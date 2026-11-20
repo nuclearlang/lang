@@ -690,10 +690,37 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.d25158",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.2d89b0",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "appConfig ProjectConfig connections: Connection[] = [ SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true), Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")), ] `guards: Guard[]` in the `appConfig` checks every route, the…",
+   "summary": "nuclear migrate make \"notes on tasks\" # one migration: what the entities changed since the last migration nuclear migrate # applies the pending ones to the default database nuclear migrate down # reverts the last one applied column shows as a drop and an add (`make` warns of every drop), so edit…",
+   "body": [
+    "```sh",
+    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
+    "nuclear migrate                         # applies the pending ones to the default database",
+    "nuclear migrate down                    # reverts the last one applied",
+    "```",
+    "",
+    "- `make` compares the entities with the last migration, never with a database; with no change it writes nothing.",
+    "- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or",
+    "  column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.",
+    "- A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows",
+    "  works.",
+    "- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11).",
+    "- A project with migrations leaves `createTables` out of its connection."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.6fb53b",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "appConfig ProjectConfig connections: Connection[] = [ SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true), Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")), ] `env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`,…",
    "body": [
     "```nuclear",
     "appConfig ProjectConfig",
@@ -703,12 +730,30 @@
     "  ]",
     "```",
     "",
-    "#### Guards (ADR-synapsis-0007)",
+    "#### Environments (spec 021, ADR-platform-0012)",
     "",
-    "`guards: Guard[]` in the `appConfig` checks every route, the contract's routes and the upgrade of the app's",
-    "WebSocket; `@controller(\"x\", guards = [...])` adds a controller's own, checked after them. They run in order and the",
-    "first that refuses answers:",
-    "",
+    "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required. The",
+    "compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it",
+    "is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by",
+    "precedence (the later wins): `.env` < `.env.<environment>` < `.env.local` < `.env.<environment>.local` < the",
+    "system's keyring (a secret) < the real process environment. `.env.local` is not read in the environment `test`, and",
+    "`testEnv(...)` of `config.nuc` wins in tests. The `.local` files are this machine's (`nuclear new` writes the",
+    "`.gitignore` line `.env*.local` and a `.env` with the defaults of the code). The format is dotenv's: `NAME=value`,",
+    "`export NAME=value`, `#` comments, `'literal'`, `\"escaped\\n\"` (several lines), `${OTHER}`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.96fdd9",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "A guard reads only headers, never the query: a token in a URL would reach the access logs.",
+   "body": [
     "| Guard | Refuses |",
     "|---|---|",
     "| `Token(value, header = \"Authorization\")` | **401** when `header` does not carry `value` (`Authorization: Bearer <value>`; another header: the value alone). An empty `value` refuses every request |",
@@ -721,7 +766,36 @@
     "```nuclear",
     "appConfig ProjectConfig",
     "  connections: Connection[] = [SQLite(file = env(\"DATABASE\", \"tasks.sqlite\")), WebSocketServer(path = \"ws\")]",
-    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"TASKS_TOKEN\"), header = \"X-Tasks-Token\")]"
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"TASKS_TOKEN\"), header = \"X-Tasks-Token\")]",
+    "",
+    "@controller(\"projects\", guards = [Token(value = env(\"OWNER_TOKEN\"))])",
+    "controller ProjectsController(tasks: TasksAppComponent)",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Project>",
+    "    ~tasks.project(id)",
+    "```",
+    "",
+    "#### Migrations of the database (ADR-backend-0001)",
+    "",
+    "`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the",
+    "project's `migrations/` folder (with the sources, not in `build/`):"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.c4c9a0",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`, `components/<c>/config/`): opened at start, closed at stop, never opened by hand.",
+   "body": [
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,",
+    "`components/<c>/config/`): opened at start, closed at stop, never opened by hand. Each has a `name` (default",
+    "`\"default\"`); `connectionName` in a kind picks another. `env(\"VAR\", \"default\")` reads the environment (below)."
    ],
    "platforms": [
     "backend"
@@ -755,53 +829,26 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.ecf8f4",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.f6ff8b",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`, `components/<c>/config/`): opened at start, closed at stop, never opened by hand.",
+   "summary": "The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).",
    "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,",
-    "`components/<c>/config/`): opened at start, closed at stop, never opened by hand. Each has a `name` (default",
-    "`\"default\"`); `connectionName` in a kind picks another. `env(\"VAR\", \"default\")` reads the environment."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.ee2bcd",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "@controller(\"projects\", guards = [Token(value = env(\"OWNER_TOKEN\"))]) controller ProjectsController(tasks: TasksAppComponent) @get(\"{id}\") one(id: int) Result<Error, Project> ~tasks.project(id) `createTables` is for development and tests.",
-   "body": [
-    "@controller(\"projects\", guards = [Token(value = env(\"OWNER_TOKEN\"))])",
-    "controller ProjectsController(tasks: TasksAppComponent)",
-    "  @get(\"{id}\")",
-    "  one(id: int) Result<Error, Project>",
-    "    ~tasks.project(id)",
-    "```",
+    "The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the",
+    "project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).",
+    "`nuclear env list` shows every variable by environment, `nuclear env set NAME value --env staging` writes",
+    "`.env.staging`, `nuclear env set NAME --secret --env production` keeps a secret in the system's keyring (the value",
+    "from stdin, never printed). The backend reads them at run time: `nuclear run` passes them to the app's process and does not start",
+    "while a required one has no value (it lists each with where it is used; `nuclear check --env <name>` reports them as",
+    "N0312); `nuclear build --env <name>` writes the non-secret values into the build's `.env`, which the runtime loads at",
+    "start without replacing a variable the process already has: where it runs, the real environment gives the secrets.",
+    "A project without `.env` files reads the process environment as before.",
     "",
-    "#### Migrations of the database (ADR-backend-0001)",
+    "#### Guards (ADR-synapsis-0007)",
     "",
-    "`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the",
-    "project's `migrations/` folder (with the sources, not in `build/`):",
-    "",
-    "```sh",
-    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
-    "nuclear migrate                         # applies the pending ones to the default database",
-    "nuclear migrate down                    # reverts the last one applied",
-    "```",
-    "",
-    "- `make` compares the entities with the last migration, never with a database; with no change it writes nothing.",
-    "- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or",
-    "  column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.",
-    "- A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows",
-    "  works.",
-    "- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11).",
-    "- A project with migrations leaves `createTables` out of its connection."
+    "`guards: Guard[]` in the `appConfig` checks every route, the contract's routes and the upgrade of the app's",
+    "WebSocket; `@controller(\"x\", guards = [...])` adds a controller's own, checked after them. They run in order and the",
+    "first that refuses answers:"
    ],
    "platforms": [
     "backend"
@@ -988,6 +1035,24 @@
     "",
     "Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.",
     "Only the `appcomponent` calls use cases; only use cases, aggregates and tools call repositories."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.84fcc0",
+   "type": "spec",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "summary": "Environments: `env(\"NAME\", \"default\")` (`env(\"NAME\")`: required) reads a variable of the environment; values in `.env`, `.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
+   "body": [
+    "Environments: `env(\"NAME\", \"default\")` (`env(\"NAME\")`: required) reads a variable of the environment; values in `.env`,",
+    "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
+    "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
+    "from stdin); `nuclear run|build|test|check --env <name>`. A required one without a value: `nuclear run` refuses, `check --env` says N0312."
    ],
    "platforms": [
     "backend"

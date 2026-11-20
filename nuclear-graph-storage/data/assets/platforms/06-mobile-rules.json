@@ -220,13 +220,65 @@
     "2. Write following this sheet. Unsure about an API: `nuclear defs show <Name> --platform mobile`; a topic:",
     "   `nuclear help mobile`; where each file goes: `nuclear help layout --platform mobile`. Never guess a constructor",
     "   or an argument.",
-    "3. `nuclear check --json` until `[]`, then `nuclear test`."
+    "3. `nuclear check --json` until `[]`, then `nuclear test`.",
+    "",
+    "Environments: `env(\"NAME\", \"default\")` (`env(\"NAME\")`: required) reads a variable of the environment; values in `.env`,",
+    "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
+    "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
+    "from stdin); `nuclear run|build|test|check --env <name>`. They are constants of the build: a secret read by the app is N0311; the backend's url is",
+    "`Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`."
    ],
    "platforms": [
     "mobile"
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#1-project-1-1-environments-spec-021-adr-platform-0012.964ee8",
+   "type": "spec",
+   "title": "The `mobile` platform of Synapsis — 1.1 Environments (spec 021, ADR-platform-0012)",
+   "summary": "The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).",
+   "body": [
+    "The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the",
+    "project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).",
+    "`nuclear env list` shows every variable by environment, `nuclear env set NAME value --env staging` writes",
+    "`.env.staging`, `nuclear env set NAME --secret --env production` keeps a secret in the system's keyring (the value",
+    "from stdin, never printed). A mobile app gets the values its code reads when it is built: `nuclear build --env <name>` puts them in the",
+    "build as constants (nothing is read at run time, no lookup of a file); a variable stored as a secret that the code",
+    "reads is a build error (N0311), since anyone who has the app can read what is inside it. `nuclear run` builds with",
+    "the environment's values and does not start while a required one has none."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#1-project-1-1-environments-spec-021-adr-platform-0012.f91bdf",
+   "type": "spec",
+   "title": "The `mobile` platform of Synapsis — 1.1 Environments (spec 021, ADR-platform-0012)",
+   "summary": "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`.",
+   "body": [
+    "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`.",
+    "",
+    "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required. The",
+    "compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it",
+    "is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by",
+    "precedence (the later wins): `.env` < `.env.<environment>` < `.env.local` < `.env.<environment>.local` < the",
+    "system's keyring (a secret) < the real process environment. `.env.local` is not read in the environment `test`, and",
+    "`testEnv(...)` of `config.nuc` wins in tests. The `.local` files are this machine's (`nuclear new` writes the",
+    "`.gitignore` line `.env*.local` and a `.env` with the defaults of the code). The format is dotenv's: `NAME=value`,",
+    "`export NAME=value`, `#` comments, `'literal'`, `\"escaped\\n\"` (several lines), `${OTHER}`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
    ]
   },
   {

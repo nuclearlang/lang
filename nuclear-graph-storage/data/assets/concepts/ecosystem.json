@@ -347,7 +347,7 @@
     "",
     "Real time and guards are configuration too: a backend's `WebSocketServer(path = \"ws\")` in `connections` and `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]`; a web app's `WebSocket(url = \"ws://...\")` instead of `Http(...)` (can:real-time, can:backend-guards).",
     "",
-    "A value that changes per machine comes from the environment: `env(\"DATABASE_URL\", \"default\")`. A secret is never written in the code."
+    "A value that changes per machine or per environment comes from `env(\"DATABASE_URL\", \"default\")`, valued by the project's `.env` files and the keyring (concept:environments). A secret is never written in the code."
    ],
    "keys": [
     "config.nuc",
@@ -378,11 +378,83 @@
     {
      "rel": "missing-plugin-is",
      "to": "error:N0304"
+    },
+    {
+     "rel": "environments",
+     "to": "concept:environments"
     }
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md",
     "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+   ],
+   "meta": {
+    "topic": "synapsis"
+   }
+  },
+  {
+   "id": "concept:environments",
+   "type": "concept",
+   "title": "Environments: `env()`, the `.env` files, the keyring and `--env`",
+   "summary": "A project of every platform reads a setting with `env(\"NAME\", \"default\")` (no default: required). Values live in dotenv files beside `config.nuc` (`.env`, `.env.<environment>`, their `.local` versions ignored by git), secrets in the system's keyring; `--env <name>` on run, build, test and check picks one. Web and mobile get the values their code reads at build; a secret never reaches them.",
+   "body": [
+    "```nuclear",
+    "// config/project_config.nuc",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))]",
+    "  guards: Guard[] = [Token(value = env(\"API_TOKEN\"))]   // required: no default",
+    "```",
+    "",
+    "- Precedence, lowest first: `.env` < `.env.<env>` < `.env.local` < `.env.<env>.local` < the keyring < the real process environment. `.env.local` is not read in `test`; `testEnv(...)` wins in tests.",
+    "- The environment: `--env <name>`, else `NUCLEAR_ENV`, else the active one (`nuclear env use <name>`, kept in `.nuclear/env`), else `development`; `nuclear test` uses `test`.",
+    "- `nuclear env list [--env e] [--json]`, `nuclear env set NAME value [--env e] [--local]`, `nuclear env set NAME --secret --env e` (the value from stdin, kept in the keyring; without one in `.env.<env>.local`), `nuclear env unset`, `nuclear env envs`, `nuclear env use e`. An agent uses the MCP tool `nuclear_env` (it never sets a secret: the user does, in a terminal).",
+    "- A backend: `nuclear run` passes the values to the app and refuses to start while a required one has no value (N0312 lists where it is used); `nuclear build --env e` writes the non-secret values into the app's `.env`, which the runtime loads without replacing the process's.",
+    "- Web and mobile: the build writes only the variables the code reads (`src/nuclear_env.ts`, `lib/nuclear_env.dart`); a secret read by a client is N0311. A name or default that is not a text literal is N0310.",
+    "- Every variable is listed in `.nuclear/contract.json` (`env`). In VS Code the Environments page (`Ctrl+Alt+Y`) edits them without opening a file."
+   ],
+   "keys": [
+    "env",
+    "environment",
+    "environments",
+    ".env",
+    "dotenv",
+    "secret",
+    "keyring",
+    "--env",
+    "nuclear env",
+    "staging",
+    "production",
+    "variables"
+   ],
+   "asks": [
+    "how do I use environment variables",
+    "how do I set a different api url for staging and production",
+    "where do I put a secret token",
+    "how do I pick the environment when I run the app",
+    "does env work in a web or mobile app"
+   ],
+   "links": [
+    {
+     "rel": "configured-in",
+     "to": "concept:config"
+    },
+    {
+     "rel": "secret-in-client-is",
+     "to": "error:N0311"
+    },
+    {
+     "rel": "missing-required-is",
+     "to": "error:N0312"
+    },
+    {
+     "rel": "not-literal-is",
+     "to": "error:N0310"
+    }
+   ],
+   "sources": [
+    "docs/04-specs/021-environments/design.md",
+    "tools/cli/docs/08-guides/commands.md",
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
    ],
    "meta": {
     "topic": "synapsis"

@@ -2114,11 +2114,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.1326eb",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.385a2d",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear update # the latest release (in a terminal every command asks when one is out) nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code) nuclear setup [flutter] [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH)…",
+   "summary": "nuclear flutter add <package>[:version]... [--dev] # the same, as Flutter writes it (--dev: devDependencies) nuclear flutter remove <package>... nuclear pub get|upgrade|outdated # pub add|remove = flutter add|remove nuclear update # the latest release (in a terminal every command asks when one is…",
    "body": [
+    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
+    "nuclear flutter remove <package>...",
+    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove",
     "nuclear update                             # the latest release (in a terminal every command asks when one is out)",
     "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)",
     "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
@@ -2145,7 +2148,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3603c0",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3dc72d",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
    "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
@@ -2158,12 +2161,11 @@
     "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
     "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
     "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
+    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
+    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
     "nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory",
     "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
-    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
-    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
-    "nuclear flutter remove <package>...",
-    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove"
+    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)"
    ],
    "platforms": [
     "mobile"
@@ -3120,13 +3122,143 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.e76711",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.36f7ff",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
-   "summary": "Output (`lib/config/project_config.dart`, without the imports, which are written automatically): /// Global configuration: connections and services of the whole app, and how the local database is kept /// (encrypted = true is the default; a component's config may set `local` for the tables of its…",
+   "summary": "// Global configuration: connections and services of the whole app, and how the local database is kept // (encrypted = true is the default; a component's config may set `local` for the tables of its own models).",
    "body": [
-    "Output (`lib/config/project_config.dart`, without the imports, which are written automatically):",
+    "```nuclear",
+    "// Global configuration: connections and services of the whole app, and how the local database is kept",
+    "// (encrypted = true is the default; a component's config may set `local` for the tables of its own models).",
+    "appConfig ProjectConfig",
+    "  local: LocalDatabase = LocalDatabase(encrypted = true)",
+    "  connections: Connection[] = [",
+    "    Http(",
+    "      baseUrl = env(\"API_URL\", \"https://rickandmortyapi.com/api/\"),",
+    "      connectTimeout = Duration(seconds = 5),",
+    "      receiveTimeout = Duration(seconds = 3),",
+    "      interceptors = [",
+    "        SessionInterceptor(),",
+    "        EventInterceptor(events = { \"force_logout\": () => ForceLogout() }),",
+    "        HttpLogInterceptor(),",
+    "      ],",
+    "    ),",
+    "    WebSocket(connectionName = \"live\", uri = \"wss://example.com/live\"),",
+    "  ]",
+    "  globals: Global[] = [",
+    "    Events(),",
+    "    SessionManager(timeout = Duration(minutes = 30)),",
+    "    Acl(inherits = { \"admin\": [\"fan\"] }),",
+    "    NetworkManager(),",
+    "    // assets/i18n/<locale>/<component>.json; with remote = RemoteDictionaries(url = \"https://...\") the",
+    "    // dictionaries are downloaded by version and win over the app's",
+    "    Translations(locales = [\"en\", \"es\"], fallback = \"en\"),",
+    "  ]",
+    "```",
     "",
+    "Output (`lib/config/project_config.dart`, without the imports, which are written automatically):"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.5a1282",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
+   "summary": "`queryParameters`, `contentType`, `responseType`, `followRedirects`, `maxRedirects`, `persistentConnection`, `validateStatus`, `interceptors`.",
+   "body": [
+    "- `Http(...)` accepts dio's options: `baseUrl`, `connectTimeout`, `receiveTimeout`, `sendTimeout`, `headers`,",
+    "  `queryParameters`, `contentType`, `responseType`, `followRedirects`, `maxRedirects`, `persistentConnection`,",
+    "  `validateStatus`, `interceptors`.",
+    "- `WebSocket(connectionName, uri, headers, protocols, pingInterval, interceptors)`: outside development,",
+    "  `wss://` (`ws://` is not encrypted).",
+    "- Interceptors: a class that extends `HttpInterceptor` and overrides `onRequest(request: RequestOptions)`,",
+    "  `onResponse(response)` or `onError(error: HttpError)`. Included: `SessionInterceptor` (the session token,",
+    "  and ending the session on a 401) and `HttpLogInterceptor`.",
+    "- `globals`: `Events()`, `SessionManager(timeout = ...)`, `NetworkManager()` or an own class that extends",
+    "  `Global`.",
+    "- `logColor` (only in `config`): the color of the component's logs (§6.17).",
+    "- `local: LocalDatabase = LocalDatabase(encrypted = true)`: how the local database (§6.2, ADR-mobile-0006) is kept.",
+    "  `encrypted` (default `true`) is AES-256 with a key generated once and kept in the device's secure storage; in a",
+    "  `config` it applies to the tables of that component's own models and wins over the project's. Changing it after",
+    "  the first run needs the tables cleared: a table is read with the cipher it was written with.",
+    "",
+    "#### Environment variables (spec 021)"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.8d7167",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
+   "summary": "`env(\"NAME\", \"default\")` reads a variable of the environment the app is built for; `env(\"NAME\")` is required.",
+   "body": [
+    "`env(\"NAME\", \"default\")` reads a variable of the environment the app is built for; `env(\"NAME\")` is required. The",
+    "value is a constant of the build: `nuclear build --env staging` writes `lib/nuclear_env.dart` (a `const` map of the",
+    "values the code reads, never a secret) and `env()` is its function, imported where it is used.",
+    "",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))]",
+    "```",
+    "",
+    "```dart",
+    "class ProjectConfig extends AppConfig {",
+    "  @override",
+    "  final List<Connection> connections = [Http(baseUrl: env('API_URL', 'http://localhost:8000/'))];",
+    "}",
+    "```",
+    "",
+    "`lib/nuclear_env.dart` of a build whose `.env.staging` has `API_URL=https://staging.example/api/`:",
+    "",
+    "```text",
+    "const Map<String, String> _values = {",
+    "  \"API_URL\": \"https://staging.example/api/\",",
+    "};",
+    "",
+    "String env(String name, [String fallback = '']) => _values[name] ?? fallback;",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.ae93ed",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
+   "summary": "/// Global configuration: connections and services of the whole app, and how the local database is kept /// (encrypted = true is the default; a component's config may set `local` for the tables of its own models).",
+   "body": [
     "```dart",
     "/// Global configuration: connections and services of the whole app, and how the local database is kept",
     "/// (encrypted = true is the default; a component's config may set `local` for the tables of its own models).",
@@ -3136,7 +3268,7 @@
     "  @override",
     "  final List<Connection> connections = [",
     "    Http(",
-    "      baseUrl: 'https://rickandmortyapi.com/api/',",
+    "      baseUrl: env('API_URL', 'https://rickandmortyapi.com/api/'),",
     "      connectTimeout: Duration(seconds: 5),",
     "      receiveTimeout: Duration(seconds: 3),",
     "      interceptors: [",
@@ -3175,78 +3307,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.f6be8a",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
-   "summary": "`queryParameters`, `contentType`, `responseType`, `followRedirects`, `maxRedirects`, `persistentConnection`, `validateStatus`, `interceptors`.",
-   "body": [
-    "- `Http(...)` accepts dio's options: `baseUrl`, `connectTimeout`, `receiveTimeout`, `sendTimeout`, `headers`,",
-    "  `queryParameters`, `contentType`, `responseType`, `followRedirects`, `maxRedirects`, `persistentConnection`,",
-    "  `validateStatus`, `interceptors`.",
-    "- `WebSocket(connectionName, uri, headers, protocols, pingInterval, interceptors)`: outside development,",
-    "  `wss://` (`ws://` is not encrypted).",
-    "- Interceptors: a class that extends `HttpInterceptor` and overrides `onRequest(request: RequestOptions)`,",
-    "  `onResponse(response)` or `onError(error: HttpError)`. Included: `SessionInterceptor` (the session token,",
-    "  and ending the session on a 401) and `HttpLogInterceptor`.",
-    "- `globals`: `Events()`, `SessionManager(timeout = ...)`, `NetworkManager()` or an own class that extends",
-    "  `Global`.",
-    "- `logColor` (only in `config`): the color of the component's logs (§6.17).",
-    "- `local: LocalDatabase = LocalDatabase(encrypted = true)`: how the local database (§6.2, ADR-mobile-0006) is kept.",
-    "  `encrypted` (default `true`) is AES-256 with a key generated once and kept in the device's secure storage; in a",
-    "  `config` it applies to the tables of that component's own models and wins over the project's. Changing it after",
-    "  the first run needs the tables cleared: a table is read with the cipher it was written with."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.fc6aee",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-1-appconfig-and-config.ea51a7",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.1 `appConfig` and `config`",
    "summary": "`appConfig` (in `config/`) declares the app's connections and global services; `config` (in `components/<c>/config/`) adds those of a component.",
    "body": [
     "`appConfig` (in `config/`) declares the app's connections and global services; `config` (in",
     "`components/<c>/config/`) adds those of a component. Each connection has a `connectionName` (`\"\"` is the",
-    "default connection); names do not repeat in the project.",
-    "",
-    "```nuclear",
-    "// Global configuration: connections and services of the whole app, and how the local database is kept",
-    "// (encrypted = true is the default; a component's config may set `local` for the tables of its own models).",
-    "appConfig ProjectConfig",
-    "  local: LocalDatabase = LocalDatabase(encrypted = true)",
-    "  connections: Connection[] = [",
-    "    Http(",
-    "      baseUrl = \"https://rickandmortyapi.com/api/\",",
-    "      connectTimeout = Duration(seconds = 5),",
-    "      receiveTimeout = Duration(seconds = 3),",
-    "      interceptors = [",
-    "        SessionInterceptor(),",
-    "        EventInterceptor(events = { \"force_logout\": () => ForceLogout() }),",
-    "        HttpLogInterceptor(),",
-    "      ],",
-    "    ),",
-    "    WebSocket(connectionName = \"live\", uri = \"wss://example.com/live\"),",
-    "  ]",
-    "  globals: Global[] = [",
-    "    Events(),",
-    "    SessionManager(timeout = Duration(minutes = 30)),",
-    "    Acl(inherits = { \"admin\": [\"fan\"] }),",
-    "    NetworkManager(),",
-    "    // assets/i18n/<locale>/<component>.json; with remote = RemoteDictionaries(url = \"https://...\") the",
-    "    // dictionaries are downloaded by version and win over the app's",
-    "    Translations(locales = [\"en\", \"es\"], fallback = \"en\"),",
-    "  ]",
-    "```"
+    "default connection); names do not repeat in the project."
    ],
    "platforms": [
     "mobile"

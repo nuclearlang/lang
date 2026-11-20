@@ -97,22 +97,7 @@
    }
   },
   {
-   "id": "doc:extensions/AGENTS.md#projects.8a4ce6",
-   "type": "readme",
-   "title": "Editor extensions — Projects",
-   "summary": "Projects",
-   "body": "| [tools/nuclear-storage-connector/](tools/nuclear-storage-connector/AGENTS.md) | not built |",
-   "sources": [
-    "extensions/AGENTS.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/AGENTS.md#projects.f54459",
+   "id": "doc:extensions/AGENTS.md#projects.2416a9",
    "type": "readme",
    "title": "Editor extensions — Projects",
    "summary": "Projects",
@@ -126,10 +111,28 @@
     "| [tools/nuclear-http-connections/](tools/nuclear-http-connections/AGENTS.md) | HTTP Connections: the tool like Postman (HTTP/REST and WebSockets) |",
     "| [tools/nuclear-atlas/](tools/nuclear-atlas/AGENTS.md) | Nuclear Atlas: the local agent integrated with the RAG (the chat with the local agents over the Nuclear Smart Graph) |",
     "| [tools/nuclear-monitor/](tools/nuclear-monitor/AGENTS.md) | Nuclear Monitor: each Nuclear function's time, calls, connections and memory as an accordion of bars (VS Code) |",
+    "| [tools/nuclear-environments/](tools/nuclear-environments/AGENTS.md) | Environments: a project's variables by environment (`.env` files, the keyring), edited through `nuclear env` (VS Code, spec 021) |",
     "| [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |",
-    "| [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |",
+    "| [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |"
+   ],
+   "sources": [
+    "extensions/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/AGENTS.md#projects.64aa62",
+   "type": "readme",
+   "title": "Editor extensions — Projects",
+   "summary": "Projects",
+   "body": [
     "| [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |",
-    "| [tools/nuclear-backend-designer/](tools/nuclear-backend-designer/AGENTS.md) | not built |"
+    "| [tools/nuclear-backend-designer/](tools/nuclear-backend-designer/AGENTS.md) | not built |",
+    "| [tools/nuclear-storage-connector/](tools/nuclear-storage-connector/AGENTS.md) | not built |"
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -894,28 +897,6 @@
    }
   },
   {
-   "id": "doc:extensions/docs/06-runbooks/release.md#steps.78e6da",
-   "type": "context",
-   "title": "Release the extensions — Steps",
-   "summary": "4. Install: `installer/install.sh`.",
-   "body": [
-    "4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`) and does not",
-    "   build one: without step 3 the previous version stays installed (0.52.1 was never packaged, so VS Code kept 0.52.0;",
-    "   the installer now says so). Check with `code --list-extensions --show-versions`. It rebuilds",
-    "   `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).",
-    "5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip",
-    "   in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*)."
-   ],
-   "sources": [
-    "extensions/docs/06-runbooks/release.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/docs/06-runbooks/release.md#steps.8dd751",
    "type": "context",
    "title": "Release the extensions — Steps",
@@ -934,6 +915,37 @@
     "   (cd extensions/vscode && npm run package)                           # → nuclearlang-<version>.vsix",
     "   (cd extensions/jetbrains && IDE_HOME=/opt/android-studio ./build.sh) # → build/nuclearlang-<version>.zip",
     "   (cd extensions/zed && ./build.sh)                                    # builds and installs into Zed",
+    "   ```"
+   ],
+   "sources": [
+    "extensions/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/06-runbooks/release.md#steps.a0d3d9",
+   "type": "context",
+   "title": "Release the extensions — Steps",
+   "summary": "4. Install: `installer/install.sh`.",
+   "body": [
+    "4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`) and does not",
+    "   build one: without step 3 the previous version stays installed (0.52.1 was never packaged, so VS Code kept 0.52.0;",
+    "   the installer now says so). Check with `code --list-extensions --show-versions`. It rebuilds",
+    "   `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).",
+    "5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip",
+    "   in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*).",
+    "6. When `extensions/vscode/syntaxes/nuclear.tmLanguage.json` changed, copy it to",
+    "   [nuclearlang/nuclear-tmlanguage](https://github.com/nuclearlang/nuclear-tmlanguage), the public copy GitHub",
+    "   Linguist will read (it is written only here):",
+    "",
+    "   ```sh",
+    "   git clone -q https://github.com/nuclearlang/nuclear-tmlanguage /tmp/tm && \\",
+    "     cp extensions/vscode/syntaxes/nuclear.tmLanguage.json /tmp/tm/ && \\",
+    "     git -C /tmp/tm commit -qam \"The grammar of <version>\" && git -C /tmp/tm push -q",
     "   ```"
    ],
    "sources": [
@@ -1020,7 +1032,7 @@
    }
   },
   {
-   "id": "doc:extensions/docs/08-guides/README.md#the-guides.44542a",
+   "id": "doc:extensions/docs/08-guides/README.md#the-guides.8ae2a8",
    "type": "readme",
    "title": "The editor extensions — The guides",
    "summary": "The guides",
@@ -1033,10 +1045,9 @@
     "| [Android Studio / IntelliJ](../../jetbrains/docs/08-guides/README.md) | install the plugin and use it on a Synapsis project |",
     "| [Zed](../../zed/docs/08-guides/README.md) | install the extension, turn on its features, use the tasks |",
     "| [HTTP Connections](../../tools/nuclear-http-connections/docs/08-guides/README.md) | call the endpoints of your projects, environments, OpenAPI |",
+    "| [Environments](../../tools/nuclear-environments/docs/08-guides/README.md) | edit a project's variables by environment (`.env` files, secrets in the keyring) without opening a file |",
     "| [Devices](../../tools/nuclear-device-manager/docs/08-guides/README.md) | run a mobile app or a web app inside VS Code |",
-    "| [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |",
-    "| [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |",
-    "| [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |"
+    "| [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |"
    ],
    "sources": [
     "extensions/docs/08-guides/README.md"
@@ -1048,11 +1059,15 @@
    }
   },
   {
-   "id": "doc:extensions/docs/08-guides/README.md#the-guides.d3bb06",
+   "id": "doc:extensions/docs/08-guides/README.md#the-guides.f6ed7e",
    "type": "readme",
    "title": "The editor extensions — The guides",
    "summary": "The guides",
-   "body": "| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |",
+   "body": [
+    "| [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |",
+    "| [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |",
+    "| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |"
+   ],
    "sources": [
     "extensions/docs/08-guides/README.md"
    ],
@@ -1112,11 +1127,13 @@
    }
   },
   {
-   "id": "doc:extensions/docs/08-guides/README.md#which-editor-has-what.0990c3",
+   "id": "doc:extensions/docs/08-guides/README.md#which-editor-has-what.675986",
    "type": "readme",
    "title": "The editor extensions — Which editor has what",
    "summary": "Zed lets an extension add no panels, views, keybindings or actions on save, so the devices, `.nuc` debugging and the workspace cannot be built there.",
    "body": [
+    "| Nuclear Atlas, *Settings and integrations*, notifications | yes | no | no |",
+    "",
     "Zed lets an extension add no panels, views, keybindings or actions on save, so the devices, `.nuc` debugging and",
     "the workspace cannot be built there."
    ],
@@ -1130,7 +1147,7 @@
    }
   },
   {
-   "id": "doc:extensions/docs/08-guides/README.md#which-editor-has-what.269377",
+   "id": "doc:extensions/docs/08-guides/README.md#which-editor-has-what.9e8603",
    "type": "readme",
    "title": "The editor extensions — Which editor has what",
    "summary": "Which editor has what",
@@ -1148,8 +1165,8 @@
     "| `.nuc` breakpoints and the paused `.nuc` line | every platform, with stepping by Nuclear line | mobile | no |",
     "| Devices inside the editor | the Synapsis device (mobile) and the web device | no | no (`nuclear device` opens its own window) |",
     "| HTTP Connections | `Ctrl+Alt+H` | `Alt+Shift+H` | no |",
-    "| Nuclear Builder | `Ctrl+Alt+P` | `Alt+Shift+P` (runs `nuclear-builder`) | no |",
-    "| Nuclear Atlas, *Settings and integrations*, notifications | yes | no | no |"
+    "| Environments (a project's variables by environment) | `Ctrl+Alt+Y` | no (`nuclear env`) | no (`nuclear env`) |",
+    "| Nuclear Builder | `Ctrl+Alt+P` | `Alt+Shift+P` (runs `nuclear-builder`) | no |"
    ],
    "sources": [
     "extensions/docs/08-guides/README.md"
@@ -3001,6 +3018,345 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#commands",
+   "type": "readme",
+   "title": "nuclear-environments — Commands",
+   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-environments/test/environments.test.ts`).",
+   "body": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-environments/test/environments.test.ts`).",
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#documents-read-by-task",
+   "type": "readme",
+   "title": "nuclear-environments — Documents (read by task)",
+   "summary": "Documents (read by task)",
+   "body": [
+    "| You need… | Read |",
+    "|---|---|",
+    "| How the list reaches the page and a change reaches the files | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
+    "| What a user reads | [docs/08-guides/README.md](docs/08-guides/README.md) |",
+    "| The pending work | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
+    "| The files, the precedence, `nuclear env` and its JSON | [the spec](../../../docs/04-specs/021-environments/design.md) |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#nuclear-environments",
+   "type": "readme",
+   "title": "nuclear-environments",
+   "summary": "variables the code reads with `env()` and the ones of its `.env` files as rows, the environments as columns (and the shared `.env`), each value with where it comes from; edited in place, secrets in the system's keyring.",
+   "body": [
+    "**Environments** in the editors (spec 021 of the platform, `docs/04-specs/021-environments/`): per project, the",
+    "variables the code reads with `env()` and the ones of its `.env` files as rows, the environments as columns (and the",
+    "shared `.env`), each value with where it comes from; edited in place, secrets in the system's keyring. VS Code only",
+    "(command `nuclear.environments.open`, a tool of the Nuclear workspace's strip, `Ctrl+Alt+Y`).",
+    "",
+    "What resolves is not here: the files, the precedence, the dotenv parser and the keyring are the CLI's",
+    "(`nuclear env`, `tools/cli`). This tool only draws what `nuclear env list --json` prints and runs",
+    "`nuclear env set/unset/use` for every change."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#rules",
+   "type": "readme",
+   "title": "nuclear-environments — Rules",
+   "summary": "never shown (the list never prints it).",
+   "body": [
+    "- `env.ts` has no `vscode` import.",
+    "- The page never writes a file: every change is a `nuclear env` command. It opens a `.env` file only when asked.",
+    "- A secret's value goes on the command's stdin (`nuclear env set NAME --secret`), never in its arguments, and is",
+    "  never shown (the list never prints it).",
+    "- An error of a command is shown on the page, never swallowed; a `nuclear` without `env` (its usage printed) asks",
+    "  to update NuclearLang (`nuclear.update`)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#stack",
+   "type": "readme",
+   "title": "nuclear-environments — Stack",
+   "summary": "Stack",
+   "body": [
+    "- TypeScript; the page is plain HTML and script, no framework, no dependency",
+    "- The installed `nuclear` command (`toolEnv` of Nuclear Builder adds `~/.local/bin` to the PATH)"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/AGENTS.md#where-the-code-is",
+   "type": "readme",
+   "title": "nuclear-environments — Where the code is",
+   "summary": "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
+   "body": [
+    "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
+    "",
+    "| File | What it is |",
+    "|---|---|",
+    "| `src/env.ts` | the list's format, the grid (`toGrid`: columns, cells, badges), `filterRows`, the commands (`setCommand`, `unsetCommand`, `useCommand`), the runner (`nuclearRunner`, injected) and `failureOf`; no `vscode` import |",
+    "| `src/panel.ts` | the page (`EnvironmentsPanel`), the command and the watchers of `**/.env*`, `**/.nuclear/contract.json`, `**/.nuclear/env` (`activateEnvironments`) |",
+    "| `src/page.ts` | the HTML and CSS (strict CSP with a nonce, the theme's colours) |",
+    "| `src/pageScript.ts` | the page's script, inlined by its source: the bar, the grid, inline editing, the keyboard |",
+    "| `src/l10n.ts`, `src/icons.ts` | the texts (English, Spanish), the icons (the stroke style of HTTP Connections) |",
+    "| `test/environments.test.ts` | the grid, the badges, the commands (a secret never in the arguments), the failures, a fake runner (node:test) |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/README.md#environments",
+   "type": "readme",
+   "title": "Environments",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) The settings of your app in every environment, without opening a `.env` file: each variable your code reads with `env(\"NAME\", \"default\")`, its value in development, staging, production (any name), where…",
+   "body": [
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml)",
+    "",
+    "The settings of your app in every environment, without opening a `.env` file: each variable your code reads with",
+    "`env(\"NAME\", \"default\")`, its value in development, staging, production (any name), where the value comes from, and",
+    "the required ones that have none."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/README.md#read-next",
+   "type": "readme",
+   "title": "Environments — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md) · [How it works](docs/02-architecture/overview.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/README.md#try-it",
+   "type": "readme",
+   "title": "Environments — Try it",
+   "summary": "nuclear env list # the same table in the terminal nuclear env set API_URL https://staging.example.com --env staging In VS Code: the ENV tool of the Nuclear workspace (`Ctrl+Alt+Y`), or *Nuclear: Open Environments*.",
+   "body": [
+    "```sh",
+    "nuclear env list           # the same table in the terminal",
+    "nuclear env set API_URL https://staging.example.com --env staging",
+    "```",
+    "",
+    "In VS Code: the **ENV** tool of the Nuclear workspace (`Ctrl+Alt+Y`), or *Nuclear: Open Environments*."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/README.md#why",
+   "type": "readme",
+   "title": "Environments — Why",
+   "summary": "and `nuclear run` would refuse to start.",
+   "body": [
+    "- One look shows what a deploy is missing: a required variable without a value in the active environment is red,",
+    "  and `nuclear run` would refuse to start.",
+    "- Secrets stay in the system's keyring, typed in a masked field, never written to a file nor shown.",
+    "- A web or mobile build bakes the variables its code reads: the page marks them (`client`), so a secret never ends",
+    "  up in an app."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.1e22c2",
+   "type": "context",
+   "title": "How the list reaches the page",
+   "summary": "without `nuclear env`) replace the grid with a notice and *Update NuclearLang* (`nuclear.update`); any other error stays above the grid until dismissed.",
+   "body": [
+    "- Failures (`failureOf`): no `nuclear` (spawn error) and a `nuclear` without `env` (exit not 0, its usage printed",
+    "  without `nuclear env`) replace the grid with a notice and *Update NuclearLang* (`nuclear.update`); any other",
+    "  error stays above the grid until dismissed. What a successful command writes on stderr (a secret written to a",
+    "  `.local` file without a keyring) is shown as a note.",
+    "- The page: `localize` (`extensions/vscode/src/i18n.ts`) gives it the language menu and the floating update button;",
+    "  its state comes in `state` messages, so a language switch redraws it as it was. Values are set as text only.",
+    "- Keyboard: the grid is one tab stop (a roving `tabindex`); arrows, Home/End (Ctrl: first/last row) move; Enter or",
+    "  F2 edits; Enter saves, Escape cancels; Delete removes the value; Enter on a name opens its first use; Ctrl+F",
+    "  filters."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.3cf3b1",
+   "type": "context",
+   "title": "How the list reaches the page",
+   "summary": "one shown, else the first of the workspace (`Workspace.projects()`); the page's picker switches between them.",
+   "body": [
+    "- The project: the one given by the command (the workspace passes `nuclear.workspace.lastProject`), else the last",
+    "  one shown, else the first of the workspace (`Workspace.projects()`); the page's picker switches between them.",
+    "- The grid (`toGrid`): the columns are the shared `.env` and each environment of the list (plus the active one and",
+    "  the ones added on the page). A cell is the environment's resolved value and its `source` (`.env`,",
+    "  `.env.<name>`, a `.local` file, `keyring`, `process`); the shared column shows the value an environment took from",
+    "  `.env`. An empty cell shows the default. Badges: `required` (no default), `missing` (required, no value in the",
+    "  active environment), `secret` (a value in the keyring), `client` (read by web or mobile code), `unused`",
+    "  (`declared: false`).",
+    "- Added on the page: a new environment or variable is kept in the panel (per project) until a file has it; the",
+    "  first value set writes its file (`set --env <new>` creates `.env.<new>`).",
+    "- The commands (`env.ts`): `set NAME VALUE [--env E] [--local] --project R`; a secret is",
+    "  `set NAME --secret [--env E] --project R` with the value on stdin. `unset` follows the cell's source: `--secret`",
+    "  for the keyring, `--local` for a `.local` file, nothing for `process` (the button is disabled). `use E`. The",
+    "  *Local* toggle adds `--local` to `set` and makes *Open file* open the `.local` file."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.41faeb",
+   "type": "context",
+   "title": "How the list reaches the page",
+   "summary": "the strip's ENV tool / nuclear.environments.open [root] ▼ EnvironmentsPanel.show(project) ──► nuclear env list --json --project <root> ──► toGrid ──► postMessage state ▲ │ │ ▼ refresh ◄── FileSystemWatcher /.env*, /.nuclear/contract.json, /.nuclear/env the page draws the grid ▲ │ └──── after every…",
+   "body": [
+    "```",
+    "the strip's ENV tool / nuclear.environments.open [root]",
+    "        ▼",
+    "EnvironmentsPanel.show(project) ──► nuclear env list --json --project <root> ──► toGrid ──► postMessage state",
+    "        ▲                                                                                  │",
+    "        │                                                                                  ▼",
+    "  refresh ◄── FileSystemWatcher **/.env*, **/.nuclear/contract.json, **/.nuclear/env     the page draws the grid",
+    "        ▲                                                                                  │",
+    "        └──── after every command ◄── nuclear env set / unset / use ◄── a message (set, unset, use)",
+    "```"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/08-guides/README.md#environments.43779f",
+   "type": "readme",
+   "title": "Environments",
+   "summary": "The same from a terminal: `nuclear env list`, `nuclear env set NAME VALUE --env staging`.",
+   "body": [
+    "The same from a terminal: `nuclear env list`, `nuclear env set NAME VALUE --env staging`. If the page asks you to",
+    "update NuclearLang, your `nuclear` is older than the page: press *Update NuclearLang*."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/08-guides/README.md#environments.edf542",
+   "type": "readme",
+   "title": "Environments",
+   "summary": "1. Read settings in your code with `env(\"NAME\", \"default\")`; `env(\"NAME\")` without a default is required.",
+   "body": [
+    "1. Read settings in your code with `env(\"NAME\", \"default\")`; `env(\"NAME\")` without a default is required.",
+    "2. Open the page: the **ENV** tool of the Nuclear workspace (`Ctrl+Alt+Y`), or *Nuclear: Open Environments*. Pick the",
+    "   project at the top.",
+    "3. Each row is a variable, each column an environment; the first column is the shared `.env` every environment",
+    "   reads. A cell shows the value and where it comes from (`.env`, `.env.staging`, a `.local` file, `keyring`,",
+    "   `process`); an empty one shows the default.",
+    "4. Edit: double-click a cell (or reach it with the arrows and press Enter), type, Enter saves, Escape cancels. Tick",
+    "   *Secret* to keep the value in the system's keyring: it is typed masked and never written to a file. The bin",
+    "   deletes a value.",
+    "5. *Local* writes to the `.local` files (ignored by git: only your machine). *Active* chooses the environment",
+    "   `nuclear run`, `build` and `check` use by default.",
+    "6. *+ Variable* and *+ Environment* add a row or a column; the first value you set writes its file.",
+    "7. Watch the badges: **missing** (red) is a required variable without a value in the active environment — the app",
+    "   will not start; **client** is baked into a web or mobile build; **unused** is in a file but no code reads it.",
+    "   Click a use under a name to open the code at the line; the arrow of a column opens its `.env` file."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#commands",
    "type": "readme",
    "title": "HTTP Connections (`nuclear-http-connections`) — Commands",
@@ -4515,7 +4871,7 @@
     "npm install",
     "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
     "npm run watch       # out/extension.js on every change",
-    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts and test/snapshot.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
+    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts and test/snapshot.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
     "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
     "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
     "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
@@ -4664,7 +5020,7 @@
    "body": [
     "The NuclearLang extension for VS Code (`nuclearlang`, 0.80.0): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
-    "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
+    "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, Nuclear Monitor, Environments, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
     "the three extensions share: [`../AGENTS.md`](../AGENTS.md)."
    ],
@@ -4785,6 +5141,25 @@
    "body": [
     "ear-builder metrics`, which agents read too.",
     "- *Reports*: what the factory spent and made, in the HUD of the company screen, in English and Spanish, light and dark. On top the bill: the tokens in and out, the money, local against paid, the budget the runs used, and tokens and money by day or week. Under it the reports of a sprint: *Throughput* (specs delivered, velocity by team), *Cycle time* (each spec and the time per station), *Burndown*, *Flow* (where the specs were each day), *Waiting for you* (the gates open now and how long), *Quality* (failures, retries, first-try pass rate per station), *People* (each member ranked by cost or by result) and *Indicators* (cost per delivered spec, tokens per useful line, the local share). A member's panel on *Your software company* shows their numbers in its Summary, and its *Reports* opens the page filtered to them. Every step of a run and every chat answer is a line of your factory's ledger (`~/.config/nuclearlang/factory/ledger/`), across projects; the runs of before are copied once with what they had."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.24d708",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- HTTP Connections, a new request page: JSON responses as a collapsible tree (copy value or path, save as variable), Raw and a sandboxed HTML Preview; JSON, HTML and XML colored with the theme (8 new `nuclearHttpConnections.*` colors); the request body checked (line and column) and formatted; headers as a table filled from the code (guard headers, Content-Type, the environment) with a badge of where each comes from, editable and deletable; variables by environment, project and component, edited in a drawer without opening `http.json`; an Auth tab (Bearer, Basic, API key, OAuth 2.0 client credentials and password); a token in a response saved to its variable by itself (with Undo) and rules that take a value of every response; icons for every section; Ctrl/Cmd+Enter sends. Earlier `http.json` files and saved tabs load unchanged.",
+    "- A newer NuclearLang release is offered on every NuclearLang page: a floating *Update to <version>* button (and the status bar) that runs `nuclear update` in a terminal, then offers to reload; checked at most every 12 hours, `NUCLEAR_NO_UPDATE_CHECK=1` turns it off.",
+    "- The wizard of a new team says the installation has no roster (run the installer again) instead of \"Nobody matches the filters\" when the AI services came without one."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5249,11 +5624,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ed56b5",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.dad91e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": "- The wizard of a new team says the installation has no roster (run the installer again) instead of \"Nobody matches the filters\" when the AI services came without one.",
+   "body": [
+    "- 0.82.0: **Environments** (spec 021), a new tool of the Nuclear workspace (`Ctrl+Alt+Y`): a project's variables (every `env(\"NAME\")` of its code and of its `.env` files) as rows and its environments as columns; edit a value inline, keep a secret in the system's keyring (typed masked, never on a command line), add a variable or an environment, pick the active one, see required variables without a value, what web and mobile builds carry and what no code reads, jump to where each is used; a file opens only when you ask. Everything goes through `nuclear env`.",
+    "- 0.81.0: the teams' members and skills, with their portraits, come with the installer (the AI services' archive lacked them: a new team showed nobody); a floating *Update to <version>* button on every NuclearLang page; the new HTTP Connections request page."
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -5271,25 +5649,6 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.fa47e3",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.81.0: the teams' members and skills, with their portraits, come with the installer (the AI services' archive lacked them: a new team showed nobody); a floating *Update to <version>* button on every NuclearLang page; the new HTTP Connections request page.",
-    "- HTTP Connections, a new request page: JSON responses as a collapsible tree (copy value or path, save as variable), Raw and a sandboxed HTML Preview; JSON, HTML and XML colored with the theme (8 new `nuclearHttpConnections.*` colors); the request body checked (line and column) and formatted; headers as a table filled from the code (guard headers, Content-Type, the environment) with a badge of where each comes from, editable and deletable; variables by environment, project and component, edited in a drawer without opening `http.json`; an Auth tab (Bearer, Basic, API key, OAuth 2.0 client credentials and password); a token in a response saved to its variable by itself (with Undo) and rules that take a value of every response; icons for every section; Ctrl/Cmd+Enter sends. Earlier `http.json` files and saved tabs load unchanged.",
-    "- A newer NuclearLang release is offered on every NuclearLang page: a floating *Update to <version>* button (and the status bar) that runs `nuclear update` in a terminal, then offers to reload; checked at most every 12 hours, `NUCLEAR_NO_UPDATE_CHECK=1` turns it off."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6800,7 +7159,7 @@
    "body": [
     "Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode}`; `project`, `tool` and",
     "`action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,",
-    "`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/A/H/V/F/D/M/S`; the actions",
+    "`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/K/A/H/V/F/Y/D/M/S`; the actions",
     "`Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).",
     "",
     "`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation (since 0.73.2 only when the user turned it on: the setting is off by default) when",
@@ -7014,7 +7373,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.31c675",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.34660f",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
    "summary": "The tools of the strip",
@@ -7028,7 +7387,7 @@
     "| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |",
     "| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
     "| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |",
-    "| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |"
+    "| `environments` | Environments | ENV | `Ctrl+Alt+Y` | built: `command` `nuclear.environments.open`, given the last project | [`nuclear-environments`](../../../tools/nuclear-environments/AGENTS.md) (spec 021) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7040,20 +7399,17 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.96048a",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.8a87ee",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
-   "summary": "Each tool is drawn as its icon over its word (`short`, translated).",
+   "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
    "body": [
-    "Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a",
-    "24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people",
-    "for the company, a bar chart with a coin for the reports, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a",
-    "phone for the devices, a gauge for the Monitor, a pen's nib for the designer, a page for the documenter, a gear for",
-    "the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the",
-    "theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a",
-    "glowing bar on its left and its word in its colour. Hovering or focusing a tool shows its card beside the strip",
-    "(`#tip`: its name, its key, *not built yet*, its notices); the tools are buttons of the keyboard (Tab, Enter, Space)",
-    "with an `aria-label` of the name and the key."
+    "| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |",
+    "| `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |",
+    "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |",
+    "",
+    "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool",
+    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7080,16 +7436,20 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.c71cff",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.d43528",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
-   "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
+   "summary": "Each tool is drawn as its icon over its word (`short`, translated).",
    "body": [
-    "| `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |",
-    "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |",
-    "",
-    "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool",
-    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`)."
+    "Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a",
+    "24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people",
+    "for the company, a bar chart with a coin for the reports, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a",
+    "phone for the devices, a gauge for the Monitor, three layers for the environments, a pen's nib for the designer, a page for the documenter, a gear for",
+    "the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the",
+    "theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a",
+    "glowing bar on its left and its word in its colour. Hovering or focusing a tool shows its card beside the strip",
+    "(`#tip`: its name, its key, *not built yet*, its notices); the tools are buttons of the keyboard (Tab, Enter, Space)",
+    "with an `aria-label` of the name and the key."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7521,7 +7881,7 @@
     "compared.",
     "",
     "When a newer release is out, every NuclearLang page (the workspace, Nuclear Builder, your software company, HTTP",
-    "Connections, the devices, the settings, Nuclear Monitor) shows a floating **Update to <version>** button in its",
+    "Connections, the devices, the settings, Nuclear Monitor, Environments) shows a floating **Update to <version>** button in its",
     "bottom-right corner, and the status bar shows it too; the button runs `nuclear update` in a terminal (NuclearLang, its",
     "AI services and this extension), then *Reload Window*. Its ✕ hides it on that page. The check reads the redirect of the",
     "releases page at most every 12 hours; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off. The command is *Nuclear: Update",
@@ -7968,11 +8328,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.95947e",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.3a9bcc",
    "type": "guide",
    "title": "The Nuclear workspace — Tool tabs",
    "summary": "The tools act on the last project you were in.",
-   "body": "The tools act on the last project you were in.",
+   "body": [
+    "| AI documenter | a page | `Ctrl+Alt+M` | a template page that lists what is planned | — |",
+    "| Settings and integrations | a gear | `Ctrl+Alt+S` | built | below |",
+    "",
+    "The tools act on the last project you were in."
+   ],
    "sources": [
     "extensions/vscode/docs/08-guides/workspace.md"
    ],
@@ -7983,7 +8348,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.9da74a",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.bf26de",
    "type": "guide",
    "title": "The Nuclear workspace — Tool tabs",
    "summary": "Tool tabs",
@@ -7997,9 +8362,8 @@
     "| HTTP Connections | a plug | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |",
     "| Devices | a phone | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |",
     "| Nuclear Monitor | a gauge | `Ctrl+Alt+F` | built | [Nuclear Monitor](../../../tools/nuclear-monitor/AGENTS.md) |",
-    "| UI designer | a pen's nib | `Ctrl+Alt+D` | a template page that lists what is planned | — |",
-    "| AI documenter | a page | `Ctrl+Alt+M` | a template page that lists what is planned | — |",
-    "| Settings and integrations | a gear | `Ctrl+Alt+S` | built | below |"
+    "| Environments | three layers | `Ctrl+Alt+Y` | built: the variables of a project by environment, edited in place | [Environments](../../../tools/nuclear-environments/docs/08-guides/README.md) |",
+    "| UI designer | a pen's nib | `Ctrl+Alt+D` | a template page that lists what is planned | — |"
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/workspace.md"

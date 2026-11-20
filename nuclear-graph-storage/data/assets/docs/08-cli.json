@@ -2520,6 +2520,21 @@
    }
   },
   {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.184a3a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.",
+   "body": "npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.",
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/CHANGELOG.md#unreleased.2dba9f",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -2560,16 +2575,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.e4a047",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.943012",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "is written; each argument after `--` is one shell word; on Windows every value is quoted for `cmd` (`\"`, `%`, `&` can no longer end it or start another command).",
+   "summary": "value from stdin, kept in the system's keyring, never printed; without a keyring, `.env.<env>.local` and a message); `--env <name>` on `run`, `build`, `test`, `check` (else `NUCLEAR_ENV`, else the active one, else `development`; tests: `test`); the dotenv files `.env` < `.env.<env>` < `.env.local`…",
    "body": [
+    "- Environments (spec 021): `nuclear env list|set|unset|envs|use` (`--json`, `--env`, `--local`, `--secret`; a secret's",
+    "  value from stdin, kept in the system's keyring, never printed; without a keyring, `.env.<env>.local` and a message);",
+    "  `--env <name>` on `run`, `build`, `test`, `check` (else `NUCLEAR_ENV`, else the active one, else `development`;",
+    "  tests: `test`); the dotenv files `.env` < `.env.<env>` < `.env.local` < `.env.<env>.local` < the keyring < the",
+    "  process. `run` passes the values to the app and refuses a required variable without one; `build` writes the",
+    "  backend's `build/.env` (no secret) or a client's values (a secret read by it: N0311); `check --env` reports N0312.",
+    "  `nuclear new` writes a `.env` with the code's defaults and a `.gitignore` with `.env*.local`; a new web project's",
+    "  backend is `env(\"API_URL\", ...)`. The MCP server's `nuclear_env` (a secret is never set through it).",
     "- Security (spec 018): a name given to `make` or `gen` that leaves the project (`/`, `..`) is refused before anything",
     "  is written; each argument after `--` is one shell word; on Windows every value is quoted for `cmd` (`\"`, `%`, `&`",
     "  can no longer end it or start another command).",
-    "- The update question is one key, `[Y]es / [n]o / [l]ater` (a day): no key in 15 s goes on, never inside `make`, an",
-    "  npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install."
+    "- The update question is one key, `[Y]es / [n]o / [l]ater` (a day): no key in 15 s goes on, never inside `make`, an"
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -3440,22 +3462,22 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.7812a8",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.2d5f14",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
-   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`,…",
+   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`,…",
    "body": [
-    "| Commands | Code | What they are for |",
-    "|---|---|---|",
-    "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
-    "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |",
-    "",
     "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,",
     "`run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,",
-    "`clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
+    "`clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
     "page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a",
     "project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both",
-    "usages, the framework's under \"projects of the framework\"."
+    "usages, the framework's under \"projects of the framework\".",
+    "",
+    "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the",
+    "installed command, as a program). Both sets use the language crates as a library (`nuclear_transpile::project`,",
+    "`nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`); the framework's also `nuclear_codegen` and",
+    "`nuclear_devices`."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3467,15 +3489,16 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.b38a62",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.bbf508",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
-   "summary": "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the installed command, as a program).",
+   "summary": "One binary, two sets of commands (ADR-cli-0003)",
    "body": [
-    "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the",
-    "installed command, as a program). Both sets use the language crates as a library (`nuclear_transpile::project`,",
-    "`nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`); the framework's also `nuclear_codegen` and",
-    "`nuclear_devices`."
+    "| Commands | Code | What they are for |",
+    "|---|---|---|",
+    "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
+    "| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |",
+    "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3864,24 +3887,45 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.584908",
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.275223",
    "type": "readme",
    "title": "The `nuclear` command — The commands, by job",
    "summary": "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help backend`, `nuclear help tutorial`, `nuclear help diagnostics`.",
    "body": [
-    "| | `install` | the runtime and the app's packages (backend, web) |",
-    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
-    "| | `test [--integration]` | the tests written in Nuclear |",
-    "| | `watch` | transpile each time a `.nuc` changes |",
-    "| | `migrate make <message>` / `migrate` / `migrate down` | the database migrations (backend) |",
-    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
-    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |",
-    "| Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |",
-    "| Machine | `doctor`, `setup` | what is missing; install Flutter step by step |",
-    "",
     "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help",
     "backend`, `nuclear help tutorial`, `nuclear help diagnostics`. `nuclear help <word> --dialect <name>` explains a",
     "kind or decorator of a dialect, and `nuclear help layout --platform <p>` where each kind's file goes."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.9e8e68",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "The commands, by job",
+   "body": [
+    "| Job | Command | What it does |",
+    "|---|---|---|",
+    "| Start | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files |",
+    "| | `agent init` | `AGENTS.md`, `CLAUDE.md`, a Cursor rule and a check hook for AI agents |",
+    "| | `code` | open the project in VS Code (run, debug, devices, hot reload) |",
+    "| Write code | `gen resource <component> <Name>` | finished models, repository, use cases, controller or screen, tests |",
+    "| | `gen usecase <component> <Name>` | a use case wired into its component (and its route, `--route`) |",
+    "| | `make <kind> <component> <Name>` (`g`) | one skeleton of a kind, at the platform's place, to fill in |",
+    "| | `gen inspect` | what the project has: components and declarations, as JSON |",
+    "| Libraries | `add <package>[@version]` | install a package of the target, write it in `config.nuc`, generate its type definitions |",
+    "| | `remove <package>` | the reverse |",
+    "| | `defs list` / `defs show` / `defs search` | read the type definitions of a library |",
+    "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |",
+    "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
+    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
@@ -3908,27 +3952,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.d41e34",
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.d48a77",
    "type": "readme",
    "title": "The `nuclear` command — The commands, by job",
    "summary": "The commands, by job",
    "body": [
-    "| Job | Command | What it does |",
-    "|---|---|---|",
-    "| Start | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files |",
-    "| | `agent init` | `AGENTS.md`, `CLAUDE.md`, a Cursor rule and a check hook for AI agents |",
-    "| | `code` | open the project in VS Code (run, debug, devices, hot reload) |",
-    "| Write code | `gen resource <component> <Name>` | finished models, repository, use cases, controller or screen, tests |",
-    "| | `gen usecase <component> <Name>` | a use case wired into its component (and its route, `--route`) |",
-    "| | `make <kind> <component> <Name>` (`g`) | one skeleton of a kind, at the platform's place, to fill in |",
-    "| | `gen inspect` | what the project has: components and declarations, as JSON |",
-    "| Libraries | `add <package>[@version]` | install a package of the target, write it in `config.nuc`, generate its type definitions |",
-    "| | `remove <package>` | the reverse |",
-    "| | `defs list` / `defs show` / `defs search` | read the type definitions of a library |",
-    "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |",
-    "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
-    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |",
-    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |"
+    "| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env(\"NAME\", \"default\")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |",
+    "| | `run\\|build\\|test\\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |",
+    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |",
+    "| | `install` | the runtime and the app's packages (backend, web) |",
+    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
+    "| | `test [--integration]` | the tests written in Nuclear |",
+    "| | `watch` | transpile each time a `.nuc` changes |",
+    "| | `migrate make <message>` / `migrate` / `migrate down` | the database migrations (backend) |",
+    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
+    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |",
+    "| Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |",
+    "| Machine | `doctor`, `setup` | what is missing; install Flutter step by step |"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
@@ -4324,6 +4364,35 @@
     "  integration <name>                    (it) an integration test in integration_test/",
     "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
     "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.a9e167",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local, .env.<env>.local, the system's keyring, the process: the later wins) env list [--env <name>] [--json] every variable (the code's and the files') × every environment env set <NAME> [<value>]…",
+   "body": [
+    "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,",
+    ".env.<env>.local, the system's keyring, the process: the later wins)",
+    "  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment",
+    "  env set <NAME> [<value>] [--env <name>] [--local] [--secret]",
+    "                                             a value in .env (--env: .env.<name>; --local: the .local file);",
+    "                                             --secret: the system's keyring (without a value: read from stdin)",
+    "  env unset <NAME> [--env <name>] [--local] [--secret]",
+    "  env envs [--json]                          the environments and the active one",
+    "  env use <name>                             the project's active environment (.nuclear/env)",
+    "  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,",
+    "                                             else development; test: test). run refuses a required variable without",
+    "                                             a value; build writes build/.env (backend) or the values of the code",
+    "                                             (web, mobile; a secret is refused); check --env reports the missing ones"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -5527,7 +5596,7 @@
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#make-one-skeleton-of-a-kind",
    "type": "context",
    "title": "The code generator: overview — `make`: one skeleton of a kind",
-   "summary": "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`: `websocket` and `token`, ADR-synapsis-0007/0008), the name helpers `snake` / `pascal`, and `write`, which never overwrites.",
+   "summary": "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`: `websocket` and `token`, ADR-synapsis-0007/0008; `with_environment` adds the `.gitignore` and the `.env` of the defaults the code's `env()` calls read, found with…",
    "body": [
     "| Project | Where the skeleton is | Code |",
     "|---|---|---|",
@@ -5535,7 +5604,8 @@
     "| Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |",
     "",
     "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`:",
-    "`websocket` and `token`, ADR-synapsis-0007/0008), the name helpers",
+    "`websocket` and `token`, ADR-synapsis-0007/0008; `with_environment` adds the `.gitignore` and the `.env` of the",
+    "defaults the code's `env()` calls read, found with `nuclear_transpile::contract::env_uses`, spec 021), the name helpers",
     "`snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized."
    ],
    "sources": [
@@ -5914,7 +5984,7 @@
    "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-new",
    "type": "readme",
    "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear new`",
-   "summary": "The `.nuc` files `new` writes (the output of a real run): Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/` in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards, runbooks),…",
+   "summary": "The `.nuc` files `new` writes (the output of a real run): Every platform also gets a `.gitignore` with `.env*.local` (the values of one machine, spec 021) and, when its code reads `env(\"NAME\", \"default\")`, a `.env` with those defaults (a required one, without a default, as a comment): the…",
    "body": [
     "The `.nuc` files `new` writes (the output of a real run):",
     "",
@@ -5923,6 +5993,10 @@
     "| `backend` (`fastapi`, `nestjs`) | `config.nuc`, `config/project_config.nuc`, `test/app_test.nuc` |",
     "| `web` (`react`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` |",
     "| `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |",
+    "",
+    "Every platform also gets a `.gitignore` with `.env*.local` (the values of one machine, spec 021) and, when its code",
+    "reads `env(\"NAME\", \"default\")`, a `.env` with those defaults (a required one, without a default, as a comment): the",
+    "backend's `DATABASE` (and its `--token` variable), the web app's `API_URL` (`Http(baseUrl = env(\"API_URL\", ...))`).",
     "",
     "Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/`",
     "in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards,",

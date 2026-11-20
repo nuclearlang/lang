@@ -3496,6 +3496,117 @@
    "tags": [
     "decorators"
    ]
+  },
+  {
+   "id": "error:N0310",
+   "type": "diagnostic",
+   "title": "N0310 — the name of an environment variable is not a literal",
+   "summary": "The name of an environment variable (`env(\"NAME\"[, \"default\"])`, spec 021) is not a text literal, or its default is not one: the compiler cannot list it in the contract (`env`) nor give it a value per environment",
+   "body": [
+    "`N0310` · projects and architecture · error",
+    "",
+    "**What it is.** The name of an environment variable (`env(\"NAME\"[, \"default\"])`, spec 021) is not a text literal, or its default is not one: the compiler cannot list it in the contract (`env`) nor give it a value per environment",
+    "",
+    "**Why.** `env(\"NAME\")` and `env(\"NAME\", \"default\")` declare a variable of the project (spec 021): the compiler lists it in the contract and the tools give it its value per environment, so the name is a text written as it is, without interpolation, and the default too. Write the name in quotes: `env(\"API_URL\", \"http://localhost:8000\")`.",
+    "",
+    "**Example.** `env(name)`, `env(\"API_${x}\")`",
+    "",
+    "**Fix.** `env(\"API_URL\", \"http://localhost:8000\")`"
+   ],
+   "keys": [
+    "n0310",
+    "the name of an environment variable is not a literal"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0310",
+    "family": "project",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "projects and architecture",
+    "title": "the name of an environment variable is not a literal",
+    "what": "The name of an environment variable (`env(\"NAME\"[, \"default\"])`, spec 021) is not a text literal, or its default is not one: the compiler cannot list it in the contract (`env`) nor give it a value per environment",
+    "fix": "`env(\"API_URL\", \"http://localhost:8000\")`",
+    "example": "`env(name)`, `env(\"API_${x}\")`"
+   }
+  },
+  {
+   "id": "error:N0311",
+   "type": "diagnostic",
+   "title": "N0311 — a secret read by a client",
+   "summary": "A web or mobile app reads (`env(\"NAME\")`) a variable stored as a secret (the system's keyring): a client build carries its values where anyone can read them, so `nuclear build --env <environment>` refuses it",
+   "body": [
+    "`N0311` · projects and architecture · error",
+    "",
+    "**What it is.** A web or mobile app reads (`env(\"NAME\")`) a variable stored as a secret (the system's keyring): a client build carries its values where anyone can read them, so `nuclear build --env <environment>` refuses it",
+    "",
+    "**Why.** A web or mobile app carries the values its code reads inside the build, where anyone who has the app can read them, so a variable stored as a secret (`nuclear env set NAME --secret`, the system's keyring) cannot be read by `env()` in it. Keep the secret in the backend and call the backend, or store the value as a plain one when it is not secret (`nuclear env set NAME value --env <environment>`).",
+    "",
+    "**Example.** `env(\"STRIPE_SECRET\")` in a screen, with `nuclear env set STRIPE_SECRET --secret`",
+    "",
+    "**Fix.** keep the secret in the backend, or store a value that is not secret as a plain one"
+   ],
+   "keys": [
+    "n0311",
+    "a secret read by a client"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0311",
+    "family": "project",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "projects and architecture",
+    "title": "a secret read by a client",
+    "what": "A web or mobile app reads (`env(\"NAME\")`) a variable stored as a secret (the system's keyring): a client build carries its values where anyone can read them, so `nuclear build --env <environment>` refuses it",
+    "fix": "keep the secret in the backend, or store a value that is not secret as a plain one",
+    "example": "`env(\"STRIPE_SECRET\")` in a screen, with `nuclear env set STRIPE_SECRET --secret`"
+   }
+  },
+  {
+   "id": "error:N0312",
+   "type": "diagnostic",
+   "title": "N0312 — a required variable without a value in the environment",
+   "summary": "A required variable (`env(\"NAME\")` without a default) has no value in the environment a command names (`nuclear check --env <environment>`, `nuclear build --env <environment>`): its `.env` files, the keyring's secrets and the process give none; `nuclear run` refuses to start for the same reason",
+   "body": [
+    "`N0312` · projects and architecture · error",
+    "",
+    "**What it is.** A required variable (`env(\"NAME\")` without a default) has no value in the environment a command names (`nuclear check --env <environment>`, `nuclear build --env <environment>`): its `.env` files, the keyring's secrets and the process give none; `nuclear run` refuses to start for the same reason",
+    "",
+    "**Why.** `env(\"NAME\")` without a default is a required variable of the project (spec 021): `nuclear check --env <environment>` and `nuclear build --env <environment>` report each one the environment does not give a value (its .env files, the keyring's secrets, the process), and `nuclear run` does not start without them. Give it one: `nuclear env set NAME <value> --env <environment>` (`--secret` for a secret), or a default: `env(\"NAME\", \"default\")`.",
+    "",
+    "**Example.** `env(\"TASKS_TOKEN\")` with no `TASKS_TOKEN` in `.env.production`",
+    "",
+    "**Fix.** `nuclear env set TASKS_TOKEN --secret --env production`, or a default"
+   ],
+   "keys": [
+    "n0312",
+    "a required variable without a value in the environment"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0312",
+    "family": "project",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "projects and architecture",
+    "title": "a required variable without a value in the environment",
+    "what": "A required variable (`env(\"NAME\")` without a default) has no value in the environment a command names (`nuclear check --env <environment>`, `nuclear build --env <environment>`): its `.env` files, the keyring's secrets and the process give none; `nuclear run` refuses to start for the same reason",
+    "fix": "`nuclear env set TASKS_TOKEN --secret --env production`, or a default",
+    "example": "`env(\"TASKS_TOKEN\")` with no `TASKS_TOKEN` in `.env.production`"
+   }
   }
  ]
 }

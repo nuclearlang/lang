@@ -952,21 +952,36 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.781a5e",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.127a9a",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
-   "summary": "class ProjectConfig(AppConfig): connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")] guards: list[Guard] = [NoOrigin(), Token(value=env(\"CHAT_TOKEN\"), header=\"X-Chat-Token\")] @controller(\"admin\", guards=[Token(value=env(\"ADMIN_TOKEN\"))]) class AdminController:…",
+   "summary": "from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env class ProjectConfig(AppConfig): connections: list[Connection] = [ Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")), Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")), Kafka(servers=env(\"KAFKA\",…",
    "body": [
-    "class ProjectConfig(AppConfig):",
-    "    connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")]",
-    "    guards: list[Guard] = [NoOrigin(), Token(value=env(\"CHAT_TOKEN\"), header=\"X-Chat-Token\")]",
+    "from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env",
     "",
-    "@controller(\"admin\", guards=[Token(value=env(\"ADMIN_TOKEN\"))])",
-    "class AdminController:",
-    "    @get()",
-    "    def info(self) -> str:",
-    "        return \"ok\"",
-    "```"
+    "class ProjectConfig(AppConfig):",
+    "    connections: list[Connection] = [",
+    "        Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")),",
+    "        Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")),",
+    "        Kafka(servers=env(\"KAFKA\", \"localhost:9092\"), group=\"rick\"),",
+    "        OpenAI(model=\"gpt-4o-mini\"),",
+    "    ]",
+    "```",
+    "",
+    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)",
+    "",
+    "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app",
+    "serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
+    "`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:",
+    "`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards",
+    "on the upgrade and sends every request frame through the app with httpx's ASGI transport.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]"
    ],
    "platforms": [
     "backend"
@@ -982,12 +997,17 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.868f1c",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.586fe9",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
    "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop.",
    "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment.",
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
+    "(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,",
+    "`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env",
+    "<environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a",
+    "variable the process already has (production gives its secrets in the real environment). `env(\"VAR\")` without a",
+    "default is required: `nuclear run` does not start without it.",
     "",
     "```nuclear",
     "appConfig ProjectConfig",
@@ -1000,20 +1020,7 @@
     "```",
     "",
     "```python",
-    "from __future__ import annotations",
-    "",
-    "from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env",
-    "",
-    "class ProjectConfig(AppConfig):",
-    "    connections: list[Connection] = [",
-    "        Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")),",
-    "        Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")),",
-    "        Kafka(servers=env(\"KAFKA\", \"localhost:9092\"), group=\"rick\"),",
-    "        OpenAI(model=\"gpt-4o-mini\"),",
-    "    ]",
-    "```",
-    "",
-    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)"
+    "from __future__ import annotations"
    ],
    "platforms": [
     "backend"
@@ -1029,24 +1036,11 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.c468dc",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.fbb585",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
-   "summary": "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
+   "summary": "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))]) controller AdminController() @get() info() string \"ok\" from future import annotations from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get from synapsis.sockets import WebSocketServer…",
    "body": [
-    "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app",
-    "serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
-    "`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:",
-    "`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards",
-    "on the upgrade and sends every request frame through the app with httpx's ASGI transport.",
-    "",
-    "```nuclear",
-    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
-    "",
-    "appConfig ProjectConfig",
-    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
-    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
-    "",
     "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
     "controller AdminController()",
     "  @get()",
@@ -1060,7 +1054,18 @@
     "from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get",
     "from synapsis.sockets import WebSocketServer",
     "",
-    "# config.nuc: plugins(sqlite = true, events = true, websocket = true)"
+    "# config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
+    "class ProjectConfig(AppConfig):",
+    "    connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")]",
+    "    guards: list[Guard] = [NoOrigin(), Token(value=env(\"CHAT_TOKEN\"), header=\"X-Chat-Token\")]",
+    "",
+    "@controller(\"admin\", guards=[Token(value=env(\"ADMIN_TOKEN\"))])",
+    "class AdminController:",
+    "    @get()",
+    "    def info(self) -> str:",
+    "        return \"ok\"",
+    "```"
    ],
    "platforms": [
     "backend"
@@ -2794,11 +2799,101 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.13ddad",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.03956a",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
-   "summary": "export class ProjectConfig extends AppConfig { readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })]; readonly guards: Guard[] = [ new NoOrigin(), new Token({ value: env('CHAT_TOKEN'), header: 'X-Chat-Token' }), ]; } @Controller('admin')…",
+   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's (backend.md §2.8).",
    "body": [
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = \"a:9092,b:9092\", group = \"app\")` (kafkajs); chat models `Ollama(model = \"qwen3.5:4b\", baseUrl = ...)`, `OpenAI(model = \"gpt-4o-mini\")` (LangChain `initChatModel`); `Embeddings(model = \"ollama:nomic-embed-text\")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
+    "(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,",
+    "`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env",
+    "<environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.a1e7ca",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
+   "summary": "variable the process already has (production gives its secrets in the real environment).",
+   "body": [
+    "variable the process already has (production gives its secrets in the real environment). `env(\"VAR\")` without a",
+    "default is required: `nuclear run` does not start without it.",
+    "",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    Postgres(url = env(\"DATABASE_URL\", \"postgres://localhost/tasks\")),",
+    "  ]",
+    "```",
+    "",
+    "```typescript",
+    "import { AppConfig, Connection, Postgres, env } from 'synapsis-nest';",
+    "",
+    "export class ProjectConfig extends AppConfig {",
+    "  readonly connections: Connection[] = [new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/tasks') })];",
+    "}",
+    "```",
+    "",
+    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)",
+    "",
+    "`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes);",
+    "`@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`. `Token`, `NoOrigin` and `guardedBy`",
+    "are `synapsis-nest`'s. `WebSocketServer` (plugin `websocket`: `ws`) is `synapsis-nest/sockets`'s: it listens to the",
+    "upgrades of the app's HTTP server at its path, checks the app's guards, and sends every request frame through the",
+    "app over the loopback.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.eab96d",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
+   "summary": "appConfig ProjectConfig connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")] guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")] @controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))]) controller AdminController()…",
+   "body": [
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
+    "",
+    "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
+    "controller AdminController()",
+    "  @get()",
+    "  info() string",
+    "    \"ok\"",
+    "```",
+    "",
+    "```typescript",
+    "import { Controller, Get } from '@nestjs/common';",
+    "import { AppConfig, Connection, Guard, NoOrigin, SQLite, Token, env, guardedBy } from 'synapsis-nest';",
+    "import { WebSocketServer } from 'synapsis-nest/sockets';",
+    "",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
     "export class ProjectConfig extends AppConfig {",
     "  readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })];",
     "  readonly guards: Guard[] = [",
@@ -2816,90 +2911,6 @@
     "  }",
     "}",
     "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.900831",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
-   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's (backend.md §2.8).",
-   "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = \"a:9092,b:9092\", group = \"app\")` (kafkajs); chat models `Ollama(model = \"qwen3.5:4b\", baseUrl = ...)`, `OpenAI(model = \"gpt-4o-mini\")` (LangChain `initChatModel`); `Embeddings(model = \"ollama:nomic-embed-text\")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env(\"VAR\", \"default\")` reads the environment.",
-    "",
-    "```nuclear",
-    "appConfig ProjectConfig",
-    "  connections: Connection[] = [",
-    "    Postgres(url = env(\"DATABASE_URL\", \"postgres://localhost/tasks\")),",
-    "  ]",
-    "```",
-    "",
-    "```typescript",
-    "import { AppConfig, Connection, Postgres, env } from 'synapsis-nest';",
-    "",
-    "export class ProjectConfig extends AppConfig {",
-    "  readonly connections: Connection[] = [new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/tasks') })];",
-    "}",
-    "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.d7c239",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
-   "summary": "`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes); `@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`.",
-   "body": [
-    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)",
-    "",
-    "`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes);",
-    "`@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`. `Token`, `NoOrigin` and `guardedBy`",
-    "are `synapsis-nest`'s. `WebSocketServer` (plugin `websocket`: `ws`) is `synapsis-nest/sockets`'s: it listens to the",
-    "upgrades of the app's HTTP server at its path, checks the app's guards, and sends every request frame through the",
-    "app over the loopback.",
-    "",
-    "```nuclear",
-    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
-    "",
-    "appConfig ProjectConfig",
-    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
-    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
-    "",
-    "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
-    "controller AdminController()",
-    "  @get()",
-    "  info() string",
-    "    \"ok\"",
-    "```",
-    "",
-    "```typescript",
-    "import { Controller, Get } from '@nestjs/common';",
-    "import { AppConfig, Connection, Guard, NoOrigin, SQLite, Token, env, guardedBy } from 'synapsis-nest';",
-    "import { WebSocketServer } from 'synapsis-nest/sockets';",
-    "",
-    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)"
    ],
    "platforms": [
     "backend"

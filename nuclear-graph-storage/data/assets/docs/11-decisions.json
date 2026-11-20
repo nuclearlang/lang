@@ -1449,20 +1449,59 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.82feda",
+   "id": "doc:docs/03-adr/0012-environments.md#consequences",
    "type": "adr",
-   "title": "Decisions of the platform",
-   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "title": "ADR-platform-0012: Environments are declared by `env()`, valued by dotenv files and the keyring — Consequences",
+   "summary": "No new syntax.",
    "body": [
-    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
-    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
-    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
-    "",
-    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
+    "No new syntax. One resolver in the CLI serves run, build, test, check, `nuclear env`, the MCP server and the editor.",
+    "A client build carries only the values its code reads. Spec 021 holds the design."
    ],
    "agents": false,
    "sources": [
-    "docs/03-adr/README.md"
+    "docs/03-adr/0012-environments.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0012-environments.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0012: Environments are declared by `env()`, valued by dotenv files and the keyring — Context and problem",
+   "summary": "A project read `env(\"NAME\", \"default\")` only in a backend, from the process; there were no named environments, no list of what a project needs, no secrets, nothing for web or mobile.",
+   "body": [
+    "A project read `env(\"NAME\", \"default\")` only in a backend, from the process; there were no named environments, no",
+    "list of what a project needs, no secrets, nothing for web or mobile."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0012-environments.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0012-environments.md#decision-the-user-2026-11-20",
+   "type": "adr",
+   "title": "ADR-platform-0012: Environments are declared by `env()`, valued by dotenv files and the keyring — Decision (the user, 2026-11-20)",
+   "summary": "secrets in the system's keyring; the real process environment wins over all.",
+   "body": [
+    "- The code declares its variables implicitly: each `env(\"NAME\"[, default])` the compiler sees, listed in the contract.",
+    "- Values are dotenv files of the project (`.env`, `.env.<environment>`, their `.local` versions ignored by git) and",
+    "  secrets in the system's keyring; the real process environment wins over all.",
+    "- Web and mobile resolve `env()` when they are built for an environment; a secret never reaches a client.",
+    "- The environment is a first-class name in every command and in the editor, so a later step can simulate an",
+    "  environment on this machine."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0012-environments.md"
    ],
    "meta": {
     "section": "11-decisions",
@@ -1506,6 +1545,29 @@
     "Only the decisions about the whole platform. Each project keeps its own in its `docs/03-adr/`, numbered from 0001",
     "and cited with its key (`../README.md` has the table of keys). The format is `0000-template.md`. An accepted ADR",
     "is not edited: a new one replaces it."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.cbeae6",
+   "type": "adr",
+   "title": "Decisions of the platform",
+   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "body": [
+    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
+    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
+    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
+    "| [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |",
+    "",
+    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
    ],
    "agents": false,
    "sources": [
@@ -8359,7 +8421,27 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable",
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.59a997",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
+   "summary": "grammar is public in `nuclearlang/nuclear-tmlanguage`): the pull request (`languages.yml`, `samples/Nuclear/`, `script/add-grammar`) once they are in 200 repositories of several owners; then `.gitattributes` loses its `linguist-language` lines.",
+   "body": [
+    "grammar is public in `nuclearlang/nuclear-tmlanguage`): the pull request (`languages.yml`, `samples/Nuclear/`,",
+    "      `script/add-grammar`) once they are in 200 repositories of several owners; then `.gitattributes` loses its",
+    "      `linguist-language` lines."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.9f90e6",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
    "summary": "OIDC login).",
@@ -8376,7 +8458,8 @@
     "- [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).",
     "- [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact",
     "      attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).",
-    "- [ ] T3.8 agent: pull requests to the awesome lists that accept the project."
+    "- [ ] T3.8 agent: pull requests to the awesome lists that accept the project.",
+    "- [ ] T3.9 agent: Nuclear in GitHub Linguist with the extensions `.nuc` and `.nuclear` (both free there today; the"
    ],
    "agents": false,
    "sources": [
@@ -9106,6 +9189,423 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/021-environments/design.md#backend",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — Backend",
+   "summary": "`nuclear run --env X` resolves and passes the variables to the app's process (the runtime's `env()` reads the process, as today).",
+   "body": [
+    "`nuclear run --env X` resolves and passes the variables to the app's process (the runtime's `env()` reads the",
+    "process, as today). `nuclear build --env X` writes `<output>/.env` with the resolved non-secret values; the runtime",
+    "(`synapsis.config`, `@synapsis/nest` config) loads `.env` of the app's folder at import, without overriding."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#nuclear-env.23517d",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — `nuclear env`",
+   "summary": "`list --json`: { \"project\": \"tasks_api\", \"active\": \"development\", \"environments\": [\"development\", \"staging\", \"production\"], \"variables\": [ { \"name\": \"DATABASE\", \"declared\": true, \"required\": false, \"default\": \"tasks.sqlite\", \"client\": false, \"uses\": [{ \"file\": \"config/project_config.nuc\", \"line\":…",
+   "body": [
+    "`list --json`:",
+    "```json",
+    "{ \"project\": \"tasks_api\", \"active\": \"development\", \"environments\": [\"development\", \"staging\", \"production\"],",
+    "  \"variables\": [",
+    "    { \"name\": \"DATABASE\", \"declared\": true, \"required\": false, \"default\": \"tasks.sqlite\", \"client\": false,",
+    "      \"uses\": [{ \"file\": \"config/project_config.nuc\", \"line\": 5 }],",
+    "      \"values\": { \"development\": { \"value\": \"tasks.sqlite\", \"source\": \".env\" },",
+    "                  \"production\": { \"value\": \"/data/tasks.sqlite\", \"source\": \".env.production\" } } },",
+    "    { \"name\": \"TASKS_TOKEN\", \"declared\": true, \"required\": true, \"client\": false, \"uses\": [...],",
+    "      \"values\": { \"development\": { \"secret\": true, \"source\": \"keyring\" }, \"production\": null } }",
+    "  ] }",
+    "```",
+    "Each variable also has `\"shared\"`: its value in `.env` itself (`{ \"value\": \"…\", \"source\": \".env\" }`, or `null`), the",
+    "page's column for the shared file. A secret's value is never printed (`\"secret\": true`, no `value`). `null`: no value (missing when `required`).",
+    "`declared: false`: a variable of a file no code reads.",
+    "A value's `source` is the file it comes from, `keyring`, `process` (the variable is in the environment of the",
+    "`nuclear` that answers) or `default` (no file gives one: the code's default). `--env <name>` lists that environment",
+    "alone. The keys of every object are sorted."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#nuclear-env.8211e6",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — `nuclear env`",
+   "summary": "`envs --json`: `{ \"active\": \"development\", \"environments\": [\"development\", \"staging\"] }` (`development` first, then the names of the `.env.<name>` files, the secrets and the active one, sorted).",
+   "body": [
+    "`envs --json`: `{ \"active\": \"development\", \"environments\": [\"development\", \"staging\"] }` (`development` first, then",
+    "the names of the `.env.<name>` files, the secrets and the active one, sorted).",
+    "",
+    "`set --secret` without `--env` writes the secret of the active environment (a secret belongs to one environment:",
+    "its account names it). Which variables are secrets is kept in `.nuclear/secrets.json` (environment → name → `keyring`",
+    "or the `.local` file), names only. `NUCLEAR_KEYRING=off` uses the `.local` file on a machine with a keyring too.",
+    "Without a value argument `set` reads the value from stdin (all of it, without the last newline)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#nuclear-env.8afcd9",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — `nuclear env`",
+   "summary": "nuclear env list [--env <name>] [--json] # every variable × every environment nuclear env set <NAME> <value> [--env <name>] [--local] [--secret] nuclear env unset <NAME> [--env <name>] [--local] [--secret] nuclear env envs [--json] # the environments: from the files, the keyring and the active one…",
+   "body": [
+    "```",
+    "nuclear env list [--env <name>] [--json]       # every variable × every environment",
+    "nuclear env set <NAME> <value> [--env <name>] [--local] [--secret]",
+    "nuclear env unset <NAME> [--env <name>] [--local] [--secret]",
+    "nuclear env envs [--json]                      # the environments: from the files, the keyring and the active one",
+    "nuclear env use <name>                         # the project's active environment (.nuclear/env)",
+    "```",
+    "All take `--project <dir>` (default: the project of the current folder). `--env` absent: the shared `.env`",
+    "(`set`/`unset`) or the active environment (`list`). `--secret` writes the system's keyring (service",
+    "`nuclearlang-env`, account `<project name>-<key>/<environment>/<NAME>`, the key a random one of the project kept in `.nuclear/env-key`, so two projects of one name never share a secret); without a keyring it writes",
+    "`.env.<environment>.local` and says so."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#the-contract",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — The contract",
+   "summary": "\"env\": [ { \"name\": \"DATABASE\", \"default\": \"tasks.sqlite\", \"required\": false, \"client\": false, \"uses\": [{ \"file\": \"config/project_config.nuc\", \"line\": 5 }] }, { \"name\": \"TASKS_TOKEN\", \"required\": true, \"client\": false, \"uses\": [...] } ]",
+   "body": [
+    "```json",
+    "\"env\": [",
+    "  { \"name\": \"DATABASE\", \"default\": \"tasks.sqlite\", \"required\": false, \"client\": false,",
+    "    \"uses\": [{ \"file\": \"config/project_config.nuc\", \"line\": 5 }] },",
+    "  { \"name\": \"TASKS_TOKEN\", \"required\": true, \"client\": false, \"uses\": [...] }",
+    "]",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#the-later-phase-simulation",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — The later phase: simulation",
+   "summary": "The environment name reaches every command and the page now, so `--simulate` can later start local stand-ins for the connections an environment names (containers, mocks) with the same values.",
+   "body": [
+    "The environment name reaches every command and the page now, so `--simulate` can later start local stand-ins for",
+    "the connections an environment names (containers, mocks) with the same values."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#the-page-vs-code",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — The page (VS Code)",
+   "summary": "A tool of the Nuclear workspace, Environments (key `Ctrl+Alt+E` if free), plain HTML and script like the other pages, with the floating update button.",
+   "body": [
+    "A tool of the Nuclear workspace, **Environments** (key `Ctrl+Alt+E` if free), plain HTML and script like the other",
+    "pages, with the floating update button. It runs `nuclear env list --json` per project and `nuclear env set/unset/use`",
+    "for every change (never writes a file itself). Badges: required, missing, secret, client, unused; a click on a use",
+    "opens the file at the line. Secrets are typed in a masked field and sent to `nuclear env set --secret` on stdin, never",
+    "on the command line. *Open file* opens the `.env` file of the column."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#web-and-mobile",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — Web and mobile",
+   "summary": "The CLI writes, before the dialect's build, a values module with only the variables the client code reads (`client: true` in the contract); `env(\"NAME\", \"d\")` reads it, so the value is a constant of the build: Both are `[project.files]` of the dialect (`names = [\"env\"]`, so `env` is imported where…",
+   "body": [
+    "The CLI writes, before the dialect's build, a values module with only the variables the client code reads",
+    "(`client: true` in the contract); `env(\"NAME\", \"d\")` reads it, so the value is a constant of the build:",
+    "- `react`: `src/nuclear_env.ts`: a `values` record and `export function env(name, fallback = '')`.",
+    "- `flutter`: `lib/nuclear_env.dart`: a `const Map<String, String>` and `String env(String name, [String fallback])`.",
+    "Both are `[project.files]` of the dialect (`names = [\"env\"]`, so `env` is imported where the code calls it), written",
+    "only when the code calls `env`. The CLI gives the build every non-secret value (`Manifest::env`, the process",
+    "environment too) and the compiler keeps only the names the code reads. A secret read by a client: N0311, at the",
+    "`env()` that reads it. A required variable without a value: N0312 in `check --env` and `build --env` (a warning in a",
+    "backend's build: where it runs the real environment gives it); `nuclear run` refuses to start."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/design.md#where-each-part-lives",
+   "type": "spec",
+   "title": "Spec 021: Environments — Design — Where each part lives",
+   "summary": "Where each part lives",
+   "body": [
+    "| Part | Project | What |",
+    "|---|---|---|",
+    "| `env()` collected, contract `env` | `nuclearlang/crates/nuclear-transpile` | a walk over calls named `env` with a literal first argument |",
+    "| How `env()` is emitted per dialect | `nuclearlang/dialects/*` (TOML, templates) | backend: the runtime's `env`; web/mobile: the generated values module |",
+    "| Files, precedence, dotenv parser, keyring | `tools/cli` (`src/env.rs` or `src/framework/env.rs`) | one resolver used by run, build, test, check and `nuclear env` |",
+    "| Runtime loading of `<app>/.env` | `nuclear-synapsis-framework/platforms/backend/packages/synapsis-py`, `synapsis-nest` | at start, never overriding the process |",
+    "| MCP tool | `tools/mcp` | `nuclear_env` (list, set, unset, use) |",
+    "| Page | `extensions/vscode` (a tool of the Nuclear workspace) | rows × environments, through `nuclear env … --json` only |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/requirements.md#decisions-of-the-user-2026-11-20",
+   "type": "spec",
+   "title": "Spec 021: Environments — Requirements — Decisions of the user (2026-11-20)",
+   "summary": "1. The code declares what it needs implicitly: every `env(\"NAME\")` / `env(\"NAME\", \"default\")` the compiler sees is a variable of the project (required when it has no default).",
+   "body": [
+    "1. The code declares what it needs **implicitly**: every `env(\"NAME\")` / `env(\"NAME\", \"default\")` the compiler",
+    "   sees is a variable of the project (required when it has no default). No new syntax.",
+    "2. Values live in **files and the keyring**: `.env`, `.env.<environment>`, and their `.local` versions (ignored by",
+    "   git) in the project; a secret in the system's keyring.",
+    "3. **Web and mobile use `env()` too**, resolved when the app is built for an environment; a secret never reaches a",
+    "   client build.",
+    "4. The environments are ready for a later step: **simulating an environment on this machine** (its services and",
+    "   connections started locally), so the environment is a first-class name in every command and in the editor."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/requirements.md#out-of-scope-later-phase-kept-in-mind-by-the-design",
+   "type": "spec",
+   "title": "Spec 021: Environments — Requirements — Out of scope (later phase, kept in mind by the design)",
+   "summary": "Out of scope (later phase, kept in mind by the design)",
+   "body": [
+    "- Simulating an environment locally (`nuclear run --env staging --simulate`: local stand-ins for its connections).",
+    "- Synchronizing secrets with a cloud secret manager."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/requirements.md#requirements.057e31",
+   "type": "spec",
+   "title": "Spec 021: Environments — Requirements — Requirements",
+   "summary": "writes the non-secret values into the app's `.env`, which the Synapsis runtime loads at start without replacing a variable the process already has (production sets secrets in the real environment).",
+   "body": [
+    "writes the non-secret values into the app's `.env`, which the Synapsis runtime loads at start without replacing",
+    "   a variable the process already has (production sets secrets in the real environment).",
+    "8. A web or mobile app gets the values its code reads when it is built (no file read at run time, no lookup cost);",
+    "   a variable stored as a secret read by a client is a build error.",
+    "9. `nuclear env` manages them without opening a file: list (with `--json`), set, unset, secret, the environments,",
+    "   the active one. An agent does it through the MCP server.",
+    "10. The editor has an **Environments** page: per project, the variables (from the code and from the files) as rows",
+    "    and the environments as columns; edit a value, mark it secret (keyring), add an environment, pick the active",
+    "    one, see required variables without a value and variables no code reads, jump to where a variable is used;",
+    "    open a file only when the user asks.",
+    "11. `nuclear new` writes a `.env` with the defaults the generated code uses and the `.gitignore` lines for",
+    "    `.env*.local`.",
+    "12. Nothing changes for a project that has no `.env` file: `env()` keeps reading the process environment."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/requirements.md#requirements.55c160",
+   "type": "spec",
+   "title": "Spec 021: Environments — Requirements — Requirements",
+   "summary": "1. `env(\"NAME\", \"default\")` works in every platform and dialect; `env(\"NAME\")` is required.",
+   "body": [
+    "1. `env(\"NAME\", \"default\")` works in every platform and dialect; `env(\"NAME\")` is required.",
+    "2. The compiler lists every variable of a project in `.nuclear/contract.json` (`env`): its name, its default, where",
+    "   it is used (file and line), and whether a client reads it. A name that is not a string literal is a diagnostic.",
+    "3. Files of a project, by precedence (lowest first): `.env` < `.env.<environment>` < `.env.local` <",
+    "   `.env.<environment>.local` < the keyring's secrets < the real process environment. `.env.local` is not read in",
+    "   the environment `test` (tests are the same on every machine); `testEnv(...)` of `config.nuc` wins in tests.",
+    "4. The format is dotenv's: `NAME=value`, `export NAME=value`, `#` comments, single quotes (literal), double quotes",
+    "   (escapes `\\n`, `\\\"`, multi-line), `${OTHER}` expansion.",
+    "5. The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else",
+    "   the project's active one (`nuclear env use <name>`); else `development` (`test` for `nuclear test`).",
+    "6. `nuclear run` refuses to start when a required variable has no value, and lists each with where it is used.",
+    "   `nuclear check --env <name>` reports the same as a diagnostic.",
+    "7. A backend reads its variables at run time: `nuclear run` passes them to the process; a build for an environment"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/requirements.md#spec-021-environments-requirements",
+   "type": "spec",
+   "title": "Spec 021: Environments — Requirements",
+   "summary": "from named environments (`development`, `staging`, `production`, any name), as `dotenv` does in Node.js and `flutter_dotenv` in Flutter, with nothing to learn: `env(\"NAME\", \"default\")` in Nuclear, `.env` files beside `config.nuc`, secrets in the system's keyring, and a page of the editor that…",
+   "body": [
+    "**Priority: high** (the user, 2026-11-20). A project of every platform (backend, web, mobile) reads its settings",
+    "from named environments (`development`, `staging`, `production`, any name), as `dotenv` does in Node.js and",
+    "`flutter_dotenv` in Flutter, with nothing to learn: `env(\"NAME\", \"default\")` in Nuclear, `.env` files beside",
+    "`config.nuc`, secrets in the system's keyring, and a page of the editor that edits them without opening a file."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/tasks.md#phase-1-environments-that-work-0-82-0.5c93ec",
+   "type": "spec",
+   "title": "Spec 021: Environments — Tasks — Phase 1: environments that work (0.82.0)",
+   "summary": "read by a client (both in diagnostics.md).",
+   "body": [
+    "- [x] ADR-platform-0012 (the decisions of the user).",
+    "- [x] Compiler: `env` of the contract; a diagnostic for a name that is not a literal; a diagnostic for a secret",
+    "      read by a client (both in diagnostics.md).",
+    "- [x] CLI: the dotenv parser, the precedence, the keyring, `--env`/`NUCLEAR_ENV`/active, `nuclear env`, run refuses",
+    "      missing required, build writes `.env` (backend) or the values module (web, mobile), check reports.",
+    "- [x] Dialects: `env()` in react and flutter; fastapi and nestjs keep the runtime's.",
+    "- [x] Runtimes: synapsis-py and synapsis-nest load the app's `.env` without overriding.",
+    "- [x] `nuclear new`: `.env` and the `.gitignore` lines.",
+    "- [x] MCP: `nuclear_env`.",
+    "- [x] VS Code: the Environments page (`extensions/tools/nuclear-environments`, `Ctrl+Alt+Y`).",
+    "- [ ] References, guides, skill, knowledge base; release. (Written: the platform references and briefs, the",
+    "      dialect references, projects.md, diagnostics.md, the CLI's guide and commands, the framework's guide, the",
+    "      skill, the MCP guide, the CHANGELOGs. Left: the knowledge base, the MCP server reinstalled, the install, the",
+    "      release.)",
+    "- [ ] The installed runtimes (synapsis-py, synapsis-nest) carry `.env` loading only after `installer/install.sh`.",
+    "- [x] The keyring's account carries a key of the project (`.nuclear/env-key`): two projects of one name never share",
+    "      a secret."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/tasks.md#phase-1-environments-that-work-0-82-0.e8c87c",
+   "type": "spec",
+   "title": "Spec 021: Environments — Tasks — Phase 1: environments that work (0.82.0)",
+   "summary": "Phase 1: environments that work (0.82.0)",
+   "body": [
+    "- [x] The tutorial's section on environments.",
+    "- [ ] The website's pages on environments (the website is a Nuclear project of its own: `website/`)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/021-environments/tasks.md#phase-2-simulation-later",
+   "type": "spec",
+   "title": "Spec 021: Environments — Tasks — Phase 2: simulation (later)",
+   "summary": "Phase 2: simulation (later)",
+   "body": "- [ ] `nuclear run --env <name> --simulate`.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/021-environments/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.096416",
    "type": "readme",
    "title": "Specs of the platform",
@@ -9170,14 +9670,14 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.a13e0f",
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.7625db",
    "type": "readme",
    "title": "Specs of the platform",
    "summary": "Specs of the platform",
    "body": [
-    "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
-    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |",
-    "| [018-failure-matrix](018-failure-matrix/requirements.md) | Every machine, every state, fail-safe: the cases where NuclearLang can fail (systems, architectures, toolchains, editors, versions and upgrades, the user's choices, ports, our services, the LSP, permissions), each with its expected behaviour, its state and its test | draft (phase 1 half done: the update, the installers' choices and lock, sudo, the extension without NuclearLang) |"
+    "| [019-launch-and-growth](019-launch-and-growth/requirements.md) | **High priority.** Found by people, search engines and AI agents: the website readable without JavaScript, GEO, the MCP and package registries, the repository and organization ready, content, the launch as news, the community, open source, the names | in progress (phase 2 started) |",
+    "| [020-benchmark](020-benchmark/requirements.md) | **High priority.** Does Nuclear make cheap models build better software for less? Eight hard apps, Claude Code (Sonnet, Haiku), OpenCode (DeepSeek, flash), Cursor (Grok, Composer), with and without Nuclear, hidden tests, published | approved |",
+    "| [021-environments](021-environments/requirements.md) | **High priority.** Environments in every platform, like dotenv: `env(\"NAME\", \"default\")` declares, `.env` files and the keyring hold the values, `--env <name>` picks one, web and mobile get them at build, `nuclear env` and the editor's Environments page edit them; ready for simulating an environment locally | in progress |"
    ],
    "agents": false,
    "sources": [
@@ -9190,13 +9690,14 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.b0f23d",
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.a13e0f",
    "type": "readme",
    "title": "Specs of the platform",
    "summary": "Specs of the platform",
    "body": [
-    "| [019-launch-and-growth](019-launch-and-growth/requirements.md) | **High priority.** Found by people, search engines and AI agents: the website readable without JavaScript, GEO, the MCP and package registries, the repository and organization ready, content, the launch as news, the community, open source, the names | in progress (phase 2 started) |",
-    "| [020-benchmark](020-benchmark/requirements.md) | **High priority.** Does Nuclear make cheap models build better software for less? Eight hard apps, Claude Code (Sonnet, Haiku), OpenCode (DeepSeek, flash), Cursor (Grok, Composer), with and without Nuclear, hidden tests, published | approved |"
+    "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
+    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |",
+    "| [018-failure-matrix](018-failure-matrix/requirements.md) | Every machine, every state, fail-safe: the cases where NuclearLang can fail (systems, architectures, toolchains, editors, versions and upgrades, the user's choices, ports, our services, the LSP, permissions), each with its expected behaviour, its state and its test | draft (phase 1 half done: the update, the installers' choices and lock, sudo, the extension without NuclearLang) |"
    ],
    "agents": false,
    "sources": [

@@ -1108,6 +1108,36 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#environments-development-staging-production",
+   "type": "readme",
+   "title": "Synapsis: three platforms, one code per platform — Environments: development, staging, production",
+   "summary": "Every `env(\"NAME\", \"default\")` of a project's code is one of its variables (`env(\"NAME\")`: required), on every platform; the compiler lists them in the contract.",
+   "body": [
+    "Every `env(\"NAME\", \"default\")` of a project's code is one of its variables (`env(\"NAME\")`: required), on every",
+    "platform; the compiler lists them in the contract. Their values are dotenv files beside `config.nuc` (`.env`,",
+    "`.env.staging`, and `.local` versions for this machine, ignored by git) and secrets in the system's keyring; the real",
+    "process environment wins over all. A backend reads them at run time; a web or mobile app gets the values its code",
+    "reads when it is built, and a secret never reaches it (ADR-platform-0012, spec 021).",
+    "",
+    "```sh",
+    "nuclear env list                                       # every variable × every environment, missing ones marked",
+    "nuclear env set API_URL https://api.staging.example --env staging",
+    "nuclear env set TASKS_TOKEN --secret --env production  # the value from stdin, into the keyring, never printed",
+    "nuclear env use staging                                # the active environment of the project",
+    "nuclear run --env staging                              # refuses while a required variable has no value",
+    "nuclear build --env production                         # backend: build/.env; web, mobile: the values inside the build",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#generators-the-finished-code-of-a-resource",
    "type": "readme",
    "title": "Synapsis: three platforms, one code per platform — Generators: the finished code of a resource",
@@ -2476,7 +2506,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.48cdac",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.17e620",
    "type": "guide",
    "title": "Tutorial: a Flutter app from scratch with Synapsis — 5. Check, test and run",
    "summary": "inside the terminal, with mouse and keyboard (`?` shows the keys).",
@@ -2485,7 +2515,15 @@
     "- **Synapsis device (VS Code):** choose \"Synapsis device\" in the device picker (it comes with the extension;",
     "  the first time it asks for *Reload Window*) and the app runs inside VS Code, on an emulated iPhone, Pixel, iPad",
     "  or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real",
-    "  device."
+    "  device.",
+    "",
+    "- **Environments:** `env(\"API_URL\", \"https://dev.example/api/\")` reads a variable (without a default it is",
+    "  required). Its values live beside `config.nuc`: `.env` for every environment, `.env.staging` for one, and",
+    "  `.env.local` / `.env.staging.local` (ignored by git) for this machine; a secret goes to the system's keyring with",
+    "  `nuclear env set TOKEN --secret --env production`. `nuclear run --env staging` or `nuclear build --env production`",
+    "  picks one (a web or mobile app gets the values when it is built; a secret never reaches it). `nuclear env list`",
+    "  shows every variable by environment; in VS Code the **Environments** page (`Ctrl+Alt+Y`) edits them without",
+    "  opening a file."
    ],
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/tutorial.md"

@@ -18723,7 +18723,26 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.0b0d36",
+   "type": "doc",
+   "title": "NuclearLang — 3. Look up instead of guessing",
+   "summary": "`nuclear env list` (the MCP tool `nuclear_env`).",
+   "body": [
+    "`nuclear env list` (the MCP tool `nuclear_env`). A secret is set by the user (`nuclear env set NAME --secret`): never",
+    "  ask for it, never write it into a file or a `.nuc`.",
+    "- A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line)."
+   ],
+   "sources": [
+    "tools/cli/agent-files/skills/nuclear/SKILL.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.98ac4f",
    "type": "doc",
    "title": "NuclearLang — 3. Look up instead of guessing",
    "summary": "`nuclear defs show <Name> --dialect flutter` (or `<Name.member>`); `nuclear defs search <text> --dialect flutter`.",
@@ -18738,7 +18757,8 @@
     "- A kind, decorator or header word of the dialect (what it generates, its rules, an example):",
     "  `nuclear help <word> --dialect <d>` (`repository`, `@screen`...); every word: `nuclear help words --dialect <d>`; where a kind's file goes: `nuclear help layout --dialect <d>`.",
     "- A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `synapsis`, `tutorial`...).",
-    "- A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line)."
+    "- A setting that changes per environment (an url, a model, a token): `env(\"NAME\", \"default\")` in the code (`env(\"NAME\")`",
+    "  is required), never a constant to edit; its values with `nuclear env set NAME value --env <environment>` and"
    ],
    "sources": [
     "tools/cli/agent-files/skills/nuclear/SKILL.md"
@@ -19691,7 +19711,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.9b0e36",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
@@ -19708,6 +19728,21 @@
     "| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |",
     "| `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `migrate`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |"
    ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.bae693",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — The compiler and the command line",
+   "summary": "The compiler and the command line",
+   "body": "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |",
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
    ],

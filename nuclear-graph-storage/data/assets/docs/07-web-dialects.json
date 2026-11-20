@@ -184,6 +184,107 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.108f57",
+   "type": "spec",
+   "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
+   "summary": "created(): Stream<TaskCreated> { return this.stream('tasks.created', (data) => data as TaskCreated); } }",
+   "body": [
+    "created(): Stream<TaskCreated> {",
+    "    return this.stream('tasks.created', (data) => data as TaskCreated);",
+    "  }",
+    "}",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/react.md"
+   ],
+   "meta": {
+    "section": "07-web-dialects",
+    "repo": "nuclearlang",
+    "dialect": "react"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.75291c",
+   "type": "spec",
+   "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
+   "summary": "export class ProjectConfig extends AppConfig { override readonly connections: Connection[] = [new Http({ baseUrl: env('API_URL', 'http://localhost:8000/'), timeout: 5000 })]; } `src/nuclear_env.ts` of a build whose `.env.staging` has `API_URL=https://staging.example/api/`: const values:…",
+   "body": [
+    "```typescript",
+    "export class ProjectConfig extends AppConfig {",
+    "  override readonly connections: Connection[] = [new Http({ baseUrl: env('API_URL', 'http://localhost:8000/'), timeout: 5000 })];",
+    "}",
+    "```",
+    "",
+    "`src/nuclear_env.ts` of a build whose `.env.staging` has `API_URL=https://staging.example/api/`:",
+    "",
+    "```text",
+    "const values: Record<string, string> = {",
+    "  \"API_URL\": \"https://staging.example/api/\",",
+    "};",
+    "",
+    "export function env(name: string, fallback: string = ''): string {",
+    "  return values[name] ?? fallback;",
+    "}",
+    "```",
+    "",
+    "Real time (ADR-synapsis-0008): the connection is a `WebSocket`; what the server pushes is a repository method with",
+    "`@on`, passed on by a use case and listened to by a state manager:",
+    "",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [WebSocket(url = \"ws://localhost:3000/ws\", timeout = 5000)]",
+    "",
+    "```",
+    "",
+    "```typescript",
+    "export class ProjectConfig extends AppConfig {",
+    "  override readonly connections: Connection[] = [new WebSocket({ url: 'ws://localhost:3000/ws', timeout: 5000 })];",
+    "}",
+    "```",
+    "",
+    "```nuclear",
+    "TaskCreated",
+    "  id: int",
+    "  title: string",
+    "",
+    "@repository(path = \"tasks\")",
+    "repository TaskRepository",
+    "  @on(\"tasks.created\")",
+    "  created() Stream<TaskCreated>",
+    "```",
+    "",
+    "```typescript",
+    "import { Repository, Stream } from 'synapsis-web';",
+    "",
+    "export interface TaskCreated {",
+    "  id: number;",
+    "  title: string;",
+    "}",
+    "",
+    "export class TaskRepository extends Repository {",
+    "  constructor() {",
+    "    super({ path: 'tasks' });",
+    "  }"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/react.md"
+   ],
+   "meta": {
+    "section": "07-web-dialects",
+    "repo": "nuclearlang",
+    "dialect": "react"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.9986e2",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
@@ -276,7 +377,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.b828dd",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.c77f50",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
    "summary": "import { AppEvent, Json } from 'synapsis-web'; export class Pinged extends AppEvent { readonly n: number; constructor(init: { n: number }) { super(); this.n = init.n; } static fromJson(json: Json): Pinged { return new Pinged({ n: json['n'] as number, }); } get eventName(): string { return…",
@@ -314,68 +415,14 @@
     "component with its repository, use cases, facade, state, list and detail screens, a global component, an event, a",
     "guard and four tests (`tools/react-check/check.sh`: tsc --strict 0 errors, 4 tests, vite build).",
     "",
-    "Real time (ADR-synapsis-0008): the connection is a `WebSocket`; what the server pushes is a repository method with",
-    "`@on`, passed on by a use case and listened to by a state manager:",
+    "Environment variables (spec 021): `env(\"NAME\", \"default\")` reads a variable of the environment the app is built",
+    "for; `env(\"NAME\")` is required. The value is a constant of the build: `nuclear build --env staging` writes",
+    "`src/nuclear_env.ts` (the values the code reads, never a secret) and `env()` is its function, imported where it is",
+    "used.",
     "",
     "```nuclear",
     "appConfig ProjectConfig",
-    "  connections: Connection[] = [WebSocket(url = \"ws://localhost:3000/ws\", timeout = 5000)]",
-    "",
-    "```",
-    "",
-    "```typescript",
-    "export class ProjectConfig extends AppConfig {",
-    "  override readonly connections: Connection[] = [new WebSocket({ url: 'ws://localhost:3000/ws', timeout: 5000 })];",
-    "}",
-    "```",
-    "",
-    "```nuclear",
-    "TaskCreated",
-    "  id: int",
-    "  title: string"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/react.md"
-   ],
-   "meta": {
-    "section": "07-web-dialects",
-    "repo": "nuclearlang",
-    "dialect": "react"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.d57159",
-   "type": "spec",
-   "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
-   "summary": "@repository(path = \"tasks\") repository TaskRepository @on(\"tasks.created\") created() Stream<TaskCreated> import { Repository, Stream } from 'synapsis-web'; export interface TaskCreated { id: number; title: string; } export class TaskRepository extends Repository { constructor() { super({ path:…",
-   "body": [
-    "@repository(path = \"tasks\")",
-    "repository TaskRepository",
-    "  @on(\"tasks.created\")",
-    "  created() Stream<TaskCreated>",
-    "```",
-    "",
-    "```typescript",
-    "import { Repository, Stream } from 'synapsis-web';",
-    "",
-    "export interface TaskCreated {",
-    "  id: number;",
-    "  title: string;",
-    "}",
-    "",
-    "export class TaskRepository extends Repository {",
-    "  constructor() {",
-    "    super({ path: 'tasks' });",
-    "  }",
-    "",
-    "  created(): Stream<TaskCreated> {",
-    "    return this.stream('tasks.created', (data) => data as TaskCreated);",
-    "  }",
-    "}",
+    "  connections: Connection[] = [Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"), timeout = 5000)]",
     "```"
    ],
    "platforms": [
