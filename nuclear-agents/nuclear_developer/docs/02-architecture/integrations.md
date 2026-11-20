@@ -8,7 +8,10 @@ related: [overview.md, strategies.md, ../06-runbooks/run.md]
 
 ## The HTTP API
 
-On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.
+On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`. A request with an `Origin` (a web
+page, a DNS rebinding) is refused with `403` before any agent runs (the guard `NoOrigin`, spec 018 M9); the editor,
+the MCP server and the tools of this machine send none. There is no token yet: another user of the same machine can
+still call it (spec 018 M9, the next step).
 
 | Route | Request | Answer |
 |---|---|---|

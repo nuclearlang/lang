@@ -187,7 +187,7 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 | M6 | Config values (`app(description = ...)`) pasted raw into JSON, TOML, HTML and YAML | escaped for the target format | handled (filters `json`/`toml`/`html`, the pubspec; tried on the three backends and web) |
 | M7 | `nuclear make` / `gen` names with `/` or `..` write outside the project | refused before anything is written (`scaffold::inside`, every generator) | handled (test) |
 | M8 | Deep nesting (2,000 parentheses) overflows the parser's stack: `nuclear check` and the LSP abort | N0023 past 200 levels | handled (test on a 2 MB stack) |
-| M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | **gap** |
+| M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | partly (`Origin` refused with a test, live on this machine; the token and `Host` left) |
 | M10 | The checksum comes from the same release as the archive; nothing is signed | a signature verified with a key in the installer | **gap** |
 | M11 | `nuclear update` pipes the site's installer into a shell | the installer of the release, verified; PowerShell by its full path | **gap** |
 | M12 | CI actions pinned by tag | pinned by commit | gap (low) |

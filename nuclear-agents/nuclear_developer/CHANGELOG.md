@@ -2,6 +2,7 @@
 
 ## Unreleased (2026-11-18)
 
+- A request with an `Origin` (a web page, a DNS rebinding) is refused with 403 before any agent runs (spec 018 M9).
 - 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.
 - Every answer says the tokens its models used (`usage: {inTokens, outTokens, model}`, Ollama's `prompt_eval_count`
   and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's

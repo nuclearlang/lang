@@ -4,9 +4,12 @@
 // The chat answers with one small model of its own (CHAT_MODEL), a small window (CHAT_CONTEXT_TOKENS) and no
 // thinking, an answer of 1024 tokens at most (a small model may never stop), and Ollama frees it CHAT_KEEP_ALIVE
 // after the last message: a chat never holds the factory's models.
+// The guard: no web page (a request with an `Origin`, as a page of another site or a DNS rebinding sends): only the
+// editor, the MCP server and the tools on this machine reach the agents (spec 018 M9; a token is the next step).
 appConfig ProjectConfig
   connections: Connection[] = [
     Ollama(model = env("CODER_MODEL", "qwen2.5-coder:3b"), name = "coder", baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CONTEXT_TOKENS", "8192").toInt() ?? 8192),
     Ollama(model = env("ASSISTANT_MODEL", "gemma4:e2b"), baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CONTEXT_TOKENS", "8192").toInt() ?? 8192),
     Ollama(model = env("CHAT_MODEL", "qwen3.5:2b"), name = "chat", baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CHAT_CONTEXT_TOKENS", "4096").toInt() ?? 4096, keepAlive = env("CHAT_KEEP_ALIVE", "3m"), numPredict = 1024, reasoning = false),
   ]
+  guards: Guard[] = [NoOrigin()]

@@ -1,0 +1,8 @@
+// Spec 018 M9: a web page (a request with an `Origin`, as another site or a DNS rebinding sends) never reaches the
+// agents; the tools of this machine send none.
+tests GuardTests
+  @test("a request with an Origin is refused before any agent runs")
+  noWebPage() void
+    app = appClient()
+    refused = ~app.post("/developer/chat", body = { "message": "hello" }, headers = { "Origin": "https://example.com" })
+    expect(refused.status == 403)
