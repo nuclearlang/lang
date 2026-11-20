@@ -1,0 +1,20 @@
+name: New dialect or target
+description: Propose a new target language or framework (Kotlin, Swift, Go, Django...)
+labels: [dialect]
+body:
+  - type: input
+    id: target
+    attributes:
+      label: Target language and framework
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why, and who would use it
+  - type: checkboxes
+    id: own
+    attributes:
+      label: Ownership
+      options:
+        - label: "I would like to build and maintain it (dialects are TOML and templates, see nuclearlang/dialects/README.md)"

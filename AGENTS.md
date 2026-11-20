@@ -104,6 +104,11 @@ A project's own commands are in its `AGENTS.md`.
 
 ## In progress
 
+**High priority**: the launch and growth of NuclearLang (website readable by search engines and AI agents, registries,
+repository, community, the launch as news:
+[docs/04-specs/019-launch-and-growth/tasks.md](docs/04-specs/019-launch-and-growth/tasks.md)) and the public benchmark
+that proves its value with cheap models ([docs/04-specs/020-benchmark/tasks.md](docs/04-specs/020-benchmark/tasks.md)).
+
 The AI services ready to run from the installer, with nothing on the machine: their own Python and the set-up in
 Nuclear are done; Nuclear Builder's engine in Nuclear and the welcome page for Ollama and the models are left
 ([docs/04-specs/009-self-contained-ai-services/tasks.md](docs/04-specs/009-self-contained-ai-services/tasks.md)).

@@ -26,4 +26,19 @@ The checks of the project you touch are in its `AGENTS.md`.
   its `docs/` for agents and contributors ([docs/05-standards/coding.md](docs/05-standards/coding.md)).
 - The rules are in [AGENTS.md](AGENTS.md); the reasons behind them, in each project's `docs/03-adr/`.
 
+## Sign off your commits (DCO)
+
+Each commit carries `Signed-off-by: Your Name <you@example.com>` (`git commit -s`): you certify the
+[Developer Certificate of Origin](https://developercertificate.org), that you wrote the change or have the right to
+submit it. No CLA.
+
+Changes written with an AI agent are welcome under the same review: you answer for them.
+
+## Where to start
+
+Issues labelled [`good first issue`](https://github.com/nuclearlang/lang/labels/good%20first%20issue); a dialect
+(TOML and templates, no compiler code: [nuclearlang/dialects/README.md](nuclearlang/dialects/README.md)); examples;
+type definitions; translations. Questions: [Discussions](https://github.com/nuclearlang/lang/discussions). How
+decisions are made: [GOVERNANCE.md](GOVERNANCE.md). Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE).

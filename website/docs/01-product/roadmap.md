@@ -31,6 +31,14 @@ compiler (an arrow passed where a `void` callback is expected passes `nuclear ch
 
 ## Pending
 
+- **Search engines and AI crawlers see almost nothing** (found 2026-11-20). Every route but `/` answers HTTP 404 on
+  GitHub Pages (its 404 page loads the app, so a browser shows it): the 113 other URLs of `sitemap.xml` are not
+  indexed. And `/` is an empty `<div id="root">` filled by JavaScript, which GPTBot, ClaudeBot and PerplexityBot do
+  not run. Left: the web platform's build writes a rendered HTML per route (`<route>/index.html`: content, its own
+  title, description, Open Graph and `SoftwareApplication` JSON-LD), so each page answers 200 with its text, a
+  capability of the platform (a spec first), not a patch of this site; `robots.txt` naming the AI crawlers
+  ([spec 019](../../../docs/04-specs/019-launch-and-growth/tasks.md), phase 1: high priority).
+
 - **Example apps for the agent onboarding.** Its prompts (`[[onboarding]] prompts`: a todos API, an orders API, an AI
   agent endpoint, a notes app, a chat with Genkit...) have no app made from them yet, nor a page that shows what an
   agent writes for each. Asked by the user (2026-11-16) for later.

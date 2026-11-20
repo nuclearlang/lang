@@ -1,0 +1,16 @@
+name: Feature or improvement
+description: Something Nuclear, a platform or a tool should do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were trying to do, and what stopped you.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+      description: For a change to the base language or a platform's contract, an RFC is needed (GOVERNANCE.md).
