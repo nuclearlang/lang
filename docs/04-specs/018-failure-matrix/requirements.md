@@ -161,7 +161,7 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 
 | ID | Case | Expected | State |
 |---|---|---|---|
-| K1 | CPU at 100 % (a build, a game) | the set-up and the knowledge base load run at low priority (`nice`/`ionice`, a lower Windows priority) and never freeze the desktop | gap |
+| K1 | CPU at 100 % (a build, a game) | the set-up and the knowledge base load run at low priority (`nice`/`ionice`, a lower Windows priority) and never freeze the desktop | written (the installers run the set-up at `nice 10` / `ionice` best-effort 7, Windows below normal; not measured on a busy machine) |
 | K2 | Memory almost full | the services' memory is bounded; a model that does not fit is said, not swapped | verify |
 | K3 | The disk busy (another big copy) | downloads and the load go on, slower, without timeouts that break the step | verify |
 | K4 | Ollama already busy with another model | said, the user's models untouched | verify |

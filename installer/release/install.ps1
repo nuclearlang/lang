@@ -377,6 +377,9 @@ if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
   }
 }
 if (-not $NoAi) {
+  # the set-up's heavy part (the knowledge base's first load, the models) below normal priority, inherited by its
+  # processes: a busy machine stays usable, the set-up only goes slower (spec 018 K1)
+  try { (Get-Process -Id $PID).PriorityClass = 'BelowNormal' } catch { }
   if (-not (Test-Path $Builder)) {
     $AiNote = 'The AI archive has no set-up: run this installer again (-Reinstall).'
   } elseif ($AiProfile) {

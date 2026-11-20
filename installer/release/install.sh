@@ -594,16 +594,23 @@ if [ "$AI" = 1 ]; then
 fi
 # the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
 builder="$INSTALL/ai/bin/nuclear-builder"
+# its heavy part (the knowledge base's first load, the models) at a low priority: a busy machine stays usable, the
+# set-up only goes slower (spec 018 K1); best effort, never idle, so a busy disk does not stop it
+gently() {
+  if command -v ionice >/dev/null 2>&1; then nice -n 10 ionice -c 2 -n 7 "$@"
+  elif command -v nice >/dev/null 2>&1; then nice -n 10 "$@"
+  else "$@"; fi
+}
 if [ "$AI" = 1 ]; then
   if [ ! -x "$builder" ]; then
     ai_note="The AI archive has no set-up: run this installer again."
   elif [ -n "$PROFILE" ]; then
     section "Set-up · profile $PROFILE"
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
+    gently env NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
       || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   elif [ "$tty" = 1 ]; then
     section "Set-up"
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
+    gently env NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
       || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   else
     ai_note="The Smart Graph and the MCP server are not set up: run \`nuclear-builder setup --profile remote --yes\`."

@@ -5,6 +5,8 @@
 #   installer/tests/run.sh            every case, one after the other
 #   installer/tests/run.sh E4 D2      only those
 #
+# PS1 parses install.ps1 in a PowerShell container (one at a time, 1 CPU, 1 GB: this machine has limits).
+#
 # Never the real HOME: every test runs in a new empty folder with HOME and every XDG folder inside it, and the AI
 # services are skipped (--no-ai), so nothing is registered at login and no port is taken.
 set -u
@@ -109,7 +111,15 @@ D13() {  # uninstall, then install again
   check 'nuclear_runs' "and a new install works"
 }
 
-ALL="D1 D2 E4 LOCK I1 D6 D7 D13"
+PS1() {  # install.ps1 parses (PowerShell in one small container; skipped without Docker)
+  machine PS1
+  if ! command -v docker >/dev/null 2>&1; then echo "  - PS1 skipped (no docker)"; return; fi
+  docker run --rm --memory 1g --cpus 1 -v "$ROOT/installer/release:/r:ro" mcr.microsoft.com/powershell:lts-alpine-3.20 \
+    pwsh -NoProfile -Command '$e=$null; $t=$null; [void][System.Management.Automation.Language.Parser]::ParseFile("/r/install.ps1",[ref]$t,[ref]$e); $e | % { "$($_.Extent.StartLineNumber): $($_.Message)" }; exit $e.Count' > "$H/out" 2>&1; code=$?
+  check '[ "$code" = 0 ]' "install.ps1 has no syntax errors"
+}
+
+ALL="D1 D2 E4 LOCK I1 D6 D7 D13 PS1"
 for CASE in ${*:-$ALL}; do
   echo "$CASE"
   "$CASE"

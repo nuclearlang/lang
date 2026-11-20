@@ -49,7 +49,7 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 - `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).
 - `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.
 - `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive
-  `package.sh` wrote; never the real `HOME`, never the AI services.
+  `package.sh` wrote; never the real `HOME`, never the AI services; `PS1` parses `install.ps1` in a PowerShell container.
 - `dist/`: what `package.sh` writes (ignored by git).
 - `docs/`: this project's documents (the table below).
 
