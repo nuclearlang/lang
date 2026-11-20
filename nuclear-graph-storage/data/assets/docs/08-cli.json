@@ -2436,6 +2436,27 @@
    }
   },
   {
+   "id": "doc:tools/cli/CHANGELOG.md#0-80-0",
+   "type": "changelog",
+   "title": "Changelog — 0.80.0",
+   "summary": "services included).",
+   "body": [
+    "- The platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them (`installer/release/version.sh`).",
+    "- `nuclear update`: installs the latest release (the public installer run again for this installation, the AI",
+    "  services included). In a terminal, every command asks `Update now? [Y/n]` when a newer release is out; the check",
+    "  runs in the background once a day, never in editors, agents, pipes or CI (`NUCLEAR_NO_UPDATE_CHECK=1` turns it",
+    "  off), and a build from source is never updated (`update.rs`)."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/CHANGELOG.md#changelog",
    "type": "changelog",
    "title": "Changelog",
@@ -2481,27 +2502,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- `nuclear gen resource` on a resource that exists finishes what it adds: a new action also gets the repository's method and the controller's route (it left a use case calling a method nobody had). `--source db --actions search` is refused: which column is searched is a decision (a query of the repository, wired with `gen usecase --calls`). ADR-developer-0001.",
-   "sources": [
-    "tools/cli/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.a9b960",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "services included).",
-   "body": [
-    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them (`installer/release/version.sh`).",
-    "- `nuclear update`: installs the latest release (the public installer run again for this installation, the AI",
-    "  services included). In a terminal, every command asks `Update now? [Y/n]` when a newer release is out; the check",
-    "  runs in the background once a day, never in editors, agents, pipes or CI (`NUCLEAR_NO_UPDATE_CHECK=1` turns it",
-    "  off), and a build from source is never updated (`update.rs`)."
-   ],
    "sources": [
     "tools/cli/CHANGELOG.md"
    ],

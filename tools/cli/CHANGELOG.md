@@ -2,13 +2,15 @@
 
 All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.80.0
 
-- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them (`installer/release/version.sh`).
+- The platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them (`installer/release/version.sh`).
 - `nuclear update`: installs the latest release (the public installer run again for this installation, the AI
   services included). In a terminal, every command asks `Update now? [Y/n]` when a newer release is out; the check
   runs in the background once a day, never in editors, agents, pipes or CI (`NUCLEAR_NO_UPDATE_CHECK=1` turns it
   off), and a build from source is never updated (`update.rs`).
+
+## Unreleased
 
 - `nuclear add <package>[@version]... [--module <m>]` and `nuclear remove <package>...` on every platform
   (ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in
