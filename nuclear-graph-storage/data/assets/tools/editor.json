@@ -8,13 +8,14 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 80 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 81 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
     "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
     "- %command.nuclear.workspace.action% (`nuclear.workspace.action`)",
     "- %command.nuclear.workspace.addToVsCode% (`nuclear.workspace.addToVsCode`)",
     "- %command.nuclear.workspace.welcome% — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
+    "- %command.nuclear.update% (`nuclear.update`)",
     "- %command.nuclear.ai.setup% (`nuclear.ai.setup`)",
     "- %command.nuclear.builder.teams% (`nuclear.builder.teams`)",
     "- %command.nuclear.builder.reports% (`nuclear.builder.reports`)",
@@ -129,6 +130,11 @@
       "title": "%command.nuclear.workspace.welcome%",
       "command": "nuclear.workspace.welcome",
       "keys": "ctrl+alt+w"
+     },
+     {
+      "title": "%command.nuclear.update%",
+      "command": "nuclear.update",
+      "keys": ""
      },
      {
       "title": "%command.nuclear.ai.setup%",

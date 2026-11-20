@@ -3765,7 +3765,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-roles-roles-nuc.995ffd",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-roles-roles-nuc.3d8ae0",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The roles (`roles.nuc`)",
    "summary": "`quality`, `delivery`; `STATION_ROLE` says who works each one when a `role.md` does not (the `delivery` station: `devops`).",
@@ -3778,10 +3778,10 @@
     "  not rewritten), `--role` and `--assign` of a command and a tool's `role`; the alias is taken for one release more.",
     "- `rolesDir()`: `NUCLEAR_ROLES`, else `roles/` beside the package, else the AI installation's",
     "  `nuclear-agents/roles`, else the working tree's. `roster(role, lang)`: `roster/<lang>.json`, English when the",
-    "  language is missing, `[]` when the role has no roster: never an error. Each employee whose portrait is there",
+    "  language is missing, `[]` when the role has no roster: never an error (the wizard's roster step, with every role",
+    "  empty, says the installation came without one and to run the installer again; the AI archive carries them). Each employee whose portrait is there",
     "  (`roster/faces/<id>.webp`, a painted portrait of 512 px, spec 011 requirement 27) gets its whole path as `face`, and",
-    "  its thumbnail (`roster/faces/thumb/<id>.webp`, 128 px, a few KB) as `thumb`; each has its `temperament`.",
-    "- `temperaments()`: the list of `temperaments.json` beside the roles (`[{ id, name: { en, es }, description: { en, es }, voice, look }]`,"
+    "  its thumbnail (`roster/faces/thumb/<id>.webp`, 128 px, a few KB) as `thumb`; each has its `temperament`."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -3793,11 +3793,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-roles-roles-nuc.d5a61e",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-roles-roles-nuc.5a1164",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The roles (`roles.nuc`)",
    "summary": "requirement 28), `[]` without the folder.",
-   "body": "requirement 28), `[]` without the folder.",
+   "body": [
+    "- `temperaments()`: the list of `temperaments.json` beside the roles (`[{ id, name: { en, es }, description: { en, es }, voice, look }]`,",
+    "  requirement 28), `[]` without the folder."
+   ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
    ],

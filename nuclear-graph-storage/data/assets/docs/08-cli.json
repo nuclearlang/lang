@@ -1296,21 +1296,12 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.8f89dc",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.b3f7d1",
    "type": "context",
    "title": "The installers: overview — The release",
-   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the services print reaches a pipe whole on Windows and under a C locale), and the knowledge base.",
+   "summary": "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so.",
    "body": [
-    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the",
-    "  services print reaches a pipe whole on Windows and under a C locale), and the knowledge base. Before packing it fails if a `.pth` points into the",
-    "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it",
-    "  (`installer/install.sh --ai`).",
-    "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
-    "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
-    "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
-    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
-    "  system (Linux x86_64 and arm64, macOS Apple silicon, Windows x86_64), so each AI archive is tried where it",
-    "  runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,",
+    "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,",
     "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
     "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
    ],
@@ -1341,6 +1332,33 @@
     "  installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
     "  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,",
     "  `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to"
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.d0b5db",
+   "type": "context",
+   "title": "The installers: overview — The release",
+   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the services print reaches a pipe whole on Windows and under a C locale), and the knowledge base; and `ai/nuclear-agents/{roles,skills,agents}`, the software factory's rosters with their…",
+   "body": [
+    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the",
+    "  services print reaches a pipe whole on Windows and under a C locale), and the knowledge base; and `ai/nuclear-agents/{roles,skills,agents}`, the software factory's rosters with",
+    "  their portraits, temperaments and team names and the library of skills and agents, which Nuclear Builder reads",
+    "  (the archive is refused when `nuclear-builder team screen`, run from it, finds no roster, library or portraits). Before packing it fails if a `.pth` points into the",
+    "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it",
+    "  (`installer/install.sh --ai`).",
+    "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
+    "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
+    "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
+    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
+    "  system (Linux x86_64 and arm64, macOS Apple silicon, Windows x86_64), so each AI archive is tried where it"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"

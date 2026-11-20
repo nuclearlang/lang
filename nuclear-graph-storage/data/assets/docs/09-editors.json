@@ -1345,29 +1345,6 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.1d7853",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
-    "",
-    "- 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).",
-    "",
-    "- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).",
-    "",
-    "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build)."
-   ],
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.2775de",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -1420,6 +1397,31 @@
     "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
     "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
     "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.4ccf78",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.81.0 (fix): HTTP Connections keeps the fields of `.nuclear/http.json` it does not know (the variables by project and component VS Code writes) when it selects an environment or adds an OpenAPI document or a socket url; the teams' members and skills come with the installer.",
+    "",
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
+    "",
+    "- 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).",
+    "",
+    "- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).",
+    "",
+    "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build)."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -2568,7 +2570,9 @@
     "  (spec 011, settings by component).",
     "- Its texts are in English and Spanish in `src/l10n.ts` (a dictionary of `extensions/vscode/src/i18n.ts`), for the Synapsis device (`mobile-device.ts`) and the web device (`web-device.ts`); device names, Hot Reload / Hot Restart and network presets stay as they are.",
     "  The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. A change",
-    "  of language reaches a device's page when it opens next: re-rendering it would cut its live screen."
+    "  of language reaches a device's page when it opens next: re-rendering it would cut its live screen.",
+    "- Both devices' pages carry the floating update button of every NuclearLang page (`withUpdateButton`,",
+    "  `extensions/vscode/src/updateCheck.ts`)."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md"
@@ -3067,13 +3071,18 @@
    "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#rules",
    "type": "readme",
    "title": "HTTP Connections (`nuclear-http-connections`) — Rules",
-   "summary": "too, and closes with its tab.",
+   "summary": "over environment.",
    "body": [
     "- The endpoints come from `.nuclear/contract.json`, never from reading the project's code.",
     "- The tree in VS Code is drawn by the workspace's webview, with the `nuclearHttpConnections.*` colors of the theme.",
     "- A component is an editor tab and each endpoint a tab inside it: the tab bar never fills with requests.",
-    "- A request is sent by the extension host, not by the webview; `{{var}}` is resolved there. A socket is the host's",
-    "  too, and closes with its tab.",
+    "- A request is sent by the extension host, not by the webview; `{{var}}` is resolved there, component over project",
+    "  over environment. A socket is the host's too, and closes with its tab. The webview never writes a file: the host",
+    "  writes `http.json`.",
+    "- `http.json` of every earlier version loads unchanged: a field this version added is optional, and an empty one is",
+    "  not written back.",
+    "- The page's colors are theme colors (`nuclearHttpConnections.*`, generated by `vscode/theme/build.mjs`); a response",
+    "  is only ever set as text, and its HTML preview is a sandboxed `srcdoc` without scripts.",
     "- The contract is read tolerantly: a field this tool does not find means HTTP only, never an error.",
     "- The decisions: ADR-extensions-0002 (the workspace), ADR-synapsis-0006 (the contract), ADR-synapsis-0007 (the guards)",
     "  and ADR-synapsis-0008 (the WebSocket and its frames)."
@@ -3107,26 +3116,60 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#where-the-code-is",
+   "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#where-the-code-is.21602e",
+   "type": "readme",
+   "title": "HTTP Connections (`nuclear-http-connections`) — Where the code is",
+   "summary": "`extensions/vscode/src/connections.ts` is not part of this tool: it checks the connections of the AI services and stays with the settings page.",
+   "body": [
+    "| `jetbrains/src/dev/nuclearlang/editor/HttpConnections.java` | the *HTTP Connections* tool window, in Swing, with its socket panel |",
+    "",
+    "`extensions/vscode/src/connections.ts` is not part of this tool: it checks the connections of the AI services and",
+    "stays with [the settings page](../../vscode/docs/02-architecture/ai-services.md)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#where-the-code-is.8e2f4a",
+   "type": "readme",
+   "title": "HTTP Connections (`nuclear-http-connections`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| File | What it is |",
+    "|---|---|",
+    "| `src/httpConnections.ts` | `HttpModel`: the projects, the tree, the environments, the commands |",
+    "| `src/panel.ts` | `ComponentPanel`: one editor tab per component, one inner tab per endpoint; the host (send, auth, OAuth token, the variables a response gives) and the page's HTML and style |",
+    "| `src/requestScript.ts` | the request page's script, inlined by its source: header rows, body editor, auth, rules, JSON tree, variables drawer |",
+    "| `src/request.ts` | no `vscode`: `http.json` and its scopes, `{{var}}` by scope, auth, OAuth 2.0 requests, JSON paths, tokens, rules, the page's pure helpers (tokenizers, JSON problems, header rows) |",
+    "| `src/icons.ts` | the page's inline SVG icons (one stroke style, colored by CSS) |",
+    "| `src/socket.ts` | no `vscode`: the contract's WebSocket fields, the urls, the message log and history, `SocketConnection` |",
+    "| `src/socketPanel.ts` | `SocketPanel`: the WebSocket page, one editor tab per component, one inner tab per socket |",
+    "| `src/l10n.ts`, `src/settings.ts` | the pages' texts (`HTTP`, `WS`); the `nuclear.http.*` settings |",
+    "| `test/sockets.test.ts`, `test/request.test.ts` | the tests (`vscode` stubbed by `test/vscode-stub.ts`), with a real echo server; `sockets.test.ts` imports `request.test.ts`, so `npm test` runs both |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/AGENTS.md#where-the-code-is.dbb129",
    "type": "readme",
    "title": "HTTP Connections (`nuclear-http-connections`) — Where the code is",
    "summary": "All of it is in this folder.",
    "body": [
     "All of it is in this folder. The VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`);",
-    "the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin.",
-    "",
-    "| File | What it is |",
-    "|---|---|",
-    "| `src/httpConnections.ts` | `HttpModel`: the projects, the tree, the environments, the commands |",
-    "| `src/panel.ts` | `ComponentPanel`: one editor tab per component, one inner tab per endpoint |",
-    "| `src/socket.ts` | no `vscode`: the contract's WebSocket fields, the urls, the message log and history, `SocketConnection` |",
-    "| `src/socketPanel.ts` | `SocketPanel`: the WebSocket page, one editor tab per component, one inner tab per socket |",
-    "| `src/l10n.ts`, `src/settings.ts` | the pages' texts (`HTTP`, `WS`); the `nuclear.http.*` settings |",
-    "| `test/sockets.test.ts` | the tests (`vscode` stubbed by `test/vscode-stub.ts`), with a real echo server |",
-    "| `jetbrains/src/dev/nuclearlang/editor/HttpConnections.java` | the *HTTP Connections* tool window, in Swing, with its socket panel |",
-    "",
-    "`extensions/vscode/src/connections.ts` is not part of this tool: it checks the connections of the AI services and",
-    "stays with [the settings page](../../vscode/docs/02-architecture/ai-services.md)."
+    "the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/AGENTS.md"
@@ -3237,21 +3280,96 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#a-component-s-panel-panel-ts",
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#a-component-s-panel-panel-ts-requestscript-ts-request-ts.18c3a4",
    "type": "context",
-   "title": "Architecture of HTTP Connections — A component's panel (`panel.ts`)",
-   "summary": "`ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per endpoint opened from the tree.",
+   "title": "Architecture of HTTP Connections — A component's panel (`panel.ts`, `requestScript.ts`, `request.ts`)",
+   "summary": "Content-Type of the body (`body`) and each scope's headers (`global`, `project`, `component`), merged on every change by `mergeHeaderRows` (a deleted auto row is kept in `removed`, a user row of the same name wins, an edited one stays; *Restore defaults*); Body, a textarea over its highlighted…",
    "body": [
-    "`ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per",
-    "endpoint opened from the tree. Each inner tab keeps its request and its last response:",
+    "- the method, the url with its path and query parameters (a `{{var}}` preview under it), and the request's panes:",
+    "  **Params**; **Headers**, rows `{on, name, value, source?, edited?}`: the auto rows are the guards' (`code`),",
+    "  Content-Type of the body (`body`) and each scope's headers (`global`, `project`, `component`), merged on every",
+    "  change by `mergeHeaderRows` (a deleted auto row is kept in `removed`, a user row of the same name wins, an edited",
+    "  one stays; *Restore defaults*); **Body**, a textarea over its highlighted copy, with the JSON problem's line and",
+    "  column and *Format* (`{{var}}` counts as a value); **Auth** (below); **After response**, the rules",
+    "  `{on, name, from: body|header, path, scope}`;",
+    "- its last response: status badge, time, size, and the views *Pretty* (a JSON tree: open and close, counts, copy a",
+    "  value or its path, *Save as variable…*; HTML and XML highlighted), *Raw*, *Preview* (HTML in an `iframe` with an",
+    "  empty `sandbox` and `srcdoc`) and *Headers*.",
     "",
-    "- the method, the url with its path and query parameters, the headers, the body (with the sample);",
-    "- send: by the extension host with `fetch`, a 30 s timeout, the active environment's variables and headers;",
-    "- the response pretty-printed; *copy as curl*.",
+    "The host:"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#a-component-s-panel-panel-ts-requestscript-ts-request-ts.477ee6",
+   "type": "context",
+   "title": "Architecture of HTTP Connections — A component's panel (`panel.ts`, `requestScript.ts`, `request.ts`)",
+   "summary": "The webview posts its whole state (`tabs`, `active`, `layout`, `split`) on every change and the model keeps it in `memory` by key, so `restore(keys)` rebuilds the panels when the HTTP Connections workspace is entered again (`model.reopen` = the keys open when it was left); a state of an earlier…",
+   "body": [
+    "The webview posts its whole state (`tabs`, `active`, `layout`, `split`) on every change and the model keeps it in",
+    "`memory` by key, so `restore(keys)` rebuilds the panels when the HTTP Connections workspace is entered again",
+    "(`model.reopen` = the keys open when it was left); a state of an earlier version (header pairs) is converted by",
+    "`migrateForm`. The memory lives in the window, not on disk.",
     "",
-    "The webview posts its whole state (`tabs`, `active`) on every change and the model keeps it in `memory` by key, so",
-    "`restore(keys)` rebuilds the panels when the HTTP Connections workspace is entered again (`model.reopen` = the keys open when",
-    "it was left). The memory lives in the window, not on disk."
+    "The layout splits the request and the response side by side, stacked, or automatically (stacked under 860 px), with",
+    "a draggable, keyboard-moved gutter. `Ctrl/Cmd+Enter` sends, `Alt+Shift+F` formats the body, `Escape` closes the",
+    "drawer or the dialog; the tabs move with the arrows. The icons are `icons.ts`'s inline SVG."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#a-component-s-panel-panel-ts-requestscript-ts-request-ts.66384c",
+   "type": "context",
+   "title": "Architecture of HTTP Connections — A component's panel (`panel.ts`, `requestScript.ts`, `request.ts`)",
+   "summary": "`ComponentPanel`: one webview panel per `componentKey(endpoint)` (`<project>::<component>`, which also names the variables' scopes), like a Bruno folder, with an inner tab per endpoint opened from the tree.",
+   "body": [
+    "`ComponentPanel`: one webview panel per `componentKey(endpoint)` (`<project>::<component>`, which also names the",
+    "variables' scopes), like a Bruno folder, with an inner tab per endpoint opened from the tree. The page is plain HTML",
+    "and script with a nonce CSP; its script is `requestScript.ts` and its pure helpers `request.ts`'s, inlined by their",
+    "source (tested as the page runs them). Each inner tab keeps:"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#a-component-s-panel-panel-ts-requestscript-ts-request-ts.db7613",
+   "type": "context",
+   "title": "Architecture of HTTP Connections — A component's panel (`panel.ts`, `requestScript.ts`, `request.ts`)",
+   "summary": "timeout and a cancel; then runs the rules (`runRules`) and, on a 2xx answer, `autoTokenUpdates`: a token field (`access_token`, `accessToken`, `token`, `jwt`, `id_token`, `refresh_token`, a few levels deep) fills each token-like variable the request used (`{{token}}`).",
+   "body": [
+    "- **send**: resolves `{{var}}` by scope, applies the auth (`applyAuth`), `fetch` with the `nuclear.http.timeoutSeconds`",
+    "  timeout and a cancel; then runs the rules (`runRules`) and, on a 2xx answer, `autoTokenUpdates`: a token field",
+    "  (`access_token`, `accessToken`, `token`, `jwt`, `id_token`, `refresh_token`, a few levels deep) fills each token-like",
+    "  variable the request used (`{{token}}`). A variable is written where it is already defined, else in the project",
+    "  scope; the page shows a notice with *Undo* (the previous values travel with it).",
+    "- **Auth**: *Inherit* (the rows as they are), *No auth* (no `Authorization`), *Bearer*, *Basic* (base64 of the",
+    "  resolved user and password), *API key* (header or query), *OAuth 2.0* with the client-credentials and password",
+    "  grants: *Get token* is the host's `fetch` to the token url (`oauthTokenRequest`; the client by a Basic header or in",
+    "  the body), the access token goes into its variable (`accessToken`) and is sent as `Bearer`; the page shows the",
+    "  expiry.",
+    "- **The variables drawer**: the scopes *Environment*, *Project*, *Component*, each with its variables (secret toggle,",
+    "  *overridden by* marks) and headers; each change is an `envEdit` (`editScope`: set, rename, delete, secret) the host",
+    "  writes. The environment is picked in the bar; *Edit http.json* opens the file."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
@@ -3292,7 +3410,9 @@
     "",
     "Verbs and sections use theme colors the extension contributes (`colors` in `package.json`:",
     "`nuclearHttpConnections.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may",
-    "override them; in CSS `var(--vscode-nuclearHttpConnections-get)`). The Chernobyl themes set them from the palette",
+    "override them; in CSS `var(--vscode-nuclearHttpConnections-get)`), and for the pages' code",
+    "`nuclearHttpConnections.jsonKey/jsonString/jsonNumber/jsonBoolean/jsonNull/jsonPunctuation/markupTag/markupAttribute`",
+    "(the page falls back to `--vscode-debugTokenExpression-*` and `--vscode-symbolIcon-*`). The Chernobyl themes set them from the palette",
     "([the theme](../../../../vscode/docs/02-architecture/theme.md))."
    ],
    "sources": [
@@ -3313,7 +3433,7 @@
     "- The settings of HTTP Connections are its own section of the editor's settings, read only through `src/settings.ts`: `nuclear.http.timeoutSeconds`, how long a request waits for its answer (30 s)",
     "  (spec 011, settings by component).",
     "- Its texts are in English and Spanish in `src/l10n.ts` (dictionaries of `extensions/vscode/src/i18n.ts`): `HTTP` for",
-    "  the request page (`panel.ts`), `WS` for the WebSocket page (`socketPanel.ts`); HTTP words (Headers, Body, Path,",
+    "  the request page (`panel.ts`; the host sends it keys, never English sentences), `WS` for the WebSocket page (`socketPanel.ts`); HTTP words (Headers, Body, Path,",
     "  Query) stay as they are. The host's texts (the tree, the log's connection lines) are `l10n.t` of `i18n.ts`, in",
     "  `extensions/vscode/l10n/bundle.l10n.es.json`. The JetBrains window is in English only, like the rest of it.",
     "  The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. Both pages",
@@ -3406,6 +3526,32 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-model-httpconnections-ts.066598",
+   "type": "context",
+   "title": "Architecture of HTTP Connections — The model (`httpConnections.ts`)",
+   "summary": "`projects.<project>.{vars, headers, secrets, components.<component>.{vars, headers, secrets}}` are the scoped variables.",
+   "body": [
+    "`projects.<project>.{vars, headers, secrets, components.<component>.{vars, headers, secrets}}` are the scoped",
+    "  variables. `request.ts` reads it (`normalizeEnvironments`: every missing field empty, so an earlier file loads",
+    "  unchanged) and writes it (`compactEnvironments`: the empty new fields left out); `saveEnvironments` writes and",
+    "  refreshes. `{{var}}` and the headers resolve component > project > environment (`scopedVars`), by the extension",
+    "  host. `secrets` only masks a value in the page. `addSocket` adds a ws:// or wss:// url (or one starting with a",
+    "  `{{var}}`) to `sockets`.",
+    "",
+    "Commands: `nuclear.httpConnections.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and",
+    "`nuclear.contracts.update (root?, name?)`, which runs `~/.local/bin/nuclear contracts update` in the project (the",
+    "output channel *HTTP Connections*)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-model-httpconnections-ts.231be1",
    "type": "context",
    "title": "Architecture of HTTP Connections — The model (`httpConnections.ts`)",
@@ -3421,7 +3567,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-model-httpconnections-ts.65b56b",
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-model-httpconnections-ts.e1f7ff",
    "type": "context",
    "title": "Architecture of HTTP Connections — The model (`httpConnections.ts`)",
    "summary": "`.nuclear/project.json` and reads the `contract.json` next to it.",
@@ -3438,56 +3584,7 @@
     "- `declaredContracts(root)`: the contracts an app declares in its `config.nuc`.",
     "- `sampleOf`: a sample body from the contract's model.",
     "- **Environments**: `<first workspace folder>/.nuclear/http.json`, else `globalStorageUri/http.json`. Its shape:",
-    "  `active`, and `environments.<name>.{vars, headers, baseUrls, openapi, sockets}`. `{{var}}` is resolved by the"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-model-httpconnections-ts.e2574d",
-   "type": "context",
-   "title": "Architecture of HTTP Connections — The model (`httpConnections.ts`)",
-   "summary": "extension host.",
-   "body": [
-    "extension host. `addSocket` adds a ws:// or wss:// url (or one starting with a `{{var}}`) to `sockets`.",
-    "",
-    "Commands: `nuclear.httpConnections.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and",
-    "`nuclear.contracts.update (root?, name?)`, which runs `~/.local/bin/nuclear contracts update` in the project (the",
-    "output channel *HTTP Connections*)."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-websocket-panel-socketpanel-ts-socket-ts.6aab4f",
-   "type": "context",
-   "title": "Architecture of HTTP Connections — The WebSocket panel (`socketPanel.ts`, `socket.ts`)",
-   "summary": "the contract's socket path; `http(s)` becomes `ws(s)` after `{{var}}` is resolved.",
-   "body": [
-    "- The url: the base url of the project or the client's connection from the environment (else `{{baseUrl}}`) plus",
-    "  the contract's socket path; `http(s)` becomes `ws(s)` after `{{var}}` is resolved.",
-    "- The headers: each token guard's header (the app's, then the controller's) is proposed unless the environment",
-    "  already sends it; the environment's headers are sent too, once, at the handshake. A refused handshake (no 101: a",
-    "  missing token, an `Origin`, a wrong path) is an error line that says so, since Node gives no reason.",
-    "- The socket is the extension host's (`SocketConnection`, Node 22's `WebSocket`, which sends the headers and no",
-    "  `Origin`, so the guards that refuse an `Origin` let the tool in). It closes with its inner tab or the editor tab.",
-    "  An editor whose Node has no `WebSocket` (before VS Code 1.101) gets an error line in the log.",
-    "- The page's log and history functions are `socket.ts`'s, inlined by their source (`appendLog`, `filterLog`,",
-    "  `prettyMessage`, `pushHistory`, `messageProblem`), so the tested code is the code the page runs.",
-    "- The state goes to the host's `memory` like the HTTP panel's; `ComponentPanel.openKeys`/`restore` cover the",
-    "  `ws::` panels too, which come back with their sockets closed."
+    "  `active`, and `environments.<name>.{vars, headers, secrets, baseUrls, openapi, sockets, projects}`, where"
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
@@ -3510,6 +3607,36 @@
     "draft. A tab keeps its url, headers, draft, format (JSON or text), the sent messages (newest first, 30) and the log",
     "(the last 500: time, direction, size; a row opens to its pretty, colored JSON; filter by text and direction; clear;",
     "copy)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md#the-websocket-panel-socketpanel-ts-socket-ts.fd0655",
+   "type": "context",
+   "title": "Architecture of HTTP Connections — The WebSocket panel (`socketPanel.ts`, `socket.ts`)",
+   "summary": "the contract's socket path; `http(s)` becomes `ws(s)` after `{{var}}` is resolved.",
+   "body": [
+    "- The url: the base url of the project or the client's connection from the environment (else `{{baseUrl}}`) plus",
+    "  the contract's socket path; `http(s)` becomes `ws(s)` after `{{var}}` is resolved.",
+    "- The headers: each token guard's header (the app's, then the controller's) is proposed unless the environment",
+    "  already sends it; the environment's headers are sent too, once, at the handshake. A refused handshake (no 101: a",
+    "  missing token, an `Origin`, a wrong path) is an error line that says so, since Node gives no reason.",
+    "- The socket is the extension host's (`SocketConnection`, Node 22's `WebSocket`, which sends the headers and no",
+    "  `Origin`, so the guards that refuse an `Origin` let the tool in). It closes with its inner tab or the editor tab.",
+    "  An editor whose Node has no `WebSocket` (before VS Code 1.101) gets an error line in the log.",
+    "- The page's log and history functions are `socket.ts`'s, inlined by their source (`appendLog`, `filterLog`,",
+    "  `prettyMessage`, `pushHistory`, `messageProblem`), so the tested code is the code the page runs.",
+    "- Its variables are scoped like the HTTP panel's (`ws::<project>::<component>`); its log colors JSON with the",
+    "  theme's JSON colors.",
+    "- The state goes to the host's `memory` like the HTTP panel's; `ComponentPanel.openKeys`/`restore` cover the",
+    "  `ws::` panels too, which come back with their sockets closed."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
@@ -3560,19 +3687,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#environments.9411fa",
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#environments.9acacb",
    "type": "readme",
    "title": "HTTP Connections — Environments",
-   "summary": "The environment bar of the pane shows the active environment, with change, edit and ↻.",
+   "summary": "{ \"active\": \"local\", \"environments\": { \"local\": { \"vars\": { \"baseUrl\": \"http://localhost:8000\", \"token\": \"dev\" }, \"headers\": { \"Authorization\": \"Bearer {{token}}\" }, \"baseUrls\": { \"shop_api\": \"http://localhost:8000\" }, \"openapi\": [\"https://api.example.com/openapi.json\"], \"sockets\":…",
    "body": [
-    "The environment bar of the pane shows the active environment, with **change**, **edit** and **↻**.",
-    "",
-    "- *change* (*HTTP Connections: Select Environment*): picks another environment, or *New environment…*.",
-    "- *edit* (*Edit Environments*): opens the file beside the editor.",
-    "",
-    "They are kept in `.nuclear/http.json` of the first workspace folder; with no folder open, in the extension's own",
-    "storage. In JetBrains, in `.nuclear/http.json` of the project.",
-    "",
     "```json",
     "{",
     "  \"active\": \"local\",",
@@ -3582,19 +3701,57 @@
     "      \"headers\": { \"Authorization\": \"Bearer {{token}}\" },",
     "      \"baseUrls\": { \"shop_api\": \"http://localhost:8000\" },",
     "      \"openapi\": [\"https://api.example.com/openapi.json\"],",
-    "      \"sockets\": [\"wss://echo.example.com/ws\"]",
+    "      \"sockets\": [\"wss://echo.example.com/ws\"],",
+    "      \"projects\": {",
+    "        \"shop_api\": {",
+    "          \"vars\": { \"token\": \"shop-dev\" },",
+    "          \"secrets\": [\"token\"],",
+    "          \"components\": { \"orders\": { \"vars\": { \"orderId\": \"7\" }, \"headers\": { \"X-Tenant\": \"acme\" } } }",
+    "        }",
+    "      }",
     "    }",
     "  }",
     "}",
     "```",
     "",
-    "- `vars`: each `{{name}}` in the URL, a header, the body or a message is replaced by its value when it is sent. The",
-    "  panel lists the variables it knows.",
-    "- `headers`: sent with every request of this environment.",
+    "- `vars`: each `{{name}}` in the URL, a header, the body, the auth or a message is replaced by its value when it is",
+    "  sent. A component's variable wins over its project's, and a project's over the environment's; headers likewise.",
+    "- `headers`: sent with every request of the scope (they show as rows of **Headers**).",
+    "- `secrets`: the variables the editor masks.",
     "- `baseUrls`: the base URL of a project or of a connection a client declares. An endpoint starts from it, else",
     "  from `{{baseUrl}}`.",
     "- `openapi`: the OpenAPI documents of this environment.",
-    "- `sockets`: the WebSocket urls of servers that are not Nuclear projects."
+    "- `sockets`: the WebSocket urls of servers that are not Nuclear projects.",
+    "- `projects`: the scoped variables and headers, by project name and then by component name. Every field is",
+    "  optional: a file without them works as before."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#environments.ce99b6",
+   "type": "readme",
+   "title": "HTTP Connections — Environments",
+   "summary": "The environment of the requests is picked in the bar of the pane and of the request page (*New environment…* too).",
+   "body": [
+    "The environment of the requests is picked in the bar of the pane and of the request page (*New environment…* too).",
+    "",
+    "- *change* (*HTTP Connections: Select Environment*): picks another environment, or *New environment…*.",
+    "- *edit* (*Edit Environments*): opens the file beside the editor.",
+    "- **Variables** in the request page's bar opens the variables editor: three scopes, **Environment** (every request),",
+    "  **Project** (the requests of this project) and **Component** (those of this component), each with its variables",
+    "  and headers. Add, rename, change or delete a row; the eye marks a variable as secret, so its value is masked (it is",
+    "  still written in the file: do not commit secrets). A variable defined in a narrower scope says *overridden by*.",
+    "  **Edit http.json** opens the file.",
+    "",
+    "They are kept in `.nuclear/http.json` of the first workspace folder; with no folder open, in the extension's own",
+    "storage. In JetBrains, in `.nuclear/http.json` of the project (without the scopes)."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
@@ -3631,24 +3788,145 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#send-a-request-vs-code",
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#send-a-request-vs-code-auth",
+   "type": "readme",
+   "title": "HTTP Connections — Auth",
+   "summary": "OAuth 2.0 supports the *client credentials* and *password* grants: fill in the token URL, the client ID and secret (sent as a Basic header, or in the body), the scope, and the user and password for the password grant.",
+   "body": [
+    "| Type | What is sent |",
+    "|---|---|",
+    "| Inherit | the rows of **Headers** as they are (the guards' and the variables' headers); the default |",
+    "| No auth | no `Authorization` header, even if a row has one |",
+    "| Bearer token | `Authorization: Bearer <token>` (`{{token}}` by default) |",
+    "| Basic auth | `Authorization: Basic` with the user and password in base64 |",
+    "| API key | a header or a query parameter with its name and value |",
+    "| OAuth 2.0 | `Authorization: Bearer {{accessToken}}`, after **Get token** |",
+    "",
+    "OAuth 2.0 supports the *client credentials* and *password* grants: fill in the token URL, the client ID and secret",
+    "(sent as a Basic header, or in the body), the scope, and the user and password for the password grant. **Get",
+    "token** asks the token URL (the extension does, not the page), keeps the access token in its variable",
+    "(`accessToken` by default; a refresh token in `refreshToken`) and shows when it expires; get a new one when it says",
+    "it expired. The authorization code grant (with PKCE) is not supported yet. Every field accepts `{{variables}}`."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#send-a-request-vs-code-variables-from-a-response",
+   "type": "readme",
+   "title": "HTTP Connections — Variables from a response",
+   "summary": "`refresh_token`, also inside `data`) and the request used a token variable (`{{token}}`, `{{accessToken}}`, `{{jwt}}`…, for example through the guards' header), the variable takes the new token.",
+   "body": [
+    "- **Automatically**: when a 2xx JSON answer has a token (`access_token`, `accessToken`, `token`, `jwt`, `id_token`,",
+    "  `refresh_token`, also inside `data`) and the request used a token variable (`{{token}}`, `{{accessToken}}`,",
+    "  `{{jwt}}`…, for example through the guards' header), the variable takes the new token. A notice says where it was",
+    "  saved, *Token saved to {{token}} (Project)*, with **Undo**.",
+    "- **By hand**: **Save as variable…** on a value of the tree or a response header: choose its name and scope; tick",
+    "  *Also after every send* to make it a rule.",
+    "- **Rules** (*After response*): each row is a variable, where its value comes from (a JSON path of the body, like",
+    "  `data.access_token` or `items[0].id`, or a header name) and its scope. They run after every send; a path that finds",
+    "  nothing is told.",
+    "",
+    "A variable is saved where it is already defined, else in the project's scope; the file is written by the extension.",
+    "",
+    "The JetBrains window works the same way: the tree, a request panel with the pretty-printed JSON response and",
+    "*copy as curl*. Its title bar has select environment, add an OpenAPI document, update the contracts and refresh."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#send-a-request-vs-code.2b6524",
+   "type": "readme",
+   "title": "HTTP Connections — Send a request (VS Code)",
+   "summary": "(the setting *HTTP Connections: Timeout Seconds*); while it waits, Send becomes Cancel.",
+   "body": [
+    "(the setting *HTTP Connections: Timeout Seconds*); while it waits, **Send** becomes **Cancel**.",
+    "4. The response shows the status (green 2xx, blue 3xx, yellow 4xx, red 5xx), the time and the size, and its views:",
+    "   - **Pretty**: JSON as a tree you open and close (**Expand all**, **Collapse all**, the arrow keys), each node with",
+    "     its count of keys or items. Point at a value to **copy** it, **copy its path** (`data.items[0].id`) or",
+    "     **save it as a variable**. HTML and XML are colored.",
+    "   - **Raw**: the body as it came. **Preview**: an HTML answer drawn as a page (its scripts do not run).",
+    "   - **Headers**: the response headers; each can be copied or saved as a variable.",
+    "5. The ⧉ button copies the body; the `<>` button copies the request as a `curl` command, with its variables filled in.",
+    "",
+    "The ▯ button in the bar places the response beside the request, under it, or automatically (beside when the page is wide);",
+    "drag the line between them to resize (or focus it and use the arrows).",
+    "",
+    "Each tab keeps its request and its last response while the window is open, also when you leave the HTTP Connections",
+    "tool and come back. They are not saved to disk."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#send-a-request-vs-code.5d3196",
    "type": "readme",
    "title": "HTTP Connections — Send a request (VS Code)",
    "summary": "1. Click an endpoint in the tree.",
    "body": [
     "1. Click an endpoint in the tree. Its component opens as one editor tab, and the endpoint as a tab inside it, so",
-    "   the editor's tab bar never fills with requests.",
-    "2. Edit the request: the method, the URL (`{{baseUrl}}/path` by default), and the tabs **Params** (path and query),",
-    "   **Headers** (*+ header*) and **Body** (JSON; a sample built from the contract's model is filled in).",
-    "3. **Send**. The extension sends it, not the page, with a 30 second timeout. The response shows the status, the",
-    "   time and the size, the pretty-printed body and the response headers.",
-    "4. **copy as curl** copies the request as a `curl` command.",
+    "   the editor's tab bar never fills with requests. The line under the bar says where you are:",
+    "   *project › component › endpoint*.",
+    "2. Edit the request: the method, the URL (`{{baseUrl}}/path` by default; under it, the URL with its variables filled",
+    "   in, an unknown one underlined in red), and the tabs:",
+    "   - **Params**: the path and query parameters.",
+    "   - **Headers**: a table of rows you can switch off, edit and delete. Some are filled in for you, each with a badge:",
+    "     *from code* (the token header the backend's guards read, `Authorization: Bearer {{token}}`), *from body*",
+    "     (Content-Type), *from environment*, *from project*, *from component*. A row you delete stays deleted for that",
+    "     tab; **Restore defaults** brings them back. A row you add with the same name wins over the filled-in one.",
+    "   - **Body**: JSON, colored as you type. A mistake shows its line and column (click it to go there); **Format**",
+    "     (`Alt+Shift+F`) indents it, and pasted JSON is indented by itself. A `{{variable}}` counts as a value.",
+    "   - **Auth**: below.",
+    "   - **After response**: rules that copy a value of every response into a variable (below).",
+    "3. **Send** (`Ctrl+Enter`, `Cmd+Enter` on a Mac). The extension sends it, not the page, with a 30 second timeout"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#talk-to-a-websocket-vs-code.870e6c",
+   "type": "readme",
+   "title": "HTTP Connections — Talk to a WebSocket (VS Code)",
+   "summary": "(checked before sending) or Text, then Send (or `Ctrl+Enter`).",
+   "body": [
+    "(checked before sending) or **Text**, then **Send** (or `Ctrl+Enter`). The box on the right brings back what you",
+    "   sent before.",
+    "5. **Messages** shows everything, newest at the bottom: the time, ↑ sent, ↓ received, • the connection, ! an error,",
+    "   and the size. Click a row to read its JSON pretty-printed (and **copy** it). Filter by text or by direction;",
+    "   **clear** empties it.",
     "",
-    "Each tab keeps its request and its last response while the window is open, also when you leave the HTTP Connections tool and",
-    "come back. They are not saved to disk.",
+    "Closing the tab closes its socket. Its variables are scoped like the request page's. Each tab keeps its url, headers, message, history and log while the window is",
+    "open, also when you leave the HTTP Connections tool and come back (its socket is then closed: connect again). The",
+    "socket needs VS Code 1.101 or newer.",
     "",
-    "The JetBrains window works the same way: the tree, a request panel with the pretty-printed JSON response and",
-    "*copy as curl*. Its title bar has select environment, add an OpenAPI document, update the contracts and refresh."
+    "In JetBrains the tree shows the same **WS** marks, events and *WebSockets* (added from the title bar). An endpoint",
+    "served only over WebSockets, an event or a url opens the socket panel; a route served over both has **Open over",
+    "WebSocket** beside **Send**. One socket is open at a time in the tool window."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
@@ -3677,35 +3955,6 @@
     "   as `{ \"id\": 1, \"method\": \"GET\", \"path\": \"/tasks\", \"headers\": {} }` (the app answers it as it answers HTTP:",
     "   `{ \"id\": 1, \"status\": 200, \"body\": … }`), an event as `{ \"subscribe\": \"tasks.created\" }` or",
     "   `{ \"unsubscribe\": \"tasks.created\" }` (what is published then arrives as `{ \"event\": …, \"data\": … }`). Choose **JSON**"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-http-connections/docs/08-guides/README.md#talk-to-a-websocket-vs-code.ed7937",
-   "type": "readme",
-   "title": "HTTP Connections — Talk to a WebSocket (VS Code)",
-   "summary": "(checked before sending) or Text, then Send (or `Ctrl+Enter`).",
-   "body": [
-    "(checked before sending) or **Text**, then **Send** (or `Ctrl+Enter`). The box on the right brings back what you",
-    "   sent before.",
-    "5. **Messages** shows everything, newest at the bottom: the time, ↑ sent, ↓ received, • the connection, ! an error,",
-    "   and the size. Click a row to read its JSON pretty-printed (and **copy** it). Filter by text or by direction;",
-    "   **clear** empties it.",
-    "",
-    "Closing the tab closes its socket. Each tab keeps its url, headers, message, history and log while the window is",
-    "open, also when you leave the HTTP Connections tool and come back (its socket is then closed: connect again). The",
-    "socket needs VS Code 1.101 or newer.",
-    "",
-    "In JetBrains the tree shows the same **WS** marks, events and *WebSockets* (added from the title bar). An endpoint",
-    "served only over WebSockets, an event or a url opens the socket panel; a route served over both has **Open over",
-    "WebSocket** beside **Send**. One socket is open at a time in the tool window."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/08-guides/README.md"
@@ -3999,7 +4248,9 @@
     "  their parent (their own time is then zero).",
     "- A click on a name posts `{ type: 'open', path, line }`; the panel opens `<project>/<path>` at the line (the",
     "  project is the folder above `.nuclear/`).",
-    "- Redraws are debounced (300 ms): the app writes at most every two seconds."
+    "- Redraws are debounced (300 ms): the app writes at most every two seconds.",
+    "- The page carries the floating update button of every NuclearLang page (`withUpdateButton`,",
+    "  `extensions/vscode/src/updateCheck.ts`)."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
@@ -4998,6 +5249,21 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ed56b5",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- The wizard of a new team says the installation has no roster (run the installer again) instead of \"Nobody matches the filters\" when the AI services came without one.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ef1fa3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5005,6 +5271,25 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.fa47e3",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.81.0: the teams' members and skills, with their portraits, come with the installer (the AI services' archive lacked them: a new team showed nobody); a floating *Update to <version>* button on every NuclearLang page; the new HTTP Connections request page.",
+    "- HTTP Connections, a new request page: JSON responses as a collapsible tree (copy value or path, save as variable), Raw and a sandboxed HTML Preview; JSON, HTML and XML colored with the theme (8 new `nuclearHttpConnections.*` colors); the request body checked (line and column) and formatted; headers as a table filled from the code (guard headers, Content-Type, the environment) with a badge of where each comes from, editable and deletable; variables by environment, project and component, edited in a drawer without opening `http.json`; an Auth tab (Bearer, Basic, API key, OAuth 2.0 client credentials and password); a token in a response saved to its variable by itself (with Undo) and rules that take a value of every response; icons for every section; Ctrl/Cmd+Enter sends. Earlier `http.json` files and saved tabs load unchanged.",
+    "- A newer NuclearLang release is offered on every NuclearLang page: a floating *Update to <version>* button (and the status bar) that runs `nuclear update` in a terminal, then offers to reload; checked at most every 12 hours, `NUCLEAR_NO_UPDATE_CHECK=1` turns it off."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6154,29 +6439,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.13bccb",
-   "type": "context",
-   "title": "The VS Code extension: its files — `src/`",
-   "summary": "`src/`",
-   "body": [
-    "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
-    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |",
-    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |",
-    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
-    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.824e2c",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.00a87c",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
@@ -6188,8 +6451,7 @@
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |",
-    "| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |",
-    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |"
+    "| `updateCheck.ts` | a newer release: the `releases/latest` redirect at most every 12 hours (globalState cache), the status bar item, the command `nuclear.update`, and the floating button `withUpdateButton` injects into every page (`localize` in `i18n.ts`, and the devices' and Monitor's pages), shown or hidden by a `nuclear:update` message, so an open page never re-renders; its version comparison is `snapshotCheck.ts`'s, tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -6201,11 +6463,35 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.ff35f4",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.209fae",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
+    "| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |",
+    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |",
+    "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
+    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |",
+    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.6e86ef",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "`src/`",
+   "body": [
+    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
+    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
     "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
     "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
     "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
@@ -6394,7 +6680,9 @@
     "`theme/build.mjs` sets `nuclearHttpConnections.get/post/put/patch/delete/platform/project/component` from the palette (type,",
     "function, warning, number, error, primary, enumMember, property), so the tree follows each variant. `package.json`",
     "contributes the same ids with neutral dark and light defaults for other themes; a theme may override them. In a",
-    "webview they are `var(--vscode-nuclearHttpConnections-get)`."
+    "webview they are `var(--vscode-nuclearHttpConnections-get)`. The request and socket pages color JSON and markup with",
+    "`nuclearHttpConnections.jsonKey/jsonString/jsonNumber/jsonBoolean/jsonNull/jsonPunctuation/markupTag/markupAttribute`,",
+    "set the same way."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/theme.md"
@@ -7230,7 +7518,14 @@
     "and the installed NuclearLang is older, a notification offers **Update NuclearLang** (`nuclear update` in a terminal:",
     "the newest release, its AI services included); when the extension is the older one, it offers the extension of the",
     "installed release. It asks once per pair of versions and blocks nothing. A NuclearLang built from source is not",
-    "compared."
+    "compared.",
+    "",
+    "When a newer release is out, every NuclearLang page (the workspace, Nuclear Builder, your software company, HTTP",
+    "Connections, the devices, the settings, Nuclear Monitor) shows a floating **Update to <version>** button in its",
+    "bottom-right corner, and the status bar shows it too; the button runs `nuclear update` in a terminal (NuclearLang, its",
+    "AI services and this extension), then *Reload Window*. Its ✕ hides it on that page. The check reads the redirect of the",
+    "releases page at most every 12 hours; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off. The command is *Nuclear: Update",
+    "NuclearLang to the latest release*."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"
