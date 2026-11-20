@@ -54,7 +54,9 @@ Semantic token colors are `semanticTokenColors` in VS Code and the `DEFAULT_*` k
 `theme/build.mjs` sets `nuclearHttpConnections.get/post/put/patch/delete/platform/project/component` from the palette (type,
 function, warning, number, error, primary, enumMember, property), so the tree follows each variant. `package.json`
 contributes the same ids with neutral dark and light defaults for other themes; a theme may override them. In a
-webview they are `var(--vscode-nuclearHttpConnections-get)`.
+webview they are `var(--vscode-nuclearHttpConnections-get)`. The request and socket pages color JSON and markup with
+`nuclearHttpConnections.jsonKey/jsonString/jsonNumber/jsonBoolean/jsonNull/jsonPunctuation/markupTag/markupAttribute`,
+set the same way.
 
 ## Testing a changed theme
 

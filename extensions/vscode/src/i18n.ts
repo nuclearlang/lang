@@ -6,6 +6,7 @@
 // page (`localize`) without a restart.
 import * as vscode from 'vscode';
 import ES from '../l10n/bundle.l10n.es.json';
+import { forgetWebview, withUpdateButton } from './updateCheck';
 import { Lang, LangSetting, LangState, osLocale, resolveLang, translate } from './language';
 
 export type { Lang } from './language';
@@ -74,9 +75,11 @@ export function registerLanguage(context: vscode.ExtensionContext): void {
 /** A page's HTML, set now and again whenever the language changes (then `again` gives a page without a `ready` of its
  * own what it showed); its globe's choice is written here. */
 export function localize(webview: vscode.Webview, render: () => string, again?: () => void): { dispose(): void } {
-  webview.html = render();
+  const page = () => withUpdateButton(webview, render());
+  webview.html = page();
   const subs = [
-    onDidChangeLang(() => ((webview.html = render()), again?.())),
+    { dispose: () => forgetWebview(webview) },
+    onDidChangeLang(() => ((webview.html = page()), again?.())),
     webview.onDidReceiveMessage((m: { type?: string; value?: unknown }) => void (m?.type === 'lang:set' && setLanguage(m.value))),
   ];
   return { dispose: () => subs.forEach((s) => s.dispose()) };

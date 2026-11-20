@@ -32,6 +32,8 @@ import {
   unsubscribeMessage,
 } from '../src/socket';
 import { socketPageHtml, socketTab } from '../src/socketPanel';
+// the request side's tests run in this same bundle (npm test runs this file)
+import './request.test';
 
 const api = (extra: Record<string, unknown> = {}): Api => ({ component: 'tasks', path: '/tasks', routes: [], ...extra }) as Api;
 

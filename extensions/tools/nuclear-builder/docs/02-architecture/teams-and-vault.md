@@ -19,7 +19,8 @@ process, one call per action: JSON on stdout, an error as `{"error": "…"}` wit
   not rewritten), `--role` and `--assign` of a command and a tool's `role`; the alias is taken for one release more.
 - `rolesDir()`: `NUCLEAR_ROLES`, else `roles/` beside the package, else the AI installation's
   `nuclear-agents/roles`, else the working tree's. `roster(role, lang)`: `roster/<lang>.json`, English when the
-  language is missing, `[]` when the role has no roster: never an error. Each employee whose portrait is there
+  language is missing, `[]` when the role has no roster: never an error (the wizard's roster step, with every role
+  empty, says the installation came without one and to run the installer again; the AI archive carries them). Each employee whose portrait is there
   (`roster/faces/<id>.webp`, a painted portrait of 512 px, spec 011 requirement 27) gets its whole path as `face`, and
   its thumbnail (`roster/faces/thumb/<id>.webp`, 128 px, a few KB) as `thumb`; each has its `temperament`.
 - `temperaments()`: the list of `temperaments.json` beside the roles (`[{ id, name: { en, es }, description: { en, es }, voice, look }]`,

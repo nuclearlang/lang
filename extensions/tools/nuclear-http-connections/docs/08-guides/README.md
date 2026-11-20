@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../02-architecture/overview.md, ../../../../vscode/docs/08-guides/workspace.md, ../../../../jetbrains/docs/08-guides/README.md, ../../../../../nuclearlang/docs/07-reference/projects.md]
 ---
 # HTTP Connections
@@ -50,15 +50,65 @@ In VS Code a backend project's ⇄ action (*Routes in HTTP Connections*) opens t
 ## Send a request (VS Code)
 
 1. Click an endpoint in the tree. Its component opens as one editor tab, and the endpoint as a tab inside it, so
-   the editor's tab bar never fills with requests.
-2. Edit the request: the method, the URL (`{{baseUrl}}/path` by default), and the tabs **Params** (path and query),
-   **Headers** (*+ header*) and **Body** (JSON; a sample built from the contract's model is filled in).
-3. **Send**. The extension sends it, not the page, with a 30 second timeout. The response shows the status, the
-   time and the size, the pretty-printed body and the response headers.
-4. **copy as curl** copies the request as a `curl` command.
+   the editor's tab bar never fills with requests. The line under the bar says where you are:
+   *project › component › endpoint*.
+2. Edit the request: the method, the URL (`{{baseUrl}}/path` by default; under it, the URL with its variables filled
+   in, an unknown one underlined in red), and the tabs:
+   - **Params**: the path and query parameters.
+   - **Headers**: a table of rows you can switch off, edit and delete. Some are filled in for you, each with a badge:
+     *from code* (the token header the backend's guards read, `Authorization: Bearer {{token}}`), *from body*
+     (Content-Type), *from environment*, *from project*, *from component*. A row you delete stays deleted for that
+     tab; **Restore defaults** brings them back. A row you add with the same name wins over the filled-in one.
+   - **Body**: JSON, colored as you type. A mistake shows its line and column (click it to go there); **Format**
+     (`Alt+Shift+F`) indents it, and pasted JSON is indented by itself. A `{{variable}}` counts as a value.
+   - **Auth**: below.
+   - **After response**: rules that copy a value of every response into a variable (below).
+3. **Send** (`Ctrl+Enter`, `Cmd+Enter` on a Mac). The extension sends it, not the page, with a 30 second timeout
+   (the setting *HTTP Connections: Timeout Seconds*); while it waits, **Send** becomes **Cancel**.
+4. The response shows the status (green 2xx, blue 3xx, yellow 4xx, red 5xx), the time and the size, and its views:
+   - **Pretty**: JSON as a tree you open and close (**Expand all**, **Collapse all**, the arrow keys), each node with
+     its count of keys or items. Point at a value to **copy** it, **copy its path** (`data.items[0].id`) or
+     **save it as a variable**. HTML and XML are colored.
+   - **Raw**: the body as it came. **Preview**: an HTML answer drawn as a page (its scripts do not run).
+   - **Headers**: the response headers; each can be copied or saved as a variable.
+5. The ⧉ button copies the body; the `<>` button copies the request as a `curl` command, with its variables filled in.
 
-Each tab keeps its request and its last response while the window is open, also when you leave the HTTP Connections tool and
-come back. They are not saved to disk.
+The ▯ button in the bar places the response beside the request, under it, or automatically (beside when the page is wide);
+drag the line between them to resize (or focus it and use the arrows).
+
+Each tab keeps its request and its last response while the window is open, also when you leave the HTTP Connections
+tool and come back. They are not saved to disk.
+
+### Auth
+
+| Type | What is sent |
+|---|---|
+| Inherit | the rows of **Headers** as they are (the guards' and the variables' headers); the default |
+| No auth | no `Authorization` header, even if a row has one |
+| Bearer token | `Authorization: Bearer <token>` (`{{token}}` by default) |
+| Basic auth | `Authorization: Basic` with the user and password in base64 |
+| API key | a header or a query parameter with its name and value |
+| OAuth 2.0 | `Authorization: Bearer {{accessToken}}`, after **Get token** |
+
+OAuth 2.0 supports the *client credentials* and *password* grants: fill in the token URL, the client ID and secret
+(sent as a Basic header, or in the body), the scope, and the user and password for the password grant. **Get
+token** asks the token URL (the extension does, not the page), keeps the access token in its variable
+(`accessToken` by default; a refresh token in `refreshToken`) and shows when it expires; get a new one when it says
+it expired. The authorization code grant (with PKCE) is not supported yet. Every field accepts `{{variables}}`.
+
+### Variables from a response
+
+- **Automatically**: when a 2xx JSON answer has a token (`access_token`, `accessToken`, `token`, `jwt`, `id_token`,
+  `refresh_token`, also inside `data`) and the request used a token variable (`{{token}}`, `{{accessToken}}`,
+  `{{jwt}}`…, for example through the guards' header), the variable takes the new token. A notice says where it was
+  saved, *Token saved to {{token}} (Project)*, with **Undo**.
+- **By hand**: **Save as variable…** on a value of the tree or a response header: choose its name and scope; tick
+  *Also after every send* to make it a rule.
+- **Rules** (*After response*): each row is a variable, where its value comes from (a JSON path of the body, like
+  `data.access_token` or `items[0].id`, or a header name) and its scope. They run after every send; a path that finds
+  nothing is told.
+
+A variable is saved where it is already defined, else in the project's scope; the file is written by the extension.
 
 The JetBrains window works the same way: the tree, a request panel with the pretty-printed JSON response and
 *copy as curl*. Its title bar has select environment, add an OpenAPI document, update the contracts and refresh.
@@ -83,7 +133,7 @@ The JetBrains window works the same way: the tree, a request panel with the pret
    and the size. Click a row to read its JSON pretty-printed (and **copy** it). Filter by text or by direction;
    **clear** empties it.
 
-Closing the tab closes its socket. Each tab keeps its url, headers, message, history and log while the window is
+Closing the tab closes its socket. Its variables are scoped like the request page's. Each tab keeps its url, headers, message, history and log while the window is
 open, also when you leave the HTTP Connections tool and come back (its socket is then closed: connect again). The
 socket needs VS Code 1.101 or newer.
 
@@ -93,13 +143,18 @@ WebSocket** beside **Send**. One socket is open at a time in the tool window.
 
 ## Environments
 
-The environment bar of the pane shows the active environment, with **change**, **edit** and **↻**.
+The environment of the requests is picked in the bar of the pane and of the request page (*New environment…* too).
 
 - *change* (*HTTP Connections: Select Environment*): picks another environment, or *New environment…*.
 - *edit* (*Edit Environments*): opens the file beside the editor.
+- **Variables** in the request page's bar opens the variables editor: three scopes, **Environment** (every request),
+  **Project** (the requests of this project) and **Component** (those of this component), each with its variables
+  and headers. Add, rename, change or delete a row; the eye marks a variable as secret, so its value is masked (it is
+  still written in the file: do not commit secrets). A variable defined in a narrower scope says *overridden by*.
+  **Edit http.json** opens the file.
 
 They are kept in `.nuclear/http.json` of the first workspace folder; with no folder open, in the extension's own
-storage. In JetBrains, in `.nuclear/http.json` of the project.
+storage. In JetBrains, in `.nuclear/http.json` of the project (without the scopes).
 
 ```json
 {
@@ -110,19 +165,29 @@ storage. In JetBrains, in `.nuclear/http.json` of the project.
       "headers": { "Authorization": "Bearer {{token}}" },
       "baseUrls": { "shop_api": "http://localhost:8000" },
       "openapi": ["https://api.example.com/openapi.json"],
-      "sockets": ["wss://echo.example.com/ws"]
+      "sockets": ["wss://echo.example.com/ws"],
+      "projects": {
+        "shop_api": {
+          "vars": { "token": "shop-dev" },
+          "secrets": ["token"],
+          "components": { "orders": { "vars": { "orderId": "7" }, "headers": { "X-Tenant": "acme" } } }
+        }
+      }
     }
   }
 }
 ```
 
-- `vars`: each `{{name}}` in the URL, a header, the body or a message is replaced by its value when it is sent. The
-  panel lists the variables it knows.
-- `headers`: sent with every request of this environment.
+- `vars`: each `{{name}}` in the URL, a header, the body, the auth or a message is replaced by its value when it is
+  sent. A component's variable wins over its project's, and a project's over the environment's; headers likewise.
+- `headers`: sent with every request of the scope (they show as rows of **Headers**).
+- `secrets`: the variables the editor masks.
 - `baseUrls`: the base URL of a project or of a connection a client declares. An endpoint starts from it, else
   from `{{baseUrl}}`.
 - `openapi`: the OpenAPI documents of this environment.
 - `sockets`: the WebSocket urls of servers that are not Nuclear projects.
+- `projects`: the scoped variables and headers, by project name and then by component name. Every field is
+  optional: a file without them works as before.
 
 Before the file exists there is one environment, `local`, whose `baseUrl` and `baseUrls` are the addresses where
 the backends of the workspace answer (from their project cards).

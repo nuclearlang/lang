@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { MonitorView, page, projectOf, readMonitor, TEXTS } from './monitor';
 import { lang, onDidChangeLang } from '../../../vscode/src/i18n';
+import { withUpdateButton } from '../../../vscode/src/updateCheck';
 
 export class MonitorPanel {
   private static current: MonitorPanel | undefined;
@@ -50,7 +51,7 @@ export class MonitorPanel {
   private async refresh(): Promise<void> {
     this.view = await readMonitor(this.folder);
     const nonce = crypto.randomBytes(16).toString('base64');
-    this.panel.webview.html = page(this.view, texts(), nonce, this.panel.webview.cspSource);
+    this.panel.webview.html = withUpdateButton(this.panel.webview, page(this.view, texts(), nonce, this.panel.webview.cspSource));
   }
 }
 

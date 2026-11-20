@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../01-product/roadmap.md, ../../../../docs/03-adr/0002-the-nuclear-workspace.md, ../../../../vscode/docs/02-architecture/workspace.md]
 ---
 # Architecture of HTTP Connections
@@ -53,25 +53,60 @@ so its guards and validation answer as over HTTP), an event as `{ "subscribe": "
 - `declaredContracts(root)`: the contracts an app declares in its `config.nuc`.
 - `sampleOf`: a sample body from the contract's model.
 - **Environments**: `<first workspace folder>/.nuclear/http.json`, else `globalStorageUri/http.json`. Its shape:
-  `active`, and `environments.<name>.{vars, headers, baseUrls, openapi, sockets}`. `{{var}}` is resolved by the
-  extension host. `addSocket` adds a ws:// or wss:// url (or one starting with a `{{var}}`) to `sockets`.
+  `active`, and `environments.<name>.{vars, headers, secrets, baseUrls, openapi, sockets, projects}`, where
+  `projects.<project>.{vars, headers, secrets, components.<component>.{vars, headers, secrets}}` are the scoped
+  variables. `request.ts` reads it (`normalizeEnvironments`: every missing field empty, so an earlier file loads
+  unchanged) and writes it (`compactEnvironments`: the empty new fields left out); `saveEnvironments` writes and
+  refreshes. `{{var}}` and the headers resolve component > project > environment (`scopedVars`), by the extension
+  host. `secrets` only masks a value in the page. `addSocket` adds a ws:// or wss:// url (or one starting with a
+  `{{var}}`) to `sockets`.
 
 Commands: `nuclear.httpConnections.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and
 `nuclear.contracts.update (root?, name?)`, which runs `~/.local/bin/nuclear contracts update` in the project (the
 output channel *HTTP Connections*).
 
-## A component's panel (`panel.ts`)
+## A component's panel (`panel.ts`, `requestScript.ts`, `request.ts`)
 
-`ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per
-endpoint opened from the tree. Each inner tab keeps its request and its last response:
+`ComponentPanel`: one webview panel per `componentKey(endpoint)` (`<project>::<component>`, which also names the
+variables' scopes), like a Bruno folder, with an inner tab per endpoint opened from the tree. The page is plain HTML
+and script with a nonce CSP; its script is `requestScript.ts` and its pure helpers `request.ts`'s, inlined by their
+source (tested as the page runs them). Each inner tab keeps:
 
-- the method, the url with its path and query parameters, the headers, the body (with the sample);
-- send: by the extension host with `fetch`, a 30 s timeout, the active environment's variables and headers;
-- the response pretty-printed; *copy as curl*.
+- the method, the url with its path and query parameters (a `{{var}}` preview under it), and the request's panes:
+  **Params**; **Headers**, rows `{on, name, value, source?, edited?}`: the auto rows are the guards' (`code`),
+  Content-Type of the body (`body`) and each scope's headers (`global`, `project`, `component`), merged on every
+  change by `mergeHeaderRows` (a deleted auto row is kept in `removed`, a user row of the same name wins, an edited
+  one stays; *Restore defaults*); **Body**, a textarea over its highlighted copy, with the JSON problem's line and
+  column and *Format* (`{{var}}` counts as a value); **Auth** (below); **After response**, the rules
+  `{on, name, from: body|header, path, scope}`;
+- its last response: status badge, time, size, and the views *Pretty* (a JSON tree: open and close, counts, copy a
+  value or its path, *Save as variable…*; HTML and XML highlighted), *Raw*, *Preview* (HTML in an `iframe` with an
+  empty `sandbox` and `srcdoc`) and *Headers*.
 
-The webview posts its whole state (`tabs`, `active`) on every change and the model keeps it in `memory` by key, so
-`restore(keys)` rebuilds the panels when the HTTP Connections workspace is entered again (`model.reopen` = the keys open when
-it was left). The memory lives in the window, not on disk.
+The host:
+
+- **send**: resolves `{{var}}` by scope, applies the auth (`applyAuth`), `fetch` with the `nuclear.http.timeoutSeconds`
+  timeout and a cancel; then runs the rules (`runRules`) and, on a 2xx answer, `autoTokenUpdates`: a token field
+  (`access_token`, `accessToken`, `token`, `jwt`, `id_token`, `refresh_token`, a few levels deep) fills each token-like
+  variable the request used (`{{token}}`). A variable is written where it is already defined, else in the project
+  scope; the page shows a notice with *Undo* (the previous values travel with it).
+- **Auth**: *Inherit* (the rows as they are), *No auth* (no `Authorization`), *Bearer*, *Basic* (base64 of the
+  resolved user and password), *API key* (header or query), *OAuth 2.0* with the client-credentials and password
+  grants: *Get token* is the host's `fetch` to the token url (`oauthTokenRequest`; the client by a Basic header or in
+  the body), the access token goes into its variable (`accessToken`) and is sent as `Bearer`; the page shows the
+  expiry.
+- **The variables drawer**: the scopes *Environment*, *Project*, *Component*, each with its variables (secret toggle,
+  *overridden by* marks) and headers; each change is an `envEdit` (`editScope`: set, rename, delete, secret) the host
+  writes. The environment is picked in the bar; *Edit http.json* opens the file.
+
+The webview posts its whole state (`tabs`, `active`, `layout`, `split`) on every change and the model keeps it in
+`memory` by key, so `restore(keys)` rebuilds the panels when the HTTP Connections workspace is entered again
+(`model.reopen` = the keys open when it was left); a state of an earlier version (header pairs) is converted by
+`migrateForm`. The memory lives in the window, not on disk.
+
+The layout splits the request and the response side by side, stacked, or automatically (stacked under 860 px), with
+a draggable, keyboard-moved gutter. `Ctrl/Cmd+Enter` sends, `Alt+Shift+F` formats the body, `Escape` closes the
+drawer or the dialog; the tabs move with the arrows. The icons are `icons.ts`'s inline SVG.
 
 ## The WebSocket panel (`socketPanel.ts`, `socket.ts`)
 
@@ -92,6 +127,8 @@ copy).
   An editor whose Node has no `WebSocket` (before VS Code 1.101) gets an error line in the log.
 - The page's log and history functions are `socket.ts`'s, inlined by their source (`appendLog`, `filterLog`,
   `prettyMessage`, `pushHistory`, `messageProblem`), so the tested code is the code the page runs.
+- Its variables are scoped like the HTTP panel's (`ws::<project>::<component>`); its log colors JSON with the
+  theme's JSON colors.
 - The state goes to the host's `memory` like the HTTP panel's; `ComponentPanel.openKeys`/`restore` cover the
   `ws::` panels too, which come back with their sockets closed.
 
@@ -102,7 +139,9 @@ backend project jumps to its routes ([the workspace](../../../../vscode/docs/02-
 
 Verbs and sections use theme colors the extension contributes (`colors` in `package.json`:
 `nuclearHttpConnections.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may
-override them; in CSS `var(--vscode-nuclearHttpConnections-get)`). The Chernobyl themes set them from the palette
+override them; in CSS `var(--vscode-nuclearHttpConnections-get)`), and for the pages' code
+`nuclearHttpConnections.jsonKey/jsonString/jsonNumber/jsonBoolean/jsonNull/jsonPunctuation/markupTag/markupAttribute`
+(the page falls back to `--vscode-debugTokenExpression-*` and `--vscode-symbolIcon-*`). The Chernobyl themes set them from the palette
 ([the theme](../../../../vscode/docs/02-architecture/theme.md)).
 
 ## The JetBrains tool window (`HttpConnections.java`)
@@ -127,7 +166,7 @@ The VS Code view in Swing, on the left, `Alt+Shift+H` (`keyboard-shortcut` in `p
 - The settings of HTTP Connections are its own section of the editor's settings, read only through `src/settings.ts`: `nuclear.http.timeoutSeconds`, how long a request waits for its answer (30 s)
   (spec 011, settings by component).
 - Its texts are in English and Spanish in `src/l10n.ts` (dictionaries of `extensions/vscode/src/i18n.ts`): `HTTP` for
-  the request page (`panel.ts`), `WS` for the WebSocket page (`socketPanel.ts`); HTTP words (Headers, Body, Path,
+  the request page (`panel.ts`; the host sends it keys, never English sentences), `WS` for the WebSocket page (`socketPanel.ts`); HTTP words (Headers, Body, Path,
   Query) stay as they are. The host's texts (the tree, the log's connection lines) are `l10n.t` of `i18n.ts`, in
   `extensions/vscode/l10n/bundle.l10n.es.json`. The JetBrains window is in English only, like the rest of it.
   The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. Both pages

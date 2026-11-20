@@ -73,3 +73,5 @@ and the platform) and its frame (phone, tablet, none). The CLI's devices use the
 - Its texts are in English and Spanish in `src/l10n.ts` (a dictionary of `extensions/vscode/src/i18n.ts`), for the Synapsis device (`mobile-device.ts`) and the web device (`web-device.ts`); device names, Hot Reload / Hot Restart and network presets stay as they are.
   The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. A change
   of language reaches a device's page when it opens next: re-rendering it would cut its live screen.
+- Both devices' pages carry the floating update button of every NuclearLang page (`withUpdateButton`,
+  `extensions/vscode/src/updateCheck.ts`).

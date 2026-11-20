@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { lang, langButton, localize, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
 import { Endpoint, HttpModel } from './httpConnections';
 import { WS } from './l10n';
+import { scopedVars } from './request';
 import {
   appendLog,
   badSocketUrl,
@@ -106,10 +107,17 @@ export class SocketPanel {
     if (saved && !SocketPanel.open_.has(key)) new SocketPanel(context, model, key, saved.title);
   }
 
+  /** The variables this panel's sockets see: its component's over its project's over the environment's. */
+  private vars(): Record<string, string> {
+    const envs = this.model.environments();
+    const rest = this.key.slice('ws::'.length);
+    const at = rest.lastIndexOf('::');
+    return scopedVars(envs.environments[envs.active], at < 0 ? rest : rest.slice(0, at), at < 0 ? undefined : rest.slice(at + 2));
+  }
+
   private environments(): void {
     const envs = this.model.environments();
-    const env = envs.environments[envs.active];
-    void this.panel.webview.postMessage({ type: 'environments', active: envs.active, vars: env?.vars ?? {} });
+    void this.panel.webview.postMessage({ type: 'environments', active: envs.active, vars: this.vars() });
   }
 
   private post(tab: string, entry: Omit<LogEntry, 'at'>, status?: string): void {
@@ -119,7 +127,7 @@ export class SocketPanel {
   private connect(tab: string, rawUrl: string, own: Record<string, string>): void {
     const envs = this.model.environments();
     const env = envs.environments[envs.active];
-    const vars = env?.vars ?? {};
+    const vars = this.vars();
     const url = toSocketScheme(resolveVars(rawUrl.trim(), vars));
     const problem = badSocketUrl(url);
     if (problem) {
@@ -155,8 +163,7 @@ export class SocketPanel {
   }
 
   private send(tab: string, text: string): void {
-    const envs = this.model.environments();
-    const resolved = resolveVars(text, envs.environments[envs.active]?.vars ?? {});
+    const resolved = resolveVars(text, this.vars());
     if (this.sockets.get(tab)?.send(resolved)) this.post(tab, { dir: 'out', text: resolved });
     else this.post(tab, { dir: 'error', text: l10n.t('not connected: connect first') });
   }
@@ -245,7 +252,7 @@ export function socketPageHtml(): string {
   .m pre { grid-column: 3 / 5; margin: 6px 0 4px; white-space: pre-wrap; word-break: break-word; }
   .m.open .body { opacity: .4; }
   .m .copy { display: none; } .m.open .copy { display: inline; }
-  .k { color: var(--vscode-symbolIcon-propertyForeground, var(--vscode-nuclearHttpConnections-component)); } .s { color: var(--vscode-nuclearHttpConnections-get); } .n { color: var(--vscode-nuclearHttpConnections-put); } .b { color: var(--vscode-nuclearHttpConnections-patch); }
+  .k { color: var(--vscode-nuclearHttpConnections-jsonKey, var(--vscode-debugTokenExpression-name)); } .s { color: var(--vscode-nuclearHttpConnections-jsonString, var(--vscode-debugTokenExpression-string)); } .n { color: var(--vscode-nuclearHttpConnections-jsonNumber, var(--vscode-debugTokenExpression-number)); } .b { color: var(--vscode-nuclearHttpConnections-jsonBoolean, var(--vscode-debugTokenExpression-boolean)); }
   .none { padding: 18px; text-align: center; opacity: .6; font-family: var(--vscode-font-family); font-size: 12px; }
   .empty { opacity: .7; padding: 24px 0; text-align: center; }
 </style>

@@ -9,6 +9,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled, readCard } from '../../../vscode/src/card';
 import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
+import { withUpdateButton } from '../../../vscode/src/updateCheck';
 import { WEB_DEVICE } from './l10n';
 import { appendLog, Launch, logFile, reason, WEB_STALL_MS, WebStep } from './launch-log';
 import { ConsoleEntry, NetworkEntry, WEB_PRESETS, WebSession, WebView } from './web-session';
@@ -57,7 +58,7 @@ export class WebDevicePanel {
     this.view = { ...{ preset: 'Responsive', width: 1280, height: 800, landscape: false, scheme: 'system', throttle: 'none', noCache: false }, ...ctx.globalState.get<Partial<WebView>>(STATE_KEY, {}) } as WebView;
     this.panel = vscode.window.createWebviewPanel('nuclear.webDevice', `Web · ${app.name}`, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, { enableScripts: true, retainContextWhenHidden: true });
     this.panel.iconPath = vscode.Uri.joinPath(ctx.extensionUri, 'icons', 'platform-web.svg');
-    this.panel.webview.html = this.html();
+    this.panel.webview.html = withUpdateButton(this.panel.webview, this.html());
     this.panel.onDidDispose(() => this.stop(true));
     this.panel.webview.onDidReceiveMessage((m) => void this.message(m));
   }

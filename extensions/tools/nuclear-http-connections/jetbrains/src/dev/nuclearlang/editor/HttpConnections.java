@@ -343,11 +343,20 @@ public final class HttpConnections {
     }
 
     static void writeEnvironments(Path base, Environments envs) throws IOException {
+        // the file as it is: what VS Code writes and this window does not know (projects, secrets, any later field)
+        // stays; only the fields below are replaced
+        Path file = base.resolve(".nuclear/http.json");
         JsonObject root = new JsonObject();
+        try {
+            if (Files.exists(file)) root = JsonParser.parseString(Files.readString(file)).getAsJsonObject();
+        } catch (Exception ignored) {
+            root = new JsonObject();
+        }
+        JsonObject before = root.has("environments") && root.get("environments").isJsonObject() ? root.getAsJsonObject("environments") : new JsonObject();
         root.addProperty("active", envs.active());
         JsonObject all = new JsonObject();
         for (Map.Entry<String, Environment> e : envs.environments().entrySet()) {
-            JsonObject o = new JsonObject();
+            JsonObject o = before.has(e.getKey()) && before.get(e.getKey()).isJsonObject() ? before.getAsJsonObject(e.getKey()) : new JsonObject();
             o.add("vars", PRETTY.toJsonTree(e.getValue().vars()));
             o.add("headers", PRETTY.toJsonTree(e.getValue().headers()));
             o.add("baseUrls", PRETTY.toJsonTree(e.getValue().baseUrls()));

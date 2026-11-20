@@ -98,6 +98,12 @@ launch nuclear-developer 'import os, sys, uvicorn; sys.exit(uvicorn.run(\"app.ma
 # 5. the knowledge base the set-up ingests (the prompts, the roles' skills, are inside the graph's package)
 mkdir -p "$AI/nuclear-graph-storage"
 cp -R "$GRAPH/data" "$AI/nuclear-graph-storage/"
+# the software factory's roles (rosters with their portraits, temperaments, team names) and the library of skills and
+# agents: Nuclear Builder reads them from <ai>/nuclear-agents (rolesDir, libraryDir); without them the editor's teams
+# have no members and no skills to choose
+mkdir -p "$AI/nuclear-agents"
+cp -R "$REPO/nuclear-agents/roles" "$REPO/nuclear-agents/skills" "$REPO/nuclear-agents/agents" "$AI/nuclear-agents/"
+rm -rf "$AI/nuclear-agents/roles/build" "$AI/nuclear-agents/roles/.nuclear" "$AI/nuclear-agents/roles/.pytest_cache" "$AI/nuclear-agents/roles/tests"
 cp "$REPO/LICENSE" "$AI/"
 echo "$VERSION" > "$AI/VERSION"
 find "$AI" -name __pycache__ -type d -prune -exec rm -rf {} +
@@ -116,6 +122,10 @@ run() { # <launcher> <args>: a .cmd is run by cmd.exe
 run nuclear-graph --help >/dev/null
 run nuclear-mcp tools >/dev/null
 run nuclear-builder setup --plan --json >/dev/null
+# the teams' roster and library come from the archive itself, not from this checkout (NUCLEAR_ROLES unset, run from /)
+roster=$(cd / && env -u NUCLEAR_ROLES -u NUCLEAR_LIBRARY NUCLEAR_AI_ROOT="$AI" "$PY" -X utf8 -c 'import sys; from nuclear_builder.cli import main; sys.argv = ["nuclear-builder", "team", "screen", "--lang", "en", "--json"]; sys.exit(main())' 2>/dev/null) || roster=""
+printf '%s' "$roster" | "$PY" -c 'import json, sys; d = json.load(sys.stdin); r = d["roster"]; assert all(r.get(k) for k in ("analyst", "architect", "developer", "qa", "devops")), "empty roster"; assert d.get("library"), "empty library"; dev = r["developer"]; dev = dev["employees"] if isinstance(dev, dict) else dev; assert any(e.get("face") for e in dev), "no portraits"' \
+  || { echo "ai-runtime: nuclear-builder finds no roster, library or portraits in $AI/nuclear-agents" >&2; exit 1; }
 run nuclear-chat pack >/dev/null
 (cd "$AI/nuclear-chat" && "$PY" -c "import app.main") >/dev/null
 "$PY" -c "import app.main" >/dev/null

@@ -14,6 +14,10 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **The floating update button** (`updateCheck.ts`): the version parsing tested, never seen with a real newer
+  release published; the Nuclear Chat page and the runtime error page do not show it (the chat's input is where the
+  button floats).
+
 - **0.80.0, the version check at start** (`snapshot.ts`): tested (`test/snapshot.test.ts`), never seen in a running
   editor over a public installation of another version.
 

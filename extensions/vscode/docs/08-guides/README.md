@@ -144,6 +144,13 @@ the newest release, its AI services included); when the extension is the older o
 installed release. It asks once per pair of versions and blocks nothing. A NuclearLang built from source is not
 compared.
 
+When a newer release is out, every NuclearLang page (the workspace, Nuclear Builder, your software company, HTTP
+Connections, the devices, the settings, Nuclear Monitor) shows a floating **Update to <version>** button in its
+bottom-right corner, and the status bar shows it too; the button runs `nuclear update` in a terminal (NuclearLang, its
+AI services and this extension), then *Reload Window*. Its ✕ hides it on that page. The check reads the redirect of the
+releases page at most every 12 hours; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off. The command is *Nuclear: Update
+NuclearLang to the latest release*.
+
 ## Troubleshooting
 
 | What you see | What to do |

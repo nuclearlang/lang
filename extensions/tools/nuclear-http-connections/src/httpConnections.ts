@@ -14,6 +14,7 @@ import { readCard } from '../../../vscode/src/card';
 import { ComponentPanel } from './panel';
 import { eventsOf, guardHeadersOf, Protocol, socketPathOf, transportsOf } from './socket';
 import { SocketPanel } from './socketPanel';
+import { compactEnvironments, Environments, normalizeEnvironments } from './request';
 
 export interface Field {
   name: string;
@@ -99,20 +100,7 @@ export interface Endpoint {
   guardHeaders?: [string, string][];
 }
 
-export interface Environment {
-  vars: Record<string, string>;
-  headers: Record<string, string>;
-  /** Base url per project or connection name; `vars.baseUrl` otherwise. */
-  baseUrls: Record<string, string>;
-  /** OpenAPI documents (urls or files) of APIs that are not Nuclear projects. */
-  openapi: string[];
-  /** WebSocket urls (ws:// or wss://) of servers that are not Nuclear projects. */
-  sockets: string[];
-}
-export interface Environments {
-  active: string;
-  environments: Record<string, Environment>;
-}
+export type { Environment, Environments } from './request';
 
 const ENV_FILE = path.join('.nuclear', 'http.json');
 const PLATFORMS: Record<string, string> = { backend: 'Backend', mobile: 'Mobile', web: 'Web' };
@@ -327,17 +315,11 @@ export class HttpModel {
     });
     const fallback: Environments = {
       active: 'local',
-      environments: { local: { vars: { baseUrl: urls[0]?.[1] ?? '' }, headers: {}, baseUrls: Object.fromEntries(urls), openapi: [], sockets: [] } },
+      environments: { local: { vars: { baseUrl: urls[0]?.[1] ?? '' }, headers: {}, secrets: [], baseUrls: Object.fromEntries(urls), openapi: [], sockets: [], projects: {} } },
     };
     try {
-      const read = JSON.parse(fs.readFileSync(this.envFile(), 'utf8')) as Partial<Environments>;
-      const environments: Record<string, Environment> = {};
-      for (const [name, e] of Object.entries(read.environments ?? {})) {
-        environments[name] = { vars: e.vars ?? {}, headers: e.headers ?? {}, baseUrls: e.baseUrls ?? {}, openapi: e.openapi ?? [], sockets: e.sockets ?? [] };
-      }
-      if (Object.keys(environments).length === 0) return fallback;
-      const active = read.active && environments[read.active] ? read.active : Object.keys(environments)[0];
-      return { active, environments };
+      // every field this version added is optional: a file of an earlier version loads unchanged
+      return normalizeEnvironments(JSON.parse(fs.readFileSync(this.envFile(), 'utf8'))) ?? fallback;
     } catch {
       return fallback;
     }
@@ -346,7 +328,13 @@ export class HttpModel {
   private writeEnvironments(envs: Environments): void {
     const file = this.envFile();
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(envs, null, 2) + '\n');
+    fs.writeFileSync(file, JSON.stringify(compactEnvironments(envs), null, 2) + '\n');
+  }
+
+  /** Writes the environments the panels changed (variables, headers, tokens) and redraws what reads them. */
+  saveEnvironments(envs: Environments): void {
+    this.writeEnvironments(envs);
+    this.refresh();
   }
 
   activateEnvironment(name: string): void {
@@ -369,7 +357,7 @@ export class HttpModel {
     if (picked.add) {
       const name = await vscode.window.showInputBox({ prompt: l10n.t('Name of the environment'), value: 'staging' });
       if (!name) return;
-      envs.environments[name] = { vars: { baseUrl: 'https://' }, headers: {}, baseUrls: {}, openapi: [], sockets: [] };
+      envs.environments[name] = { vars: { baseUrl: 'https://' }, headers: {}, secrets: [], baseUrls: {}, openapi: [], sockets: [], projects: {} };
       envs.active = name;
       this.writeEnvironments(envs);
       await this.editEnvironments();
