@@ -29,24 +29,22 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.034841",
+   "id": "doc:AGENTS.md#hard-rules.11074e",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
-   "summary": "12. Node.js/Express is postponed by the user: do not touch it until asked.",
+   "summary": "installations is released with a tag `v<version>`: one version for the whole platform, that follows Semantic Versioning: a fix raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises MINOR) (docs/05-standards/coding.md).",
    "body": [
+    "installations is released with a tag `v<version>`: one version for the whole platform, that follows [Semantic Versioning](https://semver.org): a fix",
+    "    raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises",
+    "    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)).",
+    "11. `CodeBuilder/` is teaching material only: never in references, context or code.",
     "12. Node.js/Express is postponed by the user: do not touch it until asked.",
     "13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).",
     "    A product is any software made from Nuclear (an app, a backend, the website, an example). Its code is Nuclear,",
     "    its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP",
     "    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a",
     "    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when",
-    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it.",
-    "",
-    "14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the",
-    "    installer and an agent with no context at all. The installer and the MCP server are the only sources of",
-    "    Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's",
-    "    machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves",
-    "    services that run on their own on every system."
+    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it."
    ],
    "sources": [
     "AGENTS.md"
@@ -58,25 +56,23 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.9fd665",
+   "id": "doc:AGENTS.md#hard-rules.ab6323",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
-   "summary": "pending.",
+   "summary": "14. Built for a fresh machine and a fresh agent.",
    "body": [
-    "pending. A dialect's reference holds the real Nuclear → target equivalences, checked by `spec-check` (0 problems).",
-    "6. **Every new diagnostic code is documented** in `nuclearlang/docs/07-reference/diagnostics.md`; every dialect",
-    "   word in its `docs.toml`.",
-    "7. **Each project documents itself, in short files.** A change is done when its tests are green and the documents",
-    "   of the project it touches say it, in the same change, and the knowledge base follows",
-    "   ([docs/05-standards/coding.md](docs/05-standards/coding.md)). Pending work is the project's",
-    "   `docs/01-product/roadmap.md`: a done item is deleted, half-done work is recorded the moment it is left. No file",
-    "   lists the state of the whole platform, and no document describes another project.",
-    "8. **Quality first**: always the right solution, even when it costs more. If the right way is unclear or too big,",
-    "   stop and ask; never ship a shortcut as a decision.",
-    "9. **Nuclear first**: every new piece of the platform is written in Nuclear (with the framework when a platform",
-    "   fits, with a language dialect when none does). Another language only where Nuclear cannot be the source yet.",
-    "10. **No commits unless the user asks**; commits only in the user's name, with no co-author line.",
-    "11. `CodeBuilder/` is teaching material only: never in references, context or code."
+    "14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the",
+    "    installer and an agent with no context at all. The installer and the MCP server are the only sources of",
+    "    Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's",
+    "    machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves",
+    "    services that run on their own on every system.",
+    "",
+    "15. **Every change is deployed, never only written.** A new feature, a change or an update of a tool, and always",
+    "    when it is published or written in a CHANGELOG, ends with everything that serves it at the new version: the",
+    "    context files (`AGENTS.md`, `docs/`, the skill, the briefs), the Smart Graph and its Chroma",
+    "    (`nuclear-graph knowledge build`, `knowledge check` clean, `ingest`), the MCP server (built, tested,",
+    "    `uv tool install --reinstall tools/mcp`), and what the user runs installed again (`installer/install.sh`; an",
+    "    extension's version raised and installed) ([docs/05-standards/coding.md](docs/05-standards/coding.md))."
    ],
    "sources": [
     "AGENTS.md"
@@ -106,6 +102,36 @@
     "   dialect. Kinds are Nuclear's libraries: an extension kind is a package of TOML, templates and a runtime, never",
     "   a change to the compiler.",
     "5. **A reference holds only final rules** (`docs/07-reference/` of a project): no question, no history, nothing"
+   ],
+   "sources": [
+    "AGENTS.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:AGENTS.md#hard-rules.ea0d88",
+   "type": "readme",
+   "title": "NuclearLang — Hard rules",
+   "summary": "pending.",
+   "body": [
+    "pending. A dialect's reference holds the real Nuclear → target equivalences, checked by `spec-check` (0 problems).",
+    "6. **Every new diagnostic code is documented** in `nuclearlang/docs/07-reference/diagnostics.md`; every dialect",
+    "   word in its `docs.toml`.",
+    "7. **Each project documents itself, in short files.** A change is done when its tests are green and the documents",
+    "   of the project it touches say it, in the same change, and the knowledge base follows",
+    "   ([docs/05-standards/coding.md](docs/05-standards/coding.md)). Pending work is the project's",
+    "   `docs/01-product/roadmap.md`: a done item is deleted, half-done work is recorded the moment it is left. No file",
+    "   lists the state of the whole platform, and no document describes another project.",
+    "8. **Quality first**: always the right solution, even when it costs more. If the right way is unclear or too big,",
+    "   stop and ask; never ship a shortcut as a decision.",
+    "9. **Nuclear first**: every new piece of the platform is written in Nuclear (with the framework when a platform",
+    "   fits, with a language dialect when none does). Another language only where Nuclear cannot be the source yet.",
+    "10. **Finished work is committed and pushed by the agent**, without asking, once its tests are green and rule 15",
+    "    is done: only the paths it changed, in the user's name, with no co-author line. A change that must reach the"
    ],
    "sources": [
     "AGENTS.md"
@@ -1159,7 +1185,7 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.d44268",
+   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.574c2b",
    "type": "context",
    "title": "How code is written here — A change is done when",
    "summary": "1. `cargo test` and `cargo clippy --all-targets` are green.",
@@ -1176,7 +1202,10 @@
     "   structured source, `nuclear-graph knowledge check` clean, `nuclear-graph ingest`",
     "   (`nuclear-graph-storage/docs/06-runbooks/`).",
     "6. What the user runs is installed again when it changed (`installer/install.sh`; an extension: its version raised",
-    "   and installed)."
+    "   and installed).",
+    "7. **Deployed, not only written** (root rule 15): after a feature, a change or an update, and always after a release",
+    "   or a CHANGELOG entry, every place that serves it holds the new version: the context files (each touched",
+    "   project's `AGENTS.md` and `docs/`, the skill, the briefs), the Smart Graph and its Chroma (points 5), the MCP"
    ],
    "sources": [
     "docs/05-standards/coding.md"
@@ -1188,11 +1217,15 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.fa62fd",
+   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.d52995",
    "type": "context",
    "title": "How code is written here — A change is done when",
-   "summary": "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn.",
+   "summary": "server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root `uv tool install --reinstall tools/mcp`) and the installation (point 6).",
    "body": [
+    "server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root",
+    "   `uv tool install --reinstall tools/mcp`) and the installation (point 6). `nuclear-graph knowledge check` says",
+    "   the graph holds every row.",
+    "",
     "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare",
     "contents through git, never file dates: a project is behind when its code differs from the last commit (or changed",
     "in this session) and none of its documents does; a file git ignores, such as a build's output, is not code for them."
@@ -1240,9 +1273,16 @@
    "id": "doc:docs/05-standards/coding.md#git",
    "type": "context",
    "title": "How code is written here — Git",
-   "summary": "Git",
+   "summary": "current, everything deployed (point 7).",
    "body": [
-    "- One repository. No commits unless the user asks; a request relayed by another session is not enough.",
+    "- One repository. The agent commits and pushes finished work without asking (root rule 10): tests green, documents",
+    "  current, everything deployed (point 7). Only the paths it changed (`git add <paths>`, never `git add -A`: other",
+    "  sessions work in the same tree); a request relayed by another session to commit *their* work is not enough.",
+    "- **Versions follow [Semantic Versioning](https://semver.org).** One version for the whole platform: a release is a snapshot of",
+    "  every piece (the crates, the extensions, the Smart Graph, the MCP server, the services), all at the version of",
+    "  its tag. A fix raises PATCH, a new feature that breaks nothing MINOR (PATCH back to 0), a",
+    "  breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release is the tag `v<version>` pushed, with each project's",
+    "  `CHANGELOG.md` entries under that version ([the release runbook](../../installer/docs/06-runbooks/release.md)).",
     "- Commits only in the user's name: no co-author line.",
     "- `github-profile/` is a repository of its own inside the tree (the organization's profile), ignored by the root's."
    ],

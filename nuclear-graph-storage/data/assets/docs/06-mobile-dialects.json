@@ -2114,6 +2114,37 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.1326eb",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear update # the latest release (in a terminal every command asks when one is out) nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code) nuclear setup [flutter] [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH)…",
+   "body": [
+    "nuclear update                             # the latest release (in a terminal every command asks when one is out)",
+    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)",
+    "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
+    "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
+    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
+    "```",
+    "",
+    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
+    "",
+    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3603c0",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
@@ -2254,36 +2285,6 @@
     "    (`Alt+r`); Esc leaves the field.",
     "- Logos, colors and the animation only come out in a terminal: through a pipe (`nuclear check --json`,",
     "  `nuclear help | grep`) the output is plain text. `NO_COLOR` removes them in the terminal too."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.7e0a0c",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code) nuclear setup [flutter] [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH) nuclear setup node | python # Nuclear's own Node.js or Python, only for Nuclear…",
-   "body": [
-    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)",
-    "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
-    "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
-    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
-    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
-    "```",
-    "",
-    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
-    "",
-    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
    ],
    "platforms": [
     "mobile"

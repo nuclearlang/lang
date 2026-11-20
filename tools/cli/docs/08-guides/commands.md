@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [tools/cli/src/main.rs, tools/cli/src/framework/mod.rs, tools/cli/docs/08-guides/README.md]
 ---
 # Every command of `nuclear`
@@ -16,6 +16,8 @@ These take a file or a folder, and work outside a project of the framework too.
 ```text
 usage:
   nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command
+  nuclear update                                              install the latest release (the installer, run again); in a terminal every
+                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)
   nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)
   nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)
   nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)

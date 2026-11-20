@@ -4262,7 +4262,7 @@
     "npm install",
     "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
     "npm run watch       # out/extension.js on every change",
-    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts and test/toolchains.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
+    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts and test/scripts.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
     "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
     "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
     "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
@@ -4407,9 +4407,9 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.74.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.79.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.74.0): the client of the language server, semantic",
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.79.0): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
     "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
@@ -4573,6 +4573,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.36a5ae",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.77.0: a Flutter already on the machine is used, never installed again: the one the Dart extension uses (`dart.flutterSdkPath`), more usual folders (`~/Developer/flutter`, Homebrew, puro...) and, last, the PATH of your login shell. Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.",
+    "- 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.3c5bc4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4645,26 +4663,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- 0.58.0: the welcome is the first-run onboarding over every setting, *Next, Next*, a default on every step: this machine and the profile, what it needs, the installation, the providers (Claude Code, Codex, Gemini CLI and OpenCode found on the machine; the API keys handed to the system's keyring, never to a setting), the team, the spending (the budget, the two confirmations), each tool's settings and a summary; *Settings and integrations* runs it again. The squad screen (*Builder Teams: Hire the Squad*): a football pitch with the five roles, the hired employee's card on each (face, name, profile, six stats, the HR note), the roster as a row of cards that turn over, hiring by a click or by dragging a card onto the pitch, and each one's settings (local agents, an agent or an API, the model, the skills, instructions, behaviours, tasks); several teams, new from a preset, renamed, duplicated, deleted, exported, imported, one the default; every change saved by `nuclear-builder team`. The settings are one section per tool (`nuclear.ai.*`, `nuclear.builder.*`, `nuclear.spending.*` with `confirm` and `forceConfirm`, `nuclear.atlas.*`, `nuclear.http.*`, `nuclear.devices.*`), the same in *Settings and integrations*; a value set under a moved id moves with it. Everything the extension shows is in English and Spanish, following VS Code's language (the set-up's own profile texts excepted). N",
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.6517ff",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine.",
-    "",
-    "- 0.77.0: a Flutter already on the machine is used, never installed again: the one the Dart extension uses (`dart.flutterSdkPath`), more usual folders (`~/Developer/flutter`, Homebrew, puro...) and, last, the PATH of your login shell. Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.",
-    "- 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons)."
-   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -4806,6 +4804,24 @@
     "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`",
     "  (`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
     "- First public version."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a31ad9",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.79.0: a project's actions (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, and the rest of its platform's) are buttons in the Nuclear workspace, under the project's name, so they show in Cursor too (it hides an extension's buttons in the editor title bar). A backend project has its scripts like npm's: the explorer's *Nuclear Scripts* view, a ▷ per command (run, test, build, check, install, and migrate once there is a `migrations/` folder), and the same as tasks in *Terminal → Run Task…* (`nuclear: <project>: run`), also before the first build. Run and Debug of a project that was never built cleanly build it first and, when it has errors, say so with *Show Output* instead of \"run `nuclear build` first\". On the Visual Studio Marketplace and Open VSX: the store page shows each tool with its screenshot and its key, and how to install NuclearLang first.",
+    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5012,19 +5028,105 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#how-we-made-it",
+   "id": "doc:extensions/vscode/README.md#http-connections-ctrl-alt-h",
    "type": "readme",
-   "title": "NuclearLang for VS Code — How we made it",
-   "summary": "(ADR-extensions-0001).",
+   "title": "NuclearLang for VS Code — HTTP Connections · `Ctrl+Alt+H`",
+   "summary": "!HTTP Connections: the services of every project, found by itself and split by platform, project and component An HTTP client that already knows your API: every route of every backend project, found by itself.",
    "body": [
-    "- **One language server, one base extension per editor**; a dialect is only data",
-    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)).",
-    "- **The Nuclear workspace**: one thing on screen at a time, keyboard first",
-    "  ([ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md)).",
-    "- **The tools come first**: *New with Synapsis* runs `nuclear make` and `nuclear gen`",
-    "  ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
-    "- **Written in TypeScript**, bundled with esbuild; panels in plain HTML."
+    "![HTTP Connections: the services of every project, found by itself and split by platform, project and component](https://nuclearlang.github.io/shots/connector.webp)",
+    "",
+    "An HTTP client that already knows your API: every route of every backend project, found by itself.",
+    "",
+    "- **Split by platform, project and component**: no collection to write by hand.",
+    "- **A tab per request**, with environments.",
+    "- **HTTP, REST and WebSockets**."
    ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#learn-more",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Learn more",
+   "summary": "command, key and setting Run and debug Issues",
+   "body": [
+    "- [The guide](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/README.md): every",
+    "  command, key and setting",
+    "- [The workspace](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/workspace.md) ·",
+    "  [Run and debug](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/run-and-debug.md)",
+    "- [What changed](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/CHANGELOG.md) ·",
+    "  [Issues](https://github.com/nuclearlang/lang/issues)",
+    "- To change it: [AGENTS.md](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/AGENTS.md)"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#nuclear-atlas-ctrl-alt-a",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Nuclear Atlas · `Ctrl+Alt+A`",
+   "summary": "!Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph A chat about Nuclear answered on your machine.",
+   "body": [
+    "![Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph](https://nuclearlang.github.io/shots/atlas.webp)",
+    "",
+    "A chat about Nuclear answered on your machine. Atlas uses a local model and the **Nuclear Smart Graph**, the knowledge",
+    "base of the language, its platforms and your projects. Nothing leaves your computer."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#nuclear-builder-ctrl-alt-p",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Nuclear Builder · `Ctrl+Alt+P`",
+   "summary": "!The spec assistant: the kind of work, the spec written or imported from Jira or GitHub, its acceptance criteria From a spec to a deploy.",
+   "body": [
+    "![The spec assistant: the kind of work, the spec written or imported from Jira or GitHub, its acceptance criteria](https://nuclearlang.github.io/shots/specs.webp)",
+    "",
+    "From a spec to a deploy. You write what you want, or import it from Jira or GitHub, with its acceptance criteria.",
+    "",
+    "![A run of Nuclear Builder: its stages from specification to deploy, each step with who did it](https://nuclearlang.github.io/shots/loop.webp)",
+    "",
+    "- **Loop engineering**: spec, plan, tests, code, verification and deploy, each step with who did it and what it",
+    "  produced.",
+    "- **Your team**: local agents, Claude Code, Codex, Cursor or Grok Build as members (`Ctrl+Alt+E`), and the reports",
+    "  of every run (`Ctrl+Alt+K`).",
+    "- **The tools first**: the code comes from `nuclear gen` and the transpiler, and the acceptance criteria are checked",
+    "  at the end."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#nuclear-monitor-ctrl-alt-f",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Nuclear Monitor · `Ctrl+Alt+F`",
+   "summary": "The running app, function by function: the time, calls, connections and memory of each Nuclear function, as bars.",
+   "body": "The running app, function by function: the time, calls, connections and memory of each Nuclear function, as bars.",
    "sources": [
     "extensions/vscode/README.md"
    ],
@@ -5038,54 +5140,24 @@
    "id": "doc:extensions/vscode/README.md#nuclearlang-for-vs-code",
    "type": "readme",
    "title": "NuclearLang for VS Code",
-   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website transpiler turns it into expert Dart/Flutter, TypeScript or Python.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website · Source into the code an expert would write: Dart and Flutter, TypeScript, or Python.",
    "body": [
-    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/vscode)",
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml)",
+    "· [Website](https://nuclearlang.github.io/tools/vscode) · [Source](https://github.com/nuclearlang/lang/tree/main/extensions/vscode)",
     "",
-    "**NuclearLang** (`.nuc`) is a minimal language made to be written by AI agents and read by people; a Rust",
-    "transpiler turns it into expert Dart/Flutter, TypeScript or Python. This extension brings the language server, the",
-    "dialects, the **Nuclear workspace** and the **Chernobyl** themes."
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#read-next",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Read next",
-   "summary": "Read next",
-   "body": [
-    "- [The guide](docs/08-guides/README.md): every command, key and setting",
-    "- [The workspace](docs/08-guides/workspace.md), [run and debug](docs/08-guides/run-and-debug.md)",
-    "- [What changed](CHANGELOG.md)",
-    "- To change it: [AGENTS.md](AGENTS.md)"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#try-it",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Try it",
-   "summary": "code --install-extension nuclearlang-<version>.vsix Open a `.nuc` file: diagnostics appear while you type.",
-   "body": [
-    "```sh",
-    "code --install-extension nuclearlang-<version>.vsix",
-    "```",
+    "**NuclearLang** (`.nuc`) is a minimal language written by AI agents and read by people. A Rust transpiler turns it",
+    "into the code an expert would write: Dart and Flutter, TypeScript, or Python. Its framework, **Synapsis**, gives you",
+    "three platforms written once: **mobile**, **backend** and **web**.",
     "",
-    "Open a `.nuc` file: diagnostics appear while you type. `Ctrl+Alt+N` opens the workspace."
+    "This extension is the whole studio. It brings the language server, a workspace of your projects, run and debug for",
+    "every platform, and the tools: Nuclear Builder, HTTP Connections, Nuclear Atlas, Nuclear Monitor and the devices.",
+    "",
+    "> **Install NuclearLang first** (the compiler, the language server and the AI services):",
+    "> `curl -fsSL https://nuclearlang.github.io/install.sh | sh` on Linux and macOS,",
+    "> `irm https://nuclearlang.github.io/install.ps1 | iex` on Windows.",
+    "> The extension runs the `nuclear` that the installer puts on your machine.",
+    "",
+    "---"
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -5097,21 +5169,21 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-it-brings",
+   "id": "doc:extensions/vscode/README.md#run-and-debug-in-nuc-ctrl-alt-r-ctrl-alt-g",
    "type": "readme",
-   "title": "NuclearLang for VS Code — What it brings",
-   "summary": "What it brings",
+   "title": "NuclearLang for VS Code — Run and debug in `.nuc` · `Ctrl+Alt+R` · `Ctrl+Alt+G`",
+   "summary": "!The logs of a Synapsis app: each with its breadcrumb, its data, and the .nuc file and line reloads it.",
    "body": [
-    "- **The language server**: live diagnostics with quick fixes, completion, hover, go to definition, rename, semantic colors.",
-    "- **Show Generated Code** beside the `.nuc`, and **code metrics** above each function.",
-    "- **The Nuclear workspace** (`Ctrl+Alt+N`): projects and tools as tabs, each action with a key.",
-    "- **Run, debug and reload on save**, with breakpoints in the `.nuc`.",
-    "- **The devices** (`Ctrl+Alt+V`): a mobile or web app inside the editor.",
-    "- **HTTP Connections** (`Ctrl+Alt+H`): an HTTP client that knows every endpoint of your projects.",
-    "- **Nuclear Builder** (`Ctrl+Alt+P`): a spec taken through plan, tests, code, verification and deploy.",
-    "- **Nuclear Atlas** (`Ctrl+Alt+A`): a local chat answered from the Nuclear Smart Graph.",
-    "- **Settings and integrations** (`Ctrl+Alt+S`) and the AI services set-up.",
-    "- **The Chernobyl and Chernobyl Soft themes**, with file icons."
+    "![The logs of a Synapsis app: each with its breadcrumb, its data, and the .nuc file and line](https://nuclearlang.github.io/shots/logs.webp)",
+    "",
+    "- **Run** a mobile app on a device, or **Serve** a backend or a web app. Saving a `.nuc` rebuilds the project and",
+    "  reloads it.",
+    "- **Backend scripts, like npm's**: the explorer's *Nuclear Scripts* view has a ▷ for each command of a backend",
+    "  project (run, test, build, check, install, migrate), and *Run Task…* has them too.",
+    "- **Breakpoints and steps on the Nuclear line**: `F10`, `F11` and `Shift+F11` step through the `.nuc`, not the",
+    "  generated code.",
+    "- **Logs you can read**: each line shows the component, the kind and the method, its data with the secrets masked, and",
+    "  the `.nuc` file and line it came from."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -5123,13 +5195,126 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#why",
+   "id": "doc:extensions/vscode/README.md#settings-and-the-ai-services-ctrl-alt-s",
    "type": "readme",
-   "title": "NuclearLang for VS Code — Why",
-   "summary": "Why",
+   "title": "NuclearLang for VS Code — Settings and the AI services · `Ctrl+Alt+S`",
+   "summary": "is downloaded before you choose.",
    "body": [
-    "- Less to write, one way to write it: Nuclear drops the target's imports and boilerplate and keeps the logic.",
-    "- Writing, running, debugging, calling the API and the local agents, in one window."
+    "- **Every setting on one page**, in English and Spanish.",
+    "- **The AI services set-up**: the Smart Graph, the MCP server and the local agents. You choose a profile, and nothing",
+    "  is downloaded before you choose.",
+    "- **Integrations**: Jira, GitHub, and the MCP server for Claude Code, Cursor, Codex and Grok Build."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#start",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Start",
+   "summary": "1. Install NuclearLang (the line at the top), then this extension.",
+   "body": [
+    "1. Install NuclearLang (the line at the top), then this extension.",
+    "2. `Ctrl+Alt+W` opens the welcome page: create a project, or open a folder with a `config.nuc`.",
+    "3. `Ctrl+Alt+N` opens the workspace. Press `Ctrl+Alt+R` to run."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#the-chernobyl-themes",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — The Chernobyl themes",
+   "summary": "Theme* → Chernobyl.",
+   "body": [
+    "**Chernobyl** and **Chernobyl Soft**: vivid, radioactive colors, with file and folder icons. *Preferences: Color",
+    "Theme* → Chernobyl.",
+    "",
+    "---"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#the-devices-ctrl-alt-v",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — The devices · `Ctrl+Alt+V`",
+   "summary": "!A Synapsis device inside VS Code: the app in an iPhone frame beside its main.nuc Your app inside the editor, beside its code, with no emulator to install.",
+   "body": [
+    "![A Synapsis device inside VS Code: the app in an iPhone frame beside its main.nuc](https://nuclearlang.github.io/shots/devices.webp)",
+    "",
+    "Your app inside the editor, beside its code, with no emulator to install.",
+    "",
+    "- **Mobile**: the Synapsis device, with iPhone, Pixel and tablet frames, hot reload, and debug.",
+    "- **Web**: the web device, with desktop, tablet and phone sizes, its console and its network."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#the-language-server",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — The language server",
+   "summary": "Write `.nuc` and the compiler checks it while you type.",
+   "body": [
+    "Write `.nuc` and the compiler checks it while you type.",
+    "",
+    "- **Live diagnostics with quick fixes**: the compiler's own errors, each with the exact fix one click away.",
+    "- **Completion and hover** from the platform's words and its type definitions.",
+    "- **Go to definition, find usages, rename** across the project.",
+    "- **Semantic colors** and **code metrics** above each function.",
+    "- **Show Generated Code**: the Dart, TypeScript or Python of the `.nuc`, beside it, updated on save."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#the-nuclear-workspace-ctrl-alt-n",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — The Nuclear workspace · `Ctrl+Alt+N`",
+   "summary": "!The Nuclear workspace: a tab per project, each with its platform and dialect, beside its files Every project you work on, one tab each, with its platform and dialect on the tab.",
+   "body": [
+    "![The Nuclear workspace: a tab per project, each with its platform and dialect, beside its files](https://nuclearlang.github.io/shots/workspace.webp)",
+    "",
+    "Every project you work on, one tab each, with its platform and dialect on the tab. Select a tab and you get its",
+    "files and its actions.",
+    "",
+    "- **A tab per project**: `Ctrl+1` … `Ctrl+9` jumps to one, `Ctrl+Alt+O` opens one more.",
+    "- **The actions of its platform** are in the title bar, each with a key. Mobile has Run, Debug, Hot reload and Device.",
+    "  Backend has Serve, Debug and API. Web has Serve, Device and Debug. Every platform has Build (`Ctrl+Alt+B`), Test",
+    "  (`Ctrl+Alt+T`) and Check (`Ctrl+Alt+C`).",
+    "- **New with Synapsis**: a new project, component, screen or use case comes from `nuclear new`, `nuclear make` and",
+    "  `nuclear gen`. You never start from an empty file."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -5666,9 +5851,11 @@
    "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-synapsis-project",
    "type": "context",
    "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — A Synapsis project",
-   "summary": "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the workspace file open (`nuclear code`) and with only the folder open (`code .`).",
+   "summary": "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes (a folder with a `config.nuc` and no such file, never built cleanly, is built once by `firstBuild` when Run or Debug asks; a failed build shows its reason with *Show Output*; `nuclear.canRun` is on for any…",
    "body": [
-    "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the",
+    "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes (a folder with a `config.nuc`",
+    "and no such file, never built cleanly, is built once by `firstBuild` when Run or Debug asks; a failed build shows",
+    "its reason with *Show Output*; `nuclear.canRun` is on for any folder with a `config.nuc`); it works with the",
     "workspace file open (`nuclear code`) and with only the folder open (`code .`). It takes a project's root, so a tab",
     "of the Nuclear workspace runs its own project; `synapsisOf(file)` walks up from a file for the hot reload on save."
    ],
@@ -5946,29 +6133,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.6e86ef",
-   "type": "context",
-   "title": "The VS Code extension: its files — `src/`",
-   "summary": "`src/`",
-   "body": [
-    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
-    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
-    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
-    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
-    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.71a063",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.03bfce",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
@@ -5980,10 +6145,47 @@
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |",
+    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |",
     "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
-    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |",
-    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |"
+    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |"
    ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.47bcee",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "`src/`",
+   "body": [
+    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |",
+    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
+    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
+    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
+    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.c40642",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "`src/`",
+   "body": "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |",
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
    ],
@@ -6347,30 +6549,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.0081e5",
-   "type": "context",
-   "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
-   "summary": "`PLATFORM_ACTIONS[platform]` are the `editor/title` buttons of `package.json`: the commands `nuclear.action.<id>`, shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.",
-   "body": [
-    "`PLATFORM_ACTIONS[platform]` are the `editor/title` buttons of `package.json`: the commands `nuclear.action.<id>`,",
-    "shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.",
-    "",
-    "| Platform | Actions |",
-    "|---|---|",
-    "| mobile | ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, ⚒ Build, ✓ Test, ☑ Check |",
-    "| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ API |",
-    "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/workspace.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.1110bf",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
@@ -6389,6 +6567,32 @@
     "  state, adds the folder and reloads; `activateWorkspace` resumes it.",
     "- `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the",
     "  Devices pane runs a mobile project only."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.675a7e",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
+   "summary": "`platformActions()[platform]` are the buttons of the files pane, under the project's name (`renderFiles`, the `.actions` row; a click posts `action`), and the `editor/title` buttons of `package.json` (Cursor shows none of an extension's title bar buttons): the commands `nuclear.action.<id>`, shown…",
+   "body": [
+    "`platformActions()[platform]` are the buttons of the files pane, under the project's name (`renderFiles`, the",
+    "`.actions` row; a click posts `action`), and the `editor/title` buttons of `package.json` (Cursor shows none of an",
+    "extension's title bar buttons): the commands `nuclear.action.<id>`,",
+    "shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.",
+    "",
+    "| Platform | Actions |",
+    "|---|---|",
+    "| mobile | ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, ⚒ Build, ✓ Test, ☑ Check |",
+    "| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ API |",
+    "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -6788,8 +6992,11 @@
    "id": "doc:extensions/vscode/docs/08-guides/README.md#install",
    "type": "readme",
    "title": "NuclearLang for VS Code — Install",
-   "summary": "`npm run package` in `extensions/vscode/`).",
+   "summary": "in Cursor, VSCodium and Windsurf), or `code --install-extension nuclearlang.nuclearlang`.",
    "body": [
+    "- From the store: search **NuclearLang** in the Extensions view (the Visual Studio Marketplace in VS Code; Open VSX",
+    "  in Cursor, VSCodium and Windsurf), or `code --install-extension nuclearlang.nuclearlang`. Install NuclearLang",
+    "  first: the extension runs the installed `nuclear`.",
     "- The NuclearLang installer installs the `.vsix` when `code` is on the `PATH`.",
     "- By hand: `code --install-extension nuclearlang-<version>.vsix` (from a GitHub release, or built with",
     "  `npm run package` in `extensions/vscode/`).",
@@ -7024,8 +7231,15 @@
    "id": "doc:extensions/vscode/docs/08-guides/run-and-debug.md#backend-and-web",
    "type": "guide",
    "title": "Run, debug and tasks in VS Code — Backend and web",
-   "summary": "`nestjs`, Chrome for `react`.",
+   "summary": "project with a ▷ per command (`run`, `test`, `build`, `check`, `install`, and `migrate` once the project has a `migrations/` folder).",
    "body": [
+    "- **The scripts of a backend project**, like npm's: the explorer's **Nuclear Scripts** view lists each backend",
+    "  project with a ▷ per command (`run`, `test`, `build`, `check`, `install`, and `migrate` once the project has a",
+    "  `migrations/` folder). The same are tasks of *Terminal → Run Task…* (`nuclear: <project>: run`), there before the",
+    "  first build too. Each runs `nuclear <command>` in the project's folder, in a terminal of its own.",
+    "- **A project that never built cleanly** (no `build/<name>.code-workspace`): ◉ Debug builds it first; if it has",
+    "  errors, the notification says so and *Show Output* shows them.",
+    "",
     "- **◉ Debug** builds the project and starts its debug launch: debugpy for `fastapi`, node with source maps for",
     "  `nestjs`, Chrome for `react`. A `react` app's dev server starts first, in its own terminal.",
     "- **Build on save** (`nuclear.buildOnSave`, on by default): saving a `.nuc` runs `nuclear build`, and the running",
@@ -7258,12 +7472,13 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.4e0694",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.39534a",
    "type": "guide",
    "title": "The Nuclear workspace — The actions of a project",
-   "summary": "The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs: Device and API have no key.",
+   "summary": "The actions of the active project's platform are buttons under the project's name in the workspace, and also in the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there): Device and API have no key.",
    "body": [
-    "The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs:",
+    "The actions of the active project's platform are buttons under the project's name in the workspace, and also in",
+    "the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there):",
     "",
     "| Platform | Buttons |",
     "|---|---|",

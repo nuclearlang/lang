@@ -114,6 +114,61 @@
    }
   },
   {
+   "id": "faq:run-a-project",
+   "type": "faq",
+   "title": "How do I run a project?",
+   "summary": "`nuclear run` in the project's folder builds it, installs its packages the first time and starts it: a backend's server, a web app's dev server, a mobile app on a device. In VS Code or Cursor, the Nuclear workspace (`Ctrl+Alt+N`) has the project's buttons under its name (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check), and a backend has its scripts in the explorer's Nuclear Scripts view and in Run Task.",
+   "body": [
+    "```sh",
+    "cd tasks_api",
+    "nuclear check                               # the errors of the .nuc files, if any",
+    "nuclear run                                 # build, install the first time, then serve (Ctrl+C stops it)",
+    "```",
+    "",
+    "- A backend answers at its URL (fastapi: `http://localhost:8000`, its API at `/docs`); saving a `.nuc` rebuilds and the server reloads. A project that uses the `ollama` plugin needs Ollama running with a model pulled.",
+    "- In the editor: `Ctrl+Alt+N` opens the Nuclear workspace; select the project's tab (`Ctrl+Alt+O` opens one) and use the buttons under its name: ▷ Serve (`Ctrl+Alt+R`, a terminal with `nuclear run`), ◉ Debug (`Ctrl+Alt+G`, breakpoints in the `.nuc`), ✓ Test, ⚒ Build, ☑ Check, and ⇄ API for a backend. Cursor hides an extension's buttons in the editor title bar: the workspace's are always there.",
+    "- A backend's scripts, like npm's: the explorer's **Nuclear Scripts** view has a ▷ for run, test, build, check, install (and migrate once there is a `migrations/` folder); *Terminal → Run Task…* lists them as `nuclear: <project>: <script>`, before the first build too.",
+    "- No play and no tasks usually means the project does not build: `nuclear check` names the errors. Run and Debug build a never-built project first and say why it fails."
+   ],
+   "keys": [
+    "run a project",
+    "serve",
+    "play button",
+    "ejecutar proyecto",
+    "nuclear scripts",
+    "run task"
+   ],
+   "asks": [
+    "how do I run a project",
+    "how do I run my backend",
+    "como ejecuto un proyecto",
+    "where is the play button in cursor",
+    "no play button in the editor",
+    "como corro el backend"
+   ],
+   "links": [
+    {
+     "rel": "command",
+     "to": "tool:nuclear.run"
+    },
+    {
+     "rel": "tool",
+     "to": "component:nuclear-vscode"
+    },
+    {
+     "rel": "previous",
+     "to": "faq:start-a-project"
+    }
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/run-and-debug.md",
+    "extensions/vscode/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "topic": "start"
+   }
+  },
+  {
    "id": "faq:local-models",
    "type": "faq",
    "title": "Which models do the local agents use, and can I change them?",
@@ -406,6 +461,41 @@
    ],
    "meta": {
     "topic": "start"
+   }
+  },
+  {
+   "id": "faq:update-nuclearlang",
+   "type": "faq",
+   "title": "How do I update NuclearLang?",
+   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services, the profile kept). In a terminal, `nuclear` also asks `Update now? [Y/n]` before a command when a newer release is out.",
+   "body": [
+    "The check runs in the background once a day and never delays a command; it never asks in editors, agents, pipes or CI. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
+    "",
+    "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built."
+   ],
+   "keys": [
+    "update",
+    "upgrade nuclear",
+    "new version",
+    "actualizar"
+   ],
+   "asks": [
+    "how do I update nuclear",
+    "how do I get the latest version",
+    "como actualizo nuclear",
+    "why does nuclear ask to update"
+   ],
+   "links": [
+    {
+     "rel": "command",
+     "to": "tool:nuclear.update"
+    }
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "topic": "install"
    }
   }
  ]

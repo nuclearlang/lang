@@ -8,7 +8,7 @@
    "id": "tool:nuclear",
    "type": "cli",
    "title": "`nuclear` — the command line of NuclearLang",
-   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: add, agent, analyze, ast, build, check, clean, code, contracts, credits, defs, device, dialect, doctor, explain, fix, fmt, gen, help, install, kind, make, migrate, monitor, new, packages, repair, run, setup, spec, terminal-device, test, tokens, watch.",
+   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: add, agent, analyze, ast, build, check, clean, code, contracts, credits, defs, device, dialect, doctor, explain, fix, fmt, gen, help, install, intro, kind, make, migrate, monitor, new, packages, repair, run, setup, spec, terminal-device, test, tokens, update, watch.",
    "body": [
     "```text",
     "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
@@ -2344,6 +2344,40 @@
    }
   },
   {
+   "id": "tool:nuclear.intro",
+   "type": "cli",
+   "title": "`nuclear intro` — The intro animation, then the page (the installers end with it)",
+   "summary": "The intro animation, then the page (the installers end with it)",
+   "body": [
+    "```text",
+    "  intro                                      the intro animation, then the page (the installers end with it)",
+    "```"
+   ],
+   "keys": [
+    "nuclear intro"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "intro"
+   },
+   "data": {
+    "command": "nuclear intro",
+    "entries": [
+     {
+      "what": "intro",
+      "usage": "nuclear intro",
+      "alias": "",
+      "note": "",
+      "does": "The intro animation, then the page (the installers end with it)"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.kind",
    "type": "cli",
    "title": "`nuclear kind` — A kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
@@ -2839,6 +2873,41 @@
       "alias": "",
       "note": "",
       "does": "Print the tokens produced by the lexer"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.update",
+   "type": "cli",
+   "title": "`nuclear update` — Install the latest release (the installer, run again); in a terminal every command asks to update…",
+   "summary": "Install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+   "body": [
+    "```text",
+    "  nuclear update                                              install the latest release (the installer, run again); in a terminal every",
+    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+    "```"
+   ],
+   "keys": [
+    "nuclear update"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "update"
+   },
+   "data": {
+    "command": "nuclear update",
+    "entries": [
+     {
+      "what": "update",
+      "usage": "nuclear update",
+      "alias": "",
+      "note": "",
+      "does": "Install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)"
      }
     ]
    }

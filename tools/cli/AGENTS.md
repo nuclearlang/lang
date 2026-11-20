@@ -35,6 +35,7 @@ nuclear new shop_app && cd shop_app && nuclear code
 - `src/atlas.rs`: the atlas: every documentation topic by group (embedded, found in the installation, the
   examples), links resolved for a reader without the source tree (spec 016).
 - `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.
+- `src/update.rs`: `nuclear update` and the question before a command when a newer release is out.
 - `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,
   `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`)
   ([code map](docs/02-architecture/overview.md)).

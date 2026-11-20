@@ -8,7 +8,7 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 78 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 80 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
     "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
@@ -87,7 +87,9 @@
     "- %command.nuclear.tree.newFile% (`nuclear.tree.newFile`)",
     "- %command.nuclear.tree.newFolder% (`nuclear.tree.newFolder`)",
     "- %command.nuclear.tree.rename% (`nuclear.tree.rename`)",
-    "- %command.nuclear.tree.delete% (`nuclear.tree.delete`)"
+    "- %command.nuclear.tree.delete% (`nuclear.tree.delete`)",
+    "- %command.nuclear.scripts.run% (`nuclear.scripts.run`)",
+    "- %command.nuclear.scripts.refresh% (`nuclear.scripts.refresh`)"
    ],
    "keys": [
     "vscode commands",
@@ -491,6 +493,16 @@
      {
       "title": "%command.nuclear.tree.delete%",
       "command": "nuclear.tree.delete",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.scripts.run%",
+      "command": "nuclear.scripts.run",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.scripts.refresh%",
+      "command": "nuclear.scripts.refresh",
       "keys": ""
      }
     ]

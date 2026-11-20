@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-20
 related: []
 ---
 # How code is written here
@@ -25,7 +25,14 @@ The rules every project shares. A project's own conventions are in its `docs/05-
 - Node.js/Express is postponed by the user: not touched until asked.
 
 ## Git
-- One repository. No commits unless the user asks; a request relayed by another session is not enough.
+- One repository. The agent commits and pushes finished work without asking (root rule 10): tests green, documents
+  current, everything deployed (point 7). Only the paths it changed (`git add <paths>`, never `git add -A`: other
+  sessions work in the same tree); a request relayed by another session to commit *their* work is not enough.
+- **Versions follow [Semantic Versioning](https://semver.org).** One version for the whole platform: a release is a snapshot of
+  every piece (the crates, the extensions, the Smart Graph, the MCP server, the services), all at the version of
+  its tag. A fix raises PATCH, a new feature that breaks nothing MINOR (PATCH back to 0), a
+  breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release is the tag `v<version>` pushed, with each project's
+  `CHANGELOG.md` entries under that version ([the release runbook](../../installer/docs/06-runbooks/release.md)).
 - Commits only in the user's name: no co-author line.
 - `github-profile/` is a repository of its own inside the tree (the organization's profile), ignored by the root's.
 
@@ -43,6 +50,12 @@ The rules every project shares. A project's own conventions are in its `docs/05-
    (`nuclear-graph-storage/docs/06-runbooks/`).
 6. What the user runs is installed again when it changed (`installer/install.sh`; an extension: its version raised
    and installed).
+7. **Deployed, not only written** (root rule 15): after a feature, a change or an update, and always after a release
+   or a CHANGELOG entry, every place that serves it holds the new version: the context files (each touched
+   project's `AGENTS.md` and `docs/`, the skill, the briefs), the Smart Graph and its Chroma (points 5), the MCP
+   server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root
+   `uv tool install --reinstall tools/mcp`) and the installation (point 6). `nuclear-graph knowledge check` says
+   the graph holds every row.
 
 The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare
 contents through git, never file dates: a project is behind when its code differs from the last commit (or changed

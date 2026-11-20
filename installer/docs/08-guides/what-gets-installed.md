@@ -76,3 +76,10 @@ incomplete.
   where it stopped.
 - A new version: replaced, with the AI services' profile kept.
 - `--reinstall` (`-Reinstall` on Windows): downloads and replaces even what is there.
+
+## Updates
+
+`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).
+And when a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y/n]`; a yes updates,
+then runs the command. The check happens in the background once a day, never in editors, agents, pipes or CI;
+`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off. A `nuclear` built from source is never updated this way.

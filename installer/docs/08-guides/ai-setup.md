@@ -126,7 +126,7 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
 
 ## 6. Update and remove
 
-- **Update:** run the installer again. It brings the new version and sets the services up again with the profile
+- **Update:** run the installer again, or `nuclear update` (in a terminal `nuclear` also asks when a new release is out). It brings the new version and sets the services up again with the profile
   you had, without questions.
 - **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama
   (`ollama rm <model>` frees their disk).

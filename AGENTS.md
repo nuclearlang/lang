@@ -64,7 +64,11 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
    stop and ask; never ship a shortcut as a decision.
 9. **Nuclear first**: every new piece of the platform is written in Nuclear (with the framework when a platform
    fits, with a language dialect when none does). Another language only where Nuclear cannot be the source yet.
-10. **No commits unless the user asks**; commits only in the user's name, with no co-author line.
+10. **Finished work is committed and pushed by the agent**, without asking, once its tests are green and rule 15
+    is done: only the paths it changed, in the user's name, with no co-author line. A change that must reach the
+    installations is released with a tag `v<version>`: one version for the whole platform, that follows [Semantic Versioning](https://semver.org): a fix
+    raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises
+    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)).
 11. `CodeBuilder/` is teaching material only: never in references, context or code.
 12. Node.js/Express is postponed by the user: do not touch it until asked.
 13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).
@@ -79,6 +83,13 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's
     machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves
     services that run on their own on every system.
+
+15. **Every change is deployed, never only written.** A new feature, a change or an update of a tool, and always
+    when it is published or written in a CHANGELOG, ends with everything that serves it at the new version: the
+    context files (`AGENTS.md`, `docs/`, the skill, the briefs), the Smart Graph and its Chroma
+    (`nuclear-graph knowledge build`, `knowledge check` clean, `ingest`), the MCP server (built, tested,
+    `uv tool install --reinstall tools/mcp`), and what the user runs installed again (`installer/install.sh`; an
+    extension's version raised and installed) ([docs/05-standards/coding.md](docs/05-standards/coding.md)).
 
 ## Commands of the whole tree
 

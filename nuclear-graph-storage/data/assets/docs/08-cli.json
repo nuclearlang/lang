@@ -1370,16 +1370,25 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.2453f5",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.52b7c6",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the Smart Graph answers, and uninstalls it leaving nothing.",
+   "summary": "1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other manifest), raised by Semantic Versioning: a fix PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) (coding.md).",
    "body": [
-    "PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
-    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
-    "   nuclearlang/lang -f version=<version>`.",
-    "",
-    "The workflow has never run ([roadmap](../01-product/roadmap.md))."
+    "1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other",
+    "   manifest), raised by Semantic Versioning: a fix",
+    "   PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) ([coding.md](../../../docs/05-standards/coding.md#git)).",
+    "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
+    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
+    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
+    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
+    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
+    "   by hand (`workflow_dispatch`).",
+    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
+    "   environment) and on Open VSX (namespace `nuclearlang`: the secret",
+    "   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX",
+    "   lets register only once the namespace is verified). The stores read the `version` of"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1391,25 +1400,20 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.90c7af",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.926474",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
+   "summary": "`extensions/vscode/package.json`: bump it for the release, or that store skips the upload.",
    "body": [
-    "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
-    "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
-    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
-    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
-    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
-    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
-    "   by hand (`workflow_dispatch`).",
-    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
-    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
-    "   environment) and on Open VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of",
-    "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
+    "`extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
     "   stop the GitHub release.",
     "4. The public one-liners download from that release: without a release they fail with a clear error.",
-    "5. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows"
+    "5. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
+    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
+    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
+    "   nuclearlang/lang -f version=<version>`.",
+    "",
+    "The workflow has never run ([roadmap](../01-product/roadmap.md))."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1722,7 +1726,7 @@
    "title": "Set up the AI services — 6. Update and remove",
    "summary": "you had, without questions.",
    "body": [
-    "- **Update:** run the installer again. It brings the new version and sets the services up again with the profile",
+    "- **Update:** run the installer again, or `nuclear update` (in a terminal `nuclear` also asks when a new release is out). It brings the new version and sets the services up again with the profile",
     "  you had, without questions.",
     "- **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama",
     "  (`ollama rm <model>` frees their disk).",
@@ -1978,6 +1982,26 @@
     "  where it stopped.",
     "- A new version: replaced, with the AI services' profile kept.",
     "- `--reinstall` (`-Reinstall` on Windows): downloads and replaces even what is there."
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#updates",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Updates",
+   "summary": "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).",
+   "body": [
+    "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).",
+    "And when a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y/n]`; a yes updates,",
+    "then runs the command. The check happens in the background once a day, never in editors, agents, pipes or CI;",
+    "`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off. A `nuclear` built from source is never updated this way."
    ],
    "sources": [
     "installer/docs/08-guides/what-gets-installed.md"
@@ -2287,6 +2311,7 @@
     "- `src/atlas.rs`: the atlas: every documentation topic by group (embedded, found in the installation, the",
     "  examples), links resolved for a reader without the source tree (spec 016).",
     "- `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.",
+    "- `src/update.rs`: `nuclear update` and the question before a command when a newer release is out.",
     "- `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,",
     "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`)",
     "  ([code map](docs/02-architecture/overview.md)).",
@@ -2448,6 +2473,26 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- `nuclear gen resource` on a resource that exists finishes what it adds: a new action also gets the repository's method and the controller's route (it left a use case calling a method nobody had). `--source db --actions search` is refused: which column is searched is a decision (a query of the repository, wired with `gen usecase --calls`). ADR-developer-0001.",
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.dda230",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "services included).",
+   "body": [
+    "- `nuclear update`: installs the latest release (the public installer run again for this installation, the AI",
+    "  services included). In a terminal, every command asks `Update now? [Y/n]` when a newer release is out; the check",
+    "  runs in the background once a day, never in editors, agents, pipes or CI (`NUCLEAR_NO_UPDATE_CHECK=1` turns it",
+    "  off), and a build from source is never updated (`update.rs`)."
+   ],
    "sources": [
     "tools/cli/CHANGELOG.md"
    ],
@@ -2957,17 +3002,40 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.994469",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.6c0ab9",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`, `--defs-path <dir>`.",
    "body": [
-    "| `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |",
-    "| `defs list [--dialect]`, `defs show <Name\\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |",
-    "",
     "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a",
     "platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`,",
     "`--defs-path <dir>`. An unknown option or command prints `USAGE` and exits 2; errors in the code exit 1."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.c0f9cb",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
+   "summary": "Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an installation a public installer made, `update::offer` asks `Update now?",
+   "body": [
+    "| `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |",
+    "| `update` | The latest release: runs the public installer again for this installation (`NUCLEAR_INSTALL`); only an installation a public installer made (its `.version`), a build from source says so and exits 2 | `update::command` |",
+    "| `defs list [--dialect]`, `defs show <Name\\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |",
+    "",
+    "Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an",
+    "installation a public installer made, `update::offer` asks `Update now? [Y/n]` when the last check knew a newer",
+    "release. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a",
+    "detached `curl` into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes",
+    "the installer runs and the new binary runs the command again (Windows: the installer opens in its own window, as it",
+    "replaces `nuclear.exe`)."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -3914,70 +3982,15 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4edf7a",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.05e09e",
    "type": "guide",
    "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "only lists the files that would change (exit 1) nuclear tokens <file.nuc> print the tokens produced by the lexer nuclear ast <file.nuc> print the syntax tree nuclear dialect list list the dialects found nuclear dialect check <name|path> [--json] validate a dialect's files nuclear kind new <name>…",
+   "summary": "nuclear agent init [--dialect <name>] AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents nuclear agent hook (the hook: checks the .nuc an agent edited; reads the tool call on stdin) nuclear contracts list the contracts the project (current folder) declares and their state…",
    "body": [
-    "only lists the files that would change (exit 1)",
-    "  nuclear tokens <file.nuc>                                   print the tokens produced by the lexer",
-    "  nuclear ast <file.nuc>                                      print the syntax tree",
-    "  nuclear dialect list                                        list the dialects found",
-    "  nuclear dialect check <name|path> [--json]                  validate a dialect's files",
-    "  nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
-    "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
-    "                                                              with --dialect, also the spec of the dialect and its parents;",
-    "                                                              --brief: the short sheet (what changes from TS/Dart)",
-    "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
+    "nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
     "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
-    "  nuclear contracts list                                      the contracts the project (current folder) declares and their state"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.d9e9c7",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear help <word>|words|layout --dialect <name> a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes) nuclear build <file.nuc> --dialect <name|path> [-o…",
-   "body": [
-    "```text",
-    "usage:",
-    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
-    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
-    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
-    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
-    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
-    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
-    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
-    "                                                              fixes), then report what is left",
-    "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
-    "                                                              (the Nuclear of a platform is the same in all of them)",
-    "  nuclear fmt <file.nuc|folder>... [--check]                  rewrite the files in the canonical layout (spacing,",
-    "                                                              indentation, blank lines; never reorders); --check"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.f417a2",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "nuclear contracts update [<name>...] fetch each contract (a url: GET <url>/.nuclear/contract.json; a path: its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc nuclear defs list [--dialect <name>] list the type definitions packages (all, or the dialect's) nuclear defs show…",
-   "body": [
-    "nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
+    "  nuclear contracts list                                      the contracts the project (current folder) declares and their state",
+    "  nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
     "                                                              its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc",
     "  nuclear defs list [--dialect <name>]                        list the type definitions packages (all, or the dialect's)",
     "  nuclear defs show <Name|Name.member> --dialect <name> [--json] [--inherited]",
@@ -3989,6 +4002,63 @@
     "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
     "                         folder next to each dialects/ folder is always searched",
     "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.207bf8",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear update install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never) nuclear help…",
+   "body": [
+    "```text",
+    "usage:",
+    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
+    "  nuclear update                                              install the latest release (the installer, run again); in a terminal every",
+    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
+    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
+    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
+    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
+    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
+    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
+    "                                                              fixes), then report what is left",
+    "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.8d19dd",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "(the Nuclear of a platform is the same in all of them) nuclear fmt <file.nuc|folder>... [--check] rewrite the files in the canonical layout (spacing, indentation, blank lines; never reorders); --check only lists the files that would change (exit 1) nuclear tokens <file.nuc> print the tokens…",
+   "body": [
+    "(the Nuclear of a platform is the same in all of them)",
+    "  nuclear fmt <file.nuc|folder>... [--check]                  rewrite the files in the canonical layout (spacing,",
+    "                                                              indentation, blank lines; never reorders); --check",
+    "                                                              only lists the files that would change (exit 1)",
+    "  nuclear tokens <file.nuc>                                   print the tokens produced by the lexer",
+    "  nuclear ast <file.nuc>                                      print the syntax tree",
+    "  nuclear dialect list                                        list the dialects found",
+    "  nuclear dialect check <name|path> [--json]                  validate a dialect's files",
+    "  nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
+    "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
+    "                                                              with --dialect, also the spec of the dialect and its parents;",
+    "                                                              --brief: the short sheet (what changes from TS/Dart)"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

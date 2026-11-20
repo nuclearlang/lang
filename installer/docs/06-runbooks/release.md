@@ -1,14 +1,16 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-20
 related: [installer/release/package.sh, installer/release/clean-machine/Dockerfile, .github/workflows/release.yml, installer/docs/02-architecture/overview.md]
 ---
 # Release, and test an installer
 
 ## Publish a release
 
-1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.
+1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other
+   manifest), raised by Semantic Versioning: a fix
+   PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) ([coding.md](../../../docs/05-standards/coding.md#git)).
 2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code
    extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:
    the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts

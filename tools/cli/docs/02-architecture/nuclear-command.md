@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [tools/cli/src/main.rs, tools/cli/docs/02-architecture/agent-support.md, nuclearlang/docs/07-reference/dialects.md]
 ---
 # The compiler's commands (`tools/cli/src/main.rs`)
@@ -29,7 +29,15 @@ prints it, and `nuclear help <command>` prints its lines of it; for a command of
 | `spec [--dialect <d>\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |
 | `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |
 | `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |
+| `update` | The latest release: runs the public installer again for this installation (`NUCLEAR_INSTALL`); only an installation a public installer made (its `.version`), a build from source says so and exits 2 | `update::command` |
 | `defs list [--dialect]`, `defs show <Name\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |
+
+Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an
+installation a public installer made, `update::offer` asks `Update now? [Y/n]` when the last check knew a newer
+release. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a
+detached `curl` into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes
+the installer runs and the new binary runs the command again (Windows: the installer opens in its own window, as it
+replaces `nuclear.exe`).
 
 Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a
 platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`,

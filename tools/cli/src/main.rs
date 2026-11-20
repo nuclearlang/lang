@@ -3,6 +3,7 @@
 mod agent;
 mod atlas;
 mod framework;
+mod update;
 
 use nuclear_diag::{Diagnostic, SourceFile, json_items, render_text};
 use nuclear_dialect::{Dialect, Loader, Report};
@@ -13,6 +14,8 @@ const USAGE: &str = "usage:
   nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command
   nuclear help start                                          begin here (an agent with no context too): what Nuclear is, the rules, the cycle
   nuclear help atlas [--json]                                 every documentation topic, by group
+  nuclear update                                              install the latest release (the installer, run again); in a terminal every
+                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)
   nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)
   nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)
   nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)
@@ -240,6 +243,12 @@ fn main() -> ExitCode {
         raw.remove(i);
         // SAFETY: the first thing the process does, before any thread
         unsafe { std::env::set_var("NUCLEAR_MONITOR", "1") };
+    }
+    if raw.first().map(String::as_str) == Some("update") {
+        return update::command();
+    }
+    if let Some(code) = update::offer(&std::env::args().skip(1).collect::<Vec<_>>()) {
+        return code;
     }
     if framework::claims(&raw) {
         return framework::main(raw);

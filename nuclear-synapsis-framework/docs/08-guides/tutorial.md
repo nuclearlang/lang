@@ -13,6 +13,7 @@ curl -fsSL https://nuclearlang.github.io/install.sh | sh   # Windows: irm https:
 # or, from the source tree: installer/install.sh (needs Rust)
 nuclear doctor             # checks everything: the command, the dialect, the Synapsis package, Flutter, VS Code
 nuclear setup              # only if doctor says Flutter is missing: installs it step by step (backend or web: nuclear setup node; Python comes with NuclearLang)
+nuclear update             # the latest release; in a terminal nuclear also asks before a command when a newer one is out
 ```
 
 `nuclear` finds Flutter by itself (on the PATH, `~/development/flutter`, fvm...); `FLUTTER`
