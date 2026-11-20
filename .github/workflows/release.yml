@@ -75,17 +75,15 @@ jobs:
   # the same .vsix on the Visual Studio Marketplace and Open VSX; a job of its own, so a store that fails never stops
   # the GitHub release. The version the stores read is package.json's: a version already published is skipped.
   # the extension in the stores: the Visual Studio Marketplace (VS Code) and Open VSX (Cursor, VSCodium, Windsurf).
-  # Open VSX is skipped while its token is not a secret of the repository; a failed publish is shown but never fails
-  # the release (the Windows installer test follows a successful release)
+  # Both by Trusted Publishing (OIDC, no secret stored); a failed publish is shown but never fails the release
+  # (the Windows installer test follows a successful release)
   marketplaces:
     needs: vscode
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
       contents: read
-      id-token: write  # the Marketplace's Trusted Publishing (OIDC): no token stored
-    env:
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      id-token: write  # Trusted Publishing (OIDC) of both stores: no token stored
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -97,8 +95,8 @@ jobs:
       - name: Visual Studio Marketplace
         run: npx --yes @vscode/vsce@4.1.1 publish --oidc --packagePath dist/*.vsix --skip-duplicate
       - name: Open VSX
-        if: ${{ !cancelled() && env.OVSX_PAT != '' }}
-        run: npx --yes ovsx@1.4.0 publish dist/*.vsix --skip-duplicate
+        if: ${{ !cancelled() }}
+        run: npx --yes ovsx@1.4.0 publish --trusted-publishing --packagePath dist/*.vsix --skip-duplicate
 
   # the AI services' archive (ADR-installer-0003): a Python of their own with the Smart Graph, the MCP server and the
   # Nuclear Developer, built and tried on a runner of each system (glibc Linux: onnxruntime has no musl wheel)
