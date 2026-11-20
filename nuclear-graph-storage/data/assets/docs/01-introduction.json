@@ -146,8 +146,13 @@
    "id": "doc:AGENTS.md#in-progress",
    "type": "readme",
    "title": "NuclearLang — In progress",
-   "summary": "The AI services ready to run from the installer, with nothing on the machine: their own Python and the set-up in Nuclear are done; Nuclear Builder's engine in Nuclear and the welcome page for Ollama and the models are left (docs/04-specs/009-self-contained-ai-services/tasks.md).",
+   "summary": "repository, community, the launch as news: docs/04-specs/019-launch-and-growth/tasks.md) and the public benchmark that proves its value with cheap models (docs/04-specs/020-benchmark/tasks.md).",
    "body": [
+    "**High priority**: the launch and growth of NuclearLang (website readable by search engines and AI agents, registries,",
+    "repository, community, the launch as news:",
+    "[docs/04-specs/019-launch-and-growth/tasks.md](docs/04-specs/019-launch-and-growth/tasks.md)) and the public benchmark",
+    "that proves its value with cheap models ([docs/04-specs/020-benchmark/tasks.md](docs/04-specs/020-benchmark/tasks.md)).",
+    "",
     "The AI services ready to run from the installer, with nothing on the machine: their own Python and the set-up in",
     "Nuclear are done; Nuclear Builder's engine in Nuclear and the welcome page for Ollama and the models are left",
     "([docs/04-specs/009-self-contained-ai-services/tasks.md](docs/04-specs/009-self-contained-ai-services/tasks.md))."
@@ -271,16 +276,23 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.4af7fd",
+   "id": "doc:CHANGELOG.md#unreleased.4ab368",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
+   "summary": "file they go into: the templates' new filters `json` / `toml` and `html`, and the pubspec's YAML; a description can no longer add keys (an npm `postinstall`, a TOML dependency) or a `<script>` to the built site (spec 018 M6).",
    "body": [
-    "- `STATUS.md` holds only what is left to do (half done, untested, pending) and keeps no log: what a task did is written in the documentation of its area, and no file is made to hold history (`AGENTS.md` rule 6, `docs/context/workflow.md`); the start hook (`tools/context/check.sh session`) warns when the file is over 40 KB.",
-    "- `nuclear agent hook` checks a project with its own type definitions (`<project>/defs`), as `nuclear check` does: it reported every name of them as an error after each edit.",
-    "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
-    "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring.",
-    "- ADR-graph-0001: the Smart Graph is a library of typed, linked, versioned rows; the definition of done includes the knowledge base (`nuclear-graph knowledge build | check`, `ingest`) and the end-of-turn hook (`tools/context/check.sh stop`) runs the check."
+    "- The values of `config.nuc` (`app(description, version)`, a package's name, version and path) are escaped for the",
+    "  file they go into: the templates' new filters `json` / `toml` and `html`, and the pubspec's YAML; a description",
+    "  can no longer add keys (an npm `postinstall`, a TOML dependency) or a `<script>` to the built site (spec 018 M6).",
+    "- Nesting deeper than 200 levels (expressions, blocks, types) is the error N0023, instead of a stack overflow that",
+    "  aborted `nuclear check` and the language server on one file (spec 018 M8).",
+    "- Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name",
+    "  (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has",
+    "  `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc`",
+    "  takes a name that is not an identifier (`\"date-fns@^4.1.0\"`); `[project.manifest.advice]`; `nuclear defs` reads the",
+    "  packages of the project it runs in; `gen.py --distribution` and `gen.js --package`; `defs.dart` skips the library of",
+    "  a plugin the app has not enabled (it failed every `flutter add` there). A member of a module (`np.max(list)` after",
+    "  `use numpy as np`) or of a library's function or object (`lodash.map(...)`) is the library's own: it was rewritten"
    ],
    "sources": [
     "CHANGELOG.md"
@@ -326,22 +338,18 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.c24c65",
+   "id": "doc:CHANGELOG.md#unreleased.aa31e9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "aborted `nuclear check` and the language server on one file (spec 018 M8).",
+   "summary": "as the member of Nuclear's library with that name (`_max(np)`).",
    "body": [
-    "- Nesting deeper than 200 levels (expressions, blocks, types) is the error N0023, instead of a stack overflow that",
-    "  aborted `nuclear check` and the language server on one file (spec 018 M8).",
-    "- Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name",
-    "  (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has",
-    "  `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc`",
-    "  takes a name that is not an identifier (`\"date-fns@^4.1.0\"`); `[project.manifest.advice]`; `nuclear defs` reads the",
-    "  packages of the project it runs in; `gen.py --distribution` and `gen.js --package`; `defs.dart` skips the library of",
-    "  a plugin the app has not enabled (it failed every `flutter add` there). A member of a module (`np.max(list)` after",
-    "  `use numpy as np`) or of a library's function or object (`lodash.map(...)`) is the library's own: it was rewritten",
-    "  as the member of Nuclear's library with that name (`_max(np)`).",
-    "- First public version."
+    "as the member of Nuclear's library with that name (`_max(np)`).",
+    "- First public version.",
+    "- `STATUS.md` holds only what is left to do (half done, untested, pending) and keeps no log: what a task did is written in the documentation of its area, and no file is made to hold history (`AGENTS.md` rule 6, `docs/context/workflow.md`); the start hook (`tools/context/check.sh session`) warns when the file is over 40 KB.",
+    "- `nuclear agent hook` checks a project with its own type definitions (`<project>/defs`), as `nuclear check` does: it reported every name of them as an error after each edit.",
+    "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
+    "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring.",
+    "- ADR-graph-0001: the Smart Graph is a library of typed, linked, versioned rows; the definition of done includes the knowledge base (`nuclear-graph knowledge build | check`, `ingest`) and the end-of-turn hook (`tools/context/check.sh stop`) runs the check."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -373,6 +381,82 @@
    }
   },
   {
+   "id": "doc:CODE_OF_CONDUCT.md#code-of-conduct",
+   "type": "doc",
+   "title": "Code of conduct",
+   "summary": "NuclearLang follows the Contributor Covenant, version 2.1. Its full text applies to every space of the project: the repositories, issues, pull requests, discussions, the chat, and events where you represent the project.",
+   "body": [
+    "NuclearLang follows the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).",
+    "Its full text applies to every space of the project: the repositories, issues, pull requests, discussions, the",
+    "chat, and events where you represent the project."
+   ],
+   "sources": [
+    "CODE_OF_CONDUCT.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CODE_OF_CONDUCT.md#enforcement",
+   "type": "doc",
+   "title": "Code of conduct — Enforcement",
+   "summary": "The maintainers decide, following the Contributor Covenant's enforcement guidelines: a correction, a warning, a temporary ban, or a permanent ban, depending on the harm and whether it repeats.",
+   "body": [
+    "The maintainers decide, following the Contributor Covenant's enforcement guidelines: a correction, a warning, a",
+    "temporary ban, or a permanent ban, depending on the harm and whether it repeats."
+   ],
+   "sources": [
+    "CODE_OF_CONDUCT.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CODE_OF_CONDUCT.md#in-short",
+   "type": "doc",
+   "title": "Code of conduct — In short",
+   "summary": "In short",
+   "body": [
+    "- Be welcoming, kind and patient, in English, Spanish or any language the conversation is in.",
+    "- Disagree about ideas, never attack people.",
+    "- No harassment, insults, sexualized language or imagery, doxxing, or unwelcome attention.",
+    "- Accept the maintainers' decisions on what is enforced; ask for a review of a decision in private."
+   ],
+   "sources": [
+    "CODE_OF_CONDUCT.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CODE_OF_CONDUCT.md#reporting",
+   "type": "doc",
+   "title": "Code of conduct — Reporting",
+   "summary": "Write to the maintainers at the contact email of the organization's profile (github.com/nuclearlang) with what happened, where and when (links or screenshots help).",
+   "body": [
+    "Write to the maintainers at the contact email of the organization's profile",
+    "([github.com/nuclearlang](https://github.com/nuclearlang)) with what happened, where and when (links or screenshots",
+    "help). Reports are read by the maintainers only and kept confidential. You will get an answer within a week."
+   ],
+   "sources": [
+    "CODE_OF_CONDUCT.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CONTRIBUTING.md#before-a-pull-request",
    "type": "readme",
    "title": "Contributing to NuclearLang — Before a pull request",
@@ -390,9 +474,7 @@
     "- Everything is written in English: code, comments, documents and messages.",
     "- A change updates the documents of the project it touches in the same pull request: its reference, its guides,",
     "  its `docs/` for agents and contributors ([docs/05-standards/coding.md](docs/05-standards/coding.md)).",
-    "- The rules are in [AGENTS.md](AGENTS.md); the reasons behind them, in each project's `docs/03-adr/`.",
-    "",
-    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE)."
+    "- The rules are in [AGENTS.md](AGENTS.md); the reasons behind them, in each project's `docs/03-adr/`."
    ],
    "sources": [
     "CONTRIBUTING.md"
@@ -442,19 +524,19 @@
    }
   },
   {
-   "id": "doc:README.md#how-we-made-it",
+   "id": "doc:CONTRIBUTING.md#sign-off-your-commits-dco",
    "type": "readme",
-   "title": "NuclearLang — How we made it",
-   "summary": "How we made it",
+   "title": "Contributing to NuclearLang — Sign off your commits (DCO)",
+   "summary": "Each commit carries `Signed-off-by: Your Name <you@example.com>` (`git commit -s`): you certify the Developer Certificate of Origin, that you wrote the change or have the right to submit it.",
    "body": [
-    "- One golden rule: performance, speed and readability of the syntax ([ADRs of the language](nuclearlang/docs/03-adr/README.md)).",
-    "- The parser never changes per dialect; a dialect is TOML and templates, not compiler code.",
-    "- English everywhere ([ADR-platform-0001](docs/03-adr/0001-english-everywhere.md)).",
-    "- One repository, a project per folder ([ADR-platform-0002](docs/03-adr/0002-one-repository-a-project-per-folder.md)); the AI loop ([ADR-platform-0003](docs/03-adr/0003-the-ai-loop.md)).",
-    "- A product is made with the tools ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md))."
+    "Each commit carries `Signed-off-by: Your Name <you@example.com>` (`git commit -s`): you certify the",
+    "[Developer Certificate of Origin](https://developercertificate.org), that you wrote the change or have the right to",
+    "submit it. No CLA.",
+    "",
+    "Changes written with an AI agent are welcome under the same review: you answer for them."
    ],
    "sources": [
-    "README.md"
+    "CONTRIBUTING.md"
    ],
    "meta": {
     "section": "01-introduction",
@@ -463,14 +545,138 @@
    }
   },
   {
-   "id": "doc:README.md#nuclearlang.12e02e",
+   "id": "doc:CONTRIBUTING.md#where-to-start",
    "type": "readme",
-   "title": "NuclearLang",
-   "summary": "A minimal base language for AI agents and the people who work with them.",
+   "title": "Contributing to NuclearLang — Where to start",
+   "summary": "Issues labelled `good first issue`; a dialect (TOML and templates, no compiler code: nuclearlang/dialects/README.md); examples; type definitions; translations.",
    "body": [
-    "A minimal base language for AI agents and the people who work with them. A Rust transpiler turns `.nuc` into",
-    "TypeScript, Dart or Python through declarative dialects, and its framework, Synapsis, gives three platforms",
-    "(`web`, `mobile`, `backend`) written once in Nuclear."
+    "Issues labelled [`good first issue`](https://github.com/nuclearlang/lang/labels/good%20first%20issue); a dialect",
+    "(TOML and templates, no compiler code: [nuclearlang/dialects/README.md](nuclearlang/dialects/README.md)); examples;",
+    "type definitions; translations. Questions: [Discussions](https://github.com/nuclearlang/lang/discussions). How",
+    "decisions are made: [GOVERNANCE.md](GOVERNANCE.md). Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).",
+    "",
+    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE)."
+   ],
+   "sources": [
+    "CONTRIBUTING.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:GOVERNANCE.md#areas-and-owners",
+   "type": "doc",
+   "title": "Governance — Areas and owners",
+   "summary": "Each project of the tree (a folder with its `AGENTS.md`) can have an owner who reviews its pull requests: a dialect, a platform, a tool, an editor.",
+   "body": [
+    "Each project of the tree (a folder with its `AGENTS.md`) can have an owner who reviews its pull requests: a",
+    "dialect, a platform, a tool, an editor. Owners are listed in `.github/CODEOWNERS` as they join."
+   ],
+   "sources": [
+    "GOVERNANCE.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:GOVERNANCE.md#how-a-change-is-decided",
+   "type": "doc",
+   "title": "Governance — How a change is decided",
+   "summary": "Every decision that shapes the project is an ADR in the `docs/03-adr/` of the project it touches, so the reasons stay readable.",
+   "body": [
+    "| Change | How |",
+    "|---|---|",
+    "| A fix, a test, documentation, an example | a pull request reviewed and merged by a maintainer |",
+    "| A dialect word, a platform kind, a generator, a tool's feature | a pull request; the owner of that area reviews (`CODEOWNERS`) |",
+    "| **The base language or a platform's contract** (what every user writes) | an **RFC**: a pull request adding `docs/rfcs/NNNN-<name>.md` (the problem, the proposal, the alternatives, what breaks, the migration), open for discussion at least two weeks, decided by the maintainers and recorded as an ADR |",
+    "| A new dialect (a new target language) | an issue proposing it, then a pull request; the person who brings it usually owns it |",
+    "",
+    "Every decision that shapes the project is an ADR in the `docs/03-adr/` of the project it touches, so the reasons",
+    "stay readable."
+   ],
+   "sources": [
+    "GOVERNANCE.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:GOVERNANCE.md#how-to-become-a-maintainer",
+   "type": "doc",
+   "title": "Governance — How to become a maintainer",
+   "summary": "Sustained, good work: merged pull requests over months, reviews that help others, care for the documents.",
+   "body": [
+    "Sustained, good work: merged pull requests over months, reviews that help others, care for the documents. A",
+    "maintainer invites you; you can decline. A maintainer who is away for six months becomes emeritus and can come back."
+   ],
+   "sources": [
+    "GOVERNANCE.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:GOVERNANCE.md#versions-and-stability",
+   "type": "doc",
+   "title": "Governance — Versions and stability",
+   "summary": "One version for the whole platform, Semantic Versioning (ADR-platform-0011).",
+   "body": [
+    "One version for the whole platform, Semantic Versioning",
+    "([ADR-platform-0011](docs/03-adr/0011-one-version-one-release.md)). While the version is `0.x`, a minor release may",
+    "change the language; each change is in the CHANGELOG with its migration (`nuclear fix` rewrites what it can). From",
+    "1.0, a change that breaks code needs an RFC and a major version."
+   ],
+   "sources": [
+    "GOVERNANCE.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:GOVERNANCE.md#who-decides",
+   "type": "doc",
+   "title": "Governance — Who decides",
+   "summary": "NuclearLang is led today by its creator, Julian Molina, who has the final word (a \"benevolent dictator\" model, usual for a young project).",
+   "body": [
+    "NuclearLang is led today by its creator, **Julian Molina**, who has the final word (a \"benevolent dictator\" model,",
+    "usual for a young project). As maintainers join, decisions move to them by consensus, the creator deciding only",
+    "when they cannot agree."
+   ],
+   "sources": [
+    "GOVERNANCE.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:README.md#community",
+   "type": "readme",
+   "title": "NuclearLang — Community",
+   "summary": "Questions and ideas: GitHub Discussions.",
+   "body": [
+    "Questions and ideas: [GitHub Discussions](https://github.com/nuclearlang/lang/discussions). How to contribute:",
+    "[CONTRIBUTING.md](CONTRIBUTING.md). Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Security:",
+    "[SECURITY.md](SECURITY.md). How decisions are made: [GOVERNANCE.md](GOVERNANCE.md).",
+    "",
+    "Free and open source under the [Apache License 2.0](LICENSE)."
    ],
    "sources": [
     "README.md"
@@ -482,11 +688,19 @@
    }
   },
   {
-   "id": "doc:README.md#nuclearlang.bf79b4",
+   "id": "doc:README.md#install",
    "type": "readme",
-   "title": "NuclearLang",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml)…",
-   "body": "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) [![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) [![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) [![website](https://github.com/nuclearlang/lang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/website.yml) · [Website](https://nuclearlang.github.io)",
+   "title": "NuclearLang — Install",
+   "summary": "curl -fsSL https://nuclearlang.github.io/install.sh | sh # Linux and macOS irm https://nuclearlang.github.io/install.ps1 | iex # Windows (PowerShell) One command installs the compiler, the language server, the editor extension (VS Code, Cursor, VSCodium, Windsurf, Zed), the MCP server and the…",
+   "body": [
+    "```sh",
+    "curl -fsSL https://nuclearlang.github.io/install.sh | sh     # Linux and macOS",
+    "irm https://nuclearlang.github.io/install.ps1 | iex          # Windows (PowerShell)",
+    "```",
+    "",
+    "One command installs the compiler, the language server, the editor extension (VS Code, Cursor, VSCodium, Windsurf,",
+    "Zed), the MCP server and the Smart Graph for your AI agents. `nuclear update` keeps every part at one version."
+   ],
    "sources": [
     "README.md"
    ],
@@ -497,17 +711,15 @@
    }
   },
   {
-   "id": "doc:README.md#read-next",
+   "id": "doc:README.md#learn",
    "type": "readme",
-   "title": "NuclearLang — Read next",
-   "summary": "How to contribute: CONTRIBUTING.md.",
+   "title": "NuclearLang — Learn",
+   "summary": "Learn",
    "body": [
     "- [The tutorial](nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
     "- [The language guide](nuclearlang/docs/08-guides/README.md) and [the dialects](nuclearlang/dialects/README.md).",
     "- [The platforms](nuclear-synapsis-framework/platforms/README.md).",
-    "- [AGENTS.md](AGENTS.md) and [docs/README.md](docs/README.md): the map and the rules for contributors.",
-    "",
-    "How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). License: [Apache-2.0](LICENSE)."
+    "- [AGENTS.md](AGENTS.md) and [docs/README.md](docs/README.md): the map and the rules, for contributors and agents."
    ],
    "sources": [
     "README.md"
@@ -519,42 +731,95 @@
    }
   },
   {
-   "id": "doc:README.md#the-tree",
+   "id": "doc:README.md#nuclearlang",
    "type": "readme",
-   "title": "NuclearLang — The tree",
-   "summary": "The tree",
+   "title": "NuclearLang",
+   "summary": "becomes TypeScript, Dart or Python, and its framework, Synapsis, builds mobile apps, backends and web apps from it.",
+   "body": [
+    "**Write only the logic.** A minimal language made to be written by AI agents and read by people. One codebase",
+    "becomes TypeScript, Dart or Python, and its framework, **Synapsis**, builds mobile apps, backends and web apps from",
+    "it.",
+    "",
+    "[Website](https://nuclearlang.github.io) · [Tutorial](nuclear-synapsis-framework/docs/08-guides/tutorial.md) ·",
+    "[VS Code extension](https://marketplace.visualstudio.com/items?itemName=nuclearlang.nuclearlang) ·",
+    "[Español](README.es.md)",
+    "",
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml)",
+    "[![release](https://img.shields.io/github/v/release/nuclearlang/lang?color=a7ff00&label=release)](https://github.com/nuclearlang/lang/releases/latest)",
+    "[![license](https://img.shields.io/badge/license-Apache--2.0-a7ff00)](LICENSE)",
+    "",
+    "</div>"
+   ],
+   "sources": [
+    "README.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:README.md#thirty-seconds",
+   "type": "readme",
+   "title": "NuclearLang — Thirty seconds",
+   "summary": "nuclear new todos_api -p backend && cd todos_api # a backend: only .nuc files nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\" nuclear run # FastAPI at http://localhost:8000/docs What `nuclear gen` wrote, and what you would change, is short Nuclear…",
+   "body": [
+    "```sh",
+    "nuclear new todos_api -p backend && cd todos_api            # a backend: only .nuc files",
+    "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\"",
+    "nuclear run                                                 # FastAPI at http://localhost:8000/docs",
+    "```",
+    "",
+    "What `nuclear gen` wrote, and what you would change, is short Nuclear (`components/todos/`):",
+    "",
+    "",
+    "The same Nuclear builds a NestJS backend instead (`dialect = \"nestjs\"`); a Flutter app with `-p mobile`; a React",
+    "app with `-p web`."
+   ],
+   "sources": [
+    "README.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:README.md#top",
+   "type": "readme",
+   "title": "NuclearLang",
+   "summary": "NuclearLang",
+   "body": [
+    "<div align=\"center\">",
+    "",
+    "<img src=\"https://nuclearlang.github.io/favicon.svg\" alt=\"NuclearLang\" width=\"96\" height=\"96\">"
+   ],
+   "sources": [
+    "README.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:README.md#what-is-inside",
+   "type": "readme",
+   "title": "NuclearLang — What is inside",
+   "summary": "What is inside",
    "body": [
     "| Folder | What it is |",
     "|---|---|",
-    "| [nuclearlang/](nuclearlang/README.md) | the language: compiler, language server, dialects |",
-    "| [nuclear-synapsis-framework/](nuclear-synapsis-framework/README.md) | the framework and its three platforms |",
+    "| [nuclearlang/](nuclearlang/README.md) | the language: the compiler (Rust), the language server, the dialects |",
+    "| [nuclear-synapsis-framework/](nuclear-synapsis-framework/README.md) | Synapsis: the framework and its three platforms (mobile, backend, web) |",
     "| [tools/](tools/README.md) | the `nuclear` command, the code generator, the MCP server |",
     "| [extensions/](extensions/README.md) | the editors (VS Code, Cursor, Android Studio, IntelliJ, Zed) and their tools |",
-    "| [device-emulators/](device-emulators/README.md) | the devices the tools and editors start |",
+    "| [device-emulators/](device-emulators/README.md) | the devices that run your app inside the editor |",
     "| [nuclear-graph-storage/](nuclear-graph-storage/README.md) · [nuclear-agents/](nuclear-agents/README.md) | the private knowledge base and the local agents |",
-    "| [installer/](installer/README.md) · [website/](website/README.md) | the installers and the documentation site |"
-   ],
-   "sources": [
-    "README.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:README.md#try-it",
-   "type": "readme",
-   "title": "NuclearLang — Try it",
-   "summary": "curl -fsSL https://nuclearlang.github.io/install.sh | sh # Windows: irm https://nuclearlang.github.io/install.ps1 | iex nuclear new todos_api -p backend && cd todos_api # a project: only .nuc files nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\" nuclear build &&…",
-   "body": [
-    "```sh",
-    "curl -fsSL https://nuclearlang.github.io/install.sh | sh   # Windows: irm https://nuclearlang.github.io/install.ps1 | iex",
-    "nuclear new todos_api -p backend && cd todos_api           # a project: only .nuc files",
-    "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\"",
-    "nuclear build && nuclear install && nuclear test           # FastAPI by default; dialect = \"nestjs\" for NestJS",
-    "```"
+    "| [installer/](installer/README.md) · [website/](website/README.md) | the installers and the website |"
    ],
    "sources": [
     "README.md"
@@ -569,14 +834,88 @@
    "id": "doc:README.md#why",
    "type": "readme",
    "title": "NuclearLang — Why",
-   "summary": "Why",
+   "summary": "imports, boilerplate and wiring come from the dialect.",
    "body": [
-    "- Agents spend most of their tokens on code that is always the same; in Nuclear only the business logic is written.",
-    "- One way to write each thing, errors that come with their fix, type definitions so nobody invents an API.",
-    "- One way only (`.nuc` → target); it never replaces the target's own tools. [Vision](docs/00-context/vision.md)."
+    "- **Agents spend their tokens on code that is always the same.** In Nuclear only the business logic is written:",
+    "  imports, boilerplate and wiring come from the dialect.",
+    "- **One way to write each thing**, errors that come with their fix, and type definitions of every library, so an",
+    "  agent checks names instead of inventing them.",
+    "- **Made for agents from the start:** an MCP server, a skill for Claude Code, Codex and Cursor, `llms.txt`, and a",
+    "  local knowledge base (the Smart Graph) that answers what Nuclear is and how to use it.",
+    "- **The output is what an expert would write**: plain FastAPI, NestJS, Flutter or React, readable and fast; Nuclear",
+    "  never replaces the target's own tools."
    ],
    "sources": [
     "README.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:SECURITY.md#report-a-vulnerability",
+   "type": "doc",
+   "title": "Security — Report a vulnerability",
+   "summary": "Please do not open a public issue.",
+   "body": [
+    "Please do not open a public issue. Use GitHub's private reporting:",
+    "[**Report a vulnerability**](https://github.com/nuclearlang/lang/security/advisories/new). Say what is affected, how to reproduce it and what an attacker gains. You will get an",
+    "answer within a week, and a fix or a plan within thirty days for a confirmed issue; you are credited in the release",
+    "notes unless you prefer not to be."
+   ],
+   "sources": [
+    "SECURITY.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:SECURITY.md#supported-versions",
+   "type": "doc",
+   "title": "Security — Supported versions",
+   "summary": "The latest release only (every part of NuclearLang carries one version: ADR-platform-0011).",
+   "body": [
+    "The latest release only (every part of NuclearLang carries one version:",
+    "[ADR-platform-0011](docs/03-adr/0011-one-version-one-release.md)). `nuclear update` installs it."
+   ],
+   "sources": [
+    "SECURITY.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:SECURITY.md#what-nuclearlang-does-today-and-what-it-does-not-yet",
+   "type": "doc",
+   "title": "Security — What NuclearLang does today, and what it does not yet",
+   "summary": "Stated as it is, so you can judge the risk (the full list is spec 018, group M): Gatekeeper may warn).",
+   "body": [
+    "Stated as it is, so you can judge the risk (the full list is",
+    "[spec 018, group M](docs/04-specs/018-failure-matrix/requirements.md)):",
+    "",
+    "- **Downloads are checked by a SHA-256 checksum** published in the same GitHub release. The release archives are",
+    "  **not signed** yet, and the Windows and macOS binaries are **not code-signed** yet (Windows SmartScreen and macOS",
+    "  Gatekeeper may warn).",
+    "- **Everything runs on your machine.** The Smart Graph listens on `127.0.0.1` with a token on every route and",
+    "  encrypts what it stores; the local agents' service (Nuclear Developer, port 7879) has **no token yet**. Nothing",
+    "  is sent anywhere except the AI provider you choose and the daily update check (the URL of the latest release",
+    "  only; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off).",
+    "- **No telemetry** is collected.",
+    "- The installers need **no administrator rights**: everything goes into your user's folders.",
+    "",
+    "Signing, provenance attestations and an SBOM per release are planned",
+    "([spec 019](docs/04-specs/019-launch-and-growth/tasks.md), T3.7)."
+   ],
+   "sources": [
+    "SECURITY.md"
    ],
    "meta": {
     "section": "01-introduction",
@@ -1641,30 +1980,49 @@
   {
    "id": "doc:github-profile/profile/README.md#nuclearlang",
    "type": "readme",
-   "title": "☢ NuclearLang",
-   "summary": "Dart and Python by declarative dialects.",
+   "title": "NuclearLang",
+   "summary": "becomes TypeScript, Dart or Python; Synapsis, its framework, builds mobile apps, backends and web apps from it.",
    "body": [
-    "**Write only the logic.** A minimal language made for AI agents and easy for people to read, built to TypeScript,",
-    "Dart and Python by declarative dialects. **Synapsis**, its framework, makes mobile apps, backends and web apps from",
-    "the same Nuclear.",
+    "**Write only the logic.** A minimal language made to be written by AI agents and read by people. One codebase",
+    "becomes TypeScript, Dart or Python; **Synapsis**, its framework, builds mobile apps, backends and web apps from it.",
     "",
     "[**nuclearlang.github.io**](https://nuclearlang.github.io) · [the repository](https://github.com/nuclearlang/lang) ·",
-    "[CI](https://github.com/nuclearlang/lang/actions)",
-    "",
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml)",
-    "[![website](https://github.com/nuclearlang/lang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/website.yml)",
+    "[VS Code extension](https://marketplace.visualstudio.com/items?itemName=nuclearlang.nuclearlang) ·",
+    "[Discussions](https://github.com/nuclearlang/lang/discussions) · [Español](README.es.md)",
     "",
     "</div>",
+    "",
+    "```sh",
+    "curl -fsSL https://nuclearlang.github.io/install.sh | sh     # Linux, macOS",
+    "irm https://nuclearlang.github.io/install.ps1 | iex          # Windows",
+    "```",
     "",
     "| | |",
     "|---|---|",
     "| [**lang**](https://github.com/nuclearlang/lang) | Everything, in one repository: the language and its compiler, the dialects, Synapsis and its three platforms, the `nuclear` command, the code generator, the MCP server, the editors (VS Code, Cursor, Android Studio, IntelliJ, Zed), the Smart Graph, the local agents, the installers and the website |",
     "| [nuclearlang.github.io](https://github.com/nuclearlang/nuclearlang.github.io) | Publishes the website from `lang` |",
     "",
-    "```sh",
-    "curl -fsSL https://nuclearlang.github.io/install.sh | sh     # Linux, macOS",
-    "irm https://nuclearlang.github.io/install.ps1 | iex          # Windows",
-    "```"
+    "Free and open source, Apache-2.0. Contributions welcome: start with a",
+    "[`good first issue`](https://github.com/nuclearlang/lang/labels/good%20first%20issue)."
+   ],
+   "sources": [
+    "github-profile/profile/README.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "github-profile",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:github-profile/profile/README.md#top",
+   "type": "readme",
+   "title": "NuclearLang",
+   "summary": "NuclearLang",
+   "body": [
+    "<div align=\"center\">",
+    "",
+    "<img src=\"assets/logo.svg\" alt=\"NuclearLang\" width=\"120\" height=\"120\">"
    ],
    "sources": [
     "github-profile/profile/README.md"

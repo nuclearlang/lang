@@ -3374,12 +3374,47 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates.085efe",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates.5d3572",
    "type": "spec",
    "title": "NuclearLang dialects — 4. Templates",
-   "summary": "while = \"\"\" while ({{cond}}) { {{body}} }\"\"\" 4. In a run of braces, the tag starts at the last two: `{{{#members}}` is a literal `{` followed by the `members` section.",
+   "summary": "Templates use a subset of Mustache: Formatting rules:",
    "body": [
-    "```toml",
+    "Templates use a subset of Mustache:",
+    "",
+    "| Form | Meaning |",
+    "|---|---|",
+    "| `{{name}}` | Inserts a variable. `{{clause.on}}` reads a field |",
+    "| `{{#name}}...{{/name}}` | If the variable is true (non-empty text, `true`, a list with elements), writes the inside. If it is a list, writes it once per element |",
+    "| `{{^name}}...{{/name}}` | Writes the inside if the variable is false or empty |",
+    "| `{{#a or b}}...{{/a or b}}` | The first of the alternatives that is true (also in `{{a or b}}`): a section that opens for either of two variables |",
+    "| `{{.}}` | The current element of a list of texts |",
+    "| `{{@first}}` `{{@last}}` `{{@index}}` | Position inside a list: `{{^@last}}, {{/@last}}` |",
+    "| `{{name\\|filter}}` | Filters: `pascal`, `camel`, `snake`, `kebab`, `lower`, `upper`, `join:\", \"`, `json` / `toml` (a value inside a double-quoted JSON or TOML string, escaped), `html` (inside HTML text or an attribute, as entities), `unquote` (a string argument as a bare name: `{{decor.oneToMany.inverse\\|unquote}}Id` → `projectId`); they chain (`\\|unquote\\|snake`) |",
+    "",
+    "Formatting rules:"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates.ddc8d0",
+   "type": "spec",
+   "title": "NuclearLang dialects — 4. Templates",
+   "summary": "1. A line that contains only a section tag (`{{#x}}`, `{{^x}}`, `{{/x}}`) does not appear in the output.",
+   "body": [
+    "1. A line that contains only a section tag (`{{#x}}`, `{{^x}}`, `{{/x}}`) does not appear in the output.",
+    "2. A line that contains only `{{value}}` disappears if the value is empty.",
+    "3. A multi-line value keeps the indentation of the line where it is inserted. That is why bodies are written",
+    "   like this and come out correctly indented:",
+    "",
+    "   ```toml",
     "   while = \"\"\"",
     "   while ({{cond}}) {",
     "     {{body}}",
@@ -3394,41 +3429,6 @@
     "     {{members}}",
     "   {{/members}}}\"\"\"",
     "   ```"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates.ffaac5",
-   "type": "spec",
-   "title": "NuclearLang dialects — 4. Templates",
-   "summary": "Templates use a subset of Mustache: Formatting rules: 1. A line that contains only a section tag (`{{#x}}`, `{{^x}}`, `{{/x}}`) does not appear in the output.",
-   "body": [
-    "Templates use a subset of Mustache:",
-    "",
-    "| Form | Meaning |",
-    "|---|---|",
-    "| `{{name}}` | Inserts a variable. `{{clause.on}}` reads a field |",
-    "| `{{#name}}...{{/name}}` | If the variable is true (non-empty text, `true`, a list with elements), writes the inside. If it is a list, writes it once per element |",
-    "| `{{^name}}...{{/name}}` | Writes the inside if the variable is false or empty |",
-    "| `{{#a or b}}...{{/a or b}}` | The first of the alternatives that is true (also in `{{a or b}}`): a section that opens for either of two variables |",
-    "| `{{.}}` | The current element of a list of texts |",
-    "| `{{@first}}` `{{@last}}` `{{@index}}` | Position inside a list: `{{^@last}}, {{/@last}}` |",
-    "| `{{name\\|filter}}` | Filters: `pascal`, `camel`, `snake`, `kebab`, `lower`, `upper`, `join:\", \"`, `unquote` (a string argument as a bare name: `{{decor.oneToMany.inverse\\|unquote}}Id` → `projectId`); they chain (`\\|unquote\\|snake`) |",
-    "",
-    "Formatting rules:",
-    "",
-    "1. A line that contains only a section tag (`{{#x}}`, `{{^x}}`, `{{/x}}`) does not appear in the output.",
-    "2. A line that contains only `{{value}}` disappears if the value is empty.",
-    "3. A multi-line value keeps the indentation of the line where it is inserted. That is why bodies are written",
-    "   like this and come out correctly indented:"
    ],
    "agents": false,
    "sources": [

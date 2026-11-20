@@ -7233,7 +7233,7 @@
    "body": [
     "| ID | Case | Expected | State |",
     "|---|---|---|---|",
-    "| K1 | CPU at 100 % (a build, a game) | the set-up and the knowledge base load run at low priority (`nice`/`ionice`, a lower Windows priority) and never freeze the desktop | gap |",
+    "| K1 | CPU at 100 % (a build, a game) | the set-up and the knowledge base load run at low priority (`nice`/`ionice`, a lower Windows priority) and never freeze the desktop | written (the installers run the set-up at `nice 10` / `ionice` best-effort 7, Windows below normal; not measured on a busy machine) |",
     "| K2 | Memory almost full | the services' memory is bounded; a model that does not fit is said, not swapped | verify |",
     "| K3 | The disk busy (another big copy) | downloads and the load go on, slower, without timeouts that break the step | verify |",
     "| K4 | Ollama already busy with another model | said, the user's models untouched | verify |"
@@ -7272,7 +7272,7 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-m-security-an-audit-on-2026-11-20-each-fix-with-its-test.860b74",
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-m-security-an-audit-on-2026-11-20-each-fix-with-its-test.484c7a",
    "type": "spec",
    "title": "Spec 018: Every machine, every state, fail-safe — Requirements — M. Security (an audit on 2026-11-20; each fix with its test)",
    "summary": "M.",
@@ -7284,7 +7284,7 @@
     "| M3 | A cloned project's own dialect, kind or `[toolchain]` runs commands on `build`/`run`/`install` | a project-local dialect is asked for once per project; `build` never runs a shell | **gap** |",
     "| M4 | Arguments after `--` (from the MCP server's `nuclear_project`) pasted into a shell | every argument quoted; the MCP refuses `--` | handled (tests in the CLI and the MCP server) |",
     "| M5 | Windows quoting of `nuclear add` package names and messages (`\"`, `%`, `&`) | quoted for `cmd` (argv rules, then `^` before every character cmd acts on) | handled (unit test; not run on Windows) |",
-    "| M6 | Config values (`app(description = ...)`) pasted raw into JSON, TOML and HTML templates | escaped for the target format | **gap** |"
+    "| M6 | Config values (`app(description = ...)`) pasted raw into JSON, TOML, HTML and YAML | escaped for the target format | handled (filters `json`/`toml`/`html`, the pubspec; tried on the three backends and web) |"
    ],
    "agents": false,
    "sources": [
@@ -7297,14 +7297,14 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-m-security-an-audit-on-2026-11-20-each-fix-with-its-test.d75f56",
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-m-security-an-audit-on-2026-11-20-each-fix-with-its-test.e681a7",
    "type": "spec",
    "title": "Spec 018: Every machine, every state, fail-safe — Requirements — M. Security (an audit on 2026-11-20; each fix with its test)",
    "summary": "M.",
    "body": [
     "| M7 | `nuclear make` / `gen` names with `/` or `..` write outside the project | refused before anything is written (`scaffold::inside`, every generator) | handled (test) |",
     "| M8 | Deep nesting (2,000 parentheses) overflows the parser's stack: `nuclear check` and the LSP abort | N0023 past 200 levels | handled (test on a 2 MB stack) |",
-    "| M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | **gap** |",
+    "| M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | partly (`Origin` refused with a test, live on this machine; the token and `Host` left) |",
     "| M10 | The checksum comes from the same release as the archive; nothing is signed | a signature verified with a key in the installer | **gap** |",
     "| M11 | `nuclear update` pipes the site's installer into a shell | the installer of the release, verified; PowerShell by its full path | **gap** |",
     "| M12 | CI actions pinned by tag | pinned by commit | gap (low) |",
@@ -7416,6 +7416,1696 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#measured-monthly",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — Measured monthly",
+   "summary": "New stars, new members, questions answered and time to first answer, first-time contributors, returning contributors, open `good first issue` count, Discussions threads, Discord active members.",
+   "body": [
+    "New stars, new members, questions answered and time to first answer, first-time contributors, returning",
+    "contributors, open `good first issue` count, Discussions threads, Discord active members."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#open-to-contributions-where-it-is-easiest-to-start",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — Open to contributions where it is easiest to start",
+   "summary": "Open to contributions where it is easiest to start",
+   "body": [
+    "- **New dialects**: they are TOML and templates (no compiler code): the best entry for language people.",
+    "- **Examples and templates**: an app per stack, each a test of the platform.",
+    "- **Type definitions** of libraries (`nuclear add` generates them; curated ones help everyone).",
+    "- **Translations** of the website and the editors.",
+    "- **The benchmark**: new tasks, new models, new harnesses."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#spec-019-launch-and-growth-the-community",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community",
+   "summary": "A community is people who come back.",
+   "body": [
+    "A community is people who come back. It needs places to meet, reasons to come back, and a path from first visit to",
+    "maintainer."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#the-path-from-user-to-maintainer",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — The path from user to maintainer",
+   "summary": "1. First contact: the website, a 2-minute install, a first app in 10 minutes (the tutorial, tested in the CI).",
+   "body": [
+    "1. **First contact**: the website, a 2-minute install, a first app in 10 minutes (the tutorial, tested in the CI).",
+    "2. **First contribution**: issues labelled `good first issue` (always at least ten open, each with what to change,",
+    "   where, and how to test it), docs fixes, examples, translations.",
+    "3. **Regular contributor**: a dialect word, a platform kind, a generator, a dialect's reference equivalences;",
+    "   recognized in the release notes and an `all-contributors` table.",
+    "4. **Dialect or tool owner**: owns a dialect (a new target, e.g. Kotlin, Swift, Go) or a tool, reviews its pull",
+    "   requests (`CODEOWNERS`).",
+    "5. **Maintainer**: invited after sustained work (GOVERNANCE.md).",
+    "",
+    "What makes this path real: every project documents itself (root rule 7), so a newcomer opens one `AGENTS.md` and",
+    "knows where to work; the CI tells them when they are done; a maintainer reviews within three days."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#the-places",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — The places",
+   "summary": "Answers go in Discussions when they help others (a search engine finds them; a chat does not).",
+   "body": [
+    "| Place | For | Started in |",
+    "|---|---|---|",
+    "| GitHub Discussions | questions, ideas, show and tell, RFCs (searchable, indexed by search engines and models) | phase 2 |",
+    "| Discord (or Zulip) | live help, the channels: `#help`, `#show-and-tell`, `#dialects`, `#agents`, `#español`, `#contributors` | phase 4 |",
+    "| X, Bluesky, LinkedIn, Mastodon | news, clips, releases | phase 2 |",
+    "| YouTube | demos, tutorials, streams | phase 4 |",
+    "| A monthly newsletter (Buttondown or GitHub releases digest) | what changed, community projects | phase 5 |",
+    "",
+    "Answers go in Discussions when they help others (a search engine finds them; a chat does not)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#the-rituals-reasons-to-come-back",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — The rituals (reasons to come back)",
+   "summary": "where their favorite model lands, and send runs.",
+   "body": [
+    "- **A release every week or two**, with notes written for humans and a clip.",
+    "- **A monthly community call / stream**: what shipped, a live build with an agent, questions.",
+    "- **Show and tell**: the best project of the month featured on the website and the newsletter.",
+    "- **The benchmark leaderboard** (spec 020): each new model measured with and without Nuclear; people return to see",
+    "  where their favorite model lands, and send runs.",
+    "- **Challenges**: \"build X with Nuclear and a 3B model\", with a page of results."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/community.md#who-it-is-for",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The community — Who it is for",
+   "summary": "1. Developers who build with AI agents and pay for tokens: the main audience (the benchmark speaks to them).",
+   "body": [
+    "1. **Developers who build with AI agents** and pay for tokens: the main audience (the benchmark speaks to them).",
+    "2. **People who run local models** (r/LocalLLaMA): the 3B local agents and the private Smart Graph speak to them.",
+    "3. **Flutter, FastAPI, NestJS and React developers**: one codebase for their stack and the others.",
+    "4. **Language and compiler people**: dialects as data, a transpiler in Rust; future dialect authors.",
+    "5. **The Spanish-speaking community** (Latin America and Spain): the founder speaks it, the docs and the editor",
+    "   speak it, and few new languages serve it first; an advantage to use from day one."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/community.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.1a73fd",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — Open source: what a project like this must take care of",
+   "summary": "Open source: what a project like this must take care of",
+   "body": [
+    "| Topic | Decision or task |",
+    "|---|---|",
+    "| **License** | Apache-2.0 (kept): permissive, with an explicit patent grant, accepted by companies. Every package's manifest says it; `THIRD-PARTY.md` lists vendored code (Atom Material Icons, MIT) and the release archives carry the licenses of what they bundle (the AI archive's Python and its wheels, the language server's crates: `cargo about`). |",
+    "| **Contributions** | DCO (`Signed-off-by:`), checked by a GitHub app, not a CLA: lighter for contributors; Apache-2.0 §5 already licenses contributions. |",
+    "| **Trademark** | \"NuclearLang\", \"Synapsis\" and the radioactive mark: a short `TRADEMARKS.md` (use the name to refer to the project, not for a fork's product; the logo for articles and talks). A search of existing marks before the launch (Synapsis is a common word: naming.md). |",
+    "| **Security** | `SECURITY.md` with GitHub's private vulnerability reporting; supported: the latest release. The real state is [spec 018](../018-failure-matrix/requirements.md), group M: the release archives carry a SHA-256 from the same release but are not signed, the Windows and macOS binaries are not code-signed, the Nuclear Developer's port has no token yet. Signing (Sigstore/cosign or minisign, Apple notarization, Windows Authenticode), SLSA provenance (GitHub artifact attestations) and an SBOM per archive are tasks of phase 3. |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.b35605",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — Open source: what a project like this must take care of",
+   "summary": "Open source: what a project like this must take care of",
+   "body": [
+    "| **Sustainability** | GitHub Sponsors and Open Collective (`FUNDING.yml`); later sponsorship tiers for companies, paid support. Grants that fund open source tools (NLnet, Sovereign Tech Fund, GitHub Secure Open Source Fund) when the project qualifies. |",
+    "| **Supply chain** | Pinned versions in workflows and packages (already the rule); Dependabot or Renovate; `cargo deny`; the release built only from the tag in CI (already true). |",
+    "| **Accessibility and languages** | The website and the editors keep WCAG AA contrast (the Chernobyl themes are checked); the docs in English with the most read pages also in Spanish (the extension and the website already speak both). |",
+    "| **Code of conduct** | Contributor Covenant 2.1, an email to report, enforced by the maintainers. |",
+    "| **Citation** | `CITATION.cff`, for papers that use the benchmark. |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.e11b9b",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — Open source: what a project like this must take care of",
+   "summary": "Open source: what a project like this must take care of",
+   "body": [
+    "| **Privacy** | No telemetry. The update check fetches only the latest release's URL once a day and can be turned off (`NUCLEAR_NO_UPDATE_CHECK=1`); the Smart Graph and the agents run locally; a `PRIVACY.md` says it, because \"AI\" makes people ask. |",
+    "| **AI-written code** | The project is built with AI agents and says so (the agents commit in the user's name, root rule 10). Contributions written with AI are welcome under the same review and DCO; the contributor answers for them. |",
+    "| **Governance** | Today a single maintainer decides (BDFL). `GOVERNANCE.md` says it, how a contributor becomes a maintainer (sustained merged work, invited), and the RFC process: a change to the base language or a platform's contract is an RFC (a pull request to `docs/rfcs/`), discussed two weeks, decided by the maintainers; dialects and tools follow normal review. |",
+    "| **Stability** | Semantic Versioning for the whole platform (ADR-platform-0011); while 0.x a MINOR may break, always written in the CHANGELOG with the migration (`nuclear fix` for what it can rewrite). 1.0 freezes the base language's syntax: after it, a breaking change needs a MAJOR and an RFC. |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#r1-how-the-website-is-prerendered.77dd64",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — R1: how the website is prerendered",
+   "summary": "The website is a product of the web platform (React dialect).",
+   "body": [
+    "The website is a product of the web platform (React dialect). The right place for prerendering is the platform:",
+    "`nuclear build` of a web project with `prerender = true` (in `config.nuc`) renders each route of the app's router",
+    "to `build/app/dist/<route>/index.html` after the Vite build, the client hydrating it in the browser. Every web",
+    "product gets it; the website turns it on. Steps:",
+    "",
+    "1. A spec in `nuclear-synapsis-framework/platforms/web/docs/04-specs/`: the word in `config.nuc`, the router's",
+    "   routes as the list (or a `routes()` the app gives for dynamic ones, as the site's documentation pages), how the",
+    "   head of each page is declared (a `head(title, description, image, jsonLd)` the screen returns, rendered by the",
+    "   runtime `synapsis-web` with React 19's document metadata), the hydration.",
+    "2. The dialect's `[toolchain]` gains a `prerender` command (Vite SSR build + a script of the runtime that renders",
+    "   each route with `react-dom/server` and writes the files); the CLI runs it after `build` when the project asks.",
+    "3. The website: its pages declare their head (from `site.toml`, which already has each page's text), its build",
+    "   turns prerender on, its workflow keeps `404.html` only for unknown URLs.",
+    "4. The check of R1.4 runs in `website.yml` against the built `dist/` (no network) and, after the deploy, against",
+    "   the live site."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#r1-how-the-website-is-prerendered.f0d05f",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — R1: how the website is prerendered",
+   "summary": "The JSON-LD of each page comes from `site.toml` (one `[seo]` table per page type), never written in HTML by hand.",
+   "body": "The JSON-LD of each page comes from `site.toml` (one `[seo]` table per page type), never written in HTML by hand.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#r2-generative-engine-optimization-geo",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — R2: generative engine optimization (GEO)",
+   "summary": "AI answers are made from (a) what the model learned in training and (b) what its search finds now.",
+   "body": [
+    "AI answers are made from (a) what the model learned in training and (b) what its search finds now. For (a) the",
+    "project must be written about in many places before each model's cutoff (content, GitHub, registries, Q&A); for",
+    "(b) the pages must answer the question in their first lines, in plain HTML, with numbers, and be cited by other",
+    "sites. The pages of R2.2 are written as answers: the question as the title, the answer in two sentences, then the",
+    "code, then the proof. `llms.txt` points agents to the sheets (it already does); each registry entry repeats the one",
+    "paragraph that describes NuclearLang, so every source says the same thing."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#r4-one-release-every-registry",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — R4: one release, every registry",
+   "summary": "Each registry is a job of `release.yml` after `snapshot`, publishing the artifacts of that same tag (ADR-platform-0011), with trusted publishing where the registry has it (PyPI, npm, crates.io have OIDC trusted publishing from GitHub Actions; pub.dev has automated publishing from GitHub Actions;…",
+   "body": [
+    "Each registry is a job of `release.yml` after `snapshot`, publishing the artifacts of that same tag",
+    "(ADR-platform-0011), with trusted publishing where the registry has it (PyPI, npm, crates.io have OIDC trusted",
+    "publishing from GitHub Actions; pub.dev has automated publishing from GitHub Actions; Homebrew a tap updated by the",
+    "release; winget and Scoop manifests by pull request). A registry's failure never fails the release (as",
+    "`marketplaces` today). The names are reserved first (`nuclear-mcp`, `synapsis-py`, `synapsis-nest`,",
+    "`synapsis-web`, `synapsis`, `nuclear-cli`): a name taken by someone else is decided with the user (naming.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#the-order-fix-the-doors-before-inviting-people",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Design — The order: fix the doors before inviting people",
+   "summary": "Inviting people to a website search engines cannot read, or to a repository that looks abandoned, wastes the one chance a launch gives.",
+   "body": [
+    "Inviting people to a website search engines cannot read, or to a repository that looks abandoned, wastes the one",
+    "chance a launch gives. So the work runs in five phases; the launch (phase 4) waits for phases 1-3 and for the",
+    "benchmark (spec 020).",
+    "",
+    "| Phase | What | Why first |",
+    "|---|---|---|",
+    "| 1. Readable | prerendered website, metadata, robots, sitemap check, Search Console | every other door links here |",
+    "| 2. Presentable | repository and organization: logo, READMEs in two languages, community files, topics, dead repos gone | a visitor decides in ten seconds |",
+    "| 3. Findable | MCP registries, Context7, package registries, stores, awesome lists | where developers and agents look |",
+    "| 4. Launch | benchmark published, launch day, press, videos | a number to talk about, and doors that work |",
+    "| 5. Grow | community rituals, content every week, measures every month | a launch fades; a community stays |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#how-a-rename-is-done-when-decided",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — How a rename is done (when decided)",
+   "summary": "1. One spec per rename group, listing every reference (`git grep`), the compatibility kept (an alias command, a setting moved on read, a theme id mapped), and the knowledge base rows.",
+   "body": [
+    "1. One spec per rename group, listing every reference (`git grep`), the compatibility kept (an alias command, a",
+    "   setting moved on read, a theme id mapped), and the knowledge base rows.",
+    "2. One release (ADR-platform-0011): the version rises for everything.",
+    "3. The website, the READMEs, the stores and the registries updated the same day."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#spec-019-launch-and-growth-the-names",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names",
+   "summary": "A newcomer meets the names before the code.",
+   "body": [
+    "A newcomer meets the names before the code. This is the review of every public name, what makes each one easy or",
+    "hard, and the proposals. **Nothing here is changed until the user decides each line** (rule 8): a rename is one",
+    "release, with the old command or setting still working where a user typed it."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.439c9f",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
+   "summary": "What is hard, and the proposals",
+   "body": [
+    "| \"platform\" vs \"dialect\" | the docs | right and already consistent: platform = what you write (web, mobile, backend), dialect = the language underneath | keep, explained on the first page |",
+    "| `synapsis` on pub.dev, npm, PyPI | the registries | \"synapsis\" alone may be taken | reserve `synapsis-*` names, or publish as `nuclear-synapsis*` if taken |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.a44bc2",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
+   "summary": "What is hard, and the proposals",
+   "body": [
+    "| `device-emulators/`, crate `nuclear-devices`, commands `device`, `terminal-device` | the tree, the CLI | \"emulators\" is wrong (they are devices that run the app, not emulators) | folder `devices/` |",
+    "| \"Nuclear Builder\", `nuclear-builder`, its \"software factory\", \"teams\", \"members\" | the editor, the CLI | fine as a product; \"factory\" and \"Builder\" both describe it | keep **Builder**; say \"Builder\" in the UI, not \"the factory\" |",
+    "| \"Nuclear Chat\", `nuclear-chat` | the editor | clear | keep |",
+    "| \"Nuclear Monitor\", \"HTTP Connections\", \"Devices\" | the editor | clear | keep |",
+    "| the themes **Chernobyl** and **Chernobyl Soft** | the editors, the website | a real disaster that killed people: press and companies may find it in bad taste, and it ties the brand to danger at launch | rename to a name of the same palette without the tragedy (e.g. **Isotope** and **Isotope Soft**, or **Radium**); the old theme ids keep working |",
+    "| the radioactive mark ☢ | the logo | strong and recognizable, but a hazard sign | keep (it is the brand), soften with the green glow already used; never paired with disaster imagery |",
+    "| \"dialect\" | the docs | accurate but uncommon for \"target\" | keep in the docs; the website's first pages say \"target (dialect)\" once |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.e02fea",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
+   "summary": "What is hard, and the proposals",
+   "body": [
+    "| Today | Where | Why it is hard | Proposal |",
+    "|---|---|---|---|",
+    "| repository `lang` | github.com/nuclearlang/lang | generic: \"nuclearlang/lang\" says \"lang\" twice, and a search for the project finds nothing by the repo's name | rename to `nuclearlang/nuclearlang` (GitHub redirects the old URL, clones keep working) |",
+    "| folder `nuclearlang/` inside the repository | the tree | the repository and one folder have the same name | `language/` (or `compiler/`) |",
+    "| `nuclear-synapsis-framework/` | the tree | long; \"nuclear\" and \"framework\" add nothing | `synapsis/` |",
+    "| `nuclear-graph-storage/`, command `nuclear-graph`, product \"the Smart Graph\", chat \"Nuclear Atlas\" | the tree, the CLI, the docs, the editor | four names for two things (the knowledge base, the chat that asks it) | the knowledge base is **Nuclear Graph** everywhere (folder `graph/`, command `nuclear-graph`); the chat stays **Atlas** |",
+    "| `nuclear-agents/nuclear_developer`, \"Nuclear Developer\", port 7879 | the tree, the docs | underscore and hyphen in the same path; \"Developer\" reads as a person | folder `agents/`; the product **Nuclear Agents** (the local agents) |",
+    "| `tools/code_generator`, crate `nuclear-codegen`, commands `gen`/`make` | the tree | three names; underscore | folder `tools/codegen/` |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-works",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — What works",
+   "summary": "to search (\"NuclearLang\" has no other meaning), memorable.",
+   "body": [
+    "- **NuclearLang** as the brand and **`nuclear`** as the command; **`.nuc`** as the extension: short, unique enough",
+    "  to search (\"NuclearLang\" has no other meaning), memorable.",
+    "- **Synapsis** for the framework (mobile, backend, web): a word with a meaning (connections), easy in English and",
+    "  Spanish.",
+    "- The verbs of the command: `new`, `gen`, `make`, `build`, `run`, `test`, `check`, `fix`, `add`, `update`."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#goal",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — Goal",
+   "summary": "A developer or an agent that has never heard of NuclearLang meets it through any of these doors, and every door leads to something that works in minutes: 1. A search engine (Google, Bing, DuckDuckGo): every page of the website is indexed with its own title, description and text.",
+   "body": [
+    "A developer or an agent that has never heard of NuclearLang meets it through any of these doors, and every door",
+    "leads to something that works in minutes:",
+    "",
+    "1. **A search engine** (Google, Bing, DuckDuckGo): every page of the website is indexed with its own title,",
+    "   description and text.",
+    "2. **An AI chat or an AI agent** asked about \"a language for AI agents\", \"write less code with an LLM\", \"one",
+    "   codebase for Flutter and FastAPI\": it knows NuclearLang (it read about it, or it searches and finds it), and an",
+    "   agent can install it and use its MCP server without help.",
+    "3. **A registry** where developers and agents look for tools: the editors' stores, the MCP registries, the package",
+    "   registries, Context7.",
+    "4. **A community place**: GitHub, Hacker News, Reddit, Lobsters, dev.to, YouTube, newsletters, the press."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#measures-reported-monthly-in-this-spec-s-tasks-md-until-1-0",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — Measures (reported monthly in this spec's…",
+   "summary": "Measures (reported monthly in this spec's tasks.md until 1.0)",
+   "body": [
+    "| Measure | Now | 3 months | 6 months |",
+    "|---|---|---|---|",
+    "| Indexed pages (Search Console) | 1 | 100 | all |",
+    "| GitHub stars | 0 | 500 | 2 000 |",
+    "| Marketplace + Open VSX installs | — | 1 000 | 5 000 |",
+    "| MCP registries listing `nuclear-mcp` | 0 | 6 | 8 |",
+    "| AI chats that describe NuclearLang correctly when asked (ChatGPT, Gemini, Claude, Perplexity, Copilot; with search on) | 0/5 | 3/5 | 5/5 |",
+    "| Contributors with a merged pull request | 1 | 10 | 30 |",
+    "| Community members (Discord + Discussions) | 0 | 300 | 1 500 |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r1-the-website-is-readable-without-javascript-blocking-every-other.2da1be",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R1 — The website is readable without…",
+   "summary": "6. The website is registered in Google Search Console and Bing Webmaster Tools (Bing feeds ChatGPT search and Copilot), the sitemap submitted, IndexNow pinged on each deploy.",
+   "body": [
+    "6. The website is registered in Google Search Console and Bing Webmaster Tools (Bing feeds ChatGPT search and",
+    "   Copilot), the sitemap submitted, IndexNow pinged on each deploy."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r1-the-website-is-readable-without-javascript-blocking-every-other.d2ac9a",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R1 — The website is readable without…",
+   "summary": "1. Every route of the website answers HTTP 200 with its content rendered in the HTML: the web platform's build writes `<route>/index.html` for each route (static prerender), a capability of Synapsis web (every product of the platform gets it), not a patch of the site.",
+   "body": [
+    "1. Every route of the website answers HTTP 200 with its content rendered in the HTML: the web platform's build",
+    "   writes `<route>/index.html` for each route (static prerender), a capability of Synapsis web (every product of",
+    "   the platform gets it), not a patch of the site.",
+    "2. Each page has its own `<title>`, `<meta name=\"description\">`, canonical URL, Open Graph and Twitter cards (an",
+    "   image per page: the screenshots of `public/shots/`, a generated card otherwise) and JSON-LD:",
+    "   `SoftwareApplication` (name, operatingSystem, applicationCategory, offers 0, downloadUrl, softwareVersion,",
+    "   license), `SoftwareSourceCode` for the repository, `TechArticle` for guides, `FAQPage` for the FAQ,",
+    "   `BreadcrumbList`.",
+    "3. `sitemap.xml` lists only URLs that answer 200, with `lastmod`; `robots.txt` names the AI crawlers and allows",
+    "   them (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-Web, anthropic-ai, PerplexityBot, Google-Extended,",
+    "   Applebot-Extended, CCBot, Bytespider, Meta-ExternalAgent, cohere-ai, DuckAssistBot).",
+    "4. A check in the website's CI fails when a sitemap URL does not answer 200 with its title in the HTML, when a page",
+    "   has no description, or when `llms.txt` names a page that does not exist.",
+    "5. Core Web Vitals green on mobile (LCP < 2.5 s, CLS < 0.1, INP < 200 ms), measured by Lighthouse in the CI."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r2-agents-can-learn-and-use-nuclearlang-from-the-outside-geo-genera",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R2 — Agents can learn and use NuclearLang…",
+   "summary": "1. `llms.txt` stays the index of the sheets; `llms-full.txt` the full text; both generated from the documents at each build (never written by hand), and listed in `robots.txt`.",
+   "body": [
+    "1. `llms.txt` stays the index of the sheets; `llms-full.txt` the full text; both generated from the documents at",
+    "   each build (never written by hand), and listed in `robots.txt`.",
+    "2. A page per question people ask an AI (\"What is NuclearLang?\", \"NuclearLang vs TypeScript\", \"How to write a",
+    "   FastAPI backend with an AI agent in fewer tokens\", \"One codebase for Flutter, FastAPI and React\"), each answered",
+    "   in its first paragraph, with code and numbers (the benchmark of spec 020), so an AI that searches cites it.",
+    "3. **The MCP server in every MCP registry**: the official registry (registry.modelcontextprotocol.io, its",
+    "   `server.json`), Smithery, mcp.so, Glama, PulseMCP, the Docker MCP catalog, Cursor's and VS Code's MCP",
+    "   galleries; each entry with the install line and what the tools do.",
+    "4. **Context7** has the documentation (the repository registered, its `context7.json`), so the coding agents",
+    "   that use it read the real Nuclear instead of guessing.",
+    "5. A `nuclear` page on the agents' own skill or rule galleries where they exist (Claude Code skills, Cursor rules,",
+    "   the `AGENTS.md` convention): the skill the installer copies, published.",
+    "6. The knowledge base answers \"where do I learn Nuclear\" and \"how do I install it\" for an agent with no context",
+    "   (it does: `faq:install`, `nuclear_start`); measured by a sandboxed run of an agent that only has a web search."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r3-the-repository-and-the-organization-are-ready-for-visitors-and-c.78fc10",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R3 — The repository and the organization are…",
+   "summary": "repositories (deleted by the user), the stray root file `-`, the remote branch `restructure-one-repository` when merged.",
+   "body": [
+    "repositories (deleted by the user), the stray root file `-`, the remote branch `restructure-one-repository`",
+    "   when merged."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r3-the-repository-and-the-organization-are-ready-for-visitors-and-c.d5c6fc",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R3 — The repository and the organization are…",
+   "summary": "1. The organization: its avatar (the radioactive mark of `website/public/favicon.svg`, 500×500), its profile README in English and Spanish, pinned repositories, a verified domain when a domain is bought.",
+   "body": [
+    "1. The organization: its avatar (the radioactive mark of `website/public/favicon.svg`, 500×500), its profile",
+    "   README in English and Spanish, pinned repositories, a verified domain when a domain is bought.",
+    "2. The repository: description, homepage, topics (`programming-language`, `transpiler`, `compiler`, `ai-agents`,",
+    "   `llm`, `mcp`, `mcp-server`, `flutter`, `fastapi`, `nestjs`, `react`, `rust`, `code-generation`,",
+    "   `developer-tools`), a social preview image (1280×640), Discussions on, private vulnerability reporting on.",
+    "3. `README.md` in English and `README.es.md` in Spanish, each linking the other; a GIF or screenshot first, the",
+    "   install line second, a 30-second example third, the benchmark numbers fourth.",
+    "4. `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private reporting, supported versions: the",
+    "   latest release), `GOVERNANCE.md` (who decides, the RFC process for the language, how a maintainer is made),",
+    "   `CONTRIBUTING.md` (also the DCO sign-off), issue and pull request templates (bug, feature, dialect request,",
+    "   language RFC), `FUNDING.yml`, `CITATION.cff`, labels (`good first issue`, `help wanted`, `dialect`, `platform`,",
+    "   `docs`, `rfc`).",
+    "5. What is dead is gone: the archived `dragonfly`, `dragonfly-backend`, `dragonfly-web`, `dragonfly-mobile`"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r4-the-packages-are-where-developers-look",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R4 — The packages are where developers look",
+   "summary": "1. `nuclear-mcp` on PyPI (`uvx nuclear-mcp` works), `synapsis-py` on PyPI, `synapsis-nest` and `synapsis-web` on npm, `synapsis` on pub.dev, the compiler on crates.io (`cargo install nuclear-cli`), Homebrew (a tap first, homebrew-core later), Scoop and winget for Windows, the AUR.",
+   "body": [
+    "1. `nuclear-mcp` on PyPI (`uvx nuclear-mcp` works), `synapsis-py` on PyPI, `synapsis-nest` and `synapsis-web` on",
+    "   npm, `synapsis` on pub.dev, the compiler on crates.io (`cargo install nuclear-cli`), Homebrew (a tap first,",
+    "   homebrew-core later), Scoop and winget for Windows, the AUR. Each publish is a job of the release",
+    "   (ADR-platform-0011: one version, one snapshot); none is published by hand.",
+    "2. Each package page names NuclearLang, links the website and carries the logo."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r5-content-that-people-and-models-learn-from",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R5 — Content that people and models learn from",
+   "summary": "1. A blog on the website (in English, the best posts also in Spanish): the story (\"why a language for AI agents\"), each release's notes, the benchmark, tutorials by stack (FastAPI, NestJS, Flutter, React, LangGraph).",
+   "body": [
+    "1. A blog on the website (in English, the best posts also in Spanish): the story (\"why a language for AI",
+    "   agents\"), each release's notes, the benchmark, tutorials by stack (FastAPI, NestJS, Flutter, React,",
+    "   LangGraph).",
+    "2. The same posts syndicated (canonical to the website) on dev.to, Hashnode and Medium.",
+    "3. Videos: a 2-minute demo (an agent builds a backend and a mobile app with Nuclear, the device inside the",
+    "   editor), one per platform, a benchmark explainer; YouTube with transcripts, shorts for X, LinkedIn and TikTok.",
+    "4. Answers where people ask (Stack Overflow, Reddit, GitHub discussions of the tools Nuclear works with), always",
+    "   disclosed, never spam.",
+    "5. \"Awesome\" lists: awesome-mcp-servers, awesome-ai-agents, awesome-llm-apps, awesome-programming-languages,",
+    "   awesome-flutter, awesome-fastapi, awesome-rust (each a pull request when the project meets their rules).",
+    "6. Wikipedia only when independent sources exist (press, papers): never written by us."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r6-the-launch-is-news",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R6 — The launch is news",
+   "summary": "1. The hook is a number: the benchmark of spec 020 (\"a model at a tenth of the price builds the app with Nuclear and fails without it\"), published with its data and its reproducible harness.",
+   "body": [
+    "1. **The hook is a number**: the benchmark of spec 020 (\"a model at a tenth of the price builds the app with",
+    "   Nuclear and fails without it\"), published with its data and its reproducible harness.",
+    "2. **One launch day**, prepared: Show HN (\"Show HN: NuclearLang – a language designed to be written by AI",
+    "   agents\"), Product Hunt, r/ProgrammingLanguages, r/LocalLLaMA (the local 3B agents), r/FlutterDev, r/FastAPI,",
+    "   r/rust, Lobsters, dev.to, X, LinkedIn, Bluesky, the Spanish-speaking communities; the founder answers every",
+    "   comment that day.",
+    "3. **The press and newsletters**: a press kit page (logo, screenshots, the one-paragraph description, the numbers,",
+    "   contact), pitches to The New Stack, InfoQ, DevClass, The Register, Changelog, TLDR, Console.dev, Bytes, Python",
+    "   Weekly, Flutter Weekly, Rust Weekly; podcasts (Changelog, Software Engineering Daily, Latent Space).",
+    "4. **Talks**: a lightning talk and a full talk ready (slides in the press kit), sent to Rust, Flutter, Python and AI",
+    "   conferences and local meetups.",
+    "5. **Milestones that make news later**: 1.0, the first company using it, the first community dialect, the",
+    "   benchmark's next round with new models."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r7-a-community-that-grows-by-itself-community-md",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R7 — A community that grows by itself…",
+   "summary": "Places, rituals and paths from user to maintainer; measured each month.",
+   "body": "Places, rituals and paths from user to maintainer; measured each month.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r8-what-an-open-source-project-like-this-must-take-care-of-design-m",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R8 — What an open source project like this…",
+   "summary": "License, trademark, contributions, security, privacy, governance, sustainability, supply chain, accessibility.",
+   "body": "License, trademark, contributions, security, privacy, governance, sustainability, supply chain, accessibility.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#requirements-r9-names-a-newcomer-understands-naming-md",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — R9 — Names a newcomer understands (naming.md)",
+   "summary": "The names of the projects, commands, tools and themes reviewed; the changes decided by the user, then made in one release with the old names kept working where a user typed them.",
+   "body": [
+    "The names of the projects, commands, tools and themes reviewed; the changes decided by the user, then made in one",
+    "release with the old names kept working where a user typed them."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#spec-019-launch-and-growth-found-by-people-search-engines-and-ai-agents-requirem",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements",
+   "summary": "AI agents and AI chats (ChatGPT, Gemini, Claude, Copilot, Perplexity, OpenCode, Cursor) know it, recommend it and can use it, and its launch is news.",
+   "body": [
+    "**Priority: high** (the user, 2026-11-20). NuclearLang must spread on its own: people find it when they search,",
+    "AI agents and AI chats (ChatGPT, Gemini, Claude, Copilot, Perplexity, OpenCode, Cursor) know it, recommend it and",
+    "can use it, and its launch is news."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/requirements.md#what-was-found-2026-11-20",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — found by people, search engines and AI agents — Requirements — What was found (2026-11-20)",
+   "summary": "so a browser shows it): the 113 other URLs of `sitemap.xml` are not indexed.",
+   "body": [
+    "- **The website is invisible.** Every route but `/` answers HTTP 404 on GitHub Pages (its 404 page loads the app,",
+    "  so a browser shows it): the 113 other URLs of `sitemap.xml` are not indexed. `/` is an empty `<div id=\"root\">`",
+    "  filled by JavaScript, which GPTBot, ClaudeBot, PerplexityBot and most AI crawlers do not run: they see one",
+    "  title and one line.",
+    "- **Done right already:** `llms.txt` and `llms-full.txt` (the sheets agents read), `robots.txt`, `sitemap.xml`, the",
+    "  VS Code extension on the Visual Studio Marketplace (0.80.0), Open VSX publishing (its namespace waits for",
+    "  verification: EclipseFdn/open-vsx.org#16010).",
+    "- **The repository looks empty to a visitor:** 0 stars, no topics, no `CODE_OF_CONDUCT.md`, `SECURITY.md`,",
+    "  issue templates, discussions or funding; a stray file named `-` at the root; four archived `dragonfly*`",
+    "  repositories (the old name of Synapsis) in the organization; the organization has no avatar.",
+    "- **The MCP server is in no MCP registry**, the packages in no package registry, the docs not in Context7.",
+    "- **There is no public proof** that Nuclear makes cheaper models succeed: [spec 020](../020-benchmark/requirements.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#measures",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Measures",
+   "summary": "Measures",
+   "body": [
+    "| Month | Indexed pages | Stars | Installs | MCP registries | AI chats correct | Contributors | Members |",
+    "|---|---|---|---|---|---|---|---|",
+    "| 2026-11 | 1 | 0 | — | 0 | 0/5 | 1 | 0 |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-1-readable-blocks-the-launch",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 1 — Readable (blocks the launch)",
+   "summary": "Lighthouse (Core Web Vitals green on mobile).",
+   "body": [
+    "- [ ] T1.1 agent: spec of the web platform's prerender (`nuclear-synapsis-framework/platforms/web/docs/04-specs/`).",
+    "- [ ] T1.2 agent: the `prerender` command of the react dialect and `synapsis-web`'s renderer; `nuclear build` runs it.",
+    "- [ ] T1.3 agent: the website declares each page's head from `site.toml` (`[seo]`), turns prerender on.",
+    "- [ ] T1.4 agent: JSON-LD (`SoftwareApplication`, `SoftwareSourceCode`, `TechArticle`, `FAQPage`, `BreadcrumbList`).",
+    "- [ ] T1.5 agent: Open Graph images per page (the screenshots, generated cards for the rest).",
+    "- [ ] T1.6 agent: `robots.txt` naming the AI crawlers; `sitemap.xml` with `lastmod` and only 200 URLs.",
+    "- [ ] T1.7 agent: the website's CI check (every sitemap URL 200 with its title; descriptions; `llms.txt` links) and",
+    "      Lighthouse (Core Web Vitals green on mobile).",
+    "- [ ] T1.8 user: Google Search Console and Bing Webmaster Tools (verify the site; the agent gives the meta tag or",
+    "      file), submit the sitemap. agent: IndexNow ping in the deploy.",
+    "- [ ] T1.9 user (decision): a domain of our own (nuclearlang.dev or .org), or stay on github.io."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.2a70c5",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 2 — Presentable",
+   "summary": "repositories (0 stars, 0 forks, moved into `lang`): `gh repo delete nuclearlang/<name> --yes` (the agent's permission mode does not allow deleting repositories).",
+   "body": [
+    "- [x] T2.1 agent: the stray root file `-` removed; the old `dragonfly` build artifacts removed from `target/`.",
+    "- [ ] T2.2 user: delete the archived `dragonfly`, `dragonfly-backend`, `dragonfly-web`, `dragonfly-mobile`",
+    "      repositories (0 stars, 0 forks, moved into `lang`): `gh repo delete nuclearlang/<name> --yes` (the agent's",
+    "      permission mode does not allow deleting repositories).",
+    "- [ ] T2.3 user: the organization's avatar: upload `github-profile/profile/assets/avatar-500.png` in github.com/nuclearlang →",
+    "      Settings → Profile picture (GitHub has no API for it).",
+    "- [x] T2.4 agent: the organization's profile README in English and Spanish, with the logo.",
+    "- [x] T2.5 agent: `README.md` (English) and `README.es.md` (Spanish) at the root.",
+    "- [x] T2.6 agent: `CODE_OF_CONDUCT.md`, `SECURITY.md`, `GOVERNANCE.md`, issue and pull request templates;",
+    "      `CONTRIBUTING.md` with the DCO.",
+    "- [x] T2.7 agent: topics (14), description, Discussions on, private vulnerability reporting on (2026-11-20).",
+    "      user: upload the social preview image (`github-profile/profile/assets/social-preview.png`, 1280×640, made)",
+    "      in github.com/nuclearlang/lang → Settings → Social preview (no API).",
+    "- [ ] T2.8 agent: labels done (`good first issue`, `help wanted`, `dialect`, `platform`, `docs`, `rfc`); left: the first ten",
+    "      `good first issue` issues, each with what, where and how to test."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.2b0864",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 2 — Presentable",
+   "summary": "Collective accounts.",
+   "body": [
+    "- [ ] T2.9 agent: `FUNDING.yml`, `CITATION.cff`, `TRADEMARKS.md`, `PRIVACY.md`. user: open GitHub Sponsors and Open",
+    "      Collective accounts.",
+    "- [ ] T2.10 user (decisions): each line of [naming.md](naming.md). agent: the renames decided, one release."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
+   "summary": "OIDC login).",
+   "body": [
+    "- [ ] T3.1 agent: `server.json` of `nuclear-mcp`; publish to the official MCP registry from the release (its GitHub",
+    "      OIDC login). agent → user: Smithery, mcp.so, Glama, PulseMCP, the Docker MCP catalog (forms or pull requests).",
+    "- [ ] T3.2 agent → user: Context7 (`context7.json`, register the repository).",
+    "- [ ] T3.3 agent: reserve and publish the packages from the release (PyPI `nuclear-mcp`, `synapsis-py`; npm",
+    "      `synapsis-nest`, `synapsis-web`; pub.dev `synapsis`; crates.io `nuclear-cli`), trusted publishing each.",
+    "      user: the accounts and each registry's trusted publisher (as the Marketplace).",
+    "- [ ] T3.4 agent: Homebrew tap, Scoop bucket, winget manifest, AUR package, updated by the release.",
+    "- [ ] T3.5 user: Open VSX namespace verified (EclipseFdn/open-vsx.org#16010), then the agent moves it to trusted",
+    "      publishing and the user deletes `OVSX_PAT`.",
+    "- [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).",
+    "- [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact",
+    "      attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).",
+    "- [ ] T3.8 agent: pull requests to the awesome lists that accept the project."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-4-launch-after-phases-1-3-and-spec-020-s-first-round",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 4 — Launch (after phases 1-3 and spec 020's first round)",
+   "summary": "approves a generated voice), one per platform.",
+   "body": [
+    "- [ ] T4.1 agent: the blog on the website; the first posts (the story, the benchmark, a tutorial per stack).",
+    "- [ ] T4.2 agent: the press kit page (logo, screenshots, description, numbers, contact).",
+    "- [ ] T4.3 agent → user: the 2-minute demo video (the agent scripts and records the screen; the user narrates or",
+    "      approves a generated voice), one per platform.",
+    "- [ ] T4.4 agent → user: the launch posts written (Show HN, Product Hunt, each subreddit, Lobsters, dev.to, X,",
+    "      LinkedIn, Bluesky, Spanish communities); the user posts them on one day and answers.",
+    "- [ ] T4.5 agent → user: the press pitches and the newsletter submissions; the user sends them.",
+    "- [ ] T4.6 agent → user: the talk (slides and script); the user submits it to conferences."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-5-grow",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 5 — Grow",
+   "summary": "Phase 5 — Grow",
+   "body": [
+    "- [ ] T5.1 user: Discord server (the agent writes the channels, rules and bots' configuration).",
+    "- [ ] T5.2 agent: the monthly measures of requirements.md, written below.",
+    "- [ ] T5.3 agent: content every week (a post, a clip), the monthly call's agenda.",
+    "- [ ] T5.4 agent: the benchmark leaderboard on the website, updated with each new model (spec 020)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#spec-019-launch-and-growth-tasks",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks",
+   "summary": "Who: agent (an agent does it in the tree, commits and releases), user (only the user can: an account, a payment, a decision, a click in a website's settings), agent → user (the agent prepares, the user publishes).",
+   "body": [
+    "Who: **agent** (an agent does it in the tree, commits and releases), **user** (only the user can: an account, a",
+    "payment, a decision, a click in a website's settings), **agent → user** (the agent prepares, the user publishes)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#scoring-per-run",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications — Scoring per run",
+   "summary": "Scoring per run",
+   "body": [
+    "| Score | How |",
+    "|---|---|",
+    "| Pass rate | hidden tests passed / total (the headline) |",
+    "| Complete | all critical tests passed (a list per app: e.g. no overselling, no cross-tenant read) |",
+    "| Cost | dollars as reported by the provider; tokens in/out; cache reads separately |",
+    "| Effort | turns, wall time, tool calls, compiler/runtime errors met on the way |",
+    "| Performance | k6 p50/p95/p99, throughput, error rate (A3, A4, A7) |",
+    "| Security | Semgrep + Bandit/ESLint security rules + the app's attack tests (A2, A6) |",
+    "| Size | lines written by the agent (Nuclear source vs native source; generated code counted apart) |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#spec-020-the-benchmark-the-applications.06ba8d",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications",
+   "summary": "Eight applications, each chosen for what is hard in real software: architecture, concurrency, consistency, performance, security, realtime, AI, change.",
+   "body": [
+    "Eight applications, each chosen for what is hard in real software: architecture, concurrency, consistency,",
+    "performance, security, realtime, AI, change. Each is a prose specification (`benchmark/apps/<id>/spec.md`), a set of",
+    "hidden acceptance tests, a load test where performance matters, and a scoring sheet. The platform each one targets",
+    "is the one Nuclear has; the baseline builds the same in the native stack."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#spec-020-the-benchmark-the-applications.51ba78",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications",
+   "summary": "Spec 020: The benchmark — The applications",
+   "body": [
+    "| # | App | Platforms | What makes it hard | Tests (hidden) |",
+    "|---|---|---|---|---|",
+    "| A1 | **Library loans** (warm-up, medium) | backend | a domain with rules: a book is lent once, a member has at most 3 loans, overdue fines by day; validation; pagination; OpenAPI | ~40 HTTP tests: rules, edge dates, 422s, 404s, 409s, pagination bounds |",
+    "| A2 | **Auth and multi-tenant SaaS API** | backend | JWT access + refresh rotation, roles (owner, admin, member) per organization, tenant isolation (a member never sees another tenant's rows), password reset by token, rate limit on login, migrations | ~60 tests incl. cross-tenant attacks, expired/replayed refresh tokens, role escalation attempts |",
+    "| A3 | **Inventory with concurrency** | backend | stock reservations under concurrent orders (no overselling), idempotency keys, optimistic locking, a background job that releases expired reservations, an event outbox | concurrency tests (100 parallel orders on 10 items: exactly 10 succeed), idempotent retries, job timing |",
+    "| A4 | **Realtime team chat** | backend + web | WebSocket rooms, presence, typing, message history with cursor pagination, unread counts, reconnect without losing messages, server-sent events fallback | browser tests with two users, reconnect after a dropped socket, ordering under load |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#spec-020-the-benchmark-the-applications.59a690",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications",
+   "summary": "Spec 020: The benchmark — The applications",
+   "body": "| A8 | **One product, three platforms** (the hardest) | backend + web + mobile | a shared contract (the backend's API consumed by the web and mobile apps), clean architecture in all three, the same features (A2's auth, A1's domain) everywhere, end-to-end flows across them | end-to-end: sign up on mobile, see the data on web; contract tests; each platform's tests |",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#spec-020-the-benchmark-the-applications.d28773",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications",
+   "summary": "Spec 020: The benchmark — The applications",
+   "body": [
+    "| A5 | **Offline-first field notes** | mobile + backend | a Flutter app that works offline, a local database, sync when online with conflict resolution (last-writer-wins per field plus a conflict list), photos queued for upload | device-driver tests toggling the network, two devices editing the same note, conflict surfaced |",
+    "| A6 | **AI support agent** | backend | a LangGraph/agent with tools (search orders, refund under a limit, escalate), memory per conversation, guardrails (never refund above the limit, never leak another customer's order), streaming answers; a mocked model server so the tests are deterministic | scripted conversations against the mocked model: tool calls made, limits respected, data isolation |",
+    "| A7 | **Analytics dashboard with performance budgets** | backend + web | ingest 1M events, aggregate by day/segment, queries under 200 ms p95 (indexes, no N+1, caching), a React dashboard with charts and filters, CSV export streaming | k6 load test (p95 latency, throughput, error rate), query-count assertions, browser tests of filters |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#the-change-tasks-h6-maintenance",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications — The change tasks (H6: maintenance)",
+   "summary": "Each app above, once passing, gets three change requests in a new run of the same agent and condition, starting from that run's code: 1. A feature: e.g.",
+   "body": [
+    "Each app above, once passing, gets three change requests in a new run of the same agent and condition, starting",
+    "from that run's code:",
+    "",
+    "1. **A feature**: e.g. A1 \"reservations: a member can reserve a lent book; the next return assigns it\".",
+    "2. **A bug**: a seeded defect report (\"fines are charged on the return day\") the agent must find and fix.",
+    "3. **A refactor under constraint**: e.g. \"split loans into its own component without changing the API\", checked by",
+    "   the same tests plus an architecture rule."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/apps.md#the-port-task-h7",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — The applications — The port task (H7)",
+   "summary": "The passing A2 (FastAPI) is moved to NestJS: with Nuclear, by changing the dialect and fixing what the compiler reports; without, by rewriting.",
+   "body": [
+    "The passing A2 (FastAPI) is moved to NestJS: with Nuclear, by changing the dialect and fixing what the compiler",
+    "reports; without, by rewriting. Same hidden tests."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/apps.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#caps-per-run",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — Caps (per run)",
+   "summary": "A run that hits a cap is scored with what it left (often zero): the cap is part of the result (cheap models are judged on what they deliver within a budget a person would pay).",
+   "body": [
+    "| App size | Wall time | Turns | Dollars |",
+    "|---|---|---|---|",
+    "| medium (A1) | 30 min | 80 | 2 |",
+    "| hard (A2-A7) | 90 min | 200 | 6 |",
+    "| hardest (A8) | 180 min | 400 | 12 |",
+    "",
+    "A run that hits a cap is scored with what it left (often zero): the cap is part of the result (cheap models are",
+    "judged on what they deliver within a budget a person would pay)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#how-results-feed-the-project",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — How results feed the project",
+   "summary": "Every failed Nuclear run is classified by cause (a missing word of a dialect, a wrong doc, an MCP tool missing, a compiler error that did not say how to fix it), and each cause becomes a roadmap item of the project at fault, so the next round measures the improvement — the same loop as the local…",
+   "body": [
+    "Every failed Nuclear run is classified by cause (a missing word of a dialect, a wrong doc, an MCP tool missing, a",
+    "compiler error that did not say how to fix it), and each cause becomes a roadmap item of the project at fault, so",
+    "the next round measures the improvement — the same loop as the local developer's evaluation",
+    "(`nuclear-agents/nuclear_developer/eval`), at the scale of whole applications."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#the-harness.3700be",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — The harness",
+   "summary": "1. `bench run --app A2 --agent claude --model haiku --condition N --runs 5` starts, per run, a fresh container from the condition's image, mounts an empty project folder, writes the spec and the prompt, and starts the agent headless with the caps: result).",
+   "body": [
+    "1. `bench run --app A2 --agent claude --model haiku --condition N --runs 5` starts, per run, a fresh container",
+    "   from the condition's image, mounts an empty project folder, writes the spec and the prompt, and starts the agent",
+    "   headless with the caps:",
+    "   - Claude Code: `claude -p --model <id> --max-turns <n> --output-format stream-json` (tokens and cost in its",
+    "     result).",
+    "   - OpenCode: `opencode run -m <provider/model>` with the session export (its usage per message).",
+    "   - Cursor: its `agent` CLI with `-p --model <id> --output-format json` (Composer and Grok as its model ids).",
+    "   - The Nuclear Developer: its MCP tool `developer_task`.",
+    "   The conditions differ only in the image and the prompt's first line (\"use NuclearLang\" vs \"use FastAPI\").",
+    "2. When the agent stops (done, cap, timeout), the harness builds and starts the app the way its condition says",
+    "   (`nuclear run` / `uvicorn` / `npm start` / the Flutter driver), runs the hidden tests, the load test and the",
+    "   security scan, and writes `result.json` (scores of apps.md) next to the transcript.",
+    "3. `bench report <round>` aggregates: tables, bootstrap intervals, paired differences, charts (SVG for the website)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#the-harness.83f208",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — The harness",
+   "summary": "The provider CLIs and their token accounting already exist in Nuclear Builder's providers (Claude Code, Codex, Cursor, Grok Build, Gemini CLI, OpenCode): the harness reuses that code as a library (ADR-platform-0007), not a copy.",
+   "body": [
+    "The provider CLIs and their token accounting already exist in Nuclear Builder's providers (Claude Code, Codex,",
+    "Cursor, Grok Build, Gemini CLI, OpenCode): the harness reuses that code as a library (ADR-platform-0007), not a",
+    "copy."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#the-project",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — The project",
+   "summary": "A new project of the tree, `benchmark/` (its own `AGENTS.md` and `docs/`), a Nuclear project (python dialect): benchmark/ apps/<id>/spec.md the specification the agent gets (prose, stack-neutral) apps/<id>/tests/ hidden tests (pytest for HTTP, Playwright for web, the Flutter driver for mobile)…",
+   "body": [
+    "A new project of the tree, `benchmark/` (its own `AGENTS.md` and `docs/`), a Nuclear project (python dialect):",
+    "",
+    "```",
+    "benchmark/",
+    "  apps/<id>/spec.md            the specification the agent gets (prose, stack-neutral)",
+    "  apps/<id>/tests/             hidden tests (pytest for HTTP, Playwright for web, the Flutter driver for mobile)",
+    "  apps/<id>/load/              k6 scripts and budgets",
+    "  apps/<id>/changes/           the change requests (H6) and seeded defects",
+    "  harness/*.nuc                the runner: containers, the agent CLIs, the caps, the recording",
+    "  images/                      the container images: base, +nuclear (public installer), +native toolchains",
+    "  prompts/                     the frozen prompts per condition",
+    "  results/<round>/             raw runs (transcripts, code, reports) and REPORT.md",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#the-rounds",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — The rounds",
+   "summary": "Rough cost of round 1: 5 apps × ~8 model cells × 2 conditions × 5 runs = ~400 runs; with cheap models at $0.10-$1 and mid models at $1-$5 per run, about $500-$1 000 in API spend (the dominant cost is Sonnet and the Opus ceiling).",
+   "body": [
+    "| Round | Apps | Cells | Purpose |",
+    "|---|---|---|---|",
+    "| 0 (pilot) | A1, A2 | 2 models × N/B × 2 runs | shake out the harness, the tests, the caps; not published |",
+    "| 1 | A1-A4, A6 | all models × N/B × 5 | the first published result (the launch, spec 019 phase 4) |",
+    "| 2 | A5, A7, A8 + changes + port | all models × N/B/N0 × 5 | the full answer to H1-H7 |",
+    "| each new model | A1-A4 | that model × N/B × 5 | the leaderboard |",
+    "",
+    "Rough cost of round 1: 5 apps × ~8 model cells × 2 conditions × 5 runs = ~400 runs; with cheap models at",
+    "$0.10-$1 and mid models at $1-$5 per run, about $500-$1 000 in API spend (the dominant cost is Sonnet and the Opus",
+    "ceiling). The pilot costs under $50."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/design.md#threats-to-validity-and-what-is-done-about-each",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Design — Threats to validity, and what is done about each",
+   "summary": "Threats to validity, and what is done about each",
+   "body": [
+    "| Threat | Mitigation |",
+    "|---|---|",
+    "| Models know Python/TypeScript from training and Nuclear not at all | that is the real world Nuclear lives in; the result is what a user gets today; N0 separates the language from the MCP server |",
+    "| The Nuclear prompts are better tuned than the baseline's | prompts frozen and reviewed by stack-fluent reviewers; published |",
+    "| The hidden tests favor one implementation | black-box behaviour only; written from the spec before any run; reviewed by someone who did not write the Nuclear runtime |",
+    "| Nuclear's own developers built the apps' platform features | the apps are taken from common real-world needs, not from Nuclear's examples; none is in the knowledge base's examples |",
+    "| Provider variance and caching | 5 runs, fresh containers, caches disabled where the CLI allows, dates and versions recorded |",
+    "| Contamination of later rounds (the apps become public) | each round adds new held-out apps; the leaderboard keeps a private set |",
+    "| A cheap model fails on the harness, not the task | the pilot; a run that dies from the harness is rerun and logged |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#hypotheses-pre-registered-before-the-first-run",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — Hypotheses (pre-registered before…",
+   "summary": "Hypotheses (pre-registered before the first run)",
+   "body": [
+    "| | Hypothesis | Measured by |",
+    "|---|---|---|",
+    "| H1 | Cheap models pass more acceptance tests with Nuclear than without | pass rate per cell |",
+    "| H2 | The cost of a passing application is lower with Nuclear | dollars per passed test, per app |",
+    "| H3 | Nuclear needs fewer tokens and fewer turns | tokens in/out, turns, wall time |",
+    "| H4 | The gap between a cheap and a frontier model is smaller with Nuclear | pass(frontier) − pass(cheap), per condition |",
+    "| H5 | Code from Nuclear is as fast and as secure as the native code (the golden rule) | latency/throughput under load, security findings |",
+    "| H6 | Changing an existing app (maintenance) is cheaper with Nuclear | cost and pass rate of the change tasks |",
+    "| H7 | One Nuclear codebase yields the other stack cheaply (FastAPI → NestJS) | cost of the port vs rewriting natively |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#out-of-scope",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — Out of scope",
+   "summary": "Out of scope",
+   "body": [
+    "- Judging code style by a model (an LLM judge only as an extra signal, never in the headline).",
+    "- Apps that need paid third-party services (payments, maps with keys): mocks only."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#requirements.896ef4",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — Requirements",
+   "summary": "1. Same task, same budget.",
+   "body": [
+    "1. **Same task, same budget.** Every cell gets the same specification text, the same hidden tests, the same caps",
+    "   (tokens, dollars, wall time, turns), the same tools (a shell, files, the web). Only the condition changes.",
+    "2. **Hidden, black-box acceptance tests.** The agent never sees them. They test behaviour, not code: HTTP calls",
+    "   against the running backend, a browser driving the web app (Playwright), the mobile app driven on a device",
+    "   (Flutter integration driver or the Synapsis device) — so the same tests judge N and B.",
+    "3. **Fresh and isolated.** Each run in a new container from the same image, no network but the model's API and the",
+    "   allowed docs/registries, no memory between runs (no `CLAUDE.md` of the user, no Cursor rules of another",
+    "   project).",
+    "4. **Everything recorded.** The transcript, every tool call, the tokens and dollars as each provider reports them",
+    "   (never estimated: \"not reported\" when a provider gives none, as spec 017), the final code, the test report, the",
+    "   load-test report, the security scan.",
+    "5. **Pre-registered.** The prompts, the apps, the tests, the metrics and the analysis are committed before the",
+    "   first measured run; a change after it is a new round, written in the report.",
+    "6. **Fair to the baseline.** The baseline prompt is written by someone fluent in that stack and reviewed so it is not"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#requirements.b11bf0",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — Requirements",
+   "summary": "weakened; the baseline may use its stack's generators (FastAPI templates, `nest new`, `flutter create`, `npm create vite`); the specification says the expected architecture in stack-neutral words.",
+   "body": [
+    "weakened; the baseline may use its stack's generators (FastAPI templates, `nest new`, `flutter create`, `npm",
+    "   create vite`); the specification says the expected architecture in stack-neutral words.",
+    "7. **Reproducible by anyone.** The harness, the image, the apps, the tests and the raw results are public",
+    "   (a `benchmark/` project of this tree); one command reruns a cell with the reader's own API keys.",
+    "8. **Statistics, not anecdotes.** Pass rate with 95% bootstrap confidence intervals; a paired comparison per model",
+    "   (N vs B on the same app); effect sizes; every failed run classified (did not compile, wrong behaviour, timeout,",
+    "   budget out, gave up).",
+    "9. **Honest.** Threats to validity are written next to the results (design.md); a result against Nuclear is",
+    "   published with the same prominence, and each failure becomes a roadmap item of the project at fault.",
+    "10. **Written in Nuclear** where Nuclear can (root rule 9): the harness is a Nuclear project (python dialect);",
+    "    the hidden tests may be in the stack each test drives (Playwright, pytest for HTTP), being the measure, not a",
+    "    product."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#results-published",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — Results published",
+   "summary": "passed app, pass rate by model and condition, tokens, the gap of H4) and the leaderboard (spec 019, T5.4).",
+   "body": [
+    "- A report per round (`benchmark/results/<round>/REPORT.md`) and a page on the website with the charts (cost per",
+    "  passed app, pass rate by model and condition, tokens, the gap of H4) and the leaderboard (spec 019, T5.4).",
+    "- The headline numbers in the READMEs, the press kit and the launch posts only after a round is complete."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#spec-020-the-benchmark-does-nuclear-make-ai-agents-build-better-software-for-les",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements",
+   "summary": "software with fewer tokens and fewer mistakes than writing the target directly, and that this matters most for cheap models.",
+   "body": [
+    "**Priority: high** (the user, 2026-11-20). NuclearLang claims that an AI agent writing Nuclear builds working",
+    "software with fewer tokens and fewer mistakes than writing the target directly, and that this matters most for",
+    "cheap models. This spec proves it or disproves it, publicly and reproducibly. A result against Nuclear is published",
+    "too, and becomes the roadmap."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#the-matrix",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — The matrix",
+   "summary": "run): every condition.",
+   "body": [
+    "**Agents and models** (the user's list, 2026-11-20; the exact model ids are frozen in `design.md` on the day of the",
+    "run):",
+    "",
+    "| Harness | Models | Tier |",
+    "|---|---|---|",
+    "| Claude Code | Sonnet, Haiku | mid, cheap |",
+    "| OpenCode | DeepSeek (chat and reasoner), a \"flash\" model (Gemini Flash; others as found) | cheap |",
+    "| Cursor (its agent CLI) | Grok, Composer | mid, cheap |",
+    "| Claude Code | Opus (one cell per app) | ceiling: the frontier reference for H4 |",
+    "| The local Nuclear Developer | the 3B models (one cell per app) | floor: what runs on a laptop |",
+    "",
+    "**Conditions:**",
+    "",
+    "| | Condition | The agent has |",
+    "|---|---|---|",
+    "| N | **Nuclear** | a clean machine with the public installer (MCP server, skill, Smart Graph), nothing of this tree (root rule 14) |",
+    "| B | **Baseline (native)** | the same machine with the native toolchain (Python + FastAPI, Node + NestJS, Flutter, React + Vite) and the stack's official docs reachable on the web |",
+    "| N0 | **Nuclear without the MCP server** (ablation) | the compiler and the skill only: what part of the gain is the language and what part the MCP server |",
+    "",
+    "**Applications**: eight, from medium to hard, in [apps.md](apps.md); each specified once, in prose, the same text for",
+    "every condition.",
+    "",
+    "**Repetitions**: 5 runs per cell (model × condition × app); 3 for the ceiling and the floor."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/requirements.md#the-question",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — does Nuclear make AI agents build better software for less? — Requirements — The question",
+   "summary": "The question",
+   "body": [
+    "> For the same specification, does an agent with Nuclear (the installer, the MCP server, the skill) deliver a",
+    "> complex application that passes more hidden acceptance tests, at a lower cost, than the same agent writing the",
+    "> native stack (Flutter, FastAPI, NestJS, React) without Nuclear? And does the gap grow as the model gets cheaper?"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#phase-0-prepared",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks — Phase 0 — Prepared",
+   "summary": "the exact models of each tier on the day.",
+   "body": [
+    "- [ ] T0.1 user: API keys and a budget for the run (Anthropic, DeepSeek, Google, xAI, Cursor), and the decision of",
+    "      the exact models of each tier on the day.",
+    "- [ ] T0.2 agent: the `benchmark/` project skeleton (AGENTS.md, docs/, nuclear.toml), the container images (base,",
+    "      +nuclear from the public installer, +native toolchains).",
+    "- [ ] T0.3 agent: the harness in Nuclear, reusing Nuclear Builder's providers as a library (one command per run,",
+    "      caps, recording, `result.json`).",
+    "- [ ] T0.4 agent: A1 and A2 specified, their hidden tests and scoring; reviewed by the user (and a FastAPI-fluent",
+    "      reviewer when one is available).",
+    "- [ ] T0.5 agent: the prompts per condition, frozen; the pre-registration (hypotheses, metrics, analysis) committed."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#phase-1-pilot-round-0-not-published",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks — Phase 1 — Pilot (round 0, not published)",
+   "summary": "Phase 1 — Pilot (round 0, not published)",
+   "body": [
+    "- [ ] T1.1 agent: 2 models (Haiku, DeepSeek) × N/B × A1, A2 × 2 runs; fix the harness, tests and caps.",
+    "- [ ] T1.2 agent: the report generator (tables, bootstrap intervals, SVG charts)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#phase-2-round-1-published-at-the-launch",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks — Phase 2 — Round 1 (published at the launch)",
+   "summary": "Phase 2 — Round 1 (published at the launch)",
+   "body": [
+    "- [ ] T2.1 agent: A3, A4, A6 specified with their tests, load tests and mocked model server.",
+    "- [ ] T2.2 agent: round 1 run (all models × N/B × A1-A4, A6 × 5).",
+    "- [ ] T2.3 agent: REPORT.md, the website's benchmark page, the numbers for the READMEs and the press kit (spec 019).",
+    "- [ ] T2.4 agent: each failed Nuclear run's cause filed in the roadmap of the project at fault."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#phase-3-round-2-the-full-answer",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks — Phase 3 — Round 2 (the full answer)",
+   "summary": "Phase 3 — Round 2 (the full answer)",
+   "body": [
+    "- [ ] T3.1 agent: A5, A7, A8, the change tasks and the port task, with their tests.",
+    "- [ ] T3.2 agent: round 2 run (+ the N0 ablation, the Opus ceiling, the local 3B floor).",
+    "- [ ] T3.3 agent: the report answering H1-H7, published whatever it says."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#phase-4-the-leaderboard",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks — Phase 4 — The leaderboard",
+   "summary": "Phase 4 — The leaderboard",
+   "body": "- [ ] T4.1 agent: each new model measured on A1-A4 (N/B × 5) and added to the website's leaderboard.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/020-benchmark/tasks.md#spec-020-the-benchmark-tasks",
+   "type": "spec",
+   "title": "Spec 020: The benchmark — Tasks",
+   "summary": "Who: agent (in the tree), user (accounts, keys, money, decisions).",
+   "body": "Who: **agent** (in the tree), **user** (accounts, keys, money, decisions).",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/020-benchmark/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.096416",
    "type": "readme",
    "title": "Specs of the platform",
@@ -7488,6 +9178,25 @@
     "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
     "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |",
     "| [018-failure-matrix](018-failure-matrix/requirements.md) | Every machine, every state, fail-safe: the cases where NuclearLang can fail (systems, architectures, toolchains, editors, versions and upgrades, the user's choices, ports, our services, the LSP, permissions), each with its expected behaviour, its state and its test | draft (phase 1 half done: the update, the installers' choices and lock, sudo, the extension without NuclearLang) |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.b0f23d",
+   "type": "readme",
+   "title": "Specs of the platform",
+   "summary": "Specs of the platform",
+   "body": [
+    "| [019-launch-and-growth](019-launch-and-growth/requirements.md) | **High priority.** Found by people, search engines and AI agents: the website readable without JavaScript, GEO, the MCP and package registries, the repository and organization ready, content, the launch as news, the community, open source, the names | in progress (phase 2 started) |",
+    "| [020-benchmark](020-benchmark/requirements.md) | **High priority.** Does Nuclear make cheap models build better software for less? Eight hard apps, Claude Code (Sonnet, Haiku), OpenCode (DeepSeek, flash), Cursor (Grok, Composer), with and without Nuclear, hidden tests, published | approved |"
    ],
    "agents": false,
    "sources": [

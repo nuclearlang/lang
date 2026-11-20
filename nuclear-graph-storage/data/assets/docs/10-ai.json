@@ -6243,6 +6243,7 @@
    "title": "Changelog — Unreleased (2026-11-18)",
    "summary": "and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's reports (spec 017).",
    "body": [
+    "- A request with an `Origin` (a web page, a DNS rebinding) is refused with 403 before any agent runs (spec 018 M9).",
     "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
     "- Every answer says the tokens its models used (`usage: {inTokens, outTokens, model}`, Ollama's `prompt_eval_count`",
     "  and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's",
@@ -6490,12 +6491,15 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.e92543",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.6a7935",
    "type": "context",
    "title": "Integrations and contracts — The HTTP API",
    "summary": "On `127.0.0.1:7879`.",
    "body": [
-    "On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.",
+    "On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`. A request with an `Origin` (a web",
+    "page, a DNS rebinding) is refused with `403` before any agent runs (the guard `NoOrigin`, spec 018 M9); the editor,",
+    "the MCP server and the tools of this machine send none. There is no token yet: another user of the same machine can",
+    "still call it (spec 018 M9, the next step).",
     "",
     "| Route | Request | Answer |",
     "|---|---|---|",

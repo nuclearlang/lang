@@ -25,6 +25,8 @@ exclude = [
   "STATUS.md", "docs/context/**", "docs/ai/**",    # the old documents, until spec 008 deletes them
   "docs/05-standards/agent-context-docs-implementation.md",  # the user's guideline, in Spanish
   "docs/04-specs/008-restructure/work/**",
+  "**/README.es.md",                  # the Spanish copy of a README: the base holds the English one
+  ".github/pull_request_template.md", # a form for contributors
 ]
 
 # A file goes to the first section that claims it: the decisions and plans of every project are listed first.
@@ -47,6 +49,9 @@ files = [
   "README.md",
   "AGENTS.md",
   "CONTRIBUTING.md",
+  "CODE_OF_CONDUCT.md",
+  "GOVERNANCE.md",
+  "SECURITY.md",
   "CHANGELOG.md",
   "github-profile/**",
   "docs/README.md",
