@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../02-architecture/language-server.md, ../../vscode/AGENTS.md, ../../jetbrains/AGENTS.md, ../../zed/AGENTS.md]
 ---
 # Release the extensions
@@ -33,6 +33,15 @@ asking. The extensions carry the platform's one version: a release of them is a 
    `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).
 5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip
    in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*).
+6. When `extensions/vscode/syntaxes/nuclear.tmLanguage.json` changed, copy it to
+   [nuclearlang/nuclear-tmlanguage](https://github.com/nuclearlang/nuclear-tmlanguage), the public copy GitHub
+   Linguist will read (it is written only here):
+
+   ```sh
+   git clone -q https://github.com/nuclearlang/nuclear-tmlanguage /tmp/tm && \
+     cp extensions/vscode/syntaxes/nuclear.tmLanguage.json /tmp/tm/ && \
+     git -C /tmp/tm commit -qam "The grammar of <version>" && git -C /tmp/tm push -q
+   ```
 
 ## Backward compatibility (before every release)
 
