@@ -84,6 +84,23 @@ nuclear new chat_api -p backend --websocket --token CHAT_TOKEN   # the WebSocket
 nuclear new chat_ui -p web --websocket                           # a WebSocket connection instead of Http
 ```
 
+## Environments: development, staging, production
+
+Every `env("NAME", "default")` of a project's code is one of its variables (`env("NAME")`: required), on every
+platform; the compiler lists them in the contract. Their values are dotenv files beside `config.nuc` (`.env`,
+`.env.staging`, and `.local` versions for this machine, ignored by git) and secrets in the system's keyring; the real
+process environment wins over all. A backend reads them at run time; a web or mobile app gets the values its code
+reads when it is built, and a secret never reaches it (ADR-platform-0012, spec 021).
+
+```sh
+nuclear env list                                       # every variable × every environment, missing ones marked
+nuclear env set API_URL https://api.staging.example --env staging
+nuclear env set TASKS_TOKEN --secret --env production  # the value from stdin, into the keyring, never printed
+nuclear env use staging                                # the active environment of the project
+nuclear run --env staging                              # refuses while a required variable has no value
+nuclear build --env production                         # backend: build/.env; web, mobile: the values inside the build
+```
+
 ## Plugins: only what the project uses
 
 The optional parts of each framework are **plugins**, enabled in the project's `config.nuc`. A project without a

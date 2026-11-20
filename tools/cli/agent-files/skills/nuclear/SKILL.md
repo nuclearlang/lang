@@ -65,6 +65,10 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
 - A kind, decorator or header word of the dialect (what it generates, its rules, an example):
   `nuclear help <word> --dialect <d>` (`repository`, `@screen`...); every word: `nuclear help words --dialect <d>`; where a kind's file goes: `nuclear help layout --dialect <d>`.
 - A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `synapsis`, `tutorial`...).
+- A setting that changes per environment (an url, a model, a token): `env("NAME", "default")` in the code (`env("NAME")`
+  is required), never a constant to edit; its values with `nuclear env set NAME value --env <environment>` and
+  `nuclear env list` (the MCP tool `nuclear_env`). A secret is set by the user (`nuclear env set NAME --secret`): never
+  ask for it, never write it into a file or a `.nuc`.
 - A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line).
 
 ## 4. Mistakes agents make

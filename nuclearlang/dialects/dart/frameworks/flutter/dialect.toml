@@ -355,6 +355,11 @@ names = ["Anthropic"]
 names = ["startGenkit"]
 template = { file = "templates/genkit_g.tpl" }
 
+# env("NAME", "default") (spec 021): the values of the environment the app is built for, constants of the build
+[project.files."lib/nuclear_env.dart"]
+names = ["env"]
+template = { file = "templates/nuclear_env_dart.tpl" }
+
 [project.files."lib/synapsis.g.dart"]
 names = ["startSynapsis", "appRouter", "buildRouter", "synapsisConfig", "registerSynapsis"]
 template = { file = "templates/synapsis_g.tpl" }

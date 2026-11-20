@@ -222,6 +222,43 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return "'--' is not allowed here: the arguments are Nuclear's own, the target's tools are not reached from the MCP server"
     ~tools.project(project, [command, ...given])
 
+  // The environments of a Synapsis project (spec 021): every env("NAME", "default") of its code and the values of
+  // each environment (.env, .env.<environment>, their .local versions, the system's keyring). action: list (JSON:
+  // every variable × every environment, required ones without a value are null; env alone: that one), envs (the
+  // environments and the active one), set (name, value; env: that environment, else the shared .env; local: the
+  // .local file of this machine), unset (name; secret: the keyring's), use (env: the project's active one). A
+  // secret is never set here: its value must not pass through a model; ask the user to run
+  // `nuclear env set NAME --secret --env <environment>` in a terminal, which reads it hidden.
+  nuclearEnv(project: string, action: string, name: string = "", value: string = "", env: string = "", local: boolean = false, secret: boolean = false) string
+    if not (action in ["list", "envs", "set", "unset", "use"])
+      return "'${action}' is not an action of nuclear_env (list, envs, set, unset, use)"
+    if secret and action == "set"
+      return "a secret is not set through the MCP server (its value would pass through the model): ask the user to run `nuclear env set ${name} --secret --env ${env != "" ? env : "<environment>"}` in a terminal of the project, which reads it hidden"
+    for word in [name, value, env]
+      if word.startsWith("-")
+        return "'${word}' is not a name or a value nuclear_env takes (it starts with -)"
+    args: string[] = ["env", action]
+    if action == "use"
+      if env == ""
+        return "use needs env: the environment to make active"
+      args.add(env)
+    else
+      if action == "set" or action == "unset"
+        if name == ""
+          return "${action} needs name"
+        args.add(name)
+      if action == "set"
+        args.add(value)
+      if env != ""
+        args = [...args, "--env", env]
+    if local
+      args.add("--local")
+    if secret
+      args.add("--secret")
+    if action == "list" or action == "envs"
+      args.add("--json")
+    ~tools.project(project, args)
+
   // Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much
   // memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.
   projectMonitor(project: string) string
@@ -447,7 +484,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   all() any[]
     [
       nuclearStart, nuclearDoc, graphSearch, graphAnswer, graphStrategy, graphCard, graphPrompt, graphRemember, nuclearCheck, nuclearBuild, nuclearHelp, nuclearBrief, nuclearFmt, nuclearDefs,
-      nuclearProject, projectInspect, projectMonitor, projectRunLog, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
+      nuclearProject, nuclearEnv, projectInspect, projectMonitor, projectRunLog, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 

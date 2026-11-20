@@ -32,6 +32,7 @@ In this order: the AI factory, the tools of a running project, the ones not buil
 | `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
 | `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
 | `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |
+| `environments` | Environments | ENV | `Ctrl+Alt+Y` | built: `command` `nuclear.environments.open`, given the last project | [`nuclear-environments`](../../../tools/nuclear-environments/AGENTS.md) (spec 021) |
 | `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
 | `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |
 | `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |
@@ -42,7 +43,7 @@ with a `command` opens its own page with that command when its tab is entered (`
 Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a
 24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people
 for the company, a bar chart with a coin for the reports, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a
-phone for the devices, a gauge for the Monitor, a pen's nib for the designer, a page for the documenter, a gear for
+phone for the devices, a gauge for the Monitor, three layers for the environments, a pen's nib for the designer, a page for the documenter, a gear for
 the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the
 theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a
 glowing bar on its left and its word in its colour. Hovering or focusing a tool shows its card beside the strip
@@ -126,7 +127,7 @@ Clicking a tab or an action posts a toast with its shortcut.
 
 Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode}`; `project`, `tool` and
 `action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,
-`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/A/H/V/F/D/M/S`; the actions
+`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/K/A/H/V/F/Y/D/M/S`; the actions
 `Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).
 
 `WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation (since 0.73.2 only when the user turned it on: the setting is off by default) when

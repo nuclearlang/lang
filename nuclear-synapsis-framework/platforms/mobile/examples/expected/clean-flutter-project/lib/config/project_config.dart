@@ -1,3 +1,4 @@
+import 'package:clean_flutter_project/nuclear_env.dart';
 import 'package:clean_flutter_project/shared/events/force_logout.dart';
 import 'package:synapsis/synapsis.dart';
 
@@ -9,7 +10,7 @@ class ProjectConfig extends AppConfig {
   @override
   final List<Connection> connections = [
     Http(
-      baseUrl: 'https://rickandmortyapi.com/api/',
+      baseUrl: env('API_URL', 'https://rickandmortyapi.com/api/'),
       connectTimeout: Duration(seconds: 5),
       receiveTimeout: Duration(seconds: 3),
       interceptors: [

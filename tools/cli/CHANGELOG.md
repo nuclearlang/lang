@@ -12,6 +12,14 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- Environments (spec 021): `nuclear env list|set|unset|envs|use` (`--json`, `--env`, `--local`, `--secret`; a secret's
+  value from stdin, kept in the system's keyring, never printed; without a keyring, `.env.<env>.local` and a message);
+  `--env <name>` on `run`, `build`, `test`, `check` (else `NUCLEAR_ENV`, else the active one, else `development`;
+  tests: `test`); the dotenv files `.env` < `.env.<env>` < `.env.local` < `.env.<env>.local` < the keyring < the
+  process. `run` passes the values to the app and refuses a required variable without one; `build` writes the
+  backend's `build/.env` (no secret) or a client's values (a secret read by it: N0311); `check --env` reports N0312.
+  `nuclear new` writes a `.env` with the code's defaults and a `.gitignore` with `.env*.local`; a new web project's
+  backend is `env("API_URL", ...)`. The MCP server's `nuclear_env` (a secret is never set through it).
 - Security (spec 018): a name given to `make` or `gen` that leaves the project (`/`, `..`) is refused before anything
   is written; each argument after `--` is one shell word; on Windows every value is quoted for `cmd` (`"`, `%`, `&`
   can no longer end it or start another command).

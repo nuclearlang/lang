@@ -94,6 +94,8 @@ exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-refer
 | Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |
 | | `fix <folder\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |
 | | `fmt <file.nuc\|folder> [--check]` | rewrite the files in the canonical layout |
+| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env("NAME", "default")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |
+| | `run\|build\|test\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |
 | Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |
 | | `install` | the runtime and the app's packages (backend, web) |
 | | `run` | the server (backend, web) or the app on a device (mobile) |

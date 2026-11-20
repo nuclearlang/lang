@@ -49,6 +49,10 @@ pub struct Manifest {
     /// `[project] lazy_imports` of `nuclear.toml` (ADR-lang-0012): an import whose names only function bodies use is
     /// written in the block that uses it, where the dialect can (`[syntax] local_import`).
     pub lazy_imports: bool,
+    /// The values of the environment a web or mobile app is built for (spec 021), for the dialect's values module (`env`
+    /// of `[project.files]` templates): the build keeps only the variables the code reads with `env()`. Set by the
+    /// tool that builds (never a secret), never by the manifest's file.
+    pub env: BTreeMap<String, String>,
 }
 
 impl Manifest {
@@ -92,6 +96,7 @@ impl Manifest {
             package: None,
             monitor: false,
             lazy_imports: false,
+            env: BTreeMap::new(),
         }
     }
 
@@ -210,6 +215,7 @@ impl Manifest {
             package,
             monitor: false,
             lazy_imports: p.get("lazy_imports").and_then(|v| v.as_bool()).unwrap_or(false),
+            env: BTreeMap::new(),
         })
     }
 }
@@ -690,6 +696,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             })
             .collect(),
         test_env: manifest.test_env.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+        env: manifest.env.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
         isolated: dialect.project.outputs.iter().map(|(from, _)| from.clone()).collect(),
         sources: manifest.sources(dialect),
         outputs: dialect.project.outputs.clone(),
@@ -760,6 +767,8 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
     let mut summaries: Vec<(String, DeclSummary)> = Vec::new();
     let mut uses_result = false;
     let mut uses_monitor = false;
+    // the variables the code reads with env(): the only values a client's values module carries (spec 021)
+    let mut env_read: HashSet<String> = HashSet::new();
     for p in parsed {
         let mut diagnostics = p.diagnostics;
         let mut code = String::new();
@@ -768,6 +777,11 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             let mut idents = Vec::new();
             identifiers(&nuclear_syntax::lex(&p.source).tokens, &mut idents);
             diagnostics.extend(architecture(dialect, &ctx, &kinds, &public_decls, &file, &p.path, &idents));
+            if dialect.platform.is_some() {
+                let (found, diags) = crate::contract::env_uses(&file);
+                env_read.extend(found.into_iter().map(|u| u.name));
+                diagnostics.extend(diags);
+            }
             let others: HashMap<_, _> = modules.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
             diagnostics.extend(alias::expand(&mut file, &others, &|d| crate::alias_via(dialect, d)));
             let mut e = Emitter::new(dialect, file.comments.clone()).with_source(&p.source).in_project(
@@ -795,6 +809,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
         });
     }
 
+    ctx.env.retain(|(name, _)| env_read.contains(name));
     let mut generated = Vec::new();
     if uses_result && let Some(t) = dialect.syntax("result_runtime") {
         let prelude = dialect.syntax("file_prelude").map(|p| format!("{}\n\n", p.render(&Ctx::new().into_value()).trim_end()));
@@ -1117,6 +1132,10 @@ fn project_context(
         .value(
             "test_env",
             Value::List(ctx.test_env.iter().map(|(k, v)| Ctx::new().set("name", k).set("value", v).into_value()).collect()),
+        )
+        .value(
+            "env",
+            Value::List(ctx.env.iter().map(|(k, v)| Ctx::new().set("name", k).set("value", v).into_value()).collect()),
         )
         .into_value()
 }

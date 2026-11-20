@@ -247,6 +247,21 @@ pub mod codes {
         title: "`~` on a call that is not asynchronous",
         explanation: "The callee is written in Nuclear and is not asynchronous (nothing in it waits with `~`), so the target cannot wait for its value: Python raises `TypeError: object can't be awaited`. Remove the `~`; if the callee should wait, give its body a `~` call (or `~` before its name).",
     };
+    pub const ENV_NAME: Code = Code {
+        id: "N0310",
+        title: "the name of an environment variable is not a literal",
+        explanation: "`env(\"NAME\")` and `env(\"NAME\", \"default\")` declare a variable of the project (spec 021): the compiler lists it in the contract and the tools give it its value per environment, so the name is a text written as it is, without interpolation, and the default too. Write the name in quotes: `env(\"API_URL\", \"http://localhost:8000\")`.",
+    };
+    pub const ENV_SECRET_CLIENT: Code = Code {
+        id: "N0311",
+        title: "a secret read by a client",
+        explanation: "A web or mobile app carries the values its code reads inside the build, where anyone who has the app can read them, so a variable stored as a secret (`nuclear env set NAME --secret`, the system's keyring) cannot be read by `env()` in it. Keep the secret in the backend and call the backend, or store the value as a plain one when it is not secret (`nuclear env set NAME value --env <environment>`).",
+    };
+    pub const ENV_MISSING: Code = Code {
+        id: "N0312",
+        title: "a required variable without a value in the environment",
+        explanation: "`env(\"NAME\")` without a default is a required variable of the project (spec 021): `nuclear check --env <environment>` and `nuclear build --env <environment>` report each one the environment does not give a value (its .env files, the keyring's secrets, the process), and `nuclear run` does not start without them. Give it one: `nuclear env set NAME <value> --env <environment>` (`--secret` for a secret), or a default: `env(\"NAME\", \"default\")`.",
+    };
     pub const KIND_PACKAGE: Code = Code {
         id: "N0306",
         title: "kind package without an implementation for the dialect",
@@ -394,6 +409,9 @@ pub mod codes {
     };
 
     pub const ALL: &[Code] = &[
+        ENV_NAME,
+        ENV_SECRET_CLIENT,
+        ENV_MISSING,
         TAB_INDENT,
         BAD_DEDENT,
         ODD_INDENT,

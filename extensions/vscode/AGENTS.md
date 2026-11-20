@@ -2,7 +2,7 @@
 
 The NuclearLang extension for VS Code (`nuclearlang`, 0.80.0): the client of the language server, semantic
 highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the
-Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is
+Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, Nuclear Monitor, Environments, the devices), whose code is
 in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What
 the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 
@@ -17,7 +17,7 @@ the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 npm install
 npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js
 npm run watch       # out/extension.js on every change
-npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts and test/snapshot.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)
+npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts and test/snapshot.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)
 npm run theme       # the themes and icons, also of ../jetbrains and ../zed
 npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)
 npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix

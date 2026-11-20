@@ -65,3 +65,9 @@ redis, kafka, events, websocket, ai, openai, ollama, chroma, telemetry); a kind 
 which line to add). Telemetry: one of `Datadog(apiKey = env(...))`, `NewRelic(...)`, `Grafana(...)`, `Otlp(url)` in
 `connections`; requests and use cases are traced by themselves, `Metric.count` / `Metric.record` for business
 metrics, `@untraced` on a use case, route or controller to leave it out.
+
+Environments: `env("NAME", "default")` (`env("NAME")`: required) reads a variable of the environment; values in `.env`,
+`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.
+`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value
+from stdin); `nuclear run|build|test|check --env <name>`. A required one without a value: `nuclear run` refuses, `check --env` says N0312.
+

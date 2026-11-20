@@ -67,6 +67,20 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
                                              calls in a loop, connections, memory) and each function's time
 
+environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,
+.env.<env>.local, the system's keyring, the process: the later wins)
+  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment
+  env set <NAME> [<value>] [--env <name>] [--local] [--secret]
+                                             a value in .env (--env: .env.<name>; --local: the .local file);
+                                             --secret: the system's keyring (without a value: read from stdin)
+  env unset <NAME> [--env <name>] [--local] [--secret]
+  env envs [--json]                          the environments and the active one
+  env use <name>                             the project's active environment (.nuclear/env)
+  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,
+                                             else development; test: test). run refuses a required variable without
+                                             a value; build writes build/.env (backend) or the values of the code
+                                             (web, mobile; a secret is refused); check --env reports the missing ones
+
 code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)
   component <component>                 (c)  facade + an example use case
   screen <component> <screen>           (s)  screen + state manager + state model
@@ -130,11 +144,21 @@ options
 
 docs: nuclear help flutter";
 
+/// `nuclear env ...` (spec 021): the variables the code declares come from the contract of the project as it is now.
+fn env_command(root: &Path, rest: &[String]) -> Result<(), String> {
+    let m = any_manifest(root)?;
+    let (dialect, _) = loader().load(&m.dialect);
+    let dialect = dialect.ok_or_else(|| format!("dialect '{}' could not be loaded", m.dialect))?;
+    let contract = nuclear_transpile::contract::contract(root, &m, &dialect);
+    let declared = contract["env"].as_array().cloned().unwrap_or_default();
+    crate::env::command(&crate::env::Project { root, name: m.name.clone(), declared }, rest)
+}
+
 /// The commands only the framework has.
 const OWN: &[&str] = &[
     "new", "n", "make", "g", "gen", "run", "test", "install", "migrate", "add", "remove", "device", "dv", "devices",
     "terminal-device", "td", "watch", "code", "analyze", "clean", "repair", "explain", "pub", "flutter", "emulators",
-    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "intro", "monitor",
+    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "intro", "monitor", "env",
 ];
 /// What `build` takes in a project of the framework instead of a path: a target of the platform's own tool.
 const TARGETS: &[&str] = &["apk", "appbundle", "ios", "ipa", "web", "macos", "linux", "windows"];
@@ -215,6 +239,7 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             Ok(())
         }
         "new" | "n" => new_project(rest),
+        "env" => with_root(project_dir, |root| env_command(root, &rest)),
         "make" | "g" => with_root(project_dir, |root| make(root, rest)),
         "gen" => with_root(project_dir, |root| gen_command(root, rest)),
         "check" => with_root(project_dir, |root| {
@@ -224,6 +249,10 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
                 let mut a = vec!["check", "."];
                 if rest.iter().any(|x| x == "--json") {
                     a.push("--json");
+                }
+                // `--env` (spec 021): the child reports the required variables without a value too
+                if let Some(e) = crate::env::explicit() {
+                    a.extend(["--env", e]);
                 }
                 return run("nuclear", root, &a);
             }
@@ -260,6 +289,12 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             }
         }),
         "test" => with_root(project_dir, |root| {
+            // spec 021: tests run in the environment `test` unless --env or NUCLEAR_ENV names another (the build it
+            // runs reads it); never the project's active one, so they are the same on every machine
+            if std::env::var("NUCLEAR_ENV").is_err() {
+                // SAFETY: before any thread or command of this process
+                unsafe { std::env::set_var("NUCLEAR_ENV", crate::env::TEST) };
+            }
             if let Some(m) = non_mobile_manifest(root)? {
                 return backend_command(root, "test", &m, &rest, &[]);
             }
@@ -802,6 +837,13 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
         shell_tee(log, &out, &install)?;
         dependencies::ensure_defs(root, m, &dialect)?;
     }
+    // spec 021: the environment's values go to the server's process; a required one without a value stops it here
+    let environment = crate::env::chosen(root, crate::env::DEFAULT);
+    let values = crate::env::resolve(root, &m.name, &environment, true)?;
+    crate::env::refuse_missing(&environment, &crate::env::missing(&crate::env::declared(root), &values))?;
+    let given: Vec<(String, String)> =
+        values.into_iter().filter(|(_, r)| r.source != "process").map(|(k, r)| (k, r.value)).collect();
+    log.step(&format!("environment {environment}"));
     let command = toolchain_command(root, "run", m, &dialect, rest, &[])?;
     match dialect.tool("url") {
         Some(url) => log.step(&format!("serve {}", fill_command(&dialect, url, &[])?)),
@@ -812,7 +854,7 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
     log.line(&format!("$ {command}"));
     // Python prints as it goes, not when the buffer of a pipe fills
     let status = log
-        .tee(Command::new(program).args([flag, command.as_str()]).current_dir(&out).env("PYTHONUNBUFFERED", "1"))
+        .tee(Command::new(program).args([flag, command.as_str()]).current_dir(&out).envs(given).env("PYTHONUNBUFFERED", "1"))
         .map_err(|e| format!("cannot run {program}: {e}"))?;
     log.line(&format!("exited: {}", status.code().map_or("signal".into(), |c| c.to_string())));
     if status.success() { Ok(()) } else { Err(SERVER_ENDED.into()) }
@@ -823,6 +865,11 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
 fn run_mobile(root: &Path, rest: &[String], log: &runlog::RunLog) -> Result<(), String> {
     log.step("build");
     let app = build(root)?;
+    // spec 021: the values are inside the build; a required one without a value stops it here
+    let m = manifest(root)?;
+    let environment = crate::env::chosen(root, crate::env::DEFAULT);
+    let values = crate::env::resolve(root, &m.name, &environment, true)?;
+    crate::env::refuse_missing(&environment, &crate::env::missing(&crate::env::declared(root), &values))?;
     log.step("flutter");
     // build already resolved the packages: flutter run would do it again
     let result = flutter(&app, &[&["run", "--no-pub"][..], &passthrough(rest)].concat());
@@ -1167,8 +1214,13 @@ fn build(root: &Path) -> Result<PathBuf, String> {
         }
         packages::load_defs(root, &app, &c, &loader, &mut d, true)?;
     }
-    let m = crate::monitored(root, m);
-    let out = project::build(root, &m, &d);
+    let mut m = crate::monitored(root, m);
+    // spec 021: the values of the environment the app is built for, constants of the build
+    let environment = crate::env::prepare(root, &mut m)?;
+    let mut out = project::build(root, &m, &d);
+    if let Some(e) = &environment {
+        crate::env::report(e, &mut out, true);
+    }
     let _ = project::write_metadata(root, &m, &d);
     print_diagnostics(&out, false);
     if out.has_errors() {
@@ -1448,7 +1500,12 @@ fn check(root: &Path, json: bool) -> Result<(), String> {
     if let Some(c) = packages::read(root, &d) {
         packages::load_defs(root, &root.join(&m.out), &c, &loader, &mut d, false)?;
     }
-    let out = project::build(root, &m, &d);
+    let mut m = m;
+    let environment = crate::env::prepare(root, &mut m)?;
+    let mut out = project::build(root, &m, &d);
+    if let Some(e) = &environment {
+        crate::env::report(e, &mut out, false);
+    }
     let _ = project::write_metadata(root, &m, &d);
     print_diagnostics(&out, json);
     if out.has_errors() {

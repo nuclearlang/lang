@@ -4,6 +4,9 @@ All notable changes to synapsis-web are written here; versions follow [Semantic 
 
 ## Unreleased
 
+- Environments (spec 021): `env("NAME", "default")` in a web app reads the values of the environment it was built
+  for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example
+  `characters` reads `API_URL`.
 - Found by Nuclear Chat's UI: `if c x` in `children` keeps its place (`c ? x : null`, no remount, a textarea keeps
   its focus); `not xs.isEmpty` is `!(xs.length === 0)`; a model built in a view is `new Model(...)`; `fromJson` takes
   a field's default when the key is missing; `afterEach` is imported and a rendered screen is cleaned up after each

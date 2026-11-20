@@ -4,6 +4,9 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- Environments (spec 021): synapsis-py (`synapsis.config.load_env_file`) and synapsis-nest (`loadEnvFile` of
+  `config.ts`) load the app's `.env` (written by `nuclear build --env <name>`) at start, never replacing a variable
+  the process has. The reference says `env()`, the files, `--env` and `nuclear env` (§2.8).
 - fastapi: a parameter named like a function of Python (`type`, `list`, `max`...) is written `type_` so it no
   longer hides that function in the body; outside it keeps its own name (`@_public_names`: a route's `?max=`, an MCP
   tool's `type`, a keyword call), and synapsis-py reads a renamed reserved word (`from_`) by its own name too. `rick_api`'s `alive(max)` is written `alive(max_)`.

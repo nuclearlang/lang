@@ -4,7 +4,7 @@ appConfig ProjectConfig
   local: LocalDatabase = LocalDatabase(encrypted = true)
   connections: Connection[] = [
     Http(
-      baseUrl = "https://rickandmortyapi.com/api/",
+      baseUrl = env("API_URL", "https://rickandmortyapi.com/api/"),
       connectTimeout = Duration(seconds = 5),
       receiveTimeout = Duration(seconds = 3),
       interceptors = [

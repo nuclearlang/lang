@@ -70,7 +70,8 @@ the place and the form to write it.
 | Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |
 
 `scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`:
-`websocket` and `token`, ADR-synapsis-0007/0008), the name helpers
+`websocket` and `token`, ADR-synapsis-0007/0008; `with_environment` adds the `.gitignore` and the `.env` of the
+defaults the code's `env()` calls read, found with `nuclear_transpile::contract::env_uses`, spec 021), the name helpers
 `snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized.
 
 ## `new`: the context documents (`context.rs`, spec 016)

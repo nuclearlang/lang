@@ -23,6 +23,8 @@ base64 = "0.22"
 crossterm = "0.29"
 png = "0.18"
 tungstenite = "0.27"
+# the secrets of the environments (spec 021): Secret Service (zbus, pure Rust: static musl builds), Keychain, Credential Manager
+keyring = "4"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

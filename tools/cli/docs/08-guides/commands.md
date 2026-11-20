@@ -97,6 +97,20 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
                                              calls in a loop, connections, memory) and each function's time
 
+environments (spec 021: every env("NAME", "default") of the code; values in .env, .env.<env>, .env.local,
+.env.<env>.local, the system's keyring, the process: the later wins)
+  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment
+  env set <NAME> [<value>] [--env <name>] [--local] [--secret]
+                                             a value in .env (--env: .env.<name>; --local: the .local file);
+                                             --secret: the system's keyring (without a value: read from stdin)
+  env unset <NAME> [--env <name>] [--local] [--secret]
+  env envs [--json]                          the environments and the active one
+  env use <name>                             the project's active environment (.nuclear/env)
+  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,
+                                             else development; test: test). run refuses a required variable without
+                                             a value; build writes build/.env (backend) or the values of the code
+                                             (web, mobile; a secret is refused); check --env reports the missing ones
+
 code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)
   component <component>                 (c)  facade + an example use case
   screen <component> <screen>           (s)  screen + state manager + state model

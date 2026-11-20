@@ -35,7 +35,7 @@ nuclear env use <name>                         # the project's active environmen
 ```
 All take `--project <dir>` (default: the project of the current folder). `--env` absent: the shared `.env`
 (`set`/`unset`) or the active environment (`list`). `--secret` writes the system's keyring (service
-`nuclearlang-env`, account `<project name>/<environment>/<NAME>`); without a keyring it writes
+`nuclearlang-env`, account `<project name>-<key>/<environment>/<NAME>`, the key a random one of the project kept in `.nuclear/env-key`, so two projects of one name never share a secret); without a keyring it writes
 `.env.<environment>.local` and says so.
 
 `list --json`:
@@ -50,8 +50,20 @@ All take `--project <dir>` (default: the project of the current folder). `--env`
       "values": { "development": { "secret": true, "source": "keyring" }, "production": null } }
   ] }
 ```
-A secret's value is never printed (`"secret": true`, no `value`). `null`: no value (missing when `required`).
+Each variable also has `"shared"`: its value in `.env` itself (`{ "value": "…", "source": ".env" }`, or `null`), the
+page's column for the shared file. A secret's value is never printed (`"secret": true`, no `value`). `null`: no value (missing when `required`).
 `declared: false`: a variable of a file no code reads.
+A value's `source` is the file it comes from, `keyring`, `process` (the variable is in the environment of the
+`nuclear` that answers) or `default` (no file gives one: the code's default). `--env <name>` lists that environment
+alone. The keys of every object are sorted.
+
+`envs --json`: `{ "active": "development", "environments": ["development", "staging"] }` (`development` first, then
+the names of the `.env.<name>` files, the secrets and the active one, sorted).
+
+`set --secret` without `--env` writes the secret of the active environment (a secret belongs to one environment:
+its account names it). Which variables are secrets is kept in `.nuclear/secrets.json` (environment → name → `keyring`
+or the `.local` file), names only. `NUCLEAR_KEYRING=off` uses the `.local` file on a machine with a keyring too.
+Without a value argument `set` reads the value from stdin (all of it, without the last newline).
 
 ## Backend
 `nuclear run --env X` resolves and passes the variables to the app's process (the runtime's `env()` reads the
@@ -61,10 +73,13 @@ process, as today). `nuclear build --env X` writes `<output>/.env` with the reso
 ## Web and mobile
 The CLI writes, before the dialect's build, a values module with only the variables the client code reads
 (`client: true` in the contract); `env("NAME", "d")` reads it, so the value is a constant of the build:
-- `react`: `src/nuclear_env.ts`: `export const ENV: Record<string, string> = {...}`, and the runtime's `env()`.
-- `flutter`: `lib/nuclear_env.dart`: `const Map<String, String> nuclearEnv = {...}`, and the runtime's `env()`.
-The dialect's TOML/templates decide the file and the import; Rust decides what is emitted.
-A secret read by a client: error (a diagnostic code of its own, documented in diagnostics.md).
+- `react`: `src/nuclear_env.ts`: a `values` record and `export function env(name, fallback = '')`.
+- `flutter`: `lib/nuclear_env.dart`: a `const Map<String, String>` and `String env(String name, [String fallback])`.
+Both are `[project.files]` of the dialect (`names = ["env"]`, so `env` is imported where the code calls it), written
+only when the code calls `env`. The CLI gives the build every non-secret value (`Manifest::env`, the process
+environment too) and the compiler keeps only the names the code reads. A secret read by a client: N0311, at the
+`env()` that reads it. A required variable without a value: N0312 in `check --env` and `build --env` (a warning in a
+backend's build: where it runs the real environment gives it); `nuclear run` refuses to start.
 
 ## The page (VS Code)
 A tool of the Nuclear workspace, **Environments** (key `Ctrl+Alt+E` if free), plain HTML and script like the other

@@ -147,6 +147,27 @@ appConfig ProjectConfig
   ]
 ```
 
+Environments (spec 021, ADR-platform-0012): the backend of each environment is a variable,
+`Http(baseUrl = env("API_URL", "http://localhost:8000/"))`.
+
+`env("NAME", "default")` is a variable of the project; `env("NAME")`, without a default, is required. The
+compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it
+is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by
+precedence (the later wins): `.env` < `.env.<environment>` < `.env.local` < `.env.<environment>.local` < the
+system's keyring (a secret) < the real process environment. `.env.local` is not read in the environment `test`, and
+`testEnv(...)` of `config.nuc` wins in tests. The `.local` files are this machine's (`nuclear new` writes the
+`.gitignore` line `.env*.local` and a `.env` with the defaults of the code). The format is dotenv's: `NAME=value`,
+`export NAME=value`, `#` comments, `'literal'`, `"escaped\n"` (several lines), `${OTHER}`.
+
+The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the
+project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).
+`nuclear env list` shows every variable by environment, `nuclear env set NAME value --env staging` writes
+`.env.staging`, `nuclear env set NAME --secret --env production` keeps a secret in the system's keyring (the value
+from stdin, never printed). A web app gets the values its code reads when it is built: `nuclear build --env <name>` puts them in the
+build as constants (nothing is read at run time, no lookup of a file); a variable stored as a secret that the code
+reads is a build error (N0311), since anyone who has the app can read what is inside it. `nuclear run` builds with
+the environment's values and does not start while a required one has none.
+
 ### 3.3 Data
 
 A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform

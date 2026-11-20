@@ -158,6 +158,34 @@ The complete example: `examples/examples-web/characters` (golden `examples/expec
 component with its repository, use cases, facade, state, list and detail screens, a global component, an event, a
 guard and four tests (`tools/react-check/check.sh`: tsc --strict 0 errors, 4 tests, vite build).
 
+Environment variables (spec 021): `env("NAME", "default")` reads a variable of the environment the app is built
+for; `env("NAME")` is required. The value is a constant of the build: `nuclear build --env staging` writes
+`src/nuclear_env.ts` (the values the code reads, never a secret) and `env()` is its function, imported where it is
+used.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [Http(baseUrl = env("API_URL", "http://localhost:8000/"), timeout = 5000)]
+```
+
+```typescript
+export class ProjectConfig extends AppConfig {
+  override readonly connections: Connection[] = [new Http({ baseUrl: env('API_URL', 'http://localhost:8000/'), timeout: 5000 })];
+}
+```
+
+`src/nuclear_env.ts` of a build whose `.env.staging` has `API_URL=https://staging.example/api/`:
+
+```text
+const values: Record<string, string> = {
+  "API_URL": "https://staging.example/api/",
+};
+
+export function env(name: string, fallback: string = ''): string {
+  return values[name] ?? fallback;
+}
+```
+
 Real time (ADR-synapsis-0008): the connection is a `WebSocket`; what the server pushes is a repository method with
 `@on`, passed on by a use case and listened to by a state manager:
 

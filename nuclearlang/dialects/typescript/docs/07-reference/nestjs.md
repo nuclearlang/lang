@@ -537,7 +537,12 @@ export class TasksController {
 
 ### 2.7 Configuration
 
-The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = "a:9092,b:9092", group = "app")` (kafkajs); chat models `Ollama(model = "qwen3.5:4b", baseUrl = ...)`, `OpenAI(model = "gpt-4o-mini")` (LangChain `initChatModel`); `Embeddings(model = "ollama:nomic-embed-text")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env("VAR", "default")` reads the environment.
+The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = "a:9092,b:9092", group = "app")` (kafkajs); chat models `Ollama(model = "qwen3.5:4b", baseUrl = ...)`, `OpenAI(model = "gpt-4o-mini")` (LangChain `initChatModel`); `Embeddings(model = "ollama:nomic-embed-text")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env("VAR", "default")` reads the environment. The value is read at run time from the process
+(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,
+`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
+<environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a
+variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
+default is required: `nuclear run` does not start without it.
 
 ```nuclear
 appConfig ProjectConfig

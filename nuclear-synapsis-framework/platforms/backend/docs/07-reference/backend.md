@@ -279,7 +279,7 @@ controller TasksController(tasks: TasksAppComponent)
 
 The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,
 `components/<c>/config/`): opened at start, closed at stop, never opened by hand. Each has a `name` (default
-`"default"`); `connectionName` in a kind picks another. `env("VAR", "default")` reads the environment.
+`"default"`); `connectionName` in a kind picks another. `env("VAR", "default")` reads the environment (below).
 
 | Connection | Plugin | Parameters |
 |---|---|---|
@@ -299,6 +299,28 @@ appConfig ProjectConfig
     Ollama(model = env("CHAT_MODEL", "qwen3.5:4b"), baseUrl = env("OLLAMA_URL", "http://localhost:11434")),
   ]
 ```
+
+
+#### Environments (spec 021, ADR-platform-0012)
+
+`env("NAME", "default")` is a variable of the project; `env("NAME")`, without a default, is required. The
+compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it
+is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by
+precedence (the later wins): `.env` < `.env.<environment>` < `.env.local` < `.env.<environment>.local` < the
+system's keyring (a secret) < the real process environment. `.env.local` is not read in the environment `test`, and
+`testEnv(...)` of `config.nuc` wins in tests. The `.local` files are this machine's (`nuclear new` writes the
+`.gitignore` line `.env*.local` and a `.env` with the defaults of the code). The format is dotenv's: `NAME=value`,
+`export NAME=value`, `#` comments, `'literal'`, `"escaped\n"` (several lines), `${OTHER}`.
+
+The environment of a command: `--env <name>` on `nuclear run`, `build`, `test`, `check`; else `NUCLEAR_ENV`; else the
+project's active one (`nuclear env use <name>`); else `development` (`nuclear test`: `test`, never the active one).
+`nuclear env list` shows every variable by environment, `nuclear env set NAME value --env staging` writes
+`.env.staging`, `nuclear env set NAME --secret --env production` keeps a secret in the system's keyring (the value
+from stdin, never printed). The backend reads them at run time: `nuclear run` passes them to the app's process and does not start
+while a required one has no value (it lists each with where it is used; `nuclear check --env <name>` reports them as
+N0312); `nuclear build --env <name>` writes the non-secret values into the build's `.env`, which the runtime loads at
+start without replacing a variable the process already has: where it runs, the real environment gives the secrets.
+A project without `.env` files reads the process environment as before.
 
 #### Guards (ADR-synapsis-0007)
 

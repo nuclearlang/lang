@@ -11,11 +11,12 @@ related: [tools/cli/src/framework/mod.rs, tools/cli/docs/03-adr/0003-one-command
 | Commands | Code | What they are for |
 |---|---|---|
 | The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |
+| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |
 | The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |
 
 `main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,
 `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,
-`clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing
+`clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing
 page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a
 project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both
 usages, the framework's under "projects of the framework".

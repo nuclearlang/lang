@@ -105,6 +105,22 @@ A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsi
 | `guards`, `controllers.<C>.guards` | the app's guards and each controller's own, in order: `{"guard": "token", "header": "X-Token"}`, `{"guard": "noOrigin"}`; a token's value is never written |
 | `events.<topic>` | each topic the app publishes (`~publish("topic", value)`): the `component` that publishes it and its `payload`: the model built in place, a typed parameter's type, or `<string, any>` with the map's `fields`; `any` when the source does not say |
 
+Every project of a platform also lists its environment variables (spec 021, ADR-platform-0012), one per name of
+every `env("NAME")` / `env("NAME", "default")` of its code (both texts written as they are, else N0310), sorted by
+name:
+
+```json
+"env": [
+  { "name": "DATABASE", "default": "tasks.sqlite", "required": false, "client": false,
+    "uses": [{ "file": "config/project_config.nuc", "line": 5 }] },
+  { "name": "TASKS_TOKEN", "required": true, "client": false, "uses": [{ "file": "config/project_config.nuc", "line": 6 }] }
+]
+```
+
+`default` is the first one written (none: no use has one); `required` when a use has no default and no other use
+gives one; `client` for a web or mobile project (its build carries the values: a secret read by one is N0311);
+`uses`: every call, file relative to the project and line. `nuclear env`, `run`, `build` and `check` read it.
+
 A client declares the backends it talks to in its manifest, with the name of the connection its calls use:
 
 ```nuclear

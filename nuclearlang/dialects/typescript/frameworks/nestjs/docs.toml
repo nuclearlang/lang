@@ -485,3 +485,24 @@ graph = 'a LangGraph StateGraph; its state is an `Annotation.Root`.'
 
 [underneath.decorators]
 key = "class-transformer `@Expose({ name })`; an HTTP repository answers the API's JSON as it came."
+
+[words]
+
+env = '''
+**`env("NAME", "default")`**: the value of a variable of the environment the backend runs in (spec 021);
+`env("NAME")` without a default is required (`nuclear run` refuses to start without it).
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [
+    SQLite(file = env("DATABASE", "app.sqlite"), createTables = true),
+  ]
+```
+
+- Read at run time from the process. `nuclear run --env staging` passes the values of `staging` (`.env`,
+  `.env.staging`, their `.local` versions, the keyring's secrets); `nuclear build --env staging` writes the
+  non-secret ones into the build's `.env`, which the runtime loads at start without replacing a variable the
+  process has.
+- `nuclear env list` shows every variable by environment; `nuclear env set TOKEN --secret --env production` keeps a
+  secret in the system's keyring. The name is a text written as it is (N0310).
+'''

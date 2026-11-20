@@ -2,6 +2,7 @@
 
 mod agent;
 mod atlas;
+mod env;
 mod framework;
 mod update;
 
@@ -192,6 +193,10 @@ fn parse_args() -> Result<Args, String> {
             "--inherited" => a.inherited = true,
             "--brief" => a.brief = true,
             "--check" => a.check = true,
+            // taken by main already (env::take_flag_of_command): NUCLEAR_ENV
+            "--env" => {
+                it.next();
+            }
             "-h" | "--help" => a.positional.insert(0, "help".into()),
             s if s.starts_with('-') => return Err(format!("unknown option '{s}'")),
             _ => a.positional.push(arg),
@@ -243,6 +248,11 @@ fn main() -> ExitCode {
         raw.remove(i);
         // SAFETY: the first thing the process does, before any thread
         unsafe { std::env::set_var("NUCLEAR_MONITOR", "1") };
+    }
+    // `--env <name>` (run, build, test, check): the environment of the command (spec 021)
+    if let Err(e) = env::take_flag_of_command(&mut raw) {
+        eprintln!("{e}");
+        return ExitCode::from(2);
     }
     if raw.first().map(String::as_str) == Some("update") {
         return update::command();
@@ -753,8 +763,19 @@ fn project_command(args: &Args, cmd: &str, path: &str) -> ExitCode {
         eprintln!("{path}: {applied} fix(es) applied");
         return project_command(args, "check", path);
     }
-    let manifest = monitored(&root, manifest);
-    let out = project::build(&root, &manifest, &dialect);
+    let mut manifest = monitored(&root, manifest);
+    // spec 021: the environment's values (a client carries the ones its code reads), and what is wrong with them
+    let environment = match env::prepare(&root, &mut manifest) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let mut out = project::build(&root, &manifest, &dialect);
+    if let Some(e) = &environment {
+        env::report(e, &mut out, cmd == "build");
+    }
     if let Err(e) = project::write_metadata(&root, &manifest, &dialect) {
         eprintln!("warning: cannot write {}: {e}", project::METADATA_FILE);
     }
@@ -821,6 +842,13 @@ fn project_command(args: &Args, cmd: &str, path: &str) -> ExitCode {
             eprintln!("could not write {}: {e}", map.display());
             return ExitCode::from(2);
         }
+    }
+    // a backend reads its environment at run time: the build's .env, never overriding the process (spec 021)
+    if let Some(e) = environment.as_ref().filter(|e| !e.client)
+        && let Err(e) = env::write_backend(&out_dir, &e.values, &e.environment)
+    {
+        eprintln!("{e}");
+        return ExitCode::from(2);
     }
     if !args.json {
         eprintln!("{}: {} files → {}", manifest.name, out.files.len() + out.generated.len(), out_dir.display());

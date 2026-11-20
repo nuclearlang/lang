@@ -28,6 +28,7 @@ import { activateScripts } from './scripts';
 import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } from './i18n';
 import { STRIP } from './workspaceL10n';
 import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
+import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
 
 interface Tool {
   id: string;
@@ -104,6 +105,15 @@ export function tools(): Tool[] {
       about: l10n.t("Each Nuclear function's time, calls, connections and memory while the app runs, as an accordion of bars (.nuclear/monitor/report.json)."),
       planned: [],
       command: 'nuclear.monitor.open',
+    },
+    {
+      id: 'environments',
+      label: l10n.t('Environments'),
+      short: 'ENV',
+      key: 'Ctrl+Alt+Y',
+      about: l10n.t('The variables of a project by environment (development, staging, production…): what the code reads with env(), each value and where it comes from (.env files, the keyring), required ones without a value, the active environment; every change through nuclear env.'),
+      planned: [],
+      command: 'nuclear.environments.open',
     },
     {
       id: 'designer',
@@ -223,6 +233,8 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   watchConnections(context);
   registerTreeCommands(context);
   http.extraRoots = () => ws.saved();
+  // the Environments page (spec 021): the workspace's projects, the last one first
+  activateEnvironments(context, () => ws.projects(), () => context.workspaceState.get<string>(LAST_PROJECT));
   http.refresh();
   ws.refresh();
   // one command per action, so the editor title bar can show the buttons of the active project's platform
@@ -370,6 +382,7 @@ class Workspace implements vscode.WebviewViewProvider {
       else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'environments') await vscode.commands.executeCommand(tool.command!, this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
       return true;
@@ -850,6 +863,8 @@ const TOOL_ICONS: Record<string, string> = {
   devices: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M10.5 18.5h3M11 5.5h2"/>',
   // a gauge with its needle
   monitor: '<path d="M3.5 17.5a8.5 8.5 0 1 1 17 0"/><path d="M12 9.5V11M6.6 11.6l1 1M17.4 11.6l-1 1M12 17.5l3.5-4.5"/><circle cx="12" cy="17.5" r="1.4"/><path d="M3.5 21h17"/>',
+  // three layers, one per environment, the top one lit: the active environment
+  environments: '<path d="M12 3 3 7.5 12 12l9-4.5z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/><circle cx="12" cy="7.5" r="1.2"/>',
   // a pen's nib
   designer: '<path d="M12 2.5l5.5 7-2.8 8H9.3l-2.8-8z"/><path d="M12 2.5v8"/><circle cx="12" cy="11.8" r="1.4"/><path d="M8.5 21h7"/>',
   // a page with its lines
@@ -904,6 +919,7 @@ export function stripHtml(webview: vscode.Webview): string {
   .t-http-connections { --tc: var(--vscode-nuclearHttpConnections-get, var(--vscode-charts-blue, #75beff)); }
   .t-devices { --tc: var(--vscode-nuclearHttpConnections-platform, var(--vscode-charts-green, #89d185)); }
   .t-monitor { --tc: var(--vscode-nuclearHttpConnections-delete, var(--vscode-charts-red, #f14c4c)); }
+  .t-environments { --tc: var(--vscode-nuclearHttpConnections-component, var(--vscode-charts-purple, #b180d7)); }
   .t-designer { --tc: var(--vscode-nuclearHttpConnections-patch, var(--vscode-charts-orange, #d18616)); }
   .t-docs { --tc: var(--vscode-nuclearHttpConnections-project, var(--vscode-charts-yellow, #cca700)); }
   .t-settings { --tc: var(--vscode-foreground); }

@@ -284,6 +284,11 @@ packages = ["dependencies"]
 names = ["startSynapsis", "appRouter", "routes", "synapsisConfig", "registerSynapsis"]
 template = { file = "templates/synapsis_g.tpl" }
 
+# env("NAME", "default") (spec 021): the values of the environment the app is built for, constants of the build
+[project.files."src/nuclear_env.ts"]
+names = ["env"]
+template = { file = "templates/nuclear_env_ts.tpl" }
+
 [project.files."src/index.ts"]
 template = { file = "templates/index_ts.tpl" }
 

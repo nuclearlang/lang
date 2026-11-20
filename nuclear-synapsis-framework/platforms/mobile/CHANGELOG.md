@@ -4,6 +4,9 @@ All notable changes to synapsis-mobile are written here; versions follow [Semant
 
 ## Unreleased
 
+- Environments (spec 021): `env("NAME", "default")` in a mobile app reads the values of the environment it was built
+  for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example
+  `clean-flutter-project` reads `API_URL`.
 - The flutter dialect's example `dart_extension` has its first comment in English (it was in Spanish), its output regenerated.
 - Fixed: an `Http` connection whose `baseUrl` has no final `/` (`https://jsonplaceholder.typicode.com`, as `nuclear gen
   --source rest:<url>` writes it) sent every request to a wrong host. Found by the onboarding app `todos_app`.

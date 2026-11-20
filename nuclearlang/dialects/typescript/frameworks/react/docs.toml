@@ -511,3 +511,23 @@ Character
 [underneath.kinds]
 stateless = 'a React function component: its parameters are the props.'
 stateful = 'a React component with state: `setState(() => ...)` re-renders it.'
+
+[words]
+
+env = '''
+**`env("NAME", "default")`**: the value of a variable of the environment the app is built for (spec 021);
+`env("NAME")` without a default is required.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [
+    Http(baseUrl = env("API_URL", "http://localhost:8000/"), timeout = 5000),
+  ]
+```
+
+- The value is a constant of the build: `nuclear build --env staging` puts the values of `staging` (`.env`,
+  `.env.staging`, their `.local` versions, the process) into `src/nuclear_env.ts`; nothing is read at run time.
+- Only the variables the code reads go into the build. A secret (`nuclear env set NAME --secret`) cannot be read by
+  a client: N0311. The name is a text written as it is (N0310).
+- `nuclear env list` shows every variable by environment; `nuclear env set API_URL https://api.example --env production`.
+'''

@@ -13,6 +13,42 @@ if TYPE_CHECKING:
     from .guards import Guard
 
 
+def load_env_file(path: str = ".env") -> None:
+    """Loads the app's `.env` (the one `nuclear build --env <environment>` writes beside the app, spec 021) into the
+    process environment, without replacing a variable the process already has (production sets its secrets there).
+    Lines: `NAME=value` or `NAME="value"` with the escapes `\\n`, `\\r`, `\\t`, `\\"`, `\\\\`, `\\$`; `#` comments."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = (part.strip() for part in line.split("=", 1))
+        name = name.removeprefix("export ").strip()
+        if len(value) >= 2 and value[0] == value[-1] == '"':
+            value = _unescaped(value[1:-1])
+        os.environ.setdefault(name, value)
+
+
+def _unescaped(text: str) -> str:
+    out: list[str] = []
+    chars = iter(text)
+    for c in chars:
+        if c == "\\":
+            nxt = next(chars, "")
+            out.append({"n": "\n", "r": "\r", "t": "\t"}.get(nxt, nxt))
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+# the app's folder is where it runs (the build's folder): its .env, before any env() of the app is read
+load_env_file()
+
+
 def env(name: str, default: str = "") -> str:
     """The environment variable `name`, or `default`."""
     return os.environ.get(name, default)

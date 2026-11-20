@@ -1,8 +1,39 @@
 // Configuration: the connections of the app. `AppConfig.connections` (config/project_config.nuc) lists them; the
 // database goes to SequelizeModule.forRoot, the others are opened when the app starts and closed when it stops.
 // Values usually come from the environment: env('X', 'default').
+import { readFileSync } from 'node:fs';
 import type { SequelizeModuleOptions } from '@nestjs/sequelize';
 import type { Guard } from './guards.js';
+
+/**
+ * Loads the app's `.env` (the one `nuclear build --env <environment>` writes beside the app, spec 021) into
+ * `process.env`, without replacing a variable the process already has (production sets its secrets there). Lines:
+ * `NAME=value` or `NAME="value"` with the escapes `\n`, `\r`, `\t`, `\"`, `\\`, `\$`; `#` comments.
+ */
+const ESCAPES: Record<string, string> = { n: '\n', r: '\r', t: '\t' };
+
+export function loadEnvFile(path = '.env'): void {
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    return;
+  }
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    const eq = line.indexOf('=');
+    if (!line || line.startsWith('#') || eq < 0) continue;
+    const name = line.slice(0, eq).trim().replace(/^export\s+/, '');
+    let value = line.slice(eq + 1).trim();
+    if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+      value = value.slice(1, -1).replace(/\\(.)/g, (_, c: string) => ESCAPES[c] ?? c);
+    }
+    if (process.env[name] === undefined) process.env[name] = value;
+  }
+}
+
+// the app's folder is where it runs (the build's folder): its .env, before any env() of the app is read
+loadEnvFile();
 
 /** The environment variable `name`, or `fallback`. */
 export function env(name: string, fallback = ''): string {

@@ -48,6 +48,7 @@ you run them.
 | `.nuc` breakpoints and the paused `.nuc` line | every platform, with stepping by Nuclear line | mobile | no |
 | Devices inside the editor | the Synapsis device (mobile) and the web device | no | no (`nuclear device` opens its own window) |
 | HTTP Connections | `Ctrl+Alt+H` | `Alt+Shift+H` | no |
+| Environments (a project's variables by environment) | `Ctrl+Alt+Y` | no (`nuclear env`) | no (`nuclear env`) |
 | Nuclear Builder | `Ctrl+Alt+P` | `Alt+Shift+P` (runs `nuclear-builder`) | no |
 | Nuclear Atlas, *Settings and integrations*, notifications | yes | no | no |
 
@@ -83,6 +84,7 @@ The details are in each editor's guide.
 | [Android Studio / IntelliJ](../../jetbrains/docs/08-guides/README.md) | install the plugin and use it on a Synapsis project |
 | [Zed](../../zed/docs/08-guides/README.md) | install the extension, turn on its features, use the tasks |
 | [HTTP Connections](../../tools/nuclear-http-connections/docs/08-guides/README.md) | call the endpoints of your projects, environments, OpenAPI |
+| [Environments](../../tools/nuclear-environments/docs/08-guides/README.md) | edit a project's variables by environment (`.env` files, secrets in the keyring) without opening a file |
 | [Devices](../../tools/nuclear-device-manager/docs/08-guides/README.md) | run a mobile app or a web app inside VS Code |
 | [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |
 | [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |

@@ -380,7 +380,7 @@ appConfig ProjectConfig
   local: LocalDatabase = LocalDatabase(encrypted = true)
   connections: Connection[] = [
     Http(
-      baseUrl = "https://rickandmortyapi.com/api/",
+      baseUrl = env("API_URL", "https://rickandmortyapi.com/api/"),
       connectTimeout = Duration(seconds = 5),
       receiveTimeout = Duration(seconds = 3),
       interceptors = [
@@ -413,7 +413,7 @@ class ProjectConfig extends AppConfig {
   @override
   final List<Connection> connections = [
     Http(
-      baseUrl: 'https://rickandmortyapi.com/api/',
+      baseUrl: env('API_URL', 'https://rickandmortyapi.com/api/'),
       connectTimeout: Duration(seconds: 5),
       receiveTimeout: Duration(seconds: 3),
       interceptors: [
@@ -453,6 +453,34 @@ class ProjectConfig extends AppConfig {
   `encrypted` (default `true`) is AES-256 with a key generated once and kept in the device's secure storage; in a
   `config` it applies to the tables of that component's own models and wins over the project's. Changing it after
   the first run needs the tables cleared: a table is read with the cipher it was written with.
+
+#### Environment variables (spec 021)
+
+`env("NAME", "default")` reads a variable of the environment the app is built for; `env("NAME")` is required. The
+value is a constant of the build: `nuclear build --env staging` writes `lib/nuclear_env.dart` (a `const` map of the
+values the code reads, never a secret) and `env()` is its function, imported where it is used.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [Http(baseUrl = env("API_URL", "http://localhost:8000/"))]
+```
+
+```dart
+class ProjectConfig extends AppConfig {
+  @override
+  final List<Connection> connections = [Http(baseUrl: env('API_URL', 'http://localhost:8000/'))];
+}
+```
+
+`lib/nuclear_env.dart` of a build whose `.env.staging` has `API_URL=https://staging.example/api/`:
+
+```text
+const Map<String, String> _values = {
+  "API_URL": "https://staging.example/api/",
+};
+
+String env(String name, [String fallback = '']) => _values[name] ?? fallback;
+```
 
 ### 6.2 Models
 
@@ -2661,6 +2689,8 @@ nuclear analyze | check [--json] | clean
 nuclear repair                             # when the build or the app fails: repairs in steps (see below)
 nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
 nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)
+nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)
+nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring
 nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory
 nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions
 nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)

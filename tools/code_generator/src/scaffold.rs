@@ -257,7 +257,50 @@ pub fn project(name: &str) -> Files {
     ];
     files.extend(component("home"));
     files.extend(screen("home", "home", "/", "home_manager", "home_state"));
+    with_environment(files)
+}
+
+/// The files of the environments (spec 021) a new project gets with its `.nuc`: a `.env` with the defaults of every
+/// `env()` its code reads (only when it reads one; a required one, without a default, as a comment), and a `.gitignore`
+/// that keeps the local values (`.env*.local`) out of the repository.
+fn with_environment(mut files: Files) -> Files {
+    let mut lines: Vec<String> = Vec::new();
+    for (path, text) in files.iter().filter(|(p, _)| p.extension().is_some_and(|e| e == "nuc")) {
+        if path == Path::new(MANIFEST) {
+            continue;
+        }
+        for u in nuclear_transpile::contract::env_uses(&nuclear_syntax::parse(text).file).0 {
+            let line = match &u.default {
+                Some(d) => format!("{}={}", u.name, dotenv_value(d)),
+                None => format!(
+                    "# {}=   required (no default): nuclear env set {} --secret --env <environment>",
+                    u.name, u.name
+                ),
+            };
+            if !lines.iter().any(|l| l.trim_start_matches("# ").starts_with(&format!("{}=", u.name))) {
+                lines.push(line);
+            }
+        }
+    }
+    if !lines.is_empty() {
+        let head = "# The values every environment starts from (nuclear help env): .env.<environment> changes them for one\n\
+                    # environment, .env.local and .env.<environment>.local for this machine only (ignored by git), and a\n\
+                    # secret goes to the system's keyring: nuclear env set NAME --secret --env <environment>.\n";
+        files.push((PathBuf::from(".env"), format!("{head}{}\n", lines.join("\n"))));
+    }
+    files.push((
+        PathBuf::from(".gitignore"),
+        "# the values of one machine and its secrets' fallback (spec 021): never in the repository\n.env*.local\n".into(),
+    ));
     files
+}
+
+/// A default as a dotenv value: as it is when plain, else in double quotes.
+fn dotenv_value(v: &str) -> String {
+    if v.chars().all(|c| c.is_ascii_alphanumeric() || "_-./:@,+%".contains(c)) {
+        return v.to_string();
+    }
+    format!("\"{}\"", v.replace('\\', "\\\\").replace('"', "\\\"").replace('$', "\\$").replace('\n', "\\n"))
 }
 
 /// A backend project (ADR-synapsis-0002): its manifest and the app's connections; `nuclear build .` builds it with
@@ -293,11 +336,11 @@ pub fn backend_project(name: &str, dialect: &str, options: &NewOptions) -> Files
             "  // every route: no request from a web page, and the token of {var} (`Authorization: Bearer <token>`)\n  guards: Guard[] = [NoOrigin(), Token(value = env(\"{var}\"))]\n"
         ));
     }
-    vec![
+    with_environment(vec![
         (PathBuf::from(MANIFEST), config),
         (PathBuf::from("config/project_config.nuc"), project_config),
         (PathBuf::from("test/app_test.nuc"), BACKEND_TEST.to_string()),
-    ]
+    ])
 }
 
 /// A web project (ADR-web-0001): its manifest, the app entry (the router with every `@screen`) and the app's
@@ -318,11 +361,11 @@ pub fn web_project(name: &str, dialect: &str, backend: &str, options: &NewOption
     } else {
         WEB_PROJECT_CONFIG.replace("{{backend}}", &base)
     };
-    vec![
+    with_environment(vec![
         (PathBuf::from(MANIFEST), config),
         (PathBuf::from("main.nuc"), WEB_MAIN.to_string()),
         (PathBuf::from("config/project_config.nuc"), project_config),
-    ]
+    ])
 }
 
 const WEB_MAIN: &str = r#"// The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.
@@ -331,18 +374,20 @@ stateless App
     createElement(RouterProvider, router = appRouter())
 "#;
 
-const WEB_PROJECT_CONFIG: &str = r#"// The connections and services of the whole app (nuclear help web).
+const WEB_PROJECT_CONFIG: &str = r#"// The connections and services of the whole app (nuclear help web). API_URL: the backend of each environment
+// (.env, .env.<environment>: nuclear env set API_URL <url> --env <environment>).
 appConfig ProjectConfig
   connections: Connection[] = [
-    Http(baseUrl = "{{backend}}", timeout = 5000),
+    Http(baseUrl = env("API_URL", "{{backend}}"), timeout = 5000),
   ]
 "#;
 
 const WEB_PROJECT_CONFIG_SOCKET: &str = r#"// The connections and services of the whole app (nuclear help web). The repositories' calls, and what the
-// backend pushes, go over its WebSocket; Http(baseUrl = ...) here is the same app over HTTP.
+// backend pushes, go over its WebSocket; Http(baseUrl = ...) here is the same app over HTTP. API_SOCKET_URL: the
+// backend of each environment (.env, .env.<environment>: nuclear env set API_SOCKET_URL <url> --env <environment>).
 appConfig ProjectConfig
   connections: Connection[] = [
-    WebSocket(url = "{{socket}}", timeout = 5000),
+    WebSocket(url = env("API_SOCKET_URL", "{{socket}}"), timeout = 5000),
   ]
 "#;
 
@@ -605,6 +650,22 @@ mod tests {
             assert!(errors.is_empty(), "{dialect}: {errors:?}");
             let _ = std::fs::remove_dir_all(&root);
         }
+    }
+
+    #[test]
+    fn a_new_project_has_the_defaults_of_its_environment() {
+        let get = |files: &Files, name: &str| files.iter().find(|(p, _)| p == Path::new(name)).map(|(_, t)| t.clone());
+        let api = backend_project("demo_api", "fastapi", &live());
+        let dotenv = get(&api, ".env").expect("a backend reads env()");
+        assert!(dotenv.contains("\nDATABASE=app.sqlite\n"), "{dotenv}");
+        assert!(dotenv.contains("# DEMO_TOKEN=   required"), "{dotenv}");
+        assert!(get(&api, ".gitignore").unwrap().contains("\n.env*.local\n"));
+        let web = web_project("demo_web", "react", "http://localhost:8000", &NewOptions::default());
+        assert!(get(&web, ".env").unwrap().contains("\nAPI_URL=http://localhost:8000/\n"));
+        // the mobile skeleton reads no variable: no .env, but the .gitignore
+        let app = project("demo_app");
+        assert!(get(&app, ".env").is_none() && get(&app, ".gitignore").is_some());
+        assert_eq!(dotenv_value("a b$\"c"), "\"a b\\$\\\"c\"");
     }
 
     fn live() -> NewOptions {

@@ -60,3 +60,10 @@ testAnAgentNeverReachesTheTargetsToolsThroughDashDash() void
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   said: string = asyncio.run(tools.nuclearProject(".", "install", ["--", "; curl x | sh"]))
   expect("'--' is not allowed" in said)
+
+testASecretNeverPassesThroughTheEnvironmentsTool() void
+  tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
+  said: string = asyncio.run(tools.nuclearEnv(".", "set", "TOKEN", "s3cret", "production", false, true))
+  expect("not set through the MCP server" in said and not ("s3cret" in said))
+  expect("not an action" in asyncio.run(tools.nuclearEnv(".", "delete")))
+  expect("starts with -" in asyncio.run(tools.nuclearEnv(".", "set", "A", "--secret")))

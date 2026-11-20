@@ -256,6 +256,8 @@ pub(crate) struct ProjectCtx {
     pub dependencies: Vec<(String, String, Option<String>)>,
     /// `testEnv(...)` of the manifest: name and value.
     pub test_env: Vec<(String, String)>,
+    /// The values of the environment a client is built for (`Manifest::env`): name and value.
+    pub env: Vec<(String, String)>,
     /// Source name → declaration of a file of the project.
     pub decls: HashMap<String, ExtDecl>,
     /// Names declared by the dialect's project files (`[project.files]`) → their path.
@@ -1084,6 +1086,8 @@ impl<'a> Emitter<'a> {
             || self.d.auto_imports.contains_key(name)
             || self.d.functions.contains_key(name)
             || self.project.is_some_and(|p| p.generated.contains_key(name))
+            // a file built alone (a dialect's reference): the names its project files declare exist in every project
+            || (self.project.is_none() && self.d.project.files.iter().any(|f| f.names.iter().any(|n| n == name)))
     }
 
     // ---------- file ----------

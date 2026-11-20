@@ -38,6 +38,8 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
     let mut events = Map::new();
     let mut web_socket = Value::Null;
     let mut guards = Vec::new();
+    let mut env: BTreeMap<String, Map<String, Value>> = BTreeMap::new();
+    let client = matches!(dialect.platform.as_deref(), Some("web" | "mobile"));
     for rel in project::sources(root, &out_dir) {
         if dialect.project.manifest.as_ref().is_some_and(|m| rel == Path::new(&m.file)) {
             continue;
@@ -51,6 +53,31 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
         let component = path.strip_prefix("components/").and_then(|r| r.split('/').next()).unwrap_or("").to_string();
         let default_kind = project::default_kind(dialect, &path);
         let lines = Lines::new(&source, &parsed.file.comments);
+        if dialect.platform.is_some() {
+            let file = rel.to_string_lossy().replace('\\', "/");
+            for u in env_uses(&parsed.file).0 {
+                let v = env.entry(u.name.clone()).or_insert_with(|| {
+                    let mut m = Map::new();
+                    m.insert("name".into(), u.name.clone().into());
+                    m.insert("required".into(), false.into());
+                    m.insert("client".into(), client.into());
+                    m.insert("uses".into(), Value::Array(Vec::new()));
+                    m
+                });
+                match u.default {
+                    Some(d) if !v.contains_key("default") => {
+                        v.insert("default".into(), d.into());
+                    }
+                    None => {
+                        v.insert("required".into(), true.into());
+                    }
+                    _ => {}
+                }
+                if let Some(Value::Array(uses)) = v.get_mut("uses") {
+                    uses.push(json!({ "file": file, "line": lines.line(u.span.start) }));
+                }
+            }
+        }
         for item in &parsed.file.items {
             let Item::Decl(d) = item else { continue };
             let kind = d.words.iter().find(|w| dialect.kinds.contains_key(&w.name)).map(|w| w.name.clone());
@@ -104,12 +131,106 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
         "controllers": controllers,
         "repositories": repositories,
     });
+    if dialect.platform.is_some() {
+        // spec 021: every `env("NAME"[, "default"])` of the code, by name; `required` when a use has no default
+        out["env"] = env
+            .into_values()
+            .map(|mut v| {
+                if v.contains_key("default") {
+                    v.insert("required".into(), false.into());
+                }
+                Value::Object(v)
+            })
+            .collect();
+    }
     if dialect.platform.as_deref() == Some("backend") {
         out["webSocket"] = web_socket;
         out["guards"] = Value::Array(guards);
         out["events"] = Value::Object(events);
     }
     out
+}
+
+/// One `env("NAME", "default")` of a file (spec 021): the variable's name, its default, where it is written.
+pub struct EnvUse {
+    pub name: String,
+    pub default: Option<String>,
+    pub span: Span,
+}
+
+/// Every `env(...)` call of a file of a platform project, and an N0310 for each whose name (or default) is not a
+/// text literal.
+pub fn env_uses(file: &nuclear_syntax::ast::File) -> (Vec<EnvUse>, Vec<Diagnostic>) {
+    let mut uses = Vec::new();
+    let mut diags = Vec::new();
+    let mut found = |e: &Expr| {
+        let ExprKind::Call { callee, args, .. } = &e.kind else { return };
+        if !matches!(&callee.kind, ExprKind::Name(n) if n == "env") {
+            return;
+        }
+        let text = |i: usize| args.get(i).filter(|a| a.name.is_none() && !a.spread).map(|a| literal(&a.value));
+        let name = text(0).flatten().and_then(|v| v.as_str().map(String::from));
+        let default = text(1);
+        match (name, default) {
+            (Some(name), None) if args.len() == 1 => uses.push(EnvUse { name, default: None, span: e.span }),
+            (Some(name), Some(Some(Value::String(d)))) if args.len() == 2 => {
+                uses.push(EnvUse { name, default: Some(d), span: e.span })
+            }
+            _ => diags.push(Diagnostic::error(
+                codes::ENV_NAME,
+                e.span,
+                "env() takes the variable's name and, optionally, its default, both as texts written as they are: \
+                 env(\"API_URL\") or env(\"API_URL\", \"http://localhost:8000\")",
+            )),
+        }
+    };
+    for item in &file.items {
+        match item {
+            Item::Decl(d) => walk_decl(d, &mut found),
+            Item::Stmt(s) => crate::analysis::walk_stmt_exprs(s, &mut found),
+            Item::Use(_) => {}
+        }
+    }
+    (uses, diags)
+}
+
+/// Calls `f` on every expression of a declaration: decorators, parameter defaults, fields, methods, constructors.
+fn walk_decl<'a>(d: &'a Decl, f: &mut dyn FnMut(&'a Expr)) {
+    use crate::analysis::{walk_expr, walk_stmt_exprs};
+    let decorators = |ds: &'a [nuclear_syntax::ast::Decorator], f: &mut dyn FnMut(&'a Expr)| {
+        ds.iter().flat_map(|x| x.args.iter().flatten()).for_each(|a| walk_expr(&a.value, f))
+    };
+    let params = |ps: &'a nuclear_syntax::ast::Params, f: &mut dyn FnMut(&'a Expr)| {
+        for p in &ps.list {
+            decorators(&p.decorators, f);
+            p.default.iter().for_each(|x| walk_expr(x, f));
+        }
+    };
+    decorators(&d.decorators, f);
+    if let Some(ps) = &d.params {
+        params(ps, f);
+    }
+    match &d.body {
+        Body::Members(ms) => {
+            for m in ms {
+                match m {
+                    Member::Field(x) => {
+                        decorators(&x.decorators, f);
+                        x.default.iter().for_each(|e| walk_expr(e, f));
+                    }
+                    Member::Method(x) => walk_decl(x, f),
+                    Member::Ctor(c) => {
+                        params(&c.params, f);
+                        c.body.iter().flat_map(|b| &b.stmts).for_each(|s| walk_stmt_exprs(s, f));
+                    }
+                    Member::EnumItem(x) => x.args.iter().for_each(|e| walk_expr(e, f)),
+                }
+            }
+        }
+        Body::Block(b) => b.stmts.iter().for_each(|s| walk_stmt_exprs(s, f)),
+        Body::Expr(e) => walk_expr(e, f),
+        Body::None => {}
+    }
 }
 
 /// The list fields of an `appConfig` (`connections`, `guards`) with their items.

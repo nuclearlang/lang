@@ -80,6 +80,7 @@ to see its name and key. The open one has a frame and a glowing bar; a dashed ic
 | HTTP Connections | a plug | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
 | Devices | a phone | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |
 | Nuclear Monitor | a gauge | `Ctrl+Alt+F` | built | [Nuclear Monitor](../../../tools/nuclear-monitor/AGENTS.md) |
+| Environments | three layers | `Ctrl+Alt+Y` | built: the variables of a project by environment, edited in place | [Environments](../../../tools/nuclear-environments/docs/08-guides/README.md) |
 | UI designer | a pen's nib | `Ctrl+Alt+D` | a template page that lists what is planned | — |
 | AI documenter | a page | `Ctrl+Alt+M` | a template page that lists what is planned | — |
 | Settings and integrations | a gear | `Ctrl+Alt+S` | built | below |

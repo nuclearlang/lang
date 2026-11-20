@@ -329,6 +329,14 @@ More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.
   or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real
   device.
 
+- **Environments:** `env("API_URL", "https://dev.example/api/")` reads a variable (without a default it is
+  required). Its values live beside `config.nuc`: `.env` for every environment, `.env.staging` for one, and
+  `.env.local` / `.env.staging.local` (ignored by git) for this machine; a secret goes to the system's keyring with
+  `nuclear env set TOKEN --secret --env production`. `nuclear run --env staging` or `nuclear build --env production`
+  picks one (a web or mobile app gets the values when it is built; a secret never reaches it). `nuclear env list`
+  shows every variable by environment; in VS Code the **Environments** page (`Ctrl+Alt+Y`) edits them without
+  opening a file.
+
 ## 6. Next steps
 
 | For | You write | Spec |

@@ -183,7 +183,7 @@ Templates use a subset of Mustache:
 | `{{#a or b}}...{{/a or b}}` | The first of the alternatives that is true (also in `{{a or b}}`): a section that opens for either of two variables |
 | `{{.}}` | The current element of a list of texts |
 | `{{@first}}` `{{@last}}` `{{@index}}` | Position inside a list: `{{^@last}}, {{/@last}}` |
-| `{{name\|filter}}` | Filters: `pascal`, `camel`, `snake`, `kebab`, `lower`, `upper`, `join:", "`, `json` / `toml` (a value inside a double-quoted JSON or TOML string, escaped), `html` (inside HTML text or an attribute, as entities), `unquote` (a string argument as a bare name: `{{decor.oneToMany.inverse\|unquote}}Id` → `projectId`); they chain (`\|unquote\|snake`) |
+| `{{name\|filter}}` | Filters: `pascal`, `camel`, `snake`, `kebab`, `lower`, `upper`, `join:", "`, `json` / `toml` (a value inside a double-quoted JSON or TOML string, escaped), `html` (inside HTML text or an attribute, as entities), `unquote` (a string argument as a bare name: `{{decor.oneToMany.inverse\|unquote}}Id` → `projectId`), `escape:"$"` (a backslash before each of those characters: `\|json\|escape:"$"` inside a string that interpolates `$`); they chain (`\|unquote\|snake`) |
 
 Formatting rules:
 

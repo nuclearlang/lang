@@ -431,7 +431,12 @@ class CharactersController:
 
 ### 2.7 Configuration
 
-The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `"default"`). `env("VAR", "default")` reads the environment.
+The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `"default"`). `env("VAR", "default")` reads the environment. The value is read at run time from the process
+(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,
+`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
+<environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a
+variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
+default is required: `nuclear run` does not start without it.
 
 ```nuclear
 appConfig ProjectConfig

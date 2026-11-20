@@ -1048,3 +1048,38 @@ fn lazy_imports_move_into_the_blocks_that_use_them() {
     assert!(ts.contains("import { Heavy, heavyLine } from './tools/heavy';"), "{ts}");
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// Spec 021: every `env()` of a platform project is in the contract (`env`); a client's values module carries only the
+/// values its code reads, escaped for the target; a name that is not a literal is N0310.
+#[test]
+fn environment_variables_reach_the_contract_and_the_client() {
+    for (example, module) in [("examples/examples-web/characters", "src/nuclear_env.ts"), ("examples/examples-flutter-dialect/clean-flutter-project", "lib/nuclear_env.dart")] {
+        let root = std::env::temp_dir().join(format!("nuclear-env-{}-{}", std::process::id(), module.replace('/', "_")));
+        let _ = std::fs::remove_dir_all(&root);
+        copy_tree(&tree(example), &root);
+        std::fs::write(root.join("shared/env_reader.nuc"), "token() string = env(\"APP_TOKEN\")\n").unwrap();
+        let mut manifest = Manifest::read(&root).unwrap();
+        let d = loader(None).load(&manifest.dialect).0.unwrap();
+        let contract = nuclear_transpile::contract::contract(&root, &manifest, &d);
+        let names: Vec<(&str, bool, bool)> = contract["env"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| (v["name"].as_str().unwrap(), v["required"] == true, v["client"] == true))
+            .collect();
+        assert_eq!(names, vec![("API_URL", false, true), ("APP_TOKEN", true, true)], "{example}");
+        assert_eq!(contract["env"][0]["uses"][0]["file"], "config/project_config.nuc");
+        assert_eq!(contract["env"][0]["default"], "https://rickandmortyapi.com/api/");
+        manifest.env = [("API_URL", "https://x/$y\"z"), ("UNREAD", "never")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+        let out = project::build(&root, &manifest, &d);
+        let (_, text) = out.generated.iter().find(|(p, _)| p == module).unwrap_or_else(|| panic!("{example}: no {module}"));
+        assert!(!text.contains("UNREAD"), "{text}");
+        let want = if module.ends_with(".dart") { r#""API_URL": "https://x/\$y\"z","# } else { r#""API_URL": "https://x/$y\"z","# };
+        assert!(text.contains(want), "{text}");
+        std::fs::write(root.join("shared/env_reader.nuc"), "token(n: string) string = env(n)\n").unwrap();
+        let out = project::build(&root, &manifest, &d);
+        let codes: Vec<&str> = out.files.iter().flat_map(|f| f.diagnostics.iter().map(|x| x.code.id)).collect();
+        assert!(codes.contains(&"N0310"), "{codes:?}");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+}

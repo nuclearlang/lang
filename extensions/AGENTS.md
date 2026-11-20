@@ -60,6 +60,7 @@ Each extension has its own; they are in its `AGENTS.md`.
 | [tools/nuclear-http-connections/](tools/nuclear-http-connections/AGENTS.md) | HTTP Connections: the tool like Postman (HTTP/REST and WebSockets) |
 | [tools/nuclear-atlas/](tools/nuclear-atlas/AGENTS.md) | Nuclear Atlas: the local agent integrated with the RAG (the chat with the local agents over the Nuclear Smart Graph) |
 | [tools/nuclear-monitor/](tools/nuclear-monitor/AGENTS.md) | Nuclear Monitor: each Nuclear function's time, calls, connections and memory as an accordion of bars (VS Code) |
+| [tools/nuclear-environments/](tools/nuclear-environments/AGENTS.md) | Environments: a project's variables by environment (`.env` files, the keyring), edited through `nuclear env` (VS Code, spec 021) |
 | [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |
 | [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |
 | [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |

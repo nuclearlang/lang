@@ -39,6 +39,10 @@ The `.nuc` files `new` writes (the output of a real run):
 | `web` (`react`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` |
 | `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |
 
+Every platform also gets a `.gitignore` with `.env*.local` (the values of one machine, spec 021) and, when its code
+reads `env("NAME", "default")`, a `.env` with those defaults (a required one, without a default, as a comment): the
+backend's `DATABASE` (and its `--token` variable), the web app's `API_URL` (`Http(baseUrl = env("API_URL", ...))`).
+
 Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/`
 in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards,
 runbooks), filled with what `new` knows; the rest is a `TODO(user):` line. How they are written:

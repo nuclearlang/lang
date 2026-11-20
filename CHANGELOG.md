@@ -4,6 +4,12 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- Environments (spec 021, ADR-platform-0012): every `env("NAME")` / `env("NAME", "default")` of a platform project
+  is listed in `.nuclear/contract.json` (`env`: name, default, required, client, uses); a name or default that is not
+  a text literal is N0310; N0311 (a secret read by a client) and N0312 (a required variable without a value) are
+  documented. `Manifest::env` gives a client build its values: the react dialect writes `src/nuclear_env.ts`, the
+  flutter dialect `lib/nuclear_env.dart` (only the variables the code reads), and `env()` is their function. The
+  templates' new filter `escape:"$"`; a file built alone knows the names of its dialect's project files.
 - The values of `config.nuc` (`app(description, version)`, a package's name, version and path) are escaped for the
   file they go into: the templates' new filters `json` / `toml` and `html`, and the pubspec's YAML; a description
   can no longer add keys (an npm `postinstall`, a TOML dependency) or a `<script>` to the built site (spec 018 M6).
