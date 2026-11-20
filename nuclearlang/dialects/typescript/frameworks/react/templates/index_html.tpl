@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{#app.title}}{{app.title}}{{/app.title}}{{^app.title}}{{project}}{{/app.title}}</title>
+    <title>{{#app.title}}{{app.title|html}}{{/app.title}}{{^app.title}}{{project|html}}{{/app.title}}</title>
 {{#app.description}}
-    <meta name="description" content="{{app.description}}" />
+    <meta name="description" content="{{app.description|html}}" />
 {{/app.description}}
 {{#asset.public_favicon_svg}}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -392,9 +392,11 @@ fn block(lines: &[String], section: &str) -> Result<Option<(usize, usize)>, Stri
 }
 
 /// A YAML scalar: quoted when it could be read as something else.
+/// A YAML scalar: plain when it is a simple word, else double-quoted with JSON's escapes (YAML reads them the same),
+/// so a line break or a backslash in a description never adds a key to the pubspec (spec 018 M6).
 fn yaml(v: &str) -> String {
-    if v.is_empty() || v.contains([':', '#', ' ', '>', '<', '"', '\'', '{', '[', '*', '&', '!', '|']) {
-        format!("\"{}\"", v.replace('"', "\\\""))
+    if v.is_empty() || v.contains([':', '#', ' ', '>', '<', '"', '\'', '{', '[', '*', '&', '!', '|', '\\', '%', '@', '`', ',']) || v.chars().any(char::is_control) {
+        serde_json::to_string(v).unwrap_or_default()
     } else {
         v.to_string()
     }
@@ -506,6 +508,8 @@ mod tests {
         let p = set_yaml(&p, Some("environment"), "sdk", &yaml(">=3.5.0 <4.0.0"));
         let p = set_yaml(&p, Some("flutter"), "uses-material-design", "false");
         assert!(p.contains("description: \"Shop: the app\"\n"), "{p}");
+        let p = set_yaml(&p, None, "description", &yaml("x\nflutter:\n  evil: true"));
+        assert!(p.contains("description: \"x\\nflutter:\\n  evil: true\"\n") && !p.contains("\nflutter:\n  evil"), "{p}");
         assert!(p.contains("environment:\n  sdk: \">=3.5.0 <4.0.0\"\n"), "{p}");
         assert!(p.ends_with("flutter:\n  uses-material-design: false\n"), "{p}");
         assert_eq!(yaml_get(&p, "dependencies", "hive").as_deref(), Some("^2.2.3"));

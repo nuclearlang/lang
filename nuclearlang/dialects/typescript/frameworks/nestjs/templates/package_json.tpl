@@ -1,8 +1,8 @@
 {
   "name": "{{project|kebab}}",
-  "version": "{{app.version}}",
+  "version": "{{app.version|json}}",
 {{#app.description}}
-  "description": "{{app.description}}",
+  "description": "{{app.description|json}}",
 {{/app.description}}
   "private": true,
   "type": "module",
@@ -24,8 +24,8 @@
     "rxjs": "^7.8.2",
     "sequelize": "^6.37.0",
     "sequelize-typescript": "^2.1.6"{{#plugins.packages}},
-    "{{name}}": "{{version}}"{{/plugins.packages}}{{#dependencies}},
-    "{{name}}": "{{#path}}file:{{path}}{{/path}}{{^path}}{{version}}{{/path}}"{{/dependencies}}
+    "{{name|json}}": "{{version|json}}"{{/plugins.packages}}{{#dependencies}},
+    "{{name|json}}": "{{#path}}file:{{path|json}}{{/path}}{{^path}}{{version|json}}{{/path}}"{{/dependencies}}
   },
   "devDependencies": {
     "@nestjs/testing": "^12.0.0",

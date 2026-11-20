@@ -2,19 +2,19 @@
 # The dependencies are the runtime and the plugins config.nuc enables (plugins(...)).
 [project]
 name = "{{project}}"
-version = "{{app.version}}"
+version = "{{app.version|toml}}"
 {{#app.description}}
-description = "{{app.description}}"
+description = "{{app.description|toml}}"
 {{/app.description}}
 requires-python = ">=3.12"
 dependencies = [
     "synapsis-py",
     "uvicorn>=0.30",
 {{#plugins.packages}}
-    "{{name}}{{version}}",
+    "{{name|toml}}{{version|toml}}",
 {{/plugins.packages}}
 {{#dependencies}}
-    "{{name}}{{#path}} @ {{url}}{{/path}}{{^path}}{{version}}{{/path}}",
+    "{{name|toml}}{{#path}} @ {{url|toml}}{{/path}}{{^path}}{{version|toml}}{{/path}}",
 {{/dependencies}}
 ]
 

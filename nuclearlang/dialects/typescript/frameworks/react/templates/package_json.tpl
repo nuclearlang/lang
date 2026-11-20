@@ -1,8 +1,8 @@
 {
   "name": "{{project|kebab}}",
-  "version": "{{app.version}}",
+  "version": "{{app.version|json}}",
 {{#app.description}}
-  "description": "{{app.description}}",
+  "description": "{{app.description|json}}",
 {{/app.description}}
   "private": true,
   "type": "module",
@@ -18,8 +18,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^7.18.0"{{#plugins.packages}},
-    "{{name}}": "{{version}}"{{/plugins.packages}}{{#dependencies}},
-    "{{name}}": "{{#path}}file:{{path}}{{/path}}{{^path}}{{version}}{{/path}}"{{/dependencies}}
+    "{{name|json}}": "{{version|json}}"{{/plugins.packages}}{{#dependencies}},
+    "{{name|json}}": "{{#path}}file:{{path|json}}{{/path}}{{^path}}{{version|json}}{{/path}}"{{/dependencies}}
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",

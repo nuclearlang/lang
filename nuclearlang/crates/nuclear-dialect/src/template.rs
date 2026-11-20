@@ -98,6 +98,11 @@ enum Filter {
     Upper,
     Join(String),
     StripSuffix(String),
+    /// A value inside a double-quoted JSON or TOML string (`"`, `\\`, control characters escaped): a
+    /// `description` can never end the string and add keys (spec 018 M6).
+    Json,
+    /// A value inside HTML text or an attribute (`&`, `<`, `>`, `"`, `'` as entities).
+    Html,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -327,6 +332,8 @@ fn parse_var(content: &str, offset: usize) -> Result<(String, Vec<Filter>), Temp
             "lower" => Filter::Lower,
             "upper" => Filter::Upper,
             "unquote" => Filter::Unquote,
+            "json" | "toml" => Filter::Json,
+            "html" => Filter::Html,
             _ => match (f.strip_prefix("join:"), f.strip_prefix("strip_suffix:")) {
                 (Some(arg), _) => Filter::Join(unquote(arg.trim())),
                 (_, Some(arg)) => Filter::StripSuffix(unquote(arg.trim())),
@@ -334,7 +341,7 @@ fn parse_var(content: &str, offset: usize) -> Result<(String, Vec<Filter>), Temp
                     return Err(TemplateError {
                         offset,
                         message: format!(
-                            "unknown filter '{f}' (filters: unquote, pascal, camel, snake, kebab, lower, upper, join:\", \", strip_suffix:\"X\")"
+                            "unknown filter '{f}' (filters: unquote, pascal, camel, snake, kebab, lower, upper, json, toml, html, join:\", \", strip_suffix:\"X\")"
                         ),
                     });
                 }
@@ -423,6 +430,21 @@ fn apply_filters(v: Option<&Value>, filters: &[Filter]) -> String {
             Filter::Upper => text.to_uppercase(),
             Filter::Join(_) => text,
             Filter::StripSuffix(x) => text.strip_suffix(x.as_str()).map_or(text.clone(), str::to_string),
+            Filter::Json => {
+                let quoted = serde_json::to_string(&text).unwrap_or_default();
+                quoted[1..quoted.len() - 1].to_string()
+            }
+            Filter::Html => text.chars().fold(String::new(), |mut out, c| {
+                match c {
+                    '&' => out.push_str("&amp;"),
+                    '<' => out.push_str("&lt;"),
+                    '>' => out.push_str("&gt;"),
+                    '"' => out.push_str("&quot;"),
+                    '\'' => out.push_str("&#39;"),
+                    _ => out.push(c),
+                }
+                out
+            }),
         };
     }
     text
@@ -612,6 +634,16 @@ mod tests {
         assert_eq!(render("{{names|join:\" | \"}}", list), "a | b");
         let arg = Ctx::new().set("inverse", "'project'").into_value();
         assert_eq!(render("{{inverse|unquote}}Id", arg), "projectId");
+    }
+
+    /// Spec 018 M6: a config value never leaves the string it is written into.
+    #[test]
+    fn values_escaped_for_their_format() {
+        let evil = Ctx::new().set("d", "x\", \"scripts\": {\"postinstall\": \"curl x|sh\"}, \"y\": \"z\n<script>").into_value();
+        let json = render("{\"description\": \"{{d|json}}\"}", evil.clone());
+        let parsed: serde_json::Value = serde_json::from_str(&json).expect("still one JSON object");
+        assert_eq!(parsed.as_object().unwrap().len(), 1);
+        assert_eq!(render("{{d|html}}", evil), "x&quot;, &quot;scripts&quot;: {&quot;postinstall&quot;: &quot;curl x|sh&quot;}, &quot;y&quot;: &quot;z\n&lt;script&gt;");
     }
 
     #[test]

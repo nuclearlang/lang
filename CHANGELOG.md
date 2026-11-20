@@ -4,6 +4,9 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The values of `config.nuc` (`app(description, version)`, a package's name, version and path) are escaped for the
+  file they go into: the templates' new filters `json` / `toml` and `html`, and the pubspec's YAML; a description
+  can no longer add keys (an npm `postinstall`, a TOML dependency) or a `<script>` to the built site (spec 018 M6).
 - Nesting deeper than 200 levels (expressions, blocks, types) is the error N0023, instead of a stack overflow that
   aborted `nuclear check` and the language server on one file (spec 018 M8).
 - Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name
