@@ -788,30 +788,6 @@
    }
   },
   {
-   "id": "doc:extensions/docs/06-runbooks/release.md#backward-compatibility-before-every-release.08e1e6",
-   "type": "context",
-   "title": "Release the extensions — Backward compatibility (before every release)",
-   "summary": "`test/fixtures/compat/`): `channels.json` and the `.jsonl` histories of its first version; fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title without `key` in English), every setting under an id that moved, the projects saved for every…",
-   "body": [
-    "- Nuclear Chat's service (`nuclear-chat/nuclear_chat/test/chat_test.nuc`, `firstHistory`, fixtures in its",
-    "     `test/fixtures/compat/`): `channels.json` and the `.jsonl` histories of its first version;",
-    "   - the editors (`npm run test:compat` in `vscode/`, also part of `npm test`: `tools/nuclear-builder/test/compat.test.ts`,",
-    "     fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title",
-    "     without `key` in English), every setting under an id that moved, the projects saved for every folder before",
-    "     0.63.0 and those each folder kept until 0.83 (`workspace-state-0.83.json`, `test/workspaces.test.ts`: they join the",
-    "     editor's global list), the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and",
-    "     opened from the offer, never asked again once declined or done)."
-   ],
-   "sources": [
-    "extensions/docs/06-runbooks/release.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/docs/06-runbooks/release.md#backward-compatibility-before-every-release.554bab",
    "type": "context",
    "title": "Release the extensions — Backward compatibility (before every release)",
@@ -825,6 +801,30 @@
     "   ```sh",
     "   extensions/scripts/compat-check.sh --real <a project folder>",
     "   ```"
+   ],
+   "sources": [
+    "extensions/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/06-runbooks/release.md#backward-compatibility-before-every-release.6fd3d2",
+   "type": "context",
+   "title": "Release the extensions — Backward compatibility (before every release)",
+   "summary": "`test/fixtures/compat/`): `channels.json` and the `.jsonl` histories of its first version; fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title without `key` in English), every setting under an id that moved, the projects saved for every…",
+   "body": [
+    "- Nuclear Chat's service (`nuclear-chat/nuclear_chat/test/chat_test.nuc`, `firstHistory`, fixtures in its",
+    "     `test/fixtures/compat/`): `channels.json` and the `.jsonl` histories of its first version;",
+    "   - the editors (`npm run test:compat` in `vscode/`, also part of `npm test`: `tools/nuclear-builder/test/compat.test.ts`,",
+    "     fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title",
+    "     without `key` in English), every setting under an id that moved, the projects saved for every folder before",
+    "     0.63.0 and those each folder kept until 0.83 (`workspace-state-0.83.json`, `test/workspaces.test.ts`: they join the",
+    "     editor's global list), the welcome of 0.84.0 never finished (`global-state-0.84.0-onboarding.json`, `test/onboarding.test.ts`: resumed once), the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and",
+    "     opened from the offer, never asked again once declined or done)."
    ],
    "sources": [
     "extensions/docs/06-runbooks/release.md"
@@ -4866,11 +4866,22 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/AGENTS.md#commands.8e7e60",
+   "id": "doc:extensions/vscode/AGENTS.md#commands.478c62",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → Chernobyl.",
-   "body": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → **Chernobyl**.",
+   "summary": "npm install npm run compile # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js npm run watch # out/extension.js on every change npm test # ../tools/nuclear-builder/test/editors.test.ts, then…",
+   "body": [
+    "```sh",
+    "npm install",
+    "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
+    "npm run watch       # out/extension.js on every change",
+    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts, test/snapshot.test.ts, test/toolchainPage.test.ts, the devices' tests, test/workspaces.test.ts (the Nuclear workspaces: the CLI's JSON, the recent list, the projects opened by hand of before 0.84), test/onboarding.test.ts (the onboarding resumed, 0.84.0's flag), test/fresh-machine.test.ts, test/l10n.test.ts (Spanish for every text), test/no-local.test.ts (no local-model setting) and `npm run test:compat`, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
+    "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
+    "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
+    "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
+    "code --install-extension nuclearlang-<version>.vsix",
+    "```"
+   ],
    "sources": [
     "extensions/vscode/AGENTS.md"
    ],
@@ -4881,22 +4892,11 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/AGENTS.md#commands.dcfb99",
+   "id": "doc:extensions/vscode/AGENTS.md#commands.8e7e60",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "npm install npm run compile # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js npm run watch # out/extension.js on every change npm test # ../tools/nuclear-builder/test/editors.test.ts, then…",
-   "body": [
-    "```sh",
-    "npm install",
-    "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
-    "npm run watch       # out/extension.js on every change",
-    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts, test/snapshot.test.ts, test/toolchainPage.test.ts, the devices' tests, test/workspaces.test.ts (the Nuclear workspaces: the CLI's JSON, the recent list, the projects opened by hand of before 0.84), test/fresh-machine.test.ts, test/l10n.test.ts (Spanish for every text), test/no-local.test.ts (no local-model setting) and `npm run test:compat`, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
-    "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
-    "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
-    "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
-    "code --install-extension nuclearlang-<version>.vsix",
-    "```"
-   ],
+   "summary": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → Chernobyl.",
+   "body": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → **Chernobyl**.",
    "sources": [
     "extensions/vscode/AGENTS.md"
    ],
@@ -5241,6 +5241,24 @@
    "title": "Changelog — Unreleased",
    "summary": "is still confirmed in the editor's two questions.",
    "body": "is still confirmed in the editor's two questions. *Polish in the chat* on a spec opens its thread: a member's change comes as a difference with *Accept* and *Discard*, and the spec is written only when you accept (`nuclear-builder spec accept`). `/poc` says it is not available yet. Nuclear Atlas's page is the chat, on your direct message with the general agent (Atlas), with its templates on top; `/task` there runs the order and its members tell it in the team's channel. Members show their faces. The new setting `nuclear.chat.gifs` (`pack`, `tenor`, `giphy`), in the welcome and in *Settings and integrations*, with *Keep a GIF service's key* (kept in the system keyring). The extension holds the chat service's token; no page ever does. `nuclear-builder chat` and the old chat are gone. In English and Spanish.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.413957",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: the welcome is resumed where it was. *Create a workspace* → *This window* reloads the editor, and 0.84.0 lost the welcome there (it was marked seen the moment it opened) and never offered the AI services. Its progress is now kept by the editor (the workspace, its apps, the tour, the AI services) and saved before the window reloads: you land back at *Add your apps* with your workspace open; a new window takes the welcome over; closing the editor halfway brings it back at that step next time; *Next: the tour*, *Finish: set up the AI services* and *Skip the welcome* move it on. A 0.84.0 welcome that was never finished (no workspace with an app, no AI services) comes back once.",
+    "- Nuclear Atlas works before there is an app: with no project its chat opens on the workspace's folder (or the welcome's), so *Do it with me by chat* works at every step; the prompts that need a project are hidden there."
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -6967,29 +6985,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.8fcab8",
-   "type": "context",
-   "title": "The VS Code extension: its files — `src/`",
-   "summary": "`src/`",
-   "body": [
-    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
-    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
-    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
-    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
-    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.b03ab4",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.37de9f",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
@@ -7001,8 +6997,31 @@
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `workspaces.ts` | the Nuclear workspaces (spec 022): `nuclear workspace … --json` and its JSON, the recent list, the projects opened by hand of before 0.84 moved to the global list, the empty panel's reason, the dialects of a platform; no `vscode` import | [workspace.md](workspace.md) |",
+    "| `onboarding.ts` | the onboarding's progress (the workspace, its apps, the tour, the AI services), resumed after a reload or a closed editor, 0.84.0's flag migrated; no `vscode` import | [workspace.md](workspace.md) |",
     "| `savedProjects.ts` | the projects saved for every folder before 0.63.0, kept for `npm run test:compat` | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.8fcab8",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "`src/`",
+   "body": [
+    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
+    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
+    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
+    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
+    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -7301,15 +7320,18 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.6ce4a3",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.0b6381",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Commands and keys",
-   "summary": "Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode,create,open,addApp,removeApp,renameApp,menu}`; `project`, `tool` and `action` without arguments show a quick pick.",
+   "summary": "steps come back at the next start.",
    "body": [
-    "Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode,create,open,addApp,removeApp,renameApp,menu}`; `project`, `tool` and",
-    "`action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,",
-    "`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/K/A/H/V/F/Y/D/M/S`; the actions",
-    "`Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web)."
+    "- Closed by the user: after the tour it moves to `services`; at any step the set-up is offered, and the workspace's",
+    "  steps come back at the next start.",
+    "- 0.84.0 marked `nuclear.workspace.welcomed` the moment the welcome opened, finished or not: with no saved progress,",
+    "  that flag, no recent workspace whose marker names an app and the AI services not set up, the onboarding is resumed",
+    "  once (at `apps` on the last workspace, else `workspace`; fixture `global-state-0.84.0-onboarding.json`).",
+    "",
+    "Once it is `done`, the page opens at startup only when `nuclear.workspace.welcome` is on and every tab group is empty."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7321,7 +7343,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.f760d0",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.2a087a",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Commands and keys",
    "summary": "`WelcomePanel` is a singleton in column one: the welcome of spec 022 in three short steps, each with *Do it with me by chat*: (1) *Create your workspace* (what a workspace and its marker are, the parent folder and the name, or open one, or a recent one), (2) *Add your apps* (the workspace's apps…",
@@ -7333,9 +7355,57 @@
     "Chat, the devices, Monitor, Reports, the settings), each with its key and *open it*; then a link to the AI services'",
     "set-up (`nuclear.ai.setup`, unchanged), the shortcuts folded, the startup switch. Its texts are `welcomeL10n.ts`; it is",
     "drawn again only when what it shows changed and keeps what the user typed (`vscode.setState`). The first run starts",
-    "with it: on activation, when it was never shown (`globalState` `nuclear.workspace.welcomed`) and there is no recent",
-    "workspace, it opens, and the AI services' offer (`SetupPanel.offer`) waits until it is closed. Later it opens at startup",
-    "only when `nuclear.workspace.welcome` is on and every tab group is empty."
+    "with it, and its progress survives a reload, a new window and a closed editor (`src/onboarding.ts`, no `vscode`",
+    "import, `test/onboarding.test.ts`):"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.6bad0c",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Commands and keys",
+   "summary": "`tour`, `services`, `done`, never going back (`advance`).",
+   "body": [
+    "- `globalState` `nuclear.onboarding` = `{step, root?, chosenWindow?, at}`, the step one of `workspace`, `apps`,",
+    "  `tour`, `services`, `done`, never going back (`advance`). It is written before anything that may reload or close",
+    "  the window: `openIn` saves `apps` with the workspace's root and the window chosen before `vscode.openFolder` (which",
+    "  restarts the extensions); *Next: the tour* saves `tour`; *Finish: set up the AI services* saves `services`, opens the",
+    "  set-up page and closes the welcome; *Skip the welcome* saves `done`.",
+    "- On activation, `resume` decides: a saved step that is not `done` comes back (`services` ends once the set-up's",
+    "  `nuclear.onboarding.done` or `nuclear.ai.setup.declined` is set; its page marks the onboarding `done` when it finishes",
+    "  or is declined); never saved and nothing here, the first run (`workspace`). The welcome opens at its step",
+    "  (`resumeWelcome`) on its workspace; when this window shows another workspace, *Continue setting up NuclearLang with",
+    "  the workspace …?* offers to open it. At `services` the set-up is offered (`SetupPanel.offer`); while the onboarding",
+    "  goes on, `extension.ts` makes no offer of its own.",
+    "- *A new window*: the progress is global, so the new window resumes the welcome and this one closes it",
+    "  (`WelcomePanel.handOver`, no offer)."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#commands-and-keys.6ce4a3",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Commands and keys",
+   "summary": "Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode,create,open,addApp,removeApp,renameApp,menu}`; `project`, `tool` and `action` without arguments show a quick pick.",
+   "body": [
+    "Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode,create,open,addApp,removeApp,renameApp,menu}`; `project`, `tool` and",
+    "`action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,",
+    "`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/K/A/H/V/F/Y/D/M/S`; the actions",
+    "`Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7801,16 +7871,30 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.0dbf52",
+   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.540261",
+   "type": "context",
+   "title": "Testing the VS Code extension — What is tested",
+   "summary": "What is tested",
+   "body": [
+    "| The toolchains | the variables the settings give `nuclear` (a Flutter executable or SDK root, the included Python by default, the user's own variables kept), where each is found (setting → variable → NuclearLang's own → PATH, Windows' extensions), `nuclear doctor --json` and an older CLI without it | `npm test` → `test/toolchains.test.ts`; the welcome's step and the settings' section by hand in a headless browser |",
+    "| The notifications' rules | what pops up for each `nuclear.notifications`, a notice seen by its tool or place, a repeat folded, the badges, which chat events call the user (direct messages, `@you`, questions, an answer's end; never the user's own, `system`, an edit, a run's progress or question) | `npm test` → `test/notify.test.ts`; the strip and the Builder's page by hand in a headless browser |",
+    "| Nuclear Chat's host | the relay of the pages' frames (ids apart, the token added, one subscription per topic), the host file → the registration, a run's posts and buttons, a spec draft's difference, the connection against a fake socket (registered again and caught up after a reconnection; a service down answered 503 with how to fix it) | `npm test` → `test/chat.test.ts`; against the real service, by hand from Node (spec 013 T3.2's check) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.6bf236",
    "type": "context",
    "title": "Testing the VS Code extension — What is tested",
    "summary": "`npm test` (the `test` script of `package.json`, whose version is the extensions' one: 0.53.1) bundles the test file with esbuild (`vscode` aliased to the stub) into `out/test/` and runs it with `node --test`.",
    "body": [
-    "| The Builder's engine | the stations, the gates, the checks, the money, the delivery, the safety | Nuclear's tests: `../tools/nuclear-builder/tests/test_factory.nuc` and the others there (pytest, in its `build/`) |",
-    "| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems, the ports, the AI archive's launchers; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `setup.json` says | Nuclear's tests: `../tools/nuclear-builder/tests/test_setup.nuc` (pytest, in its `build/`) |",
-    "| The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |",
-    "| The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |",
-    "",
     "`npm test` (the `test` script of `package.json`, whose version is the extensions' one: 0.53.1) bundles the test file with esbuild (`vscode` aliased to the stub) into `out/test/` and runs it with",
     "`node --test`."
    ],
@@ -7824,7 +7908,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.4c03e0",
+   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.d92667",
    "type": "context",
    "title": "Testing the VS Code extension — What is tested",
    "summary": "What is tested",
@@ -7833,7 +7917,7 @@
     "|---|---|---|",
     "| Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |",
     "| The editors' side, without the editor | the money's two confirmations, the moved settings, the teams through `nuclear-builder team`, a Builder run as a process (its question as an `ask`, the answer on stdin, exit 3 when nobody answers) against a stub command, the retries, the tools' `PATH`, the connections, Nuclear Atlas's templates, the 3B rule of the local models, every host text in Spanish, the language (`nuclear.language`: the setting, the editor, the system, the default), `l10n.t` (the Spanish bundle, the English fallback), every page dictionary's Spanish, the globe in every page's header | `npm test` → `../tools/nuclear-builder/test/editors.test.ts` (`vscode` stubbed by `test/vscode-stub.ts`) |",
-    "| The Nuclear workspaces (spec 022) | `nuclear workspace … --json` parsed (the last JSON line, `null`, `{error}`, an older `nuclear`'s usage), the recent list (first, once, at most 10, only those still there), the projects opened by hand kept per folder until 0.83 joining the global list (fixtures `global-state-0.62.json`, `workspace-state-0.83.json`), the empty panel's reason, the dialects of a platform | `npm test` → `test/workspaces.test.ts` |"
+    "| The onboarding resumed (spec 022) | the steps only go forward; a saved step resumed (after *This window*'s reload, a closed editor, a new window), `services` until the set-up is finished or declined; the first run; 0.84.0's flag resumed once when nothing says it was finished (fixture `global-state-0.84.0-onboarding.json`); a marker's apps; Atlas's chat root without a project (`chatRoots`) | `npm test` → `test/onboarding.test.ts` |"
    ],
    "sources": [
     "extensions/vscode/docs/05-standards/testing.md"
@@ -7845,33 +7929,35 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.79d362",
+   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.e1c07c",
    "type": "context",
    "title": "Testing the VS Code extension — What is tested",
    "summary": "What is tested",
    "body": [
-    "| The notifications' rules | what pops up for each `nuclear.notifications`, a notice seen by its tool or place, a repeat folded, the badges, which chat events call the user (direct messages, `@you`, questions, an answer's end; never the user's own, `system`, an edit, a run's progress or question) | `npm test` → `test/notify.test.ts`; the strip and the Builder's page by hand in a headless browser |",
-    "| Nuclear Chat's host | the relay of the pages' frames (ids apart, the token added, one subscription per topic), the host file → the registration, a run's posts and buttons, a spec draft's difference, the connection against a fake socket (registered again and caught up after a reconnection; a service down answered 503 with how to fix it) | `npm test` → `test/chat.test.ts`; against the real service, by hand from Node (spec 013 T3.2's check) |",
-    "| HTTP Connections' WebSockets | the contract's WebSocket fields read tolerantly, the tree's `WS` badges and events, the ws:// urls of an environment, the urls and `{{var}}`, the message log and history (also from their source, as the page runs them), the page's script, a real socket against an echo server (the guard's header sent, no `Origin`) | `npm test` → `../tools/nuclear-http-connections/test/sockets.test.ts` (its own stub, `test/vscode-stub.ts`) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.efc17f",
-   "type": "context",
-   "title": "Testing the VS Code extension — What is tested",
-   "summary": "What is tested",
-   "body": [
+    "| The Nuclear workspaces (spec 022) | `nuclear workspace … --json` parsed (the last JSON line, `null`, `{error}`, an older `nuclear`'s usage), the recent list (first, once, at most 10, only those still there), the projects opened by hand kept per folder until 0.83 joining the global list (fixtures `global-state-0.62.json`, `workspace-state-0.83.json`), the empty panel's reason, the dialects of a platform | `npm test` → `test/workspaces.test.ts` |",
     "| Spanish everywhere | every key of `package.nls.json` in `package.nls.es.json`; every `l10n.t('…')` literal of `src/` and `../tools/*/src` (and the backend scripts' details) in `l10n/bundle.l10n.es.json`; every page dictionary's `es` with every key of its `en` (nested ones too), and no file with a dictionary left out of the test | `npm test` → `test/l10n.test.ts` |",
-    "| No local models (ADR-platform-0013) | no contributed setting (its id, its texts in English and Spanish) nor the Settings and integrations page names Ollama, a local model or profile, the Nuclear Developer or `contextTokens`; the Smart Graph's settings stay | `npm test` → `test/no-local.test.ts`; the old values in `../tools/nuclear-builder/test/compat.test.ts` |",
-    "| The toolchains | the variables the settings give `nuclear` (a Flutter executable or SDK root, the included Python by default, the user's own variables kept), where each is found (setting → variable → NuclearLang's own → PATH, Windows' extensions), `nuclear doctor --json` and an older CLI without it | `npm test` → `test/toolchains.test.ts`; the welcome's step and the settings' section by hand in a headless browser |"
+    "| No local models (ADR-platform-0013) | no contributed setting (its id, its texts in English and Spanish) nor the Settings and integrations page names Ollama, a local model or profile, the Nuclear Developer or `contextTokens`; the Smart Graph's settings stay | `npm test` → `test/no-local.test.ts`; the old values in `../tools/nuclear-builder/test/compat.test.ts` |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested.e6def1",
+   "type": "context",
+   "title": "Testing the VS Code extension — What is tested",
+   "summary": "What is tested",
+   "body": [
+    "| HTTP Connections' WebSockets | the contract's WebSocket fields read tolerantly, the tree's `WS` badges and events, the ws:// urls of an environment, the urls and `{{var}}`, the message log and history (also from their source, as the page runs them), the page's script, a real socket against an echo server (the guard's header sent, no `Origin`) | `npm test` → `../tools/nuclear-http-connections/test/sockets.test.ts` (its own stub, `test/vscode-stub.ts`) |",
+    "| The Builder's engine | the stations, the gates, the checks, the money, the delivery, the safety | Nuclear's tests: `../tools/nuclear-builder/tests/test_factory.nuc` and the others there (pytest, in its `build/`) |",
+    "| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems, the ports, the AI archive's launchers; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `setup.json` says | Nuclear's tests: `../tools/nuclear-builder/tests/test_setup.nuc` (pytest, in its `build/`) |",
+    "| The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |",
+    "| The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |"
    ],
    "sources": [
     "extensions/vscode/docs/05-standards/testing.md"

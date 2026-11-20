@@ -305,6 +305,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.1cdaa2",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix (VS Code): the onboarding is resumed where it was after *This window* reloads the editor, a new window or a closed editor (its progress kept by the editor and saved before the reload), the AI services' set-up is its last step until it is finished or declined, and a 0.84.0 welcome never finished comes back once; Nuclear Atlas's chat works before there is an app (on the workspace's folder).",
+    "- The editor's Nuclear workspaces (spec 022, VS Code): the workspace holding VS Code's folder (else the last one opened) with its apps as the strip's tabs, the recent workspaces and the projects opened by hand kept by the editor (never lost when VS Code changes folder), *Create / Open a Workspace*, *Add / Remove / Rename an App*, an empty panel that says why, and a welcome in three steps (the workspace, its apps, a tour of each tool) with *Do it with me by chat* through Nuclear Atlas and the MCP server. Nuclear Builder shows a spec written by the MCP server at once. The tutorial and the Synapsis guide start from a workspace, by chat."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.4ab0cc",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -338,25 +356,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- ADR-platform-0003: any step, stage or run of the Builder runs again (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`), each step keeps the decisions it took and why, the run is drawn as a graph, and the acceptance criteria are held against what the run left (`docs/ai/loop.md`).",
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.609d87",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "tdin` and its tool `spec_update` (the user's).",
-   "body": [
-    "tdin` and its tool `spec_update` (the user's). What an agent cannot do yet through the server: `docs/04-specs/022-workspaces-and-mcp/mcp-coverage.md`.",
-    "- A service that does not answer at the end of the set-up (found on a new Mac: Nuclear Chat) is waited for, started again and, when another program holds its port without answering, moved to a free port; the port of our own service that is still starting is no longer moved under it; another copy of a service (an older version's, a source install's, one started by hand) is stopped, so one runs; a failure shows the service's own last lines. `installer/tests/stack.sh` checks the stack a real machine is left with.",
-    "- The delivery gate: `installer/release/delivery.sh <version>` must pass before a tag (version check, `cargo test`, clippy with 0 warnings, the VS Code extension's compile and tests, Nuclear Builder's, the MCP server's and the backend runtimes' tests, the website exactly as its workflow, `knowledge check`, the archive and every installer test), and `installer/release/after-release.sh <version>` after it (every workflow green, every asset, the site serving the tag's installers, the public one-liner and an update from the previous release in a fake HOME)."
-   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -432,13 +431,13 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.b00ac5",
+   "id": "doc:CHANGELOG.md#unreleased.a6f30f",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
-    "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
+    "- A service that does not answer at the end of the set-up (found on a new Mac: Nuclear Chat) is waited for, started again and, when another program holds its port without answering, moved to a free port; the port of our own service that is still starting is no longer moved under it; another copy of a service (an older version's, a source install's, one started by hand) is stopped, so one runs; a failure shows the service's own last lines. `installer/tests/stack.sh` checks the stack a real machine is left with.",
+    "- The delivery gate: `installer/release/delivery.sh <version>` must pass before a tag (version check, `cargo test`, clippy with 0 warnings, the VS Code extension's compile and tests, Nuclear Builder's, the MCP server's and the backend runtimes' tests, the website exactly as its workflow, `knowledge check`, the archive and every installer test), and `installer/release/after-release.sh <version>` after it (every workflow green, every asset, the site serving the tag's installers, the public one-liner and an update from the previous release in a fake HOME)."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -450,13 +449,13 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.b836c2",
+   "id": "doc:CHANGELOG.md#unreleased.b00ac5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- The editor's Nuclear workspaces (spec 022, VS Code): the workspace holding VS Code's folder (else the last one opened) with its apps as the strip's tabs, the recent workspaces and the projects opened by hand kept by the editor (never lost when VS Code changes folder), *Create / Open a Workspace*, *Add / Remove / Rename an App*, an empty panel that says why, and a welcome in three steps (the workspace, its apps, a tour of each tool) with *Do it with me by chat* through Nuclear Atlas and the MCP server. Nuclear Builder shows a spec written by the MCP server at once. The tutorial and the Synapsis guide start from a workspace, by chat.",
-    "- The MCP server organizes the user's work (spec 022): `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove` (`nuclear workspace`); `spec_create`, `spec_list`, `spec_show`, `spec_edit` (written where Nuclear Builder reads them); `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set` (never a local member). Every change asks the user first: MCP elicitation, or for a client without it a preview and a `confirm` token valid once for 5 minutes for that exact change. A folder is deleted only when the call says so. Its instructions and `nuclear_start` start the work from a workspace. Nuclear Builder has `spec update <id> --s"
+    "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
+    "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -481,6 +480,21 @@
     "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
     "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.fb5680",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- The MCP server organizes the user's work (spec 022): `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove` (`nuclear workspace`); `spec_create`, `spec_list`, `spec_show`, `spec_edit` (written where Nuclear Builder reads them); `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set` (never a local member). Every change asks the user first: MCP elicitation, or for a client without it a preview and a `confirm` token valid once for 5 minutes for that exact change. A folder is deleted only when the call says so. Its instructions and `nuclear_start` start the work from a workspace. Nuclear Builder has `spec update <id> --stdin` and its tool `spec_update` (the user's). What an agent cannot do yet through the server: `docs/04-specs/022-workspaces-and-mcp/mcp-coverage.md`.",
    "sources": [
     "CHANGELOG.md"
    ],

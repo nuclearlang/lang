@@ -72,6 +72,214 @@
    }
   },
   {
+   "id": "mcp:app_add",
+   "type": "mcp",
+   "title": "`app_add` — a tool of the Nuclear MCP server",
+   "summary": "Add an app to a workspace: `nuclear new` makes it in a folder of the workspace and the marker names it.",
+   "body": [
+    "Add an app to a workspace: `nuclear new` makes it in a folder of the workspace and the marker names it. app: its name (its folder); platform: mobile, web or backend; dialect: optional (the platform's default). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string",
+    "- `app`: string",
+    "- `platform`: string",
+    "- `dialect`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "app_add",
+    "app add"
+   ],
+   "asks": [
+    "what does app_add do",
+    "que hace app_add"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "app_add"
+   },
+   "data": {
+    "group": "app",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "app",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "platform",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "dialect",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:app_remove",
+   "type": "mcp",
+   "title": "`app_remove` — a tool of the Nuclear MCP server",
+   "summary": "Remove an app from a workspace (the marker stops naming it); its folder is deleted only with delete_folder true (every file in it: only when the user asked for it).",
+   "body": [
+    "Remove an app from a workspace (the marker stops naming it); its folder is deleted only with delete_folder true (every file in it: only when the user asked for it). Asks the user first, saying which (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string",
+    "- `app`: string",
+    "- `delete_folder`: boolean = `false`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "app_remove",
+    "app remove"
+   ],
+   "asks": [
+    "what does app_remove do",
+    "que hace app_remove"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "app_remove"
+   },
+   "data": {
+    "group": "app",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "app",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "delete_folder",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:app_rename",
+   "type": "mcp",
+   "title": "`app_rename` — a tool of the Nuclear MCP server",
+   "summary": "Rename an app of a workspace (new_name: its new name).",
+   "body": [
+    "Rename an app of a workspace (new_name: its new name). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string",
+    "- `app`: string",
+    "- `new_name`: string",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "app_rename",
+    "app rename"
+   ],
+   "asks": [
+    "what does app_rename do",
+    "que hace app_rename"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "app_rename"
+   },
+   "data": {
+    "group": "app",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "app",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "new_name",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:generate_component",
    "type": "mcp",
    "title": "`generate_component` — a tool of the Nuclear MCP server",
@@ -788,6 +996,284 @@
    }
   },
   {
+   "id": "mcp:member_add",
+   "type": "mcp",
+   "title": "`member_add` — a tool of the Nuclear MCP server",
+   "summary": "Hire members into a team: role (analyst, architect, developer, qa, devops), and optionally employee (of the roster), kind (agent or api), provider, model (one this machine has), name, count.",
+   "body": [
+    "Hire members into a team: role (analyst, architect, developer, qa, devops), and optionally employee (of the roster), kind (agent or api), provider, model (one this machine has), name, count. Never the local kind (the local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `role`: string",
+    "- `employee`: string = `\"\"`",
+    "- `kind`: string = `\"\"`",
+    "- `provider`: string = `\"\"`",
+    "- `model`: string = `\"\"`",
+    "- `name`: string = `\"\"`",
+    "- `count`: integer = `1`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "member_add",
+    "member add"
+   ],
+   "asks": [
+    "what does member_add do",
+    "que hace member_add"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "member_add"
+   },
+   "data": {
+    "group": "member",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "role",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "employee",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "kind",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "provider",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "model",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "count",
+      "type": "integer",
+      "required": false,
+      "default": "1"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:member_edit",
+   "type": "mcp",
+   "title": "`member_edit` — a tool of the Nuclear MCP server",
+   "summary": "Change a member of a team (member: its id in the team): who works it (kind agent or api, provider, model), its employee, name, instructions, temperament or skills (the whole list).",
+   "body": [
+    "Change a member of a team (member: its id in the team): who works it (kind agent or api, provider, model), its employee, name, instructions, temperament or skills (the whole list). Never the local kind (the local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `member`: string",
+    "- `kind`: string = `\"\"`",
+    "- `provider`: string = `\"\"`",
+    "- `model`: string = `\"\"`",
+    "- `employee`: string = `\"\"`",
+    "- `name`: string = `\"\"`",
+    "- `instructions`: string = `\"\"`",
+    "- `temperament`: string = `\"\"`",
+    "- `skills`: any = `null`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "member_edit",
+    "member edit"
+   ],
+   "asks": [
+    "what does member_edit do",
+    "que hace member_edit"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "member_edit"
+   },
+   "data": {
+    "group": "member",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "member",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "kind",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "provider",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "model",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "employee",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "instructions",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "temperament",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "skills",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:member_remove",
+   "type": "mcp",
+   "title": "`member_remove` — a tool of the Nuclear MCP server",
+   "summary": "Let a member go (member: its id in the team).",
+   "body": [
+    "Let a member go (member: its id in the team). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `member`: string",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "member_remove",
+    "member remove"
+   ],
+   "asks": [
+    "what does member_remove do",
+    "que hace member_remove"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "member_remove"
+   },
+   "data": {
+    "group": "member",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "member",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:nuclear_brief",
    "type": "mcp",
    "title": "`nuclear_brief` — a tool of the Nuclear MCP server",
@@ -1494,13 +1980,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 27 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 47 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
-    "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
+    "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`."
    ],
    "keys": [
     "mcp",
@@ -1514,6 +2000,656 @@
    "meta": {
     "tool": "mcp",
     "name": "server"
+   }
+  },
+  {
+   "id": "mcp:skills_set",
+   "type": "mcp",
+   "title": "`skills_set` — a tool of the Nuclear MCP server",
+   "summary": "Set the library skills of a team (every member inherits them) or, with member, of one member: skills is the whole list of skill ids (Nuclear Builder's `skills list` names them).",
+   "body": [
+    "Set the library skills of a team (every member inherits them) or, with member, of one member: skills is the whole list of skill ids (Nuclear Builder's `skills list` names them). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `skills`: array",
+    "- `member`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "skills_set",
+    "skills set"
+   ],
+   "asks": [
+    "what does skills_set do",
+    "que hace skills_set"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "skills_set"
+   },
+   "data": {
+    "group": "skills",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "skills",
+      "type": "array",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "member",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:spec_create",
+   "type": "mcp",
+   "title": "`spec_create` — a tool of the Nuclear MCP server",
+   "summary": "Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its business component (a folder of components/, or _global for the whole project), its acceptance criteria (each one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature, refactor, bug, test, security,…",
+   "body": [
+    "Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its business component (a folder of components/, or _global for the whole project), its acceptance criteria (each one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature, refactor, bug, test, security, docs, diagram) and its description; or text: the spec's whole markdown, from its `# title`. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `component`: string",
+    "- `title`: string",
+    "- `criteria`: any = `null`",
+    "- `layer`: string = `\"\"`",
+    "- `use_case`: string = `\"feature\"`",
+    "- `description`: string = `\"\"`",
+    "- `text`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "spec_create",
+    "spec create"
+   ],
+   "asks": [
+    "what does spec_create do",
+    "que hace spec_create"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "spec_create"
+   },
+   "data": {
+    "group": "spec",
+    "runs": "",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "component",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "title",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "criteria",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "layer",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "use_case",
+      "type": "string",
+      "required": false,
+      "default": "\"feature\""
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "text",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:spec_edit",
+   "type": "mcp",
+   "title": "`spec_edit` — a tool of the Nuclear MCP server",
+   "summary": "Replace the text of a spec (its whole markdown, from its `# title`; spec_show gives the current one).",
+   "body": [
+    "Replace the text of a spec (its whole markdown, from its `# title`; spec_show gives the current one). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `id`: string",
+    "- `text`: string",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "spec_edit",
+    "spec edit"
+   ],
+   "asks": [
+    "what does spec_edit do",
+    "que hace spec_edit"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "spec_edit"
+   },
+   "data": {
+    "group": "spec",
+    "runs": "",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "id",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "text",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:spec_list",
+   "type": "mcp",
+   "title": "`spec_list` — a tool of the Nuclear MCP server",
+   "summary": "The specs of a project, by component and layer, with their runs.",
+   "body": [
+    "The specs of a project, by component and layer, with their runs.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string"
+   ],
+   "keys": [
+    "spec_list",
+    "spec list"
+   ],
+   "asks": [
+    "what does spec_list do",
+    "que hace spec_list"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "spec_list"
+   },
+   "data": {
+    "group": "spec",
+    "runs": "",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:spec_show",
+   "type": "mcp",
+   "title": "`spec_show` — a tool of the Nuclear MCP server",
+   "summary": "One spec of a project: its markdown, what it says (title, criteria...), its draft when it has one, its run's status.",
+   "body": [
+    "One spec of a project: its markdown, what it says (title, criteria...), its draft when it has one, its run's status.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `id`: string"
+   ],
+   "keys": [
+    "spec_show",
+    "spec show"
+   ],
+   "asks": [
+    "what does spec_show do",
+    "que hace spec_show"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "spec_show"
+   },
+   "data": {
+    "group": "spec",
+    "runs": "",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "id",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:team_create",
+   "type": "mcp",
+   "title": "`team_create` — a tool of the Nuclear MCP server",
+   "summary": "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the default external agent.",
+   "body": [
+    "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the default external agent. Members are never of the local kind (the local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `name`: string",
+    "- `purpose`: string = `\"\"`",
+    "- `description`: string = `\"\"`",
+    "- `skills`: any = `null`",
+    "- `members`: any = `null`",
+    "- `budget_usd`: any = `null`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "team_create",
+    "team create"
+   ],
+   "asks": [
+    "what does team_create do",
+    "que hace team_create"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "team_create"
+   },
+   "data": {
+    "group": "team",
+    "runs": "",
+    "params": [
+     {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "purpose",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "skills",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "members",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "budget_usd",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:team_delete",
+   "type": "mcp",
+   "title": "`team_delete` — a tool of the Nuclear MCP server",
+   "summary": "Delete a team (its file is kept as <id>.json.bak).",
+   "body": [
+    "Delete a team (its file is kept as <id>.json.bak). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "team_delete",
+    "team delete"
+   ],
+   "asks": [
+    "what does team_delete do",
+    "que hace team_delete"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "team_delete"
+   },
+   "data": {
+    "group": "team",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:team_edit",
+   "type": "mcp",
+   "title": "`team_edit` — a tool of the Nuclear MCP server",
+   "summary": "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead) or budget_usd.",
+   "body": [
+    "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead) or budget_usd. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string",
+    "- `name`: string = `\"\"`",
+    "- `description`: string = `\"\"`",
+    "- `purpose`: string = `\"\"`",
+    "- `skills`: any = `null`",
+    "- `lead`: string = `\"\"`",
+    "- `budget_usd`: any = `null`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "team_edit",
+    "team edit"
+   ],
+   "asks": [
+    "what does team_edit do",
+    "que hace team_edit"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "team_edit"
+   },
+   "data": {
+    "group": "team",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "purpose",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "skills",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "lead",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "budget_usd",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:team_list",
+   "type": "mcp",
+   "title": "`team_list` — a tool of the Nuclear MCP server",
+   "summary": "The teams: id, name, members, the default one.",
+   "body": "The teams: id, name, members, the default one.",
+   "keys": [
+    "team_list",
+    "team list"
+   ],
+   "asks": [
+    "what does team_list do",
+    "que hace team_list"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "team_list"
+   },
+   "data": {
+    "group": "team",
+    "runs": "",
+    "params": []
+   }
+  },
+  {
+   "id": "mcp:team_show",
+   "type": "mcp",
+   "title": "`team_show` — a tool of the Nuclear MCP server",
+   "summary": "One team: its members (each its id, role, employee, who works it), purpose, skills, tech lead, budget.",
+   "body": [
+    "One team: its members (each its id, role, employee, who works it), purpose, skills, tech lead, budget.",
+    "",
+    "Parameters:",
+    "",
+    "- `team`: string"
+   ],
+   "keys": [
+    "team_show",
+    "team show"
+   ],
+   "asks": [
+    "what does team_show do",
+    "que hace team_show"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "team_show"
+   },
+   "data": {
+    "group": "team",
+    "runs": "",
+    "params": [
+     {
+      "name": "team",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
    }
   },
   {
@@ -1611,6 +2747,246 @@
       "type": "integer",
       "required": false,
       "default": "2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:workspace_create",
+   "type": "mcp",
+   "title": "`workspace_create` — a tool of the Nuclear MCP server",
+   "summary": "Create a workspace: a folder that organizes one business project and the apps that form it, recognized by its marker `.workspace/workspace.nuc` (the editor, this server and the agents start from it).",
+   "body": [
+    "Create a workspace: a folder that organizes one business project and the apps that form it, recognized by its marker `.workspace/workspace.nuc` (the editor, this server and the agents start from it). path: where (the folder is made); name (default: the folder's name) and description. Start every new product here, then app_add its apps. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `path`: string",
+    "- `name`: string = `\"\"`",
+    "- `description`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "workspace_create",
+    "workspace create"
+   ],
+   "asks": [
+    "what does workspace_create do",
+    "que hace workspace_create"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "workspace_create"
+   },
+   "data": {
+    "group": "workspace",
+    "runs": "",
+    "params": [
+     {
+      "name": "path",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:workspace_delete",
+   "type": "mcp",
+   "title": "`workspace_delete` — a tool of the Nuclear MCP server",
+   "summary": "Stop a folder being a workspace: its marker `.workspace/workspace.nuc` is removed; its apps' folders stay unless delete_folders is true (then every app's folder is deleted, with all its files: only when the user asked for it).",
+   "body": [
+    "Stop a folder being a workspace: its marker `.workspace/workspace.nuc` is removed; its apps' folders stay unless delete_folders is true (then every app's folder is deleted, with all its files: only when the user asked for it). Asks the user first, saying which (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string",
+    "- `delete_folders`: boolean = `false`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "workspace_delete",
+    "workspace delete"
+   ],
+   "asks": [
+    "what does workspace_delete do",
+    "que hace workspace_delete"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "workspace_delete"
+   },
+   "data": {
+    "group": "workspace",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "delete_folders",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:workspace_edit",
+   "type": "mcp",
+   "title": "`workspace_edit` — a tool of the Nuclear MCP server",
+   "summary": "Rename a workspace or change its description (its marker).",
+   "body": [
+    "Rename a workspace or change its description (its marker). workspace: its folder or one inside it. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string",
+    "- `name`: string = `\"\"`",
+    "- `description`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "workspace_edit",
+    "workspace edit"
+   ],
+   "asks": [
+    "what does workspace_edit do",
+    "que hace workspace_edit"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "workspace_edit"
+   },
+   "data": {
+    "group": "workspace",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:workspace_show",
+   "type": "mcp",
+   "title": "`workspace_show` — a tool of the Nuclear MCP server",
+   "summary": "A workspace and its apps: {root, name, description, apps: [{name, folder, platform, dialect, exists}]}.",
+   "body": [
+    "A workspace and its apps: {root, name, description, apps: [{name, folder, platform, dialect, exists}]}. workspace: its folder or any folder inside it. Read it first: the apps are the projects to work in.",
+    "",
+    "Parameters:",
+    "",
+    "- `workspace`: string"
+   ],
+   "keys": [
+    "workspace_show",
+    "workspace show"
+   ],
+   "asks": [
+    "what does workspace_show do",
+    "que hace workspace_show"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "workspace_show"
+   },
+   "data": {
+    "group": "workspace",
+    "runs": "",
+    "params": [
+     {
+      "name": "workspace",
+      "type": "string",
+      "required": true,
+      "default": ""
      }
     ]
    }
