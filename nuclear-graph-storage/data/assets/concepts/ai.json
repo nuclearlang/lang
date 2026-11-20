@@ -360,7 +360,7 @@
     "",
     "**On standby.** The profiles `lite`, `medium` and `hard` (Ollama, the Nuclear Developer, the local chat model) stay in Nuclear Builder's data and code but are not offered: `nuclear-builder setup --profile lite` exits with code 2 and says they are on standby; an installer given one takes `remote` and says so. Turning them on again is a decision of the user (`localModels` in Nuclear Builder's `setup.json`).",
     "",
-    "**An earlier local profile.** The set-up's first step, *Take away the local models (on standby)*, removes the Developer's service and launcher, the models NuclearLang pulled and Ollama when NuclearLang installed it (what was there before stays), writes `ai.env` as `remote` and says the GB freed.",
+    "**An earlier local profile.** The set-up's first step, *Take away the local models NuclearLang no longer uses*, removes the Developer's service and launcher, the models NuclearLang pulled and Ollama when NuclearLang installed it (what was there before stays), writes `ai.env` as `remote` and says the GB freed.",
     "",
     "**What the set-up needs**: NuclearLang with its AI archive (a Python of its own with the services and the set-up, written in Nuclear: no Python, uv or Node.js on the machine). From the source tree it also needs `uv`.",
     "",

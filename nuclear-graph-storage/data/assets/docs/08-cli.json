@@ -1162,6 +1162,30 @@
    }
   },
   {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.36e101",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal); piped, it is plain text.",
+   "body": [
+    "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);",
+    "piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows",
+    "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns",
+    "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
+    "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
+    "(`STEP_ABOUT`) and a bar when its output says a percent; everything a step says goes to",
+    "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
+    "its last lines, the error and what to do, never a traceback."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1180,29 +1204,6 @@
     "| The commands | links in `~/.local/bin` (`NUCLEAR_BIN`) | the installation's `bin` |",
     "| The PATH | a marked line in `.bashrc`, `.zshrc`, `.profile`; a `conf.d` file for fish | the user's `Path` |",
     "| Options | `--version <v>`, `--no-modify-path`, `--no-vscode`, `--no-agent`, `--no-ai`, `--profile <id>`, `--uninstall` | `-Version`, `-NoModifyPath`, `-NoVSCode`, `-NoAgent`, `-NoAi`, `-AiProfile`, `-Uninstall` |"
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.8c5b98",
-   "type": "context",
-   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "piped, it is plain text.",
-   "body": [
-    "piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows",
-    "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns",
-    "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
-    "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
-    "(`STEP_ABOUT`) and a bar when its output says a percent; everything a step says goes to",
-    "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
-    "its last lines, the error and what to do, never a traceback."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1289,7 +1290,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.d93393",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.d7eae2",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
    "summary": "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in yellow, Synapsis in purple, the version and the system.",
@@ -1300,12 +1301,11 @@
     "braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,",
     "and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`",
     "(yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the",
-    "file is not published, not that the connection failed). The AI services' question is a box of what they are. At the",
-    "end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns); when an",
-    "editor got the extension, a header box with READY in pixel letters names those editors (VS Code, Cursor...) and a",
-    "yellow box says how to start in them (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme",
-    "Chernobyl Soft, the agent's MCP server); then a green box: the command, the AI services, what to run first. `install.sh` colors",
-    "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);"
+    "file is not published, not that the connection failed). The sign and the motto are shown once, in the header (the",
+    "user, 2026-11-20: no second banner, no intro, no ADR or internal note in what the user reads; a line longer than a box",
+    "keeps its text whole without the right border, a note is wrapped to the box). At the end, when an editor got the",
+    "extension, a yellow box says how to start in it (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme",
+    "Chernobyl Soft, the agent's MCP server); then a green box: the command, the AI services, what to run first. `install.sh` colors"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1988,7 +1988,7 @@
    "title": "What the installer installs, what is yours to choose, and what it never installs — Updates",
    "summary": "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).",
    "body": [
-    "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).",
+    "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`). With that release already here (NuclearLang and its AI services) it says so and runs nothing; `nuclear update --reinstall` (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`) installs it again.",
     "An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).",
     "When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;",
     "a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;",
@@ -2546,6 +2546,7 @@
    "title": "Changelog — Unreleased",
    "summary": "(`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby.",
    "body": [
+    "- `nuclear update` with the latest release already here says so and runs nothing (it ran the whole installer again); `nuclear update --reinstall` installs it all the same (`NUCLEAR_REINSTALL=1` for the installers).",
     "- Fix (macOS): `nuclear update` said \"this nuclear was not installed by the NuclearLang installer\", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.",
     "- The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer",
     "  (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The",
@@ -3422,22 +3423,16 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.2d5f14",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.214c63",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
-   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`,…",
+   "summary": "One binary, two sets of commands (ADR-cli-0003)",
    "body": [
-    "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,",
-    "`run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,",
-    "`clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
-    "page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a",
-    "project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both",
-    "usages, the framework's under \"projects of the framework\".",
-    "",
-    "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the",
-    "installed command, as a program). Both sets use the language crates as a library (`nuclear_transpile::project`,",
-    "`nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`); the framework's also `nuclear_codegen` and",
-    "`nuclear_devices`."
+    "| Commands | Code | What they are for |",
+    "|---|---|---|",
+    "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
+    "| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |",
+    "| Update | `src/update.rs` | `nuclear update [--reinstall]` (the public installer run again for this installation; nothing when the latest release and its AI services are already here, `--reinstall` passes `NUCLEAR_REINSTALL=1`) and the question before a command in a terminal when a newer release is out: the check at most once a day, waiting at most 3 seconds; the installation is the folder above the binary's `bin/`, found after resolving the installer's link (macOS gives the link's path) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3449,17 +3444,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.658990",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.ddcad3",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
-   "summary": "One binary, two sets of commands (ADR-cli-0003)",
+   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`,…",
    "body": [
-    "| Commands | Code | What they are for |",
-    "|---|---|---|",
-    "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
-    "| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |",
-    "| Update | `src/update.rs` | `nuclear update` (the public installer run again for this installation) and the question before a command in a terminal when a newer release is out: the check at most once a day, waiting at most 3 seconds; the installation is the folder above the binary's `bin/`, found after resolving the installer's link (macOS gives the link's path) |",
-    "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |"
+    "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |",
+    "",
+    "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,",
+    "`run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,",
+    "`clean`, `repair`, `explain`, `monitor`, `env`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
+    "page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a",
+    "project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both",
+    "usages, the framework's under \"projects of the framework\".",
+    "",
+    "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the",
+    "installed command, as a program). Both sets use the language crates as a library (`nuclear_transpile::project`,",
+    "`nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`); the framework's also `nuclear_codegen` and",
+    "`nuclear_devices`."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -4063,12 +4065,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.05e09e",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4af433",
    "type": "guide",
    "title": "Every command of `nuclear` — The compiler's commands",
    "summary": "nuclear agent init [--dialect <name>] AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents nuclear agent hook (the hook: checks the .nuc an agent edited; reads the tool call on stdin) nuclear contracts list the contracts the project (current folder) declares and their state…",
    "body": [
-    "nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
+    "--brief: the short sheet (what changes from TS/Dart)",
+    "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
     "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
     "  nuclear contracts list                                      the contracts the project (current folder) declares and their state",
     "  nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
@@ -4076,13 +4079,7 @@
     "  nuclear defs list [--dialect <name>]                        list the type definitions packages (all, or the dialect's)",
     "  nuclear defs show <Name|Name.member> --dialect <name> [--json] [--inherited]",
     "                                                              print a declaration of the type definitions",
-    "  nuclear defs search <text> --dialect <name>                 find declarations whose name contains <text>",
-    "",
-    "options:",
-    "  --dialect-path <dir>   extra directory with dialects (repeatable; also $NUCLEAR_DIALECT_PATH, ':'-separated)",
-    "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
-    "                         folder next to each dialects/ folder is always searched",
-    "```"
+    "  nuclear defs search <text> --dialect <name>                 find declarations whose name contains <text>"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4094,41 +4091,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.207bf8",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear update install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never) nuclear help…",
-   "body": [
-    "```text",
-    "usage:",
-    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
-    "  nuclear update                                              install the latest release (the installer, run again); in a terminal every",
-    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
-    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
-    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
-    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
-    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
-    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
-    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
-    "                                                              fixes), then report what is left",
-    "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.8d19dd",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4b4922",
    "type": "guide",
    "title": "Every command of `nuclear` — The compiler's commands",
    "summary": "(the Nuclear of a platform is the same in all of them) nuclear fmt <file.nuc|folder>... [--check] rewrite the files in the canonical layout (spacing, indentation, blank lines; never reorders); --check only lists the files that would change (exit 1) nuclear tokens <file.nuc> print the tokens…",
    "body": [
-    "(the Nuclear of a platform is the same in all of them)",
+    "--platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
+    "                                                              (the Nuclear of a platform is the same in all of them)",
     "  nuclear fmt <file.nuc|folder>... [--check]                  rewrite the files in the canonical layout (spacing,",
     "                                                              indentation, blank lines; never reorders); --check",
     "                                                              only lists the files that would change (exit 1)",
@@ -4138,8 +4107,57 @@
     "  nuclear dialect check <name|path> [--json]                  validate a dialect's files",
     "  nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
     "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
-    "                                                              with --dialect, also the spec of the dialect and its parents;",
-    "                                                              --brief: the short sheet (what changes from TS/Dart)"
+    "                                                              with --dialect, also the spec of the dialect and its parents;"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4c10e7",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear update [--reinstall] install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer…",
+   "body": [
+    "```text",
+    "usage:",
+    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
+    "  nuclear update [--reinstall]                                install the latest release (the installer, run again; nothing when it is",
+    "                                                              already here, --reinstall: all the same); in a terminal every",
+    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
+    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
+    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
+    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
+    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
+    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
+    "                                                              fixes), then report what is left"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.681917",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "options: folder next to each dialects/ folder is always searched",
+   "body": [
+    "options:",
+    "  --dialect-path <dir>   extra directory with dialects (repeatable; also $NUCLEAR_DIALECT_PATH, ':'-separated)",
+    "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
+    "                         folder next to each dialects/ folder is always searched",
+    "```"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

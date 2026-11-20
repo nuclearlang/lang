@@ -471,6 +471,8 @@
    "body": [
     "One key answers; no key in 15 seconds goes on (a script in a terminal is never stopped); `l` waits a day. The check runs at most once a day (curl, or wget): the first command of the day waits at most 3 seconds for it, so the first run after an install already asks, and offline the command goes on. It never asks in editors, agents, pipes, CI, `make`, npm scripts or under `sudo`. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
     "",
+    "With the latest release already here (NuclearLang and its AI services), `nuclear update` says so and runs nothing; `nuclear update --reinstall` installs it again all the same (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`).",
+    "",
     "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built. One install runs at a time."
    ],
    "keys": [
