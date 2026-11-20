@@ -15,6 +15,9 @@
 # the install ends incomplete. Run it again at any time: what the same version installed is kept (-Reinstall
 # replaces it). A platform's toolchain (Flutter, Node.js) is never installed here: the summary says where to get it.
 #
+# One install runs at a time. `nuclear update` runs it with NUCLEAR_UPDATE=1, which keeps the choices of the last
+# install (-NoVSCode, -NoAgent, -NoModifyPath).
+#
 # Environment: NUCLEAR_VERSION, NUCLEAR_INSTALL (the folder), NUCLEAR_REPO (owner/name), NUCLEAR_DOWNLOAD (a mirror),
 # NUCLEAR_AI_PROFILE.
 param(
@@ -34,6 +37,17 @@ $ProgressPreference = 'SilentlyContinue'
 $Repo = if ($env:NUCLEAR_REPO) { $env:NUCLEAR_REPO } else { 'nuclearlang/lang' }
 $Install = if ($env:NUCLEAR_INSTALL) { $env:NUCLEAR_INSTALL } else { Join-Path $env:LOCALAPPDATA 'nuclearlang' }
 $Bin = Join-Path $Install 'bin'
+# an update (`nuclear update`, NUCLEAR_UPDATE=1) keeps the choices of the last install
+$Options = Join-Path $Install '.options'
+if ($env:NUCLEAR_UPDATE -eq '1' -and (Test-Path $Options)) {
+  foreach ($line in Get-Content $Options) {
+    switch ($line) {
+      'NoVSCode=1' { $NoVSCode = [switch]$true }
+      'NoAgent=1' { $NoAgent = [switch]$true }
+      'NoModifyPath=1' { $NoModifyPath = [switch]$true }
+    }
+  }
+}
 $SkillDirs = @('.claude\skills', '.agents\skills', '.codex\skills') | ForEach-Object { Join-Path $HOME $_ }
 
 function Set-UserPath([string[]]$Parts) {
@@ -200,6 +214,7 @@ if ($Uninstall) {
   if (Test-Path $Builder) { & $Builder setup --remove --all | Out-Null; Ok 'The AI services, with the models and data their set-up made' }
   Stop-Under $Install
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
+  Remove-Item -Force (Join-Path (Split-Path $Install) 'nuclearlang-install.lock') -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:APPDATA 'nuclearlang') -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:USERPROFILE '.cache\nuclearlang') -ErrorAction SilentlyContinue
   foreach ($d in $SkillDirs) { Remove-Item -Recurse -Force (Join-Path $d 'nuclear') -ErrorAction SilentlyContinue }
@@ -214,6 +229,11 @@ if ($Uninstall) {
   Write-Host ''
   return
 }
+
+# one install at a time: the lock is a file held open until this run ends (a run that died lets it go by itself)
+$LockFile = Join-Path (Split-Path $Install) 'nuclearlang-install.lock'
+try { $Lock = [IO.File]::Open($LockFile, 'OpenOrCreate', 'ReadWrite', 'None') }
+catch { Write-Host 'Another NuclearLang install is running: wait for it to end, then run this again.'; Quit 1 }
 
 # --- this system ---
 $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
@@ -268,6 +288,8 @@ try {
   Set-Content -Path (Join-Path $Install '.version') -Value $Version -Encoding ascii
   Ok "Installed in $Install"
   }
+  # the choices of this install, kept by the next update
+  Set-Content -Path $Options -Encoding ascii -Value @("NoVSCode=$([int][bool]$NoVSCode)", "NoAgent=$([int][bool]$NoAgent)", "NoModifyPath=$([int][bool]$NoModifyPath)")
 
   if (-not $NoAgent) {
     foreach ($d in $SkillDirs) {

@@ -50,7 +50,9 @@ its `.sha256` and `installer/dist/latest`.
 
 ## Test an installer without touching your machine
 
-**Never run `--uninstall` or a public installer against your real `HOME`.** Two ways:
+**Never run `--uninstall` or a public installer against your real `HOME`.** First `installer/tests/run.sh`: the
+failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken
+binary, uninstall), in seconds, against `package.sh`'s archive. Then, for the AI services, two ways:
 
 - **A fake `HOME` and a mirror.** Serve `installer/dist/` over HTTP on this machine and run the installer with
   `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the

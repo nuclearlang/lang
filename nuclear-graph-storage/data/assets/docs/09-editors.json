@@ -4660,24 +4660,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.51928d",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them. At start the extension compares its version with the installed NuclearLang (`.version`, and `ai/.version`): an extension the store updated alone offers *Update NuclearLang* (`nuclear update`, the newest release whole), an older one offers the extension of the installed release, AI services of another version offer the update; once per pair of versions, nothing blocked, nothing asked on a build from source.",
-    "- 0.79.0: a project's actions (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, and the rest of its platform's) are buttons in the Nuclear workspace, under the project's name, so they show in Cursor too (it hides an extension's buttons in the editor title bar). A backend project has its scripts like npm's: the explorer's *Nuclear Scripts* view, a ▷ per command (run, test, build, check, install, and migrate once there is a `migrations/` folder), and the same as tasks in *Terminal → Run Task…* (`nuclear: <project>: run`), also before the first build. Run and Debug of a project that was never built cleanly build it first and, when it has errors, say so with *Show Output* instead of \"run `nuclear build` first\". On the Visual Studio Marketplace and Open VSX: the store page shows each tool with its screenshot and its key, an"
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.643206",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4835,6 +4817,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a31ad9",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.79.0: a project's actions (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, and the rest of its platform's) are buttons in the Nuclear workspace, under the project's name, so they show in Cursor too (it hides an extension's buttons in the editor title bar). A backend project has its scripts like npm's: the explorer's *Nuclear Scripts* view, a ▷ per command (run, test, build, check, install, and migrate once there is a `migrations/` folder), and the same as tasks in *Terminal → Run Task…* (`nuclear: <project>: run`), also before the first build. Run and Debug of a project that was never built cleanly build it first and, when it has errors, say so with *Show Output* instead of \"run `nuclear build` first\". On the Visual Studio Marketplace and Open VSX: the store page shows each tool with its screenshot and its key, and how to install NuclearLang first.",
+    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a3b726",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4879,24 +4879,6 @@
    "body": [
     "- 0.56.0: Nuclear Builder draws a run as a living work diagram (React Flow), in two levels like C4: the pipeline, a node per stage with its progress, the members who take part and the step on now, a light round the stage working and the hand-over flowing along its edge; and the inside of a stage, its steps as components with the role that did each and the steps its agent followed, the stages around it a click away. Nodes drag, the view zooms and pans, a minimap shows the whole; the list of who takes part is gone from the side. Claude's defaults are `haiku` and 5 USD per run.",
     "- 0.55.0: the files of a project in the Nuclear workspace are a native tree view (*Files*, below the strip), the same control as the explorer: your file icon theme, git and problem colors, the keyboard, indent guides, *Collapse All*, and the active editor's file selected. Its right-click menu is the same as before (*New with Synapsis* by folder and platform, New File, New Folder, Rename, Delete; protected files and `build/` get nothing), and its title bar has New File, New Folder and New Component for the project's root."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.bdc640",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "d how to install NuclearLang first.",
-   "body": [
-    "d how to install NuclearLang first.",
-    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5004,6 +4986,24 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f278e0",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Without NuclearLang on the machine (the extension from a store), the extension says NuclearLang is not installed and offers *Install NuclearLang* (the public installer in a terminal), instead of a `cargo build` of a source tree. A test holds that no message names one.",
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them. At start the extension compares its version with the installed NuclearLang (`.version`, and `ai/.version`): an extension the store updated alone offers *Update NuclearLang* (`nuclear update`, the newest release whole), an older one offers the extension of the installed release, AI services of another version offer the update; once per pair of versions, nothing blocked, nothing asked on a build from source."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"

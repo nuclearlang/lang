@@ -23,6 +23,10 @@
 # platform's toolchain (Flutter for mobile, Node.js for web and NestJS) is never installed here: the summary and the
 # editor say what each platform needs and how to install it.
 #
+# One install runs at a time (a second one says so and stops); under sudo it stops (it needs no administrator);
+# `nuclear update` runs it with NUCLEAR_UPDATE=1, which keeps the choices of the last install (--no-vscode,
+# --no-agent, --no-modify-path, NUCLEAR_BIN).
+#
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai (tests only: skips the required Smart Graph and MCP server, the install ends incomplete),
 # --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
@@ -240,7 +244,8 @@ tmp=$(mktemp -d)
 # a step runs in the background (its spinner meanwhile) and ignores Ctrl+C there: on any exit it is stopped with every
 # process under it (curl, tar), or an interrupted download would go on writing the file a new run continues
 kill_tree() { for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done; kill "$1" 2>/dev/null || true; }
-trap '[ -n "$TASK_PID" ] && kill_tree "$TASK_PID"; [ -n "$esc" ] && printf "%s" "$esc[?25h" >&2; rm -rf "$tmp"' EXIT
+LOCK=""
+trap '[ -n "$TASK_PID" ] && kill_tree "$TASK_PID"; [ -n "$esc" ] && printf "%s" "$esc[?25h" >&2; rm -rf "$tmp"; [ -n "$LOCK" ] && rm -rf "$LOCK"' EXIT
 trap 'say ""; say "  Stopped."; exit 130' INT TERM
 
 UNINSTALL=0
@@ -260,6 +265,21 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+# sudo would leave files of root in the user's folders (no sudo is needed, ADR-installer-0005); root's own install
+# (a container) is allowed
+if [ "$(id -u)" = 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+  say "Run the installer without sudo: it installs into your own folders and needs no administrator."; exit 2
+fi
+# an update (`nuclear update`) keeps the choices of the last install
+if [ "${NUCLEAR_UPDATE:-}" = 1 ] && [ -f "$INSTALL/.options" ]; then
+  while IFS='=' read -r k v; do
+    case "$k=$v" in
+      VSCODE=[01]|AGENT=[01]|MODIFY_PATH=[01]) eval "$k=$v" ;;
+      BIN=/*) BIN=$v ;;
+    esac
+  done < "$INSTALL/.options"
+fi
 
 # --- uninstall: everything the install made, and only that (ADR-installer-0005) ---
 if [ "$UNINSTALL" = 1 ]; then
@@ -385,6 +405,14 @@ done_step() { grep -qx "step=$1" "$STATE" 2>/dev/null; }
 mark() { printf 'step=%s\n' "$1" >> "$STATE"; }
 remember() { printf '%s=%s\n' "$1" "$2" >> "$STATE"; }
 mkdir -p "$STATE_DIR"
+# one install at a time: a second one (another terminal, two updates) waits for nothing and says so
+if mkdir "$STATE_DIR/install.lock" 2>/dev/null; then LOCK="$STATE_DIR/install.lock"; echo $$ > "$LOCK/pid"
+elif kill -0 "$(cat "$STATE_DIR/install.lock/pid" 2>/dev/null || echo 0)" 2>/dev/null; then
+  say "Another NuclearLang install is running (process $(cat "$STATE_DIR/install.lock/pid")): wait for it to end, then run this again."; exit 1
+else
+  # a lock of a run that died: taken over
+  rm -rf "$STATE_DIR/install.lock"; mkdir "$STATE_DIR/install.lock"; LOCK="$STATE_DIR/install.lock"; echo $$ > "$LOCK/pid"
+fi
 if [ -f "$STATE" ] && [ "$(state_get version)" = "$VERSION" ]; then
   # the same version: what it finished and what it downloaded stay
   if ! grep -q '^step=' "$STATE"; then
@@ -452,6 +480,8 @@ if done_step installed && "$BIN/nuclear" dialect list > /dev/null 2>&1; then aga
   mark installed
 fi
 fi
+# the choices of this install, kept by the next update
+printf 'VSCODE=%s\nAGENT=%s\nMODIFY_PATH=%s\nBIN=%s\n' "$VSCODE" "$AGENT" "$MODIFY_PATH" "$BIN" > "$INSTALL/.options"
 
 if [ "$AGENT" = 1 ]; then
   for d in $SKILL_DIRS; do

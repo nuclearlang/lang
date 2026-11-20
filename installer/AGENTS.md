@@ -22,6 +22,7 @@ installer/release/version.sh [<v>|--check [v<v>]]   # one version for every proj
 installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/
 installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256
 installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it
+installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/)
 nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services
 ```
 
@@ -47,6 +48,8 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 - `release/ai-runtime.sh`: the AI archive of this machine, built and tried before it is packed.
 - `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).
 - `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.
+- `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive
+  `package.sh` wrote; never the real `HOME`, never the AI services.
 - `dist/`: what `package.sh` writes (ignored by git).
 - `docs/`: this project's documents (the table below).
 

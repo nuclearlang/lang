@@ -467,13 +467,11 @@
    "id": "faq:update-nuclearlang",
    "type": "faq",
    "title": "How do I update NuclearLang?",
-   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services, the profile kept). In a terminal, `nuclear` also asks `Update now? [Y/n]` before a command when a newer release is out.",
+   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services, the profile and the choices of the last install kept). In a terminal, `nuclear` also asks `Update now? [Y]es / [n]o / [l]ater` before a command when a newer release is out.",
    "body": [
-    "The check runs in the background once a day and never delays a command; it never asks in editors, agents, pipes or CI. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
+    "One key answers; no key in 15 seconds goes on (a script in a terminal is never stopped); `l` waits a day. The check runs in the background once a day (curl, or wget) and never delays a command; it never asks in editors, agents, pipes, CI, `make`, npm scripts or under `sudo`. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
     "",
-    "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built.",
-    "",
-    "Every part of NuclearLang carries one version and goes together (ADR-platform-0011): the compiler, the language server, the Smart Graph and its knowledge base, the MCP server, the local agents, the dialects' runtimes and the editors' extensions. An update installs all of them at the release's version. When a store updates the VS Code extension alone, the extension offers *Update NuclearLang* (`nuclear update`); when the extension is the older one, it offers the installed release's extension."
+    "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built. One install runs at a time."
    ],
    "keys": [
     "update",

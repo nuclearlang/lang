@@ -33,10 +33,12 @@ prints it, and `nuclear help <command>` prints its lines of it; for a command of
 | `defs list [--dialect]`, `defs show <Name\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |
 
 Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an
-installation a public installer made, `update::offer` asks `Update now? [Y/n]` when the last check knew a newer
-release. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a
-detached `curl` into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes
-the installer runs and the new binary runs the command again (Windows: the installer opens in its own window, as it
+installation a public installer made, `update::offer` asks `Update now? [Y]es / [n]o / [l]ater` when the last check
+knew a newer release: one key read in raw mode (the command's own input stays its own), no key in 15 s is a no (a
+script in a terminal is never stopped), `l` stops asking for a day (`update-later`); never inside `make`
+(`MAKELEVEL`), an npm script or under `sudo`. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a
+detached `curl` (or `wget` and the API, where there is no curl) into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes
+the installer runs with `NUCLEAR_UPDATE=1` (it keeps the choices of the last install) and the new binary runs the command again (Windows: the installer opens in its own window, as it
 replaces `nuclear.exe`).
 
 Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a

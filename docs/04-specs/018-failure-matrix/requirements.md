@@ -69,7 +69,7 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 | C1 | No editor | install completes; the summary says how to add one later | handled |
 | C2 | One or several of VS Code, Insiders, Cursor, VSCodium, Windsurf | the extension in each | handled (Linux); macOS written |
 | C3 | The extension already there, older or newer than NuclearLang | the extension says the versions differ and offers `nuclear update` | written (0.80.0, `snapshotCheck.ts`) |
-| C4 | The extension from a store, NuclearLang never installed | the extension offers the installer, never a path of the source tree | **gap**: its message names `cargo build … in the nuclear repository` |
+| C4 | The extension from a store, NuclearLang never installed | the extension offers the installer, never a path of the source tree | handled (*Install NuclearLang*; `test/fresh-machine.test.ts`) |
 | C5 | VS Code from snap or flatpak (sandboxed, another PATH) | the extension finds `nuclear-lsp` by its installation path | verify |
 | C6 | The editor launched from the desktop (a PATH without `~/.local/bin`) | the same | handled (`toolchains.ts`) |
 | C7 | The editor's CLI not on the PATH (macOS `code`) | found inside the app | written |
@@ -85,14 +85,15 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 | D3 | Upgrade N → N+1 (installer, `nuclear update`, the question) | replaced, profile kept, services restarted at the new version | written (the "yes" path never run) |
 | D4 | Upgrade across many versions (0.1.x → 0.80.0; binaries without `nuclear update`) | the installer run by hand works the same | verify |
 | D5 | Downgrade (`--version` older) | allowed, said; data of a newer graph either read or rebuilt | gap |
-| D6 | Interrupted at each step (Ctrl+C, closed terminal, lost connection, reboot) | a new run resumes | handled on Linux/macOS; **gap** on Windows (roadmap) |
+| D6 | Interrupted at each step (Ctrl+C, closed terminal, lost connection, reboot) | a new run resumes | handled on Linux/macOS (`run.sh D6`, the first step only); **gap** on Windows (roadmap) |
 | D7 | Stuck version ("punto muerto"): the state file names a release that no longer exists, `.version` present but the binary broken, the core new and `ai/` old | the next run detects it and replaces what is broken; `--reinstall` always gets out | partly |
 | D8 | A release missing the asset of this system | says it, the previous install untouched | handled (message) |
 | D9 | The store's extension updated before the release's archives exist | the extension waits, says the release is on its way | verify |
 | D10 | Source install over a public one, and the reverse | one installation on the PATH; `nuclear update` never replaces a source build | verify (`.version` left behind?) |
 | D11 | Two installations (another `NUCLEAR_INSTALL`/PREFIX) | `nuclear doctor` names both and which one runs | gap |
 | D12 | A project made with an older version opened with a newer one | builds, or says what to run (`nuclear repair`) | verify |
-| D13 | Uninstall, then install again | a clean install | handled (Linux) |
+| D13 | Uninstall, then install again | a clean install | handled (Linux, `run.sh D13`) |
+| D14 | Two installs at once (two terminals, two updates) | the second says so and stops; a lock of a dead run is taken over | handled on Linux (`run.sh LOCK`); written in `install.ps1` |
 
 ### E. What the user chose
 
@@ -101,9 +102,9 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 | E1 | Declined local agents | `remote`; nothing of Ollama downloaded | handled |
 | E2 | `--no-ai`, or stopped at a question | ends incomplete, says the one command that finishes | handled |
 | E3 | No terminal (`curl … \| sh` in CI) | nothing asked, profile `remote` | handled |
-| E4 | `--no-vscode`, `--no-agent`, `--no-modify-path` at the first install | a later update keeps those choices | **gap** (the update runs the defaults) |
+| E4 | `--no-vscode`, `--no-agent`, `--no-modify-path` at the first install | a later update keeps those choices | handled on Linux (`.options`, `installer/tests/run.sh E4`); written in `install.ps1` |
 | E5 | Declined the update question | the command runs; asked again (or later) | handled |
-| E6 | A script or `make` in a terminal | never blocked by the update question | **gap** |
+| E6 | A script or `make` in a terminal | never blocked by the update question | handled (one key, 15 s, `MAKELEVEL`/npm; tried in a pseudo-terminal) |
 | E7 | An Ollama the user had before; an uninstall | Ollama and its models stay | handled |
 
 ### F. Ports and other programs
@@ -134,7 +135,7 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 
 | ID | Case | Expected | State |
 |---|---|---|---|
-| H1 | `nuclear-lsp` missing | the extension says it and offers the installer | **gap** (C4) |
+| H1 | `nuclear-lsp` missing | the extension says it and offers the installer | handled (C4) |
 | H2 | The LSP and the extension of different versions | said (C3) | written |
 | H3 | The LSP crashes on a file | restarted, the file named; the editor stays usable | verify |
 | H4 | A large project (thousands of `.nuc`) | answers within the golden rule's limits | verify |
@@ -144,5 +145,50 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 
 | ID | Case | Expected | State |
 |---|---|---|---|
-| I1 | `sudo` / root running the installer or `nuclear` | refused with the reason (no sudo, ADR) | gap for `nuclear update` |
+| I1 | `sudo` running the installer or `nuclear update` | refused with the reason (no sudo, ADR); root's own install (a container) allowed | handled (`run.sh I1`) |
 | I2 | A read-only or network home, a managed corporate machine | said which folder cannot be written | verify |
+
+### J. Machines with few resources (single-board computers: Orange Pi Zero 3W, Raspberry Pi 4B, Orange Pi 5 Max)
+
+| ID | Case | Expected | State |
+|---|---|---|---|
+| J1 | 1 GB of memory or less, no swap | NuclearLang works; the AI set-up says what this machine cannot run before downloading it, and offers `remote` | verify |
+| J2 | A slow SD card or eMMC | the knowledge base load says its time and survives an interruption | verify |
+| J3 | A small disk (8-16 GB) | the space needed is said before any download | gap |
+| J4 | A 32-bit system (armv7) | said as not supported, nothing half installed | verify |
+
+### K. Machines with resources, saturated
+
+| ID | Case | Expected | State |
+|---|---|---|---|
+| K1 | CPU at 100 % (a build, a game) | the set-up and the knowledge base load run at low priority (`nice`/`ionice`, a lower Windows priority) and never freeze the desktop | gap |
+| K2 | Memory almost full | the services' memory is bounded; a model that does not fit is said, not swapped | verify |
+| K3 | The disk busy (another big copy) | downloads and the load go on, slower, without timeouts that break the step | verify |
+| K4 | Ollama already busy with another model | said, the user's models untouched | verify |
+
+### L. Firewalls and antivirus
+
+| ID | Case | Expected | State |
+|---|---|---|---|
+| L1 | The Windows firewall asks when a service listens | it never asks: every service binds `127.0.0.1` only | verify per service |
+| L2 | Windows Defender / SmartScreen flags the unsigned binaries or the bundled Python | the binaries are signed; when one is blocked, the message says so | gap (nothing is signed) |
+| L3 | macOS Gatekeeper on the binaries | signed and notarized | gap |
+| L4 | A corporate firewall, TLS inspection | the download says the certificate failed and offers a mirror | gap |
+
+### M. Security (an audit on 2026-11-20; each fix with its test)
+
+| ID | Case | Expected | State |
+|---|---|---|---|
+| M1 | A cloned repository sets `nuclear.server.path` in `.vscode/settings.json` | ignored: the setting is machine scope, restricted in an untrusted workspace | **gap** |
+| M2 | A committed `build/*.code-workspace` names the command and environment the extension runs on save | the extension runs only the installed `nuclear`, never a command or environment from the project | **gap** |
+| M3 | A cloned project's own dialect, kind or `[toolchain]` runs commands on `build`/`run`/`install` | a project-local dialect is asked for once per project; `build` never runs a shell | **gap** |
+| M4 | Arguments after `--` (from the MCP server's `nuclear_project`) pasted into a shell | every argument quoted; the MCP refuses `--` | **gap** |
+| M5 | Windows quoting of `nuclear add` package names and messages (`"`, `%`, `&`) | arguments passed without a shell, or refused | **gap** |
+| M6 | Config values (`app(description = ...)`) pasted raw into JSON, TOML and HTML templates | escaped for the target format | **gap** |
+| M7 | `nuclear make` / `gen` names with `/` or `..` write outside the project | refused: a name is `^[A-Za-z][A-Za-z0-9_]*$` | **gap** (confirmed) |
+| M8 | Deep nesting (2,000 parentheses) overflows the parser's stack: `nuclear check` and the LSP abort | a depth limit and a diagnostic | **gap** (confirmed) |
+| M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | **gap** |
+| M10 | The checksum comes from the same release as the archive; nothing is signed | a signature verified with a key in the installer | **gap** |
+| M11 | `nuclear update` pipes the site's installer into a shell | the installer of the release, verified; PowerShell by its full path | **gap** |
+| M12 | CI actions pinned by tag | pinned by commit | gap (low) |
+| M13 | String literals in every target (quotes, `$`, `${}`, f-strings, newlines) | escaped | handled (audit) |

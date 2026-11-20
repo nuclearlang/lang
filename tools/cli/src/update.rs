@@ -1,7 +1,9 @@
 //! The update of an installation made by the public installers: `nuclear update`, and the question every run in a
 //! terminal asks when a newer release is out. The latest version is fetched in the background at most once a day,
-//! so no command waits for the network; the update itself is the public installer, run again.
+//! so no command waits for the network; the update itself is the public installer, run again (it keeps the choices
+//! of the last install: `NUCLEAR_UPDATE=1`).
 
+use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Stdio};
@@ -9,7 +11,10 @@ use std::time::{Duration, SystemTime};
 
 const CURRENT: &str = env!("CARGO_PKG_VERSION");
 const LATEST_URL: &str = "https://github.com/nuclearlang/lang/releases/latest";
+const LATEST_API: &str = "https://api.github.com/repos/nuclearlang/lang/releases/latest";
 const DAY: Duration = Duration::from_secs(24 * 60 * 60);
+/// A question nobody answers (a script in a terminal) goes on as "no" after this.
+const ANSWER_WAIT: Duration = Duration::from_secs(15);
 
 /// The installation this binary runs from, when a public installer made it (its `.version`); a build from source
 /// has none and is never updated here.
@@ -18,12 +23,12 @@ fn installation(exe: &Path) -> Option<PathBuf> {
     root.join(".version").is_file().then(|| root.to_path_buf())
 }
 
-fn cache_file() -> Option<PathBuf> {
+fn cache_dir() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CACHE_HOME")
         .filter(|_| !cfg!(windows))
         .map(PathBuf::from)
         .or_else(|| std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(|h| PathBuf::from(h).join(".cache")))?;
-    Some(base.join("nuclearlang").join("latest-release"))
+    Some(base.join("nuclearlang"))
 }
 
 /// `1.2.3` (a leading `v` and anything after the third number aside) as numbers to compare.
@@ -32,9 +37,13 @@ fn parse(v: &str) -> Option<(u64, u64, u64)> {
     Some((n.next()?.ok()?, n.next()?.ok()?, n.next()?.ok()?))
 }
 
-/// The version at the end of the url `releases/latest` redirects to (`…/releases/tag/v0.1.16`).
-fn version_of(url: &str) -> Option<&str> {
-    let tag = url.trim().rsplit_once("/tag/")?.1;
+/// The version in what the check wrote: the url `releases/latest` redirects to (`…/releases/tag/v0.1.16`, curl) or
+/// the API's answer (`"tag_name": "v0.1.16"`, wget).
+fn version_of(text: &str) -> Option<&str> {
+    let tag = match text.trim().rsplit_once("/tag/") {
+        Some((_, tag)) => tag,
+        None => text.split_once("\"tag_name\"")?.1.split('"').nth(1)?,
+    };
     parse(tag).map(|_| tag.trim_start_matches('v'))
 }
 
@@ -42,27 +51,52 @@ fn newer(latest: &str) -> bool {
     matches!((parse(latest), parse(CURRENT)), (Some(l), Some(c)) if l > c)
 }
 
+fn younger_than_a_day(file: &Path) -> bool {
+    let modified = std::fs::metadata(file).and_then(|m| m.modified());
+    // a time in the future (a clock set back) counts as young: no new check on every run
+    modified.is_ok_and(|t| SystemTime::now().duration_since(t).map_or(true, |age| age < DAY))
+}
+
 /// What the last check found, and a new check in the background when it is older than a day.
 fn known_latest(cache: &Path) -> Option<String> {
-    let age = std::fs::metadata(cache).and_then(|m| m.modified()).ok().and_then(|t| SystemTime::now().duration_since(t).ok());
     let text = std::fs::read_to_string(cache).unwrap_or_default();
-    if age.is_none_or(|a| a > DAY) {
+    if !younger_than_a_day(cache) {
         refresh(cache);
     }
     version_of(&text).map(String::from)
 }
 
-/// curl writes the redirect's url into the cache, detached: this run does not wait for it.
+/// curl (or wget) writes the latest release into the cache, detached: this run does not wait for it.
 fn refresh(cache: &Path) {
     let Some(dir) = cache.parent() else { return };
     let Ok(file) = std::fs::create_dir_all(dir).and_then(|_| std::fs::File::create(cache)) else { return };
     let null = if cfg!(windows) { "NUL" } else { "/dev/null" };
     let mut curl = Command::new("curl");
     curl.args(["-fsSLI", "--max-time", "15", "-o", null, "-w", "%{url_effective}", LATEST_URL]);
-    // its own process group: the terminal closing right after this command does not stop it
+    let mut wget = Command::new("wget");
+    wget.args(["-qO-", "--timeout=15", LATEST_API]);
+    for mut cmd in [curl, wget] {
+        // its own process group: the terminal closing right after this command does not stop it
+        #[cfg(unix)]
+        std::os::unix::process::CommandExt::process_group(&mut cmd, 0);
+        let Ok(out) = file.try_clone() else { return };
+        if cmd.stdin(Stdio::null()).stdout(out).stderr(Stdio::null()).spawn().is_ok() {
+            return;
+        }
+    }
+}
+
+/// Under `sudo`: the installers need no administrator (ADR-installer-0005), and an update as root would leave files
+/// of root in the user's installation. Root's own installation (a container) is updated as any other.
+fn as_root() -> bool {
     #[cfg(unix)]
-    std::os::unix::process::CommandExt::process_group(&mut curl, 0);
-    let _ = curl.stdin(Stdio::null()).stdout(file).stderr(Stdio::null()).spawn();
+    {
+        // SAFETY: geteuid has no preconditions and cannot fail
+        let root = unsafe { libc::geteuid() == 0 };
+        root && std::env::var("SUDO_USER").is_ok_and(|u| !u.is_empty() && u != "root")
+    }
+    #[cfg(not(unix))]
+    false
 }
 
 /// Runs the public installer for the installation at `root`. On Windows it opens in a window of its own: the
@@ -78,11 +112,15 @@ fn run_installer(root: &Path) -> std::io::Result<bool> {
         c.args(["-c", "u=https://nuclearlang.github.io/install.sh; if command -v curl >/dev/null 2>&1; then curl -fsSL \"$u\" | sh; else wget -qO- \"$u\" | sh; fi"]);
         c
     };
-    Ok(cmd.env("NUCLEAR_INSTALL", root).status()?.success())
+    Ok(cmd.env("NUCLEAR_INSTALL", root).env("NUCLEAR_UPDATE", "1").status()?.success())
 }
 
 /// `nuclear update`: the latest release, now.
 pub fn command() -> ExitCode {
+    if as_root() {
+        eprintln!("nuclear update does not run under sudo: run it as the user who installed NuclearLang");
+        return ExitCode::from(2);
+    }
     let Some(root) = std::env::current_exe().ok().as_deref().and_then(installation) else {
         eprintln!("this nuclear was not installed by the NuclearLang installer: update it the way it was installed");
         return ExitCode::from(2);
@@ -97,26 +135,74 @@ pub fn command() -> ExitCode {
     }
 }
 
+enum Answer {
+    Yes,
+    No,
+    Later,
+}
+
+/// One key, without echo and without reading a line: what the command reads from the terminal afterwards stays its
+/// own. No key within `ANSWER_WAIT` (a script in a terminal) is a no.
+fn ask() -> Answer {
+    if crossterm::terminal::enable_raw_mode().is_err() {
+        return Answer::No;
+    }
+    let deadline = std::time::Instant::now() + ANSWER_WAIT;
+    let answer = loop {
+        let left = deadline.saturating_duration_since(std::time::Instant::now());
+        if left.is_zero() || !event::poll(left).unwrap_or(false) {
+            break None;
+        }
+        if let Ok(Event::Key(k)) = event::read()
+            && k.kind == KeyEventKind::Press
+        {
+            break match k.code {
+                KeyCode::Enter | KeyCode::Char('y' | 'Y') => Some(Answer::Yes),
+                KeyCode::Char('l' | 'L') => Some(Answer::Later),
+                _ => Some(Answer::No),
+            };
+        }
+    };
+    let _ = crossterm::terminal::disable_raw_mode();
+    match answer {
+        Some(a) => {
+            eprintln!("{}", match a { Answer::Yes => "yes", Answer::No => "no", Answer::Later => "later (asked again tomorrow)" });
+            a
+        }
+        None => {
+            eprintln!("no answer: going on (nuclear update installs it at any time)");
+            Answer::No
+        }
+    }
+}
+
 /// Before a command, in a terminal: when a newer release is known, asks whether to update. On a yes the update runs
 /// and the command is run again by the new binary (its exit code returned); otherwise the command goes on (`None`).
-/// Never asked without a terminal (editors, agents, pipes, CI) or with `NUCLEAR_NO_UPDATE_CHECK`.
+/// Never asked without a terminal (editors, agents, pipes, CI), inside `make` or an npm script, under sudo, or with
+/// `NUCLEAR_NO_UPDATE_CHECK`; "later" stops asking for a day.
 pub fn offer(args: &[String]) -> Option<ExitCode> {
     let terminal = std::io::stdin().is_terminal() && std::io::stdout().is_terminal() && std::io::stderr().is_terminal();
-    if !terminal || std::env::var_os("CI").is_some() || std::env::var_os("NUCLEAR_NO_UPDATE_CHECK").is_some() {
+    let quiet = ["CI", "NUCLEAR_NO_UPDATE_CHECK", "MAKELEVEL", "npm_lifecycle_event"].iter().any(|v| std::env::var_os(v).is_some());
+    if !terminal || quiet || as_root() {
         return None;
     }
     let exe = std::env::current_exe().ok()?;
     let root = installation(&exe)?;
-    let latest = known_latest(&cache_file()?)?;
-    if !newer(&latest) {
+    let dir = cache_dir()?;
+    let latest = known_latest(&dir.join("latest-release"))?;
+    let later = dir.join("update-later");
+    if !newer(&latest) || younger_than_a_day(&later) {
         return None;
     }
-    eprint!("NuclearLang {latest} is out (you have {CURRENT}). Update now? [Y/n] ");
+    eprint!("NuclearLang {latest} is out (you have {CURRENT}). Update now? [Y]es / [n]o / [l]ater ");
     let _ = std::io::stderr().flush();
-    let mut answer = String::new();
-    std::io::stdin().read_line(&mut answer).ok()?;
-    if !matches!(answer.trim().to_lowercase().as_str(), "" | "y" | "yes") {
-        return None;
+    match ask() {
+        Answer::Yes => {}
+        Answer::No => return None,
+        Answer::Later => {
+            let _ = std::fs::write(&later, &latest);
+            return None;
+        }
     }
     match run_installer(&root) {
         Ok(true) if cfg!(windows) => Some(ExitCode::SUCCESS),
@@ -126,7 +212,7 @@ pub fn offer(args: &[String]) -> Option<ExitCode> {
             _ => ExitCode::FAILURE,
         }),
         Ok(false) | Err(_) => {
-            eprintln!("the update did not finish: your command runs on NuclearLang {CURRENT}");
+            eprintln!("the update did not finish (its message is above): nuclear update goes on from where it stopped");
             None
         }
     }
@@ -137,8 +223,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn reads_the_version_of_the_redirect() {
+    fn reads_the_version_of_the_redirect_and_of_the_api() {
         assert_eq!(version_of("https://github.com/nuclearlang/lang/releases/tag/v0.1.16"), Some("0.1.16"));
+        assert_eq!(version_of("{\n  \"url\": \"x\",\n  \"tag_name\": \"v0.80.0\",\n}"), Some("0.80.0"));
         assert_eq!(version_of("https://github.com/nuclearlang/lang/releases/latest"), None);
         assert_eq!(version_of(""), None);
     }
@@ -150,5 +237,19 @@ mod tests {
         assert!(!newer(CURRENT));
         assert!(newer("999.0.0"));
         assert!(!newer("garbage"));
+    }
+
+    #[test]
+    fn a_missing_or_old_file_is_not_young() {
+        let dir = std::env::temp_dir().join(format!("nuclear-update-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("f");
+        assert!(!younger_than_a_day(&f));
+        std::fs::write(&f, "").unwrap();
+        assert!(younger_than_a_day(&f));
+        let old = std::fs::File::options().write(true).open(&f).unwrap();
+        old.set_modified(SystemTime::now() - DAY * 2).unwrap();
+        assert!(!younger_than_a_day(&f));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

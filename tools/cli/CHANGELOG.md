@@ -12,6 +12,9 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- The update question is one key, `[Y]es / [n]o / [l]ater` (a day): no key in 15 s goes on, never inside `make`, an
+  npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.
+
 - `nuclear add <package>[@version]... [--module <m>]` and `nuclear remove <package>...` on every platform
   (ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in
   `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through

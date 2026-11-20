@@ -488,11 +488,21 @@ function findServer(context: vscode.ExtensionContext): string | undefined {
 async function startClient(context: vscode.ExtensionContext): Promise<void> {
   const command = findServer(context);
   if (!command) {
+    // a machine without NuclearLang (the extension from a store): the installer, never a path of a source tree
+    const install = l10n.t('Install NuclearLang');
+    const settings = l10n.t('Open Settings');
     const choice = await vscode.window.showErrorMessage(
-      l10n.t('Nuclear: the language server (nuclear-lsp) was not found. Build it with `cargo build --release -p nuclear-lsp` in the nuclear repository or set "nuclear.server.path".'),
-      l10n.t('Open Settings'),
+      l10n.t('Nuclear: NuclearLang is not installed on this machine (its language server, nuclear-lsp, was not found). Install it, then reload the window; or set "nuclear.server.path".'),
+      install,
+      settings,
     );
-    if (choice) {
+    if (choice === install) {
+      const terminal = vscode.window.createTerminal({ name: 'NuclearLang · install' });
+      terminal.show();
+      terminal.sendText(process.platform === 'win32'
+        ? 'irm https://nuclearlang.github.io/install.ps1 | iex'
+        : 'curl -fsSL https://nuclearlang.github.io/install.sh | sh');
+    } else if (choice === settings) {
       vscode.commands.executeCommand('workbench.action.openSettings', 'nuclear.server.path');
     }
     return;

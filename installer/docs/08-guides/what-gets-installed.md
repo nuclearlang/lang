@@ -80,6 +80,8 @@ incomplete.
 ## Updates
 
 `nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).
-And when a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y/n]`; a yes updates,
-then runs the command. The check happens in the background once a day, never in editors, agents, pipes or CI;
-`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off. A `nuclear` built from source is never updated this way.
+An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).
+When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;
+a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens in the background once a day, never in editors, agents, pipes or CI;
+`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off; never inside `make`, an npm script or under `sudo`. A `nuclear`
+built from source is never updated this way. One install runs at a time: a second one says so and stops.
