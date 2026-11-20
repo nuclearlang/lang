@@ -653,6 +653,7 @@
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
     "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/)",
+    "installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time",
     "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
     "```",
     "",
@@ -723,7 +724,26 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#folders",
+   "id": "doc:installer/AGENTS.md#folders.dfd91f",
+   "type": "readme",
+   "title": "The installers and the release — Folders",
+   "summary": "`package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
+   "body": [
+    "`package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
+    "- `dist/`: what `package.sh` writes (ignored by git).",
+    "- `docs/`: this project's documents (the table below)."
+   ],
+   "sources": [
+    "installer/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/AGENTS.md#folders.fba874",
    "type": "readme",
    "title": "The installers and the release — Folders",
    "summary": "`nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
@@ -740,8 +760,8 @@
     "- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.",
     "- `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive",
     "  `package.sh` wrote; never the real `HOME`, never the AI services; `PS1` parses `install.ps1` in a PowerShell container.",
-    "- `dist/`: what `package.sh` writes (ignored by git).",
-    "- `docs/`: this project's documents (the table below)."
+    "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
+    "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:"
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -1464,14 +1484,16 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.707278",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.4b4fee",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
-   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), in seconds, against `package.sh`'s archive.",
+   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), in seconds, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on six distributions one container at a time, against `package.sh…",
    "body": [
     "**Never run `--uninstall` or a public installer against your real `HOME`.** First `installer/tests/run.sh`: the",
     "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken",
-    "binary, uninstall), in seconds, against `package.sh`'s archive. Then, for the AI services, two ways:",
+    "binary, uninstall), in seconds, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on",
+    "six distributions one container at a time, against `package.sh x86_64-unknown-linux-musl` (the release's static",
+    "build: a plain `package.sh` links this machine's glibc and does not run on an older distribution). Then, for the AI services, two ways:",
     "",
     "- **A fake `HOME` and a mirror.** Serve `installer/dist/` over HTTP on this machine and run the installer with",
     "  `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the",
@@ -1785,14 +1807,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.e2dc96",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.b2c35a",
    "type": "guide",
    "title": "Set up the AI services — 7. When a step fails",
    "summary": "7. When a step fails",
    "body": [
     "| It says | What to do |",
     "|---|---|",
-    "| the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. Nothing to do |",
+    "| the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. The ports are checked again at every login, before the services start (`nuclear-builder setup --ports`): a program that took one since gets the service moved. Nothing to do |",
     "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
     "| `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |",
     "| `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |",

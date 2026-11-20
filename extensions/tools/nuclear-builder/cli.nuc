@@ -27,6 +27,7 @@ USAGE = """
                                   the steps of a profile, one JSON line per event (what the editors draw)
   nuclear-builder setup --restart graph|developer   a service again, through the system's manager
   nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)
+  nuclear-builder setup --ports                chooses the services' ports again (at each login, before they start)
 
   nuclear-builder team list|show <id>|save|delete <id>|default <id>|export <id> <file>|import <file>|roster [--lang en|es]|temperaments [--json]
                                   the teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on
@@ -312,6 +313,13 @@ setup(args: string[]) int
     return 0
   if "--clients" in args
     connectClients((line) => print(line))
+    return 0
+  // at login, before the services start: a port a program took since the set-up is replaced by a free one
+  if "--ports" in args
+    choice = readMachine()
+    for k, v in servicePorts((line) => print(line))
+      choice[k] = v
+    writeMachine(choice)
     return 0
   if "--status" in args
     return showStatus("--json" in args)

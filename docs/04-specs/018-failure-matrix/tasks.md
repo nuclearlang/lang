@@ -16,7 +16,7 @@ related: [requirements.md, design.md]
 - [x] I1: `nuclear update` and `install.sh` refuse to run under sudo (root's own install, a container, is allowed).
 - [x] Two updates at once: a lock in the installers' state folder.
 - [x] `nuclear update` with `wget` when there is no `curl`; the message of a half-done update says the real version.
-- [ ] F2: a service whose port is taken at login picks a free one and writes it to `ai.env`, or says which program
+- [x] F2: a service whose port is taken at login picks a free one and writes it to `ai.env`, or says which program
       holds it (nuclear-builder).
 - [ ] D6 on Windows: `install.ps1` resumes an interrupted install (installer roadmap).
 - [ ] D7: a stuck installation (broken binary under a `.version`, a state of a missing release, core and `ai/` of
@@ -34,7 +34,7 @@ related: [requirements.md, design.md]
 - [ ] Two releases in a mirror (N and N+1) from the tree, for every upgrade test.
 - [ ] The fault-injection helpers and the four assertions (design.md).
 - [x] `installer/tests/run.sh`: the fake-HOME cases on this machine (D1, D2, D6, D7, D13, D14, E4, I1).
-- [ ] Docker images per distribution (A1, A3-A5), run one at a time on this machine (it has limits), then in the CI.
+- [x] `installer/tests/distros.sh`: the installer on six distributions, one container at a time (A1, A3); A4/A5 and the CI left.
 - [ ] The single-board computers (J): Orange Pi Zero 3W, Raspberry Pi 4B 8 GB, Orange Pi 5 Max, over SSH.
 - [ ] `installer-linux-arm.yml` and `installer-macos.yml` (Intel and Apple silicon) like `installer-windows.yml`.
 - [ ] The extension test under `xvfb` (C, H).

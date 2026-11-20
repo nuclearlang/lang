@@ -6924,11 +6924,13 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.418463",
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.9fbd17",
    "type": "spec",
    "title": "Spec 018: Every machine, every state, fail-safe — Requirements — A. The machine",
    "summary": "A.",
    "body": [
+    "| A10 | Windows 10/11 x64, PowerShell 5.1 and 7 | installs, Startup script | handled by `installer-windows.yml` (no AI profile with local agents) |",
+    "| A11 | Windows on ARM | arm64 core, x64 AI archive | handled by `installer-windows.yml` |",
     "| A12 | A user name with spaces or non-ASCII (`C:\\Users\\José María`, `/home/josé`) | every path quoted; services start | gap (never tried) |",
     "| A13 | Shells: bash, zsh, fish, nushell, PowerShell profile | `nuclear` on the PATH in a new terminal | handled for bash/zsh/fish/profile; nushell gap |",
     "| A14 | `/home` or `/tmp` mounted `noexec`, SELinux enforcing | said which folder cannot run programs | gap |",
@@ -6948,24 +6950,22 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.7c2635",
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.d4baf9",
    "type": "spec",
    "title": "Spec 018: Every machine, every state, fail-safe — Requirements — A. The machine",
    "summary": "A.",
    "body": [
     "| ID | Case | Expected | State |",
     "|---|---|---|---|",
-    "| A1 | Linux x86_64: Ubuntu/Debian, Fedora, Arch, openSUSE | installs, services at login (systemd user) | handled (clean machine: Debian-based only) |",
+    "| A1 | Linux x86_64: Ubuntu/Debian, Fedora, Arch, openSUSE | installs, services at login (systemd user) | handled for NuclearLang (`installer/tests/distros.sh`: Debian 12, Ubuntu 24.04, Fedora 41, Arch, openSUSE Leap 15.6, as a new user); the AI services on the clean machine only |",
     "| A2 | Linux aarch64 (Raspberry Pi, ARM servers, Asahi) | the same | written |",
-    "| A3 | Alpine / musl | NuclearLang installed; the AI services said to need glibc; install ends incomplete with that reason | written |",
+    "| A3 | Alpine / musl | NuclearLang installed; the AI services said to need glibc; install ends incomplete with that reason | NuclearLang handled (`distros.sh alpine`); the AI message written |",
     "| A4 | NixOS (no FHS), immutable distros (Silverblue) | static `nuclear` runs; the AI Python may not: said, not a crash | verify |",
     "| A5 | Linux without a systemd user session (WSL, containers, Void) | services as processes, said at the end | written |",
     "| A6 | WSL2 next to a Windows install | each side its own installation; the Windows editor sees the WSL one only through Remote-WSL | verify |",
     "| A7 | macOS Apple silicon | installs, launch agents | handled (once, 2026-11-19) |",
     "| A8 | macOS Intel | NuclearLang installed; no AI archive: said | written |",
-    "| A9 | macOS Apple silicon under Rosetta (an x86 terminal) | the arm64 archive is chosen | written |",
-    "| A10 | Windows 10/11 x64, PowerShell 5.1 and 7 | installs, Startup script | handled by `installer-windows.yml` (no AI profile with local agents) |",
-    "| A11 | Windows on ARM | arm64 core, x64 AI archive | handled by `installer-windows.yml` |"
+    "| A9 | macOS Apple silicon under Rosetta (an x86 terminal) | the arm64 archive is chosen | written |"
    ],
    "agents": false,
    "sources": [
@@ -7114,7 +7114,7 @@
     "| ID | Case | Expected | State |",
     "|---|---|---|---|",
     "| F1 | 7878 / 7879 / 7880 held by another program at the set-up | the next free port, written in `ai.env`, read by every tool | handled |",
-    "| F2 | The port free at the set-up, taken at a later login | the service picks a free one again, or says which program holds it | **gap** (the port is chosen once) |",
+    "| F2 | The port free at the set-up, taken at a later login | the ports are chosen again at each login before the services start (`setup --ports`) | written (the units, launch agents and Startup script; tested as text, not at a real login) |",
     "| F3 | The port held by a Nuclear service of an older version | stopped and replaced by the new one | verify |",
     "| F4 | Ollama's 11434 held by another program, an Ollama not running, a remote Ollama | said; `ollamaUrl` taken from the settings | partly |",
     "| F5 | `localhost` resolving to IPv6 only, or a firewall prompt (Windows) | services bound where clients look | verify |",
@@ -7334,7 +7334,7 @@
     "- [x] I1: `nuclear update` and `install.sh` refuse to run under sudo (root's own install, a container, is allowed).",
     "- [x] Two updates at once: a lock in the installers' state folder.",
     "- [x] `nuclear update` with `wget` when there is no `curl`; the message of a half-done update says the real version.",
-    "- [ ] F2: a service whose port is taken at login picks a free one and writes it to `ai.env`, or says which program",
+    "- [x] F2: a service whose port is taken at login picks a free one and writes it to `ai.env`, or says which program",
     "      holds it (nuclear-builder).",
     "- [ ] D6 on Windows: `install.ps1` resumes an interrupted install (installer roadmap).",
     "- [ ] D7: a stuck installation (broken binary under a `.version`, a state of a missing release, core and `ai/` of",
@@ -7380,7 +7380,7 @@
     "- [ ] Two releases in a mirror (N and N+1) from the tree, for every upgrade test.",
     "- [ ] The fault-injection helpers and the four assertions (design.md).",
     "- [x] `installer/tests/run.sh`: the fake-HOME cases on this machine (D1, D2, D6, D7, D13, D14, E4, I1).",
-    "- [ ] Docker images per distribution (A1, A3-A5), run one at a time on this machine (it has limits), then in the CI.",
+    "- [x] `installer/tests/distros.sh`: the installer on six distributions, one container at a time (A1, A3); A4/A5 and the CI left.",
     "- [ ] The single-board computers (J): Orange Pi Zero 3W, Raspberry Pi 4B 8 GB, Orange Pi 5 Max, over SSH.",
     "- [ ] `installer-linux-arm.yml` and `installer-macos.yml` (Intel and Apple silicon) like `installer-windows.yml`.",
     "- [ ] The extension test under `xvfb` (C, H)."

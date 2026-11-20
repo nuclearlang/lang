@@ -452,7 +452,7 @@ install_core() {
   mkdir -p "$(dirname "$INSTALL")" "$BIN"
   mv "$tmp/nuclearlang" "$INSTALL"
   link_core
-  "$BIN/nuclear" dialect list > /dev/null || { echo "the installed nuclear does not run on this system"; exit 1; }
+  "$BIN/nuclear" dialect list > /dev/null || { echo "the installed nuclear does not run on this system: the archive is not the one of $where (a local build linked to another C library?)"; exit 1; }
   # what a new run reads to keep it
   printf '%s\n' "$VERSION" > "$INSTALL/.version"
 }

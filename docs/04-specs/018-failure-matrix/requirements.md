@@ -33,9 +33,9 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 
 | ID | Case | Expected | State |
 |---|---|---|---|
-| A1 | Linux x86_64: Ubuntu/Debian, Fedora, Arch, openSUSE | installs, services at login (systemd user) | handled (clean machine: Debian-based only) |
+| A1 | Linux x86_64: Ubuntu/Debian, Fedora, Arch, openSUSE | installs, services at login (systemd user) | handled for NuclearLang (`installer/tests/distros.sh`: Debian 12, Ubuntu 24.04, Fedora 41, Arch, openSUSE Leap 15.6, as a new user); the AI services on the clean machine only |
 | A2 | Linux aarch64 (Raspberry Pi, ARM servers, Asahi) | the same | written |
-| A3 | Alpine / musl | NuclearLang installed; the AI services said to need glibc; install ends incomplete with that reason | written |
+| A3 | Alpine / musl | NuclearLang installed; the AI services said to need glibc; install ends incomplete with that reason | NuclearLang handled (`distros.sh alpine`); the AI message written |
 | A4 | NixOS (no FHS), immutable distros (Silverblue) | static `nuclear` runs; the AI Python may not: said, not a crash | verify |
 | A5 | Linux without a systemd user session (WSL, containers, Void) | services as processes, said at the end | written |
 | A6 | WSL2 next to a Windows install | each side its own installation; the Windows editor sees the WSL one only through Remote-WSL | verify |
@@ -112,7 +112,7 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 | ID | Case | Expected | State |
 |---|---|---|---|
 | F1 | 7878 / 7879 / 7880 held by another program at the set-up | the next free port, written in `ai.env`, read by every tool | handled |
-| F2 | The port free at the set-up, taken at a later login | the service picks a free one again, or says which program holds it | **gap** (the port is chosen once) |
+| F2 | The port free at the set-up, taken at a later login | the ports are chosen again at each login before the services start (`setup --ports`) | written (the units, launch agents and Startup script; tested as text, not at a real login) |
 | F3 | The port held by a Nuclear service of an older version | stopped and replaced by the new one | verify |
 | F4 | Ollama's 11434 held by another program, an Ollama not running, a remote Ollama | said; `ollamaUrl` taken from the settings | partly |
 | F5 | `localhost` resolving to IPv6 only, or a firewall prompt (Windows) | services bound where clients look | verify |

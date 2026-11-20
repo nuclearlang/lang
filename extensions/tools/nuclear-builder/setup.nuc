@@ -491,24 +491,32 @@ serviceFiles(system: string = sys.platform, at: string? = null, bin: string? = n
     return services.map((s) => ServiceFile(posixpath.join(h, "Library", "LaunchAgents", "${label(s.name)}.plist"), agent(s, h, b, m, pathOf)))
   if system == "win32"
     starts = services.map((s) => "start \"\" /min \"${ntpath.join(b, s.args[0] + (s.name == "developer" ? ".cmd" : ".exe"))}\"${s.args.skip(1).map((a) => " ${a}").join()}")
+    // the ports first (a program may hold one since the set-up), then the machine's file read with them
+    ports = "call \"${ntpath.join(b, "nuclear-builder.cmd")}\" setup --ports >nul 2>&1"
     file = ntpath.join(h, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "nuclear-ai.cmd")
-    return [ServiceFile(file, "@echo off\r\nrem The AI services of NuclearLang, started at login (written by their set-up).\r\nfor /f \"usebackq eol=# tokens=1,* delims==\" %%a in (\"${m}\") do set \"%%a=%%b\"\r\n${starts.join("\r\n")}\r\n")]
+    return [ServiceFile(file, "@echo off\r\nrem The AI services of NuclearLang, started at login (written by their set-up).\r\n${ports}\r\nfor /f \"usebackq eol=# tokens=1,* delims==\" %%a in (\"${m}\") do set \"%%a=%%b\"\r\n${starts.join("\r\n")}\r\n")]
   []
 
+// The graph's unit chooses the ports again before it starts (a program may hold one since the set-up, spec 018
+// F2), and the others start after it, so each reads the ports of this login from the machine's file.
 unit(s: Service, bin: string, machine: string, pathEnv: string) string
-  after = s.name == "developer" ? "After=nuclear-graph.service\n" : ""
+  after = s.name == "graph" ? "" : "After=nuclear-graph.service\n"
+  ports = s.name == "graph" ? "ExecStartPre=-${posixpath.join(bin, "nuclear-builder")} setup --ports\n" : ""
   command = [posixpath.join(bin, s.args[0]), ...s.args.skip(1)].join(" ")
-  "[Unit]\nDescription=${s.title} (NuclearLang)\n${after}\n[Service]\nEnvironment=PATH=${pathEnv}\nEnvironmentFile=-${machine}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\n\n[Install]\nWantedBy=default.target\n"
+  "[Unit]\nDescription=${s.title} (NuclearLang)\n${after}\n[Service]\nEnvironment=PATH=${pathEnv}\nEnvironmentFile=-${machine}\n${ports}ExecStart=${command}\nRestart=on-failure\nRestartSec=5\n\n[Install]\nWantedBy=default.target\n"
 
 agent(s: Service, at: string, bin: string, machine: string, pathEnv: string) string
   command = "exec '${posixpath.join(bin, s.args[0])}'${s.args.skip(1).map((a) => " ${a}").join()}"
+  // the graph's agent chooses the ports again before the file is read (spec 018 F2); the others, kept alive, read it
+  // again when the port they had was taken
+  ports = s.name == "graph" ? "'${posixpath.join(bin, "nuclear-builder")}' setup --ports &gt;/dev/null 2&gt;&amp;1; " : ""
   log = posixpath.join(at, "Library", "Logs", "nuclear-${s.name}.log")
   """
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0"><dict>
     <key>Label</key><string>${label(s.name)}</string>
-    <key>ProgramArguments</key><array><string>/bin/sh</string><string>-c</string><string>set -a; [ -f '${machine}' ] &amp;&amp; . '${machine}'; ${command}</string></array>
+    <key>ProgramArguments</key><array><string>/bin/sh</string><string>-c</string><string>${ports}set -a; [ -f '${machine}' ] &amp;&amp; . '${machine}'; ${command}</string></array>
     <key>EnvironmentVariables</key><dict><key>PATH</key><string>${pathEnv}</string></dict>
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><true/>

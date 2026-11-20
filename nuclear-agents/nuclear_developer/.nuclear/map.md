@@ -184,8 +184,9 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
 ## `config/`
 
 - `config/project_config.nuc`
-  - appConfig `ProjectConfig` — The models of the local agents, both on Ollama: a small coder model writes the code, a small general model plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule). Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens). The chat answers with one small model of its own (CHAT_MODEL), a small window (CHAT_CONTEXT_TOKENS) and no thinking, an answer of 1024 tokens at most (a small model may never stop), and Ollama frees it CHAT_KEEP_ALIVE after the last message: a chat never holds the factory's models.
+  - appConfig `ProjectConfig` — The models of the local agents, both on Ollama: a small coder model writes the code, a small general model plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule). Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens). The chat answers with one small model of its own (CHAT_MODEL), a small window (CHAT_CONTEXT_TOKENS) and no thinking, an answer of 1024 tokens at most (a small model may never stop), and Ollama frees it CHAT_KEEP_ALIVE after the last message: a chat never holds the factory's models. The guard: no web page (a request with an `Origin`, as a page of another site or a DNS rebinding sends): only the editor, the MCP server and the tools on this machine reach the agents (spec 018 M9; a token is the next step).
     - `connections: Connection[]`
+    - `guards: Guard[]`
 
 ## `test/`
 
@@ -197,6 +198,9 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `@test("a rename is the project's name the request writes and the name it gets") rename() void`
     - `@test("a request is asked for the facts its strategy cannot start without, and for nothing it already says") needs() void`
     - `@test("a request without a platform, or with a dialect's name, is refused before an agent runs (422, not a 500)") platform() void`
+- `test/guard_test.nuc`
+  - tests `GuardTests` — Spec 018 M9: a web page (a request with an `Origin`, as another site or a DNS rebinding sends) never reaches the agents; the tools of this machine send none.
+    - `@test("a request with an Origin is refused before any agent runs") noWebPage() void`
 - `test/roles_test.nuc`
   - tests `rolesFolder() Path` — `nuclear-agents/roles`, from wherever the tests run (the project's folder or its build).
   - tests `frontMatter(text: string) <string, string>` — The `key: value` lines of a file's front matter, and the text after it (empty when it has none).

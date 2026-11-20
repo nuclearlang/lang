@@ -135,7 +135,11 @@
   },
   "dialect": "fastapi",
   "events": {},
-  "guards": [],
+  "guards": [
+    {
+      "guard": "noOrigin"
+    }
+  ],
   "models": {
     "Analysis": {
       "description": "The strategy of a request (ADR-developer-0001) and what it asks of the run: the stages that run, the generator calls (the arguments of `nuclear gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code` is written as it is) and the facts the request lacks.",
@@ -445,6 +449,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.1.0",
+  "version": "0.80.0",
   "webSocket": null
 }
