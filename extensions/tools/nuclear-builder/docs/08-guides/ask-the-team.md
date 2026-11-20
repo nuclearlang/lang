@@ -20,12 +20,33 @@ answer is the plan (what the team will do, through which stations, and who of th
 role); then it writes the spec, starts the run and tells its progress in the thread. Every member follows the team's
 method (Scrum unless you wrote another) and the instructions you wrote for the team.
 
+## In the team's channel
+
+The team's channel (`#<team>`) is its tech lead: write there as you would in its direct message, without mentioning
+anyone, and the tech lead answers there, with the same plan, specs, runs and confirmations. Each team's channel is
+its own team's: you can work with several teams at once, each in its channel. `@<member>` brings in someone else.
+
+## Each channel remembers its own context
+
+Every channel, every thread and every direct message keeps its own memory: what you asked there, the specs written
+and the runs started (with their state now), the plans the tech lead stated, the questions left open, and a line of
+each older message the chat no longer shows the member (it sees the last 40 whole). It is written from what
+happened, without asking any model, and a member reads it only in that channel: one team's channel never sees
+another's. A thread remembers its own and reads its channel's.
+
+To see or clear it, in a terminal in the project:
+
+```sh
+nuclear-builder chat memory <channel> [--thread <thread id>]           # what it remembers
+nuclear-builder chat memory <channel> [--thread <thread id>] --clear   # forget it (a channel: with its threads)
+```
+
 ## From slides to code
 
 1. Put the document in the project (for example `docs/slides.pdf`). The team reads a PDF (with `pdftotext`, from
    poppler-utils: if the machine has none, it says so), a PowerPoint `.pptx`, markdown and any text. A `.ppt`, `.key`
    or `.odp` is refused: save it as PDF or `.pptx` first.
-2. To the team's tech lead (its direct message or the team's channel), write:
+2. To the team's tech lead (the team's channel, or its direct message), write:
 
    > read docs/slides.pdf and write all the specs from those slides, then write the code through the Builder
 

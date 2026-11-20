@@ -56,3 +56,19 @@ ids of the runs of the current project running with a live owner or waiting) and
 Asked only for kind `api`; an agent (`claude-code`, `codex`, `cursor`, `gemini-cli`, `opencode`, `grok`) is not asked;
 `forceConfirm` (the project's, or `--force-confirm` from the setting) asks it of every paid provider. The same rule in
 a run (`waiting: spending`, `paidOf`), in a detached run and its tools, and in the chat.
+
+## A channel is a memory (requirement 8)
+- Who answers is Nuclear Chat's `Routing` (unchanged): a team's channel, or a thread of it, without a member
+  mentioned → its tech lead; the responder is `member --team <team> --member <lead>`, so a DM and the channel give the
+  same prompt (only the channel's name differs), the same tools, spending rules and run reporting (the host tells a
+  run in its team's channel's thread).
+- The window: the service gives a responder the last 40 messages of the conversation verbatim (`Responders.context`).
+- The memory is the engine's (the chat knows nothing of the factory): `.nuclear/builder/chat/memory/<channel>.jsonl`,
+  a thread's `<channel>/<thread>.jsonl` (`memory.nuc`), appended, written without a model call: `request` (the
+  user's first line), `spec` (`spec_new`'s id and title), `run` (`run_start`'s id; its state read from the run file
+  when told), `plan` (an answer's `Plan:` line: the tech lead's plan starts with it), `question` (an answer ending
+  with `?`; open until a later request), `message` (a condensed line of each message of the others, told only once
+  out of the window). The prompt's `## What this channel remembers`: newest first, at most 40 lines and 4000
+  characters; a thread reads its own, then its channel's; nothing of another channel, team or DM.
+- `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows and forgets it. A channel without
+  its file behaves as before (no section).

@@ -1,0 +1,217 @@
+use sys
+use json
+use shutil
+use pathlib{ Path }
+
+// A channel's memory (spec 023 requirement 8): every channel of Nuclear Chat, and every thread of one, keeps what
+// happened there in a file of its own (`.nuclear/builder/chat/memory/<channel>.jsonl`, a thread's
+// `<channel>/<thread>.jsonl`), written without any call of a model: the user's requests (their first line), the specs
+// written (id, title), the runs started (their state read from the run file when it is told), the plans the members
+// stated (an answer's `Plan:` line), the questions left open (an answer that ends asking), and a condensed line of each
+// message of the others (shown once the chat's window of recent messages no longer holds it). A member's prompt gets
+// it as "## What this channel remembers", newest first and capped; it is read only in its own channel (a thread reads
+// its own, then its channel's).
+
+MEMORY_DIR = ".nuclear/builder/chat/memory"
+// the most lines and characters of the prompt's section, and of one remembered line
+MEMORY_LINES = 40
+MEMORY_CHARS = 4000
+FACT_CHARS = 200
+
+// A plan stated by a member: the first line of an answer that starts `Plan:` (bold or not).
+PLAN_LINE = Regex(r"^\W*plan\W*:", ignoreCase = true)
+
+safeName(name: string) string
+  name.replaceAll(Regex(r"[^\w.-]+"), "-")
+
+// The file of a channel's memory, or of one of its threads.
+memoryFile(root: string, channel: string, thread: string = "") Path
+  thread.isEmpty ? Path(root, MEMORY_DIR, "${safeName(channel)}.jsonl") : Path(root, MEMORY_DIR, safeName(channel), "${safeName(thread)}.jsonl")
+
+// The first line of a text, trimmed and cut to a remembered line's size.
+firstLine(text: string) string
+  line = text.trim().split("\n")[0].trim()
+  line.length > FACT_CHARS ? "${line.substring(0, FACT_CHARS - 1)}…" : line
+
+// What a channel (or a thread) remembers, in order; a line cut by a crash is skipped; none without its file.
+readMemory(root: string, channel: string, thread: string = "") <string, any>[]
+  file = memoryFile(root, channel, thread)
+  if not file.isFile()
+    return []
+  file.readText(encoding = "utf-8").split("\n").map((l: string) => jsonLine(l.trim())).filter((f) => f != null).map((f) => f!)
+
+// Appends what a channel (or a thread) remembers: one line each, never rewritten.
+remember(root: string, channel: string, thread: string, facts: <string, any>[]) void
+  if facts.isEmpty
+    return
+  file = memoryFile(root, channel, thread)
+  file.parent.mkdir(parents = true, existOk = true)
+  f = file.open("a", encoding = "utf-8")
+  for fact in facts
+    fact["at"] = nowMs()
+    f.write(json.dumps(fact, ensureAscii = false) + "\n")
+  f.close()
+
+// Forgets a channel (its file and its threads') or one thread; whether there was anything to forget.
+forget(root: string, channel: string, thread: string = "") boolean
+  file = memoryFile(root, channel, thread)
+  had = file.isFile()
+  file.unlink(missingOk = true)
+  if thread.isEmpty
+    threads = Path(root, MEMORY_DIR, safeName(channel))
+    if threads.isDir()
+      had = true
+      shutil.rmtree(threads, ignoreErrors = true)
+  had
+
+// The threads of a channel that remember something.
+memoryThreads(root: string, channel: string) string[]
+  dir = Path(root, MEMORY_DIR, safeName(channel))
+  dir.isDir() ? dir.glob("*.jsonl").sorted().map((p) => p.stem) : ([] as string[])
+
+// What a message to answer leaves in its channel's memory, before the answer: a condensed line of each message of the
+// others not remembered yet (the chat's window drops the oldest), then the user's request.
+rememberAsked(root: string, ask: <string, any>, by: string) void
+  channel = "${ask["channel"] ?? "general"}"
+  thread = "${ask["thread"] ?? ""}"
+  known = readMemory(root, channel, thread).filter((f) => f["kind"] == "message").map((f) => "${f["id"]}")
+  facts: <string, any>[] = []
+  for m in (ask["messages"] ?? []) as <string, any>[]
+    id = "${m["id"] ?? ""}"
+    text = m["gif"] == null ? firstLine("${m["text"] ?? ""}") : "[a GIF: ${m["gif"]}]"
+    if id.isEmpty or id in known or m["author"] == "you" or text.isEmpty
+      continue
+    known.add(id)
+    facts.add({ "kind": "message", "id": id, "author": "${m["author"] ?? "?"}", "text": text })
+  said = firstLine("${ask["said"] ?? ""}")
+  if not said.isEmpty
+    facts.add({ "kind": "request", "text": said, "by": by })
+  remember(root, channel, thread, facts)
+
+// What an answer leaves in its channel's memory, from the events the member tells as it answers: a spec written
+// (spec_new), a run started (run_start), a plan stated, and the question it ends with.
+ChannelMemory(root: string, channel: string, thread: string, by: string)
+  // the tools called, by their call's id (an agent's result names only the call), and the answer's last text
+  calls: <string, string> = {}
+  last: string = ""
+
+  // The member's events, remembered, then passed on to `out`.
+  tap(out: (e: <string, any>) => void)(e: <string, any>) => void
+    (e: <string, any>) =>
+      on(e)
+      out(e)
+
+  on(e: <string, any>) void
+    ev: <string, any> = e["event"] ?? ({} as <string, any>)
+    if e["type"] == "event" and ev["type"] == "tool"
+      calls["${ev["id"]}"] = "${ev["tool"] ?? ""}"
+    else if e["type"] == "event" and ev["type"] == "tool-result" and ev["ok"] != false
+      tool = "${ev["tool"] ?? calls["${ev["id"]}"] ?? ""}"
+      said = jsonLine("${ev["text"] ?? ""}") ?? ({} as <string, any>)
+      if tool.endsWith("spec_new") and said["id"] != null
+        spec: <string, any> = said["spec"] ?? ({} as <string, any>)
+        remember(root, channel, thread, [{ "kind": "spec", "id": "${said["id"]}", "title": firstLine("${spec["title"] ?? ""}"), "by": by }])
+      else if tool.endsWith("run_start") and said["run"] != null
+        remember(root, channel, thread, [{ "kind": "run", "id": "${said["run"]}", "by": by }])
+    else if e["type"] == "event" and ev["type"] == "text"
+      text = "${ev["text"] ?? ""}".trim()
+      if not text.isEmpty
+        last = text
+        if PLAN_LINE.test(text)
+          remember(root, channel, thread, [{ "kind": "plan", "text": firstLine(text), "by": by }])
+    else if e["type"] == "done" and e["error"] == null
+      lines: string[] = last.split("\n").map((l: string) => l.trim()).filter((l: string) => not l.isEmpty)
+      if not lines.isEmpty and lines.last.endsWith("?")
+        remember(root, channel, thread, [{ "kind": "question", "text": firstLine(lines.last), "by": by }])
+
+// One remembered line as the prompt says it; empty when it is not told (a message still in the window, a question
+// answered since).
+factLine(root: string, f: <string, any>, window: string[], answered: boolean) string
+  kind = "${f["kind"] ?? ""}"
+  if kind == "request"
+    return "- the user asked: ${f["text"]}"
+  if kind == "spec"
+    return "- spec `${f["id"]}` written: ${f["title"]}"
+  if kind == "run"
+    run = loadRun(root, "${f["id"]}")
+    if run == null
+      return "- run `${f["id"]}` started (its file is gone)"
+    spec: <string, any> = run!["spec"] ?? ({} as <string, any>)
+    return "- run `${f["id"]}` (${spec["title"] ?? f["id"]}): ${run!["status"] ?? "?"}"
+  if kind == "plan"
+    return "- ${f["by"] ?? "a member"} planned: ${"${f["text"]}".replaceAll(PLAN_LINE, "").trim()}"
+  if kind == "question" and not answered
+    return "- open question of ${f["by"] ?? "a member"}: ${f["text"]}"
+  if kind == "message" and not ("${f["id"]}" in window)
+    return "- earlier, ${f["author"]}: ${f["text"]}"
+  ""
+
+// The lines of one memory, newest first: a spec or a run told once (its newest line), a question only while no
+// request came after it, a message only once the window no longer holds it.
+memoryLines(root: string, facts: <string, any>[], window: string[]) string[]
+  lines: string[] = []
+  seen: string[] = []
+  requested = false
+  for f in facts.reversed()
+    kind = "${f["kind"] ?? ""}"
+    key = "${kind}:${f["id"] ?? ""}"
+    if kind in ["spec", "run"] and key in seen
+      continue
+    seen.add(key)
+    line = factLine(root, f, window, requested)
+    if kind == "request"
+      requested = true
+    if not line.isEmpty
+      lines.add(line)
+  lines
+
+// The prompt's section of what a channel remembers (a thread: its own, then its channel's), capped; empty when it
+// remembers nothing (a channel of before, a memory cleared). `window`: the messages the prompt holds verbatim;
+// `said`: the message to answer, remembered already as the newest request (the prompt says it apart).
+memorySection(root: string, channel: string, thread: string, window: <string, any>[], said: string = "") string
+  ids: string[] = window.map((m) => "${m["id"] ?? ""}").filter((i: string) => not i.isEmpty)
+  facts = readMemory(root, channel, thread)
+  if not facts.isEmpty and facts.last["kind"] == "request" and facts.last["text"] == firstLine(said)
+    facts = facts.take(facts.length - 1)
+  own = memoryLines(root, facts, ids)
+  parent = thread.isEmpty ? ([] as string[]) : memoryLines(root, readMemory(root, channel), ids)
+  kept: string[] = []
+  size = 0
+  for line in [...own, ...(parent.isEmpty ? [] as string[] : ["(the channel #${channel}:)", ...parent])]
+    if kept.length >= MEMORY_LINES or size + line.length > MEMORY_CHARS
+      break
+    kept.add(line)
+    size += line.length + 1
+  if kept.isEmpty or kept.last.startsWith("(the channel")
+    kept = kept.filter((l: string) => not l.startsWith("(the channel"))
+  if kept.isEmpty
+    return ""
+  where = thread.isEmpty ? "#${channel}" : "this thread of #${channel}"
+  "## What this channel remembers\n\nWhat happened in ${where} before the conversation below, newest first (this channel's own memory: nothing of another channel or team):\n\n${kept.join("\n")}"
+
+// `nuclear-builder chat memory <channel> [--thread <t>] [--clear] [--json] [--root <dir>]`: what a channel (or a
+// thread) remembers, or forgotten.
+chatLine(args: string[]) int
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  thread = option(args, "--thread") ?? ""
+  skip = ["--thread", "--root"]
+  named = args.filter((a) => not a.startsWith("--") and not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in skip))
+  if named.length != 2 or named[0] != "memory"
+    print("nuclear-builder chat memory <channel> [--thread <t>] [--clear] [--json]", file = sys.stderr)
+    return 2
+  channel = named[1]
+  asJson = "--json" in args
+  if "--clear" in args
+    had = forget(root, channel, thread)
+    if asJson
+      printJson({ "channel": channel, "thread": thread, "cleared": had })
+    else
+      print(had ? "Forgotten: #${channel}${thread.isEmpty ? "" : ", thread ${thread}"}." : "#${channel} remembered nothing.")
+    return 0
+  facts = readMemory(root, channel, thread)
+  section = memorySection(root, channel, thread, [])
+  if asJson
+    printJson({ "channel": channel, "thread": thread, "file": "${MEMORY_DIR}/${thread.isEmpty ? "${safeName(channel)}.jsonl" : "${safeName(channel)}/${safeName(thread)}.jsonl"}", "facts": facts, "threads": thread.isEmpty ? memoryThreads(root, channel) : ([] as string[]), "prompt": section })
+  else
+    print(section.isEmpty ? "#${channel} remembers nothing yet." : section)
+  0

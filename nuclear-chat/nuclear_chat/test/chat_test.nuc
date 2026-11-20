@@ -225,6 +225,8 @@ tests Chat
     // a team: its tech lead; its channel without a member mentioned too
     expect(answerersOf(ws, "general", "@web what is left?") == ["lin"])
     expect(answerersOf(ws, "core", "how is the run going?") == ["ada"])
+    // another team's channel: that team's tech lead (spec 023: a team's channel is its tech lead)
+    expect(answerersOf(ws, "web", "make a login page") == ["lin"])
     expect(answerersOf(ws, "core", "@quinn only you") == ["quinn"])
     expect(answerersOf(ws, "core", "@core and @quinn") == ["ada", "quinn"])
 

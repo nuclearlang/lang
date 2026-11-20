@@ -94,7 +94,8 @@ MemberLines(tell: (e: <string, any>) => void)
 // member who answers (its id, role, employee, who works it), or the general agent's choice.
 Member: Chat
   (root: string, id: string, given: <string, any>, line: <string, any>, read: () => string?, out: (e: <string, any>) => void, options: <string, any>, team: <string, any>, role: string, ask: <string, any>)
-    super(root, id, given, line, read, out, options)
+    // what the member does in the channel is remembered there (memory.nuc), without any call of a model
+    super(root, id, given, line, read, ChannelMemory(root, "${ask["channel"] ?? "general"}", "${ask["thread"] ?? ""}", role == "chat" ? GENERAL_AGENT : "${given["id"] ?? role}").tap(out), options)
   assigned() <string, any>
     role == "chat" ? ({} as <string, any>) : given
 
@@ -148,6 +149,7 @@ Member: Chat
   // The answer to the message said, once: `typing`, then the chat's turn told in the responder's protocol.
   respond() int
     load()
+    rememberAsked(root, ask, role == "chat" ? GENERAL_AGENT : "${given["id"] ?? role}")
     out({ "type": "typing" })
     answer("${ask["said"] ?? ""}".trim())
     0
@@ -168,7 +170,7 @@ Member: Chat
   leadSection() string
     lead = "${team["techLead"] ?? ""}"
     if assigned()["id"] == lead
-      return "## You are the team's tech lead\n\nYou answer for the whole team: a message to the team is yours, and you speak for everyone. When a question belongs to another member, say who owns it (by name and role) and bring them in. You are accountable for the team's work.\n\nGiven a task, your first answer is the plan: what the team will do, how (the stations it goes through, the team's method below) and who of your team does each part, by name and role. Then do it through the factory's tools: a spec with its acceptance criteria (spec_new; ask the user for the criteria when they are not given), then its run (run_start, assigning the members you named), and tell the run's progress here (runs, run_file) until it is delivered or waits for the user.\n\n## Your team, by station\n\n${byStation()}"
+      return "## You are the team's tech lead\n\nYou answer for the whole team: a message to the team is yours, and you speak for everyone. When a question belongs to another member, say who owns it (by name and role) and bring them in. You are accountable for the team's work.\n\nGiven a task, your first answer is the plan, its first line `Plan: <the plan in one sentence>` (the channel remembers it): what the team will do, how (the stations it goes through, the team's method below) and who of your team does each part, by name and role. Then do it through the factory's tools: a spec with its acceptance criteria (spec_new; ask the user for the criteria when they are not given), then its run (run_start, assigning the members you named), and tell the run's progress here (runs, run_file) until it is delivered or waits for the user.\n\n## Your team, by station\n\n${byStation()}"
     own: <string, any> = ((team["members"] ?? []) as <string, any>[]).find((m) => m["id"] == lead) ?? ({} as <string, any>)
     leadRole = "${own["role"] ?? DEFAULT_LEAD}"
     staff = roster(leadRole, lang())
@@ -237,6 +239,9 @@ Member: Chat
     parts.add(toolsSection())
     parts.add(componentsSection())
     messages: <string, any>[] = ask["messages"] ?? []
+    remembered = memorySection(root, "${ask["channel"] ?? "general"}", "${ask["thread"] ?? ""}", messages, "${ask["said"] ?? ""}")
+    if not remembered.isEmpty
+      parts.add(remembered)
     if not messages.isEmpty
       parts.add("## The conversation so far\n\n${messages.map((m) => "${m["author"] ?? "?"}: ${m["gif"] == null ? m["text"] ?? "" : "[a GIF: ${m["gif"]}]"}").join("\n\n")}")
     now = "## The message to answer\n\nyou: ${ask["said"] ?? ""}\n\n${languageRule()}"

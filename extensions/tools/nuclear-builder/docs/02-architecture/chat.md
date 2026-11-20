@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [engine.md, providers.md, teams-and-vault.md, ../../../../../nuclear-chat/docs/08-guides/connect-a-host.md, ../../../../../docs/04-specs/013-nuclear-chat/design.md]
 ---
 # The Builder in Nuclear Chat
@@ -38,10 +38,27 @@ run in the team's channel, and does what its buttons ask.
   local text tools are held to the same list: no `spec_new`, `run_start`, `run_answer`, no team changed by the
   Builder's tools.
 - **The tech lead plans, explains and assigns** (spec 023 requirement 2): its prompt says that its first answer to a
-  task is the plan (what, how: the stations, the team's method; who does each part, by name and role, from *Your
+  task is the plan, its first line `Plan: …` (what, how: the stations, the team's method; who does each part, by name and role, from *Your
   team, by station*), then `spec_new` with criteria and `run_start` assigning those members, and the run's progress
   told in the thread. Every member's prompt holds the team's method and instructions (`teamWay`, through
   `withSkills`).
+- **A team's channel is its tech lead** (spec 023 requirement 8): Nuclear Chat runs the lead's responder for a
+  message in the team's channel or a thread of it that mentions no member, the same command as its direct message;
+  the prompt is the same but for the channel's name (`#<team>`, `, a thread`), with the same tools, spending and
+  the run told in its thread. Another team's channel is that team's lead, with its own team, method and instructions.
+- **Every channel is a memory** (`memory.nuc`, spec 023 requirement 8): besides the last 40 messages the chat gives
+  verbatim, each channel keeps `.nuclear/builder/chat/memory/<channel>.jsonl` (a thread
+  `<channel>/<thread>.jsonl`), one JSON line per fact, appended, written without a model call: `request` (the
+  user's message, its first line, before the answer: `rememberAsked`), `spec` (`spec_new`: id, title), `run`
+  (`run_start`: its id), `plan` (an answer's first line `Plan: …`; the tech lead's plan starts with it), `question`
+  (an answer that ends asking), `message` (each message of the others, one line: `ChannelMemory` taps the member's
+  events). The prompt's `## What this channel remembers` (before *The conversation so far*): newest first, a spec
+  or run once (a run's state read from its file), a question only while no request came after it, a message only
+  once the window no longer holds it, the message being answered left out; at most 40 lines and 4000 characters
+  (`MEMORY_LINES`, `MEMORY_CHARS`). A thread reads its own, then its channel's; a channel never reads another's, nor a
+  thread's; `dm-atlas` and a member's DM are channels of their own. A channel with no file has no section.
+  `nuclear-builder chat memory <channel> [--thread <t>] [--clear] [--json]` shows it (`facts`, `threads`, `prompt`)
+  or forgets it (a channel: with its threads).
 - **The general agent is a front for any agent** (spec 013 requirement 17): the host file gives the member `atlas`
   (role `chat`, its direct message `dm-atlas`) with `responder.choices`, one per agent of `nuclear-builder agents`
   (`chat_agents.nuc`: the local Nuclear Developer only while the local models are on, Claude Code, OpenCode, Codex and Gemini CLI when their

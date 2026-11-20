@@ -803,7 +803,7 @@
     "**Why it does not cost more.** The tokens go into the same work an agent alone would do; a team only puts them in order. Each station gets the context it needs (the spec, the design, the tests), not the whole conversation, so prompts stay short; a check between stations stops a wrong step before the next one builds on it, so less work is thrown away and done again. What costs money is said: the spending question is asked only for work paid by use (an API key); an agent's subscription is not asked.",
     "",
     "**How it works.**",
-    "1. You ask a tech lead in Nuclear Chat (Atlas tells you which team is free, or helps you make one).",
+    "1. You ask a tech lead in Nuclear Chat, in its direct message or in its team's channel (Atlas tells you which team is free, or helps you make one). Each channel keeps its own memory of what was asked and done there, so a team's channel is the context of that team's work.",
     "2. The tech lead answers first with the plan: what it will do, through which stations, and who of its team does each part.",
     "3. It writes the spec with its acceptance criteria and starts the run in Nuclear Builder; each station is done by its member and checked (the tests first, then the code that passes them, then quality).",
     "4. Progress is told in the thread; the gates that need you (a delivery, a destructive step, money) wait for you.",

@@ -10162,6 +10162,52 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#a-channel-is-a-memory-requirement-8.4474ac",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — A channel is a memory (requirement 8)",
+   "summary": "mentioned → its tech lead; the responder is `member --team <team> --member <lead>`, so a DM and the channel give the same prompt (only the channel's name differs), the same tools, spending rules and run reporting (the host tells a run in its team's channel's thread).",
+   "body": [
+    "- Who answers is Nuclear Chat's `Routing` (unchanged): a team's channel, or a thread of it, without a member",
+    "  mentioned → its tech lead; the responder is `member --team <team> --member <lead>`, so a DM and the channel give the",
+    "  same prompt (only the channel's name differs), the same tools, spending rules and run reporting (the host tells a",
+    "  run in its team's channel's thread).",
+    "- The window: the service gives a responder the last 40 messages of the conversation verbatim (`Responders.context`).",
+    "- The memory is the engine's (the chat knows nothing of the factory): `.nuclear/builder/chat/memory/<channel>.jsonl`,",
+    "  a thread's `<channel>/<thread>.jsonl` (`memory.nuc`), appended, written without a model call: `request` (the",
+    "  user's first line), `spec` (`spec_new`'s id and title), `run` (`run_start`'s id; its state read from the run file",
+    "  when told), `plan` (an answer's `Plan:` line: the tech lead's plan starts with it), `question` (an answer ending",
+    "  with `?`; open until a later request), `message` (a condensed line of each message of the others, told only once",
+    "  out of the window). The prompt's `## What this channel remembers`: newest first, at most 40 lines and 4000",
+    "  characters; a thread reads its own, then its channel's; nothing of another channel, team or DM.",
+    "- `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows and forgets it. A channel without"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#a-channel-is-a-memory-requirement-8.dfe0f8",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — A channel is a memory (requirement 8)",
+   "summary": "its file behaves as before (no section).",
+   "body": "its file behaves as before (no section).",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#atlas-and-the-tech-lead",
    "type": "spec",
    "title": "Spec 023 — Design notes: the engine's contract — Atlas and the tech lead",
@@ -10317,6 +10363,30 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#a-channel-is-a-memory",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements — A channel is a memory",
+   "summary": "8. Talking in a team's channel is talking to its tech lead (the user, 2026-11-20: \"it must have the same functionality if I talk in the team's channel: I can make requirements there and the tech lead answers me there without problems, even if I talk in other teams\"): the same prompt, tools,…",
+   "body": [
+    "8. Talking in a team's channel is talking to its tech lead (the user, 2026-11-20: \"it must have the same",
+    "   functionality if I talk in the team's channel: I can make requirements there and the tech lead answers me there",
+    "   without problems, even if I talk in other teams\"): the same prompt, tools, spending and reports as its direct",
+    "   message; another team's channel is that team's lead, with its own team, method and instructions. And \"each",
+    "   channel becomes a saved context that serves as internal, separate memory, so there is a context of each thing\":",
+    "   every channel, every thread of one and every direct message keeps a durable memory of what happened there, read",
+    "   only there, which the user can see and clear."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#atlas-informs-the-tech-leads-work",
    "type": "spec",
    "title": "Spec 023: Teams that work like human development teams — Requirements — Atlas informs, the tech leads work",
@@ -10387,9 +10457,9 @@
    "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#local-first",
    "type": "spec",
    "title": "Spec 023: Teams that work like human development teams — Requirements — Local first",
-   "summary": "7. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads anything from the internet.",
+   "summary": "9. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads anything from the internet.",
    "body": [
-    "7. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads",
+    "9. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads",
     "   anything from the internet. If a bundled asset is missing (a broken install), the extension says so and, as a",
     "   contingency, takes it from the release of its own version on GitHub (nuclearlang/lang), checked against the",
     "   release's checksum, kept in its storage."

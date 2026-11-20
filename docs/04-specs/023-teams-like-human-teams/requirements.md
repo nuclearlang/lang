@@ -33,8 +33,17 @@ each team follows the instructions its user wrote for it.
    in stations (analysis, design, tests first, code, quality, delivery) with checks between them, the way a
    professional team works; the user customizes each team. Agents can explain it in these words.
 
+## A channel is a memory
+8. Talking in a team's channel is talking to its tech lead (the user, 2026-11-20: "it must have the same
+   functionality if I talk in the team's channel: I can make requirements there and the tech lead answers me there
+   without problems, even if I talk in other teams"): the same prompt, tools, spending and reports as its direct
+   message; another team's channel is that team's lead, with its own team, method and instructions. And "each
+   channel becomes a saved context that serves as internal, separate memory, so there is a context of each thing":
+   every channel, every thread of one and every direct message keeps a durable memory of what happened there, read
+   only there, which the user can see and clear.
+
 ## Local first
-7. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads
+9. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads
    anything from the internet. If a bundled asset is missing (a broken install), the extension says so and, as a
    contingency, takes it from the release of its own version on GitHub (nuclearlang/lang), checked against the
    release's checksum, kept in its storage.

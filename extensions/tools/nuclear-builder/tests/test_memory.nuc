@@ -1,0 +1,124 @@
+use json
+use pathlib{ Path }
+
+// A team's channel is its tech lead (spec 023 requirement 2) and every channel is a memory of its own (requirement 8):
+// the responder's command (`nuclear-builder member`) run as Nuclear Chat runs it, Claude Code a fake command (no
+// paid call); what a channel remembers, its cap, the window's rollover, the isolation of channels, teams and threads,
+// and `chat memory`.
+
+// Two more teams led by Claude Code: day-shift (Ada the Architect leads, Quinn the QA; its own method) and web (Lin
+// leads, with instructions of its user).
+leadTeams(tmpPath: Path, monkeypatch: any) string
+  root = memberProject(tmpPath, monkeypatch)
+  saveTeam({ "id": "day-shift", "name": "Day shift", "techLead": "arch", "method": "Kanban: one card at a time.", "members": [{ "id": "arch", "role": "architect", "kind": "agent", "provider": "claude-code", "model": "haiku", "name": "Ada" }, { "id": "qa", "role": "qa", "kind": "agent", "provider": "claude-code", "model": "haiku", "name": "Quinn" }] })
+  saveTeam({ "id": "web", "name": "Web", "techLead": "lead", "instructions": "Mobile first.", "members": [{ "id": "lead", "role": "architect", "kind": "agent", "provider": "claude-code", "model": "haiku", "name": "Lin" }] })
+  root
+
+// The conversation Nuclear Chat gives a responder.
+asked(member: string, channel: string, said: string, thread: string = "", messages: <string, any>[] = []) string
+  json.dumps({ "member": member, "channel": channel, "thread": thread, "messages": messages, "said": said, "lang": "en" })
+
+// The prompt the fake `claude` was given (`-p <prompt>`) and the role it was given (`--append-system-prompt`).
+promptOf(log: Path) string
+  "${log.readText().split("\n--output-format\n")[0]}".substring(3)
+
+roleOf(log: Path) string
+  "${log.readText().split("\n--append-system-prompt\n")[1]}".split("\n--tools\n")[0]
+
+// What the fake `claude` does when the tech lead is given a task: the plan, a spec written, its run started, a question.
+TASK_LINES: <string, any>[] = [{ "type": "assistant", "message": { "content": [{ "type": "tool_use", "id": "t1", "name": "mcp__nuclear_builder__spec_new", "input": { "title": "Log in" } }] } }, { "type": "user", "message": { "content": [{ "type": "tool_result", "tool_use_id": "t1", "content": [{ "type": "text", "text": "{\"id\": \"log-in\", \"path\": \"specs/_global/log-in\", \"spec\": {\"title\": \"Log in\"}}" }] }] } }, { "type": "assistant", "message": { "content": [{ "type": "tool_use", "id": "t2", "name": "mcp__nuclear_builder__run_start", "input": { "spec": "log-in" } }] } }, { "type": "user", "message": { "content": [{ "type": "tool_result", "tool_use_id": "t2", "content": [{ "type": "text", "text": "{\"run\": \"log-in\", \"detached\": 1, \"log\": \"x\"}" }] }] } }, { "type": "result", "result": "Plan: Ada designs the screen, Quinn checks it.\nThe spec log-in is written and its run started.\nShould it remember the user?", "total_cost_usd": 0.0, "is_error": false }]
+
+testATeamsChannelIsItsTechLeadAsADirectMessageIs(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = leadTeams(tmpPath, monkeypatch)
+  log = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "On it.", "total_cost_usd": 0.0, "is_error": false }])
+  lead = ["--team", "day-shift", "--member", "arch", "--events", "--root", root]
+  dm = memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "dm-day-shift-arch", "make a login page"))
+  expect(dm["code"] == 0 and (dm["lines"] as <string, any>[]).last == { "type": "done", "costUsd": 0.0 }, json.dumps(dm))
+  inDm = promptOf(log)
+  role = roleOf(log)
+  channel = memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "day-shift", "make a login page"))
+  expect(channel["code"] == 0 and not (channel["lines"] as <string, any>[]).any((e) => e["type"] == "ask"), json.dumps(channel))
+  // the same lead, the same prompt (only the channel's name differs), the same role and tools, no spending asked
+  expect(promptOf(log) == inDm.replace("#dm-day-shift-arch", "#day-shift"), promptOf(log))
+  expect(roleOf(log) == role and "mcp__nuclear_builder" in log.readText())
+  for part in ["You are Ada, the Architect of the team Day shift", "You are the team's tech lead", "`Plan: <the plan in one sentence>`", "spec_new", "run_start", "The method: Kanban: one card at a time.", "- design: Ada, the Architect", "- quality: Quinn, the QA", "every action of Nuclear Builder"]
+    expect(part in inDm or part in role, part)
+  // a thread of the channel: the same lead
+  memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "day-shift", "and the logout?", "m7"))
+  expect("You are the team's tech lead" in promptOf(log) and "#day-shift, a thread" in promptOf(log))
+  // another team's channel: its own lead, team, method and instructions, and nothing of day-shift's channel
+  memberCall(["--team", "web", "--member", "lead", "--events", "--root", root], monkeypatch, capsys, asked("web-lead", "web", "a landing page"))
+  web = "${promptOf(log)}${roleOf(log)}"
+  for part in ["You are Lin, the Architect of the team Web", "You are the team's tech lead", "Mobile first.", "The method: Scrum."]
+    expect(part in web, part)
+  expect(not ("make a login page" in web) and not ("Kanban" in web) and not ("Day shift" in web))
+
+testAChannelRemembersWhatHappenedThereWithoutAModel(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = leadTeams(tmpPath, monkeypatch)
+  log = fakeAgent(tmpPath, monkeypatch, "claude", TASK_LINES)
+  lead = ["--team", "day-shift", "--member", "arch", "--events", "--root", root]
+  memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "day-shift", "make a login page\nwith a remember-me box"))
+  facts = readMemory(root, "day-shift")
+  expect(facts.map((f) => f["kind"]) == ["request", "spec", "run", "plan", "question"], json.dumps(facts))
+  expect(facts[0]["text"] == "make a login page" and facts[1]["id"] == "log-in" and facts[1]["title"] == "Log in" and facts[2]["id"] == "log-in" and facts[3]["by"] == "arch")
+  expect(Path(root, ".nuclear", "builder", "chat", "memory", "day-shift.jsonl").isFile())
+  // the next message: the section, newest first, the run's state from its file
+  run = newRun(root, { "name": "app" }, { "id": "log-in", "title": "Log in" }, loadTeam("day-shift"), ["design"], "specs/_global/log-in")
+  run["status"] = "waiting"
+  saveRun(run)
+  log2 = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "Yes.", "total_cost_usd": 0.0, "is_error": false }])
+  memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "day-shift", "how is it going?"))
+  prompt = promptOf(log2)
+  section = prompt.split("## What this channel remembers\n\n")[1].split("\n\n## ")[0]
+  expect(section.split("\n").skip(2) == ["- open question of arch: Should it remember the user?", "- arch planned: Ada designs the screen, Quinn checks it.", "- run `log-in` (Log in): waiting", "- spec `log-in` written: Log in", "- the user asked: make a login page"], section)
+  // the question is no longer open once the user wrote after it (the message being answered is said apart)
+  expect(not ("how is it going" in section))
+  memberCall(lead, monkeypatch, capsys, asked("day-shift-arch", "day-shift", "yes"))
+  expect(not ("open question" in promptOf(log2)) and "- the user asked: how is it going?" in promptOf(log2) and log.exists(), promptOf(log2))
+
+testTheWindowsOlderMessagesStayAsOneLineEachAndTheSectionIsCapped(tmpPath: Path, monkeypatch: any) void
+  root = leadTeams(tmpPath, monkeypatch)
+  first: <string, any>[] = [{ "id": "m1", "author": "day-shift-qa", "text": "QA passed\nthe details" }, { "id": "m2", "author": "you", "text": "great" }, { "id": "m3", "author": "system", "text": "The run log-in ended." }]
+  rememberAsked(root, { "channel": "day-shift", "messages": first, "said": "great" }, "arch")
+  // the chat's window moved on: m1 is no longer in it; m3 still is
+  window: <string, any>[] = [{ "id": "m3", "author": "system", "text": "The run log-in ended." }, { "id": "m4", "author": "day-shift-arch", "text": "Done." }]
+  rememberAsked(root, { "channel": "day-shift", "messages": window, "said": "next?" }, "arch")
+  kinds = readMemory(root, "day-shift").map((f) => "${f["kind"]}:${f["id"] ?? ""}")
+  expect(kinds == ["message:m1", "message:m3", "request:", "message:m4", "request:"], json.dumps(kinds))
+  section = memorySection(root, "day-shift", "", window)
+  expect("- earlier, day-shift-qa: QA passed" in section and not ("the details" in section) and not ("The run log-in ended" in section) and not ("Done." in section), section)
+  // capped: the newest lines first, at most MEMORY_LINES and MEMORY_CHARS
+  many: <string, any>[] = []
+  for i in 0..120
+    many.add({ "kind": "request", "text": "request ${i} of the many requests the user made in this channel, one after another" })
+  remember(root, "web", "", many)
+  capped = memorySection(root, "web", "", [])
+  lines = capped.split("\n").filter((l: string) => l.startsWith("- "))
+  expect(lines.length <= MEMORY_LINES and capped.length < MEMORY_CHARS + 400 and lines[0].startsWith("- the user asked: request 119"), "${lines.length}")
+
+testEveryChannelThreadAndTeamHasItsOwnMemory(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = leadTeams(tmpPath, monkeypatch)
+  rememberAsked(root, { "channel": "day-shift", "said": "the day team's task" }, "arch")
+  rememberAsked(root, { "channel": "web", "said": "the web team's task" }, "lead")
+  rememberAsked(root, { "channel": "day-shift", "thread": "m9", "said": "the thread's detail" }, "arch")
+  rememberAsked(root, { "channel": "dm-atlas", "said": "what is Nuclear?" }, "atlas")
+  day = memorySection(root, "day-shift", "", [])
+  thread = memorySection(root, "day-shift", "m9", [])
+  expect("the day team's task" in day and not ("web team" in day) and not ("thread's detail" in day) and not ("Nuclear?" in day), day)
+  expect("the web team's task" in memorySection(root, "web", "", []) and not ("day team" in memorySection(root, "web", "", [])))
+  // a thread: its own memory first, then its channel's (a sub-context of it)
+  expect(thread.indexOf("the thread's detail") < thread.indexOf("(the channel #day-shift:)") and "the day team's task" in thread, thread)
+  atlas = memorySection(root, "dm-atlas", "", [])
+  expect("what is Nuclear?" in atlas and not ("task" in atlas))
+  // a channel of before (no memory file): no section at all
+  expect(memorySection(root, "night-shift", "", [{ "id": "a", "author": "you", "text": "hi" }]) == "")
+  // `chat memory`: shown, then a thread forgotten, then the channel with its threads
+  expect(chatLine(["memory", "day-shift", "--json", "--root", root]) == 0)
+  shown = json.loads(capsys.readouterr().out)
+  expect(shown["file"] == ".nuclear/builder/chat/memory/day-shift.jsonl" and shown["threads"] == ["m9"] and (shown["facts"] as any[]).length == 1 and "## What this channel remembers" in "${shown["prompt"]}", json.dumps(shown))
+  expect(chatLine(["memory", "day-shift", "--thread", "m9", "--clear", "--json", "--root", root]) == 0)
+  expect(json.loads(capsys.readouterr().out) == { "channel": "day-shift", "thread": "m9", "cleared": true } and readMemory(root, "day-shift", "m9").isEmpty and not readMemory(root, "day-shift").isEmpty)
+  rememberAsked(root, { "channel": "day-shift", "thread": "m9", "said": "again" }, "arch")
+  expect(chatLine(["memory", "day-shift", "--clear", "--root", root]) == 0 and "Forgotten: #day-shift." in capsys.readouterr().out)
+  expect(readMemory(root, "day-shift").isEmpty and readMemory(root, "day-shift", "m9").isEmpty and not readMemory(root, "web").isEmpty)
+  expect(chatLine(["memory", "--root", root]) == 2)

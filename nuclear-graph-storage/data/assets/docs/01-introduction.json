@@ -484,6 +484,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.b5c24b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A channel is a memory** (spec 023 requirement 8): a team's channel is its tech lead, exactly as its direct message (the same prompt, tools, spending and run reports; another team's channel, that team's lead). Every channel, thread and direct message keeps its own durable memory, `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (the user's requests, the specs written, the runs started with their state, the plans stated, the open questions, a line per message older than the chat's 40-message window), given to the member as *What this channel remembers* (newest first, capped) and read only in that channel. `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows or forgets it. The tech lead's plan starts with a line `Plan: …`.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.e462e7",
    "type": "changelog",
    "title": "Changelog — Unreleased",

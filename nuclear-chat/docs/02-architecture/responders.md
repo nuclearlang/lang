@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [api.md, ../00-context/domain.md, ../../../docs/04-specs/013-nuclear-chat/design.md]
 ---
 # The responders
@@ -28,7 +28,9 @@ picks it.
 ## In: one line on stdin
 `{"workspace", "root", "member", "channel", "thread", "messages", "said", "lang", "gifTags"?}`. `messages`: the last
 40 of the conversation (the thread's, or the channel's outside threads), each `{id, at, author, text, thread, gif}`
-(`gif`: its title). `lang`: the member's profile language, else the workspace's: the user's chosen language, which
+(`gif`: its title): the window (`Responders.context`, 40); what is older is the host's to remember (Nuclear Builder
+keeps a memory per channel and thread, spec 023 requirement 8). A team's channel and its threads are answered by
+its tech lead (*Who answers*, 4), the same responder as its direct message. `lang`: the member's profile language, else the workspace's: the user's chosen language, which
 the member answers in (or in the language the user's message is written in). `gifTags`: every tag of the pack,
 only for a member whose personality sends GIFs.
 

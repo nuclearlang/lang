@@ -46,6 +46,9 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
   the project keeps, channels and history, stays). Decided while building; confirm.
 
 ## Pending
+- *What this channel remembers* in the channel's menu (spec 023 requirement 8): the memory is the host's
+  (`nuclear-builder chat memory <channel> --json`, `--clear`); the UI needs a host action through its bridge (the
+  service knows nothing of it) and the VS Code host's handler. Today it is seen and cleared from a terminal.
 - A CI workflow that builds `system/`, `nuclear_chat/` and `ui/` and runs their tests, pyright and the embedded build; then the badge in
   `README.md` and a page on the website.
 - The knowledge base: `nuclear-graph knowledge build`, `check`, `ingest` once the platform's other changes of

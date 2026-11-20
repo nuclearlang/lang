@@ -133,6 +133,10 @@ USAGE = """
                                   the host file of Nuclear Chat for this project: the members of its team (the run's
                                   team), their responders, the general agent `atlas` with its choices (the
                                   agents below), the channels general and the team's
+  nuclear-builder chat memory <channel> [--thread <t>] [--clear] [--json] [--root <dir>]
+                                  what a channel of Nuclear Chat (or one of its threads) remembers, as its members'
+                                  prompts get it: the requests, the specs and runs, the plans, the open questions,
+                                  the older messages; --clear forgets it (a channel: its threads too)
   nuclear-builder agents [--json] [--root <dir>]
                                   the agents that can answer a conversation on this machine: the local Nuclear
                                   Developer (always), each agent whose command is on the PATH, each API provider with
@@ -619,6 +623,7 @@ main(argv: string[]? = null) void
       "spec" -> specLine(rest)
       "member" -> memberLine(rest)
       "chat-host" -> chatHostLine(rest)
+      "chat" -> chatLine(rest)
       "agents" -> agentsLine(rest)
       "models" -> modelsLine(rest)
       "ci" -> ciLine(rest)

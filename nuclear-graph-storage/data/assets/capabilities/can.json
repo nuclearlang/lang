@@ -625,7 +625,9 @@
         "- Started at login by the AI set-up (`nuclear-builder setup`); by hand: `nuclear-chat serve`.",
         "- Conversations as in Slack, each a route a host or an agent calls too: edit the user's message (`PATCH messages/{ws}/message/{id}`), delete any (`DELETE`, it shows deleted, its thread stays); close, archive, open again, rename or retopic a conversation (`PATCH channels/{ws}/{channel}` `{state|name|topic}`), delete it (`DELETE channels/{ws}/{channel}`: its history moved to `.nuclear/chat/deleted/`); make a channel with chosen members (`POST channels/{ws}`). In the page: *New message* and Ctrl+K open the quick switcher (any member's direct message, any channel), *Members* lists everyone, the header's ⋯ holds the conversation's actions.",
         "- Search every message: `GET messages/{ws}/search?words=` with `from:@<member>` (`from:@you`) and `in:#<channel>`; in the page the header's *Search*, whose result opens the message highlighted in its channel or thread; a host opens the page at a message with `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's chat notifications do).",
-        "- Who is listed: Atlas and each team's tech lead (spec 023); the other members work through the runs and post there as themselves; an older direct message with a member stays readable (the quick switcher finds it), never deleted."
+        "- Who is listed: Atlas and each team's tech lead (spec 023); the other members work through the runs and post there as themselves; an older direct message with a member stays readable (the quick switcher finds it), never deleted.",
+        "- A team's channel is its tech lead: a requirement written there (no member mentioned) is answered by that team's lead as in a direct message — the plan (`Plan: …`, who does each part), the spec, the run, reported in the thread; another team's channel gets that team's lead.",
+        "- Each channel remembers its own context: besides its last 40 messages, a memory of what happened there (the requests, the specs made, the runs and how they ended, the plans, the open questions; written without a model call), read only in that channel (a thread reads its own, then its channel's; Atlas's and each direct message have their own). `nuclear-builder chat memory <channel> [--thread <t>] [--clear]` shows or clears it."
       ],
       "keys": [
         "nuclear chat",
@@ -651,7 +653,10 @@
         "how do I talk to claude code from nuclear chat",
         "how do I delete or close a conversation in nuclear chat",
         "how do I search old messages",
-        "where is an older conversation with a member"
+        "where is an older conversation with a member",
+        "can I ask the team in its channel",
+        "does each channel remember its context",
+        "how do I clear what a channel remembers"
       ],
       "links": [
         {
