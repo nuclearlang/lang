@@ -55,7 +55,8 @@ else
 fi
 # the boxes' width: the terminal's, at most 76
 cols=$( (stty size < /dev/tty) 2>/dev/null | cut -d ' ' -f 2 || true)
-case ${cols:-} in ''|*[!0-9]*) cols=80 ;; esac
+# a pseudo-terminal may say 0 columns (`script`): as a terminal of 80
+case ${cols:-} in ''|*[!0-9]*|0) cols=80 ;; esac
 BOXW=$((cols - 4)); [ "$BOXW" -gt 76 ] && BOXW=76; [ "$BOXW" -lt 40 ] && BOXW=40
 
 # A path as the user reads it: the home folder as ~.
@@ -202,15 +203,19 @@ must() {
 
 # The command line of every editor of the VS Code family on this machine, one per line: on the PATH, or inside its app
 # on macOS (where `code` is on the PATH only after "Shell Command: Install 'code' command in PATH").
+# One per editor (the same command found twice, on the PATH and in its app, counts once); a path may hold spaces
+# ("Visual Studio Code.app"), so it is read a line at a time (`each_editor`), never split as words.
 editors() {
-  for cli in code code-insiders cursor codium windsurf; do command -v "$cli" 2>/dev/null; done
-  for app in "Visual Studio Code:code" "Visual Studio Code - Insiders:code-insiders" "Cursor:cursor" \
-    "VSCodium:codium" "Windsurf:windsurf"; do
-    for dir in /Applications "$HOME/Applications"; do
-      cli="$dir/${app%%:*}.app/Contents/Resources/app/bin/${app##*:}"
-      [ -x "$cli" ] && printf '%s\n' "$cli"
+  {
+    for cli in code code-insiders cursor codium windsurf; do command -v "$cli" 2>/dev/null || true; done
+    for app in "Visual Studio Code:code" "Visual Studio Code - Insiders:code-insiders" "Cursor:cursor" \
+      "VSCodium:codium" "Windsurf:windsurf"; do
+      for dir in /Applications "$HOME/Applications"; do
+        cli="$dir/${app%%:*}.app/Contents/Resources/app/bin/${app##*:}"
+        if [ -x "$cli" ]; then printf '%s\n' "$cli"; fi
+      done
     done
-  done | awk -F/ '!seen[$NF]++'
+  } | awk -F/ '!seen[$NF]++'
 }
 
 tmp=$(mktemp -d)
@@ -257,11 +262,13 @@ if [ "$UNINSTALL" = 1 ]; then
   }
   must "Removing NuclearLang" "NuclearLang removed" "Remove $(short "$INSTALL") by hand, then run the uninstaller again." \
     "The commands, the installation, the agents' skill, the caches and the PATH lines" remove_core
-  for cli in $(editors); do
+  editors > "$tmp/editor-list"
+  # on fd 3: an editor's command that reads stdin cannot take the rest of the list
+  while IFS= read -r cli <&3; do
     if task "Editor extension: $(basename "$cli")" "Taken out of the editor" "$cli" --uninstall-extension nuclearlang.nuclearlang; then
       ok "Editor extension removed from $(basename "$cli")"
     fi
-  done
+  done 3< "$tmp/editor-list"
   say ""
   box_top "Uninstalled" "$GREEN"
   box_line "${GREEN}${BOLD}NuclearLang is uninstalled.${OFF}" "$GREEN"
@@ -340,6 +347,8 @@ verify() {
 }
 install_core() {
   tar -xzf "$tmp/$name" -C "$tmp"
+  # an install without the AI services keeps the ones already there (their running services use them)
+  if [ "$AI" = 0 ] && [ -d "$INSTALL/ai" ]; then mv "$INSTALL/ai" "$tmp/nuclearlang/ai"; fi
   rm -rf "$INSTALL"
   mkdir -p "$(dirname "$INSTALL")" "$BIN"
   mv "$tmp/nuclearlang" "$INSTALL"
@@ -386,12 +395,13 @@ if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
   vsix="nuclearlang-$VERSION.vsix"
   if task "Downloading the editor extension" "Syntax, diagnostics, the device, the AI panels: one extension for every editor" \
     get "$base/$vsix" "$tmp/$vsix"; then
-    for cli in $(editors); do
+    editors > "$tmp/editor-list"
+    while IFS= read -r cli <&3; do
       ename=$(basename "$cli")
       if task "Adding the extension to $ename" "Installed with the editor's own command" "$cli" --install-extension "$tmp/$vsix" --force; then
         ok "The extension in ${BOLD}$ename${OFF}"; printf '%s ' "$ename" >> "$tmp/editors"
       else warn "The extension did not install in $ename: ${DIM}$cli --install-extension $base/$vsix${OFF}"; fi
-    done
+    done 3< "$tmp/editor-list"
   else
     warn "The editor extension of $VERSION could not be downloaded: install it later from $base/$vsix"
   fi

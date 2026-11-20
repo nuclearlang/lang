@@ -186,11 +186,11 @@ class CharacterRepository(Repository[Character]):
         q.where({"name": name})
         return q.get_one()
 
-    def alive_since(self, year: int, max: int = 20) -> Awaitable[list[Character]]:
+    def alive_since(self, year: int, max_: int = 20) -> Awaitable[list[Character]]:
         q = self.query()
         q.where({"status": "alive", "year": gte(year)})
         q.order_by("name")
-        q.limit(max)
+        q.limit(max_)
         return q.get_many()
 ```
 
