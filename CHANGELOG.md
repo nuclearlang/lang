@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.
 - Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.
 - The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).
 - **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included.

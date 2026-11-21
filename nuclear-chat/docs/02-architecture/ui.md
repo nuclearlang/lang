@@ -58,8 +58,9 @@ of the file (a said message has no `buttons`), and the read answer is the folded
 What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead,
 also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's
 `face`, else their initials on a color of their own, or the chat's own mark, name, role chip, *Tech lead* and *paid* chips, time, cost); the text as markdown built into
-elements (fenced code, inline code, bold, italic, strike, quotes, lists, links, `@mentions`, `#channels` that open
-them, `spec:`/`run:`), never as HTML; the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts
+elements (fenced code, inline code, bold, italic, strike, quotes, headings `#`–`####`, rules `---`, tables `| a | b |` over
+`|---|---|` in their own sideways scroll, lists bulleted, numbered, of tasks `- [x]` and nested by two spaces, links,
+`@mentions`, `#channels` that open them, `spec:`/`run:`), never as HTML (an agent's HTML table shows as text); the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts
 never run) and a service's by URL; a host's log (`details`) folded under its message (`LogFold`: one line, *Log*, opens
 it in a monospace block, closed by default, its height capped; no `aria-expanded` yet: a named argument cannot spell
 it); the buttons of a member's question; reactions (the user's own marked, click to

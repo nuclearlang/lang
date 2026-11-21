@@ -1,4 +1,5 @@
-// The text of a message as the chat shows it: paragraphs, fenced code blocks, quotes, lists and the inline marks
+// The text of a message as the chat shows it: paragraphs, headings, rules, tables, fenced code blocks, quotes, lists
+// (bulleted, numbered, tasks, nested) and the inline marks
 // (`code`, **bold**, *italic*, ~strike~, links, @mentions, #channels, spec: and run: links). Built as elements, never
 // as HTML: a member's text cannot reach the page as markup.
 stateless Markdown(text: string, onChannel: (id: string) => void)
@@ -27,28 +28,87 @@ fenced(part: string) string
     part
   body.trimEnd()
 
-// Paragraphs (their line breaks kept), quotes (`> `) and list items (`- `, `* `, `1. `).
+// The blocks between fences, line by line: headings (`# `), rules (`---`), tables (`| a | b |` over `|---|---|`),
+// list items (`- `, `* `, `1. `, a task `- [x] `; indented by two spaces, a level deeper), quotes (`> `) and
+// paragraphs (their line breaks kept; a blank line ends one).
 lines(text: string, prefix: string, onChannel: (id: string) => void) Element[]
   out: Element[] = []
   paragraph: string[] = []
-  n = 0
-  for line in text.split("\n")
-    item = Regex(r"^\s*(?:[-*•]|\d+\.)\s+(.*)$").find(line)
-    if line.startsWith(">") or item != null
-      if paragraph.length > 0
-        out.add(div(key = "${prefix}p${n}", className = "md-p", children = inline(paragraph.join("\n"), onChannel)))
-        paragraph = []
-      n += 1
-      if item != null
-        out.add(div(key = "${prefix}l${n}", className = "md-li", children = inline(item![1] ?? "", onChannel)))
-      else
-        out.add(div(key = "${prefix}q${n}", className = "md-quote", children = inline(line.substring(1).trimStart(), onChannel)))
+  rows = text.split("\n")
+  at = 0
+  while at < rows.length
+    line = rows[at]
+    key = "${prefix}b${at}"
+    heading = Regex(r"^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$").find(line)
+    item = Regex(r"^(\s*)([-*•+]|\d+[.)])\s+(.*)$").find(line)
+    table = isRow(line) and at + 1 < rows.length and isRule(rows[at + 1])
+    starts = line.trim().isEmpty or heading != null or item != null or table or line.trimStart().startsWith(">") or Regex(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$").find(line) != null
+    if starts and paragraph.length > 0
+      out.add(div(key = "${key}p", className = "md-p", children = inline(paragraph.join("\n"), onChannel)))
+      paragraph = []
+    if line.trim().isEmpty
+      at += 1
+    else if heading != null
+      level = (heading![1] ?? "#").length
+      out.add(div(key = key, className = "md-h md-h${level}", children = inline(heading![2] ?? "", onChannel)))
+      at += 1
+    else if Regex(r"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$").find(line) != null
+      out.add(hr(key = key, className = "md-hr"))
+      at += 1
+    else if table
+      head = cells(line)
+      body: string[][] = []
+      at += 2
+      while at < rows.length and isRow(rows[at])
+        body.add(cells(rows[at]))
+        at += 1
+      out.add(div(key = key, className = "md-table", children = [grid(head, body, key, onChannel)]))
+    else if item != null
+      indent = (item![1] ?? "").replaceAll("\t", "  ").length
+      depth = indent >= 6 ? 3 : indent >= 4 ? 2 : indent >= 2 ? 1 : 0
+      marker = item![2] ?? "-"
+      rest = item![3] ?? ""
+      task = Regex(r"^\[([ xX])\]\s+(.*)$").find(rest)
+      kind = task != null ? "md-task" : Regex(r"^\d").find(marker) != null ? "md-ol" : "md-ul"
+      done = task != null and (task![1] ?? " ") != " "
+      label = task != null ? task![2] ?? "" : rest
+      number = kind == "md-ol" ? [span(key = "n", className = "md-n", children = marker.replaceAll(")", "."))] : task != null ? [span(key = "n", className = done ? "md-box on" : "md-box", children = done ? "✓" : "")] : [] as Element[]
+      out.add(div(key = key, className = "md-li ${kind} md-d${depth}${done ? " md-done" : ""}", children = [...number, span(key = "t", children = inline(label, onChannel))]))
+      at += 1
+    else if line.trimStart().startsWith(">")
+      out.add(div(key = key, className = "md-quote", children = inline(line.trimStart().substring(1).trimStart(), onChannel)))
+      at += 1
     else
       paragraph.add(line)
-  rest = paragraph.join("\n").trim()
-  if rest.length > 0
-    out.add(div(key = "${prefix}p${n + 1}", className = "md-p", children = inline(rest, onChannel)))
+      at += 1
+  if paragraph.length > 0
+    out.add(div(key = "${prefix}end", className = "md-p", children = inline(paragraph.join("\n").trim(), onChannel)))
   out
+
+// A table's row: a line that starts with `|`.
+isRow(line: string) boolean
+  line.trim().startsWith("|") and line.trim().length > 1
+
+// The line under a table's header: only pipes, dashes, colons and spaces (`|---|:--:|`).
+isRule(line: string) boolean
+  Regex(r"^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$").find(line) != null
+
+// A row's cells, without the outer pipes; a pipe written `\|` stays in its cell.
+cells(line: string) string[]
+  t = line.trim()
+  if t.startsWith("|")
+    t = t.substring(1)
+  if t.endsWith("|") and not t.endsWith("\\|")
+    t = t.substring(0, t.length - 1)
+  t.replaceAll("\\|", "\0").split("|").map((c) => c.replaceAll("\0", "|").trim())
+
+// A table: its header and its rows, every row as wide as the header.
+grid(head: string[], body: string[][], key: string, onChannel: (id: string) => void) Element
+  width = head.length
+  table(key = "${key}t", children = [
+    thead(key = "h", children = [tr(key = "r", children = (0..width).map((i) => th(key = "c${i}", children = inline(head[i], onChannel))))]),
+    tbody(key = "b", children = (0..body.length).map((r) => tr(key = "r${r}", children = (0..width).map((i) => td(key = "c${i}", children = inline(i < body[r].length ? body[r][i] : "", onChannel)))))),
+  ])
 
 // The inline marks of a line, each one its element; the text between them as it is.
 inline(text: string, onChannel: (id: string) => void) Element[]

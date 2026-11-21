@@ -50,6 +50,16 @@ ChatTest
     expect(fenced("ts\nlet a = 1\n")).toBe("let a = 1")
     expect(fenced("a b\nc")).toBe("a b\nc")
 
+  @test("a table, a heading, a rule and the kinds of list are each one block")
+  richBlocks()
+    text = "# Tools\n\n| Tool | Opens |\n|---|:--:|\n| Atlas | `Ctrl+Alt+A` |\n| Builder | `Ctrl+Alt+P` |\n\n---\n1. first\n2. second\n  - nested\n- [x] done\n- [ ] to do\nafter"
+    expect(blocks(text, (id) => null).length).toBe(9)
+    expect(cells("| a | b \\| c | d |")).toEqual(["a", "b | c", "d"])
+    expect(isRule("|---|:--:|")).toBe(true)
+    expect(isRule("| a | b |")).toBe(false)
+    nested = blocks("- one\n  - two", (id) => null)
+    expect(nested.length).toBe(2)
+
   @test("a group is one author in one minute")
   groups()
     expect(sameGroup(sampleMessage("a", "ada", 60_000), sampleMessage("b", "ada", 119_000))).toBe(true)
