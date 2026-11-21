@@ -47,4 +47,4 @@ title_es = "Cada nombre, ruta y valor del plan y de los criterios est√° en el c√
 station = "code"
 on = true
 by = "role"
-prompt = "Read specs/{{id}}/plan.md and the acceptance criteria; list every name, path, status or value they write that the code does not have exactly as written, and fix each one."
+prompt = "Read specs/{{id}}/plan.md and the acceptance criteria; list every name, path, status or value they write that the code does not have exactly as written, and fix each one. When the plan is what is wrong (what it names does not compile, or the platform has no such name or path: the compiler or nuclear help says so) and the code does what the plan meant, correct plan.md to what the code does and say why in its piece: a plan corrected by the facts is no failure. A value of an acceptance criterion is never changed here: one the code cannot have fails the check."
