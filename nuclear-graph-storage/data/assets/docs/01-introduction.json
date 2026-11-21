@@ -320,24 +320,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.48ac00",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included.",
-    "- A failure is diagnosed and repaired (spec 024): one diagnosis call reads the failure; when it can be fixed the station works once more with it (a failed Quality sends its findings to the Code station); what a station cannot fix alone is asked of the user with its diagnosis (the run waits on `decide-<station>`: a change with the user's decision works it once more, an approval goes on). A check fixes what it finds and fails only for what it could not; what only the user can decide (the CI host, a repository) is listed at the station's gate, once. The repairs count in the run's budget and are said in the team's channel."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.4ab0cc",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -371,6 +353,24 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- ADR-platform-0003: any step, stage or run of the Builder runs again (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`), each step keeps the decisions it took and why, the run is drawn as a graph, and the acceptance criteria are held against what the run left (`docs/ai/loop.md`).",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.5c650f",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
+    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -502,6 +502,40 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.b5c24b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A channel is a memory** (spec 023 requirement 8): a team's channel is its tech lead, exactly as its direct message (the same prompt, tools, spending and run reports; another team's channel, that team's lead). Every channel, thread and direct message keeps its own durable memory, `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (the user's requests, the specs written, the runs started with their state, the plans stated, the open questions, a line per message older than the chat's 40-message window), given to the member as *What this channel remembers* (newest first, capped) and read only in that channel. `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows or forgets it. The tech lead's plan starts with a line `Plan: …`.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.c3a557",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- A failure is diagnosed and repaired (spec 024): one diagnosis call reads the failure; when it can be fixed the station works once more with it (a failed Quality sends its findings to the Code station); what a station cannot fix alone is asked of the user with its diagnosis (the run waits on `decide-<station>`: a change with the user's decision works it once more, an approval goes on). A check fixes what it finds and fails only for what it could not; what only the user can decide (the CI host, a repository) is listed at the station's gate, once. The repairs count in the run's budget and are said in the team's channel.",
+    "- `ci_preview` (and `nuclear-builder export --print`): the CI file the line would write and whether the project's is the same, without writing it. The developer's \"tests first\" check passes when the new tests fail before their code (`expect = \"fail\"`); a gate's own user checks (`gate = true`) are answered by its yes. The design cites only the project's ADRs.",
+    "- A backend lets the web apps of its config's origins call it (CORS): `origins: string[]` in the `appConfig`, the same in nestjs and fastapi. An invalid body is a 400 in every backend dialect (the fastapi documentation said 422)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.e462e7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -514,25 +548,6 @@
     "- `nuclear agent hook` checks a project with its own type definitions (`<project>/defs`), as `nuclear check` does: it reported every name of them as an error after each edit.",
     "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
     "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.efd14a",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- `ci_preview` (and `nuclear-builder export --print`): the CI file the line would write and whether the project's is the same, without writing it. The developer's \"tests first\" check passes when the new tests fail before their code (`expect = \"fail\"`); a gate's own user checks (`gate = true`) are answered by its yes. The design cites only the project's ADRs.",
-    "- A backend lets the web apps of its config's origins call it (CORS): `origins: string[]` in the `appConfig`, the same in nestjs and fastapi. An invalid body is a 400 in every backend dialect (the fastapi documentation said 422).",
-    "- **A channel is a memory** (spec 023 requirement 8): a team's channel is its tech lead, exactly as its direct message (the same prompt, tools, spending and run reports; another team's channel, that team's lead). Every channel, thread and direct message keeps its own durable memory, `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (the user's requests, the specs written, the runs started with their state, the plans stated, the open questions, a line per message older than the chat's 40-message window), given to the member as *What this channel remembers* (newest first, capped) and read only in that channel. `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows or forgets it. The tech lead's plan starts with a line `Plan: …`."
    ],
    "sources": [
     "CHANGELOG.md"
