@@ -19,6 +19,10 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
   apps*, *A new window* taking the welcome over, a closed editor resumed, Atlas's chat on a workspace with no app (the
   chat service registering a folder that is not a project was checked with `nuclear-builder chat-host --json --root
   <workspace>` only), whether a webview's dispose runs when the editor quits (it would move the tour to the AI services).
+- **An open workspace showing its apps only (0.86.1)**: `shownProjects` and `afterReload` are tested; never seen in a
+  window: the strip of a workspace whose VS Code folder is a parent of other projects (no slot until `find` answers,
+  then the apps only), `Ctrl+Alt+O` inside a workspace offering *Add an app*, `workspace.nuc` with no error in the
+  editor.
 - **The Nuclear workspaces and the three-step welcome (Unreleased, spec 022)**: compiled and tested
   (`test/workspaces.test.ts`, the l10n test), the CLI calls tried against a built `nuclear`; never run in a VS Code
   window: the empty panel, the header's menu, *This window / A new window*, the marker's watcher outside VS Code's
