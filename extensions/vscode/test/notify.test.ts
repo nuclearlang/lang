@@ -56,3 +56,10 @@ test('the chat calls the user for direct messages, mentions, questions and answe
   assert.equal(chatWhere({ channel: 'dm-askia' }), 'dm-askia');
   assert.equal(chatWhere({}), undefined);
 });
+
+test('the automatic update: the cache folder of the command, versions compared by numbers', async () => {
+  const { cacheDir, later } = await import('../src/updates');
+  assert.equal(cacheDir({ XDG_CACHE_HOME: '/c' }, 'linux', '/h'), '/c/nuclearlang');
+  assert.equal(cacheDir({}, 'linux', '/h'), '/h/.cache/nuclearlang');
+  assert.ok(later('0.89.0', '0.88.4') && later('v1.0.0', '0.99.9') && !later('0.88.4', '0.88.4') && !later('x', '0.1.0'));
+});

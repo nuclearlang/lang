@@ -32,14 +32,18 @@ prints it, and `nuclear help <command>` prints its lines of it; for a command of
 | `update` | The latest release: runs the public installer again for this installation (`NUCLEAR_INSTALL`); only an installation a public installer made (its `.version`), a build from source says so and exits 2 | `update::command` |
 | `defs list [--dialect]`, `defs show <Name\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |
 
-Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an
-installation a public installer made, `update::offer` asks `Update now? [Y]es / [n]o / [l]ater` when the last check
-knew a newer release: one key read in raw mode (the command's own input stays its own), no key in 15 s is a no (a
-script in a terminal is never stopped), `l` stops asking for a day (`update-later`); never inside `make`
-(`MAKELEVEL`), an npm script or under `sudo`. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a
-detached `curl` (or `wget` and the API, where there is no curl) into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes
-the installer runs with `NUCLEAR_UPDATE=1` (it keeps the choices of the last install) and the new binary runs the command again (Windows: the installer opens in its own window, as it
-replaces `nuclear.exe`).
+**The automatic update** (`update::on_use`, before every command; the user, 2026-11-21): a use of NuclearLang marks
+the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through
+`nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or
+`wget` and the API; at most 3 s, offline the old answer stays for a day, `latest-release`). When it is newer, one
+process waits apart (`nuclear update --when-idle`, its own session, `update.lock` with its pid, output in
+`update.log`): every minute it looks at the last use and installs once the user stopped (30 minutes without a use) or
+12 hours after it was found, working on or not; the public installer runs with `NUCLEAR_UPDATE=1` (the choices of the
+last install kept; Windows: in its own window), then `updated` holds the new version (the editor offers a reload).
+Never in CI, under `sudo`, for a build from source (no `.version`), with `NUCLEAR_AUTO_UPDATE=0` (or the old
+`NUCLEAR_NO_UPDATE_CHECK`), or after `nuclear update --auto off` (`~/.config/nuclearlang/auto-update`, written by the
+editor's setting `nuclear.update.auto`); `nuclear update --check [--json]` says `{current, latest, newer, scheduled,
+auto}`; `NUCLEAR_UPDATE_DRYRUN=1` prints the installer's line instead of running it (the tests).
 
 Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a
 platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`,

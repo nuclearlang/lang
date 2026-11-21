@@ -7812,16 +7812,15 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.b35605",
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.62576f",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Design — Open source: what a project like this must take care of",
    "summary": "Open source: what a project like this must take care of",
    "body": [
-    "| **Sustainability** | GitHub Sponsors and Open Collective (`FUNDING.yml`); later sponsorship tiers for companies, paid support. Grants that fund open source tools (NLnet, Sovereign Tech Fund, GitHub Secure Open Source Fund) when the project qualifies. |",
-    "| **Supply chain** | Pinned versions in workflows and packages (already the rule); Dependabot or Renovate; `cargo deny`; the release built only from the tag in CI (already true). |",
-    "| **Accessibility and languages** | The website and the editors keep WCAG AA contrast (the Chernobyl themes are checked); the docs in English with the most read pages also in Spanish (the extension and the website already speak both). |",
-    "| **Code of conduct** | Contributor Covenant 2.1, an email to report, enforced by the maintainers. |",
-    "| **Citation** | `CITATION.cff`, for papers that use the benchmark. |"
+    "| **Privacy** | No telemetry. The update check fetches only the latest release's URL once a day and can be turned off (`nuclear update --auto off`, `NUCLEAR_AUTO_UPDATE=0`); the Smart Graph and the agents run locally; a `PRIVACY.md` says it, because \"AI\" makes people ask. |",
+    "| **AI-written code** | The project is built with AI agents and says so (the agents commit in the user's name, root rule 10). Contributions written with AI are welcome under the same review and DCO; the contributor answers for them. |",
+    "| **Governance** | Today a single maintainer decides (BDFL). `GOVERNANCE.md` says it, how a contributor becomes a maintainer (sustained merged work, invited), and the RFC process: a change to the base language or a platform's contract is an RFC (a pull request to `docs/rfcs/`), discussed two weeks, decided by the maintainers; dialects and tools follow normal review. |",
+    "| **Stability** | Semantic Versioning for the whole platform (ADR-platform-0011); while 0.x a MINOR may break, always written in the CHANGELOG with the migration (`nuclear fix` for what it can rewrite). 1.0 freezes the base language's syntax: after it, a breaking change needs a MAJOR and an RFC. |"
    ],
    "agents": false,
    "sources": [
@@ -7834,15 +7833,16 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.e11b9b",
+   "id": "doc:docs/04-specs/019-launch-and-growth/design.md#open-source-what-a-project-like-this-must-take-care-of.b35605",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Design — Open source: what a project like this must take care of",
    "summary": "Open source: what a project like this must take care of",
    "body": [
-    "| **Privacy** | No telemetry. The update check fetches only the latest release's URL once a day and can be turned off (`NUCLEAR_NO_UPDATE_CHECK=1`); the Smart Graph and the agents run locally; a `PRIVACY.md` says it, because \"AI\" makes people ask. |",
-    "| **AI-written code** | The project is built with AI agents and says so (the agents commit in the user's name, root rule 10). Contributions written with AI are welcome under the same review and DCO; the contributor answers for them. |",
-    "| **Governance** | Today a single maintainer decides (BDFL). `GOVERNANCE.md` says it, how a contributor becomes a maintainer (sustained merged work, invited), and the RFC process: a change to the base language or a platform's contract is an RFC (a pull request to `docs/rfcs/`), discussed two weeks, decided by the maintainers; dialects and tools follow normal review. |",
-    "| **Stability** | Semantic Versioning for the whole platform (ADR-platform-0011); while 0.x a MINOR may break, always written in the CHANGELOG with the migration (`nuclear fix` for what it can rewrite). 1.0 freezes the base language's syntax: after it, a breaking change needs a MAJOR and an RFC. |"
+    "| **Sustainability** | GitHub Sponsors and Open Collective (`FUNDING.yml`); later sponsorship tiers for companies, paid support. Grants that fund open source tools (NLnet, Sovereign Tech Fund, GitHub Secure Open Source Fund) when the project qualifies. |",
+    "| **Supply chain** | Pinned versions in workflows and packages (already the rule); Dependabot or Renovate; `cargo deny`; the release built only from the tag in CI (already true). |",
+    "| **Accessibility and languages** | The website and the editors keep WCAG AA contrast (the Chernobyl themes are checked); the docs in English with the most read pages also in Spanish (the extension and the website already speak both). |",
+    "| **Code of conduct** | Contributor Covenant 2.1, an email to report, enforced by the maintainers. |",
+    "| **Citation** | `CITATION.cff`, for papers that use the benchmark. |"
    ],
    "agents": false,
    "sources": [

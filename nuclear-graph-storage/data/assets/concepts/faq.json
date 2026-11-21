@@ -476,9 +476,9 @@
    "id": "faq:update-nuclearlang",
    "type": "faq",
    "title": "How do I update NuclearLang?",
-   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services with the profile `remote`, the choices of the last install kept; what an earlier install put there for the local models is taken away). In a terminal, `nuclear` also asks `Update now? [Y]es / [n]o / [l]ater` before a command when a newer release is out.",
+   "summary": "A newer release installs itself: while you use NuclearLang (a `nuclear` command, VS Code, an agent through the MCP server) it is looked for at most once a day, and installed once you stop working (30 minutes without a use) or within 12 hours, in the background; VS Code then offers to reload. `nuclear update` installs the latest release now (the installer run again, the choices of the last install kept).",
    "body": [
-    "One key answers; no key in 15 seconds goes on (a script in a terminal is never stopped); `l` waits a day. The check runs at most once a day (curl, or wget): the first command of the day waits at most 3 seconds for it, so the first run after an install already asks, and offline the command goes on. It never asks in editors, agents, pipes, CI, `make`, npm scripts or under `sudo`. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
+    "The look runs at most once a day (curl, or wget): the first command of the day waits at most 3 seconds for it, offline it goes on. One process waits for the user to stop (`nuclear update --when-idle`) and runs the public installer; `nuclear update --check --json` says what is known (`current`, `latest`, `newer`, `scheduled`, `auto`). `nuclear update --auto off`, the VS Code setting `nuclear.update.auto` or `NUCLEAR_AUTO_UPDATE=0` turn it off; it never runs in CI or under `sudo`.",
     "",
     "With the latest release already here (NuclearLang and its AI services), `nuclear update` says so and runs nothing; `nuclear update --reinstall` installs it again all the same (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`).",
     "",

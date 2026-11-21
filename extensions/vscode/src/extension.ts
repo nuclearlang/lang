@@ -1,5 +1,6 @@
 // VS Code client for the NuclearLang language server (nuclear-lsp).
 
+import { activateAutoUpdate } from './autoUpdate';
 import { SettingsPanel } from './settingsPanel';
 import { applyToolchains } from './toolchainHost';
 import { SetupPanel } from './setupPanel';
@@ -44,7 +45,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   registerLanguage(context);
   // the pages' bundled files: the extension's, else the copy taken from its release (spec 023, requirement 7)
   initAssets(context);
-  // a newer release: the floating button of every NuclearLang page, before any page opens
+  // a newer release installs itself when the user stops working (the `nuclear` command decides): this window's uses
+  activateAutoUpdate(context);
   // the toolchains' settings into the environment of every process and terminal, before the first one starts
   applyToolchains(context);
   generated = new GeneratedCodeProvider();

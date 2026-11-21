@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The automatic update: every use of NuclearLang (the `nuclear` command, VS Code, the MCP server) looks for a newer release once a day; it installs itself when the user stops working (30 minutes without a use) or within 12 hours. `nuclear update --auto off`, the setting `nuclear.update.auto` or `NUCLEAR_AUTO_UPDATE=0` turn it off.
 - Fix (the editor): the Nuclear workspace follows VS Code's folder as VS Code does: no project of another window, nor a deleted one, nor the last workspace opened elsewhere.
 - Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.
 - Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.

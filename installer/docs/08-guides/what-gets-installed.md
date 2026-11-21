@@ -82,8 +82,10 @@ incomplete.
 
 `nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`). With that release already here (NuclearLang and its AI services) it says so and runs nothing; `nuclear update --reinstall` (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`) installs it again.
 An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).
-When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;
-a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;
-`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off; never inside `make`, an npm script or under `sudo`. A `nuclear`
-built from source is never updated this way. One install runs at a time: a second one says so and stops. The set-up of the AI services runs at a low priority, so a
+A newer release installs itself: while you use NuclearLang (a `nuclear` command, VS Code, an agent through the MCP
+server) it is looked for at most once a day (the first command of the day waits at most 3 seconds; offline it goes
+on), and when there is one it is installed once you stop working (30 minutes without a use) or within 12 hours, in the
+background; VS Code then offers to reload. `nuclear update --auto off` (or the setting `nuclear.update.auto`, or
+`NUCLEAR_AUTO_UPDATE=0`) turns it off; never in CI or under `sudo`. A `nuclear` built from source is never updated
+this way. One install runs at a time: a second one says so and stops. The set-up of the AI services runs at a low priority, so a
 busy machine stays usable while the knowledge base loads.

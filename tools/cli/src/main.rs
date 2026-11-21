@@ -15,9 +15,11 @@ const USAGE: &str = "usage:
   nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command
   nuclear help start                                          begin here (an agent with no context too): what Nuclear is, the rules, the cycle
   nuclear help atlas [--json]                                 every documentation topic, by group
-  nuclear update [--reinstall]                                install the latest release (the installer, run again; nothing when it is
-                                                              already here, --reinstall: all the same); in a terminal every
-                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)
+  nuclear update [--reinstall]                                install the latest release now (the installer, run again; nothing when it
+                                                              is already here, --reinstall: all the same). Automatic: a newer release
+                                                              (looked for once a day, on a use) installs itself when you stop working
+                                                              (30 min without a use) or within 12 hours; --check [--json] says what
+                                                              is known, --auto on|off, NUCLEAR_AUTO_UPDATE=0 or CI: never
   nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)
   nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)
   nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)
@@ -258,9 +260,8 @@ fn main() -> ExitCode {
     if raw.first().map(String::as_str) == Some("update") {
         return update::command(&raw[1..]);
     }
-    if let Some(code) = update::offer(&std::env::args().skip(1).collect::<Vec<_>>()) {
-        return code;
-    }
+    // every use: the user is working; a newer release (looked for once a day) installs itself when they stop
+    update::on_use();
     if framework::claims(&raw) {
         return framework::main(raw);
     }

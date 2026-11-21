@@ -1,4 +1,6 @@
 use os
+use shutil
+use subprocess
 use asyncio
 use logging
 use httpx
@@ -523,6 +525,10 @@ mcpTools() <string, any>
     tools.add({ "name": tool.name, "description": tool.description ?? "", "schema": tool.inputSchema })
   { "instructions": server.instructions ?? "", "tools": tools }
 
-// Serves MCP over stdio until the client closes it.
+// Serves MCP over stdio until the client closes it. An agent's session is a use of NuclearLang: `nuclear` is told
+// (apart, never waited for), so a newer release waits for the user to stop working; each tool that runs `nuclear`
+// tells it again.
 mcpMain(informs: boolean = false) void
+  if shutil.which("nuclear") != null
+    subprocess.Popen(["nuclear", "update", "--touch"], stdin = subprocess.DEVNULL, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
   mcpServer(informs).run()

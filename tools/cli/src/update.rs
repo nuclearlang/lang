@@ -1,10 +1,12 @@
-//! The update of an installation made by the public installers: `nuclear update`, and the question every run in a
-//! terminal asks when a newer release is out. The latest version is asked at most once a day, waiting at most
-//! three seconds (offline the command goes on), so the first run after an install already knows; the update itself is the public installer, run again (it keeps the choices
-//! of the last install: `NUCLEAR_UPDATE=1`).
+//! The update of an installation made by the public installers: `nuclear update`, and the automatic update.
+//!
+//! Automatic (the user, 2026-11-21): every use of NuclearLang (a `nuclear` command, the editor, the MCP server:
+//! `nuclear update --touch`) marks the user as working and, at most once a day, asks for the latest release. When a
+//! newer one is out, one process waits in the background (`nuclear update --when-idle`) and installs it when the user
+//! stops (no use for `IDLE`) or, working on, after `AT_MOST`; nothing runs in CI, under sudo, for a build from source,
+//! with `NUCLEAR_AUTO_UPDATE=0` or after `nuclear update --auto off`. The update itself is the public installer, run
+//! again (it keeps the choices of the last install: `NUCLEAR_UPDATE=1`).
 
-use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Stdio};
 use std::time::{Duration, SystemTime};
@@ -13,8 +15,12 @@ const CURRENT: &str = env!("CARGO_PKG_VERSION");
 const LATEST_URL: &str = "https://github.com/nuclearlang/lang/releases/latest";
 const LATEST_API: &str = "https://api.github.com/repos/nuclearlang/lang/releases/latest";
 const DAY: Duration = Duration::from_secs(24 * 60 * 60);
-/// A question nobody answers (a script in a terminal) goes on as "no" after this.
-const ANSWER_WAIT: Duration = Duration::from_secs(15);
+/// The user has stopped: no use of NuclearLang for this long.
+const IDLE: Duration = Duration::from_secs(30 * 60);
+/// Working on and on: the update waits no longer than this after it was found.
+const AT_MOST: Duration = Duration::from_secs(12 * 60 * 60);
+/// How often the waiting process looks at the user's last use.
+const TICK: Duration = Duration::from_secs(60);
 
 /// The installation this binary runs from, when a public installer made it (its `.version`); a build from source
 /// has none and is never updated here.
@@ -153,6 +159,42 @@ fn up_to_date(root: &Path, latest: Option<&str>) -> bool {
 /// `nuclear update [--reinstall]`: the latest release, now; when it is already here, nothing (`--reinstall`: the
 /// installer again all the same).
 pub fn command(args: &[String]) -> ExitCode {
+    match args.first().map(String::as_str) {
+        // a use by the editor or the MCP server: the user is working (and the daily look for a release)
+        Some("--touch") => {
+            on_use();
+            return ExitCode::SUCCESS;
+        }
+        Some("--check") => {
+            let known = on_use();
+            let json = args.iter().any(|a| a == "--json");
+            let (latest, scheduled) = known.unwrap_or_default();
+            let newer_out = !latest.is_empty() && newer(&latest);
+            if json {
+                println!(
+                    "{{\"current\":\"{CURRENT}\",\"latest\":\"{latest}\",\"newer\":{newer_out},\"scheduled\":{scheduled},\"auto\":{}}}",
+                    auto_on()
+                );
+            } else if newer_out {
+                println!("NuclearLang {latest} is out (you have {CURRENT}): {}", if scheduled { "it installs itself when you stop working, or within 12 hours" } else { "nuclear update installs it" });
+            } else {
+                println!("NuclearLang {CURRENT}: the latest release");
+            }
+            return ExitCode::SUCCESS;
+        }
+        Some("--when-idle") => return when_idle(),
+        Some("--auto") => {
+            return match args.get(1).map(String::as_str) {
+                Some("on") => set_auto(true),
+                Some("off") => set_auto(false),
+                _ => {
+                    eprintln!("nuclear update --auto on|off");
+                    ExitCode::from(2)
+                }
+            };
+        }
+        _ => {}
+    }
     if as_root() {
         eprintln!("nuclear update does not run under sudo: run it as the user who installed NuclearLang");
         return ExitCode::from(2);
@@ -184,85 +226,150 @@ pub fn command(args: &[String]) -> ExitCode {
     }
 }
 
-enum Answer {
-    Yes,
-    No,
-    Later,
+fn config_file() -> Option<PathBuf> {
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .filter(|_| !cfg!(windows))
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(|h| PathBuf::from(h).join(".config")))?;
+    Some(base.join("nuclearlang").join("auto-update"))
 }
 
-/// One key, without echo and without reading a line: what the command reads from the terminal afterwards stays its
-/// own. No key within `ANSWER_WAIT` (a script in a terminal) is a no.
-fn ask() -> Answer {
-    if crossterm::terminal::enable_raw_mode().is_err() {
-        return Answer::No;
+/// The automatic update is on unless the user turned it off (`nuclear update --auto off`, the editor's setting) or
+/// the environment says not here: CI, `NUCLEAR_AUTO_UPDATE=0`, the old `NUCLEAR_NO_UPDATE_CHECK`, sudo.
+fn auto_on() -> bool {
+    let off_env = std::env::var("NUCLEAR_AUTO_UPDATE").is_ok_and(|v| v == "0")
+        || ["CI", "NUCLEAR_NO_UPDATE_CHECK"].iter().any(|v| std::env::var_os(v).is_some());
+    let off_file = config_file().and_then(|f| std::fs::read_to_string(f).ok()).is_some_and(|t| t.trim() == "off");
+    !off_env && !off_file && !as_root()
+}
+
+/// How long the file was last written ago (`None`: no file).
+fn age(file: &Path) -> Option<Duration> {
+    let t = std::fs::metadata(file).and_then(|m| m.modified()).ok()?;
+    Some(SystemTime::now().duration_since(t).unwrap_or(Duration::ZERO))
+}
+
+/// When the waiting process installs: the user stopped (`idle` since the last use) or it waited `AT_MOST`.
+fn time_to_install(idle: Option<Duration>, waited: Duration) -> bool {
+    idle.is_none_or(|i| i >= IDLE) || waited >= AT_MOST
+}
+
+/// The waiting process's lock: its pid, while it lives.
+fn waiting(lock: &Path) -> bool {
+    let Some(pid) = std::fs::read_to_string(lock).ok().and_then(|t| t.trim().parse::<u32>().ok()) else { return false };
+    #[cfg(unix)]
+    {
+        // SAFETY: kill with signal 0 only asks whether the process exists
+        unsafe { libc::kill(pid as i32, 0) == 0 }
     }
-    let deadline = std::time::Instant::now() + ANSWER_WAIT;
-    let answer = loop {
-        let left = deadline.saturating_duration_since(std::time::Instant::now());
-        if left.is_zero() || !event::poll(left).unwrap_or(false) {
-            break None;
-        }
-        if let Ok(Event::Key(k)) = event::read()
-            && k.kind == KeyEventKind::Press
-        {
-            break match k.code {
-                KeyCode::Enter | KeyCode::Char('y' | 'Y') => Some(Answer::Yes),
-                KeyCode::Char('l' | 'L') => Some(Answer::Later),
-                _ => Some(Answer::No),
-            };
-        }
+    #[cfg(not(unix))]
+    {
+        // a lock younger than the longest wait is taken as alive
+        let _ = pid;
+        age(lock).is_some_and(|a| a < AT_MOST + TICK * 2)
+    }
+}
+
+/// Starts `nuclear update --when-idle` apart from this process (its own session: closing the terminal or the editor
+/// does not stop it), its output to `update.log`.
+fn start_waiting(exe: &Path, dir: &Path) {
+    let log = std::fs::File::create(dir.join("update.log")).ok();
+    let mut cmd = Command::new(exe);
+    cmd.args(["update", "--when-idle"]).stdin(Stdio::null());
+    match log.and_then(|l| l.try_clone().ok().map(|c| (l, c))) {
+        Some((out, err)) => cmd.stdout(out).stderr(err),
+        None => cmd.stdout(Stdio::null()).stderr(Stdio::null()),
     };
-    let _ = crossterm::terminal::disable_raw_mode();
-    match answer {
-        Some(a) => {
-            eprintln!("{}", match a { Answer::Yes => "yes", Answer::No => "no", Answer::Later => "later (asked again tomorrow)" });
-            a
-        }
-        None => {
-            eprintln!("no answer: going on (nuclear update installs it at any time)");
-            Answer::No
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        // SAFETY: setsid in the child before exec, async-signal-safe
+        unsafe {
+            cmd.pre_exec(|| {
+                libc::setsid();
+                Ok(())
+            });
         }
     }
+    let _ = cmd.spawn();
 }
 
-/// Before a command, in a terminal: when a newer release is known, asks whether to update. On a yes the update runs
-/// and the command is run again by the new binary (its exit code returned); otherwise the command goes on (`None`).
-/// Never asked without a terminal (editors, agents, pipes, CI), inside `make` or an npm script, under sudo, or with
-/// `NUCLEAR_NO_UPDATE_CHECK`; "later" stops asking for a day.
-pub fn offer(args: &[String]) -> Option<ExitCode> {
-    let terminal = std::io::stdin().is_terminal() && std::io::stdout().is_terminal() && std::io::stderr().is_terminal();
-    let quiet = ["CI", "NUCLEAR_NO_UPDATE_CHECK", "MAKELEVEL", "npm_lifecycle_event"].iter().any(|v| std::env::var_os(v).is_some());
-    if !terminal || quiet || as_root() {
-        return None;
-    }
-    let exe = std::env::current_exe().ok()?;
-    let root = installation(&exe)?;
+/// Every use of NuclearLang: the user is working (`activity` written now); once a day the latest release is asked,
+/// and a newer one is left to the waiting process (started when none waits). Returns what is known, for `--check`.
+pub fn on_use() -> Option<(String, bool)> {
     let dir = cache_dir()?;
-    let latest = known_latest(&dir.join("latest-release"))?;
-    let later = dir.join("update-later");
-    if !newer(&latest) || younger_than_a_day(&later) {
+    let _ = std::fs::create_dir_all(&dir);
+    let _ = std::fs::write(dir.join("activity"), b"");
+    let exe = std::env::current_exe().ok()?;
+    installation(&exe)?;
+    if !auto_on() {
         return None;
     }
-    eprint!("NuclearLang {latest} is out (you have {CURRENT}). Update now? [Y]es / [n]o / [l]ater ");
-    let _ = std::io::stderr().flush();
-    match ask() {
-        Answer::Yes => {}
-        Answer::No => return None,
-        Answer::Later => {
-            let _ = std::fs::write(&later, &latest);
-            return None;
+    let latest = known_latest(&dir.join("latest-release"))?;
+    let lock = dir.join("update.lock");
+    let scheduled = newer(&latest) && (waiting(&lock) || {
+        start_waiting(&exe, &dir);
+        true
+    });
+    Some((latest, scheduled))
+}
+
+/// `nuclear update --when-idle`: waits for the user to stop (or `AT_MOST`), then installs the latest release. One at
+/// a time (`update.lock`); it ends without installing when the release is no longer newer (installed meanwhile).
+fn when_idle() -> ExitCode {
+    let (Some(dir), Some(root)) = (cache_dir(), std::env::current_exe().ok().as_deref().and_then(installation)) else {
+        return ExitCode::from(2);
+    };
+    let lock = dir.join("update.lock");
+    if waiting(&lock) {
+        return ExitCode::SUCCESS;
+    }
+    let _ = std::fs::write(&lock, std::process::id().to_string());
+    let found = std::time::Instant::now();
+    loop {
+        std::thread::sleep(TICK);
+        if !auto_on() {
+            let _ = std::fs::remove_file(&lock);
+            return ExitCode::SUCCESS;
+        }
+        if time_to_install(age(&dir.join("activity")), found.elapsed()) {
+            break;
         }
     }
-    match run_installer(&root, false) {
-        Ok(true) if cfg!(windows) => Some(ExitCode::SUCCESS),
-        // the installer replaced the file at `exe`: the new binary runs the command
-        Ok(true) => Some(match Command::new(&exe).args(args).status() {
-            Ok(s) if s.success() => ExitCode::SUCCESS,
-            _ => ExitCode::FAILURE,
-        }),
-        Ok(false) | Err(_) => {
-            eprintln!("the update did not finish (its message is above): nuclear update goes on from where it stopped");
-            None
+    // the release as last known (asked again when that answer is a day old)
+    let target = known_latest(&dir.join("latest-release"));
+    let result = if up_to_date(&root, target.as_deref()) {
+        Ok(true)
+    } else if std::env::var_os("NUCLEAR_UPDATE_DRYRUN").is_some_and(|v| v == "1") {
+        // the tests: what would run, nothing installed
+        eprintln!("{}", dry_run(&root, false));
+        Ok(true)
+    } else {
+        eprintln!("installing NuclearLang {} (was {CURRENT})", target.as_deref().unwrap_or("?"));
+        run_installer(&root, false)
+    };
+    if matches!(result, Ok(true)) && target.as_deref().is_some_and(newer) {
+        // what the editor and the MCP server read to say it: the version it updated to
+        let _ = std::fs::write(dir.join("updated"), target.as_deref().unwrap_or_default());
+    }
+    let _ = std::fs::remove_file(&lock);
+    if matches!(result, Ok(true)) { ExitCode::SUCCESS } else { ExitCode::FAILURE }
+}
+
+/// `nuclear update --auto on|off`: the automatic update turned on or off (the editor's setting runs it).
+fn set_auto(on: bool) -> ExitCode {
+    let Some(f) = config_file() else { return ExitCode::FAILURE };
+    if let Some(d) = f.parent() {
+        let _ = std::fs::create_dir_all(d);
+    }
+    match std::fs::write(&f, if on { "on\n" } else { "off\n" }) {
+        Ok(()) => {
+            println!("automatic update {}", if on { "on" } else { "off" });
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("cannot write {}: {e}", f.display());
+            ExitCode::FAILURE
         }
     }
 }
@@ -314,6 +421,15 @@ mod tests {
         assert_eq!(version_of("{\n  \"url\": \"x\",\n  \"tag_name\": \"v0.80.0\",\n}"), Some("0.80.0"));
         assert_eq!(version_of("https://github.com/nuclearlang/lang/releases/latest"), None);
         assert_eq!(version_of(""), None);
+    }
+
+    #[test]
+    fn installs_when_the_user_stopped_or_after_twelve_hours() {
+        let m = |n: u64| Duration::from_secs(n * 60);
+        assert!(!time_to_install(Some(m(5)), m(10)), "working: it waits");
+        assert!(time_to_install(Some(m(30)), m(31)), "half an hour without a use: the user stopped");
+        assert!(time_to_install(None, m(1)), "no use recorded");
+        assert!(time_to_install(Some(m(1)), m(12 * 60)), "working on: twelve hours at most");
     }
 
     #[test]

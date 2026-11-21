@@ -690,10 +690,11 @@
    "id": "editor:vscode.settings.editor",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the language, the dialect, the build and the devices",
-   "summary": "The 132 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
+   "summary": "The 133 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
    "body": [
     "- `nuclear.language` (default `\"auto\"`): %nuclear.language.desc%",
     "- `nuclear.notifications` (default `\"all\"`): %nuclear.notifications.desc%",
+    "- `nuclear.update.auto` (default `true`): %nuclear.update.auto.desc%",
     "- `nuclear.dialect` (default `\"flutter\"`): %nuclear.dialect.md%",
     "- `nuclear.dialectPaths` (default `[]`): %nuclear.dialectPaths.md%",
     "- `nuclear.server.path` (default `\"\"`): %nuclear.server.path.md%",
@@ -846,6 +847,11 @@
       "name": "nuclear.notifications",
       "default": "\"all\"",
       "does": "%nuclear.notifications.desc%"
+     },
+     {
+      "name": "nuclear.update.auto",
+      "default": "true",
+      "does": "%nuclear.update.auto.desc%"
      },
      {
       "name": "nuclear.dialect",

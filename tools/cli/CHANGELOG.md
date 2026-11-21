@@ -4,6 +4,7 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.
 - Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.
   A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,
   platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's

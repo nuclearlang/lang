@@ -2124,10 +2124,12 @@
    "body": [
     "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`). With that release already here (NuclearLang and its AI services) it says so and runs nothing; `nuclear update --reinstall` (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`) installs it again.",
     "An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).",
-    "When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;",
-    "a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;",
-    "`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off; never inside `make`, an npm script or under `sudo`. A `nuclear`",
-    "built from source is never updated this way. One install runs at a time: a second one says so and stops. The set-up of the AI services runs at a low priority, so a",
+    "A newer release installs itself: while you use NuclearLang (a `nuclear` command, VS Code, an agent through the MCP",
+    "server) it is looked for at most once a day (the first command of the day waits at most 3 seconds; offline it goes",
+    "on), and when there is one it is installed once you stop working (30 minutes without a use) or within 12 hours, in the",
+    "background; VS Code then offers to reload. `nuclear update --auto off` (or the setting `nuclear.update.auto`, or",
+    "`NUCLEAR_AUTO_UPDATE=0`) turns it off; never in CI or under `sudo`. A `nuclear` built from source is never updated",
+    "this way. One install runs at a time: a second one says so and stops. The set-up of the AI services runs at a low priority, so a",
     "busy machine stays usable while the knowledge base loads."
    ],
    "sources": [
@@ -2692,20 +2694,35 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.27bc28",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.85fc60",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
+   "summary": "(`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby.",
    "body": [
-    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
-    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
-    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
-    "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
-    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
-    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
-    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
-    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace",
-    "  panel is `editor-workspace`.",
+    "- `nuclear update` with the latest release already here says so and runs nothing (it ran the whole installer again); `nuclear update --reinstall` installs it all the same (`NUCLEAR_REINSTALL=1` for the installers).",
+    "- Fix (macOS): `nuclear update` said \"this nuclear was not installed by the NuclearLang installer\", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.",
+    "- The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer",
+    "  (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The",
+    "  MCP server registers no `developer_*` tool while its `LOCAL_MODELS` (held to Nuclear Builder's `localModels`) is",
+    "  false, and `nuclear_start`'s work cycle never sends an agent to the local Developer.",
+    "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.991cb0",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "panel is `editor-workspace`.",
+   "body": [
+    "panel is `editor-workspace`.",
     "",
     "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
    ],
@@ -2719,18 +2736,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.85fc60",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.bb2299",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "(`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby.",
+   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
    "body": [
-    "- `nuclear update` with the latest release already here says so and runs nothing (it ran the whole installer again); `nuclear update --reinstall` installs it all the same (`NUCLEAR_REINSTALL=1` for the installers).",
-    "- Fix (macOS): `nuclear update` said \"this nuclear was not installed by the NuclearLang installer\", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.",
-    "- The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer",
-    "  (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The",
-    "  MCP server registers no `developer_*` tool while its `LOCAL_MODELS` (held to Nuclear Builder's `localModels`) is",
-    "  false, and `nuclear_start`'s work cycle never sends an agent to the local Developer.",
-    "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run."
+    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.",
+    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
+    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
+    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
+    "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
+    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
+    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
+    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
+    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace"
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -3245,20 +3264,39 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.a24496",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.3b5c0d",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
-   "summary": "Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an installation a public installer made, `update::offer` asks `Update now?",
+   "summary": "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through `nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or `wget` and the API; at most 3 s, offline the old answer stays for a day,…",
    "body": [
-    "Before any command, in a terminal (stdin, stdout and stderr; never under `CI` or `NUCLEAR_NO_UPDATE_CHECK`) of an",
-    "installation a public installer made, `update::offer` asks `Update now? [Y]es / [n]o / [l]ater` when the last check",
-    "knew a newer release: one key read in raw mode (the command's own input stays its own), no key in 15 s is a no (a",
-    "script in a terminal is never stopped), `l` stops asking for a day (`update-later`); never inside `make`",
-    "(`MAKELEVEL`), an npm script or under `sudo`. The check never delays a command: the latest tag (the redirect of `releases/latest`) is written by a",
-    "detached `curl` (or `wget` and the API, where there is no curl) into `~/.cache/nuclearlang/latest-release` at most once a day, and the next run reads it. On a yes",
-    "the installer runs with `NUCLEAR_UPDATE=1` (it keeps the choices of the last install) and the new binary runs the command again (Windows: the installer opens in its own window, as it",
-    "replaces `nuclear.exe`).",
-    "",
+    "**The automatic update** (`update::on_use`, before every command; the user, 2026-11-21): a use of NuclearLang marks",
+    "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through",
+    "`nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or",
+    "`wget` and the API; at most 3 s, offline the old answer stays for a day, `latest-release`). When it is newer, one",
+    "process waits apart (`nuclear update --when-idle`, its own session, `update.lock` with its pid, output in",
+    "`update.log`): every minute it looks at the last use and installs once the user stopped (30 minutes without a use) or",
+    "12 hours after it was found, working on or not; the public installer runs with `NUCLEAR_UPDATE=1` (the choices of the",
+    "last install kept; Windows: in its own window), then `updated` holds the new version (the editor offers a reload).",
+    "Never in CI, under `sudo`, for a build from source (no `.version`), with `NUCLEAR_AUTO_UPDATE=0` (or the old",
+    "`NUCLEAR_NO_UPDATE_CHECK`), or after `nuclear update --auto off` (`~/.config/nuclearlang/auto-update`, written by the",
+    "editor's setting `nuclear.update.auto`); `nuclear update --check [--json]` says `{current, latest, newer, scheduled,",
+    "auto}`; `NUCLEAR_UPDATE_DRYRUN=1` prints the installer's line instead of running it (the tests)."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.6c0ab9",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
+   "summary": "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`, `--defs-path <dir>`.",
+   "body": [
     "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a",
     "platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`,",
     "`--defs-path <dir>`. An unknown option or command prints `USAGE` and exits 2; errors in the code exit 1."
@@ -4267,21 +4305,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4af433",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.3cded1",
    "type": "guide",
    "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "nuclear agent init [--dialect <name>] AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents nuclear agent hook (the hook: checks the .nuc an agent edited; reads the tool call on stdin) nuclear contracts list the contracts the project (current folder) declares and their state…",
+   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear update [--reinstall] install the latest release now (the installer, run again; nothing when it is already here, --reinstall: all the same).",
    "body": [
-    "--brief: the short sheet (what changes from TS/Dart)",
-    "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
-    "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
-    "  nuclear contracts list                                      the contracts the project (current folder) declares and their state",
-    "  nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
-    "                                                              its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc",
-    "  nuclear defs list [--dialect <name>]                        list the type definitions packages (all, or the dialect's)",
-    "  nuclear defs show <Name|Name.member> --dialect <name> [--json] [--inherited]",
-    "                                                              print a declaration of the type definitions",
-    "  nuclear defs search <text> --dialect <name>                 find declarations whose name contains <text>"
+    "```text",
+    "usage:",
+    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
+    "  nuclear update [--reinstall]                                install the latest release now (the installer, run again; nothing when it",
+    "                                                              is already here, --reinstall: all the same). Automatic: a newer release",
+    "                                                              (looked for once a day, on a use) installs itself when you stop working",
+    "                                                              (30 min without a use) or within 12 hours; --check [--json] says what",
+    "                                                              is known, --auto on|off, NUCLEAR_AUTO_UPDATE=0 or CI: never",
+    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
+    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
+    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
+    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
+    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4293,12 +4334,14 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4b4922",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.500fbd",
    "type": "guide",
    "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "(the Nuclear of a platform is the same in all of them) nuclear fmt <file.nuc|folder>... [--check] rewrite the files in the canonical layout (spacing, indentation, blank lines; never reorders); --check only lists the files that would change (exit 1) nuclear tokens <file.nuc> print the tokens…",
+   "summary": "nuclear fix <folder|file.nuc> [--dialect|--platform] apply every exact fix of the errors (the editor's quick fixes), then report what is left (the Nuclear of a platform is the same in all of them) nuclear fmt <file.nuc|folder>... [--check] rewrite the files in the canonical layout (spacing,…",
    "body": [
-    "--platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
+    "nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
+    "                                                              fixes), then report what is left",
+    "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
     "                                                              (the Nuclear of a platform is the same in all of them)",
     "  nuclear fmt <file.nuc|folder>... [--check]                  rewrite the files in the canonical layout (spacing,",
     "                                                              indentation, blank lines; never reorders); --check",
@@ -4308,37 +4351,7 @@
     "  nuclear dialect list                                        list the dialects found",
     "  nuclear dialect check <name|path> [--json]                  validate a dialect's files",
     "  nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
-    "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
-    "                                                              with --dialect, also the spec of the dialect and its parents;"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4c10e7",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The compiler's commands",
-   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear update [--reinstall] install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer…",
-   "body": [
-    "```text",
-    "usage:",
-    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
-    "  nuclear update [--reinstall]                                install the latest release (the installer, run again; nothing when it is",
-    "                                                              already here, --reinstall: all the same); in a terminal every",
-    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
-    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
-    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
-    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
-    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
-    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
-    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
-    "                                                              fixes), then report what is left"
+    "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4360,6 +4373,33 @@
     "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
     "                         folder next to each dialects/ folder is always searched",
     "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.c33215",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "with --dialect, also the spec of the dialect and its parents; nuclear agent init [--dialect <name>] AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents nuclear agent hook (the hook: checks the .nuc an agent edited; reads the tool call on stdin) nuclear contracts list the…",
+   "body": [
+    "with --dialect, also the spec of the dialect and its parents;",
+    "                                                              --brief: the short sheet (what changes from TS/Dart)",
+    "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
+    "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
+    "  nuclear contracts list                                      the contracts the project (current folder) declares and their state",
+    "  nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
+    "                                                              its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc",
+    "  nuclear defs list [--dialect <name>]                        list the type definitions packages (all, or the dialect's)",
+    "  nuclear defs show <Name|Name.member> --dialect <name> [--json] [--inherited]",
+    "                                                              print a declaration of the type definitions",
+    "  nuclear defs search <text> --dialect <name>                 find declarations whose name contains <text>"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

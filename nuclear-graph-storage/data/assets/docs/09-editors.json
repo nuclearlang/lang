@@ -5805,25 +5805,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d89ae9",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- The Nuclear workspace follows VS Code's folder as VS Code does: a window shows the workspace of its folder and only it (never the last one opened elsewhere), and only the projects it opened by hand, kept with its folder; the projects of other windows and the deleted ones no longer appear. A project opened by hand in 0.84 to 0.88.3 is opened again with *Open a Project as a Tab* in the window that wants it.",
-    "- Nuclear Chat and Atlas show an agent's Markdown as it is meant: tables (a header row, their own sideways scroll), headings, rules, numbered lists, task lists and nested lists, besides the code, quotes, links and marks they already had.",
-    "- Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5901,6 +5882,26 @@
    "body": [
     "- 0.54.0: Nuclear Builder shows a run as a team at work: an avatar, a role and a model per member (Tech lead, Developer, QA, Security…), the one working animated with the step it is on, and a line when the work changes hands. When Claude leads, the spec form sets Claude's model (`haiku` too) and budget per run and adds the Nuclear MCP server to Claude Code. Fixed: typing in the spec form no longer loses the focus nor sends the caret to the start when suggestions, a run or the settings arrive.",
     "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ffe964",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- A newer release of NuclearLang installs itself when you stop working (30 minutes without a use) or within 12 hours; VS Code counts as a use and says when it updated, with *Reload*. Setting `nuclear.update.auto` (on by default).",
+    "- The Nuclear workspace follows VS Code's folder as VS Code does: a window shows the workspace of its folder and only it (never the last one opened elsewhere), and only the projects it opened by hand, kept with its folder; the projects of other windows and the deleted ones no longer appear. A project opened by hand in 0.84 to 0.88.3 is opened again with *Open a Project as a Tab* in the window that wants it.",
+    "- Nuclear Chat and Atlas show an agent's Markdown as it is meant: tables (a header row, their own sideways scroll), headings, rules, numbered lists, task lists and nested lists, besides the code, quotes, links and marks they already had.",
+    "- Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"

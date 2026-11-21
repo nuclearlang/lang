@@ -23,7 +23,7 @@ Stated as it is, so you can judge the risk (the full list is
 - **Everything runs on your machine.** The Smart Graph listens on `127.0.0.1` with a token on every route and
   encrypts what it stores; the local agents' service (Nuclear Developer, port 7879) has **no token yet**. Nothing
   is sent anywhere except the AI provider you choose and the daily update check (the URL of the latest release
-  only; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off).
+  only; `nuclear update --auto off` or `NUCLEAR_AUTO_UPDATE=0` turns it off, with the automatic update).
 - **No telemetry** is collected.
 - The installers need **no administrator rights**: everything goes into your user's folders.
 
