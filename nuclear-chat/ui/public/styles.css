@@ -251,9 +251,10 @@ input:focus-visible {
   overflow: hidden;
   flex: none;
 }
-/* the agent's menu hangs below the header */
-.channel-header { overflow: visible; position: relative; z-index: 6; }
-.channel-title { font-size: 1.1em; font-weight: 800; }
+/* the agent's menu hangs below the header; sideways the header is clipped: narrow (a thread open beside it), its
+   items never spill over the thread */
+.channel-header { overflow-x: clip; overflow-y: visible; position: relative; z-index: 6; }
+.channel-title { font-size: 1.1em; font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* the name, and under it the brain that answers as the member */
 .channel-name { display: flex; flex-direction: column; justify-content: center; min-width: 0; line-height: 1.2; }
 .brain { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 0.78em; font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; }

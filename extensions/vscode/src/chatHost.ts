@@ -287,7 +287,8 @@ export function runPosts(prev: RunLike | undefined, next: RunLike, member: (role
     const name = T.stations[st.id as keyof RunTexts['stations']] ?? st.title;
     if (was !== st.status && st.status === 'running') out.push({ author: member(st.role), text: fmt(T.started, name) });
     if (was === st.status || (st.status !== 'passed' && st.status !== 'failed')) continue;
-    const said = [...st.steps].reverse().find((s) => s.summary)?.summary ?? '';
+    // a failed station says why: its failed step's summary, not the last step's ("Analysis failed: passed")
+    const said = [...st.steps].reverse().find((s) => s.summary && (st.status !== 'failed' || s.status === 'failed'))?.summary ?? [...st.steps].reverse().find((s) => s.summary)?.summary ?? '';
     const cost = st.steps.reduce((n, s) => n + (s.costUsd ?? 0), 0);
     const details = stationDetails(st);
     out.push({ author: member(st.role), text: fmt(st.status === 'passed' ? T.passed : T.failed, name) + (said ? `: ${said}` : ''), ...(st.status === 'failed' ? { moment: 'failure' as const } : {}), ...(cost ? { costUsd: cost } : {}), ...(details ? { details } : {}) });
