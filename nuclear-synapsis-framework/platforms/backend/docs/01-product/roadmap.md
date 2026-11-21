@@ -62,9 +62,6 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   all of them (Nuclear Chat's members answered five times in its fifth test, 2026-11-18; its responders now ignore a
   message they are already answering). Wanted: `running` forgets the listeners it did not make, in both runtimes.
 
-- **No CORS**: a web app on another origin cannot call a backend (the browser blocks it); the platform has no word to
-  allow the origins of its clients. Found building the onboardings (2026-11-16): `todos_web` reads a public API for
-  that reason.
 - **A repository whose name implies an entity nobody declares compiles** (found by a rename, ADR-developer-0001). With
   `Supplier` renamed to `Vendor` and `SupplierRepository` left, `nuclear check .` reports nothing and the generated
   Python fails when imported (`NameError: name 'Supplier' is not defined`). The repository kind takes its entity

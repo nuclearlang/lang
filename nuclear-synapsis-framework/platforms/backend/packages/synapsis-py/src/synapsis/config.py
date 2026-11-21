@@ -248,11 +248,12 @@ class Chroma(Connection):
 
 
 class AppConfig:
-    """The project configuration (config/project_config.nuc): its connections, and the guards every route passes
-    (ADR-synapsis-0007)."""
+    """The project configuration (config/project_config.nuc): its connections, the guards every route passes
+    (ADR-synapsis-0007), and the web origins whose browsers may call the API (CORS)."""
 
     connections: list[Connection] = []
     guards: list[Guard] = []
+    origins: list[str] = []
 
 
 class ComponentConfig:

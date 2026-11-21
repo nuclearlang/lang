@@ -52,8 +52,9 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
   2026-11-18). Wanted: a folder dependency reinstalled on every `nuclear install`, or installed editable.
   The same with the runtime in a web project: `nuclear install` kept an old `synapsis-web` of the same version in
   `build/app/node_modules` (npm does not copy a `file:` package again when its version is unchanged), so the tests
-  ran the old runtime until the folder was deleted by hand (found with `nuclear-chat/ui`, 2026-11-18). Wanted: the
-  runtime copied fresh on every `nuclear install`.
+  ran the old runtime until the folder was deleted by hand (found with `nuclear-chat/ui`, 2026-11-18; again with a
+  nestjs backend and `synapsis-nest`'s `origins`, 2026-11-21). Wanted: the runtime copied fresh on every
+  `nuclear install`.
 
 - The mobile path still calls Flutter directly (the SDK lookup, the `flutter` commands, devices, hot reload): move
   it to the flutter dialect's `[toolchain]` like backend and web (the consequence ADR-cli-0001 names).

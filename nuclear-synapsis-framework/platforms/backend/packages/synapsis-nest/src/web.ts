@@ -39,6 +39,7 @@ export function configureApp(app: INestApplication): INestApplication {
   const config = configOf(app);
   const guards = config?.guards ?? [];
   if (guards.length) app.useGlobalGuards(new GuardsOf(guards));
+  if (config?.origins?.length) app.enableCors({ origin: [...config.origins] });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalInterceptors(new ResultInterceptor());
   fixedRoutesFirst(app);

@@ -5,7 +5,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { lastValueFrom, of } from 'rxjs';
 import { Controller, Get, Module, Param } from '@nestjs/common';
-import { Err, NotFound, Ok, Repository, ResultInterceptor, gt, oneOf } from '../src/index.js';
+import { AppConfig, Err, NotFound, Ok, Repository, ResultInterceptor, gt, oneOf } from '../src/index.js';
 import { startTestApp, stopTestApp } from '../src/testing.js';
 
 @Controller('heroes')
@@ -23,6 +23,13 @@ class HeroController {
 
 @Module({ controllers: [HeroController] })
 class HeroModule {}
+
+class WebConfig extends AppConfig {
+  readonly connections = [];
+  readonly origins = ['http://localhost:5173'];
+}
+@Module({ controllers: [HeroController], providers: [{ provide: AppConfig, useValue: new WebConfig() }] })
+class WebModule {}
 
 @Table({ tableName: 'heroes', timestamps: false })
 class Hero extends Model {
@@ -59,6 +66,20 @@ describe('synapsis-nest', () => {
       assert.equal(await (await fetch(`${base}/heroes/7`)).text(), 'hero 7');
     } finally {
       // a server left open would keep the test runner waiting
+      await stopTestApp(app);
+    }
+  });
+
+  it('lets the browsers of the config\'s origins call it (CORS), and only those', async () => {
+    const app = await startTestApp(WebModule);
+    await app.listen(0);
+    const base = (await app.getUrl()).replace('[::1]', '127.0.0.1');
+    try {
+      const allowed = await fetch(`${base}/heroes/total`, { headers: { Origin: 'http://localhost:5173' } });
+      assert.equal(allowed.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+      const other = await fetch(`${base}/heroes/total`, { headers: { Origin: 'http://evil.example' } });
+      assert.equal(other.headers.get('access-control-allow-origin'), null);
+    } finally {
       await stopTestApp(app);
     }
   });

@@ -80,5 +80,5 @@ files become a NestJS app. The Nuclear of a platform never changes with its dial
   build apps that list todos.
 - Every kind of the platform (relations, pagination, transactions, events, Kafka, Redis, AI agents):
   [the backend reference](../07-reference/backend.md).
-- A browser on another origin cannot call this API yet: the platform has no CORS setting
-  ([roadmap](../01-product/roadmap.md)).
+- A web app on another origin calls this API once its origin is in `origins: string[]` of the `appConfig`
+  ([the backend reference](../07-reference/backend.md)).

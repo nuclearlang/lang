@@ -349,6 +349,18 @@ controller ProjectsController(tasks: TasksAppComponent)
     ~tasks.project(id)
 ```
 
+#### The web apps that call it (CORS)
+
+`origins: string[]` in the `appConfig` lists the web origins whose browsers may call the API (a web app of the
+platform served on another port or host): their requests answer with `Access-Control-Allow-Origin`, any method and
+header; any other origin's browser is blocked. Without `origins`, no browser on another origin can call it.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [SQLite(file = env("DATABASE", "app.sqlite"))]
+  origins: string[] = ["http://localhost:5173"]
+```
+
 #### Migrations of the database (ADR-backend-0001)
 
 `createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the

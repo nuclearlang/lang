@@ -26,7 +26,7 @@ file goes: `nuclear help layout --platform backend`.
 | `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next("node")` above the node it leaves |
 | `ai/states/` | state | the graph's state (`messages: Messages`) |
 | `events/` | `listener Name(deps)` | `@consumer("topic")` methods; `~publish("topic", value)` |
-| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "..."), WebSocketServer(path = "ws")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"), header = "X-Token")]` (every route: headers only) |
+| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "..."), WebSocketServer(path = "ws")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"), header = "X-Token")]` (every route: headers only); `origins: string[] = ["http://localhost:5173"]` (the web apps whose browsers may call it, CORS) |
 | `test/` | `tests Name` | `@test("...")` methods, `inject<X>()`, `expect(cond)` |
 
 Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.

@@ -70,6 +70,11 @@ def create_app(
     hidden: dict[str, Any] = {"docs_url": None, "redoc_url": None, "openapi_url": None} if guards else {}
     app = FastAPI(title=title, lifespan=lifespan, **hidden)
     every = [guarded(guards)] if guards else None
+    origins = list(getattr(config, "origins", []))
+    if origins:
+        from fastapi.middleware.cors import CORSMiddleware
+
+        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
     # what `python -m synapsis.migrate` reads to find the database
     app.state.synapsis_config = config
     app.state.synapsis_components = components

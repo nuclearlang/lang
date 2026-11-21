@@ -113,6 +113,8 @@ export abstract class AppConfig {
   abstract readonly connections: Connection[];
   // the guards every route passes (ADR-synapsis-0007), when the project config lists them
   readonly guards?: Guard[];
+  // the web origins whose browsers may call the API (CORS), when the project config lists them
+  readonly origins?: string[];
 }
 
 /** The configuration of one component: connections only it uses. */

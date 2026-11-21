@@ -143,3 +143,17 @@ def test_a_model_has_nuclears_names_on_the_wire() -> None:
     r = Read(last_read=3)
     assert r.model_dump() == {"lastRead": 3, "costUsd": None}
     assert Read.model_validate({"lastRead": 4}).last_read == 4 and Read.model_validate({"last_read": 5}).last_read == 5
+
+
+class WebConfig(AppConfig):
+    connections = [SQLite("unused.db")]
+    origins = ["http://localhost:5173"]
+
+
+async def test_the_browsers_of_the_config_origins_may_call_it() -> None:
+    app = create_app(WebConfig(), controllers=[HeroController])
+    async with client(app, WebConfig(), memory_database()) as http:
+        allowed = await http.get("/heroes/total", headers={"Origin": "http://localhost:5173"})
+        assert allowed.headers.get("access-control-allow-origin") == "http://localhost:5173"
+        other = await http.get("/heroes/total", headers={"Origin": "http://evil.example"})
+        assert "access-control-allow-origin" not in other.headers
