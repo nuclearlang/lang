@@ -1097,7 +1097,8 @@ window.Squad = (() => {
   /** Step 1 needs a name; the rest can always be left (a team may lack a role: it is said, and it cannot run yet). */
   // who works a member in the wizard: the team's brain when it inherits it
   const workerOf = (m) => W.brain && m.inherits ? W.brain : m;
-  const canLeave = () => (W.step !== 0 || !!W.name.trim()) && (W.step !== 4 || W.members.every((m) => usable(workerOf(m).provider)));
+  // a team needs a name, and someone to work it: none (every() of nobody is true) is no team
+  const canLeave = () => (W.step !== 0 || !!W.name.trim()) && (W.step !== 4 || (W.members.length > 0 && W.members.every((m) => usable(workerOf(m).provider))));
   function stepIdentity() {
     return '<h2>' + esc(t('sq.wz.identityTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.identityHint')) + '</div>'
       + '<div class="wz-id"><div class="wz-logo"><button class="sq-logobtn" data-a="wzLogo" title="' + esc(t('sq.wz.logoPick')) + '" aria-label="' + esc(t('sq.wz.logoPick')) + '">' + logo(W.name || '?', W.name, W.logoData, 112) + '</button><span class="lbl">' + esc(W.logoData ? t('sq.wz.logoChange') : t('sq.wz.logoPick')) + '</span>' + (W.logoData ? '<button data-a="wzLogoClear">' + esc(t('sq.logoClear')) + '</button>' : '') + '</div>'

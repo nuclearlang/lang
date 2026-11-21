@@ -107,6 +107,23 @@ build: a plain `package.sh` links this machine's glibc and does not run on an ol
   Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the
   host's cgroups, ttys and devices and brings the desktop session down. `writable-cgroups` gives it only its own.
 
+- **The clean machine with an editor** (`clean-machine/editor.Dockerfile`, on top of the image above): VS Code and a
+  virtual display, the public installer from the internet; the extension is driven over VS Code's debugging port,
+  published to the host through `socat` (Electron listens only on the container's own `127.0.0.1`). Start Electron
+  itself (`/usr/share/code/code`, not the `code` launcher, which returns and takes `xvfb-run`'s display with it), and
+  set `"security.workspace.trust.enabled": false` and `"window.dialogStyle": "custom"` before it starts (the trust
+  question and VS Code's dialogs are native windows a debugging port cannot reach).
+
+  ```sh
+  docker build -t nuclear-clean-editor -f installer/release/clean-machine/editor.Dockerfile installer/release/clean-machine
+  docker run -d --name nuclear-editor --cgroupns=private --security-opt writable-cgroups=true --cpus 2 --memory 4g \
+    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -p 127.0.0.1:9444:9444 nuclear-clean-editor
+  docker exec nuclear-editor su - dev -c 'curl -fsSL https://nuclearlang.github.io/install.sh | sh'
+  docker exec -d nuclear-editor su - dev -c 'xvfb-run -a -s "-screen 0 1600x1000x24" /usr/share/code/code \
+    --no-sandbox --disable-gpu --remote-debugging-port=9443 ~/projects'
+  docker exec -d nuclear-editor socat TCP-LISTEN:9444,fork,reuseaddr TCP:127.0.0.1:9443   # apt-get install socat first
+  ```
+
 ## After a change in the tree
 
 `installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`,

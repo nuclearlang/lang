@@ -644,7 +644,7 @@ if [ -s "$tmp/editors" ]; then
   names=$(awk 'NR > 1 { printf " · " } { printf "%s", $0 }' "$tmp/editors")
   if [ "$os" = macos ]; then key=Cmd; quit="Cmd+Q"; else key=Ctrl; quit="close every window"; fi
   box_top "Your editor" "$YELLOW"
-  box_line "${BOLD}1${OFF}  Open ${BOLD}$names${OFF} ${DIM}(already open: $quit, then open it again)${OFF}" "$YELLOW"
+  box_line "${BOLD}1${OFF}  Open ${BOLD}$names${OFF} ${DIM}(if it is open: $quit, then open it again)${OFF}" "$YELLOW"
   box_line "${BOLD}2${OFF}  The trefoil in the left bar opens the ${BOLD}Nuclear workspace${OFF}" "$YELLOW"
   box_line "${BOLD}3${OFF}  A new project: ${YELLOW}nuclear new my_app${OFF}, then open its folder" "$YELLOW"
   box_line "${BOLD}4${OFF}  A ${BOLD}.nuc${OFF} file gets colours, errors as you type, completion and ${BOLD}Run${OFF}" "$YELLOW"

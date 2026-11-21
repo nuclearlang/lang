@@ -56,7 +56,8 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 - `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).
 - `release/delivery.sh`: the delivery gate, one command that must pass before a tag (its header lists the steps; logs
   in `target/delivery/`). `release/after-release.sh`: the checks after the tag, where the user gets the release.
-- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.
+- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user;
+  `editor.Dockerfile` adds VS Code and a virtual display, to drive the extension there ([the runbook](docs/06-runbooks/release.md)).
 - `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive
   `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of
   80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the

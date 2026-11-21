@@ -2101,7 +2101,7 @@ ${this.ws.recent().length ? `<p class="muted">${w.recent}</p>${this.ws.recent().
       ? `${apps.length ? apps.map((a) => `<div class="project"${a.exists ? ` data-root="${esc(path.join(cur.root, a.folder))}"` : ''}><div class="grow"><div class="name">${esc(a.name)} <span class="muted">${esc(a.platform)} · ${esc(a.dialect ?? '')}</span></div><div class="path">${esc(a.folder)}${a.exists ? '' : ` · ${w.missing}`}</div></div></div>`).join('') : `<p class="muted">${w.noApps}</p>`}
 <div class="form"><label>${w.platform}<select id="platform">${PLATFORMS.map((p) => `<option value="${p}">${p}</option>`).join('')}</select></label>
 <label>${w.dialect}<select id="dialect"></select></label>
-<label>${w.appName}<input id="appname" placeholder="${esc(cur.name.replace(/[^A-Za-z0-9_]+/g, '_'))}_api"></label></div>
+<label>${w.appName}<input id="appname" data-base="${esc(cur.name.replace(/[^A-Za-z0-9_]+/g, '_'))}" placeholder="${esc(cur.name.replace(/[^A-Za-z0-9_]+/g, '_'))}_api"></label></div>
 <p><button id="add">${w.addApp}</button> ${chat('apps')}</p>`
       : `<p class="muted">${w.firstWs}</p>`;
     const tour = TOUR.map((id) => `<div class="card"><b>${(w as Record<string, string>)[`tour.${id}.title`]}</b><p>${(w as Record<string, string>)[`tour.${id}`]}</p><p class="muted"><kbd>${keyOf(id)}</kbd> <a data-tool="${id}">${w.openIt}</a></p></div>`).join('');
@@ -2129,6 +2129,8 @@ ${onboarding ? `<p class="muted">${w.resumes} <a data-skip="1">${w.skip}</a></p>
     const list = DIALECTS[$('platform').value] || [];
     $('dialect').innerHTML = list.map((d) => '<option>' + d + '</option>').join('');
     if (saved.dialect && list.includes(saved.dialect)) $('dialect').value = saved.dialect;
+    // the name offered follows the platform (shop_api, shop_web, shop_app); left empty, it is the one used
+    if ($('appname')?.dataset.base) $('appname').placeholder = $('appname').dataset.base + ({ backend: '_api', web: '_web', mobile: '_app' }[$('platform').value] || '_app');
   }
   dialects();
   const keep = () => vscode.setState({ parent: val('parent'), wsname: val('wsname'), platform: val('platform'), dialect: val('dialect'), appname: val('appname') });
@@ -2139,7 +2141,7 @@ ${onboarding ? `<p class="muted">${w.resumes} <a data-skip="1">${w.skip}</a></p>
   $('create')?.addEventListener('click', () => vscode.postMessage({ type: 'create', parent: val('parent'), name: val('wsname') }));
   $('another')?.addEventListener('click', () => vscode.postMessage({ type: 'create' }));
   $('openws')?.addEventListener('click', () => vscode.postMessage({ type: 'open' }));
-  $('add')?.addEventListener('click', () => { vscode.postMessage({ type: 'addApp', platform: val('platform'), dialect: val('dialect'), name: val('appname') }); $('appname').value = ''; keep(); });
+  $('add')?.addEventListener('click', () => { vscode.postMessage({ type: 'addApp', platform: val('platform'), dialect: val('dialect'), name: val('appname') || $('appname').placeholder }); $('appname').value = ''; keep(); });
   $('setup').addEventListener('click', () => vscode.postMessage({ type: 'setup' }));
   $('startup').addEventListener('change', (ev) => vscode.postMessage({ type: 'startup', on: ev.target.checked }));
   document.addEventListener('click', (e) => {

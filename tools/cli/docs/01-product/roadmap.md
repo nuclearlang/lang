@@ -39,6 +39,9 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
 
 ## Pending
 
+- **`nuclear run` of a backend in a terminal does not take a new `.nuc`** (found on a clean machine, 2026-11-21): a
+  resource generated while it runs (`nuclear gen resource`) answers 404 until `run` starts again; in VS Code
+  `nuclear watch` transpiles it. Wanted: `run` watching the project's `.nuc` files as `watch` does.
 - **Found writing the skills library (2026-11-18)**: no OpenAPI importer; no dependency audit nor load-test command; `nuclear fmt --check` is not in the default CI line.
 - **`nuclear new .` is refused** ("'.' is not a project name"; found by spec 016's measured run, 2026-11-18): an
   agent told "create it here" made a subfolder and moved its files up by hand. Wanted: `nuclear new .` creates the

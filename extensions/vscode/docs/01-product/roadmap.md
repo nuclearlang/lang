@@ -89,6 +89,10 @@ Done, and never tried in a running VS Code (only headless renders, node checks, 
 
 ## Pending
 
+- **The extension does nothing in Restricted Mode** (found on a clean machine in Docker, 2026-11-21): a folder VS Code
+  does not trust yet shows no trefoil and no welcome until the user says they trust it. Wanted: limited support of
+  untrusted workspaces (`capabilities.untrustedWorkspaces`): the workspace, the welcome and the documentation shown,
+  everything that runs code (the server, run, build, the tools' commands) only once trusted, with a line that says so.
 - The VS Code listing (`extensions/vscode/README.md`): the example goes in a ```` ```nuclear ```` block; a relative
   image breaks locally and `vsce` rejects it without `repository`. `package.json` names the tree
   (`nuclearlang/lang`, directory `extensions/vscode`); whether `vsce` rewrites the README's relative links
