@@ -138,7 +138,10 @@ run in the team's channel, and does what its buttons ask.
   Atlas* send `atlas` with the channel (`dm-<team>-<member>`, the team's id, else `teamChannel`), and the host runs
   `nuclear.atlas.open` (root, channel); the company screen does the same with `team:chat`. The chat as a full editor
   tab stays the command *Nuclear Chat: Open the Chat*.
-- **A run is a thread** of its team's channel (`followRun`, from `driveRun`): the tech lead starts it (`run:<id>`,
+- **A run is a thread** of its team's channel (`followRun`, from `driveRun`; a run another process drives, `run
+  --detach` from an agent's `run_start`, the chat's tech lead or a terminal, is followed by its file: `FileRun`,
+  `followDetachedRuns` over the workspace's projects at the start, each new run file of `.nuclear/builder/runs/`
+  picked up as it appears; two windows open on one project both tell it): the tech lead starts it (`run:<id>`,
   found again by the chat's search when the run goes on), each station that starts, passes or fails is posted by the
   member of its role in one line, a passed or failed one with its log folded (`details`, `stationDetails`: each
   step's line with the files it wrote, then the failed step's log; its last 4,000 characters), a failure with

@@ -2949,25 +2949,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces.0573f2",
-   "type": "context",
-   "title": "What a project and a machine get for AI agents — The pieces",
-   "summary": "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`, the MCP server, `add`), never by writing target code or translating native code by hand (ADR-platform-0004).",
-   "body": [
-    "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,",
-    "the MCP server, `add`), never by writing target code or translating native code by hand",
-    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/agent-support.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces.21f1ef",
    "type": "context",
    "title": "What a project and a machine get for AI agents — The pieces",
@@ -2983,6 +2964,29 @@
     "| The check hook | `.claude/settings.json` of the project | `nuclear agent init`; it runs `nuclear agent hook` |",
     "",
     "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/agent-support.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces.359e36",
+   "type": "context",
+   "title": "What a project and a machine get for AI agents — The pieces",
+   "summary": "The skill, the project section, `start` and the MCP server's work cycle all tell an agent to size a request before any work (`nuclear help task-size`, spec 024): small and medium (≤ 10 files, ≤ 400 lines, no new feature) are its own, a large one is proposed to Nuclear Builder with the count as the…",
+   "body": [
+    "The skill, the project section, `start` and the MCP server's work cycle all tell an agent to size a request before",
+    "any work (`nuclear help task-size`, spec 024): small and medium (≤ 10 files, ≤ 400 lines, no new feature) are its",
+    "own, a large one is proposed to Nuclear Builder with the count as the reason.",
+    "",
+    "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,",
+    "the MCP server, `add`), never by writing target code or translating native code by hand",
+    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
@@ -3335,11 +3339,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.271de7",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.66fc42",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation: the atlas (`src/atlas.rs`, spec 016)",
-   "summary": "the dialect's folder, else `docs/07-reference/<name>.md` of its language; then the dialect format and the contract generated from the transpiler (`nuclear_dialect::contract::markdown()`), then the available dialects.",
+   "summary": "blocks and inline code stay.",
    "body": [
+    "blocks and inline code stay.",
     "- `mentions` / `not_a_topic`: a word that is not a topic lists the topics that explain it, most mentions first.",
     "- `spec`: the base reference, then (with a dialect) the spec of each dialect of its chain, base first: `spec.md` in",
     "  the dialect's folder, else `docs/07-reference/<name>.md` of its language; then the dialect format and the",
@@ -3362,13 +3367,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.36540f",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.7f7fac",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation: the atlas (`src/atlas.rs`, spec 016)",
-   "summary": "`agent-files/start.md`), `context-docs` (the code generator's guide), the language's guides and references, each language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`, `ai-setup`, `graph`, `editors`, `vscode`, `builder`...), each embedded from its own project's…",
+   "summary": "`agent-files/start.md`), `task-size` (spec 024: do a task or propose Nuclear Builder, `agent-files/task-size.md`), `context-docs` (the code generator's guide), the language's guides and references, each language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`,…",
    "body": [
     "- `TOPICS`: each embedded topic with its group and the file it comes from (`topic!`): `start` (the onboarding,",
-    "  `agent-files/start.md`), `context-docs` (the code generator's guide), the language's guides and references, each",
+    "  `agent-files/start.md`), `task-size` (spec 024: do a task or propose Nuclear Builder, `agent-files/task-size.md`), `context-docs` (the code generator's guide), the language's guides and references, each",
     "  language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`, `ai-setup`, `graph`,",
     "  `editors`, `vscode`, `builder`...), each embedded from its own project's `docs/08-guides/`.",
     "- `found()`: found when asked, not embedded: every `docs/07-reference/<name>.md` and `docs/08-guides/<name>.md` of",
@@ -3378,8 +3383,7 @@
     "  `config.nuc` or `nuclear.toml`, or one `.nuc` file. `nuclear help example/<name>` prints its `.nuc` files.",
     "- `GROUPS`: the order and meaning of the groups `nuclear help atlas` prints (`--json`: `[{name, group, what}]`).",
     "- `resolve`: every text printed (a topic, `spec`, `spec --brief`, a dialect word) has its relative links resolved: a",
-    "  link to a topic becomes `label (`nuclear help <topic>`)`, any other keeps its label; web and anchor links, code",
-    "  blocks and inline code stay."
+    "  link to a topic becomes `label (`nuclear help <topic>`)`, any other keeps its label; web and anchor links, code"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"

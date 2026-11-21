@@ -143,7 +143,8 @@ Bundled apart by `npm run flow` into `out/builder-flow.js` and `.css`, loaded by
 change, so the animations run on. C4's four levels, walked by the breadcrumb, a double click going down:
 
 - **Context**, for a product owner (spec 024 requirement 5): the project (its spec, its progress, its time and cost),
-  you on its left, and five business steps under it from `storyOf` (`src/story.ts`, pure, tested): `beatOf` maps each
+  you on its left, and five business steps under it as a column read downwards (a row shrank the words in the
+  editor's narrow pages) from `storyOf` (`src/story.ts`, pure, tested): `beatOf` maps each
   station (analysis → *understand*, design → *design*, tests and code → *build*, quality → *check*, delivery →
   *deliver*; any other station, an older engine's, → *build*), `beatState` gives one state (a failure, then a
   question to you, then work going on, then done; all skipped: not needed), and each says what it produced (the

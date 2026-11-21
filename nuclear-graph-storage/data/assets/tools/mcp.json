@@ -3091,16 +3091,17 @@
    "id": "mcp:run_start",
    "type": "mcp",
    "title": "`run_start` — a tool of the Nuclear MCP server",
-   "summary": "Start the run of a spec (its id: spec_list names them): its stations worked by the team (empty: the project's) in a process of its own; it stops at the gates for an answer (run_answer).",
+   "summary": "Start the run of a spec, or of several in one run (specs: their ids, spec_list names them; a big feature in pieces, a sprint): each spec through every station before the next, one bill.",
    "body": [
-    "Start the run of a spec (its id: spec_list names them): its stations worked by the team (empty: the project's) in a process of its own; it stops at the gates for an answer (run_answer). assign is the tech lead's choice of who works a role (developer=dev-017,qa=qa-002). A paid provider's spending is confirmed by the user twice in the editor (`waiting: spending`), never here. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "Start the run of a spec, or of several in one run (specs: their ids, spec_list names them; a big feature in pieces, a sprint): each spec through every station before the next, one bill. Its stations are worked by the team (empty: the project's) in a process of its own; it stops at the gates for an answer (run_answer). assign is the tech lead's choice of who works a role (developer=dev-017,qa=qa-002). A paid provider's spending is confirmed by the user twice in the editor (`waiting: spending`), never here. Asks the user first (confirm: the token of a preview, when the client cannot ask). The factory is for big work: a small or medium task is the agent's own (nuclear_doc(\"task-size\")).",
     "",
     "Parameters:",
     "",
     "- `project`: string",
-    "- `spec`: string",
+    "- `spec`: string = `\"\"`",
     "- `team`: string = `\"\"`",
     "- `assign`: string = `\"\"`",
+    "- `specs`: any = `null`",
     "- `confirm`: string = `\"\"`"
    ],
    "keys": [
@@ -3137,8 +3138,8 @@
      {
       "name": "spec",
       "type": "string",
-      "required": true,
-      "default": ""
+      "required": false,
+      "default": "\"\""
      },
      {
       "name": "team",
@@ -3151,6 +3152,12 @@
       "type": "string",
       "required": false,
       "default": "\"\""
+     },
+     {
+      "name": "specs",
+      "type": "any",
+      "required": false,
+      "default": "null"
      },
      {
       "name": "confirm",
@@ -3828,7 +3835,7 @@
    "title": "`spec_create` — a tool of the Nuclear MCP server",
    "summary": "Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its business component (a folder of components/, or _global for the whole project), its acceptance criteria (each one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature, refactor, bug, test, security,…",
    "body": [
-    "Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its business component (a folder of components/, or _global for the whole project), its acceptance criteria (each one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature, refactor, bug, test, security, docs, diagram) and its description; or text: the spec's whole markdown, from its `# title`. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its business component (a folder of components/, or _global for the whole project), its acceptance criteria (each one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature, refactor, bug, test, security, docs, diagram) and its description; or text: the spec's whole markdown, from its `# title`. language: the language the project's specs are written in (en, es...): the first spec of a project asks the user for it (offer the editor's language, else the one they write in) and it is kept; later specs leave it empty. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
     "",
     "Parameters:",
     "",
@@ -3840,6 +3847,7 @@
     "- `use_case`: string = `\"feature\"`",
     "- `description`: string = `\"\"`",
     "- `text`: string = `\"\"`",
+    "- `language`: string = `\"\"`",
     "- `confirm`: string = `\"\"`"
    ],
    "keys": [
@@ -3911,6 +3919,12 @@
      },
      {
       "name": "text",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "language",
       "type": "string",
       "required": false,
       "default": "\"\""

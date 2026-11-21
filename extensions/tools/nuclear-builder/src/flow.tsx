@@ -298,19 +298,20 @@ function inside(ctx: FlowProps, s: Stage, technical: boolean): { nodes: Node[]; 
   return { nodes, edges };
 }
 
-/** The run told to a product owner (C4 level 1, spec 024): what is being built in the middle, you on its left, and the
- * five business steps in a row under it, each with what it produced and its state; the hand-over flows along them. The
- * people, the stations and the providers are the next level's. */
+/** The run told to a product owner (C4 level 1, spec 024): what is being built on top, you on its left, and the five
+ * business steps under it as a story read downwards (a column fits the editor's narrow pages without shrinking the
+ * words), each with what it produced and its state; the hand-over flows along them. The people, the stations and the
+ * providers are the next level's. */
 function contextOf(ctx: FlowProps): { nodes: Node[]; edges: Edge[] } {
   const r = ctx.run, beats = storyOf(r);
-  const W = 252, GAP = 34, row = beats.length * W + (beats.length - 1) * GAP, px = (row - 300) / 2;
+  const W = 252, H = 150, GAP = 46, px = 0;
   const nodes: Node[] = [], edges: Edge[] = [];
   nodes.push({ id: 'project', type: 'project', position: { x: px, y: 0 }, data: { ctx } satisfies ProjectData });
   const asks = !!r.waiting;
   nodes.push({ id: 'you', type: 'actor', position: { x: px - W - 150, y: 50 }, data: { kind: 'person', title: ctx.t('flow.you'), sub: ctx.t('flow.youSub'), icon: '★', color: '#6b7280', live: asks, used: true, ctx, face: ctx.avatar('you') } satisfies ActorData });
   beats.forEach((b, i) => {
-    nodes.push({ id: 'beat:' + b.id, type: 'beat', position: { x: i * (W + GAP), y: 300 }, data: { beat: b, ctx } satisfies BeatData });
-    if (i) edges.push({ id: 'b' + i, source: 'beat:' + beats[i - 1].id, sourceHandle: 's-right', target: 'beat:' + b.id, targetHandle: 't-left', type: 'flow', data: { state: b.state === 'working' || b.state === 'needsYou' ? 'live' : b.state === 'failed' ? 'failed' : b.state === 'waiting' ? 'idle' : 'done' } });
+    nodes.push({ id: 'beat:' + b.id, type: 'beat', position: { x: px + (300 - W) / 2, y: 240 + i * (H + GAP) }, data: { beat: b, ctx } satisfies BeatData });
+    if (i) edges.push({ id: 'b' + i, source: 'beat:' + beats[i - 1].id, sourceHandle: 's-bottom', target: 'beat:' + b.id, targetHandle: 't-top', type: 'flow', data: { state: b.state === 'working' || b.state === 'needsYou' ? 'live' : b.state === 'failed' ? 'failed' : b.state === 'waiting' ? 'idle' : 'done' } });
   });
   // you give the request (the first step reads it); a step that needs you asks you
   const asking = beats.find((b) => b.state === 'needsYou');

@@ -10,6 +10,7 @@
 // process, `nuclear-builder run … --events` (runs.ts), and the chat is the window's one connection to the service
 // (vscode/src/chatHost.ts, chatView.ts); both belong to the extension, not to the page; this file draws what they
 // write and passes the user's answers. What the page computes from its data is workbench.ts, inlined in its script. Plain HTML and script.
+import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
@@ -22,7 +23,7 @@ import { lang, langButton, localize, pageI18n, texts, l10n } from '../../../vsco
 import { builderSettings } from './settings';
 import { BUILDER } from './l10n';
 import { faceData, listTeams, logoData, roleMember, roster, Roster, ROLES, showTeam, Team } from './teams/cli';
-import { Answer, Ask, Check, FACTORY_ENGINE, LAYERS, LineRun, lineJson, listRuns, loadRun, localSpecs, newRunId, orphaned, Run, Spec, specMarkdown, STATIONS, writeSpec } from './runs';
+import { Answer, Ask, Check, FACTORY_ENGINE, LAYERS, LineRun, lineJson, listRuns, loadRun, localSpecs, newRunId, orphaned, Run, runFile, Spec, specMarkdown, STATIONS, writeSpec } from './runs';
 import { CONFIG_FILE, githubIssue, jiraIssue, JiraAuth, jiraMine, suggestContext } from './support';
 import { missingCommand } from './support';
 import { chat, teamChannel } from '../../../vscode/src/chatView';
@@ -209,6 +210,8 @@ export function resumeOrphans(roots: string[]): void {
       if (resume) driveRun(root, run.id, ['retry', run.id]);
     }
   }
+  // after the orphans: a run resumed here is followed by its own process
+  followDetachedRuns(roots);
 }
 
 /** The answer to what a run asks: to its process when it waits on that question, else (it ended waiting)
@@ -274,7 +277,7 @@ async function postButtons(root: string, channel: string, p: Parameters<ReturnTy
 /** A run of the factory in its team's channel, as a thread: started by the tech lead, each station by its member as
  * it passes or fails (a failure with its moment: the member's GIF personality), its questions with buttons, its end.
  * The chat being down never touches the run. */
-function followRun(root: string, id: string, p: LineRun): void {
+function followRun(root: string, id: string, p: EventEmitter & { ask: Ask | null }): void {
   let chain: Promise<unknown> = Promise.resolve();
   const then = (f: () => Promise<unknown>) => (chain = chain.then(f).catch(() => undefined));
   let at: (Awaited<ReturnType<typeof placeOf>> & { thread?: string }) | undefined;
@@ -298,6 +301,65 @@ function followRun(root: string, id: string, p: LineRun): void {
     const r = loadRun(root, id);
     if (r) tell(r);
   });
+}
+
+/** A run another process drives (`run --detach`: an agent's `run_start`, the chat's tech lead, a terminal): its file
+ * watched, told in its team's channel as one this window drives (spec 024 requirement 4): each change, its questions,
+ * its end. */
+class FileRun extends EventEmitter {
+  ask: Ask | null = null;
+  constructor(root: string, id: string, done: () => void) {
+    super();
+    const file = runFile(root, id);
+    const look = () => {
+      const r = loadRun(root, id);
+      if (!r) return;
+      this.emit('change', r);
+      const w = r.waiting as Ask | null | undefined;
+      if (w && w.id !== this.ask?.id) {
+        this.ask = w;
+        this.emit('ask', w);
+      } else if (!w) this.ask = null;
+      if (r.status !== 'running' && r.status !== 'waiting') {
+        fs.unwatchFile(file);
+        done();
+        this.emit('exit');
+      }
+    };
+    fs.watchFile(file, { interval: 1000 }, look);
+    setImmediate(look);
+  }
+}
+
+const followedFiles = new Set<string>();
+const watchedRunDirs = new Set<string>();
+/** The runs of these projects that another process drives, followed into their team's channel: those going on now,
+ * and each one a process starts later (its file appears in `.nuclear/builder/runs/`). A run this window drives is
+ * followed by its own process (`driveRun`). */
+export function followDetachedRuns(roots: string[]): void {
+  for (const root of roots) {
+    const pick = (id: string) => {
+      const key = `${root}\0${id}`;
+      if (lines.has(id) || followedFiles.has(key)) return;
+      const r = loadRun(root, id);
+      if (!r || (r.status !== 'running' && r.status !== 'waiting')) return;
+      followedFiles.add(key);
+      followRun(root, id, new FileRun(root, id, () => followedFiles.delete(key)));
+    };
+    for (const r of listRuns(root)) pick(r.id);
+    const dir = path.dirname(runFile(root, 'x'));
+    if (watchedRunDirs.has(dir)) continue;
+    watchedRunDirs.add(dir);
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.watch(dir, (_e, name) => {
+        const n = name ? String(name) : '';
+        if (n.endsWith('.json')) setTimeout(() => pick(n.slice(0, -5)), 300);
+      });
+    } catch {
+      // a folder that cannot be watched: its runs are told when the editor drives them
+    }
+  }
 }
 
 /** Says under a message with buttons what was answered (its buttons gone). */
