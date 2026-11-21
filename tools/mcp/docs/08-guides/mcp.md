@@ -206,7 +206,35 @@ Every tool but `team_list` and `team_show` asks the user first.
 | `web_search(query, pages)` | searches the internet and answers the first results with the text of their pages (your own SearXNG with `NUCLEAR_SEARXNG_URL`, Brave with `nuclear-graph web-key brave`, else Wikipedia) |
 | `web_read(url)` | the text of a public page, without its code blocks. Local addresses are refused |
 
-## 4. When a tool fails
+## 4. What the editor does and this server does not
+
+Each row is a screen of the editor (VS Code, Android Studio) and what of it a model reaches through `nuclear-mcp`.
+What it cannot do, the model says so and tells the user where it is done; it never pretends to have done it. The
+members of a team in Nuclear Chat also have Nuclear Builder's own server (`nuclear-builder mcp`), which reaches more
+of the factory (the last column). **By design** marks what never becomes a tool: a secret, money, the machine.
+
+| Screen of the editor | Through `nuclear-mcp` | Not through it: where | Builder's server (a team's member) |
+|---|---|---|---|
+| The workspace strip: create, open, rename, describe, add / rename / remove an app | `workspace_*`, `app_*` | open a workspace in the editor, the recent list: the editor | — |
+| A project's actions: Run / Serve, Debug, Reload, Device, Build, Test, Check, API | build, test, check (`nuclear_project`), the run's log (`project_run_log`) | start or stop a run, debug, a device, hot reload: the editor's buttons or a terminal | — |
+| The file tree: *Make* a part, new file or folder, rename, delete | `generate_*`, `nuclear_project` with `make`; files with the client's own tools | — | — |
+| A backend's scripts | — | the explorer's Nuclear Scripts view, Run Task | — |
+| HTTP Connections: the endpoints, a request sent, its environments, an OpenAPI added, contracts updated | — | the editor's HTTP Connections, `nuclear contracts update` | — |
+| Environments | `nuclear_env` | a secret's value: `nuclear env set NAME --secret` (**by design**) | — |
+| Nuclear Monitor | `project_monitor`, `graph_monitor` | — | — |
+| Builder, specs: create, list, show, edit | `spec_create`, `spec_list`, `spec_show`, `spec_edit` | move, migrate, delete, accept or discard a draft: the Builder's page | `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard` |
+| Builder, runs: start, answer a gate, resume, retry, restart, stop; the run's file and journal; QA's checks | — | the Builder's page | `run_start`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `runs`, `run_file`, `run_journal`, `checks`, `check_*` |
+| The company screen, a team: create, edit (method, instructions, the team's model), delete | `team_create`, `team_edit` (`provider`, `model`: the whole team's), `team_delete` | duplicate, set as default, export / import, logo, suggest a team or a name, the roster, the temperaments: the company screen | `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_roster`, `team_temperaments` |
+| A member's profile: role, name, who works it (kind, provider, model), instructions, temperament, skills | `member_add`, `member_edit`, `member_remove`, `skills_set` | GIF habit, note, extra skills, its agent, the team's brain, the portrait: the member's card | `team_member_update` (all but the portrait) |
+| The skills library: list, show, clone, create, update, delete | — | the company screen | `skills_*` |
+| The line, the CI file, the checked connections | — | the Builder's settings | `line_show`, `line_set`, `ci_export`, `connections_check` |
+| Reports: the bill and the views | — | the Reports page | `metrics` |
+| Which agents and models can work a member | — | the member's card | `agents_list`, `models_list` |
+| Nuclear Chat and Atlas: channels (create, rename, delete, a team assigned), direct messages, reactions, GIFs | — | the chat (`Ctrl+Alt+A`); a model is a member of the chat, not its client | — |
+| API keys (the vault) | — | the settings page (**by design**: a key never passes through a model) | `vault_list` (the names only) |
+| Settings, the AI set-up, the language, updates | — | the settings page, `nuclear update` (**by design**: the machine's) | — |
+
+## 5. When a tool fails
 
 | The tool answers | What to do |
 |---|---|
