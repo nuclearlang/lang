@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- **Sala de control**: *Your software company*, the reports and Nuclear Builder are calmer: slate panels, one desaturated teal for the action and what is picked, gold for money and waiting, a soft red for failures, no all-caps (the monospace face only for data), corner brackets only on what you look at (drawn in, never with reduced motion), and the team's rare actions in *More ⋯*. Plain words: members, not operatives.
 - A workspace or an app deleted from the disk is shown faded and crossed out (✕) on the strip, never as if it were there; the panel says so and offers the other workspaces, and Nuclear Atlas no longer fails on its folder ("No such file or directory").
 - The welcome's team step says it edits your team, by name, when you have one (each change is saved in it at once); its settings step keeps only the notices and the chat's colors, everything else in Settings and integrations.
 - **Every step of a run in the team's channel** (spec 024): each station started, passed, failed or repaired, and each approval, is a message of the member who did it in the run's thread, its log folded (click to open); a failed station says why. Runs started outside the editor (the MCP server, a terminal) are followed there too.

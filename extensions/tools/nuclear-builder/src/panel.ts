@@ -877,16 +877,22 @@ export function html(webview: vscode.Webview, extension: vscode.Uri): string {
 }
 
 const CSS = `
+/* Sala de control, as the teams' and the reports' screens: slate cards, one desaturated teal for what is picked and
+   done, gold for what works or waits, a soft red for a failure */
 :root { --bg: var(--vscode-editor-background); --fg: var(--vscode-foreground); --muted: var(--vscode-descriptionForeground);
-  --line: var(--vscode-panel-border, #8884); --card: var(--vscode-sideBar-background, #8881); --accent: var(--vscode-focusBorder, #3b82f6);
-  --ok: var(--vscode-testing-iconPassed, #3fb950); --bad: var(--vscode-testing-iconFailed, #f85149); --run: var(--vscode-charts-yellow, #d29922);
-  --skip: var(--vscode-disabledForeground, #8b949e); }
+  --line: color-mix(in srgb, var(--fg) 11%, transparent); --card: color-mix(in srgb, var(--bg) 94%, #8fb0c8); --accent: #5cc8b2;
+  --ok: #6fc7a4; --bad: #e48a84; --run: #d9b86c; --skip: var(--vscode-disabledForeground, #8b949e); --ease: cubic-bezier(.2, .8, .2, 1); }
+body.vscode-light { --card: color-mix(in srgb, var(--bg) 96%, #5b7f99); --line: color-mix(in srgb, var(--fg) 13%, transparent); --accent: #137a68; --ok: #2e7d5b; --bad: #b3443a; --run: #8a6512; }
+body.vscode-high-contrast { --line: var(--vscode-contrastBorder, #fff); --accent: var(--vscode-focusBorder); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition: none !important; } }
 * { box-sizing: border-box; }
 body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font: 13px/1.45 var(--vscode-font-family); height: 100vh; overflow: hidden; }
 button, select, input, textarea { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 4px; padding: 5px 9px; }
 button { cursor: pointer; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; }
 button:hover { filter: brightness(1.15); }
-button.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+button.primary { background: var(--accent); color: #07201b; font-weight: 600; transition: box-shadow .18s var(--ease), filter .18s var(--ease); }
+button.primary:hover { filter: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent), 0 6px 18px color-mix(in srgb, var(--accent) 22%, transparent); }
+body.vscode-light button.primary { color: #fff; }
 button:focus-visible, a:focus-visible, .card:focus-visible, .accept:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 textarea { width: 100%; resize: vertical; }
 header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--line); height: 46px; }
@@ -937,7 +943,7 @@ main { flex: 1; overflow: auto; position: relative; min-width: 0; min-height: 0;
 @keyframes ringbell { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(14deg); } 85% { transform: rotate(-12deg); } 95% { transform: rotate(6deg); } }
 /* the console of the run's checks */
 table.console { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-table.console th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 4px 6px; }
+table.console th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; letter-spacing: .01em; padding: 4px 6px; }
 table.console td { border-top: 1px solid var(--line); padding: 5px 6px; vertical-align: top; overflow-wrap: anywhere; }
 table.console tr.off td { opacity: .5; }
 table.console .st { font-size: 11px; }
@@ -970,7 +976,7 @@ label.f { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4
 .crit { display: flex; gap: 6px; margin-bottom: 6px; } .crit input { flex: 1; }
 .sug { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; padding: 5px 6px; border-radius: 4px; align-items: center; }
 .sug:hover { background: var(--vscode-list-hoverBackground); }
-.kind { font-size: 10.5px; text-transform: uppercase; color: var(--muted); }
+.kind { font-size: 10.5px; color: var(--muted); }
 table.pieces { width: 100%; border-collapse: collapse; margin-top: 8px; } table.pieces td { border-top: 1px solid var(--line); padding: 4px; } table.pieces input { width: 100%; }
 .go { margin-top: 28px; display: flex; gap: 10px; justify-content: flex-end; }
 /* the run: its graph and the node that is open */
@@ -986,7 +992,7 @@ main.run { overflow: hidden; display: flex; flex-direction: column; }
 .pill { padding: 2px 9px; border-radius: 10px; font-size: 11.5px; border: 1px solid var(--line); white-space: nowrap; }
 .graph { flex: 1; position: relative; overflow: hidden; min-width: 0; min-height: 0; border-top: 1px solid var(--line); }
 .drawer h2 { font-size: 15px; margin: 0; overflow-wrap: anywhere; }
-.drawer h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 0 8px; }
+.drawer h3 { font-size: 12px; letter-spacing: .01em; color: var(--muted); margin: 18px 0 8px; }
 .dhead { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
 .sum { margin: 8px 0; overflow-wrap: anywhere; }
 .acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
@@ -999,7 +1005,7 @@ main.run { overflow: hidden; display: flex; flex-direction: column; }
 .okc { color: var(--ok); } .badc { color: var(--run); }
 .flow-n { display: grid; grid-template-columns: 22px 1fr; gap: 9px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--card); overflow-wrap: anywhere; }
 .flow-n.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.flow-n b { text-transform: uppercase; font-size: 11px; color: var(--muted); }
+.flow-n b { font-size: 11px; color: var(--muted); }
 .flow-a { color: var(--muted); padding-left: 16px; line-height: 16px; }
 .num2 { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .decn { display: grid; grid-template-columns: 16px 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
@@ -1019,7 +1025,7 @@ pre { background: var(--vscode-textCodeBlock-background, #0002); padding: 10px; 
 .colbody { flex: 1; min-height: 0; overflow: auto; padding: 0 8px 10px; scrollbar-width: thin; }
 .rcol { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .rail { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; cursor: pointer; height: 100%; color: var(--muted); }
-.rail b { writing-mode: vertical-rl; font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.rail b { writing-mode: vertical-rl; font-weight: 600; font-size: 11px; letter-spacing: .01em; }
 .rail:hover { color: var(--fg); background: var(--vscode-list-hoverBackground); }
 .fold-right #right > :not(.rail) { display: none; }
 .fold-right #right .rail { display: flex; }
@@ -1031,7 +1037,7 @@ button.fold:hover { color: var(--fg); background: var(--vscode-toolbar-hoverBack
 .gutter.h { cursor: row-resize; height: 5px; flex-shrink: 0; } .gutter.h::after { inset: 2px 0; }
 .gutter:hover::after, .wb.drag .gutter.on::after { background: var(--accent); }
 .fold-right .gutter[data-g=right] { pointer-events: none; }
-.sec { text-transform: uppercase; font-size: 10.5px; letter-spacing: .08em; color: var(--muted); margin: 12px 4px 6px; font-weight: 600; }
+.sec { font-size: 10.5px; letter-spacing: .01em; color: var(--muted); margin: 12px 4px 6px; font-weight: 600; }
 .count { display: inline-block; min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--vscode-badge-background, #8884); color: var(--vscode-badge-foreground, inherit); font-size: 10px; text-align: center; letter-spacing: 0; }
 .level { font-size: 10.5px; padding: 1px 7px; border-radius: 8px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; }
 .mid { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -1085,7 +1091,7 @@ button.ghost { background: transparent; color: var(--muted); } button.ghost:hove
 .tr.file:hover .tt { text-decoration: underline; }
 pre.tx { margin: 2px 8px 6px calc(44px + var(--d, 0) * 16px); max-height: 260px; font-size: 11.5px; }
 details.more { border-top: 1px solid var(--line); padding: 6px 0; }
-details.more > summary { cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; list-style: none; }
+details.more > summary { cursor: pointer; font-size: 11px; letter-spacing: .01em; color: var(--muted); font-weight: 600; list-style: none; }
 details.more > summary::before { content: '▸ '; display: inline-block; transition: transform .15s; }
 details.more[open] > summary::before { transform: rotate(90deg); }
 details.more > summary::-webkit-details-marker { display: none; }

@@ -7,42 +7,44 @@
 // draws: what it computes is charts.ts's, tested. Its texts are `t('rp.…')` (l10n.ts).
 import { barsSvg, fmtMs, fmtPct, fmtTokens, fmtUsd, linesSvg, splitShare, stackSvg } from './charts';
 
-const BRACKETS = ['0 0/12px 2px', '0 0/2px 12px', '100% 0/12px 2px', '100% 0/2px 12px', '0 100%/12px 2px', '0 100%/2px 12px', '100% 100%/12px 2px', '100% 100%/2px 12px'].map((p) => 'linear-gradient(var(--brk), var(--brk)) ' + p).join(', ');
+const BRACKETS = ['0 0/16px 1px', '0 0/1px 16px', '100% 0/16px 1px', '100% 0/1px 16px', '0 100%/16px 1px', '0 100%/1px 16px', '100% 100%/16px 1px', '100% 100%/1px 16px'].map((p) => 'linear-gradient(var(--brk), var(--brk)) ' + p).join(', ');
 
 export const REPORTS_CSS = String.raw`
-.rp { --hud: #a7ff00; --hud2: #2fe0f0; --warn: #ffd600; --bad: #ff4b4b; --vio: #c084fc; --on-hud: #071006;
+/* Sala de control, as the teams' screen: slate, one desaturated teal, gold for money, no all-caps */
+.rp { --hud: #5cc8b2; --hud2: #7fa6c4; --warn: #d9b86c; --bad: #e48a84; --vio: #a597d6; --on-hud: #07201b; --ease: cubic-bezier(.2, .8, .2, 1);
   --bg: var(--vscode-editor-background, #0b0f0b); --fg: var(--vscode-foreground, #d9e4d2); --mut: var(--vscode-descriptionForeground, #8a9a8a);
-  --panel: color-mix(in srgb, var(--bg) 93%, var(--hud)); --line: color-mix(in srgb, var(--hud) 24%, transparent); --line2: color-mix(in srgb, var(--hud) 50%, transparent);
-  --grid: color-mix(in srgb, var(--hud) 5%, transparent); --mono: var(--vscode-editor-font-family, ui-monospace, Menlo, Consolas, monospace); --brk: var(--hud);
-  display: flex; flex-direction: column; gap: 12px; min-height: 100%; color: var(--fg); font: 13px/1.45 var(--vscode-font-family, system-ui, sans-serif); color-scheme: dark;
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
-.vscode-light .rp { --hud: #3d7a00; --hud2: #00838f; --warn: #a86b00; --bad: #c62828; --vio: #7e22ce; --on-hud: #fff; --panel: color-mix(in srgb, var(--bg) 96%, var(--hud)); --line: color-mix(in srgb, var(--hud) 30%, transparent); color-scheme: light; }
+  --panel: color-mix(in srgb, var(--bg) 95%, #8fb0c8); --line: color-mix(in srgb, var(--fg) 10%, transparent); --line2: color-mix(in srgb, var(--fg) 18%, transparent);
+  --grid: transparent; --mono: var(--vscode-editor-font-family, ui-monospace, Menlo, Consolas, monospace); --brk: var(--hud);
+  display: flex; flex-direction: column; gap: 12px; min-height: 100%; color: var(--fg); font: 13px/1.45 var(--vscode-font-family, system-ui, sans-serif); color-scheme: dark; }
+.vscode-light .rp { --hud: #137a68; --hud2: #3f6c9c; --warn: #8a6512; --bad: #b3443a; --vio: #6c58a0; --on-hud: #fff; --panel: color-mix(in srgb, var(--bg) 97%, #5b7f99); --line: color-mix(in srgb, var(--fg) 12%, transparent); --line2: color-mix(in srgb, var(--fg) 22%, transparent); color-scheme: light; }
 .vscode-high-contrast .rp { --line: var(--vscode-contrastBorder, #fff); --line2: var(--vscode-contrastBorder, #fff); --grid: transparent; }
 .rp * { box-sizing: border-box; }
-.rp button, .rp select, .rp input { font: inherit; color: var(--vscode-input-foreground, var(--fg)); background: var(--vscode-input-background, var(--panel)); border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 2px; padding: 4px 7px; }
+.rp button, .rp select, .rp input { font: inherit; color: var(--vscode-input-foreground, var(--fg)); background: var(--vscode-input-background, var(--panel)); border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 6px; padding: 4px 8px; }
 .rp option { background: var(--vscode-dropdown-background, var(--bg)); color: var(--vscode-dropdown-foreground, var(--fg)); }
-.rp button { cursor: pointer; background: transparent; border-color: var(--line2); font: 600 10.5px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .09em; padding: 5px 10px; }
-.rp button:hover { border-color: var(--hud); background: color-mix(in srgb, var(--hud) 12%, transparent); }
-.rp :focus-visible { outline: 1px solid var(--hud); outline-offset: 2px; }
-.rp .hud { position: relative; background: var(--panel); border: 1px solid var(--line); }
-.rp .brk::before { content: ''; position: absolute; inset: -1px; pointer-events: none; background: ${BRACKETS}; background-repeat: no-repeat; }
-.rp .hs { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--line); font: 600 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--hud); background: linear-gradient(90deg, color-mix(in srgb, var(--hud) 13%, transparent), transparent 75%); }
+.rp button { cursor: pointer; background: transparent; border-color: var(--line2); font: 500 12.5px/1.5 var(--vscode-font-family, system-ui, sans-serif); padding: 5px 11px; white-space: nowrap; transition: background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease); }
+.rp button:hover { border-color: color-mix(in srgb, var(--hud) 45%, var(--line2)); background: color-mix(in srgb, var(--hud) 8%, transparent); }
+.rp :focus-visible { outline: 2px solid color-mix(in srgb, var(--hud) 75%, transparent); outline-offset: 2px; }
+.rp .hud { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
+.rp .brk::before { content: ''; position: absolute; inset: -1px; pointer-events: none; border-radius: 8px; background: ${BRACKETS}; background-repeat: no-repeat; opacity: 0; transform: scale(1.012); transition: opacity .3s var(--ease), transform .3s var(--ease); }
+.rp .brk:hover::before { opacity: 1; transform: none; } .rp .brk:hover { border-color: color-mix(in srgb, var(--brk) 35%, var(--line)); box-shadow: 0 8px 28px rgb(0 0 0 / .18); }
+.rp .hs { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--line); font: 600 12px/1.4 var(--vscode-font-family, system-ui, sans-serif); color: var(--fg); }
 .rp .hs i { font-style: normal; color: var(--mut); text-transform: none; letter-spacing: 0; font-weight: 400; }
-.rp .lbl { font: 600 9.5px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
+.rp .lbl { font: 500 11px/1.4 var(--mono); color: var(--mut); }
 .rp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.rp-head h1 { margin: 0; font: 700 16px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--hud); }
+.rp-head h1 { margin: 0; font: 700 19px/1.2 var(--vscode-font-family, system-ui, sans-serif); color: var(--fg); }
 .rp-head .sub { color: var(--mut); font-size: 12px; }
 .rp-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; padding: 10px 12px; }
 .rp-filters label { display: flex; flex-direction: column; gap: 2px; }
-.rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); }
+.rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border-radius: 8px; overflow: hidden; }
 .rp-tile { padding: 10px 12px; background: var(--panel); min-width: 0; }
 .rp-tile b { display: block; font: 700 20px/1.2 var(--mono); color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rp-tile small { display: block; color: var(--mut); font-size: 11.5px; }
 .rp-tile.money b { color: var(--warn); } .rp-tile.ok b { color: var(--hud); }
-.rp-split { display: flex; height: 8px; margin: 6px 0 3px; background: color-mix(in srgb, var(--mut) 25%, transparent); }
+.rp-split { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin: 6px 0 3px; background: color-mix(in srgb, var(--mut) 25%, transparent); }
 .rp-split span:first-child { background: var(--hud); } .rp-split span:last-child { background: var(--warn); }
-.rp-gauge { height: 8px; margin: 6px 0 3px; background: color-mix(in srgb, var(--mut) 25%, transparent); }
-.rp-gauge span { display: block; height: 100%; background: var(--hud); } .rp-gauge.warn span { background: var(--warn); } .rp-gauge.over span { background: var(--bad); }
+.rp-gauge { height: 6px; border-radius: 3px; overflow: hidden; margin: 6px 0 3px; background: color-mix(in srgb, var(--mut) 25%, transparent); }
+.rp-gauge span { display: block; height: 100%; background: var(--hud); border-radius: 3px; transform-origin: left; animation: rp-grow .7s var(--ease); }
+@keyframes rp-grow { from { transform: scaleX(0); } } .rp-gauge.warn span { background: var(--warn); } .rp-gauge.over span { background: var(--bad); }
 .rp-body { padding: 10px 12px 12px; }
 .rp-chart { display: block; width: 100%; height: 150px; color: var(--mut); font: 9px var(--mono); }
 .rp-chart text { fill: var(--mut); }
@@ -53,14 +55,15 @@ export const REPORTS_CSS = String.raw`
 .rp-tabs button.sel { color: var(--hud); border-bottom-color: var(--hud); }
 .rp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
 .rp table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.rp th { text-align: left; font: 600 9.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mut); padding: 5px 6px; border-bottom: 1px solid var(--line2); }
+.rp th { text-align: left; font: 500 11px/1.4 var(--mono); letter-spacing: .01em; color: var(--mut); padding: 5px 6px; border-bottom: 1px solid var(--line2); }
 .rp td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .rp td.n, .rp th.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .rp tr:hover td { background: color-mix(in srgb, var(--hud) 6%, transparent); }
 .rp .res-passed { color: var(--hud); } .rp .res-failed { color: var(--bad); } .rp .res-waiting, .rp .res-running { color: var(--warn); }
 .rp .none, .rp .note { color: var(--mut); font-size: 12px; padding: 6px 0; }
 .rp .err { padding: 8px 12px; border-left: 3px solid var(--bad); color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); }
-.rp h3 { margin: 4px 0 6px; font: 600 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--hud2); }
+.rp h3 { margin: 4px 0 6px; font: 500 11px/1.4 var(--mono); letter-spacing: .01em; color: var(--hud2); }
+@media (prefers-reduced-motion: reduce) { .rp *, .rp *::before, .rp *::after { animation: none !important; transition: none !important; } }
 `;
 
 export const REPORTS_SCRIPT = String.raw`

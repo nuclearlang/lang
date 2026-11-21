@@ -24,7 +24,15 @@
 /* the cards */
 .fx-card { position: relative; border-radius: 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, var(--fg) 8%), var(--card)); border: 1px solid var(--line); box-shadow: 0 6px 22px #0003, inset 0 1px 0 #ffffff0d; color: var(--fg); cursor: pointer; transition: transform .2s, box-shadow .25s, border-color .25s; }
 .fx-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px #0004, inset 0 1px 0 #ffffff12; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
-.fx-card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 10px 28px #0004; }
+.fx-card.picked { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 10px 28px #0004; }
+/* the picked card: the control room's corner brackets, drawn in */
+.fx-card.picked::after { content: ''; position: absolute; inset: -5px; border-radius: 17px; pointer-events: none;
+  background: linear-gradient(var(--accent), var(--accent)) 0 0/18px 1.5px, linear-gradient(var(--accent), var(--accent)) 0 0/1.5px 18px,
+    linear-gradient(var(--accent), var(--accent)) 100% 0/18px 1.5px, linear-gradient(var(--accent), var(--accent)) 100% 0/1.5px 18px,
+    linear-gradient(var(--accent), var(--accent)) 0 100%/18px 1.5px, linear-gradient(var(--accent), var(--accent)) 0 100%/1.5px 18px,
+    linear-gradient(var(--accent), var(--accent)) 100% 100%/18px 1.5px, linear-gradient(var(--accent), var(--accent)) 100% 100%/1.5px 18px;
+  background-repeat: no-repeat; animation: fx-brk .35s cubic-bezier(.2, .8, .2, 1); }
+@keyframes fx-brk { from { opacity: 0; inset: -12px; } }
 .fx-station { width: 270px; padding: 12px 14px 10px; }
 .fx-step { width: 260px; padding: 11px 12px 9px; }
 .fx-card.is-passed { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
@@ -42,7 +50,7 @@
 .fx-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .fx-idx { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }
 .fx-time { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.fx-pill { font-size: 10.5px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.fx-pill { font-size: 10.5px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); letter-spacing: .01em; white-space: nowrap; }
 .fx-pill.is-running { color: var(--run); border-color: var(--run); background: color-mix(in srgb, var(--run) 12%, transparent); }
 .fx-pill.is-passed { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
 .fx-pill.is-failed { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
@@ -82,7 +90,7 @@
 .fx-trace:hover { border-color: var(--accent); transform: translateX(2px); }
 .fx-trace.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .fx-trace.live { border-color: var(--run); box-shadow: 0 0 14px color-mix(in srgb, var(--run) 30%, transparent); }
-.fx-trace b { text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
+.fx-trace b { font-size: 10px; letter-spacing: .01em; }
 .fx-detail { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fx-k { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 1.5px solid var(--accent); color: var(--accent); }
 .fx-ghost { width: 190px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line); background: color-mix(in srgb, var(--card) 60%, transparent); display: grid; gap: 5px; font-size: 12px; cursor: pointer; opacity: .8; transition: opacity .2s, border-color .2s; }
@@ -101,9 +109,9 @@
 .fx-beat.is-pending { opacity: .72; }
 .fx-beat.is-skipped { opacity: .5; }
 .fx-beat .react-flow__handle { opacity: 0; }
-.fx-tech { margin-right: 8px; font: inherit; letter-spacing: .04em; text-transform: none; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+.fx-tech { margin-right: 8px; font: inherit; letter-spacing: .01em; text-transform: none; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
 .fx-tech.on { color: var(--fg); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
-.fx-kind { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.fx-kind { font-size: 9.5px; letter-spacing: .01em; color: var(--muted); }
 .fx-actor { width: 230px; display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ac); box-shadow: 0 6px 20px #0003; cursor: default; transition: transform .2s, box-shadow .25s, opacity .25s; animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
 .fx-actor:hover { transform: translateY(-2px); box-shadow: 0 10px 26px #0004; }
 .fx-actor b { display: block; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -131,7 +139,7 @@
 .fx-bit.k-decision { border-left: 3px solid #d29922; }
 .fx-bit.k-file .fx-bico { border-radius: 6px; border-color: var(--ok); color: var(--ok); } .fx-bit.k-file { border-left: 3px solid var(--ok); }
 .fx-bit.k-tool .fx-bico { border-radius: 6px; border-color: #c96442; color: #c96442; } .fx-bit.k-tool { border-left: 3px solid #c96442; }
-.fx-level { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 85%, transparent); }
+.fx-level { font-size: 10.5px; letter-spacing: .01em; color: var(--muted); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 85%, transparent); }
 
 /* edges */
 .react-flow__edge-path.fx-edge { stroke-width: 2; transition: stroke .3s; }
