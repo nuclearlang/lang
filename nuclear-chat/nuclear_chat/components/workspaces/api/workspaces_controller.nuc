@@ -1,10 +1,22 @@
-// The workspaces API: a host registers its project when it starts, and reads it back.
+// The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.
 @controller("workspaces")
-controller WorkspacesController(workspaces: WorkspacesAppComponent)
+controller WorkspacesController(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
   @post()
   register(input: NewWorkspace) Result<Error, Workspace>
-    workspaces.register(input)
+    made: Result<Error, Workspace> = workspaces.register(input)
+    // a page that shows it reads its members again (a member changed from their profile, a team's new tech lead)
+    if made.isOk
+      ~events.emit(made.value.id, "workspace", "general", {} as <string, any>)
+    made
 
   @get("{id}")
   one(id: string) Result<Error, Workspace>
     workspaces.workspace(id)
+
+  // The page's colors chosen in the chat (auto, light, dark): told to the host as an event `action` (`theme`).
+  @put("{id}/theme")
+  theme(id: string, choice: ThemeChoice) Result<Error, Workspace>
+    chosen: Result<Error, Workspace> = workspaces.chooseTheme(id, choice)
+    if chosen.isOk
+      ~events.emit(id, "action", "general", { "action": "theme", "theme": choice.theme })
+    chosen

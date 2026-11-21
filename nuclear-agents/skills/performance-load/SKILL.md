@@ -1,13 +1,14 @@
 ---
 name: performance-load
-description: Find and fix slowness in a Synapsis product with Nuclear Monitor (nuclear run --monitor, nuclear monitor): hot spots, N+1 queries, async calls in a loop, pagination, caching, and a load-testing approach. Use when something is slow, before a launch, or when asked about performance.
-title: Performance and load
-title_es: Rendimiento y carga
-description_es: Encontrar y corregir la lentitud en un producto Synapsis con Nuclear Monitor (nuclear run --monitor, nuclear build --monitor, nuclear monitor): puntos calientes, consultas N+1, llamadas asíncronas en un bucle, paginación, caché y un enfoque de pruebas de carga. Úsalo cuando algo va lento, antes de un lanzamiento o cuando se pregunta por el rendimiento.
+description: Find and fix slowness in a Synapsis product, from algorithmic complexity (Big-O) to Nuclear Monitor (nuclear run --monitor, nuclear monitor): hot spots, N+1 queries, async calls in a loop, pagination, caching, and a load-testing approach. Use when something is slow, before a launch, or when asked about performance.
+title: Performance, Big-O and load
+title_es: Rendimiento, Big-O y carga
+description_es: Encontrar y corregir la lentitud en un producto Synapsis, desde la complejidad algorítmica (Big-O) hasta Nuclear Monitor (nuclear run --monitor, nuclear build --monitor, nuclear monitor): puntos calientes, consultas N+1, llamadas asíncronas en un bucle, paginación, caché y un enfoque de pruebas de carga. Úsalo cuando algo va lento, antes de un lanzamiento o cuando se pregunta por el rendimiento.
 kind: practice
-tags: [performance, load testing, monitor, n+1, pagination, cache, latency, profiling]
+tags: [performance, big-o, complexity, load testing, monitor, n+1, pagination, cache, latency, profiling]
+base: true
 ---
-# Performance and load
+# Performance, Big-O and load
 
 ## When to use
 
@@ -44,6 +45,13 @@ A route or screen is slow, a launch is near, or memory grows. Measure first, cha
 7. **Production view**: `plugins(telemetry = true)` with `Otlp(url)`, `Datadog`, `NewRelic` or `Grafana` traces every
    request and use case (fastapi today; nestjs is on the roadmap).
 
+8. **Algorithmic complexity (Big-O)** before any measurement: name the cost of each loop by the size of its input.
+   A loop inside a loop over the same list is O(n²): a `<K, V>` map or a set built once makes the lookup O(1) and the
+   whole O(n). Searching a list with `in` or `find` inside a loop is the same trap. Sort once (O(n log n)), not inside
+   a loop. A recursion that recomputes the same value keeps its results in a map. Prefer the database to do filters,
+   counts and sorts (`where`, `count`, `exists`, an index): moving rows to filter them in Nuclear is O(n) memory and
+   network. Write the expected complexity of a hot path in its comment when it is not obvious.
+
 ## The platform's tools
 
 - `nuclear run --monitor`, `nuclear build --monitor`, `nuclear monitor [--json]`.
@@ -66,5 +74,6 @@ A route or screen is slow, a launch is near, or memory grows. Measure first, cha
 - [ ] No `async calls in a loop` or `many connections` hot spot left on the changed path.
 - [ ] Lists that grow are paginated; relations used in a loop are loaded with `relations(...)`.
 - [ ] Filtered and sorted columns on large tables are indexed, with a migration.
+- [ ] No loop inside a loop over the same data where a map or a set does it in one pass (O(n), not O(n²)).
 - [ ] The shipped build has no `--monitor`.
 - [ ] `nuclear check . --json` prints `[]` and `nuclear test` is green after the change.

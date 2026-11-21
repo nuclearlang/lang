@@ -226,7 +226,7 @@
     },
     "MembersController": {
       "component": "members",
-      "description": "The members API: the user's answer to a member's question (an event `ask`).",
+      "description": "The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.",
       "guards": [],
       "path": "members",
       "routes": [
@@ -247,6 +247,31 @@
           ],
           "path": "{workspace}/answers",
           "returns": "Answer",
+          "verb": "post"
+        },
+        {
+          "description": "A member changed from their profile (name, model, instructions, temperament, GIFs): told to the host as an event `action` (`member`), which applies it and registers the workspace again.",
+          "error": "Error",
+          "name": "edit",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "member",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "edit",
+              "type": "MemberEdit"
+            }
+          ],
+          "path": "{workspace}/{member}/edit",
+          "returns": "ChatEvent",
           "verb": "post"
         }
       ],
@@ -479,7 +504,7 @@
     },
     "WorkspacesController": {
       "component": "workspaces",
-      "description": "The workspaces API: a host registers its project when it starts, and reads it back.",
+      "description": "The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.",
       "guards": [],
       "path": "workspaces",
       "routes": [
@@ -510,6 +535,26 @@
           "path": "{id}",
           "returns": "Workspace",
           "verb": "get"
+        },
+        {
+          "description": "The page's colors chosen in the chat (auto, light, dark): told to the host as an event `action` (`theme`).",
+          "error": "Error",
+          "name": "theme",
+          "params": [
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "choice",
+              "type": "ThemeChoice"
+            }
+          ],
+          "path": "{id}/theme",
+          "returns": "Workspace",
+          "verb": "put"
         }
       ],
       "transports": [
@@ -666,6 +711,43 @@
           "default": "",
           "description": "primary, danger or empty",
           "name": "style",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Card": {
+      "description": "What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from), skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).",
+      "fields": [
+        {
+          "default": false,
+          "name": "editable",
+          "type": "boolean"
+        },
+        {
+          "default": "",
+          "name": "temperament",
+          "rules": {
+            "maxLength": 64
+          },
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "temperaments",
+          "type": "Temperament[]"
+        },
+        {
+          "default": [],
+          "name": "skills",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "name": "instructions",
+          "rules": {
+            "maxLength": 20000
+          },
           "type": "string"
         }
       ],
@@ -1137,6 +1219,59 @@
           "description": "whether the member is one of the chat's people (the members list, #general, a direct message of their own); one not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with them stays readable",
           "name": "listed",
           "type": "boolean"
+        },
+        {
+          "description": "the profile's temperament, skills and instructions, and whether the host can change them (none: a host that gives no card, its profile read only)",
+          "name": "card",
+          "optional": true,
+          "type": "Card"
+        }
+      ],
+      "key": null
+    },
+    "MemberEdit": {
+      "description": "What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps none of it: the member comes back changed when the host registers the workspace again).",
+      "fields": [
+        {
+          "name": "name",
+          "optional": true,
+          "rules": {
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "name": "model",
+          "optional": true,
+          "rules": {
+            "maxLength": 200
+          },
+          "type": "string"
+        },
+        {
+          "name": "instructions",
+          "optional": true,
+          "rules": {
+            "maxLength": 20000
+          },
+          "type": "string"
+        },
+        {
+          "name": "temperament",
+          "optional": true,
+          "rules": {
+            "maxLength": 64
+          },
+          "type": "string"
+        },
+        {
+          "name": "gifs",
+          "optional": true,
+          "rules": {
+            "pattern": "^(never|sometimes|often)$"
+          },
+          "type": "string"
         }
       ],
       "key": null
@@ -1254,7 +1389,7 @@
       "key": null
     },
     "NewWorkspace": {
-      "description": "What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+      "description": "What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.",
       "fields": [
         {
           "description": "the project's folder (absolute): its chat is kept in `.nuclear/chat/`",
@@ -1301,6 +1436,15 @@
           "name": "gifs",
           "rules": {
             "pattern": "^(pack|tenor|giphy)$"
+          },
+          "type": "string"
+        },
+        {
+          "default": "auto",
+          "description": "the page's colors: auto (the editor's), light or dark (the editor's setting nuclear.chat.theme)",
+          "name": "theme",
+          "rules": {
+            "pattern": "^(auto|light|dark)$"
           },
           "type": "string"
         }
@@ -1571,6 +1715,27 @@
       ],
       "key": null
     },
+    "Temperament": {
+      "description": "A temperament a member can speak with: its id and its name in the workspace's language.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "maxLength": 64
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "name",
+          "rules": {
+            "maxLength": 120
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
     "Tenor": {
       "description": "Tenor, as the API answers it.",
       "fields": [
@@ -1656,6 +1821,19 @@
       ],
       "key": null
     },
+    "ThemeChoice": {
+      "description": "The page's colors the user chose in the chat: auto (the editor's), light or dark.",
+      "fields": [
+        {
+          "name": "theme",
+          "rules": {
+            "pattern": "^(auto|light|dark)$"
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
     "Workspace": {
       "description": "A project registered by its host: its id names it in every route.",
       "fields": [
@@ -1695,6 +1873,11 @@
           "default": "pack",
           "name": "gifs",
           "type": "string"
+        },
+        {
+          "default": "auto",
+          "name": "theme",
+          "type": "string"
         }
       ],
       "key": null
@@ -1702,6 +1885,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.85.0",
+  "version": "0.86.1",
   "webSocket": "/ws"
 }

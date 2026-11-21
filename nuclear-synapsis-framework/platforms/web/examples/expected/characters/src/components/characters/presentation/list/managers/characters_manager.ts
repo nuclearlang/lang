@@ -16,7 +16,9 @@ export class CharactersManager extends StateManager<CharactersState> {
 
   async loadPage(page: number): Promise<void> {
     this.loading();
+    const turn$ = this.stateTurn();
     const result = await this._loadPage(page);
+    if (!this.isLatestTurn(turn$)) return;
     this.emit(result.match(CharactersState.error, CharactersState.full));
   }
 

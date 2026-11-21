@@ -15,6 +15,7 @@
   --d-badge: #cd2553;
   --d-input: #ffffff;
   --d-code: #f6f6f7;
+  --d-code-fg: #b4235a;
   --d-mention: rgba(29, 155, 209, 0.12);
   --d-mention-fg: #1264a3;
   --d-chip: rgba(29, 28, 29, 0.06);
@@ -37,6 +38,7 @@
     --d-badge: #e01e5a;
     --d-input: #222529;
     --d-code: #232529;
+    --d-code-fg: #ffcc66;
     --d-mention: rgba(29, 155, 209, 0.2);
     --d-mention-fg: #4fb3e8;
     --d-chip: rgba(255, 255, 255, 0.08);
@@ -63,6 +65,7 @@
   --input-border: var(--chat-input-border, var(--vscode-input-border, var(--border)));
   --focus: var(--chat-focus, var(--vscode-focusBorder, var(--d-accent)));
   --code: var(--chat-code, var(--vscode-textCodeBlock-background, var(--d-code)));
+  --code-fg: var(--chat-code-fg, var(--vscode-textPreformat-foreground, var(--d-code-fg)));
   --link: var(--chat-link, var(--vscode-textLink-foreground, var(--d-mention-fg)));
   --mention: var(--chat-mention, var(--d-mention));
   --mention-fg: var(--chat-mention-fg, var(--vscode-textLink-foreground, var(--d-mention-fg)));
@@ -290,7 +293,8 @@ input:focus-visible {
 }
 .chip.lead { color: var(--lead); background: color-mix(in srgb, var(--lead) 14%, transparent); }
 .channel-header .chip.lead { height: 22px; padding: 0 8px 0 3px; border-radius: 11px; font-size: 0.78em; }
-.chip.paid { color: var(--paid); background: color-mix(in srgb, var(--paid) 14%, transparent); }
+/* mixed toward the text's color: readable on any theme, even one whose orange is dark */
+.chip.paid { color: color-mix(in srgb, var(--paid) 65%, var(--fg)); background: color-mix(in srgb, var(--paid) 20%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paid) 45%, transparent); }
 .chip.local { color: var(--lead); background: color-mix(in srgb, var(--lead) 14%, transparent); }
 
 /* The messages. */
@@ -402,7 +406,7 @@ input:focus-visible {
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--code);
-  color: var(--paid);
+  color: var(--code-fg);
   font-family: var(--mono);
   font-size: 0.86em;
 }
@@ -1159,3 +1163,87 @@ button.count:hover { background: var(--hover); color: var(--fg); }
   .spinner,
   .skeleton div { animation: none; }
 }
+
+/* The page's colors. Auto follows the editor: VS Code's theme kind (its body's class) picks the defaults an editor's
+   variable does not give, before the system's. Light or dark, chosen in the chat, set the editor's colors aside. */
+:host-context(.vscode-dark),
+:host-context(.vscode-high-contrast) {
+  --d-bg: #1a1d21; --d-side: #121016; --d-fg: #d1d2d3; --d-muted: #9a9b9e; --d-border: #35373b;
+  --d-hover: rgba(255, 255, 255, 0.05); --d-accent: #1d9bd1; --d-badge: #e01e5a; --d-input: #222529; --d-code: #232529;
+  --d-code-fg: #ffcc66; --d-mention: rgba(29, 155, 209, 0.2); --d-mention-fg: #4fb3e8; --d-chip: rgba(255, 255, 255, 0.08);
+  --d-lead: #7bc67e; --d-paid: #f0b54a; --d-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+:host-context(.vscode-light) {
+  --d-bg: #ffffff; --d-side: #f4f3f6; --d-fg: #1d1c1d; --d-muted: #616061; --d-border: #e1e0e3;
+  --d-hover: rgba(29, 28, 29, 0.05); --d-accent: #1164a3; --d-badge: #cd2553; --d-input: #ffffff; --d-code: #f6f6f7;
+  --d-code-fg: #b4235a; --d-mention: rgba(29, 155, 209, 0.12); --d-mention-fg: #1264a3; --d-chip: rgba(29, 28, 29, 0.06);
+  --d-lead: #2e7d32; --d-paid: #b26a00; --d-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.chat.theme-light {
+  --d-bg: #ffffff; --d-side: #f4f3f6; --d-fg: #1d1c1d; --d-muted: #616061; --d-border: #e1e0e3;
+  --d-hover: rgba(29, 28, 29, 0.05); --d-accent: #1164a3; --d-badge: #cd2553; --d-input: #ffffff; --d-code: #f6f6f7;
+  --d-code-fg: #b4235a; --d-mention: rgba(29, 155, 209, 0.12); --d-mention-fg: #1264a3; --d-chip: rgba(29, 28, 29, 0.06);
+  --d-lead: #2e7d32; --d-paid: #b26a00; --d-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.chat.theme-dark {
+  --d-bg: #1a1d21; --d-side: #121016; --d-fg: #d1d2d3; --d-muted: #9a9b9e; --d-border: #35373b;
+  --d-hover: rgba(255, 255, 255, 0.05); --d-accent: #1d9bd1; --d-badge: #e01e5a; --d-input: #222529; --d-code: #232529;
+  --d-code-fg: #ffcc66; --d-mention: rgba(29, 155, 209, 0.2); --d-mention-fg: #4fb3e8; --d-chip: rgba(255, 255, 255, 0.08);
+  --d-lead: #7bc67e; --d-paid: #f0b54a; --d-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.chat.theme-light,
+.chat.theme-dark {
+  --bg: var(--chat-bg, var(--d-bg));
+  --side: var(--chat-sidebar, var(--d-side));
+  --fg: var(--chat-fg, var(--d-fg));
+  --muted: var(--chat-muted, var(--d-muted));
+  --border: var(--chat-border, var(--d-border));
+  --hover: var(--chat-hover, var(--d-hover));
+  --accent: var(--chat-accent, var(--d-accent));
+  --accent-fg: var(--chat-accent-fg, var(--d-accent-fg));
+  --selected: var(--chat-selected, var(--d-accent));
+  --selected-fg: var(--chat-selected-fg, var(--d-accent-fg));
+  --input: var(--chat-input, var(--d-input));
+  --input-border: var(--chat-input-border, var(--d-border));
+  --focus: var(--chat-focus, var(--d-accent));
+  --code: var(--chat-code, var(--d-code));
+  --code-fg: var(--chat-code-fg, var(--d-code-fg));
+  --link: var(--chat-link, var(--d-mention-fg));
+  --mention-fg: var(--chat-mention-fg, var(--d-mention-fg));
+  --lead: var(--chat-lead, var(--d-lead));
+  --paid: var(--chat-paid, var(--d-paid));
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* The theme at the sidebar's foot. */
+.theme-switch { display: flex; gap: 2px; margin: 0 12px 10px; flex: none; padding: 2px; border: 1px solid var(--border); border-radius: 8px; width: max-content; }
+.theme-choice { width: 28px; height: 24px; border-radius: 6px; color: var(--muted); font-size: 0.95em; }
+.theme-choice:hover { background: var(--hover); color: var(--fg); }
+.theme-choice.on { background: var(--selected); color: var(--selected-fg); }
+
+/* A member's name or picture that opens their profile. */
+.profile-link { display: inline-flex; align-items: center; border-radius: 6px; text-align: left; }
+.profile-link:hover { text-decoration: underline; }
+.gutter .profile-link:hover { text-decoration: none; filter: brightness(1.08); }
+.avatar.huge { width: 120px; height: 120px; border-radius: 20px; font-size: 2.6em; }
+
+/* The profile, where the thread goes. */
+.profile-body { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 16px 24px; }
+.profile-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 1.3em; }
+.profile-name .chip { font-size: 0.55em; }
+.profile-team { color: var(--muted); font-size: 0.9em; }
+.profile-facts { display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+.profile-fact { display: flex; flex-direction: column; gap: 5px; }
+.profile-label { color: var(--muted); font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.profile-skills { display: flex; flex-wrap: wrap; gap: 4px; }
+.profile-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.profile-hint, .profile-note, .muted { color: var(--muted); font-size: 0.85em; }
+.profile-note { margin: 0; padding: 8px 10px; border-radius: 6px; background: var(--chip); }
+.profile-said { margin: 0; color: var(--lead); font-size: 0.9em; }
+.profile textarea.field-input { resize: vertical; min-height: 90px; font-family: var(--font); }
+.pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { padding: 3px 10px; border: 1px solid var(--border); border-radius: 12px; font-size: 0.85em; color: var(--fg); }
+.pill:hover { background: var(--hover); }
+.pill.on { background: var(--selected); color: var(--selected-fg); border-color: var(--selected); }
+

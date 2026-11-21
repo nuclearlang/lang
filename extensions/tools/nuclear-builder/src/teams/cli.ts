@@ -260,6 +260,10 @@ export const addMembers = (id: string, members: TeamDraft['members']) => team<Te
 export const removeMember = (id: string, member: string) => team<Team>(['member', 'remove', id, member]);
 /** What `team member update` changes of a member: who works it, and what makes it different. */
 export interface MemberChange {
+  /** Their name in the team. */
+  name?: string;
+  /** How often they send a GIF: never, sometimes, often. */
+  gifs?: string;
   kind?: Kind;
   provider?: string;
   model?: string;
@@ -276,7 +280,7 @@ export interface MemberChange {
 /** A member changed (`team member update <id> <member>`): only what is given. */
 export function updateMember(id: string, member: string, c: MemberChange): Promise<Team> {
   const flag = (name: string, v: string | undefined) => (v === undefined ? [] : [name, v]);
-  return team<Team>(['member', 'update', id, member, ...flag('--kind', c.kind), ...flag('--provider', c.provider), ...flag('--model', c.model), ...flag('--instructions', c.instructions), ...flag('--skills', c.skills?.join(',')), ...flag('--extra-skills', c.extraSkills && JSON.stringify(c.extraSkills)), ...flag('--temperament', c.temperament), ...flag('--note', c.note), ...flag('--agent', c.agent), ...(c.teamBrain ? ['--team-brain'] : [])]);
+  return team<Team>(['member', 'update', id, member, ...flag('--name', c.name), ...flag('--gifs', c.gifs), ...flag('--kind', c.kind), ...flag('--provider', c.provider), ...flag('--model', c.model), ...flag('--instructions', c.instructions), ...flag('--skills', c.skills?.join(',')), ...flag('--extra-skills', c.extraSkills && JSON.stringify(c.extraSkills)), ...flag('--temperament', c.temperament), ...flag('--note', c.note), ...flag('--agent', c.agent), ...(c.teamBrain ? ['--team-brain'] : [])]);
 }
 /** The place of a skill: the team, or one of its members. */
 const skillPlace = (id: string, member?: string) => ['--team', id, ...(member ? ['--member', member] : [])];

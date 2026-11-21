@@ -6,6 +6,7 @@ title_es: Móvil con Synapsis
 description_es: Construir una app móvil Synapsis (dialecto flutter) con las herramientas: pantallas, gestores de estado, recursos, contratos, dispositivos y compilaciones. Úsalo cuando una tarea crea o cambia una app Android, iOS, de escritorio o Flutter web escrita en Nuclear.
 kind: technology
 tags: [mobile, flutter, app, screen, statemanager, device, android, ios, synapsis]
+base: true
 ---
 # Synapsis mobile
 

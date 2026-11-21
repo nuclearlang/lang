@@ -147,6 +147,10 @@ export interface HostMember {
   avatar?: string;
   face?: string | null;
   temperament?: string | null;
+  /** The member's own id in their team (the chat's id is `<team>-<member>`). */
+  member?: string;
+  /** What the chat's profile shows and changes (temperament, skills, instructions), and whether it may be changed. */
+  card?: { editable: boolean; temperament: string; temperaments: { id: string; name: string }[]; skills: string[]; instructions: string };
   profile?: Record<string, unknown>;
   personality?: Record<string, unknown> | null;
   responder?: { command: string[]; paid?: boolean; choice?: string; model?: string; choices?: HostChoice[] };
@@ -177,7 +181,7 @@ export const AGENT = 'atlas';
 /** What `POST workspaces` takes from a host file: each member's face (a file path) as a picture the page can draw
  * (`face`: a `data:` URL); the general agent's default for a new conversation, the setting's provider when it is on
  * this machine (else the host file's own default, an external agent: the local models are on standby, ADR-platform-0013); the language and the GIFs of the settings. */
-export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es'; gifs: string; agent: AgentProvider; face: (file: string) => string | null; forceConfirm?: boolean }): Record<string, unknown> {
+export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es'; gifs: string; agent: AgentProvider; face: (file: string) => string | null; forceConfirm?: boolean; theme?: string }): Record<string, unknown> {
   // the spending questions (`--confirm-spending` skips them): an agent's subscription is never asked (spec 023,
   // requirement 4); an API's work is not asked again when the user put that provider in a team (a member's or the
   // tech lead's), and is asked when never chosen; a forced confirmation (the setting or the project's `forceConfirm`)
@@ -199,7 +203,16 @@ export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es
     if (out.responder) out.responder = { ...out.responder, command: confirmed(out.responder.command, out.responder.choices ? picked?.kind : m.brain?.kind, out.responder.choices ? out.responder.choice : m.brain?.provider) };
     return out;
   });
-  return { root: o.root, host: 'builder', members, teams: file.teams, channels: file.channels, lang: o.lang, gifs: o.gifs };
+  return { root: o.root, host: 'builder', members, teams: file.teams, channels: file.channels, lang: o.lang, gifs: o.gifs, theme: o.theme ?? 'auto' };
+}
+
+/** What a member's profile in the chat changes (an event `action`, `member`), as `team member update` takes it: only
+ * the known fields, each a text (anything else the event carries is dropped). */
+export function memberChange(changes: unknown): { name?: string; model?: string; instructions?: string; temperament?: string; gifs?: string } {
+  const c = (changes && typeof changes === 'object' ? changes : {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const k of ['name', 'model', 'instructions', 'temperament', 'gifs']) if (typeof c[k] === 'string') out[k] = c[k] as string;
+  return out;
 }
 
 // ---------- a run in its team's channel ----------
@@ -239,8 +252,8 @@ export interface AskLike {
 }
 
 export const RUN_TEXTS = {
-  en: { start: 'Started run:{0}: **{1}**', passed: '**{0}** passed', failed: '**{0}** failed', end: 'Every station passed (USD {0}).', endFailed: 'The run failed: {0}', approve: 'Approve', change: 'Ask for a change', later: 'Later', goOn: 'Go on', yes: 'Yes', no: 'No', answered: 'Answered: {0}', spending: '{0} (asked in the editor: money is confirmed twice)', accept: 'Accept', discard: 'Discard', draft: 'A new draft of spec:{0}:', accepted: 'Accepted: spec:{0} is written.', discarded: 'Discarded: spec:{0} stays as it was.', polish: 'Let us polish spec:{0}: **{1}**. Reply in this thread; a change comes as a difference you accept or not.\n\n```markdown\n{2}\n```', poc: 'A proof of concept (`/poc {0}`) is not available yet: the factory runs only on a project\'s own code, not on a scratch folder (`.nuclear/poc/`).', stations: { analysis: 'Analysis', design: 'Design', tests: 'Tests first', code: 'Code', quality: 'Quality', delivery: 'Delivery' }, ask: { gate: '', gateQuestions: '', qaPlan: '', deliver: '' } },
-  es: { start: 'Empezó run:{0}: **{1}**', passed: '**{0}** pasó', failed: '**{0}** falló', end: 'Pasaron todas las estaciones (USD {0}).', endFailed: 'La ejecución falló: {0}', approve: 'Aprobar', change: 'Pedir un cambio', later: 'Más tarde', goOn: 'Seguir', yes: 'Sí', no: 'No', answered: 'Respondido: {0}', spending: '{0} (preguntado en el editor: el dinero se confirma dos veces)', accept: 'Aceptar', discard: 'Descartar', draft: 'Un nuevo borrador de spec:{0}:', accepted: 'Aceptado: spec:{0} está escrita.', discarded: 'Descartado: spec:{0} queda como estaba.', polish: 'Puliremos spec:{0}: **{1}**. Responde en este hilo; un cambio llega como una diferencia que aceptas o no.\n\n```markdown\n{2}\n```', poc: 'Una prueba de concepto (`/poc {0}`) aún no está disponible: la fábrica trabaja solo sobre el código del proyecto, no en una carpeta de pruebas (`.nuclear/poc/`).', stations: { analysis: 'Análisis', design: 'Diseño', tests: 'Pruebas primero', code: 'Código', quality: 'Calidad', delivery: 'Entrega' }, ask: { gate: '¿Apruebas la estación {0}? Lee sus documentos antes.', gateQuestions: 'El pedido deja preguntas abiertas en la estación {0}: respóndelas (un cambio con tus respuestas), o aprueba para seguir sin ellas.', qaPlan: 'El plan de QA está listo: activa o desactiva comprobaciones, añade las tuyas, córrelas y márcalas. ¿Seguimos?', deliver: '¿Creo la rama factory/{0}, hago el commit a tu nombre y abro el pull request?' } },
+  en: { noTeam: 'This channel has no team yet: assign one and its tech lead answers here, for every app of the folder.', noTeams: 'This channel has no team, and there is no team yet: make one, then assign it here.', createTeam: 'Create a team', free: 'free', busy: 'busy', assigned: 'Assigned: {0}', creating: 'The company screen is open: make the team, then open this chat again to assign it.', start: 'Started run:{0}: **{1}**', passed: '**{0}** passed', failed: '**{0}** failed', end: 'Every station passed (USD {0}).', endFailed: 'The run failed: {0}', approve: 'Approve', change: 'Ask for a change', later: 'Later', goOn: 'Go on', yes: 'Yes', no: 'No', answered: 'Answered: {0}', spending: '{0} (asked in the editor: money is confirmed twice)', accept: 'Accept', discard: 'Discard', draft: 'A new draft of spec:{0}:', accepted: 'Accepted: spec:{0} is written.', discarded: 'Discarded: spec:{0} stays as it was.', polish: 'Let us polish spec:{0}: **{1}**. Reply in this thread; a change comes as a difference you accept or not.\n\n```markdown\n{2}\n```', poc: 'A proof of concept (`/poc {0}`) is not available yet: the factory runs only on a project\'s own code, not on a scratch folder (`.nuclear/poc/`).', stations: { analysis: 'Analysis', design: 'Design', tests: 'Tests first', code: 'Code', quality: 'Quality', delivery: 'Delivery' }, ask: { gate: '', gateQuestions: '', qaPlan: '', deliver: '' } },
+  es: { noTeam: 'Este canal aún no tiene equipo: asigna uno y su tech lead responde aquí, para todas las apps de la carpeta.', noTeams: 'Este canal no tiene equipo y aún no hay ninguno: crea uno y luego asígnalo aquí.', createTeam: 'Crear un equipo', free: 'libre', busy: 'ocupado', assigned: 'Asignado: {0}', creating: 'La pantalla de equipos está abierta: crea el equipo y vuelve a abrir este chat para asignarlo.', start: 'Empezó run:{0}: **{1}**', passed: '**{0}** pasó', failed: '**{0}** falló', end: 'Pasaron todas las estaciones (USD {0}).', endFailed: 'La ejecución falló: {0}', approve: 'Aprobar', change: 'Pedir un cambio', later: 'Más tarde', goOn: 'Seguir', yes: 'Sí', no: 'No', answered: 'Respondido: {0}', spending: '{0} (preguntado en el editor: el dinero se confirma dos veces)', accept: 'Aceptar', discard: 'Descartar', draft: 'Un nuevo borrador de spec:{0}:', accepted: 'Aceptado: spec:{0} está escrita.', discarded: 'Descartado: spec:{0} queda como estaba.', polish: 'Puliremos spec:{0}: **{1}**. Responde en este hilo; un cambio llega como una diferencia que aceptas o no.\n\n```markdown\n{2}\n```', poc: 'Una prueba de concepto (`/poc {0}`) aún no está disponible: la fábrica trabaja solo sobre el código del proyecto, no en una carpeta de pruebas (`.nuclear/poc/`).', stations: { analysis: 'Análisis', design: 'Diseño', tests: 'Pruebas primero', code: 'Código', quality: 'Calidad', delivery: 'Entrega' }, ask: { gate: '¿Apruebas la estación {0}? Lee sus documentos antes.', gateQuestions: 'El pedido deja preguntas abiertas en la estación {0}: respóndelas (un cambio con tus respuestas), o aprueba para seguir sin ellas.', qaPlan: 'El plan de QA está listo: activa o desactiva comprobaciones, añade las tuyas, córrelas y márcalas. ¿Seguimos?', deliver: '¿Creo la rama factory/{0}, hago el commit a tu nombre y abro el pull request?' } },
 };
 export type RunTexts = (typeof RUN_TEXTS)['en'];
 export const fmt = (s: string, ...a: unknown[]) => s.replace(/\{(\d+)\}/g, (_, i) => String(a[+i] ?? ''));
@@ -281,9 +294,12 @@ export function askPost(run: RunLike, a: AskLike, member: (role?: string) => str
   return { author: a.kind === 'spending' ? 'system' : member(role), text: a.kind === 'spending' ? fmt(T.spending, a.question) : askText(a, T), buttons, moment: 'question' };
 }
 
-/** A button's id read back: a run's answer or a spec draft's (`spec|<id>|accept|discard`). */
-export function buttonOf(id: string): { kind: 'run'; run: string; ask: string; answer: string } | { kind: 'spec'; spec: string; answer: 'accept' | 'discard' } | null {
+/** A button's id read back: a run's answer, a spec draft's (`spec|<id>|accept|discard`), a team offered to the folder's
+ * channel (`team|assign|<id>`) or the offer to make one (`team|create`). */
+export function buttonOf(id: string): { kind: 'run'; run: string; ask: string; answer: string } | { kind: 'spec'; spec: string; answer: 'accept' | 'discard' } | { kind: 'team'; team: string } | null {
   const p = id.split('|');
+  if (p[0] === 'team' && p[1] === 'assign' && p.length === 3 && p[2]) return { kind: 'team', team: p[2] };
+  if (p[0] === 'team' && p[1] === 'create' && p.length === 2) return { kind: 'team', team: '' };
   if (p[0] === 'run' && p.length === 4) return { kind: 'run', run: p[1], ask: p[2], answer: p[3] };
   if (p[0] === 'spec' && p.length === 3 && (p[2] === 'accept' || p[2] === 'discard')) return { kind: 'spec', spec: p[1], answer: p[2] };
   return null;
@@ -351,6 +367,7 @@ export class ChatHost {
   private readonly ids = new Map<string, Promise<string>>();
   private readonly lastN = new Map<string, number>();
   private readonly listeners: ((root: string, e: ChatEvent) => void)[] = [];
+  private readonly registrations: ((root: string) => void)[] = [];
   private retries = 0;
   private wasOpen = false;
   private timer?: NodeJS.Timeout;
@@ -498,7 +515,18 @@ export class ChatHost {
     this.known.set(root, id);
     // the host listens to its workspace: the buttons, the commands and the members' tools are its
     this.send(HOST, { subscribe: `chat.${id}` });
+    for (const l of this.registrations) l(root);
     return id;
+  }
+
+  /** A folder registered (again): its host file is `hostBody(root)`. */
+  onRegistered(l: (root: string) => void): void {
+    this.registrations.push(l);
+  }
+
+  /** The host file a folder was last registered with. */
+  hostBody(root: string): unknown {
+    return this.bodies.get(root);
   }
 
   /** The host's own listening: every event of a registered project. */
@@ -517,6 +545,13 @@ export class ChatHost {
   registered(root: string): { members: string[]; channels: string[]; teams: string[]; lead: (team: string) => string | undefined } {
     const b = (this.bodies.get(root) ?? {}) as { members?: { id: string }[]; channels?: { id: string }[]; teams?: { id: string; lead: string }[] };
     return { members: (b.members ?? []).map((m) => m.id), channels: (b.channels ?? []).map((c) => c.id), teams: (b.teams ?? []).map((t) => t.id), lead: (t) => b.teams?.find((x) => x.id === t)?.lead };
+  }
+
+  /** A registered member's team and own id in it (the chat's id is `<team>-<member>`), or undefined. */
+  teamMember(root: string, id: string): { team: string; member: string } | undefined {
+    const b = (this.bodies.get(root) ?? {}) as { members?: { id: string; team?: string; member?: string }[] };
+    const m = b.members?.find((x) => x.id === id);
+    return m?.team && m.member ? { team: m.team, member: m.member } : undefined;
   }
 
   /** A member's name in a registered project (its id when unknown). */

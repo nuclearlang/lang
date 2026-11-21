@@ -19,6 +19,7 @@ Front matter, one `key: value` per line (no quotes, a list as `[a, b]`):
 | `description_es` | the description in Spanish |
 | `kind` | `domain`, `technology` or `practice` (the wizard groups them so) |
 | `tags` | words people type (the search) and the wizard's member suggestions read |
+| `base` | `true`: one of Nuclear's base skills, which every member of every team has without choosing it (the screens never offer it); absent on the others |
 
 The body, in English: `## When to use`, `## Steps`, `## The platform's tools` (the real `nuclear` and
 `nuclear-builder` commands and words, never invented), `## Pitfalls`, `## Checklist` (`- [ ]` items). When the
@@ -27,9 +28,13 @@ factory's) and `skills` (ids of this library) instead of `kind` and `tags`, and 
 
 ## The skills
 
+**Nuclear's base** (`base: true`, every member has them): `nuclear-language`, `synapsis-backend`, `synapsis-mobile`,
+`synapsis-web`, `testing-in-nuclear`, `rest-contracts`, `clean-architecture-components`, `clean-code`, `code-review`,
+`security-review-owasp`, `performance-load` (with Big-O), `tdd`. The rest are what a team chooses.
+
 - **Domains**: [`accessibility`](accessibility/SKILL.md) Accessibility, [`analytics-events`](analytics-events/SKILL.md) Analytics events, [`audit-logging`](audit-logging/SKILL.md) Audit logging, [`authentication`](authentication/SKILL.md) Authentication and sessions, [`bank-accounts`](bank-accounts/SKILL.md) Bank accounts and transfers, [`file-uploads`](file-uploads/SKILL.md) File uploads, [`i18n`](i18n/SKILL.md) Translations and localization, [`maps-geolocation`](maps-geolocation/SKILL.md) Maps and geolocation, [`notifications`](notifications/SKILL.md) Notifications, [`offline-sync`](offline-sync/SKILL.md) Offline-first sync, [`payments`](payments/SKILL.md) Payments, [`privacy-gdpr`](privacy-gdpr/SKILL.md) Privacy and GDPR, [`realtime-chat`](realtime-chat/SKILL.md) Chat and real time over WebSockets, [`search`](search/SKILL.md) Search, filters and pagination, [`subscriptions-billing`](subscriptions-billing/SKILL.md) Subscriptions and billing, [`user-profiles`](user-profiles/SKILL.md) User profiles.
-- **Technologies**: [`ci-pipelines`](ci-pipelines/SKILL.md) CI pipelines, [`ollama-local-models`](ollama-local-models/SKILL.md) Local models with Ollama, [`openapi-import`](openapi-import/SKILL.md) Importing an API, [`rest-contracts`](rest-contracts/SKILL.md) REST APIs and contracts, [`sql-databases`](sql-databases/SKILL.md) SQL databases, [`synapsis-backend`](synapsis-backend/SKILL.md) Synapsis backend, [`synapsis-mobile`](synapsis-mobile/SKILL.md) Synapsis mobile, [`synapsis-web`](synapsis-web/SKILL.md) Synapsis web, [`testing-in-nuclear`](testing-in-nuclear/SKILL.md) Testing in Nuclear, [`websocket-connections`](websocket-connections/SKILL.md) WebSocket connections.
-- **Practices**: [`clean-architecture-components`](clean-architecture-components/SKILL.md) Clean architecture with components, [`code-review`](code-review/SKILL.md) Code review, [`performance-load`](performance-load/SKILL.md) Performance and load, [`security-review-owasp`](security-review-owasp/SKILL.md) Security review (OWASP), [`tdd`](tdd/SKILL.md) Test-driven development.
+- **Technologies**: [`ci-pipelines`](ci-pipelines/SKILL.md) CI pipelines, [`nuclear-language`](nuclear-language/SKILL.md) Nuclear and its command line, [`ollama-local-models`](ollama-local-models/SKILL.md) Local models with Ollama, [`openapi-import`](openapi-import/SKILL.md) Importing an API, [`rest-contracts`](rest-contracts/SKILL.md) REST APIs and contracts, [`sql-databases`](sql-databases/SKILL.md) SQL databases, [`synapsis-backend`](synapsis-backend/SKILL.md) Synapsis backend, [`synapsis-mobile`](synapsis-mobile/SKILL.md) Synapsis mobile, [`synapsis-web`](synapsis-web/SKILL.md) Synapsis web, [`testing-in-nuclear`](testing-in-nuclear/SKILL.md) Testing in Nuclear, [`websocket-connections`](websocket-connections/SKILL.md) WebSocket connections.
+- **Practices**: [`clean-architecture-components`](clean-architecture-components/SKILL.md) Clean architecture with components, [`clean-code`](clean-code/SKILL.md) Clean code, [`code-review`](code-review/SKILL.md) Code review, [`performance-load`](performance-load/SKILL.md) Performance, Big-O and load, [`security-review-owasp`](security-review-owasp/SKILL.md) Security review (OWASP), [`tdd`](tdd/SKILL.md) Test-driven development.
 
 ## The agents
 

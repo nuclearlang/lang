@@ -1,5 +1,5 @@
-// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
-// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.
+// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.
 NewWorkspace
   // the project's folder (absolute): its chat is kept in `.nuclear/chat/`
   root: string
@@ -11,3 +11,5 @@ NewWorkspace
   lang: string = "en"
   // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)
   gifs: string = "pack"
+  // the page's colors: auto (the editor's), light or dark (the editor's setting nuclear.chat.theme)
+  theme: string = "auto"

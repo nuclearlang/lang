@@ -155,7 +155,8 @@ testEveryLibrarySkillRendersForEveryProviderWithoutLoss(tmpPath: Path) void
     body = "${head["body"]}".trim()
     expect(body.length > 400 and body.length < 11000, "${id}: a body of some substance that fits the local context (${body.length})")
     role = composeRole("developer", withSkills({ "skills": [id] }, { "role": "developer", "skills": [] as string[] }, lib), tmpPath.joinpath("no-roles"))
-    expect(role.sources.keys == [id] and role.sources[id] == "library", id)
+    // beside Nuclear's base skills, which every member has
+    expect(id in role.sources.keys and role.sources[id] == "library" and role.sources.keys.all((k) => k == id or k in baseSkillIds(lib)), id)
     at = tmpPath.joinpath("render", id)
     at.mkdir(parents = true)
     plugin = renderClaudePlugin(role, at)
@@ -173,3 +174,16 @@ testEveryLibrarySkillRendersForEveryProviderWithoutLoss(tmpPath: Path) void
     expect(a["role"] in ROLES, "${a["id"]}: a role")
     for id in a["skills"] as string[]
       expect(id in ids, "${a["id"]}: no skill ${id} in the library")
+
+// Nuclear's base skills (`base: true`) reach every member of every team, chosen or not; a team file of before 0.87 that
+// lists one explicitly loads as it was and gets it once.
+testNuclearsBaseSkillsReachEveryMemberOnce(tmpPath: Path, monkeypatch: any) void
+  lib = skillsHome(tmpPath, monkeypatch)
+  base = SKILL_B.replace("tags: [testing, tests, pytest]\n", "tags: [testing, tests, pytest]\nbase: true\n")
+  lib.joinpath("skills", "testing-in-nuclear", "SKILL.md").writeText(base)
+  expect(baseSkillIds() == ["testing-in-nuclear"])
+  expect(librarySkills().map((s) => s["base"]) == [false, true])
+  none = sharedSkills({ "skills": ["payments"] }, { "role": "developer" })
+  expect(none.map((s) => s["id"]) == ["testing-in-nuclear", "payments"], json.dumps(none))
+  old = sharedSkills({ "skills": ["testing-in-nuclear", "payments"] }, { "role": "qa", "skills": ["testing-in-nuclear"] })
+  expect(old.map((s) => s["id"]) == ["testing-in-nuclear", "payments"] and old[0]["from"] == "library", json.dumps(old))

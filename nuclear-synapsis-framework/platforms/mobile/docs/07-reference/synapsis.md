@@ -126,7 +126,8 @@ Every table is loaded in memory by hive (`Box`): it is for what a phone shows, n
 ## 4. State
 
 `StateManager<S>`: a `Cubit<S>` that does not emit after it is closed (a closed screen gets no late
-responses).
+responses). `stateTurn()` and `isLatestTurn(turn)` keep only the latest answer of an asynchronous `@state` method: one
+called again before its answer comes drops the older answer when it comes back last.
 
 ## 5. Global services
 

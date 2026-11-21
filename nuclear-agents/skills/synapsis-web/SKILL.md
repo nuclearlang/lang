@@ -6,6 +6,7 @@ title_es: Web con Synapsis
 description_es: Construir una app web Synapsis (dialecto react) con las herramientas: pantallas, gestores de estado, repositorios HTTP, contratos y tests. Úsalo cuando una tarea crea o cambia una app de navegador escrita en Nuclear, o la monta en una página anfitriona.
 kind: technology
 tags: [web, react, browser, screen, statemanager, repository, frontend, synapsis]
+base: true
 ---
 # Synapsis web
 

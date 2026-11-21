@@ -176,7 +176,7 @@ ctor_param = "{{decorators}}private readonly {{name}}{{#optional}}?{{/optional}}
 # --- state ---
 [kinds.statemanager]
 # the runtime's StateManager keeps these: a method of that name would replace it (N0223)
-sealed = ["close", "emit", "subscribe", "listen", "state"]
+sealed = ["close", "emit", "subscribe", "listen", "state", "stateTurn", "isLatestTurn"]
 description = "@stateModel(S) statemanager Name(deps) + @state methods → the state of a screen (StateManager<S>)"
 inherits = ["StateManager"]
 imports = ["StateManager"]

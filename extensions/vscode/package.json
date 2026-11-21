@@ -2,7 +2,7 @@
   "name": "nuclearlang",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.86.1",
+  "version": "0.87.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -486,6 +486,21 @@
             ],
             "default": "pack",
             "description": "%nuclear.chat.gifs.desc%"
+          },
+          "nuclear.chat.theme": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "light",
+              "dark"
+            ],
+            "enumDescriptions": [
+              "%nuclear.chat.theme.auto%",
+              "%nuclear.chat.theme.light%",
+              "%nuclear.chat.theme.dark%"
+            ],
+            "default": "auto",
+            "description": "%nuclear.chat.theme.desc%"
           }
         }
       },

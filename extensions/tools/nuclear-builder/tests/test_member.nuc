@@ -156,11 +156,15 @@ testTheHostFileGivesTheProjectsTeamAsMembersAndChannels(tmpPath: Path, monkeypat
   expect(members.map((m) => m["id"]) == ["night-shift-developer", "night-shift-analyst", "atlas"])
   // only the tech lead and Atlas are listed (spec 023 requirement 2): the people of the chat, each a direct message
   expect(members.map((m) => m["listed"]) == [true, false, true])
-  expect(members[0] == { "id": "night-shift-developer", "name": "Neo", "role": "developer", "member": "developer", "team": "night-shift", "listed": true, "avatar": "dev-017", "face": "${tmpPath.joinpath("roles", "developer", "roster", "faces", "thumb", "dev-017.webp")}", "temperament": "grumpy", "profile": { "bio": "Escribe tests de noche.", "hrNote": "Nunca tarde, nunca temprano.", "lang": "es" }, "personality": { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour.", "temperament": "grumpy" }, "brain": { "agent": "Nuclear Developer", "kind": "local", "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "paid": false }, "responder": { "command": ["nuclear-builder", "member", "--team", "night-shift", "--member", "developer"], "paid": false } }, json.dumps(members[0]))
+  // the profile's card: the temperament, the skills by title, the instructions; a saved team's member can be changed
+  card: <string, any> = members[0]["card"]!
+  expect(card == { "editable": true, "temperament": "grumpy", "temperaments": [{ "id": "grumpy", "name": "Gruñón" }, { "id": "shy", "name": "Tímido" }], "skills": [] as string[], "instructions": "Tests before code." }, json.dumps(card))
+  expect(members[0] == { "card": card, "id": "night-shift-developer", "name": "Neo", "role": "developer", "member": "developer", "team": "night-shift", "listed": true, "avatar": "dev-017", "face": "${tmpPath.joinpath("roles", "developer", "roster", "faces", "thumb", "dev-017.webp")}", "temperament": "grumpy", "profile": { "bio": "Escribe tests de noche.", "hrNote": "Nunca tarde, nunca temprano.", "lang": "es" }, "personality": { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour.", "temperament": "grumpy" }, "brain": { "agent": "Nuclear Developer", "kind": "local", "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "paid": false }, "responder": { "command": ["nuclear-builder", "member", "--team", "night-shift", "--member", "developer"], "paid": false } }, json.dumps(members[0]))
   // a member without an employee: the name given, the team's id as the avatar's seed, the default personality
   expect(members[1]["name"] == "Ana" and members[1]["avatar"] == "night-shift-analyst" and (members[1]["responder"] as <string, any>)["paid"] == true and members[1]["personality"] == { "gifs": "sometimes", "on": ["failure"], "note": "" } and members[1]["face"] == null and members[1]["temperament"] == null)
   expect(members[1]["brain"] == { "agent": "Claude Code", "kind": "agent", "provider": "claude-code", "model": "haiku", "paid": true })
-  expect(host["channels"] == [{ "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer"] }], json.dumps(host["channels"]))
+  expect(host["assigned"] == "night-shift")
+  expect(host["channels"] == [{ "id": "home", "name": "app", "topic": "app", "members": ["night-shift-developer"] }, { "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer"] }], json.dumps(host["channels"]))
   expect(chatHostLine(["--json", "--root", root]) == 0 and json.loads(capsys.readouterr().out)["lang"] == "en")
 
 // Every member of the team is in the chat, any number per role (`<team>-<member id>`, answered by `--member`).
@@ -183,12 +187,46 @@ testEveryTeamIsInTheChatWithItsTechLead(tmpPath: Path, monkeypatch: any, capsys:
   expect(host["teams"] == [{ "id": "night-shift", "name": "Night shift", "lead": "night-shift-developer" }, { "id": "day-shift", "name": "Day shift", "lead": "day-shift-arch" }, { "id": "empty", "name": "Empty", "lead": "" }], json.dumps(host["teams"]))
   members: <string, any>[] = host["members"]!
   expect(members.filter((m) => m["listed"] == true).map((m) => m["id"]) == ["night-shift-developer", "day-shift-arch", "atlas"])
-  expect((host["channels"] as <string, any>[]).map((c) => c["id"]) == ["general", "night-shift", "day-shift", "empty"])
+  expect((host["channels"] as <string, any>[]).map((c) => c["id"]) == ["home", "general", "night-shift", "day-shift", "empty"])
   setDefaultTeam(null)
   Path(root, ".nuclear", "builder.json").writeText("{}")
   expect(chatHostLine(["--json", "--root", root]) == 0)
   said = json.loads(capsys.readouterr().out)
   expect(not ("error" in said) and (said["teams"] as <string, any>[]).map((t) => t["id"]) == ["day-shift", "empty", "night-shift"], json.dumps(said["teams"]))
+
+// No saved team: the chat makes none up (the local team a run takes could not be changed by anybody): Atlas alone, the
+// folder's channel with nobody in it and `assigned` null, for the editor to offer the teams or making one.
+testWithNoSavedTeamTheChatHasNoTeamAndItsChannelWaitsForOne(tmpPath: Path, monkeypatch: any) void
+  root = chatProject(tmpPath, monkeypatch)
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  host = chatHost(root, "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
+  expect((host["members"] as <string, any>[]).map((m) => m["id"]) == ["atlas"] and host["teams"] == [] and host["assigned"] == null, json.dumps(host["members"]))
+  channels: <string, any>[] = host["channels"]!
+  expect(channels.map((c) => c["id"]) == ["home", "general"] and channels[0]["members"] == [], json.dumps(channels))
+
+// A team assigned to a workspace (`line set team=` in its folder) works each of its apps, and the workspace's chat
+// names its channel after the workspace; an app's own assignment wins.
+testATeamAssignedToAWorkspaceWorksItsApps(tmpPath: Path, monkeypatch: any) void
+  memberProject(tmpPath, monkeypatch)
+  ws = tmpPath.joinpath("Rick Workspace")
+  ws.joinpath(".workspace").mkdir(parents = true)
+  ws.joinpath(".workspace", "workspace.nuc").writeText("workspace(name = \"Rick Workspace\")\napp(folder = \"api\", platform = \"backend\")\n")
+  ws.joinpath(".nuclear").mkdir()
+  ws.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "team": "night-shift" }))
+  saveTeam({ "id": "day-shift", "name": "Day shift", "members": [{ "id": "arch", "role": "architect", "kind": "agent", "provider": "codex" }] })
+  app = ws.joinpath("api")
+  app.mkdir()
+  expect(assignedTeamId("${app}") == "night-shift" and runTeam("${app}")!["id"] == "night-shift")
+  host = chatHost("${ws}", "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
+  home: <string, any> = (host["channels"] as <string, any>[])[0]
+  expect(home["name"] == "rick-workspace" and home["members"] == ["night-shift-developer"] and host["assigned"] == "night-shift", json.dumps(home))
+  app.joinpath(".nuclear").mkdir()
+  app.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "team": "day-shift" }))
+  expect(assignedTeamId("${app}") == "day-shift")
+  // a folder of no workspace reads no folder above it
+  loose = tmpPath.joinpath("loose")
+  loose.mkdir()
+  expect(assignedTeamId("${loose}") == null)
 
 // Nuclear Atlas only informs (spec 023 requirement 1): its prompt sends a task to a free team's tech lead (or offers to
 // make a team), and its tools are those that read and teach: no spec written, no run started.

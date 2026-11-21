@@ -994,12 +994,12 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.336f76",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.d1177b",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "installer: `npm run package` there).",
+   "summary": "would put an older extension back over the published one, unseen), a note says to run `npm run package` there.",
    "body": [
-    "installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
+    "would put an older extension back over the published one, unseen), a note says to run `npm run package` there. The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
     "   `wasm32-wasip2` is there (`--no-zed`).",
     "6. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
     "",
@@ -1016,7 +1016,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.ab7b0d",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.f680d8",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
    "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
@@ -1033,7 +1033,7 @@
     "   `ai/` and its own `nuclear-builder setup`.",
     "4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
     "5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
-    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the"
+    "   PATH (`--no-vscode`), only when that package is the version of `package.json`: an older one is never installed (it"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"

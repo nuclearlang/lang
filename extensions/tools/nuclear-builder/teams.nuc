@@ -683,14 +683,7 @@ TeamChoice(message: string) : TeamError(message)
 // project's `.nuclear/builder.json` "team", else the default team, else the only saved team. Null when there is no
 // saved team (the run takes `localTeam`); a `TeamChoice` when there are several and none of them is chosen.
 runTeam(root: string, asked: string? = null) <string, any>?
-  id = asked
-  if id == null
-    config = Path(root, ".nuclear", "builder.json")
-    if config.isFile()
-      found = readJson(config)
-      own: <string, any> = isinstance(found, dict) ? found : ({} as <string, any>)
-      if isText(own["team"])
-        id = own["team"]
+  id = asked ?? assignedTeamId(root)
   if id == null
     id = defaultTeamId()
   if id == null
@@ -699,6 +692,28 @@ runTeam(root: string, asked: string? = null) <string, any>?
       throw TeamChoice("several teams and none is this project's nor the default (${saved.join(", ")}): choose one with `nuclear-builder line set team=<id>` in the project, or `nuclear-builder team default <id>`")
     id = saved.isEmpty ? null : saved[0]
   id == null ? null : loadTeam(id!)
+
+// The team a folder names in `.nuclear/builder.json` ("team", `line set team=<id>`), else the one its workspace names
+// (the folder above that holds `.workspace/workspace.nuc`): a team assigned to a workspace works each of its apps.
+// Null when neither names one (no folder above a workspace's is read).
+assignedTeamId(root: string) string?
+  own = namedTeam(Path(root))
+  if own != null
+    return own
+  dir = Path(root).absolute().parent
+  while dir != dir.parent
+    if dir.joinpath(".workspace", "workspace.nuc").isFile()
+      return namedTeam(dir)
+    dir = dir.parent
+  null
+
+namedTeam(dir: Path) string?
+  config = dir.joinpath(".nuclear", "builder.json")
+  if not config.isFile()
+    return null
+  found = readJson(config)
+  own: <string, any> = isinstance(found, dict) ? found : ({} as <string, any>)
+  isText(own["team"]) ? "${own["team"]}" : null
 
 // ---------- a team made or changed by one command (the page's and the agents') ----------
 

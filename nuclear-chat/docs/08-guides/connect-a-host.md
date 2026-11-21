@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../02-architecture/api.md, ../02-architecture/responders.md]
 ---
 # Connect a host
@@ -56,6 +56,10 @@ Every action of the page is a route a host or an agent calls too (ADR-platform-0
 ## 4. Answer a member's question, take an action
 - An event `ask` `{id, question, member}`: the user's answer is `POST members/{ws}/answers {"id", "answer"}`.
 - An event `action`: a button clicked (`{button, message}`) or `/poc <what>`; what it does is the host's.
+- A member changed from their profile (`{action: "member", member, team, changes}`) or the page's theme chosen
+  (`{action: "theme", theme}`): the host applies it (the member's settings, the user's setting) and registers the
+  project again; give a member a `card` with `editable: true` only when you can apply its changes, and the workspace a
+  `theme` (`auto`, `light`, `dark`).
 
 ## Keep a GIF service's key
 ```sh

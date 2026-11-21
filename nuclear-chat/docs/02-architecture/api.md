@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [overview.md, responders.md, ../../../docs/04-specs/013-nuclear-chat/design.md]
 ---
 # The API
@@ -25,8 +25,9 @@ The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the fil
 ## Routes
 | Route | Body | Answer |
 |---|---|---|
-| `POST workspaces` | `NewWorkspace` `{root, host, members, teams, channels, lang: en\|es, gifs: pack\|tenor\|giphy}` (a member's `face`: the picture the page draws, a `data:` or `https:` URL, 400 000 characters at most; its `responder` `{command, paid, choice, model, choices}`: `choices` the agents a conversation with it can choose, each `Choice` `{id, label, kind, command, paid, models, defaultModel, available, why}`, `choice` and `model` the host's default; its `brain` `{agent, kind, provider, model, paid}`: who works it, as the host says, drawn under its name in a direct message; its `listed`, true by default: false keeps the member out of the chat's people, no direct message of its own nor a place in `#general`, still writing in channels and threads and answered when mentioned) | `Workspace` (its `id`, the channels merged: `general` with the listed members, the host's, a `dm-<member>` for each listed one, the user's, and a `dm-<member>` kept with a member no longer listed) |
+| `POST workspaces` | `NewWorkspace` `{root, host, members, teams, channels, lang: en\|es, gifs: pack\|tenor\|giphy, theme: auto\|light\|dark}` (a member's `card` `{editable, temperament, temperaments: [{id, name}], skills, instructions}`, optional: what their profile shows and changes, and whether the host lets change it; a member's `face`: the picture the page draws, a `data:` or `https:` URL, 400 000 characters at most; its `responder` `{command, paid, choice, model, choices}`: `choices` the agents a conversation with it can choose, each `Choice` `{id, label, kind, command, paid, models, defaultModel, available, why}`, `choice` and `model` the host's default; its `brain` `{agent, kind, provider, model, paid}`: who works it, as the host says, drawn under its name in a direct message; its `listed`, true by default: false keeps the member out of the chat's people, no direct message of its own nor a place in `#general`, still writing in channels and threads and answered when mentioned) | `Workspace` (its `id`, the channels merged: `general` with the listed members, the host's, a `dm-<member>` for each listed one, the user's, and a `dm-<member>` kept with a member no longer listed) |
 | `GET workspaces/{id}` | | `Workspace` |
+| `PUT workspaces/{id}/theme` | `ThemeChoice` `{theme: auto\|light\|dark}` | `Workspace` (its `theme`, kept while it is registered): the page's colors chosen in the chat; event `action` `theme` for the host to keep |
 | `GET channels/{ws}` | | `Channel[]` with `unread` |
 | `POST channels/{ws}` | `NewChannel` `{name, topic, members, team}` | `Channel` (201) |
 | `POST channels/{ws}/{channel}/read` | | `Channel` (`lastRead` now) |
@@ -43,6 +44,7 @@ The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the fil
 | `POST messages/{ws}/message/{id}/click` | `Click` `{button}` | `ChatEvent` (`action`) |
 | `GET messages/{ws}/search?words=` | | `Found[]` `{channel, message}`, newest first: every channel (closed and archived too), messages that hold every word (text or a GIF's title); `from:@<member>` (id, name, first name; `from:@you`) and `in:#<channel>` (id or name) narrow it, alone too; a filter that names nobody finds nothing; a deleted message is never found |
 | `POST members/{ws}/answers` | `Answer` `{id, answer}` | `Answer`: written to the responder that asked |
+| `POST members/{ws}/{member}/edit` | `MemberEdit` `{name?, model?, instructions?, temperament?, gifs?: never\|sometimes\|often}` | `ChatEvent` (`action` `member`): only for a member whose `card.editable` (400 otherwise, a temperament not in its `card.temperaments`, nothing to change; 404 no member); the host applies it and registers the workspace again |
 | `GET gifs/pack` | | `PackGif[]` `{id, file, title, tags, svg}` |
 | `GET gifs/{ws}/search?q=` | | `GifResults` `{q, source, results, ask, service, note}` |
 | `POST gifs/{ws}/consent` | `Consent` `{online}` | `Consent`: the one question's answer |
@@ -69,7 +71,8 @@ never shown, since its URL holds the key). A pack GIF's `src` is `pack/<file>`: 
 | `message.delta` | `{member, thread, text}`: a piece of the answer being written (the responder's `text-delta`); the page joins them until the answer is posted |
 | `done` | `{member, thread, costUsd, error}`: after the answer, its GIF and a failure are posted |
 | `agent.changed` | `{member, agent, model}`: a direct message's agent chosen |
-| `action` | `{action: "button", message, button}` or `{action: "poc", what, message, thread}` |
+| `action` | `{action: "button", message, button}`, `{action: "poc", what, message, thread}`, `{action: "member", member, team, changes}` (a profile's change) or `{action: "theme", theme}`: the host's to do |
+| `workspace` | `{}`: the host registered the workspace (again): a page reads its members anew |
 
 Every event is kept by `EventLog` and published on two topics: `chat.event` (the members listen to it) and
 `chat.<workspace>`.

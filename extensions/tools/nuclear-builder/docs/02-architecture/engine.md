@@ -25,8 +25,10 @@ A spec goes through the stations, each worked by a member of its role in the run
 ### The team
 
 One rule for a run and for Nuclear Chat (`runTeam`, `teamOfRun`): the team asked for, else the project's
-`.nuclear/builder.json` `"team"`, else the default team, else the only saved team; with no saved team, the local
-team `local-team` (not saved). Several saved teams and none of them the project's nor the default is a `TeamChoice`
+`.nuclear/builder.json` `"team"`, else its workspace's (`assignedTeamId`: the folder above that holds
+`.workspace/workspace.nuc`; a team assigned to a workspace works each of its apps, an app's own wins), else the
+default team, else the only saved team; with no saved team a run takes the local team `local-team` (not saved),
+which the chat never shows. Several saved teams and none of them the project's nor the default is a `TeamChoice`
 (a `TeamError`): never the local team silently. `chat-host` answers it with `chooseTeam` (`[{ "id", "name" }]`), and
 the editor asks once which team the project uses and saves it as the project's (`line set team=<id>`); in a terminal
 the error says to run `line set team=<id>` or `team default <id>`.

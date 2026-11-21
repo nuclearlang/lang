@@ -6,6 +6,7 @@ title_es: Revisión de código
 description_es: Revisar un cambio en un proyecto Nuclear o en la plataforma: el veredicto del compilador, las reglas de arquitectura de nuclear check, los tests, el código generado sin tocar, las herramientas usadas antes que el código a mano, los nombres y la documentación. Úsalo al revisar un pull request, la salida de una ejecución de la fábrica o el cambio de un compañero.
 kind: practice
 tags: [code review, review, pull request, quality, architecture, naming, nuclear check]
+base: true
 ---
 # Code review
 

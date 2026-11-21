@@ -59,17 +59,22 @@ stateful Finder(ws: Workspace, channels: Channel[], texts: Texts, people: boolea
       className = "person ${on ? "marked" : ""}",
       role = "option",
       children = [
-        Avatar(member = m, author = m.id),
+        button(className = "profile-link", title = texts.format("profile.open", { "name": m.name }), onClick = () => profile(m.id), children = Avatar(member = m, author = m.id)),
         div(
           className = "person-text",
           children = [
-            div(children = [strong(children = m.name), m.role != "" ? span(className = "chip role", children = m.role) : null, leads(ws, m.id) ? span(className = "chip lead", children = texts.get("lead")) : null]),
+            div(children = [button(className = "profile-link", title = texts.format("profile.open", { "name": m.name }), onClick = () => profile(m.id), children = strong(children = m.name)), m.role != "" ? span(className = "chip role", children = m.role) : null, leads(ws, m.id) ? span(className = "chip lead", children = texts.get("lead")) : null]),
             m.brain.agent != "" ? BrainLine(brain = m.brain, texts = texts) : null,
           ],
         ),
         button(className = "action", onClick = () => onOpen(t.channel), children = texts.get("message")),
       ],
     )
+
+  // A member's face or name: their profile beside the channel, the list closed.
+  profile(id: string)
+    ProfileManager.show(id)
+    onClose()
 
   typed(value: string)
     setState(() =>

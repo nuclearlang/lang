@@ -4202,17 +4202,23 @@
    "id": "example:nuclear_chat/components/members/api/members_controller",
    "type": "file",
    "title": "`controller` MembersController — the example project nuclear_chat (backend)",
-   "summary": "The members API: the user's answer to a member's question (an event `ask`).",
+   "summary": "The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.",
    "body": [
     "`components/members/api/members_controller.nuc` of `nuclear_chat`:",
     "",
     "```nuclear",
-    "// The members API: the user's answer to a member's question (an event `ask`).",
+    "// The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.",
     "@controller(\"members\")",
     "controller MembersController(members: MembersAppComponent)",
     "  @post(\"{workspace}/answers\")",
     "  answer(workspace: string, answer: Answer) Result<Error, Answer>",
     "    ~members.reply(workspace, answer)",
+    "",
+    "  // A member changed from their profile (name, model, instructions, temperament, GIFs): told to the host as an",
+    "  // event `action` (`member`), which applies it and registers the workspace again.",
+    "  @post(\"{workspace}/{member}/edit\")",
+    "  edit(workspace: string, member: string, edit: MemberEdit) Result<Error, ChatEvent>",
+    "    ~members.edit(workspace, member, edit)",
     "```"
    ],
    "platforms": [
@@ -4253,6 +4259,43 @@
    "meta": {
     "kind": "model",
     "name": "Answer",
+    "project": "nuclear_chat"
+   }
+  },
+  {
+   "id": "example:nuclear_chat/components/members/domain/models/member_edit",
+   "type": "file",
+   "title": "`model` MemberEdit — the example project nuclear_chat (backend)",
+   "summary": "What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps none of it: the member comes back changed when the host registers the workspace again).",
+   "body": [
+    "`components/members/domain/models/member_edit.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps",
+    "// none of it: the member comes back changed when the host registers the workspace again).",
+    "MemberEdit",
+    "  @minLength(1)",
+    "  @maxLength(80)",
+    "  name?: string",
+    "  @maxLength(200)",
+    "  model?: string",
+    "  @maxLength(20000)",
+    "  instructions?: string",
+    "  @maxLength(64)",
+    "  temperament?: string",
+    "  @pattern(r\"^(never|sometimes|often)$\")",
+    "  gifs?: string",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/members/domain/models/member_edit.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "MemberEdit",
     "project": "nuclear_chat"
    }
   },
@@ -4510,6 +4553,55 @@
    }
   },
   {
+   "id": "example:nuclear_chat/components/members/domain/usecases/edit_member",
+   "type": "file",
+   "title": "`usecase` EditMember — the example project nuclear_chat (backend)",
+   "summary": "A member changed from their profile: an action for the host (the member's settings are the host's), told only for a member the host lets change, and with something to change.",
+   "body": [
+    "`components/members/domain/usecases/edit_member.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// A member changed from their profile: an action for the host (the member's settings are the host's), told only for a",
+    "// member the host lets change, and with something to change.",
+    "usecase EditMember(workspaces: WorkspacesAppComponent, events: EventsAppComponent)",
+    "  exec(workspace: string, member: string, edit: MemberEdit) Result<Error, ChatEvent>",
+    "    ws = workspaces.workspace(workspace)",
+    "    who = ws.members.find((m) => m.id == member)",
+    "    if who == null",
+    "      return Err(NotFound(\"no member ${member}\"))",
+    "    if who!.card == null or not who!.card!.editable",
+    "      return Err(Invalid(\"${who!.name}'s settings cannot be changed here: their team is not saved\"))",
+    "    changes: <string, any> = {}",
+    "    if edit.name != null",
+    "      changes[\"name\"] = edit.name!.trim()",
+    "    if edit.model != null",
+    "      changes[\"model\"] = edit.model!.trim()",
+    "    if edit.instructions != null",
+    "      changes[\"instructions\"] = edit.instructions!",
+    "    if edit.temperament != null",
+    "      if not edit.temperament!.isEmpty and not who!.card!.temperaments.any((t) => t.id == edit.temperament)",
+    "        return Err(Invalid(\"no temperament ${edit.temperament}\"))",
+    "      changes[\"temperament\"] = edit.temperament!",
+    "    if edit.gifs != null",
+    "      changes[\"gifs\"] = edit.gifs!",
+    "    if changes.isEmpty",
+    "      return Err(Invalid(\"nothing to change\"))",
+    "    ~events.emit(ws.id, \"action\", \"general\", { \"action\": \"member\", \"member\": member, \"team\": who!.team, \"changes\": changes })",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/members/domain/usecases/edit_member.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "EditMember",
+    "project": "nuclear_chat"
+   }
+  },
+  {
    "id": "example:nuclear_chat/components/members/events/member_answers",
    "type": "file",
    "title": "`listener` MemberAnswers — the example project nuclear_chat (backend)",
@@ -4541,15 +4633,16 @@
    "id": "example:nuclear_chat/components/members/members_appcomponent",
    "type": "file",
    "title": "`appcomponent` MembersAppComponent — the example project nuclear_chat (backend)",
-   "summary": "What the rest of the app sees of the members: a message answered by who it brings in, a question answered.",
+   "summary": "What the rest of the app sees of the members: a message answered by who it brings in, a question answered, a member changed from their profile (the host's action).",
    "body": [
     "`components/members/members_appcomponent.nuc` of `nuclear_chat`:",
     "",
     "```nuclear",
-    "// What the rest of the app sees of the members: a message answered by who it brings in, a question answered.",
+    "// What the rest of the app sees of the members: a message answered by who it brings in, a question answered, a member changed from their profile (the host's action).",
     "appcomponent MembersAppComponent",
     "  answer() = AnswerMessage.exec",
     "  reply() = AnswerQuestion.exec",
+    "  edit() = EditMember.exec",
     "```"
    ],
    "platforms": [
@@ -5554,21 +5647,33 @@
    "id": "example:nuclear_chat/components/workspaces/api/workspaces_controller",
    "type": "file",
    "title": "`controller` WorkspacesController — the example project nuclear_chat (backend)",
-   "summary": "The workspaces API: a host registers its project when it starts, and reads it back.",
+   "summary": "The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.",
    "body": [
     "`components/workspaces/api/workspaces_controller.nuc` of `nuclear_chat`:",
     "",
     "```nuclear",
-    "// The workspaces API: a host registers its project when it starts, and reads it back.",
+    "// The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.",
     "@controller(\"workspaces\")",
-    "controller WorkspacesController(workspaces: WorkspacesAppComponent)",
+    "controller WorkspacesController(workspaces: WorkspacesAppComponent, events: EventsAppComponent)",
     "  @post()",
     "  register(input: NewWorkspace) Result<Error, Workspace>",
-    "    workspaces.register(input)",
+    "    made: Result<Error, Workspace> = workspaces.register(input)",
+    "    // a page that shows it reads its members again (a member changed from their profile, a team's new tech lead)",
+    "    if made.isOk",
+    "      ~events.emit(made.value.id, \"workspace\", \"general\", {} as <string, any>)",
+    "    made",
     "",
     "  @get(\"{id}\")",
     "  one(id: string) Result<Error, Workspace>",
     "    workspaces.workspace(id)",
+    "",
+    "  // The page's colors chosen in the chat (auto, light, dark): told to the host as an event `action` (`theme`).",
+    "  @put(\"{id}/theme\")",
+    "  theme(id: string, choice: ThemeChoice) Result<Error, Workspace>",
+    "    chosen: Result<Error, Workspace> = workspaces.chooseTheme(id, choice)",
+    "    if chosen.isOk",
+    "      ~events.emit(id, \"action\", \"general\", { \"action\": \"theme\", \"theme\": choice.theme })",
+    "    chosen",
     "```"
    ],
    "platforms": [
@@ -5611,6 +5716,39 @@
    "meta": {
     "kind": "model",
     "name": "Brain",
+    "project": "nuclear_chat"
+   }
+  },
+  {
+   "id": "example:nuclear_chat/components/workspaces/domain/models/card",
+   "type": "file",
+   "title": "`model` Card — the example project nuclear_chat (backend)",
+   "summary": "What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from), skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).",
+   "body": [
+    "`components/workspaces/domain/models/card.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from),",
+    "// skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).",
+    "Card",
+    "  editable: boolean = false",
+    "  @maxLength(64)",
+    "  temperament: string = \"\"",
+    "  temperaments: Temperament[] = []",
+    "  skills: string[] = []",
+    "  @maxLength(20000)",
+    "  instructions: string = \"\"",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/workspaces/domain/models/card.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Card",
     "project": "nuclear_chat"
    }
   },
@@ -5731,6 +5869,9 @@
     "  // not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with",
     "  // them stays readable",
     "  listed: boolean = true",
+    "  // the profile's temperament, skills and instructions, and whether the host can change them (none: a host that gives",
+    "  // no card, its profile read only)",
+    "  card?: Card",
     "```"
    ],
    "platforms": [
@@ -5749,12 +5890,12 @@
    "id": "example:nuclear_chat/components/workspaces/domain/models/new_workspace",
    "type": "file",
    "title": "`model` NewWorkspace — the example project nuclear_chat (backend)",
-   "summary": "What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+   "summary": "What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.",
    "body": [
     "`components/workspaces/domain/models/new_workspace.nuc` of `nuclear_chat`:",
     "",
     "```nuclear",
-    "// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+    "// What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.",
     "NewWorkspace",
     "  // the project's folder (absolute): its chat is kept in `.nuclear/chat/`",
     "  @minLength(1)",
@@ -5770,6 +5911,9 @@
     "  // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)",
     "  @pattern(r\"^(pack|tenor|giphy)$\")",
     "  gifs: string = \"pack\"",
+    "  // the page's colors: auto (the editor's), light or dark (the editor's setting nuclear.chat.theme)",
+    "  @pattern(r\"^(auto|light|dark)$\")",
+    "  theme: string = \"auto\"",
     "```"
    ],
    "platforms": [
@@ -5916,6 +6060,62 @@
    }
   },
   {
+   "id": "example:nuclear_chat/components/workspaces/domain/models/temperament",
+   "type": "file",
+   "title": "`model` Temperament — the example project nuclear_chat (backend)",
+   "summary": "A temperament a member can speak with: its id and its name in the workspace's language.",
+   "body": [
+    "`components/workspaces/domain/models/temperament.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// A temperament a member can speak with: its id and its name in the workspace's language.",
+    "Temperament",
+    "  @maxLength(64)",
+    "  id: string",
+    "  @maxLength(120)",
+    "  name: string = \"\"",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/workspaces/domain/models/temperament.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Temperament",
+    "project": "nuclear_chat"
+   }
+  },
+  {
+   "id": "example:nuclear_chat/components/workspaces/domain/models/theme_choice",
+   "type": "file",
+   "title": "`model` ThemeChoice — the example project nuclear_chat (backend)",
+   "summary": "The page's colors the user chose in the chat: auto (the editor's), light or dark.",
+   "body": [
+    "`components/workspaces/domain/models/theme_choice.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// The page's colors the user chose in the chat: auto (the editor's), light or dark.",
+    "ThemeChoice",
+    "  @pattern(r\"^(auto|light|dark)$\")",
+    "  theme: string",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/workspaces/domain/models/theme_choice.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "ThemeChoice",
+    "project": "nuclear_chat"
+   }
+  },
+  {
    "id": "example:nuclear_chat/components/workspaces/domain/models/workspace",
    "type": "file",
    "title": "`model` Workspace — the example project nuclear_chat (backend)",
@@ -5934,6 +6134,7 @@
     "  channels: Channel[] = []",
     "  lang: string = \"en\"",
     "  gifs: string = \"pack\"",
+    "  theme: string = \"auto\"",
     "",
     "  // A file of the project's chat: `.nuclear/chat/<name>`.",
     "  chatFile(name: string) string",
@@ -5987,7 +6188,7 @@
     "      if not t.lead.isEmpty and not (t.lead in ids)",
     "        return Err(Invalid(\"the lead of the team ${t.id} is not a member: ${t.lead}\"))",
     "    root = files.absolute(input.root)",
-    "    ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs)",
+    "    ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs, theme = input.theme)",
     "    ws.channels = mergedChannels(kept(ws), hostChannels(input), ids)",
     "    known[ws.id] = ws",
     "    keep(ws)",
@@ -6075,6 +6276,38 @@
    "meta": {
     "kind": "service",
     "name": "WorkspaceRegistry",
+    "project": "nuclear_chat"
+   }
+  },
+  {
+   "id": "example:nuclear_chat/components/workspaces/domain/usecases/choose_theme",
+   "type": "file",
+   "title": "`usecase` ChooseTheme — the example project nuclear_chat (backend)",
+   "summary": "The page's colors chosen in the chat: kept for the workspace while it is registered, and told to the host (an event `action`, `theme`), which keeps it as the user's setting and gives it again at the next registration.",
+   "body": [
+    "`components/workspaces/domain/usecases/choose_theme.nuc` of `nuclear_chat`:",
+    "",
+    "```nuclear",
+    "// The page's colors chosen in the chat: kept for the workspace while it is registered, and told to the host (an event",
+    "// `action`, `theme`), which keeps it as the user's setting and gives it again at the next registration.",
+    "usecase ChooseTheme(registry: WorkspaceRegistry)",
+    "  exec(workspace: string, choice: ThemeChoice) Result<Error, Workspace>",
+    "    found: Result<Error, Workspace> = registry.find(workspace)",
+    "    if found.isErr",
+    "      return found",
+    "    found.value.theme = choice.theme",
+    "    Ok(found.value)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-chat/nuclear_chat/components/workspaces/domain/usecases/choose_theme.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ChooseTheme",
     "project": "nuclear_chat"
    }
   },
@@ -6174,6 +6407,7 @@
     "  register() = RegisterWorkspace.exec",
     "  workspace() = GetWorkspace.exec",
     "  keepChannels() = KeepChannels.exec",
+    "  chooseTheme() = ChooseTheme.exec",
     "```"
    ],
    "platforms": [
@@ -6199,7 +6433,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.86.1\")",
+    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.87.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend): the events a component publishes, and the app's",
     "// WebSocket, which serves the same controllers and pushes the events to the clients subscribed to them.",
@@ -7369,7 +7603,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.86.1\")",
+    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.87.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend).",
     "plugins(ai = true, ollama = true)",
@@ -12458,8 +12692,9 @@
     "// beside it. The host's path names the workspace and the first channel (`/<workspace>/general`); every call and event goes",
     "// through the host's bridge. On a narrow page the channels fold behind a button and the thread covers the channel.",
     "// `?message=<id>` (and `&thread=<id>` when it is a reply) opens the channel at that message, lit: a notification",
-    "// opens the exact message. Ctrl+K (⌘K) opens the quick switcher.",
-    "@screen(route = \"/:workspace/:channel\", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager])",
+    "// opens the exact message. Ctrl+K (⌘K) opens the quick switcher. A member's name or picture opens their profile where",
+    "// the thread goes; the page's theme (auto, light, dark) is the workspace's, chosen at the sidebar's foot.",
+    "@screen(route = \"/:workspace/:channel\", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager, ProfileManager])",
     "stateful ChatScreen(workspace: string, channel: string, message: string = \"\", thread: string = \"\")",
     "  open: string = \"general\"",
     "  // the message a search or a notification opened",
@@ -12476,7 +12711,7 @@
     "  initState() void",
     "    open = channel",
     "    focus = message",
-    "    WorkspaceManager.load(workspace)",
+    "    WorkspaceManager.start(workspace)",
     "    ChannelsManager.start(workspace, open)",
     "    MessagesManager.start(workspace)",
     "    MessagesManager.open(open)",
@@ -12504,7 +12739,7 @@
     "  layout(ws: Workspace, channels: Channel[], texts: Texts) Element",
     "    current = channels.find((c) => c.id == open)",
     "    div(",
-    "      className = \"chat ${sidebar ? \"sidebar-open\" : \"\"}\",",
+    "      className = \"chat theme-${ws.theme} ${sidebar ? \"sidebar-open\" : \"\"}\",",
     "      onKeyDown = (e) => shortcut(e),",
     "      children = [",
     "        Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id), onFind = (people) => find(people ? \"people\" : \"switch\"), onNewChannel = () => making(true)),",
@@ -12855,6 +13090,47 @@
    }
   },
   {
+   "id": "example:ui/components/chat/presentation/chat/managers/profile_manager",
+   "type": "file",
+   "title": "`statemanager` ProfileManager — the example project ui (web)",
+   "summary": "The member whose profile is open beside the channel (where the thread and the search go), opened from their name or picture anywhere in the chat: a message, the sidebar, the members list, a direct message's header.",
+   "body": [
+    "`components/chat/presentation/chat/managers/profile_manager.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// The member whose profile is open beside the channel (where the thread and the search go), opened from their name or",
+    "// picture anywhere in the chat: a message, the sidebar, the members list, a direct message's header.",
+    "@stateModel(ProfileState)",
+    "statemanager ProfileManager",
+    "  member: string = \"\"",
+    "",
+    "  // The user closed the profile.",
+    "  hide()",
+    "    member = \"\"",
+    "    closed()",
+    "",
+    "  @state(ProfileState.closed)",
+    "  closed()",
+    "",
+    "  @state(ProfileState.ready)",
+    "  show(id: string) string",
+    "    member = id",
+    "    id",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/components/chat/presentation/chat/managers/profile_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "ProfileManager",
+    "project": "ui"
+   }
+  },
+  {
    "id": "example:ui/components/chat/presentation/chat/managers/questions_manager",
    "type": "file",
    "title": "`statemanager` QuestionsManager — the example project ui (web)",
@@ -13026,23 +13302,49 @@
    "id": "example:ui/components/chat/presentation/chat/managers/workspace_manager",
    "type": "file",
    "title": "`statemanager` WorkspaceManager — the example project ui (web)",
-   "summary": "The workspace the page shows, read once when the screen opens.",
+   "summary": "The workspace the page shows: read when the screen opens, and again (without the loading state) when its host registers it anew (an event `workspace`: a member changed from their profile, a team's new tech lead). A member's profile is changed through the host (`edit`).",
    "body": [
     "`components/chat/presentation/chat/managers/workspace_manager.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// The workspace the page shows, read once when the screen opens.",
+    "// The workspace the page shows: read when the screen opens, and again (without the loading state) when its host",
+    "// registers it anew (an event `workspace`: a member changed from their profile, a team's new tech lead). A member's",
+    "// profile is changed through the host (`edit`).",
     "@stateModel(WorkspaceState)",
     "statemanager WorkspaceManager",
-    "  (members: MembersComponent)",
+    "  (members: MembersComponent, events: EventsComponent)",
+    "  workspace: string = \"\"",
+    "",
+    "  start(id: string)",
+    "    workspace = id",
+    "    listen(events.watchEvents(workspace), (e) => changed(e))",
+    "    load(workspace)",
+    "",
+    "  changed(e: ChatEvent)",
+    "    if e.workspace == workspace and e.type == \"workspace\"",
+    "      refresh()",
+    "",
+    "  // What the user changed of a member from their profile: told to the host, which applies it.",
+    "  edit(member: string, changes: MemberEdit) Result<NuclearChatError, ChatEvent>",
+    "    ~members.editMember(workspace, member, changes)",
     "",
     "  @state(WorkspaceState.loading)",
     "  loading()",
     "",
     "  @before(loading)",
     "  @state(WorkspaceState.ready)",
-    "  load(workspace: string) Result<NuclearChatError, Workspace>",
+    "  load(id: string) Result<NuclearChatError, Workspace>",
+    "    workspace = id",
+    "    ~members.getWorkspace(id)",
+    "",
+    "  @state(WorkspaceState.ready)",
+    "  refresh() Result<NuclearChatError, Workspace>",
     "    ~members.getWorkspace(workspace)",
+    "",
+    "  // The page's colors chosen in the chat (auto, light, dark): the workspace answered with it, and the host keeps it.",
+    "  @state(WorkspaceState.ready)",
+    "  chooseTheme(theme: string) Result<NuclearChatError, Workspace>",
+    "    ~members.chooseTheme(workspace, ThemeChoice(theme = theme))",
     "```"
    ],
    "platforms": [
@@ -13184,6 +13486,32 @@
    "meta": {
     "kind": "statemodel",
     "name": "PickerState",
+    "project": "ui"
+   }
+  },
+  {
+   "id": "example:ui/components/chat/presentation/chat/state_models/profile_state",
+   "type": "file",
+   "title": "`statemodel` ProfileState — the example project ui (web)",
+   "summary": "The states of a member's profile beside the channel: open on a member (their id), or closed.",
+   "body": [
+    "`components/chat/presentation/chat/state_models/profile_state.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// The states of a member's profile beside the channel: open on a member (their id), or closed.",
+    "ProfileState",
+    "  (ready: string, closed: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/components/chat/presentation/chat/state_models/profile_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "ProfileState",
     "project": "ui"
    }
   },
@@ -13572,8 +13900,8 @@
     "      className = \"channel-header\",",
     "      children = [",
     "        button(className = \"menu\", title = texts.get(\"showChannels\"), onClick = () => onSidebar(), children = span(className = \"icon icon-menu\")),",
-    "        member != null ? Avatar(member = member, author = member!.id, size = \"small\") : null,",
-    "        div(className = \"channel-name\", children = [strong(className = \"channel-title\", children = title), member != null and not picks and member!.brain.agent != \"\" ? BrainLine(brain = member!.brain, texts = texts) : null]),",
+    "        member != null ? button(className = \"profile-link\", title = texts.format(\"profile.open\", { \"name\": member!.name }), onClick = () => ProfileManager.show(member!.id), children = Avatar(member = member, author = member!.id, size = \"small\")) : null,",
+    "        div(className = \"channel-name\", children = [member != null ? button(className = \"channel-title profile-link\", title = texts.format(\"profile.open\", { \"name\": member!.name }), onClick = () => ProfileManager.show(member!.id), children = title) : strong(className = \"channel-title\", children = title), member != null and not picks and member!.brain.agent != \"\" ? BrainLine(brain = member!.brain, texts = texts) : null]),",
     "        member != null and member!.role != \"\" ? span(className = \"chip role\", children = member!.role) : null,",
     "        lead != null ? span(className = \"chip lead\", title = texts.format(\"leadOf\", { \"name\": lead!.name }), children = [Avatar(member = lead, author = lead!.id, size = \"tiny\"), span(children = \"${texts.get(\"lead\")}: ${lead!.name}\")]) : null,",
     "        channel != null and channel!.topic != \"\" ? span(className = \"topic\", children = channel!.topic) : null,",
@@ -13968,17 +14296,22 @@
     "      className = \"person ${on ? \"marked\" : \"\"}\",",
     "      role = \"option\",",
     "      children = [",
-    "        Avatar(member = m, author = m.id),",
+    "        button(className = \"profile-link\", title = texts.format(\"profile.open\", { \"name\": m.name }), onClick = () => profile(m.id), children = Avatar(member = m, author = m.id)),",
     "        div(",
     "          className = \"person-text\",",
     "          children = [",
-    "            div(children = [strong(children = m.name), m.role != \"\" ? span(className = \"chip role\", children = m.role) : null, leads(ws, m.id) ? span(className = \"chip lead\", children = texts.get(\"lead\")) : null]),",
+    "            div(children = [button(className = \"profile-link\", title = texts.format(\"profile.open\", { \"name\": m.name }), onClick = () => profile(m.id), children = strong(children = m.name)), m.role != \"\" ? span(className = \"chip role\", children = m.role) : null, leads(ws, m.id) ? span(className = \"chip lead\", children = texts.get(\"lead\")) : null]),",
     "            m.brain.agent != \"\" ? BrainLine(brain = m.brain, texts = texts) : null,",
     "          ],",
     "        ),",
     "        button(className = \"action\", onClick = () => onOpen(t.channel), children = texts.get(\"message\")),",
     "      ],",
     "    )",
+    "",
+    "  // A member's face or name: their profile beside the channel, the list closed.",
+    "  profile(id: string)",
+    "    ProfileManager.show(id)",
+    "    onClose()",
     "",
     "  typed(value: string)",
     "    setState(() =>",
@@ -14012,9 +14345,6 @@
     "",
     "// What a text finds: the members (by name, first name, id or role; each one's direct message) and, but in the",
     "// members list, the channels (by name or id). An empty text lists them all. The members list holds the listed members;",
-    "// the quick switcher also finds one no longer listed whose direct message is kept (an earlier conversation).",
-    "targets(ws: Workspace, channels: Channel[], query: string, people: boolean, texts: Texts) Target[]",
-    "  q = query.trim().lower().replaceAll(Regex(r\"^[@#]\"), \"\")",
     "// ... (the file goes on)",
     "```"
    ],
@@ -14341,7 +14671,7 @@
     "      className = \"msg ${first ? \"first\" : \"cont\"} ${focused ? \"focused\" : \"\"} ${gone ? \"gone\" : \"\"}\",",
     "      ref = (el: any) => seen(el),",
     "      children = [",
-    "        div(className = \"gutter\", children = first ? Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts)) : span(className = \"hover-time\", children = clock(m.at))),",
+    "        div(className = \"gutter\", children = first ? (member != null ? button(className = \"profile-link\", title = texts.format(\"profile.open\", { \"name\": member!.name }), onClick = () => ProfileManager.show(member!.id), children = Avatar(member = member, author = m.author)) : Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts))) : span(className = \"hover-time\", children = clock(m.at))),",
     "        div(",
     "          className = \"body\",",
     "          children = [",
@@ -14400,16 +14730,6 @@
     "      failed = \"\"",
     "    )",
     "",
-    "  typed(text: string)",
-    "    setState(() =>",
-    "      draft = text",
-    "    )",
-    "",
-    "  editKey(e: KeyboardEvent)",
-    "    if e.key == \"Escape\"",
-    "      e.preventDefault()",
-    "      step(\"\")",
-    "    else if e.key == \"Enter\" and not e.shiftKey and not e.nativeEvent.isComposing",
     "// ... (the file goes on)",
     "```"
    ],
@@ -14520,6 +14840,100 @@
    "meta": {
     "kind": "stateful",
     "name": "NewChannelDialog",
+    "project": "ui"
+   }
+  },
+  {
+   "id": "example:ui/components/chat/presentation/chat/widgets/profile_panel",
+   "type": "file",
+   "title": "`stateful` ProfilePanel — the example project ui (web)",
+   "summary": "A member's profile beside the channel, as Slack's: their picture, name, role, *Tech lead*, team, who works them (`Claude Code · opus · paid`), what they are like (temperament, skills, instructions, GIFs) and their bio; *Message* opens their direct message. *Edit profile* changes the name, the model, the temperament, the GIFs and the instructions through the host (`WorkspaceManager.edit`), only…",
+   "body": [
+    "`components/chat/presentation/chat/widgets/profile_panel.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// A member's profile beside the channel, as Slack's: their picture, name, role, *Tech lead*, team, who works them",
+    "// (`Claude Code · opus · paid`), what they are like (temperament, skills, instructions, GIFs) and their bio; *Message*",
+    "// opens their direct message. *Edit profile* changes the name, the model, the temperament, the GIFs and the",
+    "// instructions through the host (`WorkspaceManager.edit`), only when the host lets change them (`card.editable`); the",
+    "// rest (skills, provider, portrait) is the company screen's. The member comes back changed when the host registers the",
+    "// workspace again (an event `workspace`).",
+    "stateful ProfilePanel(ws: Workspace, member: Member, texts: Texts, onClose: () => void, onMessage: (id: string) => void)",
+    "  editing: boolean = false",
+    "  name: string = \"\"",
+    "  model: string = \"\"",
+    "  temperament: string = \"\"",
+    "  gifs: string = \"\"",
+    "  instructions: string = \"\"",
+    "  saving: boolean = false",
+    "  said: string = \"\"",
+    "  failed: string = \"\"",
+    "",
+    "  build() Element",
+    "    m = member",
+    "    team = ws.teams.find((t) => t.id == m.team)",
+    "    aside(",
+    "      className = \"thread profile\",",
+    "      children = [",
+    "        header(className = \"thread-header\", children = [strong(children = texts.get(\"profile\")), span(className = \"topic\"), button(className = \"close\", title = texts.get(\"close\"), onClick = () => onClose(), children = span(className = \"icon icon-close\"))]),",
+    "        div(",
+    "          className = \"scroll\",",
+    "          children = div(",
+    "            className = \"profile-body\",",
+    "            children = [",
+    "              Avatar(member = m, author = m.id, size = \"huge\"),",
+    "              div(className = \"profile-name\", children = [strong(children = m.name), m.role != \"\" ? span(className = \"chip role\", children = m.role) : null, leads(ws, m.id) ? span(className = \"chip lead\", children = texts.get(\"lead\")) : null]),",
+    "              team != null ? span(className = \"profile-team\", children = texts.format(\"profile.team\", { \"name\": team!.name != \"\" ? team!.name : team!.id })) : null,",
+    "              m.brain.agent != \"\" ? BrainLine(brain = m.brain, texts = texts) : null,",
+    "              button(className = \"action primary\", onClick = () => onMessage(\"dm-${m.id}\"), children = texts.get(\"message\")),",
+    "              editing ? form() : facts(),",
+    "              said != \"\" ? p(className = \"profile-said\", children = said) : null,",
+    "              failed != \"\" ? p(className = \"failed\", children = texts.format(\"failed\", { \"error\": failed })) : null,",
+    "            ],",
+    "          ),",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "  // What the member is like, read only, with *Edit profile* or why it cannot be changed here.",
+    "  facts() Element",
+    "    m = member",
+    "    mood = cardOf(m).temperaments.find((t) => t.id == cardOf(m).temperament)",
+    "    div(",
+    "      className = \"profile-facts\",",
+    "      children = [",
+    "        fact(texts.get(\"profile.temperament\"), span(children = mood != null ? mood!.name : (cardOf(m).temperament != \"\" ? cardOf(m).temperament : texts.get(\"profile.temperament.none\")))),",
+    "        fact(texts.get(\"profile.skills\"), cardOf(m).skills.isEmpty ? span(className = \"muted\", children = texts.get(\"profile.skills.none\")) : div(className = \"profile-skills\", children = cardOf(m).skills.map((s) => span(key = s, className = \"chip\", children = s)))),",
+    "        fact(texts.get(\"profile.instructions\"), cardOf(m).instructions != \"\" ? p(className = \"profile-text\", children = cardOf(m).instructions) : span(className = \"muted\", children = texts.get(\"profile.instructions.none\"))),",
+    "        fact(texts.get(\"profile.gifs\"), span(children = texts.get(\"gifs.${m.personality.gifs}\"))),",
+    "        m.profile.bio != \"\" ? fact(texts.get(\"profile.about\"), p(className = \"profile-text\", children = m.profile.bio)) : null,",
+    "        cardOf(m).editable ? button(className = \"action\", onClick = () => edit(), children = [span(className = \"icon icon-edit\"), span(children = texts.get(\"profile.edit\"))]) : p(className = \"profile-note\", children = texts.get(m.team == \"\" ? \"profile.atlas\" : \"profile.locked\")),",
+    "      ],",
+    "    )",
+    "",
+    "  fact(label: string, value: Element) Element",
+    "    div(className = \"profile-fact\", children = [span(className = \"profile-label\", children = label), value])",
+    "",
+    "  // The fields the chat changes; the rest is the company screen's.",
+    "  form() Element",
+    "    m = member",
+    "    div(",
+    "      className = \"profile-facts\",",
+    "      children = [",
+    "        label(className = \"profile-fact\", children = [span(className = \"profile-label\", children = texts.get(\"profile.name\")), input(className = \"field-input\", value = name, maxLength = 80, onChange = (e) => set(\"name\", e.target.value))]),",
+    "        label(className = \"profile-fact\", children = [span(className = \"profile-label\", children = texts.get(\"profile.model\")), input(className = \"field-input\", value = model, maxLength = 200, placeholder = m.brain.model, onChange = (e) => set(\"model\", e.target.value)), span(className = \"profile-hint\", children = texts.format(\"profile.model.hint\", { \"provider\": m.brain.agent != \"\" ? m.brain.agent : m.brain.provider }))]),",
+    "// ... (the file goes on)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/components/chat/presentation/chat/widgets/profile_panel.nuc"
+   ],
+   "meta": {
+    "kind": "stateful",
+    "name": "ProfilePanel",
     "project": "ui"
    }
   },
@@ -14668,7 +15082,7 @@
     "// The left of the chat: the project with the *New message* pencil, *Jump to…* (Ctrl+K), the members, its channels",
     "// (with + to make one) and its direct messages, each with its unread count; the open one marked. A team's channel",
     "// shows its tech lead. A closed or archived conversation is out of it (but the open one), and so is a direct message",
-    "// with a member the host no longer lists (the jump finds it: it is never deleted).",
+    "// with a member the host no longer lists (the jump finds it: it is never deleted). At its foot, the page's theme.",
     "stateless Sidebar(ws: Workspace, channels: Channel[], open: string, texts: Texts, onOpen: (id: string) => void, onFind: (people: boolean) => void, onNewChannel: () => void)",
     "  build() Element",
     "    shown = channels.filter((c) => c.state == \"open\" or c.id == open)",
@@ -14689,7 +15103,18 @@
     "            ...dms.map((c) => DmItem(key = c.id, channel = c, ws = ws, open = c.id == open, onOpen = onOpen)),",
     "          ],",
     "        ),",
+    "        ThemeSwitch(theme = ws.theme, texts = texts),",
     "      ],",
+    "    )",
+    "",
+    "// The page's colors at the sidebar's foot: the editor's (auto), light or dark; the host keeps the choice as the",
+    "// user's setting (nuclear.chat.theme).",
+    "stateless ThemeSwitch(theme: string, texts: Texts)",
+    "  build() Element",
+    "    div(",
+    "      className = \"theme-switch\",",
+    "      title = texts.get(\"theme\"),",
+    "      children = [[\"auto\", \"◐\"], [\"light\", \"☀\"], [\"dark\", \"☾\"]].map((t) => button(key = t[0], className = \"theme-choice ${t[0] == theme ? \"on\" : \"\"}\", title = texts.get(\"theme.${t[0]}\"), onClick = () => WorkspaceManager.chooseTheme(t[0]), children = t[1])),",
     "    )",
     "",
     "// The direct messages the sidebar lists: those with a listed member (Atlas, the tech leads), and the open one.",
@@ -14729,17 +15154,6 @@
     "    )",
     "",
     "// A direct message's line: the member's picture, name and role, its unread count.",
-    "stateless DmItem(channel: Channel, ws: Workspace, open: boolean, onOpen: (id: string) => void)",
-    "  build() Element",
-    "    member = dmMember(ws, channel)",
-    "    name = member?.name ?? (channel.name != \"\" ? channel.name : channel.id)",
-    "    button(",
-    "      className = \"room dm ${open ? \"open\" : \"\"} ${channel.unread > 0 ? \"unread\" : \"\"}\",",
-    "      onClick = () => onOpen(channel.id),",
-    "      children = [",
-    "        Avatar(member = member, author = member?.id ?? channel.id, size = \"small\"),",
-    "        span(className = \"room-name\", children = name),",
-    "        member != null and member!.role != \"\" ? span(className = \"room-role\", children = member!.role) : null,",
     "// ... (the file goes on)",
     "```"
    ],
@@ -15145,6 +15559,60 @@
    }
   },
   {
+   "id": "example:ui/components/members/domain/usecases/choose_theme",
+   "type": "file",
+   "title": "`usecase` ChooseTheme — the example project ui (web)",
+   "summary": "What WorkspacesRepository.theme answers, for the screens of members.",
+   "body": [
+    "`components/members/domain/usecases/choose_theme.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// What WorkspacesRepository.theme answers, for the screens of members.",
+    "usecase ChooseTheme(repository: WorkspacesRepository)",
+    "  exec(id: string, choice: ThemeChoice) Result<NuclearChatError, Workspace>",
+    "    ~repository.theme(id, choice)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/components/members/domain/usecases/choose_theme.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ChooseTheme",
+    "project": "ui"
+   }
+  },
+  {
+   "id": "example:ui/components/members/domain/usecases/edit_member",
+   "type": "file",
+   "title": "`usecase` EditMember — the example project ui (web)",
+   "summary": "What MembersRepository.edit answers, for the screens of members.",
+   "body": [
+    "`components/members/domain/usecases/edit_member.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// What MembersRepository.edit answers, for the screens of members.",
+    "usecase EditMember(repository: MembersRepository)",
+    "  exec(workspace: string, member: string, edit: MemberEdit) Result<NuclearChatError, ChatEvent>",
+    "    ~repository.edit(workspace, member, edit)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/components/members/domain/usecases/edit_member.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "EditMember",
+    "project": "ui"
+   }
+  },
+  {
    "id": "example:ui/components/members/domain/usecases/get_workspace",
    "type": "file",
    "title": "`usecase` GetWorkspace — the example project ui (web)",
@@ -15184,6 +15652,8 @@
     "appcomponent MembersComponent",
     "  getWorkspace() = GetWorkspace.exec",
     "  answerQuestion() = AnswerQuestion.exec",
+    "  editMember() = EditMember.exec",
+    "  chooseTheme() = ChooseTheme.exec",
     "```"
    ],
    "platforms": [
@@ -15458,7 +15928,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
     "synapsis(platform = \"web\", dialect = \"react\")",
-    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.86.1\")",
+    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.87.0\")",
     "",
     "// The chat service (../nuclear_chat): its models and a repository per controller are generated into contracts/.",
     "contracts(nuclear_chat = \"../nuclear_chat\")",
@@ -15510,12 +15980,12 @@
    "id": "example:ui/contracts/nuclear_chat/channels_repository",
    "type": "file",
    "title": "`repository` ChannelsRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a channel opened (read), the agent a direct message is answered by.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a channel opened (read), the agent a direct message is answered by.",
    "body": [
     "`contracts/nuclear_chat/channels_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a channel opened (read), the agent a direct message is answered by.",
     "@repository(path = \"channels\", connection = \"nuclear_chat\")",
     "repository ChannelsRepository",
@@ -15554,12 +16024,12 @@
    "id": "example:ui/contracts/nuclear_chat/events_repository",
    "type": "file",
    "title": "`repository` EventsRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The events API: what happened in a workspace after the event `since` (the number of the last one read).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The events API: what happened in a workspace after the event `since` (the number of the last one read).",
    "body": [
     "`contracts/nuclear_chat/events_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The events API: what happened in a workspace after the event `since` (the number of the last one read).",
     "@repository(path = \"events\", connection = \"nuclear_chat\")",
     "repository EventsRepository",
@@ -15583,12 +16053,12 @@
    "id": "example:ui/contracts/nuclear_chat/gifs_repository",
    "type": "file",
    "title": "`repository` GifsRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The GIFs API: the pack made for the project, the picker's search, the project's one answer.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The GIFs API: the pack made for the project, the picker's search, the project's one answer.",
    "body": [
     "`contracts/nuclear_chat/gifs_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The GIFs API: the pack made for the project, the picker's search, the project's one answer.",
     "@repository(path = \"gifs\", connection = \"nuclear_chat\")",
     "repository GifsRepository",
@@ -15618,17 +16088,21 @@
    "id": "example:ui/contracts/nuclear_chat/members_repository",
    "type": "file",
    "title": "`repository` MembersRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The members API: the user's answer to a member's question (an event `ask`).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.",
    "body": [
     "`contracts/nuclear_chat/members_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
-    "// The members API: the user's answer to a member's question (an event `ask`).",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.",
     "@repository(path = \"members\", connection = \"nuclear_chat\")",
     "repository MembersRepository",
     "  @post(path = \":workspace/answers\")",
     "  answer(workspace: string, @body answer: Answer) Result<NuclearChatError, Answer>",
+    "",
+    "  // A member changed from their profile (name, model, instructions, temperament, GIFs): told to the host as an event `action` (`member`), which applies it and registers the workspace again.",
+    "  @post(path = \":workspace/:member/edit\")",
+    "  edit(workspace: string, member: string, @body edit: MemberEdit) Result<NuclearChatError, ChatEvent>",
     "```"
    ],
    "platforms": [
@@ -15647,12 +16121,12 @@
    "id": "example:ui/contracts/nuclear_chat/messages_repository",
    "type": "file",
    "title": "`repository` MessagesRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and changes, reactions, buttons and the search.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and changes, reactions, buttons and the search.",
    "body": [
     "`contracts/nuclear_chat/messages_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and changes, reactions, buttons and the search.",
     "@repository(path = \"messages\", connection = \"nuclear_chat\")",
     "repository MessagesRepository",
@@ -15700,12 +16174,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/agent_choice",
    "type": "file",
    "title": "`file` AgentChoice — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The agent a direct message is answered by: a choice of its member (empty: the host's default) and its model.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The agent a direct message is answered by: a choice of its member (empty: the host's default) and its model.",
    "body": [
     "`contracts/nuclear_chat/models/agent_choice.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The agent a direct message is answered by: a choice of its member (empty: the host's default) and its model.",
     "AgentChoice",
     "  agent: string = \"\"",
@@ -15728,12 +16202,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/answer",
    "type": "file",
    "title": "`file` Answer — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The user's answer to a member's question (a responder's `ask`), by the question's id.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The user's answer to a member's question (a responder's `ask`), by the question's id.",
    "body": [
     "`contracts/nuclear_chat/models/answer.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The user's answer to a member's question (a responder's `ask`), by the question's id.",
     "Answer",
     "  id: string",
@@ -15756,12 +16230,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/brain",
    "type": "file",
    "title": "`file` Brain — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What answers as a member, as its host gives it, shown under the member's name: the agent, its kind (local, agent, api), its provider and model, and whether it spends money.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What answers as a member, as its host gives it, shown under the member's name: the agent, its kind (local, agent, api), its provider and model, and whether it spends money.",
    "body": [
     "`contracts/nuclear_chat/models/brain.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What answers as a member, as its host gives it, shown under the member's name: the agent, its kind (local, agent, api), its provider and model, and whether it spends money.",
     "Brain",
     "  agent: string = \"\"",
@@ -15787,12 +16261,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/button",
    "type": "file",
    "title": "`file` Button — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A button under a message (a member's question): clicking it is the host's action.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A button under a message (a member's question): clicking it is the host's action.",
    "body": [
     "`contracts/nuclear_chat/models/button.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A button under a message (a member's question): clicking it is the host's action.",
     "Button",
     "  id: string",
@@ -15814,15 +16288,46 @@
    }
   },
   {
+   "id": "example:ui/contracts/nuclear_chat/models/card",
+   "type": "file",
+   "title": "`file` Card — the example project ui (web)",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from), skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).",
+   "body": [
+    "`contracts/nuclear_chat/models/card.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from), skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).",
+    "Card",
+    "  editable: boolean = false",
+    "  temperament: string = \"\"",
+    "  temperaments: Temperament[] = []",
+    "  skills: string[] = []",
+    "  instructions: string = \"\"",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/contracts/nuclear_chat/models/card.nuc"
+   ],
+   "meta": {
+    "kind": "file",
+    "name": "Card",
+    "project": "ui"
+   }
+  },
+  {
    "id": "example:ui/contracts/nuclear_chat/models/changes",
    "type": "file",
    "title": "`file` Changes — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host changes of a message it posted: its text, its buttons (a question answered has none).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host changes of a message it posted: its text, its buttons (a question answered has none).",
    "body": [
     "`contracts/nuclear_chat/models/changes.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What a host changes of a message it posted: its text, its buttons (a question answered has none).",
     "Changes",
     "  text?: string",
@@ -15845,12 +16350,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/channel",
    "type": "file",
    "title": "`file` Channel — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A channel of the project: `general`, a team's, one the user made, or a direct message (`dm-<member>`).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A channel of the project: `general`, a team's, one the user made, or a direct message (`dm-<member>`).",
    "body": [
     "`contracts/nuclear_chat/models/channel.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A channel of the project: `general`, a team's, one the user made, or a direct message (`dm-<member>`).",
     "Channel",
     "  id: string",
@@ -15887,12 +16392,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/channel_changes",
    "type": "file",
    "title": "`file` ChannelChanges — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What the user changes of a conversation: a channel's name (its id stays: its history is kept by the id) and topic, and its state: open, closed (out of the sidebar until it is opened again or a message comes) or archived (kept, read only, out of the sidebar).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What the user changes of a conversation: a channel's name (its id stays: its history is kept by the id) and topic, and its state: open, closed (out of the sidebar until it is opened again or a message comes) or archived (kept, read only, out of the sidebar).",
    "body": [
     "`contracts/nuclear_chat/models/channel_changes.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What the user changes of a conversation: a channel's name (its id stays: its history is kept by the id) and topic, and its state: open, closed (out of the sidebar until it is opened again or a message comes) or archived (kept, read only, out of the sidebar).",
     "ChannelChanges",
     "  name?: string",
@@ -15916,12 +16421,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/chat_event",
    "type": "file",
    "title": "`file` ChatEvent — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What happened in a workspace, for whoever shows it: a message (new or changed), the channels, a member typing or using a tool, a member's question, a button clicked or a command for the host (`action`). `n` orders them.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What happened in a workspace, for whoever shows it: a message (new or changed), the channels, a member typing or using a tool, a member's question, a button clicked or a command for the host (`action`). `n` orders them.",
    "body": [
     "`contracts/nuclear_chat/models/chat_event.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What happened in a workspace, for whoever shows it: a message (new or changed), the channels, a member typing or using a tool, a member's question, a button clicked or a command for the host (`action`). `n` orders them.",
     "ChatEvent",
     "  n: int",
@@ -15949,12 +16454,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/choice",
    "type": "file",
    "title": "`file` Choice — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. One agent a member's conversation can be answered by, as its host gives it (the dropdown of a direct message): the command the chat runs (with `--model <model>` added when a model is chosen), its models and whether it is on this machine. What each one is, is the host's.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. One agent a member's conversation can be answered by, as its host gives it (the dropdown of a direct message): the command the chat runs (with `--model <model>` added when a model is chosen), its models and whether it is on this machine. What each one is, is the host's.",
    "body": [
     "`contracts/nuclear_chat/models/choice.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// One agent a member's conversation can be answered by, as its host gives it (the dropdown of a direct message): the command the chat runs (with `--model <model>` added when a model is chosen), its models and whether it is on this machine. What each one is, is the host's.",
     "Choice",
     "  id: string",
@@ -15988,12 +16493,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/click",
    "type": "file",
    "title": "`file` Click — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A button of a message clicked.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A button of a message clicked.",
    "body": [
     "`contracts/nuclear_chat/models/click.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A button of a message clicked.",
     "Click",
     "  button: string",
@@ -16015,12 +16520,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/consent",
    "type": "file",
    "title": "`file` Consent — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The project's answer to the one question: may its GIF searches leave the machine?",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The project's answer to the one question: may its GIF searches leave the machine?",
    "body": [
     "`contracts/nuclear_chat/models/consent.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The project's answer to the one question: may its GIF searches leave the machine?",
     "Consent",
     "  online: boolean",
@@ -16042,12 +16547,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/found",
    "type": "file",
    "title": "`file` Found — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A message a search found, with its channel.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A message a search found, with its channel.",
    "body": [
     "`contracts/nuclear_chat/models/found.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A message a search found, with its channel.",
     "Found",
     "  channel: string",
@@ -16070,12 +16575,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/gif",
    "type": "file",
    "title": "`file` Gif — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A GIF of a message: a drawing of the pack (`pack/<file>`) or a service's image (its URL).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A GIF of a message: a drawing of the pack (`pack/<file>`) or a service's image (its URL).",
    "body": [
     "`contracts/nuclear_chat/models/gif.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A GIF of a message: a drawing of the pack (`pack/<file>`) or a service's image (its URL).",
     "Gif",
     "  src: string",
@@ -16100,12 +16605,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/gif_results",
    "type": "file",
    "title": "`file` GifResults — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a GIF search found: the pack's first, then the service's when it is on. `ask` is `online` when the project has not said yet whether its searches may leave the machine (asked once); `note` is `no-key` (no key in the keyring) or `failed` (the service did not answer).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a GIF search found: the pack's first, then the service's when it is on. `ask` is `online` when the project has not said yet whether its searches may leave the machine (asked once); `note` is `no-key` (no key in the keyring) or `failed` (the service did not answer).",
    "body": [
     "`contracts/nuclear_chat/models/gif_results.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What a GIF search found: the pack's first, then the service's when it is on. `ask` is `online` when the project has not said yet whether its searches may leave the machine (asked once); `note` is `no-key` (no key in the keyring) or `failed` (the service did not answer).",
     "GifResults",
     "  q: string",
@@ -16133,12 +16638,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/member",
    "type": "file",
    "title": "`file` Member — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A member of the factory, as its host gives it: who they are, how they speak and how they answer.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A member of the factory, as its host gives it: who they are, how they speak and how they answer.",
    "body": [
     "`contracts/nuclear_chat/models/member.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A member of the factory, as its host gives it: who they are, how they speak and how they answer.",
     "Member",
     "  id: string",
@@ -16156,6 +16661,8 @@
     "  brain: Brain",
     "  // whether the member is one of the chat's people (the members list, #general, a direct message of their own); one not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with them stays readable",
     "  listed: boolean = true",
+    "  // the profile's temperament, skills and instructions, and whether the host can change them (none: a host that gives no card, its profile read only)",
+    "  card?: Card",
     "```"
    ],
    "platforms": [
@@ -16171,15 +16678,46 @@
    }
   },
   {
+   "id": "example:ui/contracts/nuclear_chat/models/member_edit",
+   "type": "file",
+   "title": "`file` MemberEdit — the example project ui (web)",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps none of it: the member comes back changed when the host registers the workspace again).",
+   "body": [
+    "`contracts/nuclear_chat/models/member_edit.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps none of it: the member comes back changed when the host registers the workspace again).",
+    "MemberEdit",
+    "  name?: string",
+    "  model?: string",
+    "  instructions?: string",
+    "  temperament?: string",
+    "  gifs?: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/contracts/nuclear_chat/models/member_edit.nuc"
+   ],
+   "meta": {
+    "kind": "file",
+    "name": "MemberEdit",
+    "project": "ui"
+   }
+  },
+  {
    "id": "example:ui/contracts/nuclear_chat/models/message",
    "type": "file",
    "title": "`file` Message — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A message of a channel, as the chat shows it: its edits and reactions folded in, and, when it opened a thread, how many replies it has and when the last one came.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A message of a channel, as the chat shows it: its edits and reactions folded in, and, when it opened a thread, how many replies it has and when the last one came.",
    "body": [
     "`contracts/nuclear_chat/models/message.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A message of a channel, as the chat shows it: its edits and reactions folded in, and, when it opened a thread, how many replies it has and when the last one came.",
     "Message",
     "  id: string",
@@ -16220,12 +16758,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/new_channel",
    "type": "file",
    "title": "`file` NewChannel — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A channel the user makes: its name (its id is the name in lower case, `Release plan` → `release-plan`), its topic and its members.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A channel the user makes: its name (its id is the name in lower case, `Release plan` → `release-plan`), its topic and its members.",
    "body": [
     "`contracts/nuclear_chat/models/new_channel.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A channel the user makes: its name (its id is the name in lower case, `Release plan` → `release-plan`), its topic and its members.",
     "NewChannel",
     "  name: string",
@@ -16251,13 +16789,13 @@
    "id": "example:ui/contracts/nuclear_chat/models/new_workspace",
    "type": "file",
    "title": "`file` NewWorkspace — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.",
    "body": [
     "`contracts/nuclear_chat/models/new_workspace.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
-    "// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.",
     "NewWorkspace",
     "  // the project's folder (absolute): its chat is kept in `.nuclear/chat/`",
     "  root: string",
@@ -16269,6 +16807,8 @@
     "  lang: string = \"en\"",
     "  // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)",
     "  gifs: string = \"pack\"",
+    "  // the page's colors: auto (the editor's), light or dark (the editor's setting nuclear.chat.theme)",
+    "  theme: string = \"auto\"",
     "```"
    ],
    "platforms": [
@@ -16287,12 +16827,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/nuclear_chat_error",
    "type": "file",
    "title": "`file` NuclearChatError — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The error a call of this contract answers with: the message of the API or of the connection.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The error a call of this contract answers with: the message of the API or of the connection.",
    "body": [
     "`contracts/nuclear_chat/models/nuclear_chat_error.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The error a call of this contract answers with: the message of the API or of the connection.",
     "NuclearChatError",
     "  message: string",
@@ -16314,12 +16854,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/pack_gif",
    "type": "file",
    "title": "`file` PackGif — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A drawing of the GIF pack made for the project, with its SVG text (the picker shows it as it is).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A drawing of the GIF pack made for the project, with its SVG text (the picker shows it as it is).",
    "body": [
     "`contracts/nuclear_chat/models/pack_gif.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A drawing of the GIF pack made for the project, with its SVG text (the picker shows it as it is).",
     "PackGif",
     "  id: string",
@@ -16345,12 +16885,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/personality",
    "type": "file",
    "title": "`file` Personality — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. How often a member sends a GIF, and at which moments.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. How often a member sends a GIF, and at which moments.",
    "body": [
     "`contracts/nuclear_chat/models/personality.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// How often a member sends a GIF, and at which moments.",
     "Personality",
     "  // never, sometimes (one in five of its moments) or often (one in two)",
@@ -16375,12 +16915,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/posted",
    "type": "file",
    "title": "`file` Posted — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host posts as a member (or as `system`): a run's station, a member's question with its buttons; with a moment (failure, success, question) or a GIF's tag the member may send a GIF after it, by their personality.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What a host posts as a member (or as `system`): a run's station, a member's question with its buttons; with a moment (failure, success, question) or a GIF's tag the member may send a GIF after it, by their personality.",
    "body": [
     "`contracts/nuclear_chat/models/posted.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What a host posts as a member (or as `system`): a run's station, a member's question with its buttons; with a moment (failure, success, question) or a GIF's tag the member may send a GIF after it, by their personality.",
     "Posted",
     "  author: string",
@@ -16412,12 +16952,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/profile",
    "type": "file",
    "title": "`file` Profile — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The character a member speaks as: the roster's profile.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The character a member speaks as: the roster's profile.",
    "body": [
     "`contracts/nuclear_chat/models/profile.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// The character a member speaks as: the roster's profile.",
     "Profile",
     "  bio: string = \"\"",
@@ -16442,12 +16982,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/reaction",
    "type": "file",
    "title": "`file` Reaction — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. An emoji on a message: the same one again by the same person takes it away.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. An emoji on a message: the same one again by the same person takes it away.",
    "body": [
     "`contracts/nuclear_chat/models/reaction.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// An emoji on a message: the same one again by the same person takes it away.",
     "Reaction",
     "  emoji: string",
@@ -16470,12 +17010,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/responder",
    "type": "file",
    "title": "`file` Responder — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. How a member answers: the command the chat runs once per answer (with `--events`), and whether it spends money. A member with `choices` is answered by the choice of each conversation (`PUT channels/{ws}/{channel}/agent`), else by `choice` with `model` (the host's default),…",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. How a member answers: the command the chat runs once per answer (with `--events`), and whether it spends money. A member with `choices` is answered by the choice of each conversation (`PUT channels/{ws}/{channel}/agent`), else by `choice` with `model` (the host's default),…",
    "body": [
     "`contracts/nuclear_chat/models/responder.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// How a member answers: the command the chat runs once per answer (with `--events`), and whether it spends money. A member with `choices` is answered by the choice of each conversation (`PUT channels/{ws}/{channel}/agent`), else by `choice` with `model` (the host's default), else by `command`.",
     "Responder",
     "  command: string[] = []",
@@ -16501,12 +17041,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/said",
    "type": "file",
    "title": "`file` Said — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What the user says in a channel (or in a thread of it).",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. What the user says in a channel (or in a thread of it).",
    "body": [
     "`contracts/nuclear_chat/models/said.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// What the user says in a channel (or in a thread of it).",
     "Said",
     "  text: string",
@@ -16529,12 +17069,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/sent_gif",
    "type": "file",
    "title": "`file` SentGif — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A GIF the user sends from the picker.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A GIF the user sends from the picker.",
    "body": [
     "`contracts/nuclear_chat/models/sent_gif.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A GIF the user sends from the picker.",
     "SentGif",
     "  gif: Gif",
@@ -16557,12 +17097,12 @@
    "id": "example:ui/contracts/nuclear_chat/models/team",
    "type": "file",
    "title": "`file` Team — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A team at work in the project; its tech lead answers for it.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A team at work in the project; its tech lead answers for it.",
    "body": [
     "`contracts/nuclear_chat/models/team.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A team at work in the project; its tech lead answers for it.",
     "Team",
     "  id: string",
@@ -16584,15 +17124,70 @@
    }
   },
   {
+   "id": "example:ui/contracts/nuclear_chat/models/temperament",
+   "type": "file",
+   "title": "`file` Temperament — the example project ui (web)",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A temperament a member can speak with: its id and its name in the workspace's language.",
+   "body": [
+    "`contracts/nuclear_chat/models/temperament.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// A temperament a member can speak with: its id and its name in the workspace's language.",
+    "Temperament",
+    "  id: string",
+    "  name: string = \"\"",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/contracts/nuclear_chat/models/temperament.nuc"
+   ],
+   "meta": {
+    "kind": "file",
+    "name": "Temperament",
+    "project": "ui"
+   }
+  },
+  {
+   "id": "example:ui/contracts/nuclear_chat/models/theme_choice",
+   "type": "file",
+   "title": "`file` ThemeChoice — the example project ui (web)",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The page's colors the user chose in the chat: auto (the editor's), light or dark.",
+   "body": [
+    "`contracts/nuclear_chat/models/theme_choice.nuc` of `ui`:",
+    "",
+    "```nuclear",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// The page's colors the user chose in the chat: auto (the editor's), light or dark.",
+    "ThemeChoice",
+    "  theme: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-chat/ui/contracts/nuclear_chat/models/theme_choice.nuc"
+   ],
+   "meta": {
+    "kind": "file",
+    "name": "ThemeChoice",
+    "project": "ui"
+   }
+  },
+  {
    "id": "example:ui/contracts/nuclear_chat/models/workspace",
    "type": "file",
    "title": "`file` Workspace — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A project registered by its host: its id names it in every route.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. A project registered by its host: its id names it in every route.",
    "body": [
     "`contracts/nuclear_chat/models/workspace.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
     "// A project registered by its host: its id names it in every route.",
     "Workspace",
     "  id: string",
@@ -16603,6 +17198,7 @@
     "  channels: Channel[] = []",
     "  lang: string = \"en\"",
     "  gifs: string = \"pack\"",
+    "  theme: string = \"auto\"",
     "```"
    ],
    "platforms": [
@@ -16621,13 +17217,13 @@
    "id": "example:ui/contracts/nuclear_chat/workspaces_repository",
    "type": "file",
    "title": "`repository` WorkspacesRepository — the example project ui (web)",
-   "summary": "Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The workspaces API: a host registers its project when it starts, and reads it back.",
+   "summary": "Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it. The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.",
    "body": [
     "`contracts/nuclear_chat/workspaces_repository.nuc` of `ui`:",
     "",
     "```nuclear",
-    "// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
-    "// The workspaces API: a host registers its project when it starts, and reads it back.",
+    "// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.",
+    "// The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.",
     "@repository(path = \"workspaces\", connection = \"nuclear_chat\")",
     "repository WorkspacesRepository",
     "  @post",
@@ -16635,6 +17231,10 @@
     "",
     "  @get(path = \":id\")",
     "  one(id: string) Result<NuclearChatError, Workspace>",
+    "",
+    "  // The page's colors chosen in the chat (auto, light, dark): told to the host as an event `action` (`theme`).",
+    "  @put(path = \":id/theme\")",
+    "  theme(id: string, @body choice: ThemeChoice) Result<NuclearChatError, Workspace>",
     "```"
    ],
    "platforms": [
@@ -16871,7 +17471,7 @@
     "noEvents() Stream<ChatEvent>",
     "  Stream((on) => () => null)",
     "",
-    "@mock([WorkspacesRepository, ChannelsRepository, MessagesRepository, GifsRepository, LiveRepository])",
+    "@mock([WorkspacesRepository, ChannelsRepository, MessagesRepository, GifsRepository, LiveRepository, MembersRepository])",
     "ChatTest",
     "  beforeEach()",
     "    when(WorkspacesRepository.one).thenReturn(Ok(sampleWorkspace()))",

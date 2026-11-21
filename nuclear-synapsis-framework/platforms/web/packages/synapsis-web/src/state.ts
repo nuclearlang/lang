@@ -27,6 +27,19 @@ export abstract class StateManager<S> {
     };
   }
 
+  private turns = 0;
+
+  /** A new call of an asynchronous state method (`@state`): its turn. Only the latest call's answer is emitted. */
+  protected stateTurn(): number {
+    return ++this.turns;
+  }
+
+  /** Whether no asynchronous state method was called after the one of `stateTurn`: an older answer that comes late (an
+   * earlier read of the same list, the list of the channel left) is dropped instead of replacing the newer state. */
+  protected isLatestTurn(turn: number): boolean {
+    return turn === this.turns;
+  }
+
   private readonly stops: (() => void)[] = [];
 
   /** Calls `on` with every value of `stream` until the screen that provided the manager leaves (ADR-synapsis-0008). */

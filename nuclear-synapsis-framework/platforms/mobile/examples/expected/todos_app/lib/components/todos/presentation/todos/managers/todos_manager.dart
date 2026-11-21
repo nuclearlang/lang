@@ -17,7 +17,9 @@ class TodosManager extends StateManager<TodosState> {
 
   Future<void> load() async {
     loading();
+    final turn$ = stateTurn();
     final result = await _load();
+    if (!isLatestTurn(turn$)) return;
     emit(result.match(TodosState.error, TodosState.full));
   }
 

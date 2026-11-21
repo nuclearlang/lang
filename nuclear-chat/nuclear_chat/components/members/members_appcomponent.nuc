@@ -1,4 +1,5 @@
-// What the rest of the app sees of the members: a message answered by who it brings in, a question answered.
+// What the rest of the app sees of the members: a message answered by who it brings in, a question answered, a member changed from their profile (the host's action).
 appcomponent MembersAppComponent
   answer() = AnswerMessage.exec
   reply() = AnswerQuestion.exec
+  edit() = EditMember.exec

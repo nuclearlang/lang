@@ -1,7 +1,7 @@
 use json
 use pathlib{ Path }
 
-// The OpenCode adapter (`opencode run`, its flags checked against OpenCode 2.2.7's `--help`: `--agent`, `--format
+// The OpenCode adapter (`opencode run`, its flags checked against OpenCode 2.2.7's `--help`: `--standalone`, `--agent`, `--format
 // json`, `--model provider/model`, `--auto`). The role is rendered as OpenCode's own agent, `.opencode/agent/<role>.md`
 // in the run's temporary folder (`OPENCODE_CONFIG_DIR`), and the configuration there (`OPENCODE_CONFIG`) gives the
 // Nuclear MCP server and the Builder's (`nuclear_builder`) and denies the shell (commands are data: `.nuclear/builder.json`). OpenCode brings its own
@@ -20,7 +20,9 @@ renderOpenCode(role: Role, work: Work, at: Path) <string, string>
   env
 
 openCodeArgs(role: Role, prompt: string, work: Work) string[]
-  args = ["opencode", "run", "--agent", role.id, "--format", "json", "--auto"]
+  // `--standalone`: a private server that reads this run's configuration (OPENCODE_CONFIG, OPENCODE_CONFIG_DIR); the
+  // background service OpenCode 2.2 connects to by default reads its own, and answers `Agent not found` for the role
+  args = ["opencode", "run", "--standalone", "--agent", role.id, "--format", "json", "--auto"]
   if work.model.length > 0
     args.addAll(["--model", work.model])
   [...args, prompt]

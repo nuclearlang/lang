@@ -834,6 +834,17 @@ test('the library is grouped by kind and searched by its words and tags', () => 
   assert.deepEqual(libraryGroups(lib, 'nothing'), []);
 });
 
+test("Nuclear's base skills are never offered to choose, and every member lists them as the base's", () => {
+  const lib = [{ id: 'payments', title: 'Payments', kind: 'domain' }, { id: 'clean-code', title: 'Clean code', kind: 'practice', base: true }];
+  assert.deepEqual(libraryGroups(lib, '').map((g) => g.skills.map((s) => s.id)), [['payments']]);
+  assert.deepEqual(libraryGroups(lib, 'clean'), []);
+  // a team of before 0.87 that lists the base skill: once, as the base's
+  const rows = memberSkills({ skills: ['clean-code', 'payments'] }, {}, lib, [], []);
+  assert.deepEqual(rows.map((r) => [r.id, r.via, r.inherited]), [['payments', 'team', true], ['clean-code', 'base', true]]);
+  const fresh = memberSkills({ skills: ['payments'] }, {}, lib, [], []);
+  assert.deepEqual(fresh.map((r) => [r.id, r.via, r.inherited]), [['payments', 'team', true], ['clean-code', 'base', true]]);
+});
+
 test('a member lists its own skills first, then its library ones, then what it inherits, each override marked', () => {
   const lib = [{ id: 'payments', title: 'Payments' }, { id: 'tdd', title: 'TDD' }, { id: 'i18n', title: 'I18n' }];
   const team = { skills: ['payments', 'i18n'], ownSkills: [{ id: 'payments', name: 'Our payments', description: '' }, { id: 'style', name: 'House style', description: '' }] };

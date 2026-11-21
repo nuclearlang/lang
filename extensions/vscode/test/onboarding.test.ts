@@ -70,3 +70,11 @@ test("Atlas's chat opens without a project: the workspace's (or the welcome's) f
   assert.deepEqual(chatRoots([api], ws, ws, '/w/shop'), { roots: [api, ws], root: '/w/shop' });
   assert.deepEqual(chatRoots([], undefined, undefined, ''), { roots: [], root: '' });
 });
+
+test("an open workspace is Atlas's first folder and the one it opens; a project asked for stays", () => {
+  const ws = { root: '/w/shop', name: 'shop' }, api = { root: '/w/shop/shop_api', name: 'shop_api' };
+  assert.deepEqual(chatRoots([api], undefined, ws, '', ws), { roots: [ws, api], root: '/w/shop' });
+  assert.deepEqual(chatRoots([api], undefined, ws, '/w/shop/shop_api', ws), { roots: [ws, api], root: '/w/shop/shop_api' });
+  // the workspace once, even when it is also the folder Atlas was opened on
+  assert.deepEqual(chatRoots([api], ws, ws, '', ws).roots, [ws, api]);
+});

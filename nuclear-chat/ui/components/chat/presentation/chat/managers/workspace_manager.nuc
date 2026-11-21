@@ -1,12 +1,38 @@
-// The workspace the page shows, read once when the screen opens.
+// The workspace the page shows: read when the screen opens, and again (without the loading state) when its host
+// registers it anew (an event `workspace`: a member changed from their profile, a team's new tech lead). A member's
+// profile is changed through the host (`edit`).
 @stateModel(WorkspaceState)
 statemanager WorkspaceManager
-  (members: MembersComponent)
+  (members: MembersComponent, events: EventsComponent)
+  workspace: string = ""
+
+  start(id: string)
+    workspace = id
+    listen(events.watchEvents(workspace), (e) => changed(e))
+    load(workspace)
+
+  changed(e: ChatEvent)
+    if e.workspace == workspace and e.type == "workspace"
+      refresh()
+
+  // What the user changed of a member from their profile: told to the host, which applies it.
+  edit(member: string, changes: MemberEdit) Result<NuclearChatError, ChatEvent>
+    ~members.editMember(workspace, member, changes)
 
   @state(WorkspaceState.loading)
   loading()
 
   @before(loading)
   @state(WorkspaceState.ready)
-  load(workspace: string) Result<NuclearChatError, Workspace>
+  load(id: string) Result<NuclearChatError, Workspace>
+    workspace = id
+    ~members.getWorkspace(id)
+
+  @state(WorkspaceState.ready)
+  refresh() Result<NuclearChatError, Workspace>
     ~members.getWorkspace(workspace)
+
+  // The page's colors chosen in the chat (auto, light, dark): the workspace answered with it, and the host keeps it.
+  @state(WorkspaceState.ready)
+  chooseTheme(theme: string) Result<NuclearChatError, Workspace>
+    ~members.chooseTheme(workspace, ThemeChoice(theme = theme))

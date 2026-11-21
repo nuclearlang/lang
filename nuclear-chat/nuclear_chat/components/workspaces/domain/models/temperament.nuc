@@ -1,0 +1,6 @@
+// A temperament a member can speak with: its id and its name in the workspace's language.
+Temperament
+  @maxLength(64)
+  id: string
+  @maxLength(120)
+  name: string = ""

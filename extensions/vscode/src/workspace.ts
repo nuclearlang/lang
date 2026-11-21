@@ -218,6 +218,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   const ws = new Workspace(context, http);
   // Nuclear Atlas with no project yet (a new workspace, the welcome): its chat on the workspace's folder
   AtlasPanel.fallback = () => ws.chatFolder();
+  AtlasPanel.workspace = () => { const w = ws.workspace(); return w && { root: w.root, name: w.name }; };
   // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
   activateScripts(context, () => ws.projects(), ws.onDidChange.event);
   // the notifications of the agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
@@ -710,7 +711,9 @@ class Workspace implements vscode.WebviewViewProvider {
       else if (tool.id === 'devices') await vscode.commands.executeCommand('nuclear.unparkDevices');
       else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
-      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
+      // in a workspace the chat stays where the user left it (the workspace's own, first): choosing an app to run does not
+      // move the conversation; without one it follows the last project, as before
+      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.current ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'environments') await vscode.commands.executeCommand(tool.command!, this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
@@ -792,7 +795,8 @@ class Workspace implements vscode.WebviewViewProvider {
   /** Nuclear Atlas on a conversation: `dm-<member>` or a team's channel, of `root` (else the last project). */
   async openAtlas(root?: string, channel?: string): Promise<void> {
     await this.go(TOOL_PREFIX + 'atlas');
-    AtlasPanel.show(this.context, () => this.projects(), root ?? this.context.workspaceState.get<string>(LAST_PROJECT), channel);
+    // with no folder asked (the strip's Atlas), the workspace's own chat; a member clicked in the Builder names its project
+    AtlasPanel.show(this.context, () => this.projects(), root ?? this.current?.root ?? this.context.workspaceState.get<string>(LAST_PROJECT), channel);
   }
 
   async openTool(id?: string): Promise<void> {
@@ -1255,7 +1259,7 @@ export function stripHtml(webview: vscode.Webview): string {
   html, body { height: 100%; margin: 0; }
   .strip .nuc-lang { margin: 0 auto 6px; padding: 3px 0; width: 32px; flex-direction: column; gap: 1px; font-size: 9px; border: none; opacity: .7; } .strip .nuc-lang:hover { opacity: 1; }
   body { display: flex; height: 100vh; font-family: var(--vscode-font-family); font-size: 13px; color: var(--vscode-foreground); overflow: hidden; }
-  .strip { width: 42px; flex: none; display: flex; flex-direction: column; background: var(--vscode-sideBarSectionHeader-background); border-right: 1px solid var(--vscode-sideBarSectionHeader-border, transparent); overflow: hidden auto; }
+  .strip { width: 64px; flex: none; display: flex; flex-direction: column; background: var(--vscode-sideBarSectionHeader-background); border-right: 1px solid var(--vscode-sideBarSectionHeader-border, transparent); overflow: hidden auto; }
   .tools { margin-top: auto; padding-bottom: 6px; flex: none; }
   .tab { position: relative; width: 32px; height: 32px; margin: 5px auto 0; border-radius: 5px; display: grid; place-items: center; font-size: 10px; font-weight: 600; cursor: pointer; opacity: .7; user-select: none; letter-spacing: .02em; }
   .tab:hover { opacity: 1; background: var(--vscode-list-hoverBackground); }
@@ -1267,6 +1271,11 @@ export function stripHtml(webview: vscode.Webview): string {
   .tab.on { opacity: 1; background: var(--vscode-list-activeSelectionBackground); color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)); box-shadow: inset 2px 0 0 var(--vscode-focusBorder); }
   .tab .n { position: absolute; left: 2px; top: 1px; font-size: 8px; opacity: .6; font-weight: 400; }
   .tab img.pi { width: 20px; height: 20px; }
+  /* a project's tab: its glyph with the dialect's badge over its name, so each app is told apart at a glance */
+  .tab.app { width: 58px; height: auto; min-height: 44px; padding: 5px 2px 4px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab.app .ico { position: relative; width: 22px; height: 22px; display: grid; place-items: center; font-size: 10px; }
+  .tab.app .nm { max-width: 54px; font-size: 9px; font-weight: 500; line-height: 1.15; text-align: center; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab.app.on .nm { font-weight: 700; }
   .tab img.di { position: absolute; right: -3px; bottom: -3px; width: 14px; height: 14px; border-radius: 3px; background: var(--vscode-sideBar-background); padding: 1px; }
   .tab svg.g { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
   /* the tools: an icon in its colour over a word, a HUD frame when open */
@@ -1436,9 +1445,13 @@ export function stripHtml(webview: vscode.Webview): string {
     }
     state.projects.forEach((p, i) => {
       const key = i < 9 ? 'Ctrl+' + (i + 1) : '';
-      const tb = tab(p.platformIcon ? '' : initials(p.name), p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.app ? '\\n' + t('appHint') : p.saved ? '\\n' + t('removeHint') : ''), p.root === state.active);
-      if (p.platformIcon) { const pi = el('img', 'pi'); pi.src = p.platformIcon; tb.appendChild(pi); }
-      if (p.dialectIcon) { const di = el('img', 'di'); di.src = p.dialectIcon; tb.appendChild(di); }
+      const tb = tab('', p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.app ? '\\n' + t('appHint') : p.saved ? '\\n' + t('removeHint') : ''), p.root === state.active);
+      tb.classList.add('app');
+      const ico = el('span', 'ico', p.platformIcon ? '' : initials(p.name));
+      if (p.platformIcon) { const pi = el('img', 'pi'); pi.src = p.platformIcon; ico.appendChild(pi); }
+      if (p.dialectIcon) { const di = el('img', 'di'); di.src = p.dialectIcon; ico.appendChild(di); }
+      tb.appendChild(ico);
+      tb.appendChild(el('span', 'nm', p.name));
       if (key) tb.appendChild(el('span', 'n', String(i + 1)));
       tb.addEventListener('click', () => { vscode.postMessage({ type: 'project', root: p.root }); if (key) toast(key, t('opens', p.name)); });
       if (p.app) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'appMenu', root: p.root }); });

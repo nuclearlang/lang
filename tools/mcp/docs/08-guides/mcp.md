@@ -12,9 +12,9 @@ The local models are **on standby** ([ADR-platform-0013](../../../../docs/03-adr
 the server registers no `developer_*` tool on any machine, and its work cycle never names the local developer.
 
 `nuclear-mcp --informs` is the server of an agent that only informs (Nuclear Atlas, spec 023): it offers only
-`INFORM_TOOLS` (`server.nuc`): what teaches Nuclear and reads the projects, workspaces, specs and teams, and the team
-tools that ask first (`team_create`, `team_edit`, `member_add`, `member_edit`); no generator, build, project command,
-spec or workspace written.
+`INFORM_TOOLS` (`server.nuc`): what teaches Nuclear and reads the projects, workspaces, specs, teams, runs, checks,
+skills, the line, the reports and the agents and models, and the team tools that ask first (`team_create`, `team_edit`, `member_add`, `member_edit`); no generator, build, project command,
+spec, run, skill or workspace written.
 
 ## 1. Set up
 
@@ -181,6 +181,10 @@ Each is a `nuclear-builder spec … --json` command in the project: the spec liv
 | `spec_list(project)` | the specs by component and layer, with their runs |
 | `spec_show(project, id)` | a spec's markdown, what it says, its draft, its run's status |
 | `spec_edit(project, id, text, confirm)` | the spec's whole new markdown over it (`spec update <id> --stdin`); asks the user first |
+| `spec_move(project, id, component, layer, confirm)` | the spec's folder to another component or layer, its run following (`spec move`); asks first |
+| `spec_migrate(project, confirm)` | the specs of the flat `specs/<id>/` to their component (`spec migrate`); asks first |
+| `spec_delete(project, id, confirm)` | the spec's folder to `.nuclear/builder/deleted/` (`spec delete`); asks first |
+| `spec_accept(project, id, confirm)`, `spec_discard(project, id, confirm)` | a draft a member wrote in Nuclear Chat (`spec.draft.md`) over the spec, or thrown away; asks first |
 
 ### Teams and members
 
@@ -195,9 +199,50 @@ Every tool but `team_list` and `team_show` asks the user first.
 | `team_edit(team, name, description, purpose, skills, lead, budget_usd, method, instructions, kind, provider, model, confirm)` | `team update` (`--method`, `--instructions`, `--kind --provider --model`: the team's model puts every member on it) |
 | `team_delete(team, confirm)` | `team delete` (the file kept as `<id>.json.bak`) |
 | `member_add(team, role, employee, kind, provider, model, name, count, confirm)` | `team member add` |
-| `member_edit(team, member, kind, provider, model, employee, name, instructions, temperament, skills, confirm)` | `team member update` |
+| `member_edit(team, member, kind, provider, model, employee, name, instructions, temperament, skills, extra_skills, gifs, note, agent, team_brain, confirm)` | `team member update`: everything of the member's card but its portrait (`team_brain`: the team's model works it) |
 | `member_remove(team, member, confirm)` | `team member remove` |
 | `skills_set(team, skills, member, confirm)` | `team skills set`: the team's library skills, or a member's |
+| `team_duplicate(team, name, confirm)`, `team_default(team, confirm)` | a copy of the team; the default team (of a project that names none) |
+| `team_export(team, file, confirm)`, `team_import(file, confirm)` | the team to a JSON file, or one from it (an id in use gets the next free one) |
+| `team_logo(team, image, clear, confirm)` | the team's logo (a .png, .svg or .jpg of 1 MB at most), or none |
+| `team_suggest(purpose, skills, lang, limit)`, `team_name_suggest(purpose, lang)` | who of each role fits a purpose and skills, with why; five names for a team |
+| `team_runnable(project, team)` | whether the team has a member of each role the project's stations need |
+| `team_roster(lang)`, `team_temperaments()` | the employees a member can be; the temperaments a member can have |
+
+### Runs and checks of the software factory
+
+Each is a `nuclear-builder` command in the project; a run starts or goes on in a process of its own (`--detach`) and
+stops at each gate for an answer. Every tool that starts, answers or changes asks the user first. A paid provider's
+spending is never confirmed here: the run waits (`waiting: spending`) for the user's two confirmations in the editor.
+
+| Tool | What it does |
+|---|---|
+| `run_start(project, spec, team, assign, confirm)` | the run of a spec (its id) by the team (empty: the project's); `assign`: who works a role (`developer=dev-017`) |
+| `runs(project)`, `run_file(project, id)`, `run_journal(project, id)` | the runs; a run's file (stations, steps, decisions, files, cost, the question it waits on); its journal |
+| `run_answer(project, id, answer, text, confirm)` | the user's answer to the question a run waits on: `approve`, `change` (with `text`), `stop`, `yes`, `no` |
+| `run_resume(project, id, confirm)`, `run_retry(project, id, station, step, team, confirm)`, `run_restart(project, id, confirm)`, `run_stop(project, id, confirm)` | a run goes on, again from a station or a step (what it wrote from there undone), again from the start, or stopped |
+| `checks(project, id)` | a run's checks (QA's plan and the user's) |
+| `check_switch(project, id, check, on, confirm)`, `check_add(project, id, title, station, by, prompt, confirm)`, `check_mark(project, id, check, status, confirm)` | a check on or off; a new one; one marked `passed`, `failed` or `skipped` |
+
+### The skills library
+
+Each is a `nuclear-builder skills …` command. A library skill is read-only: clone it to change it.
+
+| Tool | What it does |
+|---|---|
+| `skills_list(team, member, lang)`, `skills_show(id, team, member, lang)` | the library; with a team or a member, what it gets and where each comes from; one skill's `SKILL.md` |
+| `skills_clone(id, team, member, confirm)` | the skill as the team's (or the member's) own, winning over the one it came from |
+| `skills_create(team, text, member, confirm)`, `skills_update(id, team, text, member, confirm)`, `skills_delete(id, team, member, confirm)` | an own skill written (`text`: its whole `SKILL.md`, from its front matter), replaced or deleted |
+
+### The line, the CI file, the reports, who can work a member
+
+| Tool | What it does |
+|---|---|
+| `line_show(project)`, `line_set(project, values, confirm)` | the project's line (`.nuclear/builder.json`) with its defaults; keys set (`{key: value}`), asked first |
+| `ci_export(project, host, confirm)` | the CI file of `github`, `gitlab` or `bitbucket` that runs `nuclear-builder ci`; asked first |
+| `connections_check(project, team)` | each member's agent or provider of the team answers |
+| `metrics(view, project, team, member, since, until, by)` | the factory's reports from its ledger: `bill`, `throughput`, `cycle`, `burndown`, `flow`, `waiting`, `quality`, `people`, `indicators` |
+| `agents_list(project)`, `models_list(provider, project)` | the agents and the models that can work a member on this machine |
 
 ### The internet
 
@@ -222,14 +267,14 @@ of the factory (the last column). **By design** marks what never becomes a tool:
 | HTTP Connections: the endpoints, a request sent, its environments, an OpenAPI added, contracts updated | — | the editor's HTTP Connections, `nuclear contracts update` | — |
 | Environments | `nuclear_env` | a secret's value: `nuclear env set NAME --secret` (**by design**) | — |
 | Nuclear Monitor | `project_monitor`, `graph_monitor` | — | — |
-| Builder, specs: create, list, show, edit | `spec_create`, `spec_list`, `spec_show`, `spec_edit` | move, migrate, delete, accept or discard a draft: the Builder's page | `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard` |
-| Builder, runs: start, answer a gate, resume, retry, restart, stop; the run's file and journal; QA's checks | — | the Builder's page | `run_start`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `runs`, `run_file`, `run_journal`, `checks`, `check_*` |
-| The company screen, a team: create, edit (method, instructions, the team's model), delete | `team_create`, `team_edit` (`provider`, `model`: the whole team's), `team_delete` | duplicate, set as default, export / import, logo, suggest a team or a name, the roster, the temperaments: the company screen | `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_roster`, `team_temperaments` |
-| A member's profile: role, name, who works it (kind, provider, model), instructions, temperament, skills | `member_add`, `member_edit`, `member_remove`, `skills_set` | GIF habit, note, extra skills, its agent, the team's brain, the portrait: the member's card | `team_member_update` (all but the portrait) |
-| The skills library: list, show, clone, create, update, delete | — | the company screen | `skills_*` |
-| The line, the CI file, the checked connections | — | the Builder's settings | `line_show`, `line_set`, `ci_export`, `connections_check` |
-| Reports: the bill and the views | — | the Reports page | `metrics` |
-| Which agents and models can work a member | — | the member's card | `agents_list`, `models_list` |
+| Builder, specs: create, list, show, edit, move, migrate, delete, a draft accepted or discarded | `spec_*` | — | the same |
+| Builder, runs: start, answer a gate, resume, retry, restart, stop; the run's file and journal; QA's checks | `run_*`, `runs`, `checks`, `check_*` | a paid provider's spending: confirmed twice in the editor (**by design**) | the same |
+| The company screen, a team: create, edit (method, instructions, the team's model), delete, duplicate, default, export / import, logo, suggestions, the roster, the temperaments | `team_*` (`team_edit`'s `provider`, `model`: the whole team's) | — | the same |
+| A member's profile: role, name, who works it (kind, provider, model, the team's model), instructions, temperament, skills, extra skills, GIF habit, note, its agent | `member_add`, `member_edit`, `member_remove`, `skills_set` | the portrait: the member's card | `team_member_update` |
+| The skills library: list, show, clone, create, update, delete | `skills_*` | — | the same |
+| The line, the CI file, the checked connections | `line_show`, `line_set`, `ci_export`, `connections_check` | — | the same |
+| Reports: the bill and the views | `metrics` | — | the same |
+| Which agents and models can work a member | `agents_list`, `models_list` | — | the same |
 | Nuclear Chat and Atlas: channels (create, rename, delete, a team assigned), direct messages, reactions, GIFs | — | the chat (`Ctrl+Alt+A`); a model is a member of the chat, not its client | — |
 | API keys (the vault) | — | the settings page (**by design**: a key never passes through a model) | `vault_list` (the names only) |
 | Settings, the AI set-up, the language, updates | — | the settings page, `nuclear update` (**by design**: the machine's) | — |

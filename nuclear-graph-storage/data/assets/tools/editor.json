@@ -690,7 +690,7 @@
    "id": "editor:vscode.settings.editor",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the language, the dialect, the build and the devices",
-   "summary": "The 131 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
+   "summary": "The 132 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
    "body": [
     "- `nuclear.language` (default `\"auto\"`): %nuclear.language.desc%",
     "- `nuclear.notifications` (default `\"all\"`): %nuclear.notifications.desc%",
@@ -716,6 +716,7 @@
     "- `nuclear.spending.confirm` (default `true`): %nuclear.spending.confirm.desc%",
     "- `nuclear.spending.forceConfirm` (default `false`): %nuclear.spending.forceConfirm.desc%",
     "- `nuclear.chat.gifs` (default `\"pack\"`): %nuclear.chat.gifs.desc%",
+    "- `nuclear.chat.theme` (default `\"auto\"`): %nuclear.chat.theme.desc%",
     "- `nuclear.http.timeoutSeconds` (default `30`): %nuclear.http.timeoutSeconds.desc%",
     "- `nuclear.devices.idleMinutes` (default `30`): %nuclear.devices.idleMinutes.desc%",
     "- `nuclear.codemetrics.basics.CodeLensEnabled` (default `true`): %codemetrics.basics.CodeLensEnabled%",
@@ -955,6 +956,11 @@
       "name": "nuclear.chat.gifs",
       "default": "\"pack\"",
       "does": "%nuclear.chat.gifs.desc%"
+     },
+     {
+      "name": "nuclear.chat.theme",
+      "default": "\"auto\"",
+      "does": "%nuclear.chat.theme.desc%"
      },
      {
       "name": "nuclear.http.timeoutSeconds",

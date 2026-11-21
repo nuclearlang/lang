@@ -1,4 +1,4 @@
-// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.
+// What a host registers: the project, its members and teams, the channels it opens, the language, the GIFs and the theme.
 NewWorkspace
   // the project's folder (absolute): its chat is kept in `.nuclear/chat/`
   @minLength(1)
@@ -14,3 +14,6 @@ NewWorkspace
   // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)
   @pattern(r"^(pack|tenor|giphy)$")
   gifs: string = "pack"
+  // the page's colors: auto (the editor's), light or dark (the editor's setting nuclear.chat.theme)
+  @pattern(r"^(auto|light|dark)$")
+  theme: string = "auto"

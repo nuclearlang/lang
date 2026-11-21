@@ -1,0 +1,26 @@
+// A member changed from their profile: an action for the host (the member's settings are the host's), told only for a
+// member the host lets change, and with something to change.
+usecase EditMember(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
+  exec(workspace: string, member: string, edit: MemberEdit) Result<Error, ChatEvent>
+    ws = workspaces.workspace(workspace)
+    who = ws.members.find((m) => m.id == member)
+    if who == null
+      return Err(NotFound("no member ${member}"))
+    if who!.card == null or not who!.card!.editable
+      return Err(Invalid("${who!.name}'s settings cannot be changed here: their team is not saved"))
+    changes: <string, any> = {}
+    if edit.name != null
+      changes["name"] = edit.name!.trim()
+    if edit.model != null
+      changes["model"] = edit.model!.trim()
+    if edit.instructions != null
+      changes["instructions"] = edit.instructions!
+    if edit.temperament != null
+      if not edit.temperament!.isEmpty and not who!.card!.temperaments.any((t) => t.id == edit.temperament)
+        return Err(Invalid("no temperament ${edit.temperament}"))
+      changes["temperament"] = edit.temperament!
+    if edit.gifs != null
+      changes["gifs"] = edit.gifs!
+    if changes.isEmpty
+      return Err(Invalid("nothing to change"))
+    ~events.emit(ws.id, "action", "general", { "action": "member", "member": member, "team": who!.team, "changes": changes })

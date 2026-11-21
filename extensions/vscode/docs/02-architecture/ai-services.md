@@ -116,7 +116,10 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
 
 - One `contributes.configuration` section per tool, each read in code by its own module: `aiSettings.ts`
   (`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`,
-  given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts`
+  given to the chat as the workspace's `gifs`, and `nuclear.chat.theme`, its `theme`, which the chat's own switch
+  writes back (`onChatAction`, event `action` `theme`); every project registered again when one changes). `onChatAction`
+  also applies a member's profile changed in the chat (`action` `member`: `updateMember`, the team's file, then the
+  registration again), and the `settings.ts`
   of HTTP Connections and the devices. Nuclear Atlas has no setting of its own (`nuclear.atlas.contextTokens`
   is gone with its former meter).
 - The settings that moved (`MOVED` in `migrateSettings.ts`: `nuclear.ai.claudeModel` → `nuclear.builder.claudeModel`,

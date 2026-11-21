@@ -56,8 +56,8 @@ folder above the binary's `bin/`).
    `ai/` and its own `nuclear-builder setup`.
 4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
 5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
-   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the
-   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
+   PATH (`--no-vscode`), only when that package is the version of `package.json`: an older one is never installed (it
+   would put an older extension back over the published one, unseen), a note says to run `npm run package` there. The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
    `wasm32-wasip2` is there (`--no-zed`).
 6. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.
 

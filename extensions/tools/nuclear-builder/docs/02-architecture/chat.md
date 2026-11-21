@@ -11,13 +11,21 @@ engine gives the chat its members and how each one answers; the extension mounts
 run in the team's channel, and does what its buttons ask.
 
 ## What the engine gives (`member.nuc`, `chat.nuc`)
-- `nuclear-builder chat-host --json [--root] [--lang]`: the host file (spec 023: every saved team, the run's team
-  first, [engine.md](engine.md) "The team"; the local team when none is saved): every member, any number per role, as
+- `nuclear-builder chat-host --json [--root] [--lang]`: the host file of a project or a workspace (spec 023: every
+  saved team, the one assigned to the folder first, [engine.md](engine.md) "The team"; none when none is saved: the
+  local team a run takes is never a member of the chat, nobody could change it): every member, any number per role, as
   `<team>-<member id>` with their face, temperament, personality, responder and brain, who works them: `{agent, kind,
-  provider, model, paid}`, and `listed`: true only for each team's tech lead (the one it names, else its Architect,
+  provider, model, paid}`, their profile's `card` (`memberCard`: `{editable, temperament, temperaments: [{id, name}],
+  skills (titles), instructions}`, editable for a saved team's member; the chat's profile changes them through the
+  host: `team member update`), and `listed`: true only for each team's tech lead (the one it names, else its Architect,
   else its first member) and `atlas`; the teams with their tech lead, who answers a message to the team; `@<role>`
-  reaches the role's first member as listed; the channels `general` (its members: the listed ones but Atlas) and each
-  team's (its members: its tech lead). Several teams and none chosen are no error here (`chooseTeam` is gone: every
+  reaches the role's first member as listed; the channels `home` (the folder's own, named after the workspace or the
+  project: its member is the tech lead of the team assigned to the folder or to its workspace), `general` (its
+  members: the listed ones but Atlas) and each team's (its members: its tech lead); `assigned`: the team assigned
+  here, null when none is. With `assigned` null the editor (`panel.ts` `offerTeams`) posts in `home`, as Atlas, the
+  saved teams as buttons (`team|assign|<id>`: its tech lead and whether it is free), or *Create a team*
+  (`team|create`, the company screen) when there is none; a team chosen is `line set team=<id>` in the folder, and the
+  folder is registered again so its tech lead joins `home`. Several teams and none chosen are no error here (`chooseTeam` is gone: every
   team is in the chat; a run still asks which one).
   The editor registers from it only the general agent and each team's tech lead (`registration` of
   `vscode/src/chatHost.ts`, spec 023): Nuclear Chat lists them and no other member; a run's station is then told by

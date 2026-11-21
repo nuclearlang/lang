@@ -272,6 +272,37 @@ tests Chat
     // the tech lead does not answer a command
     expect(not seen.value.any((e) => e.type == "typing" and e.data["member"] == "ada"))
 
+  @test("a member changed from their profile is the host's action; one the host cannot change, or nothing to change, is refused")
+  editsMember() void
+    input = project(inject<ChatFiles>())
+    input.members[0].card = Card(editable = true, temperament = "calm", temperaments = [Temperament(id = "calm", name = "Calm"), Temperament(id = "extrovert", name = "Extrovert")])
+    ws = registered(input)
+    members = inject<MembersAppComponent>()
+    told: Result<Error, ChatEvent> = ~members.edit(ws.id, "ada", MemberEdit(name = " Ada ", model = "haiku", temperament = "extrovert", gifs = "often"))
+    expect(told.isOk and told.value.type == "action" and told.value.data["action"] == "member" and told.value.data["team"] == "core")
+    expect(told.value.data["changes"] == { "name": "Ada", "model": "haiku", "temperament": "extrovert", "gifs": "often" })
+    unknownMood: Result<Error, ChatEvent> = ~members.edit(ws.id, "ada", MemberEdit(temperament = "grumpy"))
+    expect(unknownMood.isErr and unknownMood.error.status == 400)
+    nothing: Result<Error, ChatEvent> = ~members.edit(ws.id, "ada", MemberEdit())
+    expect(nothing.isErr and nothing.error.status == 400)
+    locked: Result<Error, ChatEvent> = ~members.edit(ws.id, "quinn", MemberEdit(model = "haiku"))
+    expect(locked.isErr and locked.error.status == 400)
+    gone: Result<Error, ChatEvent> = ~members.edit(ws.id, "nobody", MemberEdit(model = "haiku"))
+    expect(gone.isErr and gone.error.status == 404)
+
+  @test("the page's colors: the host's at registration, changed in the chat for the workspace; an unknown workspace is refused")
+  choosesTheme() void
+    input = project(inject<ChatFiles>())
+    input.theme = "dark"
+    ws = registered(input)
+    expect(ws.theme == "dark")
+    workspaces = inject<WorkspacesAppComponent>()
+    chosen: Result<Error, Workspace> = workspaces.chooseTheme(ws.id, ThemeChoice(theme = "light"))
+    read: Result<Error, Workspace> = workspaces.workspace(ws.id)
+    expect(chosen.isOk and read.value.theme == "light")
+    missing: Result<Error, Workspace> = workspaces.chooseTheme("w0", ThemeChoice(theme = "light"))
+    expect(missing.isErr and missing.error.status == 404)
+
   @test("the pack: 30 drawings or more, searched by tag and title")
   pack() void
     gifs = inject<GifsAppComponent>()

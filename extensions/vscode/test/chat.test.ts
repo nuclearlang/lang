@@ -3,7 +3,7 @@
 // what was missed read back). node:test, no editor.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askPost, buttonOf, ChatHost, Frame, HOST, HostFile, lineDiff, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket } from '../src/chatHost';
+import { askPost, buttonOf, ChatHost, Frame, HOST, HostFile, lineDiff, memberChange, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket } from '../src/chatHost';
 import type { SocketEvents } from '../../tools/nuclear-http-connections/src/socket';
 
 const guard = { header: 'X-Chat-Token', token: 'secret' };
@@ -50,6 +50,17 @@ test('a host file becomes the registration: faces as pictures, the general agent
   const off = registration(file, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'codex' }, face: () => null }) as { members: { responder: { choice: string } }[] };
   assert.equal(off.members[1].responder.choice, 'claude-code');
   assert.deepEqual([body.root, body.lang, body.gifs], ['/p', 'es', 'tenor']);
+});
+
+test('the registration carries the chat\'s theme and each member\'s card; a profile\'s change keeps only what team member update takes', () => {
+  const card = { editable: true, temperament: 'nerd', temperaments: [{ id: 'nerd', name: 'Nerd' }], skills: ['Tests'], instructions: 'Break it' };
+  const withCard = { ...file, members: [{ ...file.members[0], member: 'qa', card }, file.members[1]] };
+  const body = registration(withCard, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null, theme: 'dark' }) as { theme: string; members: Record<string, unknown>[] };
+  assert.equal(body.theme, 'dark');
+  assert.deepEqual(body.members[0].card, card);
+  assert.equal((registration(file, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null }) as { theme: string }).theme, 'auto');
+  assert.deepEqual(memberChange({ name: 'Edgar', model: 'haiku', gifs: 'often', kind: 'api', provider: 'anthropic', skills: ['x'], instructions: 3 }), { name: 'Edgar', model: 'haiku', gifs: 'often' });
+  assert.deepEqual(memberChange(null), {});
 });
 
 test('a paid provider the user put in the team is not confirmed again in the chat; one never chosen still is; a forced confirmation always is', () => {
@@ -114,6 +125,10 @@ test('a run\'s question has its answers as buttons that read back; spending has 
   const money = askPost(r, { id: 'spending-1', kind: 'spending', question: 'Spend?' }, member, RUN_TEXTS.en);
   assert.deepEqual([money.author, money.buttons], ['system', []]);
   assert.deepEqual(buttonOf('spec|loans|accept'), { kind: 'spec', spec: 'loans', answer: 'accept' });
+  // a team offered to the folder's channel, and the offer to make one
+  assert.deepEqual(buttonOf('team|assign|night-shift'), { kind: 'team', team: 'night-shift' });
+  assert.deepEqual(buttonOf('team|create'), { kind: 'team', team: '' });
+  assert.equal(buttonOf('team|assign|'), null);
   assert.equal(buttonOf('spec|loans|burn'), null);
 });
 

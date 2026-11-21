@@ -6,6 +6,7 @@ title_es: APIs REST y contratos
 description_es: Diseñar rutas REST en un backend Synapsis (rutas, códigos de estado, errores, validación) y generar los clientes de las apps desde su contrato con nuclear contracts list y update. Úsalo cuando una tarea añade o cambia una ruta de la API, o una app móvil o web debe llamar a un backend escrito en Nuclear.
 kind: technology
 tags: [rest, api, contracts, routes, status codes, openapi, client, http]
+base: true
 ---
 # REST APIs and contracts
 

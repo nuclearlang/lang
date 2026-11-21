@@ -11,7 +11,7 @@ Every provider of a role is called the same way (`adapter.nuc`):
 
 - `Role`: composed by `composeRole(id, assigned)` from `nuclear-agents/roles/<id>/` (`role.md` with its front
   matter, the skills the team switched on, its templates and `checks.toml`) and the member's `instructions` (a base
-  agent's text first) and the skills of the team and the member (`assigned.sharedSkills`, `library.nuc`
+  agent's text first) and Nuclear's base skills, the team's and the member's (`assigned.sharedSkills`, `library.nuc`
   `withSkills`: the member's own over the team's, the team's over the library's; `role.sources` says where each one
   that is not the role's comes from). Every adapter renders them as the role's skills: Claude Code's plugin
   `skills/<id>/SKILL.md`, OpenCode's `.opencode/agent/<role>.md`, Codex's `AGENTS.md`, Gemini CLI's `GEMINI.md`, Cursor's prompt, Grok Build's `--rules`, an
@@ -40,7 +40,7 @@ and a member of it is converted on read (teams-and-vault.md); its adapter stays,
 |---|---|---|---|---|---|
 | `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |
 | `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |
-| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |
+| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`) | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |
 | `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |
 | `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |
 | `agent` | `cursor` | `adapter_cursor.nuc` | `agent -p --output-format stream-json --force --approve-mcps --trust --workspace <root> --plugin-dir <plugin> [--model] <prompt>` (`cursor-agent` when `agent` is not Cursor's), the MCP servers in the plugin's `mcp.json` | the role's text at the head of the prompt (shell denied by the plugin's hook) | 0 (tokens not reported) |

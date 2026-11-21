@@ -17,7 +17,7 @@ stateful MessageRow(message: Message, ws: Workspace, texts: Texts, first: boolea
       className = "msg ${first ? "first" : "cont"} ${focused ? "focused" : ""} ${gone ? "gone" : ""}",
       ref = (el: any) => seen(el),
       children = [
-        div(className = "gutter", children = first ? Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts)) : span(className = "hover-time", children = clock(m.at))),
+        div(className = "gutter", children = first ? (member != null ? button(className = "profile-link", title = texts.format("profile.open", { "name": member!.name }), onClick = () => ProfileManager.show(member!.id), children = Avatar(member = member, author = m.author)) : Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts))) : span(className = "hover-time", children = clock(m.at))),
         div(
           className = "body",
           children = [
@@ -140,7 +140,7 @@ stateless MessageMeta(message: Message, member: Member?, ws: Workspace, texts: T
     div(
       className = "meta",
       children = [
-        strong(className = "author", children = authorName(ws, message.author, texts)),
+        member != null ? button(className = "author profile-link", title = texts.format("profile.open", { "name": member!.name }), onClick = () => ProfileManager.show(member!.id), children = authorName(ws, message.author, texts)) : strong(className = "author", children = authorName(ws, message.author, texts)),
         member != null and member!.role != "" ? span(className = "chip role", children = member!.role) : null,
         member != null and leads(ws, member!.id) ? span(className = "chip lead", children = texts.get("lead")) : null,
         member != null and member!.responder.paid ? span(className = "chip paid", children = texts.get("paid")) : null,

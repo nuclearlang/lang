@@ -1,6 +1,10 @@
-// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
-// The members API: the user's answer to a member's question (an event `ask`).
+// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.
 @repository(path = "members", connection = "nuclear_chat")
 repository MembersRepository
   @post(path = ":workspace/answers")
   answer(workspace: string, @body answer: Answer) Result<NuclearChatError, Answer>
+
+  // A member changed from their profile (name, model, instructions, temperament, GIFs): told to the host as an event `action` (`member`), which applies it and registers the workspace again.
+  @post(path = ":workspace/:member/edit")
+  edit(workspace: string, member: string, @body edit: MemberEdit) Result<NuclearChatError, ChatEvent>

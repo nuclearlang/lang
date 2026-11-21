@@ -1,0 +1,4 @@
+// What MembersRepository.edit answers, for the screens of members.
+usecase EditMember(repository: MembersRepository)
+  exec(workspace: string, member: string, edit: MemberEdit) Result<NuclearChatError, ChatEvent>
+    ~repository.edit(workspace, member, edit)

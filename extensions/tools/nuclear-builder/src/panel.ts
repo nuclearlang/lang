@@ -310,6 +310,24 @@ async function draftPosted(root: string, channel: string, thread: string | undef
   await postButtons(root, channel, { author: member, text: `${fmt(T.draft, d.id)}\n\n${lineDiff(was, now)}`, thread, buttons: [{ id: `spec|${d.id}|accept`, label: T.accept, style: 'primary' }, { id: `spec|${d.id}|discard`, label: T.discard }], links: { spec: d.id } });
 }
 
+/** The folder's own channel (`home`) with no team assigned (its host file's `assigned` null): Atlas offers the saved
+ * teams as buttons, each with its tech lead and whether it is free, or *Create a team* when there is none. Once while
+ * an offer is still open; a host file of before 0.87 (no `assigned`) gets none. */
+async function offerTeams(root: string): Promise<void> {
+  const body = chat().hostBody(root) as { assigned?: string | null; channels?: { id: string }[] } | undefined;
+  if (body?.assigned !== null || !body.channels?.some((c) => c.id === 'home')) return;
+  const ws = await chat().workspace(root);
+  const said = await chat().request('GET', `/messages/${ws}/home`);
+  const open = Array.isArray(said.body) && (said.body as { buttons?: { id: string }[] }[]).some((m) => m.buttons?.some((b) => b.id.startsWith('team|')));
+  if (open) return;
+  const teams = await lineJson<{ id: string; name: string; lead?: { name?: string } | null; free?: boolean }[]>(root, ['team', 'list', '--json']).catch(() => []);
+  const T = chatTexts();
+  const buttons = teams.length
+    ? teams.map((t) => ({ id: `team|assign|${t.id}`, label: `${t.name}${t.lead?.name ? ` · ${t.lead.name}` : ''} (${t.free === false ? T.busy : T.free})`, style: t.free === false ? '' : 'primary' }))
+    : [{ id: 'team|create', label: T.createTeam, style: 'primary' }];
+  await postButtons(root, 'home', { author: 'atlas', text: teams.length ? T.noTeam : T.noTeams, buttons });
+}
+
 const ANSWER_LABEL: Record<string, keyof ReturnType<typeof chatTexts>> = { approve: 'approve', change: 'change', stop: 'later', yes: 'goOn', no: 'no' };
 
 /** What the Builder does with its workspaces' events: a button of a run's question answers the run (`answerRun`),
@@ -329,6 +347,16 @@ async function onChatEvent(root: string, e: ChatEvent): Promise<void> {
       }
       answerRun(root, b.run, b.ask, answer);
       return answered(root, message, T[ANSWER_LABEL[b.answer] ?? 'approve'] + (answer.text ? `: ${answer.text}` : ''));
+    }
+    if (b?.kind === 'team') {
+      if (!b.team) {
+        void vscode.commands.executeCommand('nuclear.builder.teams');
+        return answered(root, message, T.creating);
+      }
+      // the folder's `.nuclear/builder.json` names the team: its tech lead joins the channel when the folder registers again
+      await lineJson(root, ['line', 'set', `team=${b.team}`]);
+      await chat().workspace(root, true);
+      return answered(root, message, fmt(T.assigned, b.team));
     }
     if (b?.kind === 'spec') {
       await lineJson(root, ['spec', b.answer, b.spec, '--json']);
@@ -352,6 +380,7 @@ let following = false;
 export function followChat(): void {
   if (following) return;
   following = true;
+  chat().onRegistered((root) => void offerTeams(root).catch(() => undefined));
   chat().onEvent((root, e) => void onChatEvent(root, e).catch((x) => notices.add({ tool: 'builder', title: l10n.t('Nuclear Chat'), text: String(x instanceof Error ? x.message : x), level: 'error', root })));
 }
 

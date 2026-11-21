@@ -6,6 +6,7 @@ title_es: Backend con Synapsis
 description_es: Construir un backend Synapsis (dialecto fastapi o nestjs) con las herramientas: proyecto nuevo, componentes, recursos, entidades, migraciones, ejecutar y probar. Úsalo cuando una tarea crea o cambia una API HTTP, un recurso de base de datos o un caso de uso de un backend escrito en Nuclear.
 kind: technology
 tags: [backend, api, fastapi, nestjs, rest, entity, migrations, synapsis, server]
+base: true
 ---
 # Synapsis backend
 

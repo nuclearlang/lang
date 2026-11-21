@@ -1,0 +1,18 @@
+// The member whose profile is open beside the channel (where the thread and the search go), opened from their name or
+// picture anywhere in the chat: a message, the sidebar, the members list, a direct message's header.
+@stateModel(ProfileState)
+statemanager ProfileManager
+  member: string = ""
+
+  // The user closed the profile.
+  hide()
+    member = ""
+    closed()
+
+  @state(ProfileState.closed)
+  closed()
+
+  @state(ProfileState.ready)
+  show(id: string) string
+    member = id
+    id

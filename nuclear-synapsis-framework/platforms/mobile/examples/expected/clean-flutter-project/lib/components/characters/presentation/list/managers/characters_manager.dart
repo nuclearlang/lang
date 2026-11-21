@@ -16,7 +16,9 @@ class CharactersManager extends StateManager<CharactersState> {
 
   Future<void> loadPage(int page) async {
     loading();
+    final turn$ = stateTurn();
     final result = await _loadPage(page);
+    if (!isLatestTurn(turn$)) return;
     emit(result.match(CharactersState.error, CharactersState.full));
   }
 

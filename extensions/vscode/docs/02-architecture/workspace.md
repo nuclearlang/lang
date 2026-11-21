@@ -117,7 +117,8 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
 - **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened
   first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a
   change of VS Code's folder never loses them.
-- **The slots of the strip** (`shownProjects`) are the workspace's apps whose folder exists, in the marker's order
+- **The slots of the strip** (`shownProjects`; each a `.tab.app`: the platform's glyph with the dialect's badge over
+  the app's name, the strip 64 px wide) are the workspace's apps whose folder exists, in the marker's order
   (`projectAt` of each, else the app's own JSON), and nothing else: no scan of VS Code's folders, no project opened by
   hand (a workspace is the clean folder the editor works on; *Open a Project as a Tab* there offers *Add an app*).
   Without a workspace: the projects of VS Code's folders (`findProjects()`), then the ones opened by hand. Until

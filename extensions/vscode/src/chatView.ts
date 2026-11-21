@@ -6,9 +6,9 @@ import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { builder } from './aiMachine';
-import { AgentProvider, CHAT_FIX, chatCommand, ChatHost, fmt, Frame, HostFile, readConnect, registration } from './chatHost';
+import { AgentProvider, CHAT_FIX, chatCommand, ChatEvent, ChatHost, fmt, Frame, HostFile, memberChange, readConnect, registration } from './chatHost';
 import { lang, l10n, onDidChangeLang } from './i18n';
-import { faceData, factoryDir } from '../../tools/nuclear-builder/src/teams/cli';
+import { faceData, factoryDir, updateMember } from '../../tools/nuclear-builder/src/teams/cli';
 import { lineJson } from '../../tools/nuclear-builder/src/runs';
 import { builderSettings } from '../../tools/nuclear-builder/src/settings';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
@@ -21,6 +21,33 @@ export const chatGifs = (): string => {
   const v = vscode.workspace.getConfiguration('nuclear.chat').get<string>('gifs', 'pack');
   return (GIF_SOURCES as readonly string[]).includes(v) ? v : 'pack';
 };
+
+export const CHAT_THEMES = ['auto', 'light', 'dark'] as const;
+/** The chat's colors (`nuclear.chat.theme`): the editor's, or always light or dark. */
+export const chatTheme = (): string => {
+  const v = vscode.workspace.getConfiguration('nuclear.chat').get<string>('theme', 'auto');
+  return (CHAT_THEMES as readonly string[]).includes(v) ? v : 'auto';
+};
+
+/** The chat's own actions for its host: the theme chosen at the sidebar's foot (kept as the user's setting, which
+ * registers every project again), a member changed from their profile (`team member update`: the team's file
+ * changes, which registers them again). */
+async function onChatAction(c: ChatHost, root: string, e: ChatEvent): Promise<void> {
+  if (e.type !== 'action') return;
+  if (e.data.action === 'theme') {
+    const t = String(e.data.theme);
+    if ((CHAT_THEMES as readonly string[]).includes(t) && t !== chatTheme()) await vscode.workspace.getConfiguration('nuclear.chat').update('theme', t, vscode.ConfigurationTarget.Global);
+    return;
+  }
+  if (e.data.action !== 'member') return;
+  const who = c.teamMember(root, String(e.data.member));
+  if (!who) return;
+  try {
+    await updateMember(who.team, who.member, memberChange(e.data.changes));
+  } catch (x) {
+    void vscode.window.showErrorMessage(l10n.t('{0} was not changed: {1}', c.nameOf(root, String(e.data.member)), (x as Error).message));
+  }
+}
 
 /** The host file of a project (`nuclear-builder chat-host --json`), as the service takes it. Several teams and none
  * chosen: the user is asked once which team the project uses, saved as its own (`line set team=<id>`). */
@@ -43,7 +70,7 @@ async function registrationOf(root: string): Promise<Record<string, unknown>> {
     return registrationOf(root);
   }
   if (file.error) throw new Error(file.error);
-  return registration(file, { root, lang: l, gifs: chatGifs(), agent: builderSettings().chat as AgentProvider, face: (f) => faceData(f), forceConfirm: spendingSettings().forceConfirm || projectForcesConfirm(root) });
+  return registration(file, { root, lang: l, gifs: chatGifs(), theme: chatTheme(), agent: builderSettings().chat as AgentProvider, face: (f) => faceData(f), forceConfirm: spendingSettings().forceConfirm || projectForcesConfirm(root) });
 }
 
 let host: ChatHost | undefined;
@@ -51,6 +78,8 @@ let host: ChatHost | undefined;
 export function chat(): ChatHost {
   if (!host) {
     host = new ChatHost({ connect: () => readConnect().catch((e: Error) => Promise.reject(new Error(fmt(CHAT_FIX[lang()], e.message)))), registrationOf });
+    const own = host;
+    host.onEvent((root, e) => void onChatAction(own, root, e));
     // the GIFs, the general agent's provider, the language (the members answer in it): every project registered again
     const again = () => {
       for (const root of roots) void host!.workspace(root, true).catch(() => undefined);

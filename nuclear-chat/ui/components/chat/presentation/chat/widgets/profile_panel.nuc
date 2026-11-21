@@ -1,0 +1,159 @@
+// A member's profile beside the channel, as Slack's: their picture, name, role, *Tech lead*, team, who works them
+// (`Claude Code · opus · paid`), what they are like (temperament, skills, instructions, GIFs) and their bio; *Message*
+// opens their direct message. *Edit profile* changes the name, the model, the temperament, the GIFs and the
+// instructions through the host (`WorkspaceManager.edit`), only when the host lets change them (`card.editable`); the
+// rest (skills, provider, portrait) is the company screen's. The member comes back changed when the host registers the
+// workspace again (an event `workspace`).
+stateful ProfilePanel(ws: Workspace, member: Member, texts: Texts, onClose: () => void, onMessage: (id: string) => void)
+  editing: boolean = false
+  name: string = ""
+  model: string = ""
+  temperament: string = ""
+  gifs: string = ""
+  instructions: string = ""
+  saving: boolean = false
+  said: string = ""
+  failed: string = ""
+
+  build() Element
+    m = member
+    team = ws.teams.find((t) => t.id == m.team)
+    aside(
+      className = "thread profile",
+      children = [
+        header(className = "thread-header", children = [strong(children = texts.get("profile")), span(className = "topic"), button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close"))]),
+        div(
+          className = "scroll",
+          children = div(
+            className = "profile-body",
+            children = [
+              Avatar(member = m, author = m.id, size = "huge"),
+              div(className = "profile-name", children = [strong(children = m.name), m.role != "" ? span(className = "chip role", children = m.role) : null, leads(ws, m.id) ? span(className = "chip lead", children = texts.get("lead")) : null]),
+              team != null ? span(className = "profile-team", children = texts.format("profile.team", { "name": team!.name != "" ? team!.name : team!.id })) : null,
+              m.brain.agent != "" ? BrainLine(brain = m.brain, texts = texts) : null,
+              button(className = "action primary", onClick = () => onMessage("dm-${m.id}"), children = texts.get("message")),
+              editing ? form() : facts(),
+              said != "" ? p(className = "profile-said", children = said) : null,
+              failed != "" ? p(className = "failed", children = texts.format("failed", { "error": failed })) : null,
+            ],
+          ),
+        ),
+      ],
+    )
+
+  // What the member is like, read only, with *Edit profile* or why it cannot be changed here.
+  facts() Element
+    m = member
+    mood = cardOf(m).temperaments.find((t) => t.id == cardOf(m).temperament)
+    div(
+      className = "profile-facts",
+      children = [
+        fact(texts.get("profile.temperament"), span(children = mood != null ? mood!.name : (cardOf(m).temperament != "" ? cardOf(m).temperament : texts.get("profile.temperament.none")))),
+        fact(texts.get("profile.skills"), cardOf(m).skills.isEmpty ? span(className = "muted", children = texts.get("profile.skills.none")) : div(className = "profile-skills", children = cardOf(m).skills.map((s) => span(key = s, className = "chip", children = s)))),
+        fact(texts.get("profile.instructions"), cardOf(m).instructions != "" ? p(className = "profile-text", children = cardOf(m).instructions) : span(className = "muted", children = texts.get("profile.instructions.none"))),
+        fact(texts.get("profile.gifs"), span(children = texts.get("gifs.${m.personality.gifs}"))),
+        m.profile.bio != "" ? fact(texts.get("profile.about"), p(className = "profile-text", children = m.profile.bio)) : null,
+        cardOf(m).editable ? button(className = "action", onClick = () => edit(), children = [span(className = "icon icon-edit"), span(children = texts.get("profile.edit"))]) : p(className = "profile-note", children = texts.get(m.team == "" ? "profile.atlas" : "profile.locked")),
+      ],
+    )
+
+  fact(label: string, value: Element) Element
+    div(className = "profile-fact", children = [span(className = "profile-label", children = label), value])
+
+  // The fields the chat changes; the rest is the company screen's.
+  form() Element
+    m = member
+    div(
+      className = "profile-facts",
+      children = [
+        label(className = "profile-fact", children = [span(className = "profile-label", children = texts.get("profile.name")), input(className = "field-input", value = name, maxLength = 80, onChange = (e) => set("name", e.target.value))]),
+        label(className = "profile-fact", children = [span(className = "profile-label", children = texts.get("profile.model")), input(className = "field-input", value = model, maxLength = 200, placeholder = m.brain.model, onChange = (e) => set("model", e.target.value)), span(className = "profile-hint", children = texts.format("profile.model.hint", { "provider": m.brain.agent != "" ? m.brain.agent : m.brain.provider }))]),
+        div(className = "profile-fact", children = [span(className = "profile-label", children = texts.get("profile.temperament")), pills([["", texts.get("profile.temperament.none")], ...cardOf(m).temperaments.map((t) => [t.id, t.name])], temperament, "temperament")]),
+        div(className = "profile-fact", children = [span(className = "profile-label", children = texts.get("profile.gifs")), pills(["never", "sometimes", "often"].map((g) => [g, texts.get("gifs.${g}")]), gifs, "gifs")]),
+        label(className = "profile-fact", children = [span(className = "profile-label", children = texts.get("profile.instructions")), textarea(className = "field-input", rows = 5, value = instructions, maxLength = 20000, onChange = (e) => set("instructions", e.target.value))]),
+        p(className = "profile-hint", children = texts.get("profile.more")),
+        div(className = "edit-tools", children = [button(className = "action", onClick = () => cancel(), children = texts.get("cancel")), button(className = "action primary", disabled = saving or name.trim() == "", onClick = () => save(), children = texts.get("save"))]),
+      ],
+    )
+
+  // A choice among a few, as pills: each `[value, label]`, the chosen one pressed.
+  pills(choices: string[][], chosen: string, field: string) Element
+    div(className = "pills", children = choices.map((c) => button(key = c[0], className = "pill ${c[0] == chosen ? "on" : ""}", onClick = () => set(field, c[0]), children = c[1])))
+
+  // The form starts from what the member is now.
+  edit()
+    m = member
+    setState(() =>
+      editing = true
+      name = m.name
+      model = m.brain.model
+      temperament = cardOf(m).temperament
+      gifs = m.personality.gifs
+      instructions = cardOf(m).instructions
+      said = ""
+      failed = ""
+    )
+
+  cancel()
+    setState(() =>
+      editing = false
+      failed = ""
+    )
+
+  set(field: string, value: string)
+    setState(() =>
+      if field == "name"
+        name = value
+      else if field == "model"
+        model = value
+      else if field == "temperament"
+        temperament = value
+      else if field == "gifs"
+        gifs = value
+      else
+        instructions = value
+    )
+
+  // Only what changed goes to the host; nothing changed closes the form.
+  save()
+    changes = profileChanges(member, name, model, temperament, gifs, instructions)
+    if changes == null
+      cancel()
+      return
+    setState(() =>
+      saving = true
+      failed = ""
+    )
+    done: Result<NuclearChatError, ChatEvent> = ~WorkspaceManager.edit(member.id, changes!)
+    match done
+      Ok(e) -> saved()
+      Err(e) -> refused(e.message)
+
+  saved()
+    setState(() =>
+      saving = false
+      editing = false
+      said = texts.get("profile.saved")
+    )
+
+  refused(why: string)
+    setState(() =>
+      saving = false
+      failed = why
+    )
+
+// What the profile's form changes of a member: each field only when it differs from what the member is now; null
+// when nothing does.
+profileChanges(m: Member, name: string, model: string, temperament: string, gifs: string, instructions: string) MemberEdit?
+  newName = name.trim() != m.name ? name.trim() : null
+  newModel = model.trim() != m.brain.model ? model.trim() : null
+  newMood = temperament != cardOf(m).temperament ? temperament : null
+  newGifs = gifs != m.personality.gifs ? gifs : null
+  newText = instructions != cardOf(m).instructions ? instructions : null
+  if newName == null and newModel == null and newMood == null and newGifs == null and newText == null
+    return null
+  MemberEdit(name = newName, model = newModel, temperament = newMood, gifs = newGifs, instructions = newText)
+
+// A member's card, or an empty one (read only) from a host that gives none.
+cardOf(m: Member) Card
+  m.card ?? Card()

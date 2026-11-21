@@ -44,7 +44,8 @@ With a workspace open, the strip holds its apps and nothing else, in the order o
 folder is added to it as an app. With no workspace open, the tabs are the Nuclear projects of the VS Code workspace
 folders and the ones you opened with *Open a Project as a Tab* (`Ctrl+Alt+O`), which the editor remembers for every
 folder. Each tab shows its platform's
-glyph with the dialect's icon as a badge. `Ctrl+1` … `Ctrl+9` go to the first nine.
+glyph with the dialect's icon as a badge, over its name (cut when it is long; the whole name, platform and dialect are
+in its tooltip). `Ctrl+1` … `Ctrl+9` go to the first nine.
 
 The pane of a project is its file tree, beside the strip, drawn like VS Code's explorer, with the icons of the
 Chernobyl icon theme. It follows `files.exclude` and selects the file of the active editor. A click opens a file;

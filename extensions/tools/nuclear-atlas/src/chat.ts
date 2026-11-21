@@ -65,11 +65,13 @@ export interface ChatRoot {
   name: string;
 }
 
-/** The folders Atlas's chat can open on, and the one it opens: the projects, then the folder it was opened on that is
- * not one (`extra`: a workspace, the welcome's folder); with neither, the `fallback` (the open workspace, else the
- * welcome's folder), so the chat mounts before there is any app. `current` stays when it is one of them. */
-export function chatRoots(projects: ChatRoot[], extra: ChatRoot | undefined, fallback: ChatRoot | undefined, current: string): { roots: ChatRoot[]; root: string } {
-  const roots = [...projects, ...(extra && !projects.some((p) => p.root === extra.root) ? [extra] : [])];
+/** The folders Atlas's chat can open on, and the one it opens: the open workspace first (its own channel, the team
+ * assigned to the whole workspace), then the projects, then the folder it was opened on that is not one (`extra`: the
+ * welcome's folder); with none, the `fallback` (the welcome's folder), so the chat mounts before there is any app.
+ * `current` stays when it is one of them; else the workspace's. */
+export function chatRoots(projects: ChatRoot[], extra: ChatRoot | undefined, fallback: ChatRoot | undefined, current: string, workspace?: ChatRoot): { roots: ChatRoot[]; root: string } {
+  const roots: ChatRoot[] = [];
+  for (const r of [workspace, ...projects, extra]) if (r && !roots.some((x) => x.root === r.root)) roots.push(r);
   if (!roots.length && fallback) roots.push(fallback);
   return { roots, root: roots.some((r) => r.root === current) ? current : roots[0]?.root ?? '' };
 }

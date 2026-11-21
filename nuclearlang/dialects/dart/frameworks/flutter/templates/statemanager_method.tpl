@@ -3,12 +3,22 @@
 {{#decor.before}}
   {{decor.before.arg}}();
 {{/decor.before}}
+{{#async}}
+  final turn$ = stateTurn();
+{{/async}}
 {{#ret_info.result}}
   final result = {{#async}}await {{/async}}_{{name}}({{call_args}});
+{{#async}}
+  if (!isLatestTurn(turn$)) return;
+{{/async}}
   emit(result.match({{owner_decor.stateModel.arg}}.error, {{decor.state.arg}}));
 {{/ret_info.result}}
 {{^ret_info.result}}
-  emit({{decor.state.arg}}({{#async}}await {{/async}}_{{name}}({{call_args}})));
+  final value = {{#async}}await {{/async}}_{{name}}({{call_args}});
+{{#async}}
+  if (!isLatestTurn(turn$)) return;
+{{/async}}
+  emit({{decor.state.arg}}(value));
 {{/ret_info.result}}
 {{#decor.after}}
   {{decor.after.arg}}();

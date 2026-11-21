@@ -87,7 +87,8 @@ testOpenCodeGetsItsOwnAgentFileTheMcpServerAndNoShell(tmpPath: Path, monkeypatch
   out = runAdapter(openCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, "anthropic/claude-haiku-4-5"), (e) => events.add(e))
   expect(out.ok, out.error)
   args = log.readText().split("\n")
-  expect(args.take(7) == ["run", "--agent", "analyst", "--format", "json", "--auto", "--model"] and args[7] == "anthropic/claude-haiku-4-5")
+  // a private server (`--standalone`): the background service would not read this run's agent
+  expect(args.take(8) == ["run", "--standalone", "--agent", "analyst", "--format", "json", "--auto", "--model"] and args[8] == "anthropic/claude-haiku-4-5")
   files = Path("${log}.files").readText()
   expect("agent/analyst.md" in files and "bash: deny" in files and "\"nuclear-mcp\"" in files and "Be brief." in files)
   expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "cost", "cost"])

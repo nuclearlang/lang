@@ -6479,18 +6479,24 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.160500",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.7b1769",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
-   "summary": "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+   "summary": "(`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`, given to the chat as the workspace's `gifs`, and `nuclear.chat.theme`, its `theme`, which the chat's own switch writes back (`onChatAction`, event `action` `theme`); every project…",
    "body": [
-    "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
-    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
-    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
-    "  `.nuclear/builder.json` brings both questions back. Only work paid by use through an API key (kind `api`) is asked",
-    "  (spec 023, requirement 4): `asksFor(providers, …)` is false when every provider of a run's question is an agent",
-    "  (Claude Code, Codex, Cursor…: a subscription), unless the questions are forced, which asks every provider; a",
-    "  provider it does not know is asked."
+    "- One `contributes.configuration` section per tool, each read in code by its own module: `aiSettings.ts`",
+    "  (`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`,",
+    "  given to the chat as the workspace's `gifs`, and `nuclear.chat.theme`, its `theme`, which the chat's own switch",
+    "  writes back (`onChatAction`, event `action` `theme`); every project registered again when one changes). `onChatAction`",
+    "  also applies a member's profile changed in the chat (`action` `member`: `updateMember`, the team's file, then the",
+    "  registration again), and the `settings.ts`",
+    "  of HTTP Connections and the devices. Nuclear Atlas has no setting of its own (`nuclear.atlas.contextTokens`",
+    "  is gone with its former meter).",
+    "- The settings that moved (`MOVED` in `migrateSettings.ts`: `nuclear.ai.claudeModel` → `nuclear.builder.claudeModel`,",
+    "  `nuclear.ai.claude.maxBudgetUsd` → `nuclear.spending.budgetUsd`, `nuclear.ai.resumeInterrupted`,",
+    "  `nuclear.ai.watch.minFreeMb` and `nuclear.ai.watch.commandTimeoutMinutes` → `nuclear.builder.*`) are copied at start-up at every level where the user",
+    "  set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level",
+    "  where the new id already has a value keeps both."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6502,24 +6508,21 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.b90e65",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.d4c945",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
-   "summary": "(`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`, given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts` of HTTP Connections and the devices.",
+   "summary": "Claude Code's agent, takes over) and the user is told once; `chatProvider` reads one as the default before that.",
    "body": [
-    "- One `contributes.configuration` section per tool, each read in code by its own module: `aiSettings.ts`",
-    "  (`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`,",
-    "  given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts`",
-    "  of HTTP Connections and the devices. Nuclear Atlas has no setting of its own (`nuclear.atlas.contextTokens`",
-    "  is gone with its former meter).",
-    "- The settings that moved (`MOVED` in `migrateSettings.ts`: `nuclear.ai.claudeModel` → `nuclear.builder.claudeModel`,",
-    "  `nuclear.ai.claude.maxBudgetUsd` → `nuclear.spending.budgetUsd`, `nuclear.ai.resumeInterrupted`,",
-    "  `nuclear.ai.watch.minFreeMb` and `nuclear.ai.watch.commandTimeoutMinutes` → `nuclear.builder.*`) are copied at start-up at every level where the user",
-    "  set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level",
-    "  where the new id already has a value keeps both.",
     "- The local models on standby: a `nuclear.builder.chat` of the kind `local` is removed at its level (the default,",
     "  Claude Code's agent, takes over) and the user is told once; `chatProvider` reads one as the default before that.",
-    "  `nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer"
+    "  `nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer",
+    "  declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
+    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
+    "  `.nuclear/builder.json` brings both questions back. Only work paid by use through an API key (kind `api`) is asked",
+    "  (spec 023, requirement 4): `asksFor(providers, …)` is false when every provider of a run's question is an agent",
+    "  (Claude Code, Codex, Cursor…: a subscription), unless the questions are forced, which asks every provider; a",
+    "  provider it does not know is asked."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -7536,23 +7539,24 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-nuclear-workspace-and-its-apps-spec-022.0db62c",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-nuclear-workspace-and-its-apps-spec-022.0c0329",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The Nuclear workspace and its apps (spec 022)",
-   "summary": "holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).",
+   "summary": "after a burst): an app added by the MCP server, an agent or a terminal appears at once; a failed reading while the marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.",
    "body": [
-    "- **The open workspace** (`Workspace.loadWorkspace`, on activation and when VS Code's folders change): the one that",
-    "  holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).",
-    "- **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened",
-    "  first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a",
-    "  change of VS Code's folder never loses them.",
-    "- **The slots of the strip** (`shownProjects`) are the workspace's apps whose folder exists, in the marker's order",
-    "  (`projectAt` of each, else the app's own JSON), and nothing else: no scan of VS Code's folders, no project opened by",
-    "  hand (a workspace is the clean folder the editor works on; *Open a Project as a Tab* there offers *Add an app*).",
-    "  Without a workspace: the projects of VS Code's folders (`findProjects()`), then the ones opened by hand. Until",
-    "  `loadWorkspace` has answered once, no slot: the scan of a parent folder never shows, even for a moment, the projects",
-    "  of other workspaces. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads the workspace again (300 ms",
-    "  after a burst): an app added by the MCP server, an agent or a terminal appears at once; a failed reading while the"
+    "after a burst): an app added by the MCP server, an agent or a terminal appears at once; a failed reading while the",
+    "  marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.",
+    "- **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,",
+    "  one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which",
+    "  is why they \"disappeared\" when VS Code opened another folder: that entry joins the global list when its folder opens",
+    "  and is cleared (`migrateSaved`; fixtures `test/fixtures/compat/global-state-0.62.json` and",
+    "  `workspace-state-0.83.json`).",
+    "- **The header**: the workspace's initials head the strip and its name heads the files pane (`.wsbar`); both open",
+    "  `workspaceMenu()` (rename, description, add / rename / remove an app, open the marker, *Do it with me by chat*, the",
+    "  recent workspaces, open, create). `+` adds an app when a workspace is open (else opens a project as a tab); the right",
+    "  click on an app's tab offers rename and remove.",
+    "- **The empty panel** (`emptyState`: no workspace and no project): why (no folder open, or the folder is not a",
+    "  workspace), the recent workspaces, *Open a workspace…*, *Create a workspace*, and the old *open a project as a tab*."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7573,34 +7577,6 @@
     "composer (`AtlasPanel.compose`), on the workspace's folder, or before there is one on the extension's own",
     "`globalStorage/welcome` folder. The user sends it; the agent works through the MCP server's tools (`workspace_create`,",
     "`app_add`…), which ask the user before each change."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/workspace.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-nuclear-workspace-and-its-apps-spec-022.61a93e",
-   "type": "context",
-   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The Nuclear workspace and its apps (spec 022)",
-   "summary": "marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.",
-   "body": [
-    "marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.",
-    "- **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,",
-    "  one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which",
-    "  is why they \"disappeared\" when VS Code opened another folder: that entry joins the global list when its folder opens",
-    "  and is cleared (`migrateSaved`; fixtures `test/fixtures/compat/global-state-0.62.json` and",
-    "  `workspace-state-0.83.json`).",
-    "- **The header**: the workspace's initials head the strip and its name heads the files pane (`.wsbar`); both open",
-    "  `workspaceMenu()` (rename, description, add / rename / remove an app, open the marker, *Do it with me by chat*, the",
-    "  recent workspaces, open, create). `+` adds an app when a workspace is open (else opens a project as a tab); the right",
-    "  click on an app's tab offers rename and remove.",
-    "- **The empty panel** (`emptyState`: no workspace and no project): why (no folder open, or the folder is not a",
-    "  workspace), the recent workspaces, *Open a workspace…*, *Create a workspace*, and the old *open a project as a tab*."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7650,6 +7626,34 @@
     "Opening a workspace (`openIn`): in an empty window it becomes the window's folder (`vscode.openFolder`); in a window",
     "with a folder it asks *This window* (the folder replaced) or *A new window*; a window whose folder is inside the",
     "workspace just shows it."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-nuclear-workspace-and-its-apps-spec-022.bdfdcf",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The Nuclear workspace and its apps (spec 022)",
+   "summary": "holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).",
+   "body": [
+    "- **The open workspace** (`Workspace.loadWorkspace`, on activation and when VS Code's folders change): the one that",
+    "  holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).",
+    "- **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened",
+    "  first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a",
+    "  change of VS Code's folder never loses them.",
+    "- **The slots of the strip** (`shownProjects`; each a `.tab.app`: the platform's glyph with the dialect's badge over",
+    "  the app's name, the strip 64 px wide) are the workspace's apps whose folder exists, in the marker's order",
+    "  (`projectAt` of each, else the app's own JSON), and nothing else: no scan of VS Code's folders, no project opened by",
+    "  hand (a workspace is the clean folder the editor works on; *Open a Project as a Tab* there offers *Add an app*).",
+    "  Without a workspace: the projects of VS Code's folders (`findProjects()`), then the ones opened by hand. Until",
+    "  `loadWorkspace` has answered once, no slot: the scan of a parent folder never shows, even for a moment, the projects",
+    "  of other workspaces. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads the workspace again (300 ms"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -8235,7 +8239,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.e60832",
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.abda6e",
    "type": "readme",
    "title": "NuclearLang for VS Code — Settings",
    "summary": "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its new one by itself.",
@@ -8249,6 +8253,7 @@
     "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
     "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` (asked: only an API paid by use; an agent's subscription is not, unless `forceConfirm`) |",
     "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
+    "| `nuclear.chat.theme` | `auto` (the editor's theme), `light` or `dark`: Nuclear Chat's and Nuclear Atlas's colors; also the switch at the foot of the chat's sidebar |",
     "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |",
     "",
     "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`,",
@@ -8618,7 +8623,8 @@
     "folder is added to it as an app. With no workspace open, the tabs are the Nuclear projects of the VS Code workspace",
     "folders and the ones you opened with *Open a Project as a Tab* (`Ctrl+Alt+O`), which the editor remembers for every",
     "folder. Each tab shows its platform's",
-    "glyph with the dialect's icon as a badge. `Ctrl+1` … `Ctrl+9` go to the first nine.",
+    "glyph with the dialect's icon as a badge, over its name (cut when it is long; the whole name, platform and dialect are",
+    "in its tooltip). `Ctrl+1` … `Ctrl+9` go to the first nine.",
     "",
     "The pane of a project is its file tree, beside the strip, drawn like VS Code's explorer, with the icons of the",
     "Chernobyl icon theme. It follows `files.exclude` and selects the file of the active editor. A click opens a file;",

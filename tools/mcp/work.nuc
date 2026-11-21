@@ -437,28 +437,37 @@ WorkTools(runner: any = runCommand)
       args = [...args, k, flags[k]!]
     ~builderRun([...args, "--count", "${Math.max(1, count)}", "--json"])
 
-  // Change a member of a team (member: its id in the team): who works it (kind agent or api, provider, model), its
-  // employee, name, instructions, temperament or skills (the whole list). Never the local kind (the local models are
+  // Change a member of a team (member: its id in the team), as its card in the editor does: who works it (kind agent
+  // or api, provider, model; team_brain true: the team's model instead), its employee, name, instructions,
+  // temperament, skills (the whole list), extra_skills (its own skills, a list of objects), gifs (its GIF habit:
+  // never, sometimes, often), note, agent (a library agent it is based on). Never the local kind (the local models are
   // on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).
-  memberEdit(team: string, member: string, kind: string = "", provider: string = "", model: string = "", employee: string = "", name: string = "", instructions: string = "", temperament: string = "", skills: string[]? = null, confirm: string = "", ctx: Context? = null) string
+  memberEdit(team: string, member: string, kind: string = "", provider: string = "", model: string = "", employee: string = "", name: string = "", instructions: string = "", temperament: string = "", skills: string[]? = null, extraSkills: <string, any>[]? = null, gifs: string = "", note: string = "", agent: string = "", teamBrain: boolean = false, confirm: string = "", ctx: Context? = null) string
     if kind == "local"
       return refused(LOCAL_STANDBY)
-    flags: <string, string> = { "--kind": kind, "--provider": provider, "--model": model, "--employee": employee, "--name": name, "--instructions": instructions, "--temperament": temperament }
+    flags: <string, string> = { "--kind": kind, "--provider": provider, "--model": model, "--employee": employee, "--name": name, "--instructions": instructions, "--temperament": temperament, "--gifs": gifs, "--note": note, "--agent": agent }
     if skills != null
       flags["--skills"] = skills!.join(",")
+    if extraSkills != null
+      flags["--extra-skills"] = Json.encode(extraSkills)
     given = flags.keys.filter((k) => not flags[k]!.isEmpty or k == "--skills")
     bad = optionLike([team, member, ...given.map((k) => flags[k]!)])
     if bad != null or team.isEmpty or member.isEmpty
       return refused("a team and a member are needed (no value starts with -)")
-    if given.isEmpty
+    if given.isEmpty and not teamBrain
       return refused("say what changes of the member")
-    change = "Change the member `${member}` of the team `${team}`: ${given.map((k) => "${k.substring(2)} → ${flags[k]}").join("; ")}."
-    no = ~confirmed(ctx, "member_edit", { "team": team, "member": member, "flags": flags }, change, confirm)
+    said = given.map((k) => "${k.substring(2)} → ${flags[k]}")
+    if teamBrain
+      said.add("worked by the team's model")
+    change = "Change the member `${member}` of the team `${team}`: ${said.join("; ")}."
+    no = ~confirmed(ctx, "member_edit", { "team": team, "member": member, "flags": flags, "teamBrain": teamBrain }, change, confirm)
     if no != null
       return no!
     args = ["team", "member", "update", team, member]
     for k in given
       args = [...args, k, flags[k]!]
+    if teamBrain
+      args.add("--team-brain")
     ~builderRun([...args, "--json"])
 
   // Let a member go (member: its id in the team). Asks the user first (confirm: the token of a preview, when the
@@ -489,12 +498,436 @@ WorkTools(runner: any = runCommand)
       args = [...args, "--member", member]
     ~builderRun([...args, "--json"])
 
+  // ---------- what follows reaches the rest of Nuclear Builder: what the editor's Builder page and company screen do ----------
+
+  // A change of Nuclear Builder asked first: `nuclear-builder <args>` in `folder` only on the user's yes.
+  builderChange(ctx: Context?, tool: string, key: <string, any>, change: string, confirm: string, args: string[], folder: string? = null, stdin: string = "") string
+    no = ~confirmed(ctx, tool, key, change, confirm)
+    if no != null
+      return no!
+    ~builderRun(args, folder, stdin)
+
+  // ---------- more of the specs ----------
+
+  // Move a spec to another business component (and layer: presentation, domain or data); its run follows. Asks the
+  // user first (confirm: the token of a preview, when the client cannot ask).
+  specMove(project: string, id: string, component: string, layer: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    bad = optionLike([id, component, layer])
+    if bad != null or id.isEmpty or component.isEmpty
+      return refused("a spec's id and a component are needed (neither starts with -)")
+    args = ["spec", "move", id, "--component", component, ...(layer.isEmpty ? [] as string[] : ["--layer", layer]), "--json"]
+    ~builderChange(ctx, "spec_move", { "project": "${root}", "id": id, "component": component, "layer": layer }, "Move the spec `${id}` of ${root} to specs/${component}/${layer.isEmpty ? "" : "${layer}/"}${id} (its run follows).", confirm, args, "${root}")
+
+  // Move the specs of the old flat layout (specs/<id>/) to their component. Asks the user first (confirm: the token of
+  // a preview, when the client cannot ask).
+  specMigrate(project: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    ~builderChange(ctx, "spec_migrate", { "project": "${root}" }, "Move every spec of the flat specs/<id>/ of ${root} to its component's folder.", confirm, ["spec", "migrate", "--json"], "${root}")
+
+  // Delete a spec: its folder goes to .nuclear/builder/deleted/ (it can be brought back by hand). Asks the user first
+  // (confirm: the token of a preview, when the client cannot ask).
+  specDelete(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a spec's id")
+    ~builderChange(ctx, "spec_delete", { "project": "${root}", "id": id }, "Delete the spec `${id}` of ${root}: its folder goes to .nuclear/builder/deleted/.", confirm, ["spec", "delete", id, "--json"], "${root}")
+
+  // Accept a spec's draft (spec.draft.md, written by a member in Nuclear Chat) over the spec. Asks the user first
+  // (confirm: the token of a preview, when the client cannot ask).
+  specAccept(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a spec's id")
+    ~builderChange(ctx, "spec_accept", { "project": "${root}", "id": id }, "Accept the draft of the spec `${id}` of ${root}: spec.draft.md replaces its spec.md.", confirm, ["spec", "accept", id, "--json"], "${root}")
+
+  // Throw away a spec's draft (spec.draft.md); the spec stays as it is. Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  specDiscard(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a spec's id")
+    ~builderChange(ctx, "spec_discard", { "project": "${root}", "id": id }, "Throw away the draft of the spec `${id}` of ${root} (spec.draft.md); the spec stays.", confirm, ["spec", "discard", id, "--json"], "${root}")
+
+  // ---------- runs of the software factory ----------
+
+  // Start the run of a spec (its id: spec_list names them): its stations worked by the team (empty: the project's)
+  // in a process of its own; it stops at the gates for an answer (run_answer). assign is the tech lead's choice of who
+  // works a role (developer=dev-017,qa=qa-002). A paid provider's spending is confirmed by the user twice in the editor
+  // (`waiting: spending`), never here. Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  runStart(project: string, spec: string, team: string = "", assign: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    bad = optionLike([spec, team, assign])
+    if bad != null or spec.isEmpty
+      return refused("a spec's id is needed (no value starts with -)")
+    said = ~builderRun(["spec", "show", spec, "--json"], "${root}")
+    shown = jsonOf(said)
+    if shown == null or shown!["path"] == null
+      return said
+    file = Path(root, "${shown!["path"]}", "spec.md")
+    args = ["run", "${file}", "--detach", ...(team.isEmpty ? [] as string[] : ["--team", team]), ...(assign.isEmpty ? [] as string[] : ["--assign", assign])]
+    change = "Start the run of the spec `${spec}` in ${root}${team.isEmpty ? " by the project's team" : " by the team ${team}"}${assign.isEmpty ? "" : " (${assign})"}: the factory's stations work it and stop at each gate for an answer."
+    ~builderChange(ctx, "run_start", { "project": "${root}", "spec": spec, "team": team, "assign": assign }, change, confirm, args, "${root}")
+
+  // The runs of a project: id, title, status, cost, each station's status.
+  runs(project: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    ~builderRun(["runs", "--json"], "${root}")
+
+  // A run's file: every station and step, who did it, its decisions, the files it wrote, the cost; `waiting` is the
+  // question it waits on.
+  runFile(project: string, id: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderRun(["run", "show", id, "--json"], "${root}")
+
+  // A run's journal (markdown): everything the roles did, station by station.
+  runJournal(project: string, id: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderRun(["run", "journal", id], "${root}")
+
+  // Answer the question a run waits on, with the user's own answer: approve (go on), change (text: what should
+  // change; the station works again), stop (the run waits), or yes / no for QA's plan. The spending and the delivery
+  // are answered in the editor. Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  runAnswer(project: string, id: string, answer: string, text: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if not (answer in ["approve", "change", "stop", "yes", "no"])
+      return refused("'${answer}' is not an answer: approve, change, stop, yes or no")
+    if id.startsWith("-") or id.isEmpty or text.startsWith("--")
+      return refused("'${id}' is not a run's id (and a text never starts with --)")
+    args = ["run", "answer", id, "--answer", answer, ...(text.isEmpty ? [] as string[] : ["--text", text]), "--detach"]
+    ~builderChange(ctx, "run_answer", { "project": "${root}", "id": id, "answer": answer, "text": text }, "Answer the run `${id}` of ${root}: ${answer}${text.isEmpty ? "" : " (\"${text}\")"}.", confirm, args, "${root}")
+
+  // Go on with a run that stopped (interrupted, or waiting with nothing to answer), in a process of its own. Asks the
+  // user first (confirm: the token of a preview, when the client cannot ask).
+  runResume(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderChange(ctx, "run_resume", { "project": "${root}", "id": id }, "Go on with the run `${id}` of ${root} from where it stopped.", confirm, ["run", "--resume", id, "--detach"], "${root}")
+
+  // Run a run again from the station that failed (or from station, or from one step and every step after it),
+  // optionally by another team: what those stations wrote is undone first. Asks the user first (confirm: the token of
+  // a preview, when the client cannot ask).
+  runRetry(project: string, id: string, station: string = "", step: string = "", team: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    bad = optionLike([id, station, step, team])
+    if bad != null or id.isEmpty
+      return refused("a run's id is needed (no value starts with -)")
+    args = ["retry", id, ...(station.isEmpty ? [] as string[] : ["--from", station]), ...(step.isEmpty ? [] as string[] : ["--step", step]), ...(team.isEmpty ? [] as string[] : ["--team", team]), "--detach"]
+    start = step.isEmpty ? (station.isEmpty ? "the station that failed" : "the station ${station}") : "the step ${step}"
+    ~builderChange(ctx, "run_retry", { "project": "${root}", "id": id, "station": station, "step": step, "team": team }, "Run `${id}` of ${root} again from ${start}${team.isEmpty ? "" : " by the team ${team}"}: what it wrote from there is undone first.", confirm, args, "${root}")
+
+  // Run a run again from the start: every file it wrote goes back first. Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  runRestart(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderChange(ctx, "run_restart", { "project": "${root}", "id": id }, "Run `${id}` of ${root} again from the start: every file it wrote goes back first.", confirm, ["restart", id, "--detach"], "${root}")
+
+  // Stop a run's process (a run that asks a question just waits). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  runStop(project: string, id: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderChange(ctx, "run_stop", { "project": "${root}", "id": id }, "Stop the run `${id}` of ${root}.", confirm, ["run", "stop", id, "--json"], "${root}")
+
+  // ---------- QA's checks of a run ----------
+
+  // A run's checks (checks.json of its spec): QA's plan and the user's, each one's station, who runs it, its state.
+  checks(project: string, id: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a run's id")
+    ~builderRun(["checks", id, "list", "--json"], "${root}")
+
+  // Switch a check of a run on (on true) or off. Asks the user first (confirm: the token of a preview, when the client
+  // cannot ask).
+  checkSwitch(project: string, id: string, check: string, on: boolean, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    bad = optionLike([id, check])
+    if bad != null or id.isEmpty or check.isEmpty
+      return refused("a run's id and a check are needed (neither starts with -)")
+    ~builderChange(ctx, "check_switch", { "project": "${root}", "id": id, "check": check, "on": on }, "Switch the check `${check}` of the run `${id}` ${on ? "on" : "off"}.", confirm, ["checks", id, on ? "on" : "off", check, "--json"], "${root}")
+
+  // Add a check to a run's plan: its title, its station, who runs it (user, or role: the station's role with prompt).
+  // Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  checkAdd(project: string, id: string, title: string, station: string = "quality", by: string = "user", prompt: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if not (by in ["user", "role"])
+      return refused("'${by}' is not who runs a check: user or role")
+    bad = optionLike([id, title, station, prompt])
+    if bad != null or id.isEmpty or title.isEmpty
+      return refused("a run's id and a title are needed (no value starts with -)")
+    args = ["checks", id, "add", "--title", title, "--station", station, "--by", by, ...(prompt.isEmpty ? [] as string[] : ["--prompt", prompt]), "--json"]
+    ~builderChange(ctx, "check_add", { "project": "${root}", "id": id, "title": title, "station": station, "by": by, "prompt": prompt }, "Add the check \"${title}\" to the run `${id}` (station ${station}, run by the ${by}).", confirm, args, "${root}")
+
+  // Mark a check of a run passed, failed or skipped. Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  checkMark(project: string, id: string, check: string, status: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if not (status in ["passed", "failed", "skipped"])
+      return refused("'${status}' is not a check's state: passed, failed or skipped")
+    bad = optionLike([id, check])
+    if bad != null or id.isEmpty or check.isEmpty
+      return refused("a run's id and a check are needed (neither starts with -)")
+    ~builderChange(ctx, "check_mark", { "project": "${root}", "id": id, "check": check, "status": status }, "Mark the check `${check}` of the run `${id}` ${status}.", confirm, ["checks", id, "mark", check, status, "--json"], "${root}")
+
+  // ---------- more of the teams ----------
+
+  // Copy a team under a new name (name: empty, the next free one). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  teamDuplicate(team: string, name: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([team, name])
+    if bad != null or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    named = name.isEmpty ? "" : " as ${name}"
+    ~builderChange(ctx, "team_duplicate", { "team": team, "name": name }, "Copy the team `${team}`${named}.", confirm, ["team", "duplicate", team, ...(name.isEmpty ? [] as string[] : ["--name", name]), "--json"])
+
+  // Make a team the default one (the team of a project that names none). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  teamDefault(team: string, confirm: string = "", ctx: Context? = null) string
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    ~builderChange(ctx, "team_default", { "team": team }, "Make `${team}` the default team.", confirm, ["team", "default", team])
+
+  // Export a team to a JSON file (file: its path). Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  teamExport(team: string, file: string, confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([team, file])
+    if bad != null or team.isEmpty or file.isEmpty
+      return refused("a team's id and a file are needed (neither starts with -)")
+    target = Path(file).expanduser().resolve()
+    ~builderChange(ctx, "team_export", { "team": team, "file": "${target}" }, "Export the team `${team}` to ${target}.", confirm, ["team", "export", team, "${target}"])
+
+  // Import a team from a JSON file (an id in use gets the next free one). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  teamImport(file: string, confirm: string = "", ctx: Context? = null) string
+    if file.startsWith("-") or not Path(file).expanduser().isFile()
+      return refused("${file} is not a file")
+    source = Path(file).expanduser().resolve()
+    ~builderChange(ctx, "team_import", { "file": "${source}" }, "Import the team of ${source}.", confirm, ["team", "import", "${source}"])
+
+  // Give a team a logo (image: a .png, .svg or .jpg of 1 MB at most) or take it away (clear true). Asks the user first
+  // (confirm: the token of a preview, when the client cannot ask).
+  teamLogo(team: string, image: string = "", clear: boolean = false, confirm: string = "", ctx: Context? = null) string
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    if not clear and (image.startsWith("-") or not Path(image).expanduser().isFile())
+      return refused("'${image}' is not an image file (or say clear)")
+    picture = clear ? "" : "${Path(image).expanduser().resolve()}"
+    change = clear ? "Take the logo of the team `${team}` away." : "Give the team `${team}` the logo ${picture}."
+    ~builderChange(ctx, "team_logo", { "team": team, "image": picture, "clear": clear }, change, confirm, ["team", "logo", team, ...(clear ? ["--clear"] : [picture]), "--json"])
+
+  // The employees of each role that fit a purpose and skills (library ids), each with why: who to hire.
+  teamSuggest(purpose: string = "", skills: string[]? = null, lang: string = "en", limit: int = 0) string
+    bad = optionLike([purpose, lang, ...(skills ?? [])])
+    if bad != null
+      return refused("'${bad}' starts with -")
+    ~builderRun(["team", "suggest", ...(purpose.isEmpty ? [] as string[] : ["--purpose", purpose]), ...(skills == null ? [] as string[] : ["--skills", skills!.join(",")]), "--lang", lang, ...(limit > 0 ? ["--limit", "${limit}"] : [] as string[]), "--json"])
+
+  // Five satirical names for a team with that purpose.
+  teamNameSuggest(purpose: string = "", lang: string = "en") string
+    bad = optionLike([purpose, lang])
+    if bad != null
+      return refused("'${bad}' starts with -")
+    ~builderRun(["team", "name-suggest", ...(purpose.isEmpty ? [] as string[] : ["--purpose", purpose]), "--lang", lang, "--json"])
+
+  // Whether a team has a member of each role a project's stations need.
+  teamRunnable(project: string, team: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    ~builderRun(["team", "runnable", team, "--json"], "${root}")
+
+  // The roster: the employees of each role a member can be (their names, portraits, personalities).
+  teamRoster(lang: string = "en") string
+    if lang.startsWith("-")
+      return refused("'${lang}' is not a language")
+    ~builderRun(["team", "roster", "--lang", lang])
+
+  // The temperaments a member can have (how it talks).
+  teamTemperaments() string
+    ~builderRun(["team", "temperaments", "--json"])
+
+  // ---------- the skills library ----------
+
+  // The library of skills and agents; with team, its skills and its own; with member, every skill it gets and where
+  // each comes from.
+  skillsList(team: string = "", member: string = "", lang: string = "en") string
+    bad = optionLike([team, member, lang])
+    if bad != null
+      return refused("'${bad}' starts with -")
+    ~builderRun(["skills", "list", ...(team.isEmpty ? [] as string[] : ["--team", team]), ...(member.isEmpty ? [] as string[] : ["--member", member]), "--lang", lang, "--json"])
+
+  // A skill's SKILL.md as that place sees it (the member's own, the team's own, the library's), where it comes from
+  // and whether it can be changed there.
+  skillsShow(id: string, team: string = "", member: string = "", lang: string = "en") string
+    bad = optionLike([id, team, member, lang])
+    if bad != null or id.isEmpty
+      return refused("a skill's id is needed (no value starts with -)")
+    ~builderRun(["skills", "show", id, ...(team.isEmpty ? [] as string[] : ["--team", team]), ...(member.isEmpty ? [] as string[] : ["--member", member]), "--lang", lang, "--json"])
+
+  // Copy a skill as the team's own (every member inherits it) or the member's, with the same id: it wins over the one
+  // it came from (a library skill is read-only: clone it to change it). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  skillsClone(id: string, team: string, member: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([id, team, member])
+    if bad != null or id.isEmpty or team.isEmpty
+      return refused("a skill's id and a team are needed (no value starts with -)")
+    whose = member.isEmpty ? "the team `${team}`" : "the member `${member}` of the team `${team}`"
+    ~builderChange(ctx, "skills_clone", { "id": id, "team": team, "member": member }, "Copy the skill `${id}` as ${whose}'s own.", confirm, ["skills", "clone", id, "--team", team, ...(member.isEmpty ? [] as string[] : ["--member", member]), "--json"])
+
+  // Write a new own skill of a team (or of a member): text is its whole SKILL.md, with its front matter (name, title,
+  // description, title_es, description_es, kind, tags). Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  skillsCreate(team: string, text: string, member: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([team, member])
+    if bad != null or team.isEmpty or not text.trim().startsWith("---")
+      return refused("a team is needed and text is a whole SKILL.md, from its front matter (---)")
+    whose = member.isEmpty ? "the team `${team}`" : "the member `${member}` of the team `${team}`"
+    ~builderChange(ctx, "skills_create", { "team": team, "text": text, "member": member }, "Write a new skill of ${whose} (${text.trim().split("\n").length} lines).", confirm, ["skills", "create", "--team", team, ...(member.isEmpty ? [] as string[] : ["--member", member]), "--json"], null, text)
+
+  // Replace an own skill of a team (or of a member): text is its whole SKILL.md. Asks the user first (confirm: the
+  // token of a preview, when the client cannot ask).
+  skillsUpdate(id: string, team: string, text: string, member: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([id, team, member])
+    if bad != null or id.isEmpty or team.isEmpty or not text.trim().startsWith("---")
+      return refused("a skill's id and a team are needed, and text is a whole SKILL.md, from its front matter (---)")
+    whose = member.isEmpty ? "the team `${team}`" : "the member `${member}` of the team `${team}`"
+    ~builderChange(ctx, "skills_update", { "id": id, "team": team, "text": text, "member": member }, "Replace the skill `${id}` of ${whose} (${text.trim().split("\n").length} lines).", confirm, ["skills", "update", id, "--team", team, ...(member.isEmpty ? [] as string[] : ["--member", member]), "--json"], null, text)
+
+  // Delete an own skill of a team (or of a member). Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  skillsDelete(id: string, team: string, member: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([id, team, member])
+    if bad != null or id.isEmpty or team.isEmpty
+      return refused("a skill's id and a team are needed (no value starts with -)")
+    whose = member.isEmpty ? "the team `${team}`" : "the member `${member}` of the team `${team}`"
+    ~builderChange(ctx, "skills_delete", { "id": id, "team": team, "member": member }, "Delete the skill `${id}` of ${whose}.", confirm, ["skills", "delete", id, "--team", team, ...(member.isEmpty ? [] as string[] : ["--member", member]), "--json"])
+
+  // ---------- the line, the CI file, the connections, the reports, who can work a member ----------
+
+  // A project's line (.nuclear/builder.json) with its defaults: {line, own (the file's own keys), keys}.
+  lineShow(project: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    ~builderRun(["line", "show", "--json"], "${root}")
+
+  // Set keys of a project's line (values: {key: its JSON value}; line_show lists the keys). Asks the user first
+  // (confirm: the token of a preview, when the client cannot ask).
+  lineSet(project: string, values: <string, any>, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if values.isEmpty or values.keys.any((k: string) => k.startsWith("-") or "=" in k)
+      return refused("say which keys change: {key: value}")
+    pairs = values.keys.map((k: string) => "${k}=${Json.encode(values[k])}")
+    ~builderChange(ctx, "line_set", { "project": "${root}", "values": values }, "Set the line of ${root}: ${pairs.join("; ")}.", confirm, ["line", "set", ...pairs, "--json"], "${root}")
+
+  // Write the CI file of a project that runs its line (host: github, gitlab or bitbucket). Asks the user first
+  // (confirm: the token of a preview, when the client cannot ask).
+  ciExport(project: string, host: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if not (host in ["github", "gitlab", "bitbucket"])
+      return refused("'${host}' is not a CI host: github, gitlab or bitbucket")
+    ~builderChange(ctx, "ci_export", { "project": "${root}", "host": host }, "Write the ${host} CI file of ${root}, which runs nuclear-builder ci.", confirm, ["export", host, "--json"], "${root}")
+
+  // Check the connections of a team (empty: the project's): each member's agent or provider answers.
+  connectionsCheck(project: string, team: string = "") string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if team.startsWith("-")
+      return refused("'${team}' is not a team's id")
+    ~builderRun(["connections", ...(team.isEmpty ? [] as string[] : ["--team", team]), "--json"], "${root}")
+
+  // The factory's reports from its ledger, every project of this machine: view one of bill, throughput, cycle,
+  // burndown, flow, waiting, quality, people, indicators (empty: all); project a name or folder, team and member ids;
+  // since and until dates YYYY-MM-DD; by day or week.
+  metrics(view: string = "", project: string = "", team: string = "", member: string = "", since: string = "", until: string = "", by: string = "day") string
+    flags: <string, string> = { "--view": view, "--project": project, "--team": team, "--member": member, "--from": since, "--to": until, "--by": by }
+    given = flags.keys.filter((k) => not flags[k]!.isEmpty)
+    bad = optionLike(given.map((k) => flags[k]!))
+    if bad != null
+      return refused("'${bad}' starts with -")
+    args = ["metrics"]
+    for k in given
+      args = [...args, k, flags[k]!]
+    ~builderRun([...args, "--json"])
+
+  // The agents that can work a member or answer a conversation on this machine ({id, kind, provider, label, models,
+  // defaultModel, available, why}).
+  agentsList(project: string = "") string
+    if project.startsWith("-")
+      return refused("'${project}' is not a folder")
+    ~builderRun(["agents", "--json", ...(project.isEmpty ? [] as string[] : ["--root", project])])
+
+  // The models of each provider that can work here (provider: only one's).
+  modelsList(provider: string = "", project: string = "") string
+    bad = optionLike([provider, project])
+    if bad != null
+      return refused("'${bad}' starts with -")
+    ~builderRun(["models", ...(provider.isEmpty ? [] as string[] : ["--provider", provider]), "--json", ...(project.isEmpty ? [] as string[] : ["--root", project])])
+
   // Every tool, in the order a client lists them.
   all() any[]
     [
       workspaceCreate, workspaceShow, workspaceEdit, workspaceDelete, appAdd, appRename, appRemove,
       specCreate, specList, specShow, specEdit,
       teamList, teamShow, teamCreate, teamEdit, teamDelete, memberAdd, memberEdit, memberRemove, skillsSet,
+      specMove, specMigrate, specDelete, specAccept, specDiscard,
+      runStart, runs, runFile, runJournal, runAnswer, runResume, runRetry, runRestart, runStop,
+      checks, checkSwitch, checkAdd, checkMark,
+      teamDuplicate, teamDefault, teamExport, teamImport, teamLogo, teamSuggest, teamNameSuggest, teamRunnable, teamRoster, teamTemperaments,
+      skillsList, skillsShow, skillsClone, skillsCreate, skillsUpdate, skillsDelete,
+      lineShow, lineSet, ciExport, connectionsCheck, metrics, agentsList, modelsList,
     ]
 
 LOCAL_STANDBY = "no member of the local kind: the local models are on standby (ADR-platform-0013); a member is worked by an agent (kind agent) or an API provider (kind api)"

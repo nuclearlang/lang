@@ -170,7 +170,7 @@ testTheTeamsToolsCallNuclearBuilderAndNeverHireALocalMember() void
   expect(runner.calls[0][0] == ["nuclear-builder", "team", "create", "--json"] and json.loads("${runner.calls[0][2]}")["members"] == [{ "role": "developer", "provider": "claude-code" }])
   asyncio.run(tools.memberAdd("dev", "qa", "", "agent", "codex", "", "", 2, "", yes))
   expect(runner.calls[1][0] == ["nuclear-builder", "team", "member", "add", "dev", "--role", "qa", "--kind", "agent", "--provider", "codex", "--count", "2", "--json"])
-  asyncio.run(tools.memberEdit("dev", "qa-001", "", "", "", "", "", "Be thorough", "", null, "", yes))
+  asyncio.run(tools.memberEdit("dev", "qa-001", instructions = "Be thorough", ctx = yes))
   expect(runner.calls[2][0] == ["nuclear-builder", "team", "member", "update", "dev", "qa-001", "--instructions", "Be thorough", "--json"])
   asyncio.run(tools.memberRemove("dev", "qa-001", "", yes))
   asyncio.run(tools.skillsSet("dev", ["testing", "security"], "", "", yes))
@@ -185,6 +185,48 @@ testTheTeamsToolsCallNuclearBuilderAndNeverHireALocalMember() void
   asyncio.run(tools.teamCreate("Ops", "", "", null, [{ "role": "devops" }], null, "", "Write runbooks", "api", "anthropic", "claude-sonnet-4-5", "", yes))
   draft = json.loads("${runner.calls.last[2]}")
   expect(draft["brain"] == { "kind": "api", "provider": "anthropic", "model": "claude-sonnet-4-5" } and draft["instructions"] == "Write runbooks" and draft["method"] == "")
+
+// The rest of Nuclear Builder (what its page and the company screen do): each a `nuclear-builder` command in the
+// project, every change asked first and nothing run on a no; a run started or answered in a process of its own.
+testTheRestOfNuclearBuilderIsReachedAndEveryChangeAskedFirst(tmpPath: Path) void
+  project = tmpPath.joinpath("shop")
+  project.mkdir()
+  project.joinpath("config.nuc").writeText("")
+  runner = Runner("{\"id\": \"lend-a-book\", \"path\": \"specs/books/lend-a-book\"}")
+  tools = WorkTools(runner.run)
+  no = asking("accept", false)
+  declined = said(asyncio.run(tools.runStart("${project}", "lend-a-book", ctx = no)))
+  // the spec is read to find its file, nothing is started
+  expect(declined["changed"] == "nothing: the user said no" and runner.calls.length == 1)
+  yes = asking("accept")
+  asyncio.run(tools.runStart("${project}", "lend-a-book", "dev", "developer=dev-017", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "run", "${project.resolve()}/specs/books/lend-a-book/spec.md", "--detach", "--team", "dev", "--assign", "developer=dev-017"] and runner.calls.last[1] == "${project.resolve()}")
+  asyncio.run(tools.runAnswer("${project}", "r1", "change", "Smaller steps", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "run", "answer", "r1", "--answer", "change", "--text", "Smaller steps", "--detach"])
+  expect("not an answer" in "${said(asyncio.run(tools.runAnswer("${project}", "r1", "maybe", ctx = yes)))["error"]}")
+  asyncio.run(tools.runRetry("${project}", "r1", "code", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "retry", "r1", "--from", "code", "--detach"])
+  asyncio.run(tools.checkMark("${project}", "r1", "c2", "passed", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "checks", "r1", "mark", "c2", "passed", "--json"])
+  asyncio.run(tools.specMove("${project}", "lend-a-book", "loans", "domain", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "spec", "move", "lend-a-book", "--component", "loans", "--layer", "domain", "--json"])
+  asyncio.run(tools.lineSet("${project}", { "budgetUsd": 3 }, ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "line", "set", "budgetUsd=3", "--json"])
+  asyncio.run(tools.skillsCreate("dev", "---\nname: house-style\n---\nShort functions.\n", ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "skills", "create", "--team", "dev", "--json"] and "${runner.calls.last[2]}".startsWith("---"))
+  // the member's whole card: its GIF habit, its note and the team's model
+  asyncio.run(tools.memberEdit("dev", "dev-1", gifs = "often", note = "Prefers Kanban", teamBrain = true, ctx = yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "team", "member", "update", "dev", "dev-1", "--gifs", "often", "--note", "Prefers Kanban", "--team-brain", "--json"])
+  // what only reads is never asked
+  asked = yes.session.asked.length
+  asyncio.run(tools.runs("${project}"))
+  asyncio.run(tools.metrics("bill", by = "week"))
+  asyncio.run(tools.modelsList("claude-code"))
+  expect(yes.session.asked.length == asked and runner.calls.slice(-3).map((c) => c[0]) == [["nuclear-builder", "runs", "--json"], ["nuclear-builder", "metrics", "--view", "bill", "--by", "week", "--json"], ["nuclear-builder", "models", "--provider", "claude-code", "--json"]])
+  // a client that cannot ask: a preview, nothing run
+  calls = runner.calls.length
+  preview = said(asyncio.run(tools.runStop("${project}", "r1")))
+  expect(preview["confirm"] != null and runner.calls.length == calls)
 
 // The real `nuclear workspace` (skipped until the installed command has it): create, show, edit and delete.
 testTheWorkspaceToolsAgainstTheInstalledCommand(tmpPath: Path) void

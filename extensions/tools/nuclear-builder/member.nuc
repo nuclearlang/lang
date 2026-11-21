@@ -1,3 +1,4 @@
+use re
 use sys
 use json
 use httpx
@@ -17,6 +18,8 @@ SAY_IN: <string, string> = { "en": "Answer in English.", "es": "Responde en espa
 
 // The general agent's member in the chat: its id names its direct message, `dm-atlas`.
 GENERAL_AGENT = "atlas"
+// The folder's own channel in the chat (the workspace's or the project's), with the assigned team's tech lead.
+HOME_CHANNEL = "home"
 
 GENERAL_AGENT_BIO: <string, string> = { "en": "I explain Nuclear, your workspace and your projects from the knowledge base. A task is a team's: I tell you which tech lead is free, or help you make a team.", "es": "Te explico Nuclear, tu workspace y tus proyectos desde la base de conocimiento. Una tarea es de un equipo: te digo qué tech lead está libre, o te ayudo a crear un equipo." }
 
@@ -341,18 +344,24 @@ memberLine(args: string[]) int
   member = Member(root, id, given, readLine(root, "${card["platform"] ?? ""}"), readIt, (e: <string, any>) => lines.on(e), options, team, role, request!)
   member.respond()
 
-// The host file of Nuclear Chat for a project (spec 013, design.md "The process"; spec 023 requirement 2): every
-// saved team (the project's first: line.nuc's `teamOfRun`; the local team when none is saved), each member of each
+// The host file of Nuclear Chat for a project or a workspace (spec 013, design.md "The process"; spec 023 requirement
+// 2): every saved team (the one assigned here first: teams.nuc's `runTeam`; none when none is saved: no team is made
+// up), each member of each
 // (any number per role; id `<team>-<member id>`), their profile in `lang`, the brain that answers as them (`brain`:
 // the agent's name, its kind, provider and model, paid or local), their face (the thumbnail's whole path, a chat's
-// avatar; the portrait's without one; null without either), their temperament, their personality and their
-// responder. Only the tech lead of each team and Atlas are `listed` (the people of the chat, each with a direct
-// message); the other members write in the team's channel and the run's threads. The channels `general` and each
-// team's, with its tech lead; the teams with their tech lead, who answers a message to the team.
+// avatar; the portrait's without one; null without either), their temperament, their personality, their
+// responder and their profile's card (`memberCard`). Only the tech lead of each team and Atlas are `listed` (the people of the chat, each with a direct
+// message); the other members write in the team's channel and the run's threads. The channels: `home`, the folder's
+// own (named after the workspace or the project), with the tech lead of the team assigned to it (`assignedTeamId`:
+// the folder's or its workspace's); `general`; each team's, with its tech lead. `assigned` is the team assigned here,
+// null when none is: the editor then offers the saved teams in `home` (or creating one). The teams with their tech
+// lead, who answers a message to the team.
 chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <string, any>
   members: <string, any>[] = []
   teams: <string, any>[] = []
   channels: <string, any>[] = []
+  // the temperaments a member's profile offers, named in the language
+  moods = temperaments().map((t) => { "id": "${t["id"]}", "name": "${(t["name"] ?? ({} as <string, any>))[lang] ?? (t["name"] ?? ({} as <string, any>))["en"] ?? t["id"]}" })
   for team in hostTeams(root, lang)
     teamId = "${team["id"]}"
     lead = "${team["techLead"] ?? defaultLead(team["members"] ?? []) ?? ""}"
@@ -363,7 +372,7 @@ chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <st
       p = staff.find((x) => x["id"] == r["employee"]) ?? ({} as <string, any>)
       name = "${r["name"] ?? ""}".isEmpty ? ROLE_TITLES[role] ?? role : "${r["name"]}"
       personality: <string, any> = r["personality"] ?? ({} as <string, any>)
-      members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "listed": own == lead, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" } })
+      members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "listed": own == lead, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" }, "card": memberCard(r, teamId, personality, p, moods, lang) })
     leadId = lead.isEmpty ? "" : "${teamId}-${lead}"
     // a message to the team goes to its tech lead; `@<role>` to the role's first member as listed here (Nuclear Chat)
     teams.add({ "id": teamId, "name": team["name"], "lead": leadId })
@@ -379,17 +388,43 @@ chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <st
   if chosen == null
     responder["why"] = NO_PROVIDER
   members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "listed": true, "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": responder })
-  project = "${projectCard(root)["name"] ?? Path(root).name}"
-  { "host": "builder", "members": members, "channels": [{ "id": "general", "name": "general", "topic": "The project ${project}", "members": listed }, ...channels], "teams": teams, "lang": lang }
+  project = folderName(root)
+  assigned = assignedTeamId(root)
+  team: <string, any>? = assigned == null ? null : teams.find((t) => t["id"] == assigned)
+  homeLead = team == null ? "" : "${team!["lead"]}"
+  home: <string, any> = { "id": HOME_CHANNEL, "name": channelName(project), "topic": project, "members": homeLead.isEmpty ? ([] as string[]) : [homeLead] }
+  { "host": "builder", "members": members, "channels": [home, { "id": "general", "name": "general", "topic": "The project ${project}", "members": listed }, ...channels], "teams": teams, "assigned": team == null ? null : assigned, "lang": lang }
 
-// The teams of the chat, as shown: the project's (the run's team: the one of `.nuclear/builder.json`, the default, the
-// only saved one; none chosen among several is no error here), then every other saved team; with none saved, the
-// local team. A team that cannot be read is left out of the chat (the company screen tells what is wrong with it).
+// The folder's name in the chat: a workspace's (its marker's `workspace(name = …)`), else the project's, else the
+// folder's own.
+folderName(root: string) string
+  marker = Path(root, ".workspace", "workspace.nuc")
+  if marker.isFile()
+    found = re.search(r'workspace\(\s*name\s*=\s*"([^"]+)"', marker.readText())
+    if found != null
+      return "${found!.group(1)}"
+  "${projectCard(root)["name"] ?? Path(root).name}"
+
+// A channel's name from a folder's: lower case, words joined by `-` (Slack's).
+channelName(name: string) string
+  slug: string = re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9]+", "-", name.lower()))
+  slug.isEmpty ? HOME_CHANNEL : slug
+
+// What a member's profile in the chat shows and changes: the temperament (the team's, else the employee's) and the ones
+// to choose from, the skills by their titles, the instructions; only a saved team's member can be changed (the local
+// team is made when none is saved: the profile says to create a team).
+memberCard(r: <string, any>, teamId: string, personality: <string, any>, p: <string, any>, moods: <string, any>[], lang: string) <string, any>
+  skills = ((r["skills"] ?? ([] as string[])) as string[]).map((id) => "${(librarySkill(id, lang) ?? ({} as <string, any>))["title"] ?? id}")
+  { "editable": teamId != LOCAL_TEAM, "temperament": "${personality["temperament"] ?? p["temperament"] ?? ""}", "temperaments": moods, "skills": skills, "instructions": "${r["instructions"] ?? ""}" }
+
+// The teams of the chat, as shown: the project's (the run's team: the one of `.nuclear/builder.json`, its workspace's,
+// the default, the only saved one; none chosen among several is no error here), then every other saved team; with
+// none saved, none (the local team a run takes is never a member of the chat: nobody could change it). A team that cannot be read is left out of the chat (the company screen tells what is wrong with it).
 hostTeams(root: string, lang: string) <string, any>[]
   people = rosters(lang)
   first: <string, any>? = null
   try
-    first = teamOfRun(root, null)
+    first = runTeam(root, null)
   catch e
     if not isinstance(e, TeamChoice)
       throw e

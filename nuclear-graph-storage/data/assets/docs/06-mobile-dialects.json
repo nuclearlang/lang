@@ -267,7 +267,8 @@
    "summary": "`StateManager<S>`: a `Cubit<S>` that does not emit after it is closed (a closed screen gets no late responses).",
    "body": [
     "`StateManager<S>`: a `Cubit<S>` that does not emit after it is closed (a closed screen gets no late",
-    "responses)."
+    "responses). `stateTurn()` and `isLatestTurn(turn)` keep only the latest answer of an asynchronous `@state` method: one",
+    "called again before its answer comes drops the older answer when it comes back last."
    ],
    "platforms": [
     "mobile"

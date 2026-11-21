@@ -160,6 +160,9 @@ template = { file = "templates/injectable.tpl" }
 
 # state of a screen: a Cubit whose state is a state model
 [kinds.statemanager]
+# the runtime's StateManager keeps these: a method of that name would replace it (N0223); `stateTurn` and
+# `isLatestTurn` keep only the latest answer of an asynchronous @state method
+sealed = ["close", "emit", "state", "stateTurn", "isLatestTurn"]
 description = "@stateModel(S) statemanager Name(deps) + @state methods → the state of a screen (Cubit<S>)"
 inherits = ["StateManager"]
 imports = ["StateManager"]

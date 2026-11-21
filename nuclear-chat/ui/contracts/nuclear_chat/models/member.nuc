@@ -1,4 +1,4 @@
-// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
 // A member of the factory, as its host gives it: who they are, how they speak and how they answer.
 Member
   id: string
@@ -16,3 +16,5 @@ Member
   brain: Brain
   // whether the member is one of the chat's people (the members list, #general, a direct message of their own); one not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with them stays readable
   listed: boolean = true
+  // the profile's temperament, skills and instructions, and whether the host can change them (none: a host that gives no card, its profile read only)
+  card?: Card

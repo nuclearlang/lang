@@ -495,7 +495,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
 // The tools of an agent that only informs (`nuclear-mcp --informs`: Nuclear Atlas, spec 023): what teaches Nuclear and
 // reads the user's projects, workspaces, specs and teams, and the team tools (each change asked first); nothing that
 // does the work (no generator, build, project command, developer, spec or workspace written).
-INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit"]
+INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit", "runs", "run_file", "run_journal", "checks", "team_suggest", "team_name_suggest", "team_runnable", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "metrics", "agents_list", "models_list"]
 
 // The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always); `informs`:
 // only `INFORM_TOOLS`.

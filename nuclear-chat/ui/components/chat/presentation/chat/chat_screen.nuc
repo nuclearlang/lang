@@ -2,8 +2,9 @@
 // beside it. The host's path names the workspace and the first channel (`/<workspace>/general`); every call and event goes
 // through the host's bridge. On a narrow page the channels fold behind a button and the thread covers the channel.
 // `?message=<id>` (and `&thread=<id>` when it is a reply) opens the channel at that message, lit: a notification
-// opens the exact message. Ctrl+K (⌘K) opens the quick switcher.
-@screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager])
+// opens the exact message. Ctrl+K (⌘K) opens the quick switcher. A member's name or picture opens their profile where
+// the thread goes; the page's theme (auto, light, dark) is the workspace's, chosen at the sidebar's foot.
+@screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager, ProfileManager])
 stateful ChatScreen(workspace: string, channel: string, message: string = "", thread: string = "")
   open: string = "general"
   // the message a search or a notification opened
@@ -20,7 +21,7 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
   initState() void
     open = channel
     focus = message
-    WorkspaceManager.load(workspace)
+    WorkspaceManager.start(workspace)
     ChannelsManager.start(workspace, open)
     MessagesManager.start(workspace)
     MessagesManager.open(open)
@@ -48,7 +49,7 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
   layout(ws: Workspace, channels: Channel[], texts: Texts) Element
     current = channels.find((c) => c.id == open)
     div(
-      className = "chat ${sidebar ? "sidebar-open" : ""}",
+      className = "chat theme-${ws.theme} ${sidebar ? "sidebar-open" : ""}",
       onKeyDown = (e) => shortcut(e),
       children = [
         Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id), onFind = (people) => find(people ? "people" : "switch"), onNewChannel = () => making(true)),
@@ -78,7 +79,7 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
             ),
           ],
         ),
-        searching ? SearchPanel(ws = ws, channels = channels, texts = texts, onJump = (f) => jump(f), onClose = () => search(false)) : ThreadPanel(ws = ws, channels = channels, texts = texts, picker = picker and pickerThread != "" ? gifPicker(texts) : null, onClose = () => ThreadManager.hide(), onGif = (q) => gif(q, threadOpen()), onChannel = (id) => go(id), focus = focus),
+        searching ? SearchPanel(ws = ws, channels = channels, texts = texts, onJump = (f) => jump(f), onClose = () => search(false)) : ProfileStateBuilder(ready = (id: string) => profilePanel(ws, channels, id, texts), orElse = () => threadPanel(ws, channels, texts)),
         finder != "" ? Finder(ws = ws, channels = channels, texts = texts, people = finder == "people", onOpen = (id) => found(id), onClose = () => find("")) : null,
         newChannel ? NewChannelDialog(ws = ws, texts = texts, onMade = (id) => made(id), onClose = () => making(false)) : null,
       ],
@@ -87,6 +88,16 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
   // An archived channel is read only: where the composer was, what it is and *Open it again*.
   archived(current: Channel, texts: Texts) Element
     div(className = "archived-bar", children = [span(children = texts.format("archived.bar", { "name": current.name })), button(className = "action primary", onClick = () => unarchive(current.id), children = texts.get("unarchive"))])
+
+  threadPanel(ws: Workspace, channels: Channel[], texts: Texts) Element
+    ThreadPanel(ws = ws, channels = channels, texts = texts, picker = picker and pickerThread != "" ? gifPicker(texts) : null, onClose = () => ThreadManager.hide(), onGif = (q) => gif(q, threadOpen()), onChannel = (id) => go(id), focus = focus)
+
+  // A member's profile where the thread goes (the thread comes back when it closes); a member no longer there, the thread.
+  profilePanel(ws: Workspace, channels: Channel[], id: string, texts: Texts) Element
+    member = ws.members.find((m) => m.id == id)
+    if member == null
+      return threadPanel(ws, channels, texts)
+    ProfilePanel(key = id, ws = ws, member = member!, texts = texts, onClose = () => ProfileManager.hide(), onMessage = (dm) => found(dm))
 
   gifPicker(texts: Texts) Element
     GifPicker(key = "picker-${pickerThread}-${pickerStart}", texts = texts, start = pickerStart, thread = pickerThread, onClose = () => closePicker())
@@ -116,6 +127,7 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
     ChannelsManager.read(id)
 
   openThread(m: Message)
+    ProfileManager.hide()
     ThreadManager.open(open, m.id)
 
   // A search's result: its channel at the message, and its thread when it is a reply.
@@ -143,6 +155,8 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
     go(id)
 
   search(on: boolean)
+    if on
+      ProfileManager.hide()
     setState(() =>
       searching = on
       sidebar = false

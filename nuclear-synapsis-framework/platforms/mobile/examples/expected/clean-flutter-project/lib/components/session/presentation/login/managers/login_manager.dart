@@ -14,7 +14,9 @@ class LoginManager extends StateManager<LoginState> {
 
   Future<void> login(LoginForm form) async {
     loading();
+    final turn$ = stateTurn();
     final result = await _login(form);
+    if (!isLatestTurn(turn$)) return;
     emit(result.match(LoginState.error, LoginState.done));
   }
 

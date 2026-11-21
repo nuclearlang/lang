@@ -20,3 +20,6 @@ Member
   // not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with
   // them stays readable
   listed: boolean = true
+  // the profile's temperament, skills and instructions, and whether the host can change them (none: a host that gives
+  // no card, its profile read only)
+  card?: Card

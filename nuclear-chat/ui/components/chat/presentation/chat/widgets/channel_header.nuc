@@ -18,8 +18,8 @@ stateless ChannelHeader(ws: Workspace, channel: Channel?, open: string, texts: T
       className = "channel-header",
       children = [
         button(className = "menu", title = texts.get("showChannels"), onClick = () => onSidebar(), children = span(className = "icon icon-menu")),
-        member != null ? Avatar(member = member, author = member!.id, size = "small") : null,
-        div(className = "channel-name", children = [strong(className = "channel-title", children = title), member != null and not picks and member!.brain.agent != "" ? BrainLine(brain = member!.brain, texts = texts) : null]),
+        member != null ? button(className = "profile-link", title = texts.format("profile.open", { "name": member!.name }), onClick = () => ProfileManager.show(member!.id), children = Avatar(member = member, author = member!.id, size = "small")) : null,
+        div(className = "channel-name", children = [member != null ? button(className = "channel-title profile-link", title = texts.format("profile.open", { "name": member!.name }), onClick = () => ProfileManager.show(member!.id), children = title) : strong(className = "channel-title", children = title), member != null and not picks and member!.brain.agent != "" ? BrainLine(brain = member!.brain, texts = texts) : null]),
         member != null and member!.role != "" ? span(className = "chip role", children = member!.role) : null,
         lead != null ? span(className = "chip lead", title = texts.format("leadOf", { "name": lead!.name }), children = [Avatar(member = lead, author = lead!.id, size = "tiny"), span(children = "${texts.get("lead")}: ${lead!.name}")]) : null,
         channel != null and channel!.topic != "" ? span(className = "topic", children = channel!.topic) : null,

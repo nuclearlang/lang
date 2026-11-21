@@ -17,7 +17,9 @@ export class TodosManager extends StateManager<TodosState> {
 
   async load(): Promise<void> {
     this.loading();
+    const turn$ = this.stateTurn();
     const result = await this._load();
+    if (!this.isLatestTurn(turn$)) return;
     this.emit(result.match(TodosState.error, TodosState.full));
   }
 

@@ -1,6 +1,12 @@
-// The members API: the user's answer to a member's question (an event `ask`).
+// The members API: the user's answer to a member's question (an event `ask`), a member changed from their profile.
 @controller("members")
 controller MembersController(members: MembersAppComponent)
   @post("{workspace}/answers")
   answer(workspace: string, answer: Answer) Result<Error, Answer>
     ~members.reply(workspace, answer)
+
+  // A member changed from their profile (name, model, instructions, temperament, GIFs): told to the host as an
+  // event `action` (`member`), which applies it and registers the workspace again.
+  @post("{workspace}/{member}/edit")
+  edit(workspace: string, member: string, edit: MemberEdit) Result<Error, ChatEvent>
+    ~members.edit(workspace, member, edit)

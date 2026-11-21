@@ -1,0 +1,4 @@
+// What WorkspacesRepository.theme answers, for the screens of members.
+usecase ChooseTheme(repository: WorkspacesRepository)
+  exec(id: string, choice: ThemeChoice) Result<NuclearChatError, Workspace>
+    ~repository.theme(id, choice)

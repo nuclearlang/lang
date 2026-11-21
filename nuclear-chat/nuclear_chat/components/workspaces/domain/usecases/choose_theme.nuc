@@ -1,0 +1,9 @@
+// The page's colors chosen in the chat: kept for the workspace while it is registered, and told to the host (an event
+// `action`, `theme`), which keeps it as the user's setting and gives it again at the next registration.
+usecase ChooseTheme(registry: WorkspaceRegistry)
+  exec(workspace: string, choice: ThemeChoice) Result<Error, Workspace>
+    found: Result<Error, Workspace> = registry.find(workspace)
+    if found.isErr
+      return found
+    found.value.theme = choice.theme
+    Ok(found.value)

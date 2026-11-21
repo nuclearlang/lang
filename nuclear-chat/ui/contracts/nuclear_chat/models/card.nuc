@@ -1,0 +1,8 @@
+// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from), skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).
+Card
+  editable: boolean = false
+  temperament: string = ""
+  temperaments: Temperament[] = []
+  skills: string[] = []
+  instructions: string = ""

@@ -21,7 +21,9 @@ export class TasksManager extends StateManager<TasksState> {
 
   async load(): Promise<void> {
     this.loading();
+    const turn$ = this.stateTurn();
     const result = await this._load();
+    if (!this.isLatestTurn(turn$)) return;
     this.emit(result.match(TasksState.error, TasksState.full));
   }
 

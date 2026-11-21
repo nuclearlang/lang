@@ -84,6 +84,10 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Untested
 
+- **Nuclear's base skills in every team (0.87)**: `baseSkillIds`, `sharedSkills` and the screen's `libraryGroups` /
+  `memberSkills` are tested; never seen in a window: the locked *Nuclear base* chip and its tooltip in the team's skills
+  and the wizard's step 2, the picker without the base skills, a member's *Skills* tab marking them *Nuclear base*, a
+  team of before 0.87 that lists one.
 - **The Builder without its chat, the roster only while adding** (2026-11-20): tested (`editors.test.ts`: the page,
   the squad's clicks), never opened in a running VS Code. A member or a team other than the project's run team opens
   a channel Nuclear Chat did not register (`chatHost` registers only that team): Atlas shows the chat without it.

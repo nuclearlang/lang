@@ -1,0 +1,10 @@
+// What a member's profile shows and changes, as its host gives it: their temperament (and the ones to choose from),
+// skills and instructions, and whether the host can change them (a member of a team that is not saved cannot).
+Card
+  editable: boolean = false
+  @maxLength(64)
+  temperament: string = ""
+  temperaments: Temperament[] = []
+  skills: string[] = []
+  @maxLength(20000)
+  instructions: string = ""

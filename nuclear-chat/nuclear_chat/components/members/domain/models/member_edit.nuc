@@ -1,0 +1,14 @@
+// What the user changes of a member from their profile: only what is given. The host applies it (the chat keeps
+// none of it: the member comes back changed when the host registers the workspace again).
+MemberEdit
+  @minLength(1)
+  @maxLength(80)
+  name?: string
+  @maxLength(200)
+  model?: string
+  @maxLength(20000)
+  instructions?: string
+  @maxLength(64)
+  temperament?: string
+  @pattern(r"^(never|sometimes|often)$")
+  gifs?: string

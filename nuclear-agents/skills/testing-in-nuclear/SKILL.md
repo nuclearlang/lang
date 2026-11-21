@@ -6,6 +6,7 @@ title_es: Tests en Nuclear
 description_es: Escribir y ejecutar tests en Nuclear para cada plataforma de Synapsis: test/<nombre>_test.nuc, @test, mocks de repositorios, tests de estados y de widgets, el appClient del backend y nuclear test. Úsalo cuando una tarea añade tests, un test falla o hay que probar el código antes de darlo por hecho.
 kind: technology
 tags: [testing, tests, unit tests, mock, nuclear test, widget test, states, appclient]
+base: true
 ---
 # Testing in Nuclear
 

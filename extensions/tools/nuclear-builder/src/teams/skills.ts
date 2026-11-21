@@ -90,10 +90,10 @@ export function skillFields(md: string): SkillFields {
 }
 
 /** The library by kind (domains, technologies, practices, then any other), each one whose id, title, description or
- * tags hold every word of `q`. */
-export function libraryGroups<S extends { id: string; title: string; description?: string; kind?: string; tags?: string[] }>(library: S[], q: string): { kind: string; skills: S[] }[] {
+ * tags hold every word of `q`; never Nuclear's base skills (`base`: every member has them, nobody chooses them). */
+export function libraryGroups<S extends { id: string; title: string; description?: string; kind?: string; tags?: string[]; base?: boolean }>(library: S[], q: string): { kind: string; skills: S[] }[] {
   const words = String(q ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-  const hit = (s: S) => { const t = [s.id, s.title, s.description ?? '', ...(s.tags ?? [])].join(' ').toLowerCase(); return words.every((w) => t.includes(w)); };
+  const hit = (s: S) => { if (s.base) return false; const t = [s.id, s.title, s.description ?? '', ...(s.tags ?? [])].join(' ').toLowerCase(); return words.every((w) => t.includes(w)); };
   const kinds = ['domain', 'technology', 'practice'];
   for (const s of library ?? []) if (s.kind && !kinds.includes(s.kind)) kinds.push(s.kind);
   return kinds.map((kind) => ({ kind, skills: (library ?? []).filter((s) => (s.kind || 'practice') === kind && hit(s)) })).filter((g) => g.skills.length);
@@ -102,14 +102,15 @@ export function libraryGroups<S extends { id: string; title: string; description
 /** A skill as a member's Skills tab lists it: where it comes from (`member`: its own; `team`: the team's own;
  * `library`: attached by the member, the team or its base agent, `via`), whether it is inherited from the team, and what
  * it overrides. */
-export interface SkillRow { id: string; title: string; description: string; from: 'member' | 'team' | 'library'; via: 'member' | 'team' | 'agent'; inherited: boolean; overrides: string[] }
+export interface SkillRow { id: string; title: string; description: string; from: 'member' | 'team' | 'library'; via: 'member' | 'team' | 'agent' | 'base'; inherited: boolean; overrides: string[] }
 
 /** What a member gets beside its role's skills, the member's own first, then its library skills, then what it
- * inherits (library.nuc `sharedSkills`, ordered for the screen). `roleNames`: its role's skills (not these). */
+ * inherits: the team's, then Nuclear's base skills (library.nuc `sharedSkills`, ordered for the screen). `roleNames`:
+ * its role's skills (not these). */
 export function memberSkills(
   team: { skills?: string[]; ownSkills?: { id: string; name: string; description?: string }[] },
   member: { skills?: string[]; ownSkills?: { id: string; name: string; description?: string }[]; agent?: string },
-  library: { id: string; title: string; description?: string }[],
+  library: { id: string; title: string; description?: string; base?: boolean }[],
   agents: { id: string; skills?: string[] }[],
   roleNames: string[],
 ): SkillRow[] {
@@ -123,11 +124,14 @@ export function memberSkills(
     const own = teamOwn(id);
     if (own) return push({ id, title: own.name, description: own.description ?? '', from: 'team', via, inherited: via === 'team', overrides: lib(id) ? ['library'] : [] });
     const l = lib(id);
-    if (l) push({ id, title: l.title, description: l.description ?? '', from: 'library', via, inherited: via === 'team', overrides: [] });
+    // a base skill a team or member of before 0.87 lists is shown once, as the base's (the last loop)
+    if (l?.base && via !== 'base') return;
+    if (l) push({ id, title: l.title, description: l.description ?? '', from: 'library', via, inherited: via === 'team' || via === 'base', overrides: [] });
   };
   for (const id of member.skills ?? []) if (!roleNames.includes(id)) fromLib(id, 'member');
   for (const id of (agents ?? []).find((a) => a.id === member.agent)?.skills ?? []) fromLib(id, 'agent');
   for (const id of team.skills ?? []) fromLib(id, 'team');
   for (const s of team.ownSkills ?? []) fromLib(s.id, 'team');
+  for (const s of library ?? []) if (s.base) fromLib(s.id, 'base');
   return rows;
 }

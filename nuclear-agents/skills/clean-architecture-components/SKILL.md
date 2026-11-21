@@ -6,6 +6,7 @@ title_es: Arquitectura limpia con componentes
 description_es: Organizar un proyecto Synapsis en componentes cerrados con capas de presentación, dominio y datos: fachadas, casos de uso, repositorios, servicios y agregados, dispuestos por nuclear gen component, gen resource y nuclear help layout. Úsalo al diseñar las piezas de una función, dividir un componente o corregir errores N0301/N0302.
 kind: practice
 tags: [architecture, clean architecture, components, layers, use case, repository, facade, design]
+base: true
 ---
 # Clean architecture with components
 

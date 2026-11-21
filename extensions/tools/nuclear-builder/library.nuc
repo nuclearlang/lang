@@ -44,13 +44,13 @@ localizedField(head: <string, any>, key: string, lang: string) string
   own.isEmpty ? "${head[key] ?? ""}" : own
 
 // A markdown file of the library as an entry: its id, title and description in `lang`, its front matter's other
-// fields, and the whole file (`markdown`).
+// fields, whether it is one of Nuclear's base skills (`base: true`, `baseSkillIds`), and the whole file (`markdown`).
 libraryEntry(id: string, text: string, lang: string) <string, any>
   head = frontMatter(text)
   words = id.replaceAll("-", " ")
   title = localizedField(head, "title", lang)
   tags: any = head["tags"] ?? ([] as string[])
-  entry: <string, any> = { "id": id, "title": title.isEmpty ? words.substring(0, 1).upper() + words.substring(1) : title, "description": localizedField(head, "description", lang), "kind": "${head["kind"] ?? ""}", "tags": isinstance(tags, list) ? tags : ([] as string[]), "from": "library", "markdown": text }
+  entry: <string, any> = { "id": id, "title": title.isEmpty ? words.substring(0, 1).upper() + words.substring(1) : title, "description": localizedField(head, "description", lang), "kind": "${head["kind"] ?? ""}", "tags": isinstance(tags, list) ? tags : ([] as string[]), "from": "library", "base": "${head["base"] ?? ""}".lower() == "true", "markdown": text }
   if head["role"] != null
     entry["role"] = "${head["role"]}"
     skills: any = head["skills"] ?? ([] as string[])
@@ -86,6 +86,12 @@ libraryAgent(id: string, lang: string = "en", dir: Path? = null) <string, any>?
   at = dir ?? libraryDir()
   file = at == null or not validSkillId(id) ? null : at!.joinpath("agents", id, "agent.md")
   file == null or not file!.isFile() ? null : libraryEntry(id, file!.readText(encoding = "utf-8"), lang)
+
+// Nuclear's base skills (`base: true` in their SKILL.md): every member of every team has them, whatever the team
+// chose (the language and its command line, the three platforms, tests, contracts, architecture, clean code, review,
+// security, performance); the user chooses only the others.
+baseSkillIds(dir: Path? = null) string[]
+  librarySkills("en", dir).filter((s) => s["base"] == true).map((s) => "${s["id"]}")
 
 // ---------- a team's and a member's own skills ----------
 
@@ -222,8 +228,9 @@ skillWords(skills: string[], dir: Path? = null) string[]
 ownById(given: any, id: string) <string, any>?
   isinstance(given, list) ? (given as <string, any>[]).find((s) => s["id"] == id) : null
 
-// The skills a member gets beside its role's (spec 011 requirement 34): the team's (its library skills, its own), the
-// base agent's, the member's (its library skills, its own), each id once, in that order. Each `{ id, markdown, from,
+// The skills a member gets beside its role's (spec 011 requirement 34): Nuclear's base skills (`baseSkillIds`), the
+// team's (its library skills, its own), the base agent's, the member's (its library skills, its own), each id once, in
+// that order (a team file of before 0.87 that lists a base skill gets it once). Each `{ id, markdown, from,
 // overrides }`: a member's own skill wins over the team's, the team's over the library's (`overrides` says which it
 // replaced). A member's `skills` that are its role's are the role's (composeRole), not these.
 sharedSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <string, any>[]
@@ -235,6 +242,7 @@ sharedSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <str
         id = isinstance(x, dict) ? "${(x as <string, any>)["id"] ?? ""}" : "${x}"
         if not id.isEmpty and not (id in ids)
           ids.add(id)
+  add(baseSkillIds(at))
   add(team["skills"])
   add(team["ownSkills"])
   agent = isinstance(member["agent"], str) ? libraryAgent("${member["agent"]}", "en", at) : null

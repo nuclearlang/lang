@@ -1,5 +1,5 @@
-// Generated from the contract nuclear_chat 0.85.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
-// The workspaces API: a host registers its project when it starts, and reads it back.
+// Generated from the contract nuclear_chat 0.86.1 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The workspaces API: a host registers its project when it starts (again when its members change: an event `workspace`), and reads it back.
 @repository(path = "workspaces", connection = "nuclear_chat")
 repository WorkspacesRepository
   @post
@@ -7,3 +7,7 @@ repository WorkspacesRepository
 
   @get(path = ":id")
   one(id: string) Result<NuclearChatError, Workspace>
+
+  // The page's colors chosen in the chat (auto, light, dark): told to the host as an event `action` (`theme`).
+  @put(path = ":id/theme")
+  theme(id: string, @body choice: ThemeChoice) Result<NuclearChatError, Workspace>

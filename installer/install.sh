@@ -124,11 +124,14 @@ if [ "$VSCODE" = 1 ]; then
   elif [ -z "$VSIX" ]; then
     echo "note: no .vsix in extensions/vscode (npm run package there); VS Code extension skipped"
   else
-    code --install-extension "$VSIX" --force >/dev/null && echo "VS Code extension: $(basename "$VSIX")"
-    # the newest .vsix may be older than the extension's version: say so, or an old extension stays installed unseen
+    # a package older than the extension's version is never installed: it would put back an older extension over a
+    # newer one (the published one, an update) without anybody seeing it
     WANT=$(sed -n 's/^  "version": "\(.*\)",$/\1/p' "$REPO/extensions/vscode/package.json")
-    [ "$(basename "$VSIX")" = "nuclearlang-$WANT.vsix" ] \
-      || echo "note: the extension is $WANT but its newest package is $(basename "$VSIX"): npm run package in extensions/vscode, then install again"
+    if [ "$(basename "$VSIX")" = "nuclearlang-$WANT.vsix" ]; then
+      code --install-extension "$VSIX" --force >/dev/null && echo "VS Code extension: $(basename "$VSIX")"
+    else
+      echo "note: the extension is $WANT but its newest package is $(basename "$VSIX"): not installed (npm run package in extensions/vscode, then install again)"
+    fi
   fi
 fi
 

@@ -6,6 +6,7 @@ title_es: Desarrollo guiado por tests
 description_es: Practicar rojo-verde-refactorizar en un proyecto Nuclear con las herramientas de la plataforma: primero los generadores, un @test que falla por cada criterio, el Nuclear más pequeño que pasa y luego limpiar con nuclear check y nuclear test tras cada paso. Úsalo al construir una función o corregir un error con los tests primero.
 kind: practice
 tags: [tdd, test first, red green refactor, tests, bug fix, nuclear test, quality]
+base: true
 ---
 # Test-driven development
 

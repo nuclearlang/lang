@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [overview.md, api.md, ../../../docs/04-specs/013-nuclear-chat/design.md, ../../../nuclear-synapsis-framework/docs/03-adr/0009-a-web-app-mounts-in-a-host-page.md]
 ---
 # The UI (`ui/`)
@@ -27,18 +27,19 @@ bridge) the app uses `config/project_config.nuc`'s `WebSocket(connectionName = "
 |---|---|
 | `config.nuc` | `contracts(nuclear_chat = "../nuclear_chat")`: every build writes `contracts/nuclear_chat/` (the models and one repository per controller) from the service's `.nuclear/contract.json` |
 | `components/{channels,messages,members,gifs,events}/` | a facade and a use case per call (the conversations' `ChangeChannel`, `DeleteChannel`, `UpdateMessage`, `DeleteMessage`, `SearchMessages` too), all written by `nuclear gen usecase <c> <Name> --calls <Repository>.<method>`; `events/data/live_repository.nuc`: `@on("chat.${workspace}") events(workspace: string) Stream<ChatEvent>` |
-| `components/chat/` | the screen: `chat_screen.nuc`, its nine managers and state models, `widgets/` by feature (sidebar, channel header, the conversation's menu, the agent's picker, message list and row, an answer being written, markdown, composer, GIF picker, thread, search, quick switcher and members list, new channel, typing and questions, avatar, times), models `Thread`, `Activity`, `Part`, `Question`, `Completion`, `Target` |
+| `components/chat/` | the screen: `chat_screen.nuc`, its ten managers and state models, `widgets/` by feature (sidebar and its theme switch, a member's profile, channel header, the conversation's menu, the agent's picker, message list and row, an answer being written, markdown, composer, GIF picker, thread, search, quick switcher and members list, new channel, typing and questions, avatar, times), models `Thread`, `Activity`, `Part`, `Question`, `Completion`, `Target` |
 | `shared/models/texts.nuc` | every text in English and Spanish (`Texts(lang)`, `get`, `format`) |
 | `public/styles.css` | the stylesheet, inside the shadow root |
 | `test/chat_test.nuc` | the tests (vitest + jsdom) |
 
 ## The screen
-`ChatScreen(workspace, channel, message, thread)` provides nine managers; each reads one thing and listens to the service's events
+`ChatScreen(workspace, channel, message, thread)` provides ten managers; each reads one thing and listens to the service's events
 of its workspace:
 
 | Manager | State | Reads again when |
 |---|---|---|
-| `WorkspaceManager` | the workspace (members, teams, `lang`) | the screen opens |
+| `WorkspaceManager` | the workspace (members, teams, `lang`, `theme`) | the screen opens; a `workspace` event (the host registered it again) reads it without the loading state; `edit` tells a profile's change (`POST members/{ws}/{member}/edit`), `chooseTheme` the theme (`PUT workspaces/{id}/theme`) |
+| `ProfileManager` | the member whose profile is open, or closed | a member's name or picture clicked; a thread or the search opened closes it |
 | `PackManager` | the pack's drawings (`GET gifs/pack`) | once |
 | `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels` or `agent.changed` event; the open channel is marked read (`POST …/read`); `chooseAgent` (`PUT …/agent`) |
 | `MessagesManager` | the open channel's messages outside threads | a `message` event of that channel; it also says, sends a GIF, reacts, clicks |
@@ -100,16 +101,29 @@ posted answer replaces it with its cost. The composer completes `@` (members by 
 `/gif`), Enter sends and Shift+Enter breaks the line; a text that was not sent stays with why. Empty, loading and
 error states for the workspace, a channel and a thread.
 
+**A member's profile, as Slack's** (`ProfilePanel`, where the thread goes): a click on a member's picture or name in
+a message, in the members list or in a direct message's header opens it: their picture, name, role, *Tech lead*,
+team, who works them (`BrainLine`), temperament, skills, instructions, GIF habit and bio, and *Message*. *Edit
+profile* changes the name, the model (the provider stays: it and the skills and portrait are the host's company
+screen), the temperament and the GIFs (pills) and the instructions; only what changed is sent (`profileChanges`), and
+the member comes back changed when the host registers the workspace again. A member whose host gives no card, or a
+card that is not `editable` (a team not saved), is read only, with what to do (*create a team*; Atlas: its direct
+message's header).
+
 ## Look
 Every color is a CSS variable: the host's `--chat-*` first, then an editor's `--vscode-*` (VS Code's webview gives
-them), then the chat's own light or dark default (`prefers-color-scheme`). Container queries on the page: below 720
+them), then the chat's own light or dark default: VS Code's theme kind (`:host-context(.vscode-dark)`, `.vscode-light`), else
+`prefers-color-scheme`. The theme switch at the sidebar's foot (◐ auto, ☀ light, ☾ dark) is the workspace's `theme`
+(the host's setting): light or dark set the editor's colors aside (`.chat.theme-light`, `.chat.theme-dark`). Inline
+code has its own colors (`--code-fg`: the editor's `textPreformat.foreground`), and the *paid* chip is mixed toward the
+text's color, readable on a theme whose orange is dark. Container queries on the page: below 720
 px wide the channels fold behind a menu and the thread covers the channel; below 420 px tall (an editor's dock) every
 spacing is tighter.
 
 ## Commands
 ```sh
 cd ui && nuclear check --json && nuclear build && nuclear install    # [] then build/app with its packages
-nuclear test                                                         # vitest: 18 tests
+nuclear test                                                         # vitest: 21 tests
 cd build/app && npm run build:embed                                  # dist-embed/embed.js, what a host carries
 nuclear fmt --check .
 ```

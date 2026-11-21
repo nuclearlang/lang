@@ -14,9 +14,11 @@ Nuclear Builder) and press **New team**: five steps, *Next, Next*.
 1. **Identity**: a logo (pick an image; it shows in the hexagon), the name (the die, *Suggest a name*, rolls a new
    one each time, like a game's nickname) and a description.
 2. **Purpose and skills**: what the team is for, and the skills it needs from the **library**: real `SKILL.md` files
-   (payments, bank accounts, authentication, offline sync, the Synapsis backend, mobile and web, TDD, an OWASP
-   review…), grouped as domains, technologies and practices, with a search. Tick the ones the team needs: every
-   member inherits them. A skill's name opens its file in a drawer, drawn as a page: add it, **clone it** into the
+   (payments, bank accounts, authentication, offline sync, maps, subscriptions…), grouped as domains, technologies and
+   practices, with a search. Nuclear's base comes in every team without choosing it, the locked chip **Nuclear base**
+   (its tooltip lists them): what Nuclear and its command line do and cannot do, the Synapsis backend, mobile and web,
+   tests in Nuclear, REST contracts, the component architecture, clean code, code review, the OWASP security review,
+   performance with Big-O, TDD. Tick only what the team needs beyond that: every member inherits it. A skill's name opens its file in a drawer, drawn as a page: add it, **clone it** into the
    team (or into a member, once you have them) to change it, or **Edit** a copy. **New skill** opens the skills
    editor: a name, a description (what it does and when to use it), a kind, tags, Spanish texts if you want them,
    and the markdown the agent follows, with its preview beside it.
@@ -67,7 +69,8 @@ they did last), *Person*, *Skills*, *Instructions*, *Behaviours*, *Tasks*, and l
 library, or write a **New skill**. A member's *Skills* tab has the role's skills to switch on or off, a **base agent**
 (an `agent.md` of the library: a backend, mobile or web engineer, a QA security tester, a tech writer; its text comes
 before the member's instructions and its skills are added), and then every skill the member gets: their own first,
-then the library's they added, then the team's, marked *inherited from the team*. A member's own skill with the same
+then the library's they added, then the team's, marked *inherited from the team*, then Nuclear's base, marked
+*Nuclear base*. A member's own skill with the same
 name as the team's wins over it, and the team's over the library's: clone one to make it theirs, then edit it.
 Deleting one of your skills asks you first; the library's files never change.
 

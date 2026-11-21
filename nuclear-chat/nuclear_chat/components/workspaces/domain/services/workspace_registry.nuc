@@ -16,7 +16,7 @@ service WorkspaceRegistry(files: ChatFiles)
       if not t.lead.isEmpty and not (t.lead in ids)
         return Err(Invalid("the lead of the team ${t.id} is not a member: ${t.lead}"))
     root = files.absolute(input.root)
-    ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs)
+    ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs, theme = input.theme)
     ws.channels = mergedChannels(kept(ws), hostChannels(input), ids)
     known[ws.id] = ws
     keep(ws)

@@ -121,6 +121,7 @@ The other settings are one section per tool, edited in VS Code's settings or in 
 | `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |
 | `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` (asked: only an API paid by use; an agent's subscription is not, unless `forceConfirm`) |
 | `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |
+| `nuclear.chat.theme` | `auto` (the editor's theme), `light` or `dark`: Nuclear Chat's and Nuclear Atlas's colors; also the switch at the foot of the chat's sidebar |
 | `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |
 
 A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`,

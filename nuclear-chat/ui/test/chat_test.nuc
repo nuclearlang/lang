@@ -31,7 +31,7 @@ sampleRoom(id: string, kind: string, unread: int) Channel
 noEvents() Stream<ChatEvent>
   Stream((on) => () => null)
 
-@mock([WorkspacesRepository, ChannelsRepository, MessagesRepository, GifsRepository, LiveRepository])
+@mock([WorkspacesRepository, ChannelsRepository, MessagesRepository, GifsRepository, LiveRepository, MembersRepository])
 ChatTest
   beforeEach()
     when(WorkspacesRepository.one).thenReturn(Ok(sampleWorkspace()))
@@ -197,3 +197,26 @@ ChatTest
     ~screen.findByText("1 resultado")
     fireEvent.click(screen.getByText("#general"))
     ~screen.findByPlaceholderText("Mensaje a #general")
+
+  @test("a profile's form sends only what changed, nothing when nothing did")
+  profileForm()
+    ada = Member(id = "ada", name = "Ada Lovelace", role = "Architect", team = "backend", avatar = "", profile = Profile(), personality = Personality(on = []), responder = Responder(command = [], paid = false), brain = Brain(agent = "Nuclear Developer", kind = "local", provider = "nuclear-developer", model = "gemma4:e2b", paid = false), card = Card(editable = true, temperament = "calm", temperaments = [], skills = [], instructions = ""))
+    expect(profileChanges(ada, "Ada Lovelace", "gemma4:e2b", "calm", "never", "")).toBeNull()
+    changed = profileChanges(ada, " Ada ", "haiku", "calm", "often", "Tests first.")
+    expect(changed?.name).toBe("Ada")
+    expect(changed?.model).toBe("haiku")
+    expect(changed?.temperament).toBeNull()
+    expect(changed?.gifs).toBe("often")
+    expect(changed?.instructions).toBe("Tests first.")
+
+  @widget("a member's name opens their profile; one of a team not saved says to create a team, and the theme is chosen at the sidebar's foot")
+  profile()
+    when(WorkspacesRepository.theme).thenReturn(Ok(sampleWorkspace()))
+    renderScreen(ChatScreen(workspace = "w1", channel = "backend"))
+    names = ~screen.findAllByTitle("Ver el perfil de Ada Lovelace")
+    fireEvent.click(names[0])
+    ~screen.findByText("Perfil")
+    ~screen.findByText("Equipo Backend")
+    ~screen.findByText("Este miembro es de un equipo que todavía no está guardado. Crea un equipo en la pantalla de la empresa de Nuclear Builder para cambiar quién lo trabaja, sus skills y sus instrucciones.")
+    fireEvent.click(screen.getByTitle("Oscuro"))
+    verify(WorkspacesRepository.theme).called(1)

@@ -6,6 +6,7 @@ title_es: Revisión de seguridad (OWASP)
 description_es: Revisar un proyecto Synapsis frente al OWASP Top 10 con las defensas propias de la plataforma: guards y @acl, decoradores de validación, secretos en env, la cadena de consultas contra la inyección, URLs base fijas contra SSRF, revisión de dependencias. Úsalo antes de publicar una función, ante un hallazgo de seguridad o cuando se pide una revisión de seguridad.
 kind: practice
 tags: [security, owasp, review, injection, ssrf, secrets, access control, validation, vulnerabilities]
+base: true
 ---
 # Security review (OWASP)
 

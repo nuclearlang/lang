@@ -79,8 +79,10 @@ there are no presets.
   from?, title_es?, description_es?, kind?, tags? }]` are its own (`name` the title, `text` the markdown body, `from`
   where a clone came from: `library:<id>`, `team:<id>`, `role:<id>`), validated by `validOwnSkills`, at most 40 000
   characters each. A member has the same two, beside its role's skills switched on in `skills`, and its base `agent`.
-  What a member gets (`sharedSkills`, `withSkills`): its role's skills switched on, then the team's library skills and
-  own skills, the base agent's skills, the member's library skills and own skills, each id once; **a member's own
+  What a member gets (`sharedSkills`, `withSkills`): its role's skills switched on, then Nuclear's base skills (the
+  library's `base: true`, `baseSkillIds`: every member of every team, never chosen; the screens show them as one locked
+  chip and never offer them; a team of before 0.87 that lists one gets it once, its file unchanged), then the team's
+  library skills and own skills, the base agent's skills, the member's library skills and own skills, each id once; **a member's own
   skill wins over the team's, the team's over the library's** (`overrides` says which). The base agent's text goes
   before the member's `instructions`. An old team's `skills` (free words before the library) become library ids when
   a word is a skill's id, title (either language) or tag; the rest go to its `purpose` as `Skills: …`, written once on
@@ -170,8 +172,8 @@ ADR-platform-0008); the Builder is its host.
 - `nuclear-builder chat-host --json [--root <dir>] [--lang en|es]` prints the host file: `{ "host": "builder",
   "members", "channels", "teams", "lang" }`; `teams` is `[{ "id", "name", "lead": "<team>-<techLead>" }]`, the
   member who answers a message to the team (`@<role>` reaches the role's first member as listed: Nuclear Chat's
-  routing). The members are every member of every saved team (the project's first: `teamOfRun`, engine.md "The
-  team"; the local team when none is saved), any number per role, in the team's order, each `{ "id":
+  routing). The members are every member of every saved team (the folder's first: `runTeam`, engine.md "The
+  team"; none when none is saved), any number per role, in the team's order, each `{ "id":
   "<team>-<member id>", "name", "role", "member" (its id in the team), "team", "avatar" (the employee's id, the drawn
   face's seed; `<team>-<member id>` without one), "face" (the
   thumbnail's whole path, the chat's avatar; the portrait's without one; null without either), "temperament" (the member's, else the employee's; null), "profile":

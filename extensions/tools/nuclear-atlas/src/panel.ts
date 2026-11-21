@@ -111,7 +111,7 @@ export class AtlasPanel {
   static show(context: vscode.ExtensionContext, projects: () => BuilderProject[], active?: string, channel?: string): void {
     const fresh = !AtlasPanel.current;
     const p = AtlasPanel.current ?? (AtlasPanel.current = new AtlasPanel(context, projects));
-    if (active && projects().some((x) => x.root === active)) p.root = active;
+    if (active && (projects().some((x) => x.root === active) || AtlasPanel.workspace?.()?.root === active)) p.root = active;
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('atlas', true);
     p.state();
@@ -125,13 +125,16 @@ export class AtlasPanel {
   /** Where the chat opens when there is no project (the editor's: the open workspace, else the welcome's folder). */
   static fallback: (() => { root: string; name: string } | undefined) | undefined;
 
+  /** The open Nuclear workspace (its folder and name), the chat's first folder; none outside a workspace. */
+  static workspace: (() => { root: string; name: string } | undefined) | undefined;
+
   static close(): void {
     AtlasPanel.current?.panel.dispose();
   }
 
   private state(): void {
     const own = this.projects();
-    const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root);
+    const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root, AtlasPanel.workspace?.());
     this.root = root;
     // the prompts to start from are a project's (its map, its components): none on a workspace's or the welcome's folder
     const isProject = own.some((p) => p.root === root);

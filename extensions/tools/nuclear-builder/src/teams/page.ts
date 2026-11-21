@@ -312,6 +312,7 @@ export const SQUAD_CSS = String.raw`
 .sk-chip { display: inline-flex; align-items: stretch; border: 1px solid var(--line2); background: var(--panel); --cut: 5px; clip-path: ${CUT}; }
 .sk-chip.on { border-color: var(--hud); background: color-mix(in srgb, var(--hud) 12%, transparent); }
 .sk-chip.own { border-color: var(--hud2); background: color-mix(in srgb, var(--hud2) 10%, transparent); }
+.sk-chip.base { border-style: solid; opacity: .9; cursor: help; } .sk-chip.base .sk-name { cursor: help; }
 .sq .sk-chip button { border: none; clip-path: none; text-transform: none; letter-spacing: 0; font: 12px/1.4 var(--vscode-font-family, system-ui, sans-serif); padding: 3px 8px; }
 .sq .sk-chip button.sk-box { font: 700 11px/1.4 var(--mono); color: var(--mut); border-right: 1px solid var(--line); min-width: 24px; }
 .sq .sk-chip.on button.sk-box { color: var(--hud); }
@@ -868,16 +869,19 @@ window.Squad = (() => {
   /** The library grouped by kind (domains, technologies, practices), searched: the wizard's step 2 and the picker. */
   function libraryChips(place, on, field, q) {
     const groups = libraryGroups(S.library ?? [], q);
-    return '<div class="sk-lib"><input class="sk-search" data-f="' + field + '" value="' + esc(q) + '" placeholder="' + esc(t('sq.sk.search', (S.library ?? []).length)) + '" aria-label="' + esc(t('sq.sk.searchLabel')) + '">'
+    return '<div class="sk-lib"><input class="sk-search" data-f="' + field + '" value="' + esc(q) + '" placeholder="' + esc(t('sq.sk.search', (S.library ?? []).filter((s) => !s.base).length)) + '" aria-label="' + esc(t('sq.sk.searchLabel')) + '">'
       + (groups.length ? groups.map((g) => '<div class="sk-group"><span class="lbl">' + esc(KIND_TEXT(g.kind)) + ' <i>' + g.skills.length + '</i></span><div class="sk-chips">' + g.skills.map((s) => skChip(place, s, on.includes(s.id))).join('') + '</div></div>').join('')
         : '<div class="sq-muted" style="padding:8px 0">' + esc((S.library ?? []).length ? t('sq.hud.noMatch') : t('sq.sk.noLibrary')) + '</div>') + '</div>';
   }
   /** What a place has chosen: its library skills and its own, each opening its file; New skill opens the editor. */
   function skillChosen(place, attached, own) {
-    const libs = (attached ?? []).filter((id) => !(own ?? []).some((o) => o.id === id)).map((id) => libOf(id)).filter(Boolean);
+    // Nuclear's base skills are every member's: one locked chip, never chosen nor removed (a team of before 0.87 may list them)
+    const base = (S.library ?? []).filter((s) => s.base);
+    const libs = (attached ?? []).filter((id) => !(own ?? []).some((o) => o.id === id)).map((id) => libOf(id)).filter((s) => s && !s.base);
     const chips = libs.map((s) => '<span class="sk-chip on"><button class="sk-name" data-skv="' + esc(place + '|' + s.id) + '">' + esc(s.title) + '</button><button class="sk-box" data-skt="' + esc(place + '|' + s.id) + '" aria-label="' + esc(t('sq.sk.detach') + ': ' + s.title) + '">✕</button></span>').join('')
       + (own ?? []).map((s) => '<span class="sk-chip own"><button class="sk-name" data-skv="' + esc(place + '|' + s.id) + '">✎ ' + esc(ownTitle(s)) + '</button></span>').join('');
-    return '<div class="sk-chosen"><span class="lbl">' + esc(t('sq.sk.chosen', libs.length + (own ?? []).length)) + '</span>' + (chips || '<span class="sq-muted">' + esc(t('sq.sk.noneChosen')) + '</span>') + '<span class="sq-grow"></span><button data-sknew="' + esc(place) + '">+ ' + esc(t('sq.sk.new')) + '</button></div>';
+    const baseChip = base.length ? '<span class="sk-chip base" title="' + esc(t('sq.sk.baseHint') + '\\n' + base.map((s) => '· ' + s.title).join('\\n')) + '"><span class="sk-name">🔒 ' + esc(t('sq.sk.base', base.length)) + '</span></span>' : '';
+    return '<div class="sk-chosen">' + baseChip + '<span class="lbl">' + esc(t('sq.sk.chosen', libs.length + (own ?? []).length)) + '</span>' + (chips || '<span class="sq-muted">' + esc(t('sq.sk.noneChosen')) + '</span>') + '<span class="sq-grow"></span><button data-sknew="' + esc(place) + '">+ ' + esc(t('sq.sk.new')) + '</button></div>';
   }
   /** The team's skills, inherited by every member: under the team's description. */
   function teamSkills() {
@@ -893,7 +897,7 @@ window.Squad = (() => {
     for (const r of rows) { const own = r.from === 'member' ? (x.ownSkills ?? []).find((s) => s.id === r.id) : r.from === 'team' ? (S.team.ownSkills ?? []).find((s) => s.id === r.id) : null; if (own) { r.title = ownTitle(own); r.description = ownAbout(own); } }
     const agents = (S.agents ?? []).filter((a) => !a.role || a.role === x.role);
     const agentSel = (S.agents ?? []).length ? '<label class="sk-base"><span class="lbl">' + esc(t('sq.sk.agent')) + '</span><select data-f="magent" aria-label="' + esc(t('sq.sk.agent')) + '"><option value="">' + esc(t('sq.sk.noAgent')) + '</option>' + agents.map((a) => '<option value="' + esc(a.id) + '"' + (x.agent === a.id ? ' selected' : '') + ' title="' + esc(a.description) + '">' + esc(a.title) + '</option>').join('') + '</select>' + (x.agent ? '<button data-skv="' + esc(place + '|agent:' + x.agent) + '">' + esc(t('sq.sk.preview')) + '</button>' : '') + '</label><div class="sq-muted" style="font-size:11.5px">' + esc(t('sq.sk.agentHint')) + '</div>' : '';
-    const row = (r) => '<div class="sk-row' + (r.inherited ? ' inh' : '') + '"><div class="sk-row-t"><b>' + esc(r.title) + '</b>' + skBadge(r.from === 'member' ? 'own' : r.inherited ? 'inherited' : r.via === 'agent' ? 'agent' : 'library', r.from === 'team' && !r.inherited ? t('sq.sk.from.team') : '')
+    const row = (r) => '<div class="sk-row' + (r.inherited ? ' inh' : '') + '"><div class="sk-row-t"><b>' + esc(r.title) + '</b>' + skBadge(r.from === 'member' ? 'own' : r.via === 'base' ? 'base' : r.inherited ? 'inherited' : r.via === 'agent' ? 'agent' : 'library', r.from === 'team' && !r.inherited ? t('sq.sk.from.team') : '')
       + (r.overrides.length ? '<span class="sk-over">' + esc(t('sq.sk.overrides', r.overrides.map((o) => t('sq.sk.from.' + o)).join(', '))) + '</span>' : '') + '<div class="sq-muted">' + esc(r.description) + '</div></div>'
       + '<div class="sk-row-a"><button data-skv="' + esc(place + '|' + r.id) + '">' + esc(t('sq.sk.preview')) + '</button>'
       + (r.from === 'member' ? '<button data-ske="' + esc(place + '|' + r.id) + '">' + esc(t('sq.sk.edit')) + '</button><button class="danger" data-skd="' + esc(place + '|' + r.id) + '" aria-label="' + esc(t('sq.sk.delete') + ': ' + r.title) + '">✕</button>'
