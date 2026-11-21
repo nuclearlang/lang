@@ -749,3 +749,14 @@ testAVerdictIsReadThroughItsMarkdown() void
   expect(verdictOf("`FAILED`: x").startsWith("FAILED"))
   expect(verdictOf("  not fixable").startsWith("NOT FIXABLE"))
   expect(not verdictOf("It is FIXABLE").startsWith("FIXABLE"))
+
+// What only the user can decide (a check's `NEEDS YOU:` line: replacing their CI file) is asked at the station's gate,
+// once, never a failed check.
+testWhatOnlyTheUserDecidesIsAskedAtTheGate(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  f = factory(root, localCrew(), [], developer([]))
+  st: <string, any> = { "id": "delivery", "steps": [] as any[] }
+  expect(f.toDecide(st) == "")
+  f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
+  f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
+  expect(f.toDecide(st) == " Decide also: Replace .github/workflows/nuclear-builder.yml with the line's?", f.toDecide(st))

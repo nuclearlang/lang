@@ -110,7 +110,9 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the
   station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line
   for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already
-  right; skipped, and said, when the role is local). QA's plan is the list: the run stops there until the
+  right; what only the user can decide, a tool's `needsUser` such as replacing their CI file, is no failure either:
+  the check writes `NEEDS YOU: <question>` and the station's gate asks it after its own question, `toDecide`;
+  skipped, and said, when the role is local). QA's plan is the list: the run stops there until the
   user goes on with every check of theirs that is on, of the stations up to Quality, marked (`checks <id> mark
   <check> passed|failed`); a check of the user's with `gate = true` (*the user approves the analysis*, the design, QA's
   plan, the push) is marked by the user's yes at its station's gate, never asked twice.

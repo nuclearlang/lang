@@ -29,7 +29,7 @@ GATE_CHECKS = ["analyst.user-approves", "architect.user-approves", "qa.plan-appr
 // A check run by the station's role (spec 024): what it finds in the station's documents it fixes there when it can,
 // and its verdict is the work after its fixes: a finding fixed is no failure (it would stop the run for what is
 // already right), one it could not fix is.
-CHECK_TASK = "Run this check on the station's documents. Fix there what you find wrong and can fix from the sources (the spec, the project, the tools); never invent to make it pass. Then answer PASSED or FAILED on the first line: PASSED when the check holds now (after your fixes), FAILED when something still does not hold; then why: what you fixed, and what is still wrong.\n\n{check}"
+CHECK_TASK = "Run this check on the station's documents. Fix there what you find wrong and can fix from the sources (the spec, the project, the tools); never invent to make it pass. What only the user can decide (a tool answers needsUser: replacing a file of theirs, money, a secret) is neither done nor a failure: write it on its own line as `NEEDS YOU: <the question>`, and it is asked at the station's gate. Then answer PASSED or FAILED on the first line: PASSED when the check holds now (after your fixes), FAILED when something still does not hold; then why: what you fixed, and what is still wrong.\n\n{check}"
 
 STATION_TASK: <string, string> = { "analysis": "Read the spec as the client's request: what the client needs, the acceptance criteria (each one checkable), and the questions that must be answered before anything is built.", "design": "Design what the generators did not write (they wrote first what follows from the data: read the files they changed): the parts and how they talk, with Mermaid diagrams, the ADRs it follows, and a plan of pieces of one file each, in the order they can be written.", "tests": "Write the tests first, from the acceptance criteria and the plan, in Nuclear, with the platform's generators (nuclear make test) where they fit, and a test plan that says which test holds which criterion.", "code": "Write the code of the plan that the generators did not write, in Nuclear, with the Nuclear MCP server's tools (generate first, then write what is left), until nuclear check says ok and the tests pass.", "quality": "Run the checks of the run that are yours, read the results of the project's build and tests, and write the QA report: each check with its result, what failed and why.", "delivery": "Write the definition of done (each criterion met and where it shows), the user stories of what was built, and the text of the pull request." }
 
@@ -1286,6 +1286,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         commands(st, commandsOf(line, "${c["command"]}"))
       else
         out: Outcome = provider(role, "${st["id"]}", s, CHECK_TASK.replace("{check}", "${c["prompt"] ?? c["title"]}"), [], budgetLeft())
+        // what only the user can decide waits for the station's gate (`NEEDS YOU:` lines), never fails the check
+        for asked in out.text.split("\n").map((l: string) => l.trim()).filter((l: string) => l.startsWith("NEEDS YOU:"))
+          youDecide(st, asked.substring(10).trim())
         out.ok and not verdictOf(out.text).startsWith("FAILED")
       c["state"] = passed ? "passed" : "failed"
       c["note"] = "${s["id"]}"
@@ -1293,6 +1296,18 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       ok = ok and passed
     saveChecks(root(), "${run["id"]}", checks)
     ok
+
+  // A decision only the user can take, found by a check of the station (`NEEDS YOU:`): asked at the station's gate.
+  youDecide(st: <string, any>, question: string) void
+    asked: string[] = st["needsYou"] ?? []
+    if not question.isEmpty and not (question in asked)
+      asked.add(question)
+    st["needsYou"] = asked
+
+  // What the user must decide at a station's gate, said after its question.
+  toDecide(st: <string, any>) string
+    asked: string[] = st["needsYou"] ?? []
+    asked.isEmpty ? "" : " Decide also: ${asked.join(" ")}"
 
   // The user's checks of a station that its gate answers (`gate = true`), marked passed by the user's yes there: never
   // asked twice.
@@ -1317,7 +1332,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       questions = st["id"] == "analysis" ? openQuestions() : ([] as string[])
       if not (st["id"] in gates) and questions.isEmpty
         return true
-      asked: <string, any> = { "id": "gate-${st["id"]}", "kind": "gate", "station": st["id"], "question": questions.isEmpty ? "Approve the ${STATION_INFO["${st["id"]}"]!["title"]}? Read ${docs.join(", ")}." : "The request does not say: ${questions.join(" ")} Answer them (change: your answers), or approve to go on without them. Read ${docs.join(", ")}.", "key": questions.isEmpty ? "gate" : "gateQuestions", "args": ["${st["id"]}"], "documents": docs }
+      asked: <string, any> = { "id": "gate-${st["id"]}", "kind": "gate", "station": st["id"], "question": (questions.isEmpty ? "Approve the ${STATION_INFO["${st["id"]}"]!["title"]}? Read ${docs.join(", ")}." : "The request does not say: ${questions.join(" ")} Answer them (change: your answers), or approve to go on without them. Read ${docs.join(", ")}.") + toDecide(st), "key": questions.isEmpty ? "gate" : "gateQuestions", "args": ["${st["id"]}"], "documents": docs }
       if not questions.isEmpty
         asked["questions"] = questions
       answer = askUser(asked)
@@ -1373,7 +1388,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   deliver(st: <string, any>) boolean
     // one branch per spec (a run of several specs delivers each one apart; a run of one: its id is the spec's)
     specId = "${(run["spec"] as <string, any>)["id"]}"
-    answer = askUser({ "id": "deliver", "kind": "gate", "station": "delivery", "question": "Make the branch factory/${specId}, commit in your name and open the pull request?", "key": "deliver", "args": [specId], "documents": STATION_DOCS["delivery"]!.map((d) => "${specPathOf(run)}/${d}") })
+    answer = askUser({ "id": "deliver", "kind": "gate", "station": "delivery", "question": "Make the branch factory/${specId}, commit in your name and open the pull request?" + toDecide(st), "key": "deliver", "args": [specId], "documents": STATION_DOCS["delivery"]!.map((d) => "${specPathOf(run)}/${d}") })
     if answer["answer"] != "approve" and answer["answer"] != "yes"
       end(step(st, "No pull request", "you", "", "noPullRequest"), "skipped", "you did not approve the delivery")
       return true
