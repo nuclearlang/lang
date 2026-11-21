@@ -760,6 +760,8 @@ testWhatOnlyTheUserDecidesIsAskedAtTheGate(tmpPath: Path, monkeypatch: any) void
   f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
   f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
   expect(f.toDecide(st) == " Decide also: Replace .github/workflows/nuclear-builder.yml with the line's?", f.toDecide(st))
+  f.youDecide(st, "Initialize the git repository? This folder has no .git, so no branch can be made.")
+  expect(f.toDecide(st).endsWith(" Initialize the git repository?"), f.toDecide(st))
 
 // The CI file the line would write is shown without writing it (`ci_preview`, `export --print`): a check compares
 // with it and never replaces the user's file.

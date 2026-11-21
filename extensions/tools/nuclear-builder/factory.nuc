@@ -29,7 +29,7 @@ GATE_CHECKS = ["analyst.user-approves", "architect.user-approves", "qa.plan-appr
 // A check run by the station's role (spec 024): what it finds in the station's documents it fixes there when it can,
 // and its verdict is the work after its fixes: a finding fixed is no failure (it would stop the run for what is
 // already right), one it could not fix is.
-CHECK_TASK = "Run this check on the station's documents. Fix there what you find wrong and can fix from the sources (the spec, the project, the tools); never invent to make it pass. What only the user can decide (a tool answers needsUser: replacing a file of theirs, money, a secret) is neither done nor a failure: write it on its own line as `NEEDS YOU: <the question>`, and it is asked at the station's gate. Then answer PASSED or FAILED on the first line: PASSED when the check holds now (after your fixes), FAILED when something still does not hold; then why: what you fixed, and what is still wrong.\n\n{check}"
+CHECK_TASK = "Run this check on the station's documents. Fix there what you find wrong and can fix from the sources (the spec, the project, the tools); never invent to make it pass. What only the user can decide (a tool answers needsUser: replacing a file of theirs, money, a secret) is neither done nor a failure: write it as one line `NEEDS YOU: <one short question>` (a single sentence, nothing after it), and it is asked at the station's gate. Then answer PASSED or FAILED on the first line: PASSED when the check holds now (after your fixes), FAILED when something still does not hold; then why: what you fixed, and what is still wrong.\n\n{check}"
 
 STATION_TASK: <string, string> = { "analysis": "Read the spec as the client's request: what the client needs, the acceptance criteria (each one checkable), and the questions that must be answered before anything is built.", "design": "Design what the generators did not write (they wrote first what follows from the data: read the files they changed): the parts and how they talk, with Mermaid diagrams, the ADRs it follows, and a plan of pieces of one file each, in the order they can be written.", "tests": "Write the tests first, from the acceptance criteria and the plan, in Nuclear, with the platform's generators (nuclear make test) where they fit, and a test plan that says which test holds which criterion.", "code": "Write the code of the plan that the generators did not write, in Nuclear, with the Nuclear MCP server's tools (generate first, then write what is left), until nuclear check says ok and the tests pass.", "quality": "Run the checks of the run that are yours, read the results of the project's build and tests, and write the QA report: each check with its result, what failed and why.", "delivery": "Write the definition of done (each criterion met and where it shows), the user stories of what was built, and the text of the pull request." }
 
@@ -1270,6 +1270,8 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   runChecks(st: <string, any>, role: Role) boolean
     checks = loadChecks(root(), "${run["id"]}")
     mine = checks.filter((c) => c["station"] == st["id"] and c["on"] == true and c["by"] == "role")
+    // what the user must decide is what this attempt found: an earlier attempt's questions never pile up
+    st["needsYou"] = [] as string[]
     ok = true
     for c in mine
       s = step(st, "Check: ${c["title"]}", role.id, role.id, "check", ["${c["id"]}", "${c["title"]}", "${c["title_es"] ?? c["title"]}"])
@@ -1300,8 +1302,12 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // A decision only the user can take, found by a check of the station (`NEEDS YOU:`): asked at the station's gate.
   youDecide(st: <string, any>, question: string) void
     asked: string[] = st["needsYou"] ?? []
-    if not question.isEmpty and not (question in asked)
-      asked.add(question)
+    // its first sentence, at most 200 characters: a question, not the check's report
+    cut = question.indexOf("? ")
+    short = (cut > 0 ? question.substring(0, cut + 1) : question).trim()
+    said = short.length > 200 ? "${short.substring(0, 199)}…" : short
+    if not said.isEmpty and not (said in asked) and asked.length < 5
+      asked.add(said)
     st["needsYou"] = asked
 
   // What the user must decide at a station's gate, said after its question.
