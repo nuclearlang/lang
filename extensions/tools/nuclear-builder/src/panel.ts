@@ -930,6 +930,7 @@ main { flex: 1; overflow: auto; position: relative; min-width: 0; min-height: 0;
 .gate { margin: 10px 0 2px; padding: 12px 14px; border: 1px solid var(--run); border-radius: 10px; background: color-mix(in srgb, var(--run) 9%, var(--card)); display: grid; gap: 8px; animation: slidein .35s ease-out; }
 .gate .q { display: flex; gap: 10px; align-items: center; } .gate .q b { font-size: 13.5px; }
 .gate .docs { display: flex; flex-wrap: wrap; gap: 6px; }
+.gate .decide ul { margin: 4px 0 0; padding-left: 18px; } .gate .decide li { margin: 2px 0; }
 .gate textarea { min-height: 54px; }
 .gate .acts { margin: 0; }
 .bell { display: inline-flex; width: 26px; height: 26px; border-radius: 50%; align-items: center; justify-content: center; background: var(--run); color: #111; animation: ringbell 1.8s ease-in-out infinite; flex-shrink: 0; }
@@ -1569,13 +1570,16 @@ function gate(r) {
       + (live(r) ? '' : '<div class="acts"><button id="resume" class="primary">💰 ' + esc(t('confirmSpending')) + '</button></div>') + '</div>';
   }
   if (w.kind === 'checks') {
-    const mine = (checksOf[r.id] ?? []).filter((c) => c.on && c.by === 'user' && c.state === 'pending');
+    // the user's own checks up to Quality: Delivery's are asked there, and those a gate answers are marked by its yes
+    const gated = ['analyst.user-approves', 'architect.user-approves', 'qa.plan-approved', 'devops.approve-push'];
+    const mine = (checksOf[r.id] ?? []).filter((c) => c.on && c.by === 'user' && c.state === 'pending' && c.station !== 'delivery' && !c.gate && !gated.includes(c.id));
     return '<div class="gate" role="alert"><div class="q"><span class="bell">✓</span>' + (role ? av(role) : '') + '<b>' + esc(t('qaPlanAsk', nameOf('qa'))) + '</b></div>'
       + '<div class="muted">' + esc(mine.length ? t('qaPlanMine', mine.length) : t('qaPlanReady')) + '</div>'
       + '<div class="acts"><button data-over="1">☰ ' + esc(t('openConsole')) + '</button><button class="primary" data-answer="yes"' + (mine.length ? ' disabled title="' + esc(t('markYoursFirst')) + '"' : '') + '>▶ ' + esc(t('goOn')) + '</button><button data-answer="stop">' + esc(t('later')) + '</button></div></div>';
   }
   return '<div class="gate" role="alert"><div class="q"><span class="bell">?</span>' + (role ? av(role) : '') + '<b>' + esc(st ? t('gateAsk', st.title, nameOf(role)) : w.question) + '</b></div>'
     + (docs ? '<div class="docs"><span class="muted">' + esc(t('readFirst')) + '</span>' + docs + '</div>' : '')
+    + ((st && st.needsYou && st.needsYou.length) ? '<div class="decide"><span class="muted">' + esc(t('decideAlso')) + '</span><ul>' + st.needsYou.map((q) => '<li>' + esc(q) + '</li>').join('') + '</ul></div>' : '')
     + '<textarea id="changeText" placeholder="' + esc(t('changePlaceholder')) + '"></textarea>'
     + '<div class="acts"><button class="primary" data-answer="approve">✓ ' + esc(t('approve')) + '</button><button data-answer="change">✎ ' + esc(t('askChange')) + '</button><button data-answer="stop" title="' + esc(t('laterHint')) + '">' + esc(t('later')) + '</button></div></div>';
 }

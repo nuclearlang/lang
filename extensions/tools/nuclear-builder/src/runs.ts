@@ -79,6 +79,8 @@ export interface Stage {
   role?: string;
   /** The team's member who works the station: the run's `assign`, else the role's first member. */
   member?: string;
+  /** What only the user can decide, found by the station's checks: asked at its gate. */
+  needsYou?: string[];
   provider?: string;
   model?: string;
   phases?: string[];
@@ -173,6 +175,10 @@ export interface Check {
   note?: string;
   prompt?: string;
   command?: string;
+  /** `fail`: the command must fail (the tests before their code). */
+  expect?: 'fail';
+  /** A check of the user's that the station's gate answers. */
+  gate?: boolean;
 }
 
 export function runFile(root: string, id: string): string {

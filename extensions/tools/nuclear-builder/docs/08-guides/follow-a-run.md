@@ -178,3 +178,11 @@ where it belongs. When the analysis read it wrong, name the strategy in the spec
 nuclear-graph strategy "al cancelar un pedido pagado debería rechazarlo pero lo acepta"   # which strategy, and why
 nuclear-graph card strategy:bug-behaviour                                                # its plan
 ```
+
+## What only you can decide
+
+A check that finds something only you can decide (replacing your CI file, choosing the CI host, a repository to
+create) does not fail the run: the station's gate lists it under *Only you can decide*, one short question each, with
+the station's own question. QA's *Go on* waits only for your own checks up to Quality: those a gate answers (you
+approve the analysis, the design, QA's plan, the push) are marked by your yes there.
+
