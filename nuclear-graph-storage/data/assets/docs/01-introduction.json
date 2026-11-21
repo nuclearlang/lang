@@ -320,6 +320,25 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.3a5854",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
+    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
+    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.4ab0cc",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -353,24 +372,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- ADR-platform-0003: any step, stage or run of the Builder runs again (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`), each step keeps the decisions it took and why, the run is drawn as a graph, and the acceptance criteria are held against what the run left (`docs/ai/loop.md`).",
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.5c650f",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
-    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
-   ],
    "sources": [
     "CHANGELOG.md"
    ],
