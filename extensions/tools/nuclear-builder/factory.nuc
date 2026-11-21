@@ -18,6 +18,14 @@ use pathlib{ Path }
 STATION_DOCS: <string, string[]> = { "analysis": ["analysis.md", "questions.md"], "design": ["design.md", "plan.md"], "tests": ["test-plan.md"], "code": ["work-log.md"], "quality": ["qa-report.md"], "delivery": ["definition-of-done.md", "user-story.md", "pr.md"] }
 
 // What each station asks of its role.
+// The first word of a model's verdict (FIXABLE, NOT FIXABLE, PASSED, FAILED) in upper case, whatever Markdown wraps
+// it: `**FIXABLE**`, `# PASSED`, `` `FAILED` `` (a real diagnosis came back bold and was read as not fixable).
+verdictOf(text: string) string
+  re.sub(r"^[\s*_#`>:-]+", "", text.trim()).upper()
+
+// The user's checks a gate answers, by id: the run files of before 0.88 copied them without `gate = true`.
+GATE_CHECKS = ["analyst.user-approves", "architect.user-approves", "qa.plan-approved", "devops.approve-push"]
+
 // A check run by the station's role (spec 024): what it finds in the station's documents it fixes there when it can,
 // and its verdict is the work after its fixes: a finding fixed is no failure (it would stop the run for what is
 // already right), one it could not fix is.
@@ -175,7 +183,19 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
           ok = station(st)
           // diagnosed once; when the diagnosis says the station can fix it, the station runs once more with it
           if not ok and repair(st)
-            ok = station(st)
+            // Quality's findings are in the code: the Developer works again with the diagnosis, then Quality judges again
+            code = stages().find((x) => "${x["id"]}" == "code")
+            if "${st["id"]}" == "quality" and code != null and wanted(code!)
+              fixing: <string, any> = run["repairing"]!
+              fixing["station"] = "code"
+              code!["phases"] = ((code!["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
+              code!["status"] = "running"
+              save()
+              coded = station(code!)
+              code!["status"] = coded ? "passed" : "failed"
+              ok = coded and station(st)
+            else
+              ok = station(st)
             run["repairing"] = null
           st["status"] = ok ? "passed" : "failed"
           st["ended"] = nowMs()
@@ -278,7 +298,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     decide(s, "diagnose \"${bad!["title"]}\"", "a failed station gets one diagnosis and, when fixable, one more attempt")
     out: Outcome = provider(role, id, s, "${REPAIR_TASK}\n\n## The failure\n\n${failure.substring(Math.max(0, failure.length - 6000))}", [], Math.min(budgetLeft(), REPAIR_BUDGET_USD))
     said: string = out.text.trim()
-    fixable = out.ok and budgetLeft() > 0 and said.upper().startsWith("FIXABLE")
+    fixable = out.ok and budgetLeft() > 0 and verdictOf(said).startsWith("FIXABLE")
     diagnosis = said.substring(0, 4000)
     repairs: <string, any>[] = run["repairs"] ?? []
     repairs.add({ "station": id, "spec": spec, "step": bad!["id"], "diagnosis": diagnosis, "fixable": fixable, "at": nowMs(), "costUsd": out.costUsd })
@@ -1266,7 +1286,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         commands(st, commandsOf(line, "${c["command"]}"))
       else
         out: Outcome = provider(role, "${st["id"]}", s, CHECK_TASK.replace("{check}", "${c["prompt"] ?? c["title"]}"), [], budgetLeft())
-        out.ok and not out.text.trim().upper().startsWith("FAILED")
+        out.ok and not verdictOf(out.text).startsWith("FAILED")
       c["state"] = passed ? "passed" : "failed"
       c["note"] = "${s["id"]}"
       end(s, passed ? "passed" : "failed", passed ? "passed" : "failed: see the step")
@@ -1280,7 +1300,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     checks = loadChecks(root(), "${run["id"]}")
     marked = false
     for c in checks
-      if c["gate"] == true and c["station"] == station and c["by"] == "user" and c["state"] == "pending"
+      if (c["gate"] == true or "${c["id"]}" in GATE_CHECKS) and c["station"] == station and c["by"] == "user" and c["state"] == "pending"
         c["state"] = "passed"
         c["note"] = "approved at the gate"
         marked = true

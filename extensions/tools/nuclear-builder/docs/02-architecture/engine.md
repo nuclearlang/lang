@@ -195,7 +195,8 @@ one branch per spec (`factory/<spec id>`). A run of one spec has no `specs`: the
 
 ### A failure diagnosed and repaired (spec 024 requirement 6)
 
-A station that fails (a step, a check by prompt, QA's report) gets one diagnosis (`repair`) by the provider of its own
+A station that fails (a step, a check by prompt, QA's report) gets one diagnosis (`repair`; its verdict read through
+any Markdown, `verdictOf`: a real one came back `**FIXABLE**`) by the provider of its own
 role: its last failed step's summary and the tail of its log (a check's findings: 6,000 characters) after
 `REPAIR_TASK`, capped at `REPAIR_BUDGET_USD` (0.50) of what the budget has left. Its first line `FIXABLE` readies the
 station to run once more: what the failed steps wrote is undone, its parts run again but those of `REPAIR_KEEPS`
@@ -204,7 +205,8 @@ station to run once more: what the failed steps wrote is undone, its parts run a
 same station in the process: the run fails as before, the diagnosis kept for the user. Each diagnosis is a step
 *Why it failed, and the repair* (`skipped`: whatever it wrote is undone) and an entry of the run's `repairs`
 (`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`), what the team's channel tells; its cost is the
-run's.
+run's. When it is Quality that failed, its findings are in the code: the diagnosis goes to the Code station, which
+works once more with it, and Quality judges again.
 
 ### The run file
 

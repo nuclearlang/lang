@@ -740,3 +740,12 @@ testATestWrittenBeforeItsCodeMustFail(tmpPath: Path, monkeypatch: any) void
   expect(not f.commands(st, ["echo passing"], false, true))
   steps: <string, any>[] = st["steps"]!
   expect(steps[0]["status"] == "passed" and "as they must" in "${steps[0]["summary"]}" and steps[1]["status"] == "failed", json.dumps(steps))
+
+// A model's verdict is read whatever Markdown wraps it: a real diagnosis came back `**FIXABLE**` and was read as not
+// fixable, so the repair its own plan described never ran.
+testAVerdictIsReadThroughItsMarkdown() void
+  expect(verdictOf("**FIXABLE**\n\nthe plan").startsWith("FIXABLE"))
+  expect(verdictOf("# PASSED\nwhy").startsWith("PASSED"))
+  expect(verdictOf("`FAILED`: x").startsWith("FAILED"))
+  expect(verdictOf("  not fixable").startsWith("NOT FIXABLE"))
+  expect(not verdictOf("It is FIXABLE").startsWith("FIXABLE"))
