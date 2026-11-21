@@ -157,7 +157,7 @@ The editors' commands (one call each, JSON on stdout with `--json`, an error as 
   [--language <en|es|…>] [--stdin] --json`: the language of the project's specs is asked once (spec 024): with none
   kept in `.nuclear/builder.json` (`specLanguage`) and no `--language`, the spec is refused with what to ask (the
   editor's language offered first); the one given is kept, and every spec carries `- Language: <name> (every
-  document of this spec is written in <name>)` after its component and layer, which the stations read with the spec.
+  document of this spec is written in <name>, its headings included)` after its component and layer, which the stations read with the spec.
   The spec's base (title, use case, `- Source: local`, component, layer, description, its
   acceptance criteria as `- [ ] …`, `- (none yet)` without them) in its folder, or with `--stdin` the whole markdown
   read there (from its `# title`), its id from

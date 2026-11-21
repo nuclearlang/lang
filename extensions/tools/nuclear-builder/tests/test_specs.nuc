@@ -150,7 +150,7 @@ testTheSpecsLanguageIsAskedOnceAndSaidByEverySpec(tmpPath: Path, monkeypatch: an
   made = specNew(root, "Lend a book", "books", "", "feature", "", ["a lent book is not free"], null, "es")
   expect(specLanguageOf(root) == "es" and readJson(Path(root, ".nuclear", "builder.json"))["team"] == "night-shift")
   text = Path(root, "${made["path"]}", "spec.md").readText()
-  expect("- Language: Spanish (every document of this spec is written in Spanish)" in text, text)
+  expect("- Language: Spanish (every document of this spec is written in Spanish, its headings included)" in text, text)
   // the next spec takes the kept language; a whole markdown gets the line after its title
   other = specNew(root, "Return a book", "books", "", "feature", "", [], "# Return a book\n\n## Description\n\nBack.")
   expect("# Return a book\n\n- Language: Spanish" in Path(root, "${other["path"]}", "spec.md").readText())

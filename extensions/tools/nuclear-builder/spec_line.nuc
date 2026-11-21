@@ -27,7 +27,7 @@ keepSpecLanguage(root: string, language: string) void
 // The line of a spec that says its language: every station writes the spec's documents in it.
 languageLine(language: string) string
   name = SPEC_LANGUAGES[language] ?? language
-  "- Language: ${name} (every document of this spec is written in ${name})"
+  "- Language: ${name} (every document of this spec is written in ${name}, its headings included)"
 
 // The commands of the specs (`nuclear-builder spec new | list | show | update | delete | move | migrate | accept | discard [--json]`), for a terminal and the
 // editors (JSON on stdout, an error as {"error": "…"} with exit code 1); the layout is specs.nuc's.
