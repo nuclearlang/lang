@@ -105,7 +105,9 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   stops. Delivery always asks before the branch.
 - **The checks** (`checks.nuc`, `checks.json` in the spec's folder): every role's `checks.toml` and the team's tasks, with the
   user's own (`nuclear-builder checks <id> add`). A check of `by = "role"` runs at the end of its station: a
-  `command` (a key of the line's `commands`) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the
+  `command` (a key of the line's `commands`; with `expect = "fail"` the project must compile (`check`) and the command
+  must fail: the Developer's *each new test fails before the code* passes when the tests written before their code
+  fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the
   station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line
   for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already
   right; skipped, and said, when the role is local). QA's plan is the list: the run stops there until the

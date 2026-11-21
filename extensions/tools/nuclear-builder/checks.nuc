@@ -30,6 +30,9 @@ seedChecks(root: string, id: string, roles: Role[], team: <string, any>) <string
       check: <string, any> = { "id": own.startsWith("${role.id}.") ? own : "${role.id}.${own}", "title": c["title"] ?? c["id"], "station": c["station"] ?? role.stations.first, "on": c["on"] ?? true, "by": c["by"] ?? "role", "role": role.id, "state": "pending", "note": "" }
       if c["command"] != null
         check["command"] = c["command"]
+      // `expect = "fail"`: the command must fail (the tests written before their code)
+      if c["expect"] == "fail"
+        check["expect"] = "fail"
       // the title in Spanish beside the English (checks.toml's `title_es`): the screens show the one of their language
       if c["title_es"] != null
         check["title_es"] = c["title_es"]

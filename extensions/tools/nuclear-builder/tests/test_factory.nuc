@@ -729,3 +729,14 @@ testARunOfSeveralSpecFilesListsThemInOrder(tmpPath: Path, monkeypatch: any) void
   catch e
     said = "${e}"
   expect("named twice" in said)
+
+// The tests written before their code must fail (the developer's check `expect = "fail"`): a failing command passes
+// its step, one that passes fails it (those tests would test nothing new); a compile error is caught by `check` first.
+testATestWrittenBeforeItsCodeMustFail(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  f = factory(root, localCrew(), [], developer([]))
+  st: <string, any> = { "id": "tests", "title": "Tests first", "status": "running", "steps": [] as any[] }
+  expect(f.commands(st, ["exit 1"], false, true))
+  expect(not f.commands(st, ["echo passing"], false, true))
+  steps: <string, any>[] = st["steps"]!
+  expect(steps[0]["status"] == "passed" and "as they must" in "${steps[0]["summary"]}" and steps[1]["status"] == "failed", json.dumps(steps))

@@ -1214,7 +1214,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
 
   // Runs commands of the line in the project, each a step; what they write goes to the ledger. `quiet`: a failure is
   // not drawn as a failed step (a check that a repair follows): it is skipped, "errors to repair".
-  commands(st: <string, any>, list: string[], quiet: boolean = false) boolean
+  // `expectFail`: the command must fail (the tests written before their code): its failure passes the step, a pass
+  // fails it (the tests would test nothing new).
+  commands(st: <string, any>, list: string[], quiet: boolean = false, expectFail: boolean = false) boolean
     for command in list
       s = step(st, command, "shell")
       s["input"] = command
@@ -1228,6 +1230,11 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       if code != 0 and quiet
         end(s, "skipped", "exit ${code}: errors to repair")
         return false
+      if expectFail
+        end(s, code != 0 ? "passed" : "failed", code != 0 ? "exit ${code}: they fail before the code, as they must (${lastLine("${s["log"]}")})" : "exit 0: they pass before the code: they test nothing new")
+        if code == 0
+          return false
+        continue
       end(s, code == 0 ? "passed" : "failed", code == 0 ? "exit 0" : "exit ${code}: ${lastLine("${s["log"]}")}")
       if code != 0
         return false
@@ -1252,7 +1259,10 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         c["note"] = "a check by prompt needs an agent or an API model for the ${role.title}"
         end(s, "skipped", "${c["note"]}")
         continue
-      passed = if c["command"] != null
+      // `expect = "fail"`: the project compiles, and the command fails (the tests before their code)
+      passed = if c["command"] != null and c["expect"] == "fail"
+        commands(st, commandsOf(line, "check")) and commands(st, commandsOf(line, "${c["command"]}"), false, true)
+      else if c["command"] != null
         commands(st, commandsOf(line, "${c["command"]}"))
       else
         out: Outcome = provider(role, "${st["id"]}", s, CHECK_TASK.replace("{check}", "${c["prompt"] ?? c["title"]}"), [], budgetLeft())

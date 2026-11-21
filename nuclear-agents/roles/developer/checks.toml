@@ -8,7 +8,10 @@ title_es = "Cada test nuevo falla antes del código, por la razón correcta"
 station = "tests"
 on = true
 by = "role"
-command = "test"
+# the project compiles and its new tests fail because the code they need is absent: at this station red is the
+# expected result, so `nuclear test` is read by the role, never run as a pass/fail command (the green of
+# `nuclear test` is developer.tests-pass, at the code station).
+prompt = "Run `nuclear check . --json` (it must print `[]`, so the tests compile) and `nuclear test`; read the failures and answer, for each new test of specs/{{id}}/plan.md, whether it fails because the code it needs is missing or wrong (a route that answers 404 where the criterion says 422/400, a skeleton's `Ok(\"\")` where the rule is missing), never because it does not compile. The green of `nuclear test` belongs to developer.tests-pass, at the code station."
 
 [[check]]
 id = "developer.compiles"
