@@ -129,6 +129,9 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
   folder was deleted from the disk (`gone()`, checked when drawn, by a watcher on the folders and when the window is
   focused again) stays on the strip faded and crossed out (✕): it is never opened, Nuclear Atlas never opens a chat on
   it (`chatRoots` skips a folder that is not there), the panel says it was deleted and offers the other workspaces.
+  `workspace()` is then none: no command runs in that folder (`nuclear workspace` runs from the home folder) and no
+  app is added to it, so nothing makes it again; the welcome whose workspace was deleted before its apps starts again
+  from making or opening one (`withoutGone`), and a VS Code folder that is not there is not asked to be kept.
 - **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,
   one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which
   is why they "disappeared" when VS Code opened another folder: that entry joins the global list when its folder opens

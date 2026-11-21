@@ -33,7 +33,7 @@ import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
 import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, shownProjects, WorkspaceInfo, workspaceCli } from './workspaces';
 import { nuclearCommand } from './toolchains';
-import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED } from './onboarding';
+import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED, withoutGone } from './onboarding';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 import { assetUrl } from './assetsPage';
 
@@ -397,8 +397,10 @@ class Workspace implements vscode.WebviewViewProvider {
 
   // ---------- the Nuclear workspace (spec 022) ----------
 
+  /** The open workspace to work on: none when its folder was deleted from the disk (it is only drawn crossed out, so
+   * nothing runs in a folder that is not there, and nothing makes it again). */
   workspace(): WorkspaceInfo | undefined {
-    return this.current;
+    return this.gone() ? undefined : this.current;
   }
 
   /** The open workspace's folder was deleted from the disk (by hand, another program): shown crossed out, never used. */
@@ -412,7 +414,7 @@ class Workspace implements vscode.WebviewViewProvider {
   }
 
   private cli(args: string[], cwd?: string): Promise<WorkspaceInfo | null> {
-    return workspaceCli(nuclearCommand(), args, cwd ?? this.current?.root ?? os.homedir(), toolEnv());
+    return workspaceCli(nuclearCommand(), args, cwd && fs.existsSync(cwd) ? cwd : this.workspace()?.root ?? os.homedir(), toolEnv());
   }
 
   /** The workspace that holds one of VS Code's folders, else the last one opened. */
@@ -508,7 +510,8 @@ class Workspace implements vscode.WebviewViewProvider {
     // the onboarding goes on with this workspace's apps, here or in the window that opens it (saved first: opening a
     // folder restarts the extensions)
     const onboarding = ['workspace', 'apps'].includes(this.onboarding().step);
-    const folders = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
+    // a folder deleted from the disk keeps nothing: the workspace takes this window without asking
+    const folders = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath).filter((f) => fs.existsSync(f));
     const inside = folders.some((f) => f === w.root || f.startsWith(w.root + path.sep));
     if (inside) {
       if (onboarding) await this.setOnboarding('apps', { root: w.root, chosenWindow: 'this' });
@@ -530,7 +533,8 @@ class Workspace implements vscode.WebviewViewProvider {
   // ---------- the onboarding (src/onboarding.ts) ----------
 
   onboarding(): Onboarding {
-    return this.context.globalState.get<Onboarding>(ONBOARDING) ?? { step: 'done', at: 0 };
+    const o = this.context.globalState.get<Onboarding>(ONBOARDING) ?? { step: 'done', at: 0 };
+    return withoutGone(o);
   }
 
   /** The onboarding moves on (never back), saved before anything that may reload or close the window. */
@@ -541,7 +545,7 @@ class Workspace implements vscode.WebviewViewProvider {
 
   /** On activation: the welcome at its step, on the onboarding's workspace (offered when this window shows another). */
   async resumeWelcome(o: Onboarding): Promise<void> {
-    if (o.root && this.current?.root !== o.root && fs.existsSync(markerOf(o.root))) {
+    if (o.root && this.workspace()?.root !== o.root && fs.existsSync(markerOf(o.root))) {
       const open = l10n.t('Open it'), later = l10n.t('Not now');
       const pick = await vscode.window.showInformationMessage(l10n.t('Continue setting up NuclearLang with the workspace {0}?', path.basename(o.root)), open, later);
       if (pick === open) return this.openWorkspace(o.root);
@@ -552,7 +556,8 @@ class Workspace implements vscode.WebviewViewProvider {
 
   /** A workspace to work on: the open one, else the user is offered to create or open one. */
   private async needWorkspace(): Promise<WorkspaceInfo | undefined> {
-    if (this.current) return this.current;
+    const live = this.workspace();
+    if (live) return live;
     const create = l10n.t('Create a workspace'), open = l10n.t('Open a workspace…');
     const pick = await vscode.window.showInformationMessage(l10n.t('No Nuclear workspace is open: an app belongs to one.'), create, open);
     if (pick === create) return this.createWorkspace();
@@ -746,7 +751,7 @@ class Workspace implements vscode.WebviewViewProvider {
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       // in a workspace the chat stays where the user left it (the workspace's own, first): choosing an app to run does not
       // move the conversation; without one it follows the last project, as before
-      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.current ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.workspace() ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'environments') await vscode.commands.executeCommand(tool.command!, this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
@@ -774,9 +779,9 @@ class Workspace implements vscode.WebviewViewProvider {
 
   async openProject(): Promise<void> {
     // a workspace shows its apps only: a project of elsewhere would never appear in it
-    if (this.current) {
+    if (this.workspace()) {
       const add = l10n.t('Add an app');
-      if ((await vscode.window.showInformationMessage(l10n.t('The workspace {0} shows only its apps. Add one to it, or open another workspace.', this.current.name), add)) === add) await this.addApp();
+      if ((await vscode.window.showInformationMessage(l10n.t('The workspace {0} shows only its apps. Add one to it, or open another workspace.', this.workspace()!.name), add)) === add) await this.addApp();
       return;
     }
     const picked = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, openLabel: l10n.t('Open as a Nuclear project') });
@@ -821,7 +826,7 @@ class Workspace implements vscode.WebviewViewProvider {
   async openAtlas(root?: string, channel?: string): Promise<void> {
     await this.go(TOOL_PREFIX + 'atlas');
     // with no folder asked (the strip's Atlas), the workspace's own chat; a member clicked in the Builder names its project
-    AtlasPanel.show(this.context, () => this.projects(), root ?? this.current?.root ?? this.context.workspaceState.get<string>(LAST_PROJECT), channel);
+    AtlasPanel.show(this.context, () => this.projects(), root ?? this.workspace()?.root ?? this.context.workspaceState.get<string>(LAST_PROJECT), channel);
   }
 
   async openTool(id?: string): Promise<void> {
@@ -1045,7 +1050,7 @@ class Workspace implements vscode.WebviewViewProvider {
           break;
         case 'add':
           // the strip's +: an app of the open workspace, else a project opened by hand
-          void (this.current ? this.addApp() : this.openProject());
+          void (this.workspace() ? this.addApp() : this.gone() ? this.workspaceMenu() : this.openProject());
           break;
         case 'openProject':
           void this.openProject();

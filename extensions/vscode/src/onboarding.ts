@@ -23,6 +23,13 @@ export const WELCOMED = 'nuclear.workspace.welcomed';
 
 export const next = (step: Step): Step => STEPS[Math.min(STEPS.indexOf(step) + 1, STEPS.length - 1)];
 
+/** The one time a step goes back: the workspace it was about was deleted from the disk before its apps were made, so
+ * the welcome starts again from making or opening one (never adds an app to a folder that is not there). */
+export function withoutGone(o: Onboarding, exists: (file: string) => boolean = fs.existsSync): Onboarding {
+  if (!o.root || exists(markerOf(o.root)) || STEPS.indexOf(o.step) > STEPS.indexOf('apps')) return o;
+  return { step: 'workspace', at: o.at };
+}
+
 /** A step never goes back by itself: `to` only when it is after `o`'s. */
 export function advance(o: Onboarding | undefined, to: Step, now: number, extra: Partial<Onboarding> = {}): Onboarding {
   const from = o?.step ?? 'workspace';

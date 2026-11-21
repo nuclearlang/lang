@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder.
 - **Sala de control**: *Your software company*, the reports and Nuclear Builder are calmer: slate panels, one desaturated teal for the action and what is picked, gold for money and waiting, a soft red for failures, no all-caps (the monospace face only for data), corner brackets only on what you look at (drawn in, never with reduced motion), and the team's rare actions in *More ⋯*. Plain words: members, not operatives.
 - A workspace or an app deleted from the disk is shown faded and crossed out (✕) on the strip, never as if it were there; the panel says so and offers the other workspaces, and Nuclear Atlas no longer fails on its folder ("No such file or directory").
 - The welcome's team step says it edits your team, by name, when you have one (each change is saved in it at once); its settings step keeps only the notices and the chat's colors, everything else in Settings and integrations.

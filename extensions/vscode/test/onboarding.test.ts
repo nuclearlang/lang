@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import test from 'node:test';
-import { advance, markerHasApps, next, resume } from '../src/onboarding';
+import { advance, markerHasApps, next, resume, withoutGone } from '../src/onboarding';
 import { chatRoots } from '../../tools/nuclear-atlas/src/chat';
 
 const FIXTURES = path.resolve(__dirname, '..', '..', 'test', 'fixtures', 'compat');
@@ -80,4 +80,12 @@ test("an open workspace is Atlas's first folder and the one it opens; a project 
   assert.deepEqual(chatRoots([api], undefined, ws, '/w/shop/shop_api', ws), { roots: [ws, api], root: '/w/shop/shop_api' });
   // the workspace once, even when it is also the folder Atlas was opened on
   assert.deepEqual(chatRoots([api], ws, ws, '', ws).roots, [ws, api]);
+});
+
+test('the welcome on a workspace deleted from the disk starts again from making or opening one', () => {
+  const o = { step: 'apps' as const, root: '/gone/rick-workspace', chosenWindow: 'this' as const, at: 5 };
+  assert.deepEqual(withoutGone(o, () => false), { step: 'workspace', at: 5 });
+  assert.deepEqual(withoutGone(o, () => true), o);
+  // past its apps, a deleted workspace changes nothing of the welcome
+  assert.deepEqual(withoutGone({ ...o, step: 'tour' }, () => false), { ...o, step: 'tour' });
 });
