@@ -113,6 +113,9 @@ tests Chat
     expect(first.isOk and first.value.links["run"] == "r42" and first.value.author == "you")
     posted = ~chat.post(ws.id, "general", Posted(author = "ada", text = "Which release?", buttons = [Button(id = "v1", label = "v1")]))
     expect(posted.isOk)
+    // a host's post with its log folded: kept and read back with it; a message without one has none
+    logged = ~chat.post(ws.id, "dm-ada", Posted(author = "ada", text = "Design passed", details = "wrote design.md"))
+    expect(logged.isOk and logged.value.details == "wrote design.md" and posted.value.details == "")
     reply = ~chat.say(ws.id, "general", Said(text = "v1", thread = first.value.id))
     expect(reply.isOk and reply.value.thread == first.value.id)
     // a line cut by a crash, and lines that name a message

@@ -367,6 +367,12 @@ passedSteps(run: <string, any>) string[]
     for s in st["steps"] as <string, any>[]
       if s["status"] == "passed"
         ids.add(s["id"]!)
+  // a run of several specs: the specs done settled their writes as `<spec>:<step>` (factory.nuc `nextSpec`)
+  for e in (run["specs"] ?? []) as <string, any>[]
+    for st in (e["stages"] ?? []) as <string, any>[]
+      for s in st["steps"] as <string, any>[]
+        if s["status"] == "passed"
+          ids.add("${e["id"]}:${s["id"]}")
   ids
 
 // A run left `running` by a process that stopped: its unfinished steps are failed, what they wrote is undone, and

@@ -14,6 +14,11 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **A device brought back by switching tools (reported 2026-11-21, not reproduced)**: the user went from the
+  workspace to the Builder and a device panel came with it. Tried in a real VS Code: `rick_mobile` → Builder with no
+  device open leaves none. Not tried: with a device whose app runs (parked on leaving, `DevicePanel.park`), with a
+  device left from 0.86 or older. The exact steps are asked of the user.
+
 - **The onboarding resumed (Unreleased, the fix of 0.84.0)**: `test/onboarding.test.ts` covers the steps, the resume
   decision and the migration of 0.84.0's flag; never run in a window: *This window* → reload → the welcome at *Add your
   apps*, *A new window* taking the welcome over, a closed editor resumed, Atlas's chat on a workspace with no app (the

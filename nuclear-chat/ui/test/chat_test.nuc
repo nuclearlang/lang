@@ -97,6 +97,15 @@ ChatTest
     ~screen.findByText("Líder técnico: Ada Lovelace")
     expect(screen.getAllByText("hi").length).toBe(1)
 
+  @widget("a host's log is folded under its message: closed, opened by its line")
+  foldedLog()
+    when(MessagesRepository.history).thenReturn(Ok([Message(id = "m9", at = 60_000, author = "ada", text = "Design passed", reactions = {}, buttons = [], links = {}, details = "wrote design.md")]))
+    renderScreen(ChatScreen(workspace = "w1", channel = "backend"))
+    toggle = ~screen.findByText("Registro")
+    expect(screen.queryByText("wrote design.md")).toBeNull()
+    fireEvent.click(toggle)
+    ~screen.findByText("wrote design.md")
+
   @widget("the composer completes a mention and Enter says it")
   composer()
     when(MessagesRepository.say).thenReturn(Ok(sampleMessage("m2", "you", 62_000)))

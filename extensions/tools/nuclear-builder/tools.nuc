@@ -122,12 +122,14 @@ BuilderTools(root: string)
   // whole project), its acceptance criteria (each one checkable: a spec without them cannot run, so ask the user for
   // them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature,
   // refactor, bug, test, security, docs or diagram) and its description. Answers its id and folder.
-  specNewTool(title: string, component: string, criteria: string[], layer: string = "", useCase: string = "feature", description: string = "") string
+  // `language`: the language the project's specs are written in (en, es...), asked of the user once (the editor's
+  // language offered as the default) and kept for the project; empty: the one kept.
+  specNewTool(title: string, component: string, criteria: string[], layer: string = "", useCase: string = "feature", description: string = "", language: string = "") string
     body = () =>
       kept = criteria.map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
       if kept.isEmpty
         return toolSaid({ "error": "a spec needs its acceptance criteria (each one checkable): ask the user for them" })
-      toolSaid(specNew(root, title, component, layer, useCase, description, kept))
+      toolSaid(specNew(root, title, component, layer, useCase, description, kept, null, language))
     attempt(body)
 
   // The specs of the project by component and layer, with their runs.
@@ -192,13 +194,19 @@ BuilderTools(root: string)
   // empty: the project's team). It runs in a process of its own and stops at the gates for an answer (run_answer);
   // with a paid provider it waits for the user's two confirmations of the spending (`waiting: spending`). `assign` is
   // the tech lead's choice of who works a role (`developer=dev-017,qa=qa-002`); a role not named is worked by its first
-  // member.
-  runStartTool(spec: string, team: string = "", assign: string = "") string
+  // member. `specs` (several ids) runs them in order in one run, one bill, each through every station (spec 024).
+  runStartTool(spec: string = "", team: string = "", assign: string = "", specs: string[]? = null) string
     body = () =>
-      file = specFileOf(root, spec)
-      if not file.isFile()
-        return toolSaid({ "error": "no spec `${spec}` (spec_list lists them)" })
-      toolSaid(startDetached(root, "${file}", team.isEmpty ? null : team, assign.isEmpty ? null : assign))
+      names: string[] = specs ?? (spec.isEmpty ? ([] as string[]) : [spec])
+      if names.isEmpty
+        return toolSaid({ "error": "say which spec (spec) or specs (specs, worked in order in one run)" })
+      files: string[] = []
+      for name in names
+        file = specFileOf(root, name)
+        if not file.isFile()
+          return toolSaid({ "error": "no spec `${name}` (spec_list lists them)" })
+        files.add("${file}")
+      toolSaid(startDetached(root, files, team.isEmpty ? null : team, assign.isEmpty ? null : assign))
     attempt(body)
 
   // The runs of the project: id, title, status, cost, each station's status.

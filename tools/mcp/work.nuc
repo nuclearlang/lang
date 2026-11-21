@@ -266,16 +266,17 @@ WorkTools(runner: any = runCommand)
   // business component (a folder of components/, or _global for the whole project), its acceptance criteria (each
   // one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or
   // data), its use case (feature, refactor, bug, test, security, docs, diagram) and its description; or text: the
-  // spec's whole markdown, from its `# title`. Asks the user first (confirm: the token of a preview, when the client
-  // cannot ask).
-  specCreate(project: string, component: string, title: string, criteria: string[]? = null, layer: string = "", useCase: string = "feature", description: string = "", text: string = "", confirm: string = "", ctx: Context? = null) string
+  // spec's whole markdown, from its `# title`. language: the language the project's specs are written in (en, es...):
+  // the first spec of a project asks the user for it (offer the editor's language, else the one they write in) and it
+  // is kept; later specs leave it empty. Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  specCreate(project: string, component: string, title: string, criteria: string[]? = null, layer: string = "", useCase: string = "feature", description: string = "", text: string = "", language: string = "", confirm: string = "", ctx: Context? = null) string
     root = projectOf(project)
     if root == null
       return refused("${project} is not inside a Synapsis project (no config.nuc)")
     kept = (criteria ?? []).map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
     if kept.isEmpty and text.trim().isEmpty
       return refused("a spec needs its acceptance criteria (each one checkable): ask the user for them")
-    bad = optionLike([component, title, layer, useCase])
+    bad = optionLike([component, title, layer, useCase, language])
     if bad != null or title.trim().isEmpty or component.trim().isEmpty
       return refused("a spec needs a title and a component (neither starts with -)")
     if [description, ...kept].any((w) => w.startsWith("--"))
@@ -283,7 +284,7 @@ WorkTools(runner: any = runCommand)
     folder = layer.isEmpty ? "specs/${component}/<id>" : "specs/${component}/${layer}/<id>"
     items = kept.isEmpty ? "the criteria of its text" : kept.map((c) => "- ${c}").join("\n")
     change = "Write the spec \"${title}\" (${useCase}) in the project ${root}: ${folder}/spec.md, shown in Nuclear Builder at once. Its acceptance criteria:\n${items}"
-    no = ~confirmed(ctx, "spec_create", { "project": "${root}", "component": component, "title": title, "criteria": kept, "layer": layer, "useCase": useCase, "description": description, "text": text }, change, confirm)
+    no = ~confirmed(ctx, "spec_create", { "project": "${root}", "component": component, "title": title, "criteria": kept, "layer": layer, "useCase": useCase, "description": description, "text": text, "language": language }, change, confirm)
     if no != null
       return no!
     args = ["spec", "new", "--title", title, "--component", component, "--use-case", useCase]
@@ -293,6 +294,8 @@ WorkTools(runner: any = runCommand)
       args = [...args, "--description", description]
     for c in kept
       args = [...args, "--criteria", c]
+    if not language.trim().isEmpty
+      args = [...args, "--language", language.trim()]
     if not text.trim().isEmpty
       args.add("--stdin")
     ~builderRun([...args, "--json"], "${root}", text)
@@ -561,25 +564,32 @@ WorkTools(runner: any = runCommand)
 
   // ---------- runs of the software factory ----------
 
-  // Start the run of a spec (its id: spec_list names them): its stations worked by the team (empty: the project's)
-  // in a process of its own; it stops at the gates for an answer (run_answer). assign is the tech lead's choice of who
-  // works a role (developer=dev-017,qa=qa-002). A paid provider's spending is confirmed by the user twice in the editor
-  // (`waiting: spending`), never here. Asks the user first (confirm: the token of a preview, when the client cannot ask).
-  runStart(project: string, spec: string, team: string = "", assign: string = "", confirm: string = "", ctx: Context? = null) string
+  // Start the run of a spec, or of several in one run (specs: their ids, spec_list names them; a big feature in pieces,
+  // a sprint): each spec through every station before the next, one bill. Its stations are worked by the team (empty:
+  // the project's) in a process of its own; it stops at the gates for an answer (run_answer). assign is the tech lead's
+  // choice of who works a role (developer=dev-017,qa=qa-002). A paid provider's spending is confirmed by the user twice
+  // in the editor (`waiting: spending`), never here. Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask). The factory is for big work: a small or medium task is the agent's own (nuclear_doc("task-size")).
+  runStart(project: string, spec: string = "", team: string = "", assign: string = "", specs: string[]? = null, confirm: string = "", ctx: Context? = null) string
     root = projectOf(project)
     if root == null
       return refused("${project} is not inside a Synapsis project (no config.nuc)")
-    bad = optionLike([spec, team, assign])
-    if bad != null or spec.isEmpty
-      return refused("a spec's id is needed (no value starts with -)")
-    said = ~builderRun(["spec", "show", spec, "--json"], "${root}")
-    shown = jsonOf(said)
-    if shown == null or shown!["path"] == null
-      return said
-    file = Path(root, "${shown!["path"]}", "spec.md")
-    args = ["run", "${file}", "--detach", ...(team.isEmpty ? [] as string[] : ["--team", team]), ...(assign.isEmpty ? [] as string[] : ["--assign", assign])]
-    change = "Start the run of the spec `${spec}` in ${root}${team.isEmpty ? " by the project's team" : " by the team ${team}"}${assign.isEmpty ? "" : " (${assign})"}: the factory's stations work it and stop at each gate for an answer."
-    ~builderChange(ctx, "run_start", { "project": "${root}", "spec": spec, "team": team, "assign": assign }, change, confirm, args, "${root}")
+    ids: string[] = [...(spec.isEmpty ? [] as string[] : [spec]), ...(specs ?? [])].filter((s: string) => not s.trim().isEmpty)
+    bad = optionLike([...ids, team, assign])
+    if bad != null or ids.isEmpty
+      return refused("a spec's id is needed, or several in specs (no value starts with -)")
+    files: string[] = []
+    for id in ids
+      said = ~builderRun(["spec", "show", id, "--json"], "${root}")
+      shown = jsonOf(said)
+      if shown == null or shown!["path"] == null
+        return said
+      files.add("${Path(root, "${shown!["path"]}", "spec.md")}")
+    args = ["run", ...files, "--detach", ...(team.isEmpty ? [] as string[] : ["--team", team]), ...(assign.isEmpty ? [] as string[] : ["--assign", assign])]
+    listed = ids.join("`, `")
+    named = ids.length == 1 ? "the spec `${ids[0]}`" : "the specs `${listed}` in one run"
+    change = "Start the run of ${named} in ${root}${team.isEmpty ? " by the project's team" : " by the team ${team}"}${assign.isEmpty ? "" : " (${assign})"}: the factory's stations work it and stop at each gate for an answer."
+    ~builderChange(ctx, "run_start", { "project": "${root}", "specs": ids, "team": team, "assign": assign }, change, confirm, args, "${root}")
 
   // The runs of a project: id, title, status, cost, each station's status.
   runs(project: string) string

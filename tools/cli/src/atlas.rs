@@ -41,6 +41,7 @@ pub const GROUPS: &[(&str, &str)] = &[
 /// is added here (test `every_document_is_a_help_topic`).
 pub const TOPICS: &[Topic] = &[
     topic!("start", "start", "what Nuclear is, the rules never broken, the work cycle, the tools", "tools/cli/agent-files/start.md"),
+    topic!("task-size", "start", "the size of a task: do it yourself, or propose Nuclear Builder (small, medium, large)", "tools/cli/agent-files/task-size.md"),
     topic!(
         "context-docs",
         "project",

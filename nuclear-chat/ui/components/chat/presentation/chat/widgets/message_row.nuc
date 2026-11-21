@@ -26,6 +26,8 @@ stateful MessageRow(message: Message, ws: Workspace, texts: Texts, first: boolea
             mode == "edit" ? editor() : (m.text != "" ? Markdown(text = m.text, onChannel = onChannel) : null),
             m.edited > 0 and not gone ? span(className = "edited", children = texts.get("edited")) : null,
             m.gif != null ? GifImage(gif = m.gif!) : null,
+            // a host's log folded under its one line (a run's station, a repair): closed until clicked
+            m.details != "" ? LogFold(text = m.details, label = texts.get("log")) : null,
             m.buttons.length > 0 ? div(className = "actions", children = m.buttons.map((b) => button(key = b.id, className = "action ${b.style}", onClick = () => MessagesManager.click(m.id, b.id), children = b.label))) : null,
             m.reactions.length > 0 ? Reactions(message = m, ws = ws, texts = texts) : null,
             not inThread and m.replies > 0 ? ThreadSummary(message = m, texts = texts, onThread = onThread) : null,
@@ -199,3 +201,23 @@ stateless GifImage(gif: Gif)
 // An SVG text as an image's source: drawn as an image, its scripts never run.
 svgSource(svg: string) string
   "data:image/svg+xml;base64,${svg.toBytes().toBase64()}"
+
+// A host's log under its message, folded: one line to open it, the log in a monospace block below.
+// shortcut: no `aria-expanded` (a named argument cannot spell `aria-…`, and the runtime passes props as given); the
+// caret says the state to the eye only. Upgrade when Synapsis web maps `ariaExpanded` to `aria-expanded`.
+stateful LogFold(text: string, label: string)
+  open: boolean = false
+
+  build() Element
+    div(
+      className = "log ${open ? "open" : ""}",
+      children = [
+        button(className = "log-toggle", onClick = () => toggle(), children = [span(className = "log-caret", children = open ? "▾" : "▸"), span(children = label)]),
+        open ? pre(className = "log-text", children = text) : null,
+      ],
+    )
+
+  toggle()
+    setState(() =>
+      open = not open
+    )

@@ -39,6 +39,11 @@ run in the team's channel, and does what its buttons ask.
   (`--kind`, `--provider`, `--model`; by default the default external choice, `externalWorker`, while the local models
   are on standby, ADR-platform-0013: the local one asked is that choice too, and with none the command refuses with
   `NO_PROVIDER`; the local Nuclear Developer with them on).
+- **A task is sized first** (spec 024 requirement 1, `leadSection` and `ATLAS_ROLE` of `member.nuc`): the tech lead
+  counts the files and lines and whether a feature is added (`nuclear_doc("task-size")`); small or medium (≤ 10
+  files, ≤ 400 lines, no new feature) is no run: the lead does it or one member does, saying which files changed; a
+  large one is the plan, a spec and a run of the factory, with the size as the reason. Atlas says the size when it
+  sends the user to a tech lead.
 - **Nuclear Atlas only informs** (spec 023 requirement 1): its prompt (`ATLAS_ROLE` of `member.nuc`) explains
   Nuclear, the workspace and the projects from the Smart Graph and the project's map; asked for a task it sends the
   user to a team's tech lead, naming the free teams with their lead (its prompt's *The teams*, from `teamsAtWork`: a
@@ -134,8 +139,14 @@ run in the team's channel, and does what its buttons ask.
   `nuclear.atlas.open` (root, channel); the company screen does the same with `team:chat`. The chat as a full editor
   tab stays the command *Nuclear Chat: Open the Chat*.
 - **A run is a thread** of its team's channel (`followRun`, from `driveRun`): the tech lead starts it (`run:<id>`,
-  found again by the chat's search when the run goes on), each station that passes or fails is posted by the member
-  of its role (a failure with `moment: "failure"`: the member's GIF personality applies), its end by the tech lead.
+  found again by the chat's search when the run goes on), each station that starts, passes or fails is posted by the
+  member of its role in one line, a passed or failed one with its log folded (`details`, `stationDetails`: each
+  step's line with the files it wrote, then the failed step's log; its last 4,000 characters), a failure with
+  `moment: "failure"` (the member's GIF personality applies), its end by the tech lead. Each repair of the engine is
+  posted once by the station's member, *failed and is being repaired: <the diagnosis's first line>*, the diagnosis
+  folded: the run file's `repairs: [{ "station", "diagnosis", "at" }]` (spec 024 requirement 6), appended by the
+  engine, read by `runPosts` (the ones after the last seen). An answer to a gate says it was the user's
+  (*Answered by you: …*).
   A gate or QA's plan is the member's message with buttons (`run|<run>|<ask>|<answer>`); a click answers the run
   through `answerRun` (*Ask for a change* asks for the text in the editor) and the buttons go. The spending is told
   but confirmed only in the editor's two modal questions. A run of another team than the project's is told in

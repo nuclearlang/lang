@@ -58,6 +58,11 @@ anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis 
 work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a
 project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.
 
+The cycle starts by sizing the request (`nuclear_doc("task-size")`, spec 024): small (≤ 3 files, ≤ 100 lines) and
+medium (≤ 10 files, ≤ 400 lines) without a new feature are the model's own work; a new feature, more, or several
+specs is proposed to Nuclear Builder (`spec_create`, then `run_start`) with the count as the reason, for the user to
+decide.
+
 The work starts from a **workspace** (spec 022): the folder that holds `.workspace/workspace.nuc` and names the apps
 of one business project. The model reads it with `workspace_show`; for a new product it creates it
 (`workspace_create`) and adds each app (`app_add`), writes each feature as a spec (`spec_create`, shown in Nuclear
@@ -177,7 +182,7 @@ Each is a `nuclear-builder spec … --json` command in the project: the spec liv
 
 | Tool | What it does |
 |---|---|
-| `spec_create(project, component, title, criteria, layer, use_case, description, text, confirm)` | a new spec (`spec new`): its acceptance criteria are required (or `text`, the whole markdown); asks the user first |
+| `spec_create(project, component, title, criteria, layer, use_case, description, text, language, confirm)` | a new spec (`spec new`): its acceptance criteria are required (or `text`, the whole markdown); `language` (en, es...) is asked of the user for the first spec of a project (the editor's offered) and kept; asks the user first |
 | `spec_list(project)` | the specs by component and layer, with their runs |
 | `spec_show(project, id)` | a spec's markdown, what it says, its draft, its run's status |
 | `spec_edit(project, id, text, confirm)` | the spec's whole new markdown over it (`spec update <id> --stdin`); asks the user first |
@@ -217,7 +222,7 @@ spending is never confirmed here: the run waits (`waiting: spending`) for the us
 
 | Tool | What it does |
 |---|---|
-| `run_start(project, spec, team, assign, confirm)` | the run of a spec (its id) by the team (empty: the project's); `assign`: who works a role (`developer=dev-017`) |
+| `run_start(project, spec, team, assign, specs, confirm)` | the run of a spec (its id), or of several in one run (`specs`: their ids, each through every station before the next, one bill), by the team (empty: the project's); `assign`: who works a role (`developer=dev-017`) |
 | `runs(project)`, `run_file(project, id)`, `run_journal(project, id)` | the runs; a run's file (stations, steps, decisions, files, cost, the question it waits on); its journal |
 | `run_answer(project, id, answer, text, confirm)` | the user's answer to the question a run waits on: `approve`, `change` (with `text`), `stop`, `yes`, `no` |
 | `run_resume(project, id, confirm)`, `run_retry(project, id, station, step, team, confirm)`, `run_restart(project, id, confirm)`, `run_stop(project, id, confirm)` | a run goes on, again from a station or a step (what it wrote from there undone), again from the start, or stopped |

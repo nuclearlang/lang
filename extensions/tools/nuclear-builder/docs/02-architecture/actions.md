@@ -48,7 +48,7 @@ Merging a pull request is never a tool, nor a command.
 
 | Action (page) | Command | Tool | Who |
 |---|---|---|---|
-| Start a spec with a team (`--assign <role>=<member>`: who works a role; else its first member) | `run <spec.md> [--team <id>] [--assign …] --events` (the page) · `--detach` (apart) | `run_start` | spending |
+| Start a spec, or several in one run (in order, one bill), with a team (`--assign <role>=<member>`: who works a role; else its first member) | `run <spec.md> [<spec.md>…] [--team <id>] [--assign …] --events` (the page) · `--detach` (apart) | `run_start` (`spec`, or `specs`) | spending |
 | Resume a run that waits | `run --resume <id>` | `run_resume` | spending |
 | Retry from the station that failed, from a station, from a step | `retry <id> [--from <station>] [--step <step>]` | `run_retry` | spending |
 | Run from scratch (its files go back) | `restart <id>` | `run_restart` | user |

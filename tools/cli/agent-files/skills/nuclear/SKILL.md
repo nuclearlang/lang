@@ -33,7 +33,12 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
 
 ## 2. Work cycle
 
-0. Start from a workspace: the folder of the business project, whose `.workspace/workspace.nuc` lists its apps
+0. Size the request before any work (`nuclear help task-size`): count the files and lines it would change and whether
+   it adds a feature (a new screen, endpoint, entity, component, or a changed contract or schema). Small (≤ 3 files,
+   ≤ 100 lines, no feature) and medium (≤ 10 files, ≤ 400 lines, no new feature): do it, and say what you touched.
+   Large (more, a new feature, or several specs): propose Nuclear Builder (a spec, or several, and one run) with your
+   count as the reason; the user decides.
+1. Start from a workspace: the folder of the business project, whose `.workspace/workspace.nuc` lists its apps
    (`nuclear workspace find --json`, then `nuclear workspace show --json`: each app's folder, platform and dialect).
    None yet: `nuclear workspace new <path> --name <n>`; a new app: `nuclear workspace add <app> --platform
    mobile|web|backend` (it is `nuclear new` inside the workspace; `nuclear new` there registers the app too). Work

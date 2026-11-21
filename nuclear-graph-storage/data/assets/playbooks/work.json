@@ -810,6 +810,65 @@
     "use_case": "knowledge",
     "role": "lead"
    }
+  },
+  {
+   "id": "playbook:size-a-task",
+   "type": "playbook",
+   "title": "Playbook: size a task, then do it or propose Nuclear Builder",
+   "summary": "Before any work, count the files and lines a request would change and whether it adds a feature. Small (<= 3 files, <= 100 lines) and medium (<= 10 files, <= 400 lines) without a new feature: the agent does it and says what it touched. Larger, a new feature or several specs: propose Nuclear Builder (one spec or several, one run) with the count as the reason; the user decides.",
+   "body": [
+    "1. Read what the request touches (`project_inspect`, the files) and count: the files changed or created, about how many lines, and whether it adds a feature: a new screen, endpoint, entity, component or use case, or a changed contract or schema.",
+    "2. Decide by the table:",
+    "",
+    "| Size | Measure | Who does it |",
+    "|---|---|---|",
+    "| small | <= 3 files, <= 100 lines, no feature | the agent, now |",
+    "| medium | <= 10 files, <= 400 lines, no new feature | the agent, saying which files it touched |",
+    "| large | more, a new feature, or several specs | Nuclear Builder, proposed with the count; the user decides |",
+    "",
+    "3. Say the size in one line before starting (`small: 2 files, ~40 lines, no feature`). When the work grows past its size, stop and say so.",
+    "4. A large task: name what each spec would hold and why it is large; with the user's yes, `spec_create` each spec and `run_start` one run.",
+    "",
+    "The numbers follow code review practice, not a law: Google's engineering practices (about 100 lines a reasonable change, 1,000 usually too large), the SmartBear/Cisco review study (defects missed past about 400 lines), a study of npm pull requests (accepted ones mostly change 5 to 15 files)."
+   ],
+   "keys": [
+    "task size",
+    "small task",
+    "medium task",
+    "large task",
+    "when to use nuclear builder",
+    "bug fix",
+    "refactor",
+    "how big"
+   ],
+   "asks": [
+    "should I use nuclear builder for this",
+    "is this task small or large",
+    "when is a task too big for an agent",
+    "do I need a spec for a bug fix"
+   ],
+   "links": [
+    {
+     "rel": "concept",
+     "to": "concept:software-factory"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:spec_create"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:run_start"
+    }
+   ],
+   "sources": [
+    "tools/cli/agent-files/task-size.md",
+    "docs/04-specs/024-builder-for-big-work/requirements.md"
+   ],
+   "meta": {
+    "use_case": "plan",
+    "role": "developer"
+   }
   }
  ]
 }

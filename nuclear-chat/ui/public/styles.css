@@ -1249,3 +1249,10 @@ button.count:hover { background: var(--hover); color: var(--fg); }
 .pill:hover { background: var(--hover); }
 .pill.on { background: var(--selected); color: var(--selected-fg); border-color: var(--selected); }
 
+
+/* A host's log folded under its message (a run's station, a repair): one line closed, the log in monospace open. */
+.log { margin-top: 4px; }
+.log-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 4px; color: var(--muted); font-size: 0.85em; }
+.log-toggle:hover { background: var(--chip); color: var(--fg); }
+.log-caret { width: 1em; }
+.log-text { margin: 4px 0 0; padding: 8px 10px; max-height: 260px; overflow: auto; border-radius: 6px; background: var(--chip); font-family: var(--mono); font-size: 0.8em; white-space: pre-wrap; overflow-wrap: anywhere; }

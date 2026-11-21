@@ -35,7 +35,7 @@ Containers and components (levels 2 and 3):
 
 ## Decisions
 
-The ADRs this design follows:
+The ADRs this design follows (only files of the project's `docs/03-adr/`; a rule of the platform by its own name):
 
 - {{adr}}: {{howItIsFollowed}}
 

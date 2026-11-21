@@ -37,7 +37,7 @@ The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the fil
 | `GET messages/{ws}/{channel}?thread=` | | `Message[]` (one thread with `thread`) |
 | `POST messages/{ws}/{channel}` | `Said` `{text, thread?}` | `Message` (201): the user's; who it brings in answers (events) |
 | `POST messages/{ws}/{channel}/gif` | `SentGif` `{gif: {src, title, source}, thread?}` | `Message` (201) |
-| `POST messages/{ws}/{channel}/post` | `Posted` `{author, text, thread?, buttons, links, moment?, gif?, answersGif, costUsd?}` | `Message` (201): a host's, as a member or `system`; a GIF may follow by the member's personality: at a `moment`, or of the pack's tag `gif` (`answersGif`: the member answers a GIF of the user, likelier) |
+| `POST messages/{ws}/{channel}/post` | `Posted` `{author, text, thread?, buttons, links, moment?, gif?, answersGif, costUsd?, details}` | `Message` (201): a host's, as a member or `system`; `details` (up to 20,000 characters, empty: none) is a log the page folds under the message (a run's station, a repair), kept on the line and given back on `Message.details`; a GIF may follow by the member's personality: at a `moment`, or of the pack's tag `gif` (`answersGif`: the member answers a GIF of the user, likelier) |
 | `PATCH messages/{ws}/message/{id}` | `Changes` `{text?, buttons?}` | `Message` |
 | `DELETE messages/{ws}/message/{id}` | | `Message` with `deleted` (the user's or a member's: the workspace is the user's): a line `{"edit": id, "deleted": true}`; its text, GIF, buttons, links and reactions are gone, its thread's replies stay; a later edit or reaction changes nothing |
 | `POST messages/{ws}/message/{id}/reactions` | `Reaction` `{emoji, by = you}` | `Message` (the same emoji again takes it away) |

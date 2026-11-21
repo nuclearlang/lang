@@ -14,6 +14,7 @@ import { asksFor, confirmSpending, mustConfirm, projectForcesConfirm } from '../
 import { migrateSettings } from '../../../vscode/src/migrateSettings';
 import { addMembers, agentsHere, CommandMissing, createTeam, listTeams, removeMember, roleMember, roster, saveTeam, showTeam, suggestMembers, suggestNames, teamScreen, updateMember, vaultSet } from '../src/teams/cli';
 import { LineRun, lineJson, localSpecs, newRunId, orphaned, Run, specMarkdown, writeSpec } from '../src/runs';
+import { beatOf, beatState, isToolCall, storyOf } from '../src/story';
 import { initials, inline, providerName, runOutline, stepTitle, specOfPath, specTree, stepTree, teamColor, teamLog, teamWork, whoLabel } from '../src/workbench';
 import { factoryDir, logoData, rosterFaces } from '../src/teams/cli';
 import { budgetGauge, filterRoster, memberActivity, statLevel, teamSpend } from '../src/teams/hud';
@@ -1031,4 +1032,33 @@ test('a bundled file missing in the extension is served from the kept copy, the 
   assert.deepEqual(webview.options.localResourceRoots!.map((r) => r.fsPath), ['/ext', cache]);
   assetUrl(webview as never, { fsPath: ext } as never, 'out/chat-embed.js');
   assert.equal(webview.options.localResourceRoots!.length, 2, 'added once');
+});
+
+// The run told to a product owner (spec 024 requirement 5): five business steps from the stations, each with its state
+// and what it produced; an older engine's or a custom station is building; the tool calls are technical details.
+test('the diagram\'s first level tells the run as five business steps with what each produced', () => {
+  const st = (id: string, status: string, steps: object[] = []) => ({ id, title: id, about: '', actors: [], status, steps });
+  const run = {
+    spec: { criteria: ['lists characters', 'filters by status', 'opens one'] },
+    stages: [
+      st('analysis', 'passed'),
+      st('design', 'passed', [{ id: 'd', status: 'passed', decisions: [{ what: 'SQLite', why: 'local' }, { what: 'REST', why: 'dashboard' }] }]),
+      st('tests', 'passed', [{ id: 't', status: 'passed', files: ['test/a.nuc'] }]),
+      st('code', 'running', [{ id: 'c', status: 'running', file: 'components/a.nuc', files: ['components/a.nuc', 'components/b.nuc'] }]),
+      st('quality', 'pending', [{ id: 'q1', status: 'passed' }, { id: 'q2', status: 'pending' }]),
+      st('delivery', 'pending'),
+    ],
+  } as unknown as Run;
+  const s = storyOf(run);
+  assert.deepEqual(s.map((b) => [b.id, b.state]), [['understand', 'done'], ['design', 'done'], ['build', 'working'], ['check', 'waiting'], ['deliver', 'waiting']]);
+  assert.deepEqual(s.map((b) => [b.made.key.split('.').pop(), ...b.made.args]), [['criteria', 3], ['decisions', 2], ['files', 3], ['checks', 1, 2], ['pr']]);
+  assert.deepEqual(s[2].stations.map((x) => x.id), ['tests', 'code']);
+  // a question to the user and a failure win over the rest; every station skipped is not needed
+  assert.equal(beatState([{ status: 'passed' }, { status: 'waiting' }] as never), 'needsYou');
+  assert.equal(beatState([{ status: 'waiting' }, { status: 'failed' }] as never), 'failed');
+  assert.equal(beatState([{ status: 'skipped' }] as never), 'skipped');
+  assert.equal(beatState([]), 'waiting');
+  assert.equal(beatOf('coder'), 'build');
+  assert.equal(isToolCall({ kind: 'tool' }), true);
+  assert.equal(isToolCall({}), false);
 });

@@ -15,6 +15,8 @@ Message
   // the factory's work it names: spec, run
   links: <string, string> = {}
   costUsd?: double
+  // a log folded under the message, shown closed (an accordion); empty when it has none
+  details: string = ""
   // the time of its last edit, 0 when never edited
   edited: int = 0
   // the time it was deleted (its text, GIF, buttons and reactions are gone; its thread stays), 0 when it is not

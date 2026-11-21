@@ -29,10 +29,21 @@ ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, 
 // A run that cannot go on now: it waits for an answer of the user (a gate, the spending), or for a command.
 RunStop(message: string) : RuntimeError(message)
 
+// What the one diagnosis of a failed station asks its role (spec 024 requirement 6), the failure after it.
+REPAIR_TASK = "A step of this station failed; its failure is below. Do not change any file. Answer FIXABLE or NOT FIXABLE on the first line: FIXABLE when working the station again with what you write next would pass (a document to correct, a check's findings to follow); NOT FIXABLE when it needs the user (a missing tool, key or decision, the money). Then, in at most ten lines: what went wrong and what the station must change."
+
+// The most a diagnosis may spend (USD), within what the run's budget has left.
+REPAIR_BUDGET_USD = 0.5
+
+// The parts of a station a repair never runs again: the generators' and those that asked the user.
+REPAIR_KEEPS = ["generate", "plan", "approve"]
+
 Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (question: <string, any>) => <string, any>?, emit: (e: <string, any>) => void, options: <string, any> = {})
   lock: threading.Lock = threading.Lock()
   phaseNow: string = ""
   beating: threading.Event = threading.Event()
+  // the stations this process repaired once already (`spec/station`): a second failure stops the run
+  repaired: string[] = []
 
   root() string
     "${run["root"]}"
@@ -146,22 +157,32 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         return finish("failed")
       confirmSpending(at)
       seedChecks(root(), "${run["id"]}", ROLES.map((r) => composeRole(r, assigned(r))), team)
-      for i in at..stages().length
-        st = stages()[i]
-        if not wanted(st)
-          skipStation(st)
-          continue
-        st["status"] = "running"
-        st["started"] = st["started"] ?? nowMs()
-        save()
-        ok = station(st)
-        st["status"] = ok ? "passed" : "failed"
-        st["ended"] = nowMs()
-        save()
-        if not ok
-          diagnose(st)
-          undoFailed()
-          return finish("failed")
+      // a run of several specs works them in order, each through every station (`nextSpec`)
+      while true
+        for i in at..stages().length
+          st = stages()[i]
+          if not wanted(st)
+            skipStation(st)
+            continue
+          st["status"] = "running"
+          st["started"] = st["started"] ?? nowMs()
+          save()
+          ok = station(st)
+          // diagnosed once; when the diagnosis says the station can fix it, the station runs once more with it
+          if not ok and repair(st)
+            ok = station(st)
+            run["repairing"] = null
+          st["status"] = ok ? "passed" : "failed"
+          st["ended"] = nowMs()
+          save()
+          if not ok
+            diagnose(st)
+            undoFailed()
+            return finish("failed")
+        if not nextSpec()
+          break
+        at = 0
+        seedChecks(root(), "${run["id"]}", ROLES.map((r) => composeRole(r, assigned(r))), team)
       finish("passed")
     catch e
       if isinstance(e, RunStop)
@@ -188,6 +209,10 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       beating.set()
 
   finish(status: string) <string, any>
+    if status != "passed"
+      for e in (run["specs"] ?? []) as <string, any>[]
+        if e["id"] == (run["spec"] as <string, any>)["id"]
+          e["status"] = status
     run["status"] = status
     run["ended"] = nowMs()
     run["owner"] = null
@@ -197,6 +222,72 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     ledgerAppend(runEntry(run))
     emit({ "type": "done", "status": status, "costUsd": run["costUsd"] })
     run
+
+  // The next spec of a run of several (spec 024 requirement 2, `specs`): the one that passed keeps its stations in its
+  // entry and what its steps wrote is settled (`<spec>:<step>`, never undone by a later spec's failure); the next one
+  // becomes the run's `spec` with fresh stations. False when none is left (a run of one spec has no `specs`).
+  nextSpec() boolean
+    specs: <string, any>[] = run["specs"] ?? []
+    current = "${(run["spec"] as <string, any>)["id"]}"
+    entry = specs.find((e) => e["id"] == current)
+    if entry != null
+      entry!["status"] = "passed"
+      entry!["stages"] = json.loads(json.dumps(stages()))
+    following = specs.find((e) => e["status"] == "pending")
+    if following == null
+      return false
+    for w in (run["writes"] ?? []) as <string, any>[]
+      if not (":" in "${w["step"]}")
+        w["step"] = "${current}:${w["step"]}"
+    following!["status"] = "running"
+    run["spec"] = following!["spec"]
+    run["specPath"] = following!["specPath"]
+    run["stages"] = stages().map((st) => stationOf("${st["id"]}", team, "${st["role"]}", run["assign"]))
+    run["analysis"] = null
+    run["acceptance"] = null
+    run["diagnosis"] = null
+    traceEvent(run, "spec", "${following!["id"]}: ${(following!["spec"] as <string, any>)["title"] ?? ""}")
+    save()
+    true
+
+  // A failed station diagnosed once by the provider of its own role (spec 024 requirement 6): its last failed step's
+  // summary and log tail (a check's findings) go to one capped call; FIXABLE readies the station to run once more with
+  // the diagnosis in its task (what the failed steps wrote undone, its parts run again but the generators' and those
+  // that asked the user). Recorded in `repairs` (`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`);
+  // the call is the run's cost. False: no second attempt (a local role, the budget spent, repaired once already in
+  // this process, not fixable): the run fails with the diagnosis for the user.
+  repair(st: <string, any>) boolean
+    id = "${st["id"]}"
+    spec = "${(run["spec"] as <string, any>)["id"]}"
+    a = assigned("${st["role"]}")
+    if "${spec}/${id}" in repaired or a["kind"] == "local" or budgetLeft() <= 0
+      return false
+    steps: <string, any>[] = st["steps"]!
+    bad = steps.reversed().find((x) => x["status"] == "failed")
+    if bad == null
+      return false
+    repaired.add("${spec}/${id}")
+    failure = "${bad!["title"]}: ${bad!["summary"] ?? ""}\n\n${bad!["log"] ?? ""}".trim()
+    role = composeRole("${st["role"]}", a)
+    s = step(st, "Why it failed, and the repair", role.id, role.id)
+    decide(s, "diagnose \"${bad!["title"]}\"", "a failed station gets one diagnosis and, when fixable, one more attempt")
+    out: Outcome = provider(role, id, s, "${REPAIR_TASK}\n\n## The failure\n\n${failure.substring(Math.max(0, failure.length - 6000))}", [], Math.min(budgetLeft(), REPAIR_BUDGET_USD))
+    said: string = out.text.trim()
+    fixable = out.ok and budgetLeft() > 0 and said.upper().startsWith("FIXABLE")
+    diagnosis = said.substring(0, 4000)
+    repairs: <string, any>[] = run["repairs"] ?? []
+    repairs.add({ "station": id, "spec": spec, "step": bad!["id"], "diagnosis": diagnosis, "fixable": fixable, "at": nowMs(), "costUsd": out.costUsd })
+    run["repairs"] = repairs
+    s["log"] = diagnosis
+    // skipped, not passed: whatever the call wrote is undone with the failed steps
+    end(s, "skipped", fixable ? "fixable: the station works again with the diagnosis" : out.ok ? "not fixable by the station: the run stops for you" : "no diagnosis: ${out.error}")
+    if not fixable
+      return false
+    undoFailed()
+    st["phases"] = ((st["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
+    run["repairing"] = { "station": id, "diagnosis": diagnosis }
+    save()
+    true
 
   // The process that runs a run beats every BEAT_SECONDS: a run whose beat is older than STALE_SECONDS is orphaned.
   heartbeat() void
@@ -405,6 +496,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     parts = [STATION_TASK[id]!, "## The spec (${specPathOf(run)}/spec.md)\n\n${spec.trim()}"]
     if more.trim().length > 0
       parts.add("## What the client said\n\n${more.trim()}")
+    fixing: <string, any>? = run["repairing"]
+    if fixing != null and fixing!["station"] == id
+      parts.add("## A repair: this station failed before, and its diagnosis says what to change\n\n${fixing!["diagnosis"]}")
     parts.join("\n\n")
 
   // The documents of the stations before this one (and this one's, when it runs again).
@@ -1225,12 +1319,14 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // Delivery: once the user approves, the branch, the commit in the user's name (git's own identity, no other
   // author) and the pull request with gh, its body pr.md. Never merged.
   deliver(st: <string, any>) boolean
-    answer = askUser({ "id": "deliver", "kind": "gate", "station": "delivery", "question": "Make the branch factory/${run["id"]}, commit in your name and open the pull request?", "key": "deliver", "args": ["${run["id"]}"], "documents": STATION_DOCS["delivery"]!.map((d) => "${specPathOf(run)}/${d}") })
+    // one branch per spec (a run of several specs delivers each one apart; a run of one: its id is the spec's)
+    specId = "${(run["spec"] as <string, any>)["id"]}"
+    answer = askUser({ "id": "deliver", "kind": "gate", "station": "delivery", "question": "Make the branch factory/${specId}, commit in your name and open the pull request?", "key": "deliver", "args": [specId], "documents": STATION_DOCS["delivery"]!.map((d) => "${specPathOf(run)}/${d}") })
     if answer["answer"] != "approve" and answer["answer"] != "yes"
       end(step(st, "No pull request", "you", "", "noPullRequest"), "skipped", "you did not approve the delivery")
       return true
     end(step(st, "You approved the delivery", "you", "", "youApprovedDelivery"), "passed", "")
-    branch = "factory/${run["id"]}"
+    branch = "factory/${specId}"
     files = [...((run["writes"] ?? []) as <string, any>[]).map((w) => "${w["path"]}"), "${specPathOf(run)}"].unique().filter((f) => Path(root(), f).exists())
     title = "${(run["spec"] as <string, any>)["title"]}"
     body = Path(specDir(), "pr.md").isFile() ? "${specPathOf(run)}/pr.md" : "${specPathOf(run)}/spec.md"

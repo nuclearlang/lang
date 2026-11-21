@@ -40,7 +40,8 @@ can follow piece by piece, the generators first. Every choice is checked against
 - What a generator can write is a generator call in the plan, never a piece for a model.
 - Every piece names its path (from the platform's layout), its kind, every name it declares and what it uses; a
   piece only uses pieces before it.
-- The design follows the project's ADRs; a decision that departs from one is a proposed ADR, never a silent change.
+- The design follows the project's ADRs; a decision that departs from one is a proposed ADR, never a silent change. A
+  project ADR is cited only when its file is in `docs/03-adr/`; a rule of the platform by its own name.
 - The diagrams use the names of the code and say what flows on every arrow.
 
 ## Never

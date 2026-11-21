@@ -93,6 +93,16 @@
 .fx-project { width: 300px; padding: 14px 16px 11px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--card)), var(--card) 70%); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 .fx-project .fx-title { font-size: 18px; margin: 2px 0 2px; }
 .fx-spec { margin: 8px 0 4px; font-size: 12.5px; font-style: italic; }
+/* the story (C4 level 1, spec 024): a business step, in plain words, with what it produced */
+.fx-beat { width: 252px; padding: 12px 14px 10px; }
+.fx-beat .fx-title { font-size: 15px; margin: 2px 0 3px; }
+.fx-beat .fx-muted { font-size: 11.5px; line-height: 1.35; min-height: 31px; }
+.fx-made { margin: 9px 0 6px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.fx-beat.is-pending { opacity: .72; }
+.fx-beat.is-skipped { opacity: .5; }
+.fx-beat .react-flow__handle { opacity: 0; }
+.fx-tech { margin-right: 8px; font: inherit; letter-spacing: .04em; text-transform: none; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+.fx-tech.on { color: var(--fg); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .fx-kind { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .fx-actor { width: 230px; display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ac); box-shadow: 0 6px 20px #0003; cursor: default; transition: transform .2s, box-shadow .25s, opacity .25s; animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
 .fx-actor:hover { transform: translateY(-2px); box-shadow: 0 10px 26px #0004; }

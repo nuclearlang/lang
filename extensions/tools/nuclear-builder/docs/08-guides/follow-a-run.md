@@ -68,10 +68,12 @@ and their settings.
 The run is a living work diagram in C4's four levels; the breadcrumb walks them, a double click goes down, Escape
 goes back up:
 
-- **Context** (where a run opens): the project in the middle; you; the team's members who work the run with their avatars and names and
-  who does their work; the providers in use (on this machine and free, or paid, with the run's budget); the Smart
-  Graph and GitHub. The edges say who talks to whom, and flow while they do: the role working and its provider, the
-  project asking you when a station waits.
+- **Context** (where a run opens), the view for whoever asked for the work, a product owner or a stakeholder: what is
+  being built (the project and the spec) and five steps in plain words, *Understand the request*, *Design the
+  solution*, *Build it*, *Check it*, *Deliver it*, each saying what it produced (the spec and its acceptance criteria,
+  the decisions taken, the files written, the checks passed, the pull request) and its state (to come, working, needs
+  you, done, stopped). A step that needs you asks you along an edge. *⤢ Inside* (or a double click) goes to the
+  stations of that step; who works them, the providers and the budget are there.
 - **Stations**: a node per station, left to right (Analysis → Design → Tests first → Code → Quality → Delivery), with
   the employee and the provider and model that work it, its state, time, progress and the step on now. A light runs
   round the station working, one that waits for you breathes in amber, and the edge that hands the work to it flows.
@@ -79,8 +81,10 @@ goes back up:
 - **Inside a station** (its *⤢ Inside* or a double click): its steps with the employee and model that did each, and
   under each step the steps its agent followed, the last one lit while it works. The stations before and after stand
   at the sides.
-- **Inside a step**: what it followed, the decisions it took and why, the files it wrote and the tools it called, as
-  nodes.
+- **Inside a step**: what it followed, the decisions it took and why and the files it wrote, as nodes (a spec, a
+  decision or an ADR opens as a rendered preview).
+- **⚙ Technical details** (top right, inside a station or a step): also the tools the agents called (`Glob`, `Read`,
+  `Write`…), for debugging; off, the view says only what was done.
 - Nodes can be dragged; the wheel zooms, a drag pans, the minimap shows the whole and the controls fit the view.
 - **Click a node** and the node beside the diagram picks it: its steps, each opening to what it did, **the decisions it
   took and why**, its files and its log.
@@ -114,8 +118,13 @@ Over MCP: `developer_retry`.
 
 - A call to the local agents that fails for a passing reason (the service starting, busy, a 5xx) is retried with
   exponential backoff; the settings say how many times and how long. Each retry is in the step's trace.
-- When a station fails, the local diagnoser tells why and what to do (its *Why it failed* step). *↻ Run <station>
-  again* (or `nuclear-builder retry <run>`) runs it again from there, keeping every station that passed.
+- When a station fails, the member who worked it reads the failure once (*Why it failed, and the repair*): when it
+  can fix it (a document to correct, a check's findings to follow), the station runs once more with that diagnosis,
+  by itself; when it cannot, or fails again, the run stops with the diagnosis for you. The diagnosis costs at most
+  0.50 USD of the run's budget. *↻ Run <station> again* (or `nuclear-builder retry <run>`) runs it again from there,
+  keeping every station that passed.
+- Several specs in one run (`nuclear-builder run a.md b.md`): they go one after the other; a failure stops the run on
+  that spec, and a retry goes on from it.
 
 ## It survives the editor, and it keeps working
 

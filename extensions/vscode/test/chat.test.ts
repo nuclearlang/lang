@@ -3,7 +3,7 @@
 // what was missed read back). node:test, no editor.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askPost, buttonOf, ChatHost, Frame, HOST, HostFile, lineDiff, memberChange, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket } from '../src/chatHost';
+import { askPost, buttonOf, ChatHost, DETAILS_MAX, Frame, HOST, HostFile, lineDiff, memberChange, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket, stationDetails } from '../src/chatHost';
 import type { SocketEvents } from '../../tools/nuclear-http-connections/src/socket';
 
 const guard = { header: 'X-Chat-Token', token: 'secret' };
@@ -103,13 +103,23 @@ const member = (role?: string) => (role ? `core-${role}` : 'system');
 test('a run is told in its thread: started by the lead, each station by its member, a failure with its moment', () => {
   const T = RUN_TEXTS.en;
   const start = runPosts(undefined, run('running', [['analysis', 'running']]), member, T, 'core-architect');
-  assert.deepEqual(start, [{ author: 'core-architect', text: 'Started run:loans: **Loans**', links: { run: 'loans' } }]);
+  assert.deepEqual(start, [{ author: 'core-architect', text: 'Started run:loans: **Loans**', links: { run: 'loans' } }, { author: 'core-analyst', text: '**Analysis** started' }]);
   const a = run('running', [['analysis', 'running'], ['quality', 'pending']]);
   const b = run('running', [['analysis', 'passed'], ['quality', 'running']]);
-  assert.deepEqual(runPosts(a, b, member, T, 'lead'), [{ author: 'core-analyst', text: '**Analysis** passed: analysis said', costUsd: 0.1 }]);
+  // each station passed or failed carries its log folded; the next one says it started
+  assert.deepEqual(runPosts(a, b, member, T, 'lead'), [{ author: 'core-analyst', text: '**Analysis** passed: analysis said', costUsd: 0.1, details: '✓ analysis said' }, { author: 'core-qa', text: '**Quality** started' }]);
   assert.deepEqual(runPosts(b, b, member, T, 'lead'), [], 'nothing changed');
   const c = run('failed', [['analysis', 'passed'], ['quality', 'failed']]);
-  assert.deepEqual(runPosts(b, c, member, T, 'lead'), [{ author: 'core-qa', text: '**Quality** failed: quality said', moment: 'failure', costUsd: 0.1 }, { author: 'lead', text: 'The run failed: quality said' }]);
+  assert.deepEqual(runPosts(b, c, member, T, 'lead'), [{ author: 'core-qa', text: '**Quality** failed: quality said', moment: 'failure', costUsd: 0.1, details: '✗ quality said' }, { author: 'lead', text: 'The run failed: quality said' }]);
+  // a repair of the engine (spec 024): told once by the station's member, the diagnosis folded
+  const r = { ...c, status: 'running', repairs: [{ station: 'quality', diagnosis: 'The design cites ADR-0002, which does not exist.\nCite the rule N0301 instead.', at: 1 }] };
+  assert.deepEqual(runPosts(c, r, member, T, 'lead').filter((p) => p.details?.startsWith('The design')), [{ author: 'core-qa', text: '**Quality** failed and is being repaired: The design cites ADR-0002, which does not exist.', details: 'The design cites ADR-0002, which does not exist.\nCite the rule N0301 instead.' }]);
+  assert.equal(runPosts(r, r, member, T, 'lead').length, 0, 'a repair is told once');
+  // a failed step's log follows its line, the end kept when it is long
+  const long = { id: 'code', title: 'Code', status: 'failed', role: 'developer', steps: [{ summary: 'build', status: 'failed', files: ['src/a.nuc'], log: 'x'.repeat(5000) + 'the error' }] };
+  const folded = stationDetails(long);
+  assert.ok(folded.length <= DETAILS_MAX + 1 && folded.endsWith('the error') && folded.startsWith('…'));
+  assert.ok(stationDetails({ ...long, steps: [{ ...long.steps[0], log: 'boom' }] }).startsWith('✗ build\n    src/a.nuc\n\nboom'));
   const d = run('passed', [['analysis', 'passed'], ['quality', 'passed']]);
   assert.equal(runPosts(b, d, member, RUN_TEXTS.es, 'lead').at(-1)!.text, 'Pasaron todas las estaciones (USD 0.250).');
   assert.equal(runPosts(b, d, member, T, 'lead').at(-1)!.moment, 'success');

@@ -142,18 +142,21 @@ Bundled apart by `npm run flow` into `out/builder-flow.js` and `.css`, loaded by
 `tsconfig.flow.json`. The page keeps the state and calls `NuclearFlow.render` on every change: React keeps what did not
 change, so the animations run on. C4's four levels, walked by the breadcrumb, a double click going down:
 
-- **Context**: the project in the middle (its spec, its progress, its time and cost); you on its left; the team's members who work the run
-  above it, each card the employee's name first (*Neo*), then the role and who does its work (*Developer · Claude
-  Code · haiku*), with their portrait in the role's neon ring (the roster's `faces/`, spec 011 requirement 27; the
-  drawn face when there is none); a role is never named by what does its work (an older run's shell is *DevOps*); the providers in use below (local and free,
-  or paid with the run's budget); the Smart Graph and GitHub on its right. Edges by who talks to whom: you give the
-  spec, or the project asks you (flowing) when a station waits; the role working flows to the project and the
-  project to its provider.
+- **Context**, for a product owner (spec 024 requirement 5): the project (its spec, its progress, its time and cost),
+  you on its left, and five business steps under it from `storyOf` (`src/story.ts`, pure, tested): `beatOf` maps each
+  station (analysis → *understand*, design → *design*, tests and code → *build*, quality → *check*, delivery →
+  *deliver*; any other station, an older engine's, → *build*), `beatState` gives one state (a failure, then a
+  question to you, then work going on, then done; all skipped: not needed), and each says what it produced (the
+  spec's criteria, the decisions, the files written, the checks passed, the pull request). Who works each station, the providers and the
+  budget are the next level's.
 - **Containers**: a node per station with the employee and the provider and model that work it, its crew, its
   progress, the step on now, a station that waits breathing in amber; the hand-over flows along the edges.
 - **Components**: inside a station, its steps (each with its employee and provider), the steps each agent followed,
   the stations before and after.
-- **Code**: inside a step, its trace, decisions, files and tool calls as nodes.
+- **Code**: inside a step, its trace, decisions and files as nodes. The agents' tool calls (`kind: tool` of a trace
+  item, `isToolCall`) are drawn on Components and Code only with *⚙ Technical details* on (the diagram's own state,
+  off at first). A `.md` the page opens (a spec, a decision, an ADR) opens as VS Code's rendered preview
+  (`markdown.showPreviewToSide`).
 
 A level is framed when it opens: the station working, waiting or failed and its neighbours; inside a station, the
 step working or failed and its neighbours.

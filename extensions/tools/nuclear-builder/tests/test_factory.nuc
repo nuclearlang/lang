@@ -637,3 +637,95 @@ testARoleCheckThatFailedBeforeRunsAgainWithItsStation(tmpPath: Path, monkeypatch
   expect(probe["state"] == "passed")
   stages: <string, any>[] = done["stages"]!
   expect(stages.find((st) => st["id"] == "quality")!["status"] == "passed")
+
+// A fake Claude Code for the repair: a diagnosis answers `verdict`; a check fails its first time, then passes; any
+// other call writes the design. Each prompt is appended to `prompts.log`.
+repairingClaude(tmpPath: Path, monkeypatch: any, verdict: string) void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath("claude")
+  seen = tmpPath.joinpath("check-seen")
+  log = tmpPath.joinpath("prompts.log")
+  tool.writeText("#!/usr/bin/env python3\nimport json, os, sys\nprompt = ' '.join(sys.argv)\nopen('${log}', 'a').write(prompt.replace('\\\\n', ' ') + '\\\\n=====\\\\n')\nif 'NOT FIXABLE' in prompt:\n    said = ${json.dumps(verdict)}\nelif 'PASSED or FAILED' in prompt:\n    said = 'PASSED' if os.path.exists('${seen}') else 'FAILED\\\\nThe design cites ADR-0002, which this project does not have.'\n    open('${seen}', 'a').close()\nelse:\n    said = '--- document: design.md ---\\\\n# Design\\\\n\\\\nIt follows ADR-0001.'\nprint(json.dumps({'type': 'result', 'result': said, 'total_cost_usd': 0.01, 'is_error': False}))\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+
+repairTeam() <string, any>
+  team = crew("Claude", ["architect"], ROSTERLESS)
+  memberFor(team, "architect")!["tasks"] = [{ "id": "adrs", "title": "The design follows the project's ADRs", "station": "design", "on": true }]
+  team
+
+// spec 024 requirement 6: a station that fails is diagnosed once by its own provider; FIXABLE runs it once more with the
+// diagnosis in its task, and the run goes on; the repair is in the run file for the channel.
+testAFailedStationIsDiagnosedOnceAndRunsAgainWithTheDiagnosis(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  repairingClaude(tmpPath, monkeypatch, "FIXABLE\nCite ADR-0001 only: ADR-0002 does not exist here.")
+  team = repairTeam()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+  repairs: <string, any>[] = done["repairs"]!
+  expect(repairs.length == 1 and repairs[0]["station"] == "design" and repairs[0]["fixable"] == true and "ADR-0001" in "${repairs[0]["diagnosis"]}" and repairs[0]["costUsd"] == 0.01, json.dumps(repairs))
+  prompts = tmpPath.joinpath("prompts.log").readText().split("=====")
+  works = prompts.filter((p) => "Design what the generators did not write" in p)
+  // the design worked twice; the second time with the diagnosis
+  expect(works.length == 2 and not ("A repair" in works[0]) and "A repair" in works[1] and "Cite ADR-0001 only" in works[1])
+  expect(done["repairing"] == null and stepsOf(done).any((s) => s["title"] == "Why it failed, and the repair" and s["status"] == "skipped"))
+
+// A diagnosis that says NOT FIXABLE stops the run for the user: no second attempt, the diagnosis kept.
+testADiagnosisThatCannotFixItStopsTheRun(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  repairingClaude(tmpPath, monkeypatch, "NOT FIXABLE\nThe user must decide which ADRs apply.")
+  team = repairTeam()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+  repairs: <string, any>[] = done["repairs"]!
+  expect(done["status"] == "failed" and repairs.length == 1 and repairs[0]["fixable"] == false)
+  works = tmpPath.joinpath("prompts.log").readText().split("=====").filter((p) => "Design what the generators did not write" in p)
+  expect(works.length == 1)
+
+// spec 024 requirement 2: one run of two specs, one bill: each spec through every station in order, the first kept in
+// its entry with its stations, what its steps wrote settled (never undone by the second's failure).
+testOneRunWorksSeveralSpecsInOrder(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis", "design"] })
+  Path(root, "specs", "count-shelves").mkdir(parents = true)
+  second = SPEC.replace("Count the books", "Count the shelves")
+  Path(root, "specs", "count-shelves", "spec.md").writeText(second)
+  team = localCrew()
+  first = parseSpec(SPEC, "count-books")
+  run = newRun(root, { "name": "app", "platform": "backend", "dialect": "fastapi" }, first, team, ["analysis", "design"])
+  run["id"] = "count-books-plus-1"
+  run["specs"] = [{ "id": "count-books", "title": first["title"], "specPath": "specs/count-books", "spec": first, "status": "running" }, { "id": "count-shelves", "title": "Count the shelves", "specPath": "specs/count-shelves", "spec": parseSpec(second, "count-shelves"), "status": "pending" }]
+  calls: string[] = []
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start()
+  specs: <string, any>[] = done["specs"]!
+  expect(done["status"] == "passed" and specs.map((e) => e["status"]) == ["passed", "passed"], json.dumps(specs.map((e) => e["status"])))
+  expect((done["spec"] as <string, any>)["id"] == "count-shelves" and done["specPath"] == "specs/count-shelves")
+  expect(((specs[0]["stages"] as <string, any>[]).map((st) => st["status"])) == ["passed", "passed"])
+  // both analyses were written, each in its spec's folder; one run file
+  expect(Path(root, "specs", "count-books", "analysis.md").isFile() and Path(root, "specs", "count-shelves", "analysis.md").isFile())
+  expect(calls.count((c) => c == "/developer/analyze") == 2 and loadRun(root, "count-books-plus-1") != null)
+  settled = ((done["writes"] ?? []) as <string, any>[]).filter((w) => "${w["step"]}".startsWith("count-books:"))
+  expect(not settled.isEmpty and settled.all((w) => "${w["step"]}" in passedSteps(done)))
+
+// `run <spec> <spec>` and `run_start`'s `specs`: one run named after the first, the specs listed in order; a spec named
+// twice is refused.
+testARunOfSeveralSpecFilesListsThemInOrder(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch)
+  Path(root, ".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend", "dialect": "fastapi" }))
+  Path(root, "specs", "count-shelves").mkdir(parents = true)
+  Path(root, "specs", "count-shelves", "spec.md").writeText(SPEC.replace("Count the books", "Count the shelves"))
+  books = "${Path(root, "specs", "count-books", "spec.md")}"
+  made = prepareRun(root, [books, "${Path(root, "specs", "count-shelves", "spec.md")}"], null)
+  run: <string, any> = made["run"]!
+  expect(run["id"] == "count-books-plus-1" and (run["specs"] as <string, any>[]).map((e) => [e["id"], e["status"]]) == [["count-books", "running"], ["count-shelves", "pending"]])
+  single: <string, any> = prepareRun(root, [books], null)["run"]!
+  expect(not ("specs" in single))
+  said = ""
+  try
+    prepareRun(root, [books, books], null)
+  catch e
+    said = "${e}"
+  expect("named twice" in said)

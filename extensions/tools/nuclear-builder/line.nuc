@@ -230,30 +230,44 @@ paidOf(run: <string, any>, team: <string, any>, forced: boolean = false) <string
   paid = workers.filter((m) => asksSpending("${m["kind"] ?? "local"}", forced))
   { "roles": paid.map((m) => "${m["role"]}"), "members": paid.map((m) => "${m["id"]}"), "providers": paid.map((m) => "${m["provider"]}").unique(), "budgetUsd": team["budgetUsd"] ?? 5.0 }
 
-// A new run of a spec file by a team, saved: the spec kept in its folder, the project's line, the team.
-prepareRun(root: string, file: string, asked: string?, assign: string? = null) <string, any>
+// A spec file read and kept in its folder (a spec given from elsewhere: the one of its id, else its component's).
+keepSpec(root: string, file: string) <string, any>
   path = Path(file).resolve()
   id = specId(path)
   text = path.readText(encoding = "utf-8")
   spec = parseSpec(text, id)
-  // a spec given from elsewhere is kept in its folder: the one of its id, else its component's
   specPath = specPathFor(root, id, spec)
   home = Path(root, specPath, "spec.md")
   if home.resolve() != path
     writeAtomic(home, text)
+  { "spec": spec, "specPath": specPath }
+
+// A new run of one spec file or several (spec 024 requirement 2) by a team: the specs kept in their folders, the
+// project's line, the team. Several: one run (`<first>-plus-<n>`, one bill) whose `specs` lists each one in order
+// (`{ id, title, specPath, spec, status }`, the first `running`); the run's `spec` is the one at work.
+prepareRun(root: string, files: string[], asked: string?, assign: string? = null) <string, any>
+  kept = files.map((f) => keepSpec(root, f))
+  ids = kept.map((k) => "${(k["spec"] as <string, any>)["id"]}")
+  if ids.unique().length != ids.length
+    throw ValueError("a spec is named twice: ${ids.join(", ")}")
   card = projectCard(root)
   line = readLine(root, "${card["platform"] ?? ""}")
   team = teamOfRun(root, asked)
-  run = newRun(root, card, spec, team, line["stations"] ?? STATIONS, specPath, assignOf(assign, team))
+  run = newRun(root, card, kept[0]["spec"]!, team, line["stations"] ?? STATIONS, kept[0]["specPath"], assignOf(assign, team))
+  if kept.length > 1
+    run["id"] = "${ids[0]}-plus-${kept.length - 1}"
+    run["specs"] = kept.map((k) => { "id": (k["spec"] as <string, any>)["id"], "title": (k["spec"] as <string, any>)["title"] ?? "", "specPath": k["specPath"], "spec": k["spec"], "status": k == kept[0] ? "running" : "pending" })
   { "run": run, "team": team, "line": line }
 
 // A run started in a process of its own (`run --detach`): the run file at once, the answer `{run, detached, log}`;
 // with a paid provider, `waiting: spending` (it waits for the user's two confirmations, asked where the user is).
-startDetached(root: string, file: string, asked: string?, assign: string? = null) <string, any>
-  made = prepareRun(root, file, asked, assign)
+startDetached(root: string, files: string[], asked: string?, assign: string? = null) <string, any>
+  made = prepareRun(root, files, asked, assign)
   run: <string, any> = made["run"]!
-  if ((run["spec"] as <string, any>)["criteria"] as string[]).isEmpty
-    throw ValueError("the spec ${run["id"]} has no acceptance criteria: ask the user for them and write them first (spec_draft, or the Builder's form)")
+  every: <string, any>[] = run["specs"] != null ? (run["specs"] as <string, any>[]).map((e) => e["spec"] as <string, any>) : [run["spec"]!]
+  for spec in every
+    if (spec["criteria"] as string[]).isEmpty
+      throw ValueError("the spec ${spec["id"]} has no acceptance criteria: ask the user for them and write them first (spec_draft, or the Builder's form)")
   current = loadRun(root, "${run["id"]}")
   if current != null and current!["status"] == "running" and not orphaned(current!["owner"])
     throw ValueError("the run ${run["id"]} is running already")
@@ -266,7 +280,7 @@ startDetached(root: string, file: string, asked: string?, assign: string? = null
     started["how"] = "the user confirms the spending twice where they answer: the Builder page (Resume) or the chat"
   started
 
-// `nuclear-builder run [spec.md] [--team <id>] [--assign <role>=<member>,…] [--resume <id>] [--events] [--detach] [--confirm-spending] [--force-confirm]`
+// `nuclear-builder run [spec.md…] [--team <id>] [--assign <role>=<member>,…] [--resume <id>] [--events] [--detach] [--confirm-spending] [--force-confirm]`
 // · `run answer|stop|show|journal <id>`
 runLine(args: string[]) int
   root = projectRoot("${Path.cwd()}")
@@ -276,22 +290,35 @@ runLine(args: string[]) int
   if resume != null
     return retryLine([resume!, ...args.filter((a) => a != "--resume" and a != resume)], false)
   skip = ["--team", "--assign"]
-  given = args.filter((a) => not a.startsWith("--")).find((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in skip))
-  file = given ?? newestSpec(root)
-  if file == null
+  given = args.filter((a) => not a.startsWith("--") and not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in skip))
+  newest = newestSpec(root)
+  files: string[] = given.isEmpty ? (newest == null ? ([] as string[]) : [newest!]) : given
+  if files.isEmpty
     print("no spec: nuclear-builder spec new --title … --component … (or the Builder page), or pass its path", file = sys.stderr)
     return 2
   if "--detach" in args
     try
-      printJson(startDetached(root, file!, option(args, "--team"), option(args, "--assign")))
+      printJson(startDetached(root, files, option(args, "--team"), option(args, "--assign")))
     catch e
       if not isinstance(e, ValueError) and not isinstance(e, OSError)
         throw e
       printJson({ "error": "${e}" })
       return 1
     return 0
-  made = prepareRun(root, file!, option(args, "--team"), option(args, "--assign"))
-  exitOf(factoryOf(made["run"]!, made["team"]!, args, made["line"]!).start())
+  made = preparedOrSaid(root, files, args)
+  if made == null
+    return 2
+  exitOf(factoryOf(made!["run"]!, made!["team"]!, args, made!["line"]!).start())
+
+// `prepareRun` for the command: a refusal (a spec named twice) printed, null.
+preparedOrSaid(root: string, files: string[], args: string[]) <string, any>?
+  try
+    return prepareRun(root, files, option(args, "--team"), option(args, "--assign"))
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    print("${e}", file = sys.stderr)
+    return null
 
 // `nuclear-builder retry <id> [--from <station> | --step <step>] [--detach]` · `restart <id>`: what the stations (or
 // the steps) left out wrote is undone first; `--step` runs that step and every step after it. A run of the

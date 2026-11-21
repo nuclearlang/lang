@@ -32,6 +32,9 @@ No program can read the graph until you allow it with `connect` or `allow` (the 
 MCP server). Its documents are encrypted on disk and it refuses web pages
 ([the Smart Graph](../../../../../nuclear-graph-storage/README.md)).
 
+The first spec of a project asks once in which language its specs are written (the editor's language first); every
+document the stations write for a spec is in that language. It is kept in `.nuclear/builder.json` (`specLanguage`).
+
 ## 2. Write the spec in VS Code
 
 Open the Nuclear workspace and press `Ctrl+Alt+P`: the Builder's workbench, the specs and the runs on the left, the

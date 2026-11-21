@@ -26,6 +26,7 @@ toolsProject(tmpPath: Path, monkeypatch: any) string
   root.joinpath("config.nuc").writeText("")
   root.joinpath(".nuclear").mkdir()
   root.joinpath(".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend" }))
+  root.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "specLanguage": "en" }))
   monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
   monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("roles")}")
   fake = tmpPath.joinpath("fake-builder")

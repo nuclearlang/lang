@@ -231,6 +231,8 @@ export interface Posted {
   links?: Record<string, string>;
   moment?: 'failure' | 'success' | 'question';
   costUsd?: number;
+  /** A log folded under the message (the chat shows it closed: an accordion). */
+  details?: string;
 }
 
 /** The little of a run the chat needs (runs.ts `Run`). */
@@ -238,8 +240,23 @@ export interface RunLike {
   id: string;
   status: string;
   spec: { title: string };
-  stages: { id: string; title: string; status: string; role?: string; steps: { summary: string; status: string; costUsd?: number }[] }[];
+  stages: { id: string; title: string; status: string; role?: string; steps: { summary: string; status: string; costUsd?: number; log?: string; files?: string[] }[] }[];
   costUsd?: number;
+  /** The engine's repairs (spec 024 requirement 6): a failed station diagnosed, then run once more with it. */
+  repairs?: { station: string; diagnosis: string; at: number }[];
+}
+
+/** The most a folded log carries: its end, where a failure is. */
+export const DETAILS_MAX = 4000;
+
+/** A station's log as the chat folds it under its post: each step's line (✓, ✗ or ·) with the files it wrote, then
+ * the failed step's own log; its last `DETAILS_MAX` characters. */
+export function stationDetails(st: RunLike['stages'][number]): string {
+  const mark = (s: string) => (s === 'passed' ? '✓' : s === 'failed' ? '✗' : '·');
+  const lines = st.steps.flatMap((s) => [`${mark(s.status)} ${s.summary || '…'}`, ...(s.files ?? []).map((f) => `    ${f}`)]);
+  const failed = [...st.steps].reverse().find((s) => s.status === 'failed' && s.log);
+  const text = [...lines, ...(failed ? ['', failed.log!.trim()] : [])].join('\n');
+  return text.length > DETAILS_MAX ? `…${text.slice(-DETAILS_MAX)}` : text;
 }
 export interface AskLike {
   id: string;
@@ -252,24 +269,33 @@ export interface AskLike {
 }
 
 export const RUN_TEXTS = {
-  en: { noTeam: 'This channel has no team yet: assign one and its tech lead answers here, for every app of the folder.', noTeams: 'This channel has no team, and there is no team yet: make one, then assign it here.', createTeam: 'Create a team', free: 'free', busy: 'busy', assigned: 'the team {0}', creating: 'The company screen is open: make the team, then open this chat again to assign it.', start: 'Started run:{0}: **{1}**', passed: '**{0}** passed', failed: '**{0}** failed', end: 'Every station passed (USD {0}).', endFailed: 'The run failed: {0}', approve: 'Approve', change: 'Ask for a change', later: 'Later', goOn: 'Go on', yes: 'Yes', no: 'No', answered: 'Answered: {0}', spending: '{0} (asked in the editor: money is confirmed twice)', accept: 'Accept', discard: 'Discard', draft: 'A new draft of spec:{0}:', accepted: 'Accepted: spec:{0} is written.', discarded: 'Discarded: spec:{0} stays as it was.', polish: 'Let us polish spec:{0}: **{1}**. Reply in this thread; a change comes as a difference you accept or not.\n\n```markdown\n{2}\n```', poc: 'A proof of concept (`/poc {0}`) is not available yet: the factory runs only on a project\'s own code, not on a scratch folder (`.nuclear/poc/`).', stations: { analysis: 'Analysis', design: 'Design', tests: 'Tests first', code: 'Code', quality: 'Quality', delivery: 'Delivery' }, ask: { gate: '', gateQuestions: '', qaPlan: '', deliver: '' } },
-  es: { noTeam: 'Este canal aún no tiene equipo: asigna uno y su tech lead responde aquí, para todas las apps de la carpeta.', noTeams: 'Este canal no tiene equipo y aún no hay ninguno: crea uno y luego asígnalo aquí.', createTeam: 'Crear un equipo', free: 'libre', busy: 'ocupado', assigned: 'el equipo {0}', creating: 'La pantalla de equipos está abierta: crea el equipo y vuelve a abrir este chat para asignarlo.', start: 'Empezó run:{0}: **{1}**', passed: '**{0}** pasó', failed: '**{0}** falló', end: 'Pasaron todas las estaciones (USD {0}).', endFailed: 'La ejecución falló: {0}', approve: 'Aprobar', change: 'Pedir un cambio', later: 'Más tarde', goOn: 'Seguir', yes: 'Sí', no: 'No', answered: 'Respondido: {0}', spending: '{0} (preguntado en el editor: el dinero se confirma dos veces)', accept: 'Aceptar', discard: 'Descartar', draft: 'Un nuevo borrador de spec:{0}:', accepted: 'Aceptado: spec:{0} está escrita.', discarded: 'Descartado: spec:{0} queda como estaba.', polish: 'Puliremos spec:{0}: **{1}**. Responde en este hilo; un cambio llega como una diferencia que aceptas o no.\n\n```markdown\n{2}\n```', poc: 'Una prueba de concepto (`/poc {0}`) aún no está disponible: la fábrica trabaja solo sobre el código del proyecto, no en una carpeta de pruebas (`.nuclear/poc/`).', stations: { analysis: 'Análisis', design: 'Diseño', tests: 'Pruebas primero', code: 'Código', quality: 'Calidad', delivery: 'Entrega' }, ask: { gate: '¿Apruebas la estación {0}? Lee sus documentos antes.', gateQuestions: 'El pedido deja preguntas abiertas en la estación {0}: respóndelas (un cambio con tus respuestas), o aprueba para seguir sin ellas.', qaPlan: 'El plan de QA está listo: activa o desactiva comprobaciones, añade las tuyas, córrelas y márcalas. ¿Seguimos?', deliver: '¿Creo la rama factory/{0}, hago el commit a tu nombre y abro el pull request?' } },
+  en: { noTeam: 'This channel has no team yet: assign one and its tech lead answers here, for every app of the folder.', noTeams: 'This channel has no team, and there is no team yet: make one, then assign it here.', createTeam: 'Create a team', free: 'free', busy: 'busy', assigned: 'the team {0}', creating: 'The company screen is open: make the team, then open this chat again to assign it.', start: 'Started run:{0}: **{1}**', started: '**{0}** started', repairing: '**{0}** failed and is being repaired', passed: '**{0}** passed', failed: '**{0}** failed', end: 'Every station passed (USD {0}).', endFailed: 'The run failed: {0}', approve: 'Approve', change: 'Ask for a change', later: 'Later', goOn: 'Go on', yes: 'Yes', no: 'No', answered: 'Answered by you: {0}', spending: '{0} (asked in the editor: money is confirmed twice)', accept: 'Accept', discard: 'Discard', draft: 'A new draft of spec:{0}:', accepted: 'Accepted: spec:{0} is written.', discarded: 'Discarded: spec:{0} stays as it was.', polish: 'Let us polish spec:{0}: **{1}**. Reply in this thread; a change comes as a difference you accept or not.\n\n```markdown\n{2}\n```', poc: 'A proof of concept (`/poc {0}`) is not available yet: the factory runs only on a project\'s own code, not on a scratch folder (`.nuclear/poc/`).', stations: { analysis: 'Analysis', design: 'Design', tests: 'Tests first', code: 'Code', quality: 'Quality', delivery: 'Delivery' }, ask: { gate: '', gateQuestions: '', qaPlan: '', deliver: '' } },
+  es: { noTeam: 'Este canal aún no tiene equipo: asigna uno y su tech lead responde aquí, para todas las apps de la carpeta.', noTeams: 'Este canal no tiene equipo y aún no hay ninguno: crea uno y luego asígnalo aquí.', createTeam: 'Crear un equipo', free: 'libre', busy: 'ocupado', assigned: 'el equipo {0}', creating: 'La pantalla de equipos está abierta: crea el equipo y vuelve a abrir este chat para asignarlo.', start: 'Empezó run:{0}: **{1}**', started: '**{0}** empezó', repairing: '**{0}** falló y se está reparando', passed: '**{0}** pasó', failed: '**{0}** falló', end: 'Pasaron todas las estaciones (USD {0}).', endFailed: 'La ejecución falló: {0}', approve: 'Aprobar', change: 'Pedir un cambio', later: 'Más tarde', goOn: 'Seguir', yes: 'Sí', no: 'No', answered: 'Respondido por ti: {0}', spending: '{0} (preguntado en el editor: el dinero se confirma dos veces)', accept: 'Aceptar', discard: 'Descartar', draft: 'Un nuevo borrador de spec:{0}:', accepted: 'Aceptado: spec:{0} está escrita.', discarded: 'Descartado: spec:{0} queda como estaba.', polish: 'Puliremos spec:{0}: **{1}**. Responde en este hilo; un cambio llega como una diferencia que aceptas o no.\n\n```markdown\n{2}\n```', poc: 'Una prueba de concepto (`/poc {0}`) aún no está disponible: la fábrica trabaja solo sobre el código del proyecto, no en una carpeta de pruebas (`.nuclear/poc/`).', stations: { analysis: 'Análisis', design: 'Diseño', tests: 'Pruebas primero', code: 'Código', quality: 'Calidad', delivery: 'Entrega' }, ask: { gate: '¿Apruebas la estación {0}? Lee sus documentos antes.', gateQuestions: 'El pedido deja preguntas abiertas en la estación {0}: respóndelas (un cambio con tus respuestas), o aprueba para seguir sin ellas.', qaPlan: 'El plan de QA está listo: activa o desactiva comprobaciones, añade las tuyas, córrelas y márcalas. ¿Seguimos?', deliver: '¿Creo la rama factory/{0}, hago el commit a tu nombre y abro el pull request?' } },
 };
 export type RunTexts = (typeof RUN_TEXTS)['en'];
 export const fmt = (s: string, ...a: unknown[]) => s.replace(/\{(\d+)\}/g, (_, i) => String(a[+i] ?? ''));
 
 /** The posts a run's change makes (`prev` undefined: the run was just seen, its thread starts): each station that
- * passed or failed, by the member of its role, a failure with its moment (the member's GIF personality applies);
- * the run's end. `member(role)` is the member's id in the workspace (`system` when it has none). */
+ * started, passed or failed, by the member of its role (passed or failed with its log folded, `stationDetails`; a
+ * failure with its moment: the member's GIF personality applies); each repair (`repairs`: the diagnosis folded); the
+ * run's end. `member(role)` is the member's id in the workspace (`system` when it has none). */
 export function runPosts(prev: RunLike | undefined, next: RunLike, member: (role?: string) => string, T: RunTexts, lead: string): Posted[] {
   const out: Posted[] = [];
   if (!prev) out.push({ author: lead, text: fmt(T.start, next.id, next.spec.title), links: { run: next.id } });
   for (const st of next.stages) {
     const was = prev?.stages.find((s) => s.id === st.id)?.status;
+    const name = T.stations[st.id as keyof RunTexts['stations']] ?? st.title;
+    if (was !== st.status && st.status === 'running') out.push({ author: member(st.role), text: fmt(T.started, name) });
     if (was === st.status || (st.status !== 'passed' && st.status !== 'failed')) continue;
     const said = [...st.steps].reverse().find((s) => s.summary)?.summary ?? '';
     const cost = st.steps.reduce((n, s) => n + (s.costUsd ?? 0), 0);
-    out.push({ author: member(st.role), text: fmt(st.status === 'passed' ? T.passed : T.failed, T.stations[st.id as keyof RunTexts['stations']] ?? st.title) + (said ? `: ${said}` : ''), ...(st.status === 'failed' ? { moment: 'failure' as const } : {}), ...(cost ? { costUsd: cost } : {}) });
+    const details = stationDetails(st);
+    out.push({ author: member(st.role), text: fmt(st.status === 'passed' ? T.passed : T.failed, name) + (said ? `: ${said}` : ''), ...(st.status === 'failed' ? { moment: 'failure' as const } : {}), ...(cost ? { costUsd: cost } : {}), ...(details ? { details } : {}) });
+  }
+  for (const r of (next.repairs ?? []).slice(prev?.repairs?.length ?? 0)) {
+    const st = next.stages.find((s) => s.id === r.station);
+    const first = r.diagnosis.trim().split('\n')[0] ?? '';
+    out.push({ author: member(st?.role), text: fmt(T.repairing, T.stations[r.station as keyof RunTexts['stations']] ?? st?.title ?? r.station) + (first ? `: ${first}` : ''), details: r.diagnosis.length > DETAILS_MAX ? `…${r.diagnosis.slice(-DETAILS_MAX)}` : r.diagnosis });
   }
   if (prev && prev.status !== next.status && next.status === 'passed') out.push({ author: lead, text: fmt(T.end, (next.costUsd ?? 0).toFixed(3)), moment: 'success' });
   // the station's post already carried the failure's moment: the end only says it

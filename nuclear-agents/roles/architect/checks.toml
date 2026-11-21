@@ -26,7 +26,7 @@ title_es = "El diseño sigue los ADR del proyecto; cada decisión nueva es un AD
 station = "design"
 on = true
 by = "role"
-prompt = "Read the project's docs/03-adr/ and specs/{{id}}/design.md. List each decision of the design that an ADR contradicts or that no ADR covers and is costly to undo; write a proposed ADR for each."
+prompt = "Read the project's docs/03-adr/ and specs/{{id}}/design.md. List each decision of the design that an ADR contradicts or that no ADR covers and is costly to undo; write a proposed ADR for each. A design that cites, as a project ADR, a number with no file in docs/03-adr/ is a finding: it cites the platform's rule by its name, or proposes the ADR. specs/{{id}}/ is the folder the factory chose for this spec, at any depth: never a finding."
 
 [[check]]
 id = "architect.user-approves"

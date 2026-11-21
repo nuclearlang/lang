@@ -9,6 +9,8 @@ specsProject(tmpPath: Path, monkeypatch: any) string
   root = tmpPath.joinpath("app")
   root.mkdir()
   root.joinpath("config.nuc").writeText("")
+  root.joinpath(".nuclear").mkdir()
+  root.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "specLanguage": "en" }))
   monkeypatch.chdir(root)
   "${root}"
 
@@ -133,3 +135,22 @@ testASpecsTextIsReplacedByUpdateAndOnlyByTheUserThroughATool(tmpPath: Path, monk
   expect(asked != null and (asked!["needsUser"] as <string, any>)["tool"] == "spec_update" and spec.readText().startsWith("# Lend a book for two weeks"))
   applyForUser(root, "spec_update", { "id": "lend-a-book", "text": "# Lend it\n" })
   expect(spec.readText() == "# Lend it\n")
+
+// The language of a project's specs is asked once (spec 024): with none kept and none given, a spec is refused with
+// what to ask; the one given is kept for the project and every spec says it, so each station writes in it.
+testTheSpecsLanguageIsAskedOnceAndSaidByEverySpec(tmpPath: Path, monkeypatch: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "team": "night-shift" }))
+  refused = false
+  try
+    specNew(root, "Lend a book", "books")
+  catch e
+    refused = "ask the user in which language" in "${e}"
+  expect(refused)
+  made = specNew(root, "Lend a book", "books", "", "feature", "", ["a lent book is not free"], null, "es")
+  expect(specLanguageOf(root) == "es" and readJson(Path(root, ".nuclear", "builder.json"))["team"] == "night-shift")
+  text = Path(root, "${made["path"]}", "spec.md").readText()
+  expect("- Language: Spanish (every document of this spec is written in Spanish)" in text, text)
+  // the next spec takes the kept language; a whole markdown gets the line after its title
+  other = specNew(root, "Return a book", "books", "", "feature", "", [], "# Return a book\n\n## Description\n\nBack.")
+  expect("# Return a book\n\n- Language: Spanish" in Path(root, "${other["path"]}", "spec.md").readText())

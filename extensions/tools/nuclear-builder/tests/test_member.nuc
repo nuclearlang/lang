@@ -23,7 +23,7 @@ memberProject(tmpPath: Path, monkeypatch: any) string
   roster.joinpath("faces", "thumb", "dev-017.webp").writeText("RIFF----WEBP")
   tmpPath.joinpath("roles", "temperaments.json").writeText(json.dumps({ "temperaments": [{ "id": "grumpy", "name": { "en": "Grumpy", "es": "Gruñón" }, "voice": "You are grumpy: terse, blunt messages." }, { "id": "shy", "name": { "en": "Shy", "es": "Tímido" }, "voice": "You are shy: short, quiet messages." }] }))
   saveTeam({ "id": "night-shift", "name": "Night shift", "description": "We ship at dawn.", "budgetUsd": 2, "techLead": "developer", "roles": { "developer": { "employee": "dev-017", "kind": "local", "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "instructions": "Tests before code.", "personality": { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour." } }, "analyst": { "kind": "agent", "provider": "claude-code", "model": "haiku", "name": "Ana" } } })
-  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "team": "night-shift" }))
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "team": "night-shift", "specLanguage": "en" }))
   root
 
 memberOf(root: string, role: string, ask: <string, any>, lines: string[], events: <string, any>[], options: <string, any> = {}) Member
@@ -52,7 +52,7 @@ testAMemberAnswersAsTheirProfileWithTheFactorysTools(tmpPath: Path, monkeypatch:
   // the member's own prompt: their name, role, profile in the conversation's language, personality, the team's
   // instructions, the factory's tools, the chat's conversation; the tools' results in the second call
   message = "${bodies[0]["message"]}"
-  for part in ["You are Neo, the Developer of the team Night shift", "#night-shift", "Escribe tests de noche.", "Nunca tarde, nunca temprano.", "Dry humour.", "- Temperament: Grumpy", "## How you write\n\nYou are grumpy: terse, blunt messages.", "Tests before code.", "You are the team's tech lead", "speak for everyone", "accountable for the team's work", "`spec_new`", "- booking", "you: hola equipo", "you: escribe la base", "answer in Spanish", "Responde en español.", "your first answer is the plan", "who of your team does each part", "run_start", "## Your team, by station", "- analysis: Ana, the Analyst", "- tests first: Neo, the Developer", "- quality: nobody (the team has no QA)"]
+  for part in ["You are Neo, the Developer of the team Night shift", "#night-shift", "Escribe tests de noche.", "Nunca tarde, nunca temprano.", "Dry humour.", "- Temperament: Grumpy", "## How you write\n\nYou are grumpy: terse, blunt messages.", "Tests before code.", "You are the team's tech lead", "speak for everyone", "accountable for the team's work", "`spec_new`", "- booking", "you: hola equipo", "you: escribe la base", "answer in Spanish", "Responde en español.", "your first answer is the plan", "size it first", "is no run of the factory", "who of your team does each part", "run_start", "## Your team, by station", "- analysis: Ana, the Analyst", "- tests first: Neo, the Developer", "- quality: nobody (the team has no QA)"]
     expect(part in message, part)
   expect(not ("spec_new (failed)" in "${bodies[1]["message"]}") and "## The tools answered" in "${bodies[1]["message"]}" and "book-a-room" in "${bodies[1]["message"]}")
 
@@ -240,7 +240,7 @@ testAtlasOnlyInformsAndNamesTheFreeTeamsWithTheirTechLead(tmpPath: Path, monkeyp
   atlas.respond()
   expect(not events.any((e) => e["type"] == "ask") and events.last == { "type": "done", "costUsd": 0.0 }, json.dumps(events))
   sent = log.readText()
-  for part in ["You only inform", "a team's tech lead does it", "offer to make one here", "team_create", "## The teams", "- Night shift (`night-shift`): free; its tech lead Neo, the Developer", "costs no more tokens", "## Your tools"]
+  for part in ["You only inform", "a team's tech lead does it", "offer to make one here", "team_create", "## The teams", "- Night shift (`night-shift`): free; its tech lead Neo, the Developer", "costs no more tokens", "task-size", "## Your tools"]
     expect(part in sent, part)
   expect(not ("every action of Nuclear Builder" in sent))
   // its tools: the informing ones of both MCP servers

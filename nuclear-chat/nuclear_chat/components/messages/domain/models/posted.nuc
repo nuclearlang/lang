@@ -16,3 +16,6 @@ Posted
   // the member answers a GIF the user sent: the GIF is likelier
   answersGif: boolean = false
   costUsd?: double
+  // a log folded under the message (a run's station, a repair): the chat shows it closed, opened on click
+  @maxLength(20000)
+  details: string = ""

@@ -1,12 +1,48 @@
+use re
 use sys
+use json
 use pathlib{ Path }
+
+// The names of the languages a project's specs are written in (any other two-letter code is said by its code).
+SPEC_LANGUAGES: <string, string> = { "en": "English", "es": "Spanish", "pt": "Portuguese", "fr": "French", "de": "German", "it": "Italian" }
+
+// The language of a project's specs (`.nuclear/builder.json` "specLanguage"), asked once (spec 024 requirement 3).
+specLanguageOf(root: string) string?
+  file = Path(root, ".nuclear", "builder.json")
+  if not file.isFile()
+    return null
+  found = readJson(file)
+  own: <string, any> = isinstance(found, dict) ? found : ({} as <string, any>)
+  isText(own["specLanguage"]) and not "${own["specLanguage"]}".isEmpty ? "${own["specLanguage"]}" : null
+
+// The language kept for the project's specs, the rest of `.nuclear/builder.json` as it was.
+keepSpecLanguage(root: string, language: string) void
+  file = Path(root, ".nuclear", "builder.json")
+  found = file.isFile() ? readJson(file) : ({} as <string, any>)
+  own: <string, any> = isinstance(found, dict) ? found : ({} as <string, any>)
+  own["specLanguage"] = language
+  file.parent.mkdir(parents = true, existOk = true)
+  writeAtomic(file, json.dumps(own, indent = 2) + "\n")
+
+// The line of a spec that says its language: every station writes the spec's documents in it.
+languageLine(language: string) string
+  name = SPEC_LANGUAGES[language] ?? language
+  "- Language: ${name} (every document of this spec is written in ${name})"
 
 // The commands of the specs (`nuclear-builder spec new | list | show | update | delete | move | migrate | accept | discard [--json]`), for a terminal and the
 // editors (JSON on stdout, an error as {"error": "…"} with exit code 1); the layout is specs.nuc's.
 
 // `spec new`: the spec's base in its component's folder, with its acceptance criteria; its id from the title, never
 // one in use. `text` is the whole spec's markdown written there instead of the base (the editor's form).
-specNew(root: string, title: string, component: string, layer: string = "", useCase: string = "feature", description: string = "", criteria: string[] = [], text: string? = null) <string, any>
+specNew(root: string, title: string, component: string, layer: string = "", useCase: string = "feature", description: string = "", criteria: string[] = [], text: string? = null, language: string = "") <string, any>
+  given = language.trim().lower()
+  if not given.isEmpty and re.fullmatch(r"[a-z]{2}", given) == null
+    throw ValueError("`${language}` is not a language: a two-letter code (en, es, pt...)")
+  chosen = given.isEmpty ? specLanguageOf(root) : given
+  if chosen == null
+    throw ValueError("the project's specs have no language yet: ask the user in which language they are written (offer the editor's language as the default) and pass it as --language <en|es|...>; it is kept for the project")
+  if not given.isEmpty and given != specLanguageOf(root)
+    keepSpecLanguage(root, given)
   if title.trim().isEmpty
     throw ValueError("a spec needs a --title")
   if component.trim().isEmpty
@@ -24,13 +60,21 @@ specNew(root: string, title: string, component: string, layer: string = "", useC
   lines = ["# ${title.trim()}", "", "- Use case: ${kind}", "- Source: local", "- Component: ${component.trim()}"]
   if not layer.trim().isEmpty
     lines.add("- Layer: ${layer.trim()}")
+  lines.add(languageLine(chosen!))
   items = criteria.map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
   lines.addAll(["", "## Description", "", description.trim(), "", "## Acceptance criteria", "", ...(items.isEmpty ? ["- (none yet)"] : items.map((c) => "- [ ] ${c}")), ""])
   if text != null and not text!.trim().startsWith("# ")
     throw ValueError("a spec's markdown starts with its `# title`")
-  written = text == null ? lines.join("\n") : text!.trim() + "\n"
+  written = text == null ? lines.join("\n") : withLanguage(text!.trim(), chosen!) + "\n"
   writeAtomic(Path(root, path, "spec.md"), written)
   { "id": id, "path": path, "spec": parseSpec(written, id) }
+
+// A spec's markdown with its language line, after its title (kept when it says one already).
+withLanguage(text: string, language: string) string
+  if "\n- Language: " in text
+    return text
+  at = text.indexOf("\n")
+  at < 0 ? "${text}\n\n${languageLine(language)}" : "${text.substring(0, at)}\n\n${languageLine(language)}${text.substring(at)}"
 
 // `spec show`: a spec's markdown, what it says (its criteria among it), its draft when it has one, its run's status.
 specShow(root: string, id: string) <string, any>
@@ -213,7 +257,7 @@ specLine(args: string[]) int
   asJson = "--json" in args
   try
     if what == "new"
-      made = specNew(root, option(args, "--title") ?? "", option(args, "--component") ?? "", option(args, "--layer") ?? "", option(args, "--use-case") ?? "feature", option(args, "--description") ?? "", options(args, "--criteria"), "--stdin" in args ? sys.stdin.read() : null)
+      made = specNew(root, option(args, "--title") ?? "", option(args, "--component") ?? "", option(args, "--layer") ?? "", option(args, "--use-case") ?? "feature", option(args, "--description") ?? "", options(args, "--criteria"), "--stdin" in args ? sys.stdin.read() : null, option(args, "--language") ?? "")
       asJson ? printJson(made) : print("wrote ${made["path"]}/spec.md")
     else if what == "list"
       found = specList(root)

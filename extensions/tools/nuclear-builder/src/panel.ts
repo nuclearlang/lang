@@ -226,6 +226,25 @@ export function answerRun(root: string, id: string, ask: string, answer: Answer)
 // ---------- Nuclear Chat: a run told in its team's channel, its questions' buttons, a spec's thread, /poc ----------
 
 const chatTexts = () => RUN_TEXTS[lang()];
+
+/** The language of the project's specs (spec 024): '' when the project keeps one (`.nuclear/builder.json`
+ * `specLanguage`); else asked once, the editor's language first; undefined when the user dismissed the question. */
+async function askSpecLanguage(root: string): Promise<string | undefined> {
+  try {
+    const kept = (JSON.parse(fs.readFileSync(path.join(root, '.nuclear', 'builder.json'), 'utf8')) as { specLanguage?: unknown }).specLanguage;
+    if (typeof kept === 'string' && kept) return '';
+  } catch {
+    // no builder.json yet
+  }
+  const mine = lang();
+  const names: Record<string, string> = { es: l10n.t('Spanish'), en: l10n.t('English') };
+  const order = [mine, ...Object.keys(names).filter((c) => c !== mine)];
+  const pick = await vscode.window.showQuickPick(
+    order.map((c, i) => ({ label: names[c] ?? c, description: i === 0 ? l10n.t("the editor's language") : '', code: c })),
+    { title: l10n.t("The language of this project's specs (asked once)"), ignoreFocusOut: true },
+  );
+  return pick?.code;
+}
 /** The messages with buttons this window posted: their text and thread, to say the answer under them. */
 const buttoned = new Map<string, { text: string; channel: string; thread?: string }>();
 
@@ -571,6 +590,8 @@ export class BuilderPanel {
    * in use), then the form's whole spec (criteria, context, pieces, source) is written in that file; with a
    * `nuclear-builder` that has no `spec` yet, it is written there by the editor. With a team, its run starts. */
   private async saveSpec(spec: Spec, team?: string): Promise<void> {
+    const language = await askSpecLanguage(this.root);
+    if (language === undefined) return;
     if (team !== undefined && !readCard(this.root)) throw new Error(l10n.t('the project has no card yet (.nuclear/project.json): build it once (nuclear build . or nuclear build)'));
     const component = spec.component || '_global';
     const layer = component !== '_global' && spec.layer && (LAYERS as readonly string[]).includes(spec.layer) ? spec.layer : null;
@@ -579,7 +600,7 @@ export class BuilderPanel {
     let id: string;
     try {
       // the command places the spec and writes the form's whole markdown (criteria, context, pieces, source)
-      const made = await lineJson<{ id: string; path: string }>(this.root, ['spec', 'new', '--title', spec.title, '--component', component, ...(layer ? ['--layer', layer] : []), '--use-case', spec.useCase, '--stdin', '--json'], undefined, specMarkdown({ ...full, id: '' }));
+      const made = await lineJson<{ id: string; path: string }>(this.root, ['spec', 'new', '--title', spec.title, '--component', component, ...(layer ? ['--layer', layer] : []), '--use-case', spec.useCase, ...(language ? ['--language', language] : []), '--stdin', '--json'], undefined, specMarkdown({ ...full, id: '' }));
       id = made.id;
       file = path.join(made.path, 'spec.md');
     } catch (e) {
@@ -689,7 +710,10 @@ export class BuilderPanel {
       }
       case 'open': {
         const file = path.isAbsolute(m.file) ? m.file : path.join(this.root, m.file);
-        if (fs.existsSync(file)) await vscode.window.showTextDocument(vscode.Uri.file(file), { viewColumn: vscode.ViewColumn.Beside, preview: true });
+        if (!fs.existsSync(file)) return;
+        // a spec, a decision, an ADR: read rendered first (what matters to the user); its source is one click from the preview
+        if (file.endsWith('.md')) return void (await vscode.commands.executeCommand('markdown.showPreviewToSide', vscode.Uri.file(file)));
+        await vscode.window.showTextDocument(vscode.Uri.file(file), { viewColumn: vscode.ViewColumn.Beside, preview: true });
         return;
       }
       case 'teams':

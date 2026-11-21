@@ -21,6 +21,10 @@ Why it is built this way: [ADR-cli-0002](../03-adr/0002-agents-learn-nuclear-fro
 
 The skill does not copy the brief: it asks the installed binary for it, so it is never out of date.
 
+The skill, the project section, `start` and the MCP server's work cycle all tell an agent to size a request before
+any work (`nuclear help task-size`, spec 024): small and medium (≤ 10 files, ≤ 400 lines, no new feature) are its
+own, a large one is proposed to Nuclear Builder with the count as the reason.
+
 The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,
 the MCP server, `add`), never by writing target code or translating native code by hand
 ([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).

@@ -16,6 +16,8 @@ usecase PostMessage(store: MessageStore, events: EventsAppComponent, gifs: GifsA
       entry["buttons"] = Json.decode(Json.encode(posted.buttons))
     if posted.costUsd != null
       entry["costUsd"] = posted.costUsd
+    if posted.details != ""
+      entry["details"] = posted.details
     store.append(ws, channel, entry)
     ~events.emit(ws.id, "message", channel, { "message": entry })
     if member != null and (posted.moment != null or posted.gif != null)

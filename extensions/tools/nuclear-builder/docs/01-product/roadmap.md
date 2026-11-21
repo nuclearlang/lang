@@ -84,6 +84,20 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Untested
 
+- **Several specs in one run and the repair of a failure (spec 024, 0.88)**: tested in Nuclear with a fake Claude Code
+  (a check that fails once, a FIXABLE and a NOT FIXABLE diagnosis, two specs through two stations); never with a real
+  provider: whether a real diagnosis starts with `FIXABLE`/`NOT FIXABLE` as asked (anything else stops the run), a
+  run of several specs in the editor (the page and the chat draw `specs` per spec: the C4 and notification work), the
+  delivery of several specs (one branch and pull request each). `tools/mcp`'s `run_start` takes one spec still.
+
+- **Every step of a run in its thread (0.88, spec 024 requirement 4)**: `runPosts` and `stationDetails` are tested
+  (`test/chat.test.ts`); never seen in a run: the *started* posts, the logs folded, a repair told from the engine's
+  `repairs` (the engine writes it in the same release), a run of several specs.
+
+- **The diagram told as C4 for a product owner (spec 024 requirement 5)**: `storyOf` is tested (editors.test.ts) and the
+  diagram type-checks; never seen in a window: the five business steps of a real run, their states and lines, *⤢
+  Inside* to the stations, *⚙ Technical details* hiding and showing the tool calls, a spec opened as a preview.
+
 - **Nuclear's base skills in every team (0.87)**: `baseSkillIds`, `sharedSkills` and the screen's `libraryGroups` /
   `memberSkills` are tested; never seen in a window: the locked *Nuclear base* chip and its tooltip in the team's skills
   and the wizard's step 2, the picker without the base skills, a member's *Skills* tab marking them *Nuclear base*, a

@@ -152,7 +152,11 @@ its id, else of its `- Component:` and `- Layer:` (none: `_global`).
 The editors' commands (one call each, JSON on stdout with `--json`, an error as `{"error": "…"}` with exit code 1):
 
 - `spec new --title … --component <name>|_global [--layer …] [--use-case …] [--description …] [--criteria …]…
-  [--stdin] --json`: the spec's base (title, use case, `- Source: local`, component, layer, description, its
+  [--language <en|es|…>] [--stdin] --json`: the language of the project's specs is asked once (spec 024): with none
+  kept in `.nuclear/builder.json` (`specLanguage`) and no `--language`, the spec is refused with what to ask (the
+  editor's language offered first); the one given is kept, and every spec carries `- Language: <name> (every
+  document of this spec is written in <name>)` after its component and layer, which the stations read with the spec.
+  The spec's base (title, use case, `- Source: local`, component, layer, description, its
   acceptance criteria as `- [ ] …`, `- (none yet)` without them) in its folder, or with `--stdin` the whole markdown
   read there (from its `# title`), its id from
   the title and never one in use (a spec or a run: `-2`, `-3`…); prints `{id, path, spec}` (`spec` as `parseSpec`
@@ -170,6 +174,31 @@ The editors' commands (one call each, JSON on stdout with `--json`, an error as 
   most of its files touch (its run's ledger and its pieces, `components/<c>/…`; the layer when all of them are in
   one), else `_global`; prints `[{id, from, path, by}]` (`by`: `spec`, `files`, `nothing`), or `{id, from, error}`
   for one left where it is (exit code 1).
+
+### Several specs in one run (spec 024 requirement 2)
+
+`nuclear-builder run a.md b.md …` (and `run_start`'s `specs`) makes one run, `<first>-plus-<n>`, one bill and one
+budget: `prepareRun` keeps each spec in its folder and lists them in `specs` (`{ id, title, specPath, spec, status }`,
+`pending`, `running`, `passed`, `failed`); a spec named twice is refused. The specs go one after the other, each
+through every station (the simplest order that keeps a spec's documents together and lets a gate stop one spec): the
+run's `spec` and `specPath` are the one at work; when it passes, `nextSpec` keeps its stations in its entry
+(`specs[].stages`), settles what its steps wrote (`writes[].step` becomes `<spec>:<step>`, which `passedSteps` keeps:
+a later spec's failure never undoes it), gives the next spec fresh stations and seeds its checks. A failure stops the
+run on that spec (its entry `failed`); a retry or a resume goes on with it, then the ones after it. The delivery makes
+one branch per spec (`factory/<spec id>`). A run of one spec has no `specs`: the files of before load as they are.
+
+### A failure diagnosed and repaired (spec 024 requirement 6)
+
+A station that fails (a step, a check by prompt, QA's report) gets one diagnosis (`repair`) by the provider of its own
+role: its last failed step's summary and the tail of its log (a check's findings: 6,000 characters) after
+`REPAIR_TASK`, capped at `REPAIR_BUDGET_USD` (0.50) of what the budget has left. Its first line `FIXABLE` readies the
+station to run once more: what the failed steps wrote is undone, its parts run again but those of `REPAIR_KEEPS`
+(the generators, QA's plan and the user's yes to it), and its task carries *A repair: …* with the diagnosis
+(`run.repairing` while it runs). `NOT FIXABLE`, no answer, a local role, the budget spent or a second failure of the
+same station in the process: the run fails as before, the diagnosis kept for the user. Each diagnosis is a step
+*Why it failed, and the repair* (`skipped`: whatever it wrote is undone) and an entry of the run's `repairs`
+(`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`), what the team's channel tells; its cost is the
+run's.
 
 ### The run file
 
@@ -191,7 +220,7 @@ team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`)
 for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPlan`, `deliver` [run]) and the status `waiting`; and, from the agent steps,
 `analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the
 actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:
-`specs/<id>`). A run is read as the
+`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above). A run is read as the
 project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript
 engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps
 its team and its `assign`; one of the local team that was never saved (`local-team`) gets it again.

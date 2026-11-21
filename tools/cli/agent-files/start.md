@@ -34,6 +34,11 @@ never search the disk for Nuclear's source code or its documents, and never gues
 
 ## The work cycle
 
+0. Size the request before any work (`nuclear help task-size`): count the files and the lines it would change and
+   whether it adds a feature (a new screen, endpoint, entity, component, or a changed contract or schema). Small
+   (≤ 3 files, ≤ 100 lines, no feature) and medium (≤ 10 files, ≤ 400 lines, no new feature): do it yourself, and say
+   what you touched. Large (more, a new feature, or several specs): propose Nuclear Builder (a spec, or several, and
+   one run) with your count as the reason, and let the user decide.
 1. A new project: `nuclear new <name> -p mobile|backend|web [-d <dialect>]` (mobile: `flutter`; backend: `fastapi`,
    `nestjs`; web: `react`). Inside it, `nuclear help` lists every command of its platform. `nuclear doctor` says
    what this machine lacks for it: a mobile app needs Flutter (`nuclear setup flutter`), a `nestjs` or `react` project

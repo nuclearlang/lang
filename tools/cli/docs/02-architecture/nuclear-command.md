@@ -59,7 +59,7 @@ platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--
 What an agent with no context reads to learn Nuclear, on any machine: never a path of the source tree.
 
 - `TOPICS`: each embedded topic with its group and the file it comes from (`topic!`): `start` (the onboarding,
-  `agent-files/start.md`), `context-docs` (the code generator's guide), the language's guides and references, each
+  `agent-files/start.md`), `task-size` (spec 024: do a task or propose Nuclear Builder, `agent-files/task-size.md`), `context-docs` (the code generator's guide), the language's guides and references, each
   language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`, `ai-setup`, `graph`,
   `editors`, `vscode`, `builder`...), each embedded from its own project's `docs/08-guides/`.
 - `found()`: found when asked, not embedded: every `docs/07-reference/<name>.md` and `docs/08-guides/<name>.md` of

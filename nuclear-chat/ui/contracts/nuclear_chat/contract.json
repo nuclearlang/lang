@@ -1331,6 +1331,12 @@
           "type": "double"
         },
         {
+          "default": "",
+          "description": "a log folded under the message, shown closed (an accordion); empty when it has none",
+          "name": "details",
+          "type": "string"
+        },
+        {
           "default": 0,
           "description": "the time of its last edit, 0 when never edited",
           "name": "edited",
@@ -1560,6 +1566,15 @@
           "name": "costUsd",
           "optional": true,
           "type": "double"
+        },
+        {
+          "default": "",
+          "description": "a log folded under the message (a run's station, a repair): the chat shows it closed, opened on click",
+          "name": "details",
+          "rules": {
+            "maxLength": 20000
+          },
+          "type": "string"
         }
       ],
       "key": null

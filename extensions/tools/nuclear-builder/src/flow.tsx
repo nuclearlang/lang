@@ -1,9 +1,9 @@
 // The run as a living work diagram (React Flow), drawn inside the Builder page (panel.ts), in C4's four levels:
-// *Context* (the project in the middle; you, the team's five roles, the providers in use, the Smart Graph and GitHub
-// around it, the edges by who talks to whom), *Containers* (the pipeline: a node per stage, the role that has control
+// *Context*, for a product owner (spec 024): what is being built and five business steps in plain words (understand,
+// design, build, check, deliver: `story.ts`), each with what it produced and its state, you asked when it needs you, *Containers* (the pipeline: a node per stage, the role that has control
 // on each, the hand-over animated along the edges), *Components* (inside a stage: its steps in the stage's boundary,
 // the steps each agent followed under them, the stages before and after as neighbours) and *Code* (inside a step: what
-// its agent followed, its decisions, its files and its tool call as nodes). The breadcrumb walks the levels; a double
+// its agent followed, its decisions, its files; its tool calls only with *Technical details* on, as on Components). The breadcrumb walks the levels; a double
 // click goes down. The page owns the state (the run, what is picked, the level) and calls `NuclearFlow.render`; this
 // file only draws it and reports clicks. Its texts are the page's (`t`). No `vscode` import.
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import './flow.css';
 import type { Run, Stage, Step } from './runs';
+import { isToolCall, storyOf, type StoryBeat } from './story';
 
 export type Level = 'context' | 'containers' | 'components' | 'code';
 
@@ -63,9 +64,7 @@ const dur = (s?: { started?: number; ended?: number }) => {
   return ms < 1000 ? ms + ' ms' : ms < 60000 ? (ms / 1000).toFixed(1) + ' s' : Math.floor(ms / 60000) + ' min ' + Math.round((ms % 60000) / 1000) + ' s';
 };
 const status = (ctx: FlowProps, s: string) => ctx.t('flow.status.' + s);
-const PROVIDER_NAME: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
 /** Who does a station's or a step's work: "Claude Code · haiku". */
-const doneBy = (x: { provider?: string; model?: string }) => (x.provider ? (PROVIDER_NAME[x.provider] ?? x.provider) + (x.model ? ' · ' + x.model : '') : '');
 /** The label without the name the card already shows in bold. */
 const rest = (label: string, name: string) => (label === name ? '' : label.startsWith(name + ' · ') ? label.slice(name.length + 3) : label);
 const paid = (provider?: string) => !!provider && provider !== 'nuclear-developer' && provider !== 'shell';
@@ -204,6 +203,25 @@ function ActorNode({ data: d }: NodeProps<Node<ActorData>>) {
   );
 }
 
+// ---------- the story (C4 level 1, for a product owner): a business step, what it produced, its state ----------
+/** A step's state as the cards draw a station's (the ring of work, the amber that waits for you, the red that stopped). */
+const BEAT_CARD: Record<string, string> = { waiting: 'pending', working: 'running', needsYou: 'waiting', done: 'passed', failed: 'failed', skipped: 'skipped' };
+const BEAT_ICON: Record<string, string> = { understand: '◎', design: '◫', build: '⚒', check: '✓', deliver: '⇪' };
+type BeatData = { beat: StoryBeat; ctx: FlowProps };
+function BeatNode({ data: { beat: b, ctx } }: NodeProps<Node<BeatData>>) {
+  const who = b.stations.find((s) => s.status === 'running' || s.status === 'waiting') ?? b.stations[0];
+  return (
+    <div className={`fx-card fx-beat is-${BEAT_CARD[b.state]}`}>
+      <Sides />
+      <div className="fx-kind">{ctx.t('flow.story.state.' + b.state)}</div>
+      <div className="fx-title"><span className="fx-ico">{BEAT_ICON[b.id]}</span>{ctx.t('flow.story.' + b.id)}</div>
+      <div className="fx-muted">{ctx.t('flow.story.about.' + b.id)}</div>
+      <div className="fx-made">{b.state === 'working' ? <Typing /> : null}{ctx.t(b.made.key, ...b.made.args)}</div>
+      {who && b.stations.length ? <div className="fx-foot"><span>{ctx.name(who.role ?? who.actors[0] ?? '')}</span><button className="fx-open nodrag" title={ctx.t('flow.story.zoom')} onClick={(e) => { e.stopPropagation(); ctx.onLevel('containers'); ctx.onPick(who.id); }}>⤢ {ctx.t('flow.inside')}</button></div> : null}
+    </div>
+  );
+}
+
 // ---------- inside a step (C4 level 4, code): what its agent followed, decided, wrote and called ----------
 type BitData = { kind: 'trace' | 'decision' | 'file' | 'tool'; k: number; title: string; detail: string; picked: boolean; live: boolean; ctx: FlowProps };
 function BitNode({ data: d }: NodeProps<Node<BitData>>) {
@@ -234,7 +252,7 @@ function FlowEdge(p: EdgeProps<Edge<FlowEdgeData>>) {
   );
 }
 
-const nodeTypes = { station: StationNode, boundary: BoundaryNode, step: StepNode, trace: TraceNode, ghost: GhostNode, project: ProjectNode, actor: ActorNode, bit: BitNode };
+const nodeTypes = { station: StationNode, boundary: BoundaryNode, step: StepNode, trace: TraceNode, ghost: GhostNode, project: ProjectNode, actor: ActorNode, bit: BitNode, beat: BeatNode };
 const edgeTypes = { flow: FlowEdge };
 const edgeState = (from: { status: string }, to: { status: string }): FlowEdgeData['state'] =>
   to.status === 'running' || to.status === 'waiting' ? 'live' : to.status === 'failed' ? 'failed' : to.status === 'pending' || from.status === 'pending' ? 'idle' : 'done';
@@ -248,9 +266,11 @@ function pipeline(ctx: FlowProps): { nodes: Node[]; edges: Edge[] } {
   });
   return { nodes, edges };
 }
-function inside(ctx: FlowProps, s: Stage): { nodes: Node[]; edges: Edge[] } {
+function inside(ctx: FlowProps, s: Stage, technical: boolean): { nodes: Node[]; edges: Edge[] } {
   const at = ctx.run.stages.indexOf(s);
-  const tallest = Math.max(0, ...s.steps.map((x) => x.trace?.length ?? 0));
+  // what each agent followed; its tool calls (Glob, Read, Write…) only in the technical details
+  const traceOf = (x: Step) => (x.trace ?? []).filter((t) => technical || !isToolCall(t));
+  const tallest = Math.max(0, ...s.steps.map((x) => traceOf(x).length));
   const w = Math.max(STEPW + 80, s.steps.length * (STEPW + STEPGAP) - STEPGAP + 80), h = 110 + 150 + tallest * (TRACEH + 8) + 40;
   const nodes: Node[] = [{ id: 'boundary', type: 'boundary', position: { x: 0, y: 0 }, data: { title: s.title, kind: ctx.t('flow.kind.stage'), status: s.status, about: s.about, w, h, ctx, time: dur(s) } satisfies BoundaryData, selectable: false, draggable: false, zIndex: -1 }];
   const edges: Edge[] = [];
@@ -258,10 +278,11 @@ function inside(ctx: FlowProps, s: Stage): { nodes: Node[]; edges: Edge[] } {
     const id = 'step:' + x.id, left = 40 + k * (STEPW + STEPGAP);
     nodes.push({ id, type: 'step', position: { x: left, y: 100 }, data: { stage: s, step: x, ctx, picked: ctx.picked.stage === s.id && ctx.picked.step === x.id && ctx.picked.trace === null } satisfies StepData });
     if (k) edges.push({ id: 'e' + k, source: 'step:' + s.steps[k - 1].id, target: id, type: 'flow', data: { state: edgeState(s.steps[k - 1], x) } });
-    (x.trace ?? []).forEach((t, j) => {
+    const shown = traceOf(x);
+    shown.forEach((t, j) => {
       const tid = id + ':' + j;
-      nodes.push({ id: tid, type: 'trace', position: { x: left + 26, y: 100 + 160 + j * (TRACEH + 8) }, data: { k: j, label: t.step, detail: t.detail, picked: ctx.picked.step === x.id && ctx.picked.trace === j, last: j === (x.trace?.length ?? 0) - 1, live: x.status === 'running' } satisfies TraceData });
-      edges.push({ id: tid + 'e', source: id, sourceHandle: 'down', target: tid, type: 'flow', data: { step: true, state: x.status === 'running' && j === (x.trace?.length ?? 0) - 1 ? 'live' : 'done' } });
+      nodes.push({ id: tid, type: 'trace', position: { x: left + 26, y: 100 + 160 + j * (TRACEH + 8) }, data: { k: j, label: t.step, detail: t.detail, picked: ctx.picked.step === x.id && ctx.picked.trace === j, last: j === shown.length - 1, live: x.status === 'running' } satisfies TraceData });
+      edges.push({ id: tid + 'e', source: id, sourceHandle: 'down', target: tid, type: 'flow', data: { step: true, state: x.status === 'running' && j === shown.length - 1 ? 'live' : 'done' } });
     });
   });
   const before = ctx.run.stages[at - 1], after = ctx.run.stages[at + 1];
@@ -277,66 +298,34 @@ function inside(ctx: FlowProps, s: Stage): { nodes: Node[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
-/** An older run's actors as the factory's five roles: who did the work of each. */
-const ROLE_OF: Record<string, string> = { planner: 'analyst', claude: 'architect', coder: 'developer', tester: 'qa', security: 'qa', diagnoser: 'qa', shell: 'devops', delivery: 'devops' };
-const ROLES = ['analyst', 'architect', 'developer', 'qa', 'devops'];
-const ROLE_COLOR: Record<string, string> = { analyst: '#8b5cf6', architect: '#3b82f6', developer: '#f59e0b', qa: '#06b6d4', devops: '#ef4444' };
+/** The run told to a product owner (C4 level 1, spec 024): what is being built in the middle, you on its left, and the
+ * five business steps in a row under it, each with what it produced and its state; the hand-over flows along them. The
+ * people, the stations and the providers are the next level's. */
 function contextOf(ctx: FlowProps): { nodes: Node[]; edges: Edge[] } {
-  const r = ctx.run;
-  const steps = r.stages.flatMap((s) => s.steps);
-  const actors = new Set([...steps.map((x) => x.actor), ...r.stages.flatMap((s) => s.actors)]);
-  const liveActor = steps.find((x) => x.status === 'running')?.actor;
-  const liveRole = liveActor ? (ROLES.includes(liveActor) ? liveActor : ROLE_OF[liveActor]) : undefined;
-  // the team of the run: the host's (the employees hired), else the run's stations, else an older run's actors
-  const fromStages = r.stages.filter((s) => s.role).map((s) => ({ role: s.role!, name: ctx.name(s.role!), provider: s.provider ?? 'nuclear-developer', model: s.model }));
-  const roles: ContextRole[] = ctx.context?.roles.length ? ctx.context.roles : fromStages.length ? fromStages.filter((x, i, all) => all.findIndex((y) => y.role === x.role) === i) : ROLES.map((role) => {
-    const who = [...actors].filter((a) => ROLE_OF[a] === role);
-    const a = who.find((x) => steps.some((y) => y.actor === x)) ?? who[0] ?? (role === 'architect' ? 'planner' : 'shell');
-    // the role's own name (the employee hired, else the role): an older run's actor (the shell) is not the role
-    return { role, name: ctx.name(role), provider: a === 'claude' ? 'claude-code' : a === 'shell' ? 'shell' : 'nuclear-developer' };
-  });
+  const r = ctx.run, beats = storyOf(r);
+  const W = 252, GAP = 34, row = beats.length * W + (beats.length - 1) * GAP, px = (row - 300) / 2;
+  const nodes: Node[] = [], edges: Edge[] = [];
+  nodes.push({ id: 'project', type: 'project', position: { x: px, y: 0 }, data: { ctx } satisfies ProjectData });
   const asks = !!r.waiting;
-  const askedBy = r.waiting ? r.stages.find((s) => s.id === r.waiting!.station)?.role : undefined;
-  const providers = [...new Set(roles.map((x) => x.provider))];
-  // three rows: the five roles above, you / the project / the systems in the middle, the providers below
-  const W = 252, GAP = 20, row = 5 * W + 4 * GAP, px = (row - 300) / 2, nodes: Node[] = [], edges: Edge[] = [];
-  const at = (id: string, x: number, y: number, data: ActorData) => nodes.push({ id, type: 'actor', position: { x, y }, data });
-  nodes.push({ id: 'project', type: 'project', position: { x: px, y: 200 }, data: { ctx } satisfies ProjectData });
-  at('you', px - W - 150, 250, { kind: 'person', title: ctx.t('flow.you'), sub: ctx.t('flow.youSub'), icon: '★', color: '#6b7280', live: asks, used: true, ctx, face: ctx.avatar('you') });
-  // a role's card: the employee's name first (*Neo*), then the role and who does its work (Developer · Claude Code · haiku)
-  const roleSub = (x: ContextRole) => {
-    const title = ctx.t('flow.role.' + x.role), named = !!x.name && x.name !== title && x.name !== ctx.role(x.role).split(' · ')[0];
-    return [named ? title : '', doneBy(x)].filter(Boolean).join(' · ');
-  };
-  roles.forEach((x, i) => at('role:' + x.role, i * (W + GAP), 0, { kind: 'role', title: x.name || ctx.t('flow.role.' + x.role), sub: roleSub(x), icon: '●', color: ROLE_COLOR[x.role] ?? '#888', live: liveRole === x.role || askedBy === x.role, used: true, ctx, face: ctx.avatar(x.role, x.employee) }));
-  const budget = r.factory?.budgetUsd;
-  providers.forEach((p, i) => at('provider:' + p, row / 2 - (providers.length * W + (providers.length - 1) * 40) / 2 + i * (W + 40), 470, { kind: 'provider', title: PROVIDER_NAME[p] ?? p, sub: p === 'nuclear-developer' ? ctx.t('flow.localSub') : p === 'shell' ? ctx.t('flow.shellSub') : ctx.t('flow.paidSub') + (budget ? ' · ' + ctx.t('flow.budget', budget.toFixed(2) + ' USD') : ''), icon: p === 'shell' ? '⚙' : p === 'nuclear-developer' ? '⌂' : '☁', color: p === 'nuclear-developer' ? '#16a34a' : p === 'shell' ? '#4b5563' : '#c96442', live: roles.some((x) => x.provider === p && x.role === liveRole), used: true, ctx }));
-  // the Smart Graph only when it took part: a step of its own, or a local agent's step (the Developer reads it)
-  const local = steps.some((x) => x.actor === 'graph' || (x.status !== 'pending' && (x.provider ?? r.stages.find((s) => s.steps.includes(x))?.provider) === 'nuclear-developer'));
-  const delivered = r.stages.some((s) => s.id === 'delivery' && s.status === 'passed');
-  if (local) at('graph', px + 300 + 110, 185, { kind: 'system', title: 'Smart Graph', sub: ctx.t('flow.graphSub'), icon: '📚', color: '#16a34a', live: !!liveRole, used: true, ctx });
-  at('github', px + 300 + 110, 320, { kind: 'system', title: 'GitHub', sub: ctx.t(r.spec.source?.kind === 'github' ? 'flow.githubIssue' : 'flow.githubSub'), icon: '⑂', color: '#6e7681', live: false, used: r.spec.source?.kind === 'github' || delivered, ctx });
-  const edge = (id: string, source: string, target: string, from: Side, to: Side, label: string, live: boolean, used = true) =>
-    edges.push({ id, source, target, sourceHandle: 's-' + from, targetHandle: 't-' + to, type: 'flow', data: { state: live ? 'live' : used ? 'done' : 'idle', label } });
-  // you give the spec and answer; the project asks you at a gate
-  if (asks) edge('ask', 'project', 'you', 'left', 'right', ctx.t('flow.e.asks'), true);
-  else edge('you', 'you', 'project', 'right', 'left', ctx.t('flow.e.spec'), false);
-  roles.forEach((x) => edge('r:' + x.role, 'role:' + x.role, 'project', 'bottom', 'top', '', liveRole === x.role || askedBy === x.role));
-  // who does the roles' work: one edge per provider, with the roles it does
-  providers.forEach((p) => {
-    const by = roles.filter((x) => x.provider === p);
-    edge('p:' + p, 'project', 'provider:' + p, 'bottom', 'top', by.map((x) => ctx.t('flow.role.' + x.role)).join(' · '), by.some((x) => x.role === liveRole));
+  nodes.push({ id: 'you', type: 'actor', position: { x: px - W - 150, y: 50 }, data: { kind: 'person', title: ctx.t('flow.you'), sub: ctx.t('flow.youSub'), icon: '★', color: '#6b7280', live: asks, used: true, ctx, face: ctx.avatar('you') } satisfies ActorData });
+  beats.forEach((b, i) => {
+    nodes.push({ id: 'beat:' + b.id, type: 'beat', position: { x: i * (W + GAP), y: 300 }, data: { beat: b, ctx } satisfies BeatData });
+    if (i) edges.push({ id: 'b' + i, source: 'beat:' + beats[i - 1].id, sourceHandle: 's-right', target: 'beat:' + b.id, targetHandle: 't-left', type: 'flow', data: { state: b.state === 'working' || b.state === 'needsYou' ? 'live' : b.state === 'failed' ? 'failed' : b.state === 'waiting' ? 'idle' : 'done' } });
   });
-  if (local) edge('graph', 'project', 'graph', 'right', 'left', ctx.t('flow.e.reads'), !!liveRole);
-  edge('gh', 'project', 'github', 'right', 'left', ctx.t('flow.e.pr'), false, r.spec.source?.kind === 'github' || delivered);
+  // you give the request (the first step reads it); a step that needs you asks you
+  const asking = beats.find((b) => b.state === 'needsYou');
+  if (asking) edges.push({ id: 'ask', source: 'beat:' + asking.id, sourceHandle: 's-left', target: 'you', targetHandle: 't-bottom', type: 'flow', data: { state: 'live', label: ctx.t('flow.e.asks') } });
+  else edges.push({ id: 'you', source: 'you', sourceHandle: 's-right', target: 'project', targetHandle: 't-left', type: 'flow', data: { state: 'done', label: ctx.t('flow.e.spec') } });
+  edges.push({ id: 'story', source: 'project', sourceHandle: 's-bottom', target: 'beat:' + beats[0].id, targetHandle: 't-top', type: 'flow', data: { state: 'done' } });
   return { nodes, edges };
 }
-function codeOf(ctx: FlowProps, s: Stage, x: Step): { nodes: Node[]; edges: Edge[] } {
+
+function codeOf(ctx: FlowProps, s: Stage, x: Step, technical: boolean): { nodes: Node[]; edges: Edge[] } {
   const all = (x.trace ?? []) as ({ step: string; detail: string; kind?: string })[];
-  const trace = all.filter((tr) => tr.kind !== 'tool'), tools = all.filter((tr) => tr.kind === 'tool');
+  const trace = all.filter((tr) => !isToolCall(tr)), tools = technical ? all.filter(isToolCall) : [];
   const decisions = x.decisions ?? [], files = [...new Set([...(x.file ? [x.file] : []), ...(x.files ?? [])])];
   const COL = 300, ROW = 84, top = 96;
-  const rows = Math.max(trace.length, decisions.length, files.length + tools.length + (x.tool ? 1 : 0), 1);
+  const rows = Math.max(trace.length, decisions.length, files.length + tools.length + (x.tool && technical ? 1 : 0), 1);
   const w = COL * 3 + 40, h = top + rows * ROW + 40;
   const nodes: Node[] = [{ id: 'boundary', type: 'boundary', position: { x: 0, y: 0 }, data: { title: x.title, kind: ctx.t('flow.kind.step') + ' · ' + ctx.who(x.actor, x), status: x.status, about: x.summary || s.title, w, h, ctx, time: dur(x) } satisfies BoundaryData, selectable: false, draggable: false, zIndex: -1 }];
   const edges: Edge[] = [];
@@ -350,14 +339,14 @@ function codeOf(ctx: FlowProps, s: Stage, x: Step): { nodes: Node[]; edges: Edge
   decisions.forEach((d, k) => bit('d:' + k, 1, k, { kind: 'decision', k, title: d.what, detail: ctx.t('flow.because', d.why), picked: false, live: false }));
   files.forEach((f, k) => bit('f:' + k, 2, k, { kind: 'file', k, title: f.split('/').pop() ?? f, detail: f, picked: false, live: false }));
   tools.forEach((tr, k) => bit('c:' + k, 2, files.length + k, { kind: 'tool', k, title: tr.step, detail: tr.detail.slice(0, 140), picked: false, live: live && k === tools.length - 1 }));
-  if (x.tool) bit('tool', 2, files.length + tools.length, { kind: 'tool', k: 0, title: x.tool, detail: (x.input ?? '').slice(0, 140), picked: false, live });
+  if (x.tool && technical) bit('tool', 2, files.length + tools.length, { kind: 'tool', k: 0, title: x.tool, detail: (x.input ?? '').slice(0, 140), picked: false, live });
   // what it followed leads to what it decided, and that to what it wrote: row by row, left to right
   const traceAt = (k: number) => 't:' + Math.min(k, Math.max(0, trace.length - 1));
   decisions.forEach((_, k) => edges.push({ id: 'de' + k, source: traceAt(k), sourceHandle: 'r', target: 'd:' + k, targetHandle: 'l', type: 'flow', data: { state: 'done' } }));
   const rightOf = (k: number) => (decisions.length ? 'd:' + Math.min(k, decisions.length - 1) : traceAt(k));
   files.forEach((_, k) => edges.push({ id: 'fe' + k, source: rightOf(k), sourceHandle: 'r', target: 'f:' + k, targetHandle: 'l', type: 'flow', data: { state: x.status === 'failed' ? 'failed' : 'done' } }));
   tools.forEach((_, k) => edges.push({ id: 'ce' + k, source: rightOf(files.length + k), sourceHandle: 'r', target: 'c:' + k, targetHandle: 'l', type: 'flow', data: { state: live && k === tools.length - 1 ? 'live' : 'done' } }));
-  if (x.tool) edges.push({ id: 'tool', source: rightOf(files.length), sourceHandle: 'r', target: 'tool', targetHandle: 'l', type: 'flow', data: { state: live ? 'live' : 'done' } });
+  if (x.tool && technical) edges.push({ id: 'tool', source: rightOf(files.length), sourceHandle: 'r', target: 'tool', targetHandle: 'l', type: 'flow', data: { state: live ? 'live' : 'done' } });
   return { nodes, edges };
 }
 
@@ -374,7 +363,9 @@ function Diagram(ctx: FlowProps) {
   const [sizes, setSizes] = useState<Record<string, { width: number; height: number }>>({});
   const sized = (id: string) => sizes[level + '#' + id];
   const at = moved.level === level ? moved.at : {};
-  const drawn = lv === 'context' ? contextOf(ctx) : inStep && stage ? codeOf(ctx, stage, inStep) : stage ? inside(ctx, stage) : pipeline(ctx);
+  // the tool calls (Glob, Read, Write…) are for debugging: drawn only with *Technical details* on (spec 024)
+  const [technical, setTechnical] = useState(false);
+  const drawn = lv === 'context' ? contextOf(ctx) : inStep && stage ? codeOf(ctx, stage, inStep, technical) : stage ? inside(ctx, stage, technical) : pipeline(ctx);
   const nodes = drawn.nodes.map((n) => ({ ...n, position: at[n.id] ?? n.position, measured: sized(n.id) }));
   const edges = drawn.edges;
   const onNodesChange = (changes: NodeChange[]) => {
@@ -433,6 +424,7 @@ function Diagram(ctx: FlowProps) {
       }}
       onNodeDoubleClick={(_, n) => {
         if (n.type === 'project') ctx.onLevel('containers');
+        else if (n.type === 'beat') { const b = (n.data as BeatData).beat; ctx.onLevel('containers'); if (b.stations[0]) ctx.onPick(b.stations[0].id); }
         else if (n.type === 'station') ctx.onOpen(n.id);
         else if (n.type === 'step') ctx.onLevel('code', ctx.open, (n.data as StepData).step.id);
       }}
@@ -448,7 +440,10 @@ function Diagram(ctx: FlowProps) {
         {inStep ? <><span>›</span><button className="here" title={ctx.t('flow.c4.code')}>{inStep.title.length > 34 ? inStep.title.slice(0, 34) + '…' : inStep.title}</button></> : null}
         {live && live !== stage ? <button className="fx-follow" onClick={() => ctx.onOpen(live.id)} title={ctx.t('flow.followHint')}><Typing /> {live.title}</button> : null}
       </Panel>
-      <Panel position="top-right" className="fx-level">{ctx.t('flow.level.' + lv)}</Panel>
+      <Panel position="top-right" className="fx-level">
+        {lv === 'components' || lv === 'code' ? <button className={'fx-tech nodrag' + (technical ? ' on' : '')} aria-pressed={technical} title={ctx.t('flow.technicalHint')} onClick={() => setTechnical(!technical)}>⚙ {ctx.t('flow.technical')}</button> : null}
+        {ctx.t('flow.level.' + lv)}
+      </Panel>
     </ReactFlow>
   );
 }

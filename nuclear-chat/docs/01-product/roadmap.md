@@ -20,6 +20,11 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
   on again needs the local member's answers run end to end again (its typing line `typing.local`, its GIF lines).
 
 ## Untested
+
+- **A host's log folded under its message (0.88, spec 024)**: kept and read back by the service (pytest), opened by
+  its line on the page (vitest); never seen in an editor: a run's stations and repairs posted with their logs, the
+  fold's look on the Chernobyl themes. `aria-expanded` is missing on the fold's button (a named argument cannot spell
+  `aria-…`): the platform's finding, for Synapsis web to map `ariaExpanded`.
 - **A member's profile and the theme (0.87)**: seen in a real VS Code and a real Cursor (0.87.1, driven over CDP):
   the profile opened from a direct message's header, its edit form, the light theme chosen and kept after a restart,
   the *paid* chip readable. Never seen: a change saved through the host (`team member update`) and the member coming

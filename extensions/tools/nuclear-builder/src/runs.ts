@@ -25,6 +25,8 @@ export type UseCase = 'feature' | 'refactor' | 'bug' | 'docs' | 'diagram' | 'tes
 export interface TraceItem {
   step: string;
   detail: string;
+  /** `tool`: an agent's tool call (Glob, Read, Write…), shown only in the diagram's technical details. */
+  kind?: string;
 }
 
 export interface Decision {
