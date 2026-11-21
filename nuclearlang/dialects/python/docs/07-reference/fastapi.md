@@ -258,7 +258,7 @@ class CharacterRepository(HttpRepository):
 
 What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:
 its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's
-(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
+(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422).
 
 ```nuclear
 model NewCharacter

@@ -10,7 +10,7 @@
       "summary": "A backend exposes REST routes with controllers (`@get`, `@post`, `@put`, `@patch`, `@delete`), reads and answers validated models, turns a `Result` error into its HTTP status, checks guards on its routes, serves the same routes over a WebSocket when configured, and publishes its contract and OpenAPI document.",
       "body": [
         "- `@controller(\"books\") controller BooksController(books: BooksAppComponent)` with one method per route; `{id}` in a route is a path parameter, a model parameter is the JSON body.",
-        "- Models validate the input with rule decorators (`@required`, `@minLength`, `@maxLength`, `@min`, `@max`, `@pattern`, `@email`, `@url`); an invalid body is a 422.",
+        "- Models validate the input with rule decorators (`@required`, `@minLength`, `@maxLength`, `@min`, `@max`, `@pattern`, `@email`, `@url`); an invalid body is a 400 with the reasons (every dialect).",
         "- An `Err(NotFound(...))` answers 404; `Invalid` 400, `Unauthorized` 401, `Forbidden` 403, `Conflict` 409. A `@post` answers 201; `status = 200` in the decorator changes it.",
         "- Guards: `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]` in the `appConfig`, `@controller(\"x\", guards = [...])` for one controller (see can:backend-guards).",
         "- `WebSocketServer(path = \"ws\")` in the connections serves the same controllers over a WebSocket (see can:real-time).",

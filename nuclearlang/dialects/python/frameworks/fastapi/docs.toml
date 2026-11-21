@@ -56,7 +56,7 @@ Full rules: `nuclear help backend`.
 model = '''
 A **model**: what the API reads and answers, validated.
 
-What the API reads and answers (in `domain/models/` by folder). The rule decorators check it: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
+What the API reads and answers (in `domain/models/` by folder). The rule decorators check it: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons (the platform's answer, every dialect).
 
 ```nuclear
 model NewCharacter
@@ -423,15 +423,15 @@ On a tests method: `@test("what it checks")`, one test.
 '''
 
 required = '''
-On a model field: it cannot be empty (a text of at least one character); otherwise a 422.
+On a model field: it cannot be empty (a text of at least one character); otherwise a 400.
 '''
 
 email = '''
-On a model field: the value must be an e-mail address; otherwise a 422.
+On a model field: the value must be an e-mail address; otherwise a 400.
 '''
 
 url = '''
-On a model field: the value must be an http(s) URL; otherwise a 422.
+On a model field: the value must be an http(s) URL; otherwise a 400.
 '''
 
 key = '''
