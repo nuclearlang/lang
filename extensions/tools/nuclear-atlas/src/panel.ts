@@ -134,7 +134,7 @@ export class AtlasPanel {
 
   private state(): void {
     const own = this.projects();
-    const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root, AtlasPanel.workspace?.());
+    const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root, AtlasPanel.workspace?.(), fs.existsSync);
     this.root = root;
     // the prompts to start from are a project's (its map, its components): none on a workspace's or the welcome's folder
     const isProject = own.some((p) => p.root === root);

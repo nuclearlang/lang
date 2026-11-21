@@ -443,7 +443,7 @@ window.Squad = (() => {
   const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'];
   const BEHAVIOURS = ['askBeforeWriting', 'explainDecisions', 'stopAtFirstFailure'];
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  let el = null, post = () => undefined;
+  let el = null, post = () => undefined, onView = null;
   let S = { teams: [], team: null, roster: null, vault: null, missing: null, loading: true };
   // the company (every team as a panel), one team, or the wizard; the onboarding has no company, only its team
   let view = 'team', companyMode = false;
@@ -513,6 +513,8 @@ window.Squad = (() => {
   // ---------- drawing ----------
   function draw() {
     if (!el) return;
+    // the onboarding says what the step does: a team edited (saved at once) or a new one in the wizard
+    onView?.(view === 'wizard' || !S.team ? { view: 'wizard' } : { view, team: S.team.name });
     const keep = el.querySelector('.sq')?.scrollTop ?? 0;
     const a = document.activeElement, focusKey = a && el.contains(a) ? (a.dataset?.f ?? null) : null, caret = focusKey && typeof a.selectionStart === 'number' ? [a.selectionStart, a.selectionEnd] : null;
     if (S.missing) { el.innerHTML = '<div class="sq"><div class="sq-missing hud brk"><b>' + esc(t('sq.missingTitle')) + '</b><div>' + esc(S.missing) + '</div><div class="sq-muted" style="margin-top:6px">' + esc(t('sq.missingHelp')) + '</div><div class="sq-row"><button data-a="retry">' + esc(t('sq.tryAgain')) + '</button></div></div></div>'; return; }
@@ -1539,7 +1541,7 @@ window.Squad = (() => {
 
   return {
     mount(root, send, opts) {
-      el = root; post = send;
+      el = root; post = send; onView = opts?.onView ?? null;
       companyMode = !!opts?.company; view = companyMode ? 'company' : 'team';
       root.addEventListener('click', onClick); root.addEventListener('input', onInput); root.addEventListener('change', onChange); root.addEventListener('keydown', onKey);
       root.addEventListener('mouseover', onPeek); root.addEventListener('focusin', onPeek);

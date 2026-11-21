@@ -517,6 +517,19 @@ test('the model pickers list every model every time and survive repeated choices
   on.input({ target: { dataset: { f: 'wzmodel-1-other' }, value: ' claude-opus-5-5 ' } });
 });
 
+test('the onboarding is told whether its team step edits a team (saved at once) or makes a new one', () => {
+  const on: Record<string, (e: unknown) => void> = {};
+  const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
+  const window: { Squad?: { mount(el: unknown, post: (m: unknown) => void, o: unknown): void; receive(m: unknown): boolean } } = {};
+  new Function('window', 'T', 't', 'document', 'matchMedia', SQUAD_SCRIPT)(window, {}, (k: string, ...a: unknown[]) => [k, ...a].join(' '), { activeElement: null }, () => ({ matches: true }));
+  const views: { view: string; team?: string }[] = [];
+  window.Squad!.mount(el, () => undefined, { onView: (v: { view: string; team?: string }) => views.push(v) });
+  window.Squad!.receive({ type: 'team:state', teams: [{ id: 'nf', name: 'Nuclear Factory' }], team: { id: 'nf', name: 'Nuclear Factory', members: [] }, roster: {} });
+  assert.deepEqual(views.at(-1), { view: 'team', team: 'Nuclear Factory' });
+  on.click({ target: { closest: () => ({ dataset: { a: 'wizard' }, disabled: false }) } });
+  assert.deepEqual(views.at(-1), { view: 'wizard' });
+});
+
 test('a built team shows only its members; the roster opens only to add, and closes; a member or a team opens its conversation in Nuclear Atlas', () => {
   const on: Record<string, (e: unknown) => void> = {};
   const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };

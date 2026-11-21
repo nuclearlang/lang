@@ -97,8 +97,10 @@ export function migrateSaved(global: string[] | undefined, here: string[] | unde
 }
 
 /** Why the column has nothing to show: no workspace and no project. `null`: it has something. */
-export type Empty = { reason: 'noFolder' | 'notWorkspace'; recent: Recent[] } | null;
-export function emptyState(workspace: WorkspaceInfo | undefined, projects: number, folders: string[], recent: Recent[]): Empty {
+export type Empty = { reason: 'noFolder' | 'notWorkspace' | 'gone'; recent: Recent[] } | null;
+export function emptyState(workspace: WorkspaceInfo | undefined, projects: number, folders: string[], recent: Recent[], gone = false): Empty {
+  // the open workspace deleted from the disk: say so, and offer the others
+  if (workspace && gone) return { reason: 'gone', recent: recent.filter((r) => r.root !== workspace.root) };
   if (workspace || projects > 0) return null;
   return { reason: folders.length ? 'notWorkspace' : 'noFolder', recent };
 }

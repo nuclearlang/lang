@@ -271,10 +271,12 @@ const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 ${FORM_JS}
 ${SQUAD_SCRIPT}
 ${TC_JS}
+// the team step edits the team on the screen (each change saved at once), or makes a new one in the wizard
+const teamIntro = () => teamView?.team ? esc(t('teamIntroEdit')).replace('{0}', '<b>' + esc(teamView.team) + '</b>') : esc(t('teamIntro'));
 const PAGES = ['machine', 'requirements', 'install', 'toolchains', 'providers', 'team', 'spending', 'tools', 'summary'];
 const at = (id) => PAGES.indexOf(id);
 // the step shown survives a re-render (a change of language)
-let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), run = null, timer = null, sections = [], prov = null, summary = null, squad = false, tc = null, later = {};
+let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), run = null, timer = null, sections = [], prov = null, summary = null, squad = false, teamView = null, tc = null, later = {};
 // the local models are on standby (ADR-platform-0013): the one profile is remote, the Smart Graph and the MCP server
 const chosen = () => S.profiles.find((p) => p.id === 'remote');
 const needs = () => S.requirements.remote;
@@ -333,9 +335,13 @@ function providersPage() {
 function chatItem() {
   return sectionOf('builder')?.items.find((i) => i.key === 'nuclear.builder.chat');
 }
+// only what a new user decides (the notices that interrupt them, the chat's look); every other setting keeps its
+// default and lives in Settings and integrations
+const TOOL_KEYS = ['nuclear.notifications', 'nuclear.chat.theme'];
 function toolsPage() {
-  const ids = ['builder', 'chat', 'http', 'devices', 'language'];
-  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(at('spending'), at('summary')) };
+  const items = TOOL_KEYS.map((k) => sections.flatMap((s) => s.items).find((i) => i.key === k)).filter(Boolean);
+  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + (items.length ? settingsForm({ items }) : '')
+    + '<div class="muted" style="margin-top:14px">' + esc(t('toolsRest')) + ' <a href="#" data-settings="1">' + esc(t('openSettings')) + '</a></div>', nav: navBtns(at('spending'), at('summary')) };
 }
 /** The toolchains of the platforms the user builds: found where, or installed by them, by NuclearLang, or later. */
 function toolchainsPage() {
@@ -373,7 +379,7 @@ function draw() {
   document.getElementById('progress').style.width = Math.round((page / (PAGES.length - 1)) * 100) + '%';
   const id = PAGES[page];
   document.getElementById('frame').className = id === 'team' ? 'wide' : 'narrow';
-  const v = page <= at('install') ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('teamIntro')) + '</div>', nav: navBtns(at('providers'), at('spending')) }
+  const v = page <= at('install') ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div id="teamIntro" class="muted" style="margin-bottom:10px">' + teamIntro() + '</div>', nav: navBtns(at('providers'), at('spending')) }
     : id === 'spending' ? { out: '<h2>' + esc(t('step.spending')) + '</h2><div class="muted">' + esc(t('spendingIntro')) + '</div>' + (sectionOf('spending') ? settingsForm(sectionOf('spending')) : ''), nav: navBtns(at('team'), at('tools')) }
     : id === 'toolchains' ? toolchainsPage() : id === 'tools' ? toolsPage() : summaryPage();
   // the first step asks the language first (nuclear.language); the tools' step leaves it out
@@ -383,7 +389,7 @@ function draw() {
   document.getElementById('nav').innerHTML = v.nav;
   const host = document.getElementById('squadHost');
   host.style.display = id === 'team' ? '' : 'none';
-  if (id === 'team' && !squad) { squad = true; Squad.mount(host, (m) => vscode.postMessage(m)); }
+  if (id === 'team' && !squad) { squad = true; Squad.mount(host, (m) => vscode.postMessage(m), { onView: (v) => { teamView = v; const i = document.getElementById('teamIntro'); if (i) i.innerHTML = teamIntro(); } }); }
   clearInterval(timer);
   if (page === at('requirements')) timer = setInterval(() => vscode.postMessage({ type: 'check' }), 3000);
 }

@@ -218,12 +218,14 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   const ws = new Workspace(context, http);
   // Nuclear Atlas with no project yet (a new workspace, the welcome): its chat on the workspace's folder
   AtlasPanel.fallback = () => ws.chatFolder();
-  AtlasPanel.workspace = () => { const w = ws.workspace(); return w && { root: w.root, name: w.name }; };
+  AtlasPanel.workspace = () => { const w = ws.workspace(); return w && !ws.gone() ? { root: w.root, name: w.name } : undefined; };
   // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
   activateScripts(context, () => ws.projects(), ws.onDidChange.event);
   // the notifications of the agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
   notices.open = (n) => ws.openNotice(n);
   context.subscriptions.push(notices.onDidChange.event(() => ws.refresh()));
+  // back to the window: a workspace or an app deleted meanwhile (a watcher can miss a folder removed whole) drawn crossed out
+  context.subscriptions.push(vscode.window.onDidChangeWindowState((s) => s.focused && ws.refresh()));
   followChatNotices();
   // the chat's buttons (a run's gate, a spec's draft, a team offered to a folder's channel) are answered from the start,
   // not only once the Builder's page was opened
@@ -359,7 +361,7 @@ class Workspace implements vscode.WebviewViewProvider {
       w,
       () =>
         w!.apps
-          .filter((a) => a.exists)
+          .filter((a) => a.exists && fs.existsSync(path.join(w!.root, a.folder)))
           .map((a) => {
             const root = path.join(w!.root, a.folder);
             return projectAt(root) ?? { root, name: a.name, platform: a.platform, dialect: a.dialect ?? '', contracts: [] };
@@ -397,6 +399,11 @@ class Workspace implements vscode.WebviewViewProvider {
 
   workspace(): WorkspaceInfo | undefined {
     return this.current;
+  }
+
+  /** The open workspace's folder was deleted from the disk (by hand, another program): shown crossed out, never used. */
+  gone(): boolean {
+    return !!this.current && !fs.existsSync(markerOf(this.current.root));
   }
 
   /** The recent workspaces whose marker is still there, the last opened first. */
@@ -442,7 +449,12 @@ class Workspace implements vscode.WebviewViewProvider {
       clearTimeout(timer);
       timer = setTimeout(() => void this.reload(), 300);
     };
-    this.markerWatch = vscode.Disposable.from(w, w.onDidCreate(again), w.onDidChange(again), w.onDidDelete(again), { dispose: () => clearTimeout(timer) });
+    // the workspace's folder or an app's deleted (or made again) by hand: drawn crossed out at once
+    const folders = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(path.dirname(root)), path.basename(root) + '/*'), true, true, false);
+    const itself = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(path.dirname(root)), path.basename(root)), false, true, false);
+    let draw: NodeJS.Timeout | undefined;
+    const redraw = () => { clearTimeout(draw); draw = setTimeout(() => this.refresh(), 300); };
+    this.markerWatch = vscode.Disposable.from(w, w.onDidCreate(again), w.onDidChange(again), w.onDidDelete(again), folders, folders.onDidDelete(redraw), itself, itself.onDidDelete(redraw), itself.onDidCreate(redraw), { dispose: () => { clearTimeout(timer); clearTimeout(draw); } });
     this.context.subscriptions.push(this.markerWatch);
   }
 
@@ -622,7 +634,9 @@ class Workspace implements vscode.WebviewViewProvider {
 
   /** The workspace's menu (its name on the column): rename it, its description, its apps, its marker, another one. */
   async workspaceMenu(): Promise<void> {
-    const w = this.current;
+    const gone = this.gone();
+    // a workspace deleted from the disk offers only another one (its own items would act on a folder that is not there)
+    const w = gone ? undefined : this.current;
     type Item = vscode.QuickPickItem & { id: string };
     const items: Item[] = [
       ...(w
@@ -642,7 +656,7 @@ class Workspace implements vscode.WebviewViewProvider {
       { label: `$(folder-opened) ${l10n.t('Open a workspace…')}`, id: 'open' },
       { label: `$(new-folder) ${l10n.t('Create a workspace')}`, id: 'create' },
     ];
-    const pick = await vscode.window.showQuickPick(items, { title: w ? l10n.t('Workspace {0}', w.name) : l10n.t('Nuclear workspaces') });
+    const pick = await vscode.window.showQuickPick(items, { title: gone ? l10n.t('{0} was deleted from the disk: open another workspace', this.current!.name) : w ? l10n.t('Workspace {0}', w.name) : l10n.t('Nuclear workspaces') });
     if (!pick) return;
     if (pick.id.startsWith('recent:')) return this.openWorkspace(pick.id.slice(7));
     if (pick.id === 'open') return this.openWorkspace();
@@ -671,7 +685,7 @@ class Workspace implements vscode.WebviewViewProvider {
   /** The folder a chat opens on without a project: the open workspace, else the editor's own `welcome` folder. */
   chatFolder(): { root: string; name: string } {
     const w = this.current;
-    if (w) return { root: w.root, name: w.name };
+    if (w && !this.gone()) return { root: w.root, name: w.name };
     const root = vscode.Uri.joinPath(this.context.globalStorageUri, 'welcome').fsPath;
     fs.mkdirSync(root, { recursive: true });
     return { root, name: l10n.t('Welcome') };
@@ -945,8 +959,10 @@ class Workspace implements vscode.WebviewViewProvider {
     void webview.postMessage({
       type: 'state',
       // the open Nuclear workspace (its name heads the column), or why there is nothing (the empty panel)
-      workspace: w ? { name: w.name, root: w.root } : null,
-      empty: !this.known ? null : emptyState(w, this.projects().length, (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath), this.recent()),
+      workspace: w ? { name: w.name, root: w.root, gone: this.gone() } : null,
+      // the apps whose folder was deleted from the disk: crossed out on the strip, never opened
+      gone: w ? w.apps.filter((a) => this.gone() || !a.exists || !fs.existsSync(path.join(w.root, a.folder))).map((a) => ({ name: a.name, root: path.join(w.root, a.folder), platform: a.platform, dialect: a.dialect ?? '' })) : [],
+      empty: !this.known ? null : emptyState(w, this.projects().length, (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath), this.recent(), this.gone()),
       projects: this.projects().map((p) => ({
         app: apps.has(p.root),
         root: p.root,
@@ -1319,6 +1335,10 @@ export function stripHtml(webview: vscode.Webview): string {
   .tab.add { opacity: .5; font-size: 16px; font-weight: 300; border: 1px dashed currentColor; }
   .tab.add:hover { opacity: 1; }
   .tab.ws { margin-top: 6px; border-radius: 50%; font-size: 9px; opacity: .9; border: 1px solid var(--vscode-focusBorder); }
+  /* deleted from the disk: faded, a cross over it, its name struck */
+  .tab.gone { opacity: .38; cursor: default; } .tab.ws.gone { cursor: pointer; border-style: dashed; }
+  .tab.gone::after { content: '✕'; position: absolute; top: -3px; right: -3px; width: 13px; height: 13px; border-radius: 50%; display: grid; place-items: center; font-size: 8px; font-weight: 700; color: var(--vscode-errorForeground); background: var(--vscode-sideBar-background); border: 1px solid var(--vscode-errorForeground); }
+  .tab.gone .nm { text-decoration: line-through; }
   .wsbar { display: flex; align-items: center; gap: 6px; padding: 6px 10px 2px; font-size: 11px; cursor: pointer; flex: none; opacity: .85; }
   .wsbar:hover, .wsbar:focus { opacity: 1; outline: none; } .wsbar b { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .wsbar span { margin-left: auto; opacity: .7; }
   .nows { padding: 12px 10px; line-height: 1.5; } .nows p { margin: 0 0 10px; opacity: .8; }
@@ -1449,8 +1469,9 @@ export function stripHtml(webview: vscode.Webview): string {
     ps.innerHTML = '';
     // the open workspace heads the strip: its menu (rename, its apps, its marker, another workspace)
     if (state.workspace) {
-      const wt = tab(initials(state.workspace.name), t('wsTitle', state.workspace.name), false);
+      const wt = tab(initials(state.workspace.name), t(state.workspace.gone ? 'wsGone' : 'wsTitle', state.workspace.name), false);
       wt.classList.add('ws');
+      if (state.workspace.gone) wt.classList.add('gone');
       wt.addEventListener('click', () => vscode.postMessage({ type: 'wsMenu' }));
       ps.appendChild(wt);
     }
@@ -1467,6 +1488,15 @@ export function stripHtml(webview: vscode.Webview): string {
       tb.addEventListener('click', () => { vscode.postMessage({ type: 'project', root: p.root }); if (key) toast(key, t('opens', p.name)); });
       if (p.app) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'appMenu', root: p.root }); });
       else if (p.saved) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'remove', root: p.root }); });
+      ps.appendChild(tb);
+    });
+    // an app deleted from the disk: faded and crossed out, its menu only takes it out of the workspace
+    (state.gone || []).forEach((g) => {
+      const tb = tab('', t('appGone', g.name), false);
+      tb.classList.add('app', 'gone');
+      tb.appendChild(el('span', 'ico', initials(g.name)));
+      tb.appendChild(el('span', 'nm', g.name));
+      if (!state.workspace.gone) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'appMenu', root: g.root }); });
       ps.appendChild(tb);
     });
     const add = tab('+', state.workspace ? t('addApp', state.workspace.name) : t('openTab'), false);
@@ -1546,7 +1576,7 @@ export function stripHtml(webview: vscode.Webview): string {
   function renderNoWorkspace(pane, empty) {
     head(pane, t('workspace'));
     const box = el('div', 'nows');
-    box.appendChild(el('p', '', t(empty.reason === 'noFolder' ? 'wsNoFolder' : 'wsNotWorkspace')));
+    box.appendChild(el('p', '', empty.reason === 'gone' ? t('wsGoneText', state.workspace?.name ?? '') : t(empty.reason === 'noFolder' ? 'wsNoFolder' : 'wsNotWorkspace')));
     if (empty.recent.length) {
       box.appendChild(el('div', 'section', t('wsRecent')));
       for (const r of empty.recent) {

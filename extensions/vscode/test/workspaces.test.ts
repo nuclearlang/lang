@@ -50,6 +50,9 @@ test('the empty panel: no folder open, or a folder that is not a workspace; noth
   assert.deepEqual(emptyState(undefined, 0, [], recent), { reason: 'noFolder', recent });
   assert.deepEqual(emptyState(undefined, 0, ['/home/me/other'], []), { reason: 'notWorkspace', recent: [] });
   assert.equal(emptyState(parseCli(SHOW, 0)!, 0, [], recent), null);
+  // the open workspace deleted from the disk: said, with the other recent workspaces
+  const w = parseCli(SHOW, 0)!;
+  assert.deepEqual(emptyState(w, 0, [], [...recent, { root: w.root, name: w.name, openedAt: 2 }], true), { reason: 'gone', recent });
   assert.equal(emptyState(undefined, 2, ['/f'], recent), null);
 });
 

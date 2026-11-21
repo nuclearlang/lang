@@ -48,9 +48,11 @@ extension runs it as a process, one call per action, and keeps no process of it 
   <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,
   chosen among the agents and the APIs, with its model; a conversation can choose another), 6 the team (the squad screen mounted in the page,
   `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,
-  ADR-platform-0010), 7 the spending (the `spending` section),
-  8 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
-  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is).
+  ADR-platform-0010; with a team the screen edits it, every change saved at once, and the step says so with its name:
+  `Squad.mount(..., { onView })`), 7 the spending (the `spending` section),
+  8 the notices and the look (`nuclear.notifications`, `nuclear.chat.theme`; every other setting keeps its default and
+  is changed in Settings and integrations; an object setting with a `kind` and a `provider`, the chat's, is an
+  *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is).
   *Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never
   finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the
   machine steps say to run the installer again and the other steps still work.

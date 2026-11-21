@@ -4,6 +4,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- A workspace or an app deleted from the disk is shown faded and crossed out (✕) on the strip, never as if it were there; the panel says so and offers the other workspaces, and Nuclear Atlas no longer fails on its folder ("No such file or directory").
+- The welcome's team step says it edits your team, by name, when you have one (each change is saved in it at once); its settings step keeps only the notices and the chat's colors, everything else in Settings and integrations.
 - **Every step of a run in the team's channel** (spec 024): each station started, passed, failed or repaired, and each approval, is a message of the member who did it in the run's thread, its log folded (click to open); a failed station says why. Runs started outside the editor (the MCP server, a terminal) are followed there too.
 - **The pipeline told as C4** (spec 024): the diagram's first level is the story for a product owner (*Understand the request*, *Design the solution*, *Build it*, *Check it*, *Deliver it*), each in plain words with what it produced; a click zooms into the stations, a station's steps, and only on demand the tool calls.
 - A gate's card lists what only you can decide; a station that cannot fix something alone asks you with its diagnosis. The specs' language is asked once per project, the editor's offered.

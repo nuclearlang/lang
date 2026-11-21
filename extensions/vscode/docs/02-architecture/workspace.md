@@ -125,7 +125,10 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
   `loadWorkspace` has answered once, no slot: the scan of a parent folder never shows, even for a moment, the projects
   of other workspaces. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads the workspace again (300 ms
   after a burst): an app added by the MCP server, an agent or a terminal appears at once; a failed reading while the
-  marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.
+  marker is there keeps the workspace (`afterReload`), only a deleted marker closes it. A workspace or an app whose
+  folder was deleted from the disk (`gone()`, checked when drawn, by a watcher on the folders and when the window is
+  focused again) stays on the strip faded and crossed out (✕): it is never opened, Nuclear Atlas never opens a chat on
+  it (`chatRoots` skips a folder that is not there), the panel says it was deleted and offers the other workspaces.
 - **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,
   one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which
   is why they "disappeared" when VS Code opened another folder: that entry joins the global list when its folder opens
