@@ -51,7 +51,7 @@ out(text: string) <string, any>
 
 testEveryToolIsDocumentedAndEveryPageActionNamesOne() void
   names = builderToolNames()
-  expect(names.length == 57 and names.length == builderToolList(".").length, "${names.length}")
+  expect(names.length == 58 and names.length == builderToolList(".").length, "${names.length}")
   page = builderDir().joinpath("docs", "02-architecture", "actions.md").readText()
   for name in names
     expect("`${name}`" in page, "${name} is not in actions.md")

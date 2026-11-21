@@ -760,3 +760,14 @@ testWhatOnlyTheUserDecidesIsAskedAtTheGate(tmpPath: Path, monkeypatch: any) void
   f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
   f.youDecide(st, "Replace .github/workflows/nuclear-builder.yml with the line's?")
   expect(f.toDecide(st) == " Decide also: Replace .github/workflows/nuclear-builder.yml with the line's?", f.toDecide(st))
+
+// The CI file the line would write is shown without writing it (`ci_preview`, `export --print`): a check compares
+// with it and never replaces the user's file.
+testTheCiFileIsComparedWithoutWritingIt(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  first = ciPreview(root, "github")
+  expect(first["exists"] == false and first["same"] == false and not Path(root, "${first["path"]}").exists())
+  writeCiFile(root, "github")
+  expect(ciPreview(root, "github")["same"] == true)
+  Path(root, "${first["path"]}").writeText("# mine\n")
+  expect(ciPreview(root, "github")["same"] == false and Path(root, "${first["path"]}").readText() == "# mine\n")

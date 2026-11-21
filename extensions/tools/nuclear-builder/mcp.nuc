@@ -16,7 +16,7 @@ BUILDER_INSTRUCTIONS = "Nuclear Builder, NuclearLang's software factory, in one 
 // runs and teams (each team's tech lead and whether it is free), and nothing that does the work (no spec written, no
 // run started or answered, no team changed: a team is made with the Nuclear MCP server's team tools, which ask the
 // user first).
-INFORM_TOOLS = ["spec_list", "spec_show", "runs", "run_file", "run_journal", "metrics", "checks", "team_list", "team_show", "team_runnable", "team_suggest", "team_name_suggest", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "project_read", "agents_list", "models_list"]
+INFORM_TOOLS = ["spec_list", "spec_show", "runs", "run_file", "run_journal", "metrics", "checks", "team_list", "team_show", "team_runnable", "team_suggest", "team_name_suggest", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "ci_preview", "project_read", "agents_list", "models_list"]
 
 // The tool's name of a method: its own without `Tool` (`specNewTool` → `spec_new`).
 toolName(method: any) string

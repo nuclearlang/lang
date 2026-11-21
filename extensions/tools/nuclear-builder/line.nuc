@@ -422,11 +422,16 @@ ciLine(only: string[]) int
       print("✓ ${stage}")
   0
 
-// `nuclear-builder export github|gitlab|bitbucket [--json]`: writes the CI file that runs the line's commands.
+// `nuclear-builder export github|gitlab|bitbucket [--json] [--print]`: writes the CI file that runs the line's
+// commands; `--print` writes nothing: the file it would write, and whether the project's is the same.
 exportLine(args: string[]) int
   if args.isEmpty or not (args[0] in CI_PROVIDERS)
-    print("usage: nuclear-builder export ${CI_PROVIDERS.join("|")} [--json]", file = sys.stderr)
+    print("usage: nuclear-builder export ${CI_PROVIDERS.join("|")} [--json] [--print]", file = sys.stderr)
     return 2
+  if "--print" in args
+    shown = ciPreview(projectRoot("${Path.cwd()}"), args[0])
+    "--json" in args ? printJson(shown) : print("${shown["text"]}")
+    return 0
   wrote = writeCiFile(projectRoot("${Path.cwd()}"), args[0])
   "--json" in args ? printJson({ "wrote": wrote }) : print("wrote ${wrote}")
   0
@@ -540,6 +545,15 @@ lineLine(args: string[]) int
   0
 
 // The CI file of a provider written in the project: its path.
+// The CI file the line would write (nothing written): its path, its text, and whether the project's file is the same.
+ciPreview(root: string, provider: string) <string, any>
+  if not (provider in CI_PROVIDERS)
+    throw ValueError("no CI provider `${provider}`: ${CI_PROVIDERS.join(", ")}")
+  platform = "${projectCard(root)["platform"] ?? ""}"
+  out = ciFile(provider, readLine(root, platform), platform)
+  target = Path(root, out["path"]!)
+  { "path": out["path"], "text": out["text"], "exists": target.isFile(), "same": target.isFile() and target.readText(encoding = "utf-8") == out["text"] }
+
 writeCiFile(root: string, provider: string) string
   if not (provider in CI_PROVIDERS)
     throw ValueError("no CI provider `${provider}`: ${CI_PROVIDERS.join(", ")}")

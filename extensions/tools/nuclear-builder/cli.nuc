@@ -147,7 +147,7 @@ USAGE = """
                                   Ollama's installed models with their memory need and fit (fits, tight, too-big)
                                   plus the small ones it can pull; and this machine's memory (lists kept 10 minutes)
   nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json
-  nuclear-builder export github|gitlab|bitbucket [--json]   writes the CI file that runs `nuclear-builder ci`
+  nuclear-builder export github|gitlab|bitbucket [--json] [--print]   writes the CI file that runs `nuclear-builder ci` (--print: writes nothing, shows it and whether the project's is the same)
   nuclear-builder line show | set KEY=<json> ...   the project's line (.nuclear/builder.json): read, or keys set
   nuclear-builder connections [--team <id>] [--json]   Check the connections of a team
   nuclear-builder read <path> [--json]         a file of the project as text (a PDF by pdftotext, a .pptx, markdown)

@@ -46,7 +46,7 @@ title_es = "El fichero de CI es el que exporta la línea, y pasa cada etapa"
 station = "delivery"
 on = true
 by = "role"
-prompt = "Compare the project's CI file with nuclear-builder export for its CI (github, gitlab or bitbucket); run nuclear-builder ci check and ci test; say each stage's result, and fix the line, not the file, when they differ."
+prompt = "Compare the project's CI file with what the line exports, without writing it: ci_preview (github, gitlab or bitbucket) gives the file and whether it is the same. Never export or replace the CI file: when they differ, fix the line when the line is what is wrong, else write NEEDS YOU: replace <path> with the line's? Run nuclear-builder ci check and ci test and say each stage's result."
 
 [[check]]
 id = "devops.secrets"

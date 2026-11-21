@@ -561,6 +561,13 @@ BuilderTools(root: string)
       toolSaid(setLine(root, values))
     attempt(body)
 
+  // The CI file the line would write for github, gitlab or bitbucket, and whether the project's is the same: nothing
+  // is written (to compare, as a check does).
+  ciPreviewTool(provider: string) string
+    body = () =>
+      toolSaid(ciPreview(root, provider))
+    attempt(body)
+
   // Write the CI file that runs the line's commands: github, gitlab or bitbucket (replacing one is the user's).
   ciExportTool(provider: string) string
     body = () =>
@@ -613,7 +620,7 @@ BuilderTools(root: string)
       checksTool, checkSwitchTool, checkAddTool, checkMarkTool,
       teamListTool, teamShowTool, teamCreateTool, teamSuggestTool, teamNameSuggestTool, teamRunnableTool, teamUpdateTool, teamMemberAddTool, teamMemberRemoveTool, teamMemberUpdateTool, teamDuplicateTool, teamDeleteTool, teamDefaultTool, teamExportTool, teamImportTool, teamLogoTool, teamRosterTool, teamTemperamentsTool,
       skillsListTool, skillsShowTool, skillsCloneTool, skillsCreateTool, skillsUpdateTool, skillsDeleteTool, teamSkillsSetTool,
-      lineShowTool, lineSetTool, ciExportTool, connectionsCheckTool, projectReadTool, vaultListTool, agentsListTool, modelsListTool,
+      lineShowTool, lineSetTool, ciPreviewTool, ciExportTool, connectionsCheckTool, projectReadTool, vaultListTool, agentsListTool, modelsListTool,
     ]
 
 // What a tool's answer asks of the user, or null: `needsUser` (a yes or no) or `waiting: spending` (two confirmations).
