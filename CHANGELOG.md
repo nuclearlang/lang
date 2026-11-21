@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- Fix (the editor): the Nuclear workspace follows VS Code's folder as VS Code does: no project of another window, nor a deleted one, nor the last workspace opened elsewhere.
 - Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.
 - Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.
 - The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).

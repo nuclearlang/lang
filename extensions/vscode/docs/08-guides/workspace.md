@@ -15,8 +15,8 @@ unsaved editor stays open (you never get a save prompt), and the devices stay be
 
 Start from a **Nuclear workspace**: a folder for one business project and its apps (a backend, a web app, mobile
 apps). Its file `.workspace/workspace.nuc` says which apps belong to it, so the editor, the MCP server and your agents
-always find them. The editor opens the workspace that holds VS Code's open folder, else the last one you opened: the
-recent workspaces are remembered by the editor, so a change of VS Code's folder never loses them.
+always find them. The editor opens the workspace that holds VS Code's open folder, and only it, as VS Code shows only its folder; the
+recent workspaces are remembered by the editor and offered when the folder is not one.
 
 - **Create a workspace**: *Nuclear: Create a Workspace* asks the folder it goes in and its name.
 - **Open one**: *Nuclear: Open a Workspace* (a folder that is not a workspace yet is offered to become one). In an

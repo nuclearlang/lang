@@ -113,7 +113,8 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
 `{"error"}` (exit 1) shown as `nuclear workspace: <message>`; an older `nuclear` without the command is told to update.
 
 - **The open workspace** (`Workspace.loadWorkspace`, on activation and when VS Code's folders change): the one that
-  holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).
+  holds one of VS Code's folders (`find --json` run in it), and only it: as VS Code shows only its folder, a window whose
+  folder is not a workspace (or was deleted) opens none; the empty panel offers the recent ones.
 - **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened
   first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a
   change of VS Code's folder never loses them.
@@ -132,11 +133,11 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
   `workspace()` is then none: no command runs in that folder (`nuclear workspace` runs from the home folder) and no
   app is added to it, so nothing makes it again; the welcome whose workspace was deleted before its apps starts again
   from making or opening one (`withoutGone`), and a VS Code folder that is not there is not asked to be kept.
-- **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,
-  one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which
-  is why they "disappeared" when VS Code opened another folder: that entry joins the global list when its folder opens
-  and is cleared (`migrateSaved`; fixtures `test/fixtures/compat/global-state-0.62.json` and
-  `workspace-state-0.83.json`).
+- **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): this window's folder's own list,
+  `workspaceState` `nuclear.workspace.window.projects` (`saved()`, `savedHere`: the deleted ones left out), as VS Code
+  keeps a folder's state; a folder's list of 0.63 to 0.83 (`nuclear.workspace.projects` in its `workspaceState`) is
+  read with it (fixture `test/fixtures/compat/workspace-state-0.83.json`). The global list of 0.84 to 0.88.3
+  (`nuclear.workspace.projects` in `globalState`) showed every window's projects in each and is no longer read.
 - **The header**: the workspace's initials head the strip and its name heads the files pane (`.wsbar`); both open
   `workspaceMenu()` (rename, description, add / rename / remove an app, open the marker, *Do it with me by chat*, the
   recent workspaces, open, create). `+` adds an app when a workspace is open (else opens a project as a tab); the right

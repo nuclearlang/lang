@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import test from 'node:test';
-import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseCli, parseDialects, remember, shownProjects } from '../src/workspaces';
+import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, parseCli, parseDialects, remember, savedHere, shownProjects } from '../src/workspaces';
 
 const FIXTURES = path.resolve(__dirname, '..', '..', 'test', 'fixtures', 'compat');
 const fixture = (f: string) => JSON.parse(fs.readFileSync(path.join(FIXTURES, f), 'utf8')) as Record<string, string[]>;
@@ -34,15 +34,10 @@ test('the recent workspaces: the last opened first, each once, at most ten, only
   assert.deepEqual(alive([{ root: '/a', name: 'a', openedAt: 1 }, { root: '/gone', name: 'g', openedAt: 1 }], (f) => f === markerOf('/a')).map((r) => r.root), ['/a']);
 });
 
-test('the projects opened by hand of 0.63 to 0.83 (one list per folder) join the global list, never lost', () => {
-  const global = fixture('global-state-0.62.json')['nuclear.workspace.projects'];
+test("a window shows only the projects it opened by hand, those still on the disk (never another window's)", () => {
   const here = fixture('workspace-state-0.83.json')['nuclear.workspace.projects'];
-  const { saved, changed } = migrateSaved(global, here);
-  assert.ok(changed, "the folder's old entry is cleared once read");
-  assert.deepEqual(saved, [...global, '/home/someone/work/shop-workspace/admin']);
-  // read again: nothing left in the folder, the same list
-  assert.deepEqual(migrateSaved(saved, undefined), { saved, changed: false });
-  assert.deepEqual(migrateSaved(undefined, undefined), { saved: [], changed: false });
+  assert.deepEqual(savedHere([...here, here[0], '/gone/app'], (d) => d !== '/gone/app'), here);
+  assert.deepEqual(savedHere(undefined, () => true), []);
 });
 
 test('the empty panel: no folder open, or a folder that is not a workspace; nothing when there is something', () => {

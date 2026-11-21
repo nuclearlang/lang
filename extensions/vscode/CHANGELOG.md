@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- The Nuclear workspace follows VS Code's folder as VS Code does: a window shows the workspace of its folder and only it (never the last one opened elsewhere), and only the projects it opened by hand, kept with its folder; the projects of other windows and the deleted ones no longer appear. A project opened by hand in 0.84 to 0.88.3 is opened again with *Open a Project as a Tab* in the window that wants it.
 - Nuclear Chat and Atlas show an agent's Markdown as it is meant: tables (a header row, their own sideways scroll), headings, rules, numbered lists, task lists and nested lists, besides the code, quotes, links and marks they already had.
 - Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder.
 - **Sala de control**: *Your software company*, the reports and Nuclear Builder are calmer: slate panels, one desaturated teal for the action and what is picked, gold for money and waiting, a soft red for failures, no all-caps (the monospace face only for data), corner brackets only on what you look at (drawn in, never with reduced motion), and the team's rare actions in *More ⋯*. Plain words: members, not operatives.

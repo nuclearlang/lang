@@ -85,15 +85,10 @@ export function alive(list: Recent[] | undefined, exists: (file: string) => bool
 
 export const markerOf = (root: string): string => path.join(root, '.workspace', 'workspace.nuc');
 
-/**
- * The projects opened by hand (Ctrl+Alt+O), kept since 0.84 in the editor's global state, so a change of VS Code's
- * folder never loses them. From 0.63 to 0.83 each folder kept its own (`workspaceState`): they join the global list
- * when that folder is opened (the old entry is then cleared), the global ones first, each root once.
- */
-export function migrateSaved(global: string[] | undefined, here: string[] | undefined): { saved: string[]; changed: boolean } {
-  const g = (global ?? []).filter((r) => typeof r === 'string');
-  const extra = (here ?? []).filter((r) => typeof r === 'string' && !g.includes(r));
-  return { saved: [...new Set([...g, ...extra])], changed: here !== undefined };
+/** The projects this window opened by hand (its folder's own list, as VS Code keeps a folder's state): the ones still
+ * on the disk. A project of another window, or one deleted, is never shown here. */
+export function savedHere(list: string[] | undefined, exists: (dir: string) => boolean): string[] {
+  return [...new Set((list ?? []).filter((r) => typeof r === 'string' && exists(r)))];
 }
 
 /** Why the column has nothing to show: no workspace and no project. `null`: it has something. */

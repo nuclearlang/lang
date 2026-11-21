@@ -31,7 +31,7 @@ import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } fr
 import { STRIP } from './workspaceL10n';
 import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
-import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, shownProjects, WorkspaceInfo, workspaceCli } from './workspaces';
+import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, parseDialects, savedHere, PLATFORMS, RECENT, Recent, remember, shownProjects, WorkspaceInfo, workspaceCli } from './workspaces';
 import { nuclearCommand } from './toolchains';
 import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED, withoutGone } from './onboarding';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
@@ -194,7 +194,9 @@ const TERMINAL_COMMANDS: Record<string, Record<string, string>> = {
   web: { run: 'nuclear run', build: 'nuclear build', test: 'nuclear test', check: 'nuclear check' },
 };
 
-const SAVED = 'nuclear.workspace.projects';
+// the projects opened by hand: this window's folder's own list (workspace state); the global list of 0.84 to 0.88.3
+// (`nuclear.workspace.projects` in the global state) showed every window's projects in each, and is no longer read
+const SAVED = 'nuclear.workspace.window.projects';
 const ACTIVE = 'nuclear.workspace.active';
 const LAST_PROJECT = 'nuclear.workspace.lastProject';
 const TABS = 'nuclear.workspace.tabs';
@@ -288,7 +290,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     vscode.commands.registerCommand('nuclear.workspace.renameApp', (root?: string) => ws.renameApp(root)),
     vscode.commands.registerCommand('nuclear.workspace.menu', () => ws.workspaceMenu()),
   );
-  // the workspace that holds VS Code's folder, else the last one opened; then the strip draws its apps
+  // the workspace that holds VS Code's folder (only it, as VS Code shows only its folder); then the strip draws its apps
   const loaded = ws.loadWorkspace();
   const pending = context.globalState.get<PendingAction>(PENDING);
   if (pending && Date.now() - pending.at < 300_000 && inFolders(pending.root)) {
@@ -387,12 +389,12 @@ class Workspace implements vscode.WebviewViewProvider {
     return all.find((p) => p.root === root) ?? all[0];
   }
 
-  /** The projects opened by hand (Ctrl+Alt+O), kept by the editor (global state), whatever folder VS Code has open;
-   * the ones a folder kept from 0.63 to 0.83 (workspace state) join them when that folder opens. */
+  /** The projects this window opened by hand (Ctrl+Alt+O), kept with its folder (workspace state), the deleted ones
+   * left out: another window's never show here. */
   saved(): string[] {
-    const { saved, changed } = migrateSaved(this.context.globalState.get<string[]>(SAVED), this.context.workspaceState.get<string[]>(SAVED));
-    if (changed) void this.context.globalState.update(SAVED, saved).then(() => this.context.workspaceState.update(SAVED, undefined));
-    return saved;
+    // a folder's own list of 0.63 to 0.83 (the same key, in this folder's state) is still this window's
+    const old = this.context.workspaceState.get<string[]>('nuclear.workspace.projects') ?? [];
+    return savedHere([...(this.context.workspaceState.get<string[]>(SAVED) ?? []), ...old], (d) => fs.existsSync(d));
   }
 
   // ---------- the Nuclear workspace (spec 022) ----------
@@ -417,15 +419,15 @@ class Workspace implements vscode.WebviewViewProvider {
     return workspaceCli(nuclearCommand(), args, cwd && fs.existsSync(cwd) ? cwd : this.workspace()?.root ?? os.homedir(), toolEnv());
   }
 
-  /** The workspace that holds one of VS Code's folders, else the last one opened. */
+  /** The workspace that holds one of VS Code's folders, as VS Code shows only its folder: never another one (the last
+   * opened is offered on the empty panel, with the other recent ones, not opened by itself). */
   async loadWorkspace(): Promise<void> {
     let found: WorkspaceInfo | null = null;
     for (const f of vscode.workspace.workspaceFolders ?? []) {
+      if (!fs.existsSync(f.uri.fsPath)) continue;
       found = await this.cli(['find'], f.uri.fsPath).catch(() => null);
       if (found) break;
     }
-    const last = this.recent()[0];
-    if (!found && last) found = await this.cli(['show', '--workspace', last.root], last.root).catch(() => null);
     await this.setWorkspace(found ?? undefined);
   }
 
@@ -792,7 +794,7 @@ class Workspace implements vscode.WebviewViewProvider {
       return;
     }
     const saved = this.saved();
-    if (!saved.includes(root)) await this.context.globalState.update(SAVED, [...saved, root]);
+    if (!saved.includes(root)) await this.context.workspaceState.update(SAVED, [...saved, root]);
     this.http.refresh();
     await this.go(root);
   }
@@ -806,7 +808,8 @@ class Workspace implements vscode.WebviewViewProvider {
   }
 
   async removeProject(root: string): Promise<void> {
-    await this.context.globalState.update(SAVED, this.saved().filter((r) => r !== root));
+    await this.context.workspaceState.update(SAVED, this.saved().filter((r) => r !== root));
+    await this.context.workspaceState.update('nuclear.workspace.projects', undefined);
     if (this.activeKey() === root) await this.context.workspaceState.update(ACTIVE, undefined);
     this.http.refresh();
     this.refresh();
