@@ -23,6 +23,19 @@ STATION_DOCS: <string, string[]> = { "analysis": ["analysis.md", "questions.md"]
 verdictOf(text: string) string
   re.sub(r"^[\s*_#`>:-]+", "", text.trim()).upper()
 
+// Two questions to the user that ask the same with other words (the CI host, the repository to create): most of the
+// shorter one's words of four letters or more are in the other one.
+sameQuestion(a: string, b: string) boolean
+  words = (t: string) => re.findall(r"[a-záéíóúñü]{4,}", t.lower()).unique()
+  x: string[] = words(a)
+  y: string[] = words(b)
+  small = x.length <= y.length ? x : y
+  big = x.length <= y.length ? y : x
+  if small.isEmpty
+    return a.trim().lower() == b.trim().lower()
+  shared = small.filter((w: string) => w in big).length
+  shared * 10 >= small.length * 6
+
 // The user's checks a gate answers, by id: the run files of before 0.88 copied them without `gate = true`.
 GATE_CHECKS = ["analyst.user-approves", "architect.user-approves", "qa.plan-approved", "devops.approve-push"]
 
@@ -1343,7 +1356,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     cut = question.indexOf("? ")
     short = (cut > 0 ? question.substring(0, cut + 1) : question).trim()
     said = short.length > 200 ? "${short.substring(0, 199)}…" : short
-    if not said.isEmpty and not (said in asked) and asked.length < 5
+    if not said.isEmpty and not asked.any((q: string) => sameQuestion(q, said)) and asked.length < 5
       asked.add(said)
     st["needsYou"] = asked
 

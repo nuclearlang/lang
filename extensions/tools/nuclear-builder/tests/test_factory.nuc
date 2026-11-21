@@ -780,3 +780,8 @@ testTheCiFileIsComparedWithoutWritingIt(tmpPath: Path, monkeypatch: any) void
   expect(ciPreview(root, "github")["same"] == true)
   Path(root, "${first["path"]}").writeText("# mine\n")
   expect(ciPreview(root, "github")["same"] == false and Path(root, "${first["path"]}").readText() == "# mine\n")
+
+// The same question to the user with other words is asked once.
+testTheSameQuestionWithOtherWordsIsAskedOnce() void
+  expect(sameQuestion("which CI host (github, gitlab or bitbucket) exports the line's file?", "Which CI host (github, gitlab or bitbucket) exports the line's file, and do you approve adding it?"))
+  expect(not sameQuestion("which CI host (github, gitlab or bitbucket) exports the line's file?", "Initialize the git repository and give it a remote?"))
