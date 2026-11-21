@@ -12,6 +12,9 @@ MCP server, in the project [`tools/mcp`](../../../tools/mcp/AGENTS.md).
 
 ## Pending
 
+- **`knowledge review <id>` run once per row forgets the rows reviewed before** (found 2026-11-21): reviewing eight
+  rows one call each left seven asking again; `knowledge review` with no ids (or all the ids in one call) keeps them.
+  Wanted: a review adds to the reviewed rows.
 - **The rows of `query:kind.create` name a generator's condition with the generator's own word** (`when rest`,
   `when db`), not with the option that sets it (`--source rest`): the generated rows of the generators need the
   option of each condition.
