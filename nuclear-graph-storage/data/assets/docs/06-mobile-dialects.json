@@ -5693,7 +5693,32 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-8-statemanager.5fefc4",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-8-statemanager.703942",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.8 `statemanager`",
+   "summary": "6.8 `statemanager`",
+   "body": [
+    "| Decorator | What it does |",
+    "|---|---|",
+    "| `@state(S.state)` | the method's value is emitted as that state; if it returns `Result`, an `Err` emits `S.error(...)`. Without a body, it emits the state with its parameters. The caller gets nothing |",
+    "| `@before(method)` | calls that method before (for example, the `loading` state) |",
+    "| `@after(method)` | calls that method after |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-8-statemanager.9db184",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.8 `statemanager`",
    "summary": "The state of a screen (a Cubit).",
@@ -5730,7 +5755,9 @@
     "",
     "  Future<void> loadPage(int page) async {",
     "    loading();",
+    "    final turn$ = stateTurn();",
     "    final result = await _loadPage(page);",
+    "    if (!isLatestTurn(turn$)) return;",
     "    emit(result.match(CharactersState.error, CharactersState.full));",
     "  }",
     "",
@@ -5739,31 +5766,6 @@
     "  }",
     "}",
     "```"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-8-statemanager.703942",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.8 `statemanager`",
-   "summary": "6.8 `statemanager`",
-   "body": [
-    "| Decorator | What it does |",
-    "|---|---|",
-    "| `@state(S.state)` | the method's value is emitted as that state; if it returns `Result`, an `Err` emits `S.error(...)`. Without a body, it emits the state with its parameters. The caller gets nothing |",
-    "| `@before(method)` | calls that method before (for example, the `loading` state) |",
-    "| `@after(method)` | calls that method after |"
    ],
    "platforms": [
     "mobile"
