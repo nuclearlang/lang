@@ -310,12 +310,14 @@ async function draftPosted(root: string, channel: string, thread: string | undef
   await postButtons(root, channel, { author: member, text: `${fmt(T.draft, d.id)}\n\n${lineDiff(was, now)}`, thread, buttons: [{ id: `spec|${d.id}|accept`, label: T.accept, style: 'primary' }, { id: `spec|${d.id}|discard`, label: T.discard }], links: { spec: d.id } });
 }
 
-/** The folder's own channel (`home`) with no team assigned (its host file's `assigned` null): Atlas offers the saved
- * teams as buttons, each with its tech lead and whether it is free, or *Create a team* when there is none. Once while
- * an offer is still open; a host file of before 0.87 (no `assigned`) gets none. */
+/** The folder's own channel (`home`) with no team assigned (nobody in it): Atlas offers the saved teams as buttons,
+ * each with its tech lead and whether it is free, or *Create a team* when there is none. Once while an offer is still
+ * open; a host file of before 0.87 (no `home`) gets none. */
 async function offerTeams(root: string): Promise<void> {
-  const body = chat().hostBody(root) as { assigned?: string | null; channels?: { id: string }[] } | undefined;
-  if (body?.assigned !== null || !body.channels?.some((c) => c.id === 'home')) return;
+  // the registered host file keeps the channels, not `assigned`: `home` with nobody in it is a folder with no team
+  const body = chat().hostBody(root) as { channels?: { id: string; members?: string[] }[] } | undefined;
+  const home = body?.channels?.find((c) => c.id === 'home');
+  if (!home || (home.members ?? []).length > 0) return;
   const ws = await chat().workspace(root);
   const said = await chat().request('GET', `/messages/${ws}/home`);
   const open = Array.isArray(said.body) && (said.body as { buttons?: { id: string }[] }[]).some((m) => m.buttons?.some((b) => b.id.startsWith('team|')));
@@ -356,7 +358,8 @@ async function onChatEvent(root: string, e: ChatEvent): Promise<void> {
       // the folder's `.nuclear/builder.json` names the team: its tech lead joins the channel when the folder registers again
       await lineJson(root, ['line', 'set', `team=${b.team}`]);
       await chat().workspace(root, true);
-      return answered(root, message, fmt(T.assigned, b.team));
+      const name = (chat().hostBody(root) as { teams?: { id: string; name?: string }[] } | undefined)?.teams?.find((t) => t.id === b.team)?.name ?? b.team;
+      return answered(root, message, fmt(T.assigned, name));
     }
     if (b?.kind === 'spec') {
       await lineJson(root, ['spec', b.answer, b.spec, '--json']);

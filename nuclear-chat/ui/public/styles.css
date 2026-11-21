@@ -1229,6 +1229,8 @@ button.count:hover { background: var(--hover); color: var(--fg); }
 .avatar.huge { width: 120px; height: 120px; border-radius: 20px; font-size: 2.6em; }
 
 /* The profile, where the thread goes. */
+/* a profile reads from the top: not the messages' scroll that stays at the newest one (column-reverse) */
+.profile .scroll { flex-direction: column; }
 .profile-body { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 16px 24px; }
 .profile-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 1.3em; }
 .profile-name .chip { font-size: 0.55em; }

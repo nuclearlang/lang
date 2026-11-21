@@ -21,7 +21,7 @@ import { chatWhere } from './notify';
 import { SettingsPanel } from './settingsPanel';
 import { SETUP_DECLINED, SETUP_DONE, SetupPanel } from './setupPanel';
 import { watchConnections } from './connections';
-import { BuilderPanel, builderSidebar, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
+import { BuilderPanel, builderSidebar, followChat as followBuilderChat, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
 import { inline, runOutline, specOfPath, specTree } from '../../tools/nuclear-builder/src/workbench';
 import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-http-connections/src/httpConnections';
 import { ComponentPanel } from '../../tools/nuclear-http-connections/src/panel';
@@ -225,6 +225,9 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   notices.open = (n) => ws.openNotice(n);
   context.subscriptions.push(notices.onDidChange.event(() => ws.refresh()));
   followChatNotices();
+  // the chat's buttons (a run's gate, a spec's draft, a team offered to a folder's channel) are answered from the start,
+  // not only once the Builder's page was opened
+  followBuilderChat();
   // the Builder's specs and runs, in the column while the Builder is the open tool (spec 011 requirement 25)
   context.subscriptions.push(sidebarChanged.event(() => ws.builderChanged()));
   // runs a closed or crashed editor left half done: recovered and resumed where they stopped
@@ -679,6 +682,8 @@ class Workspace implements vscode.WebviewViewProvider {
   async go(key: string): Promise<void> {
     const previous = this.activeKey();
     if (previous !== key && !(await this.switchTabs(previous, key))) return;
+    // the tool already active (a window reloaded keeps it): its page opens again, it was not reopened by a switch
+    if (previous === key) await this.showTool(key);
     await this.context.workspaceState.update(ACTIVE, key);
     if (!key.startsWith(TOOL_PREFIX)) await this.context.workspaceState.update(LAST_PROJECT, key);
     this.refresh();
@@ -705,6 +710,20 @@ class Workspace implements vscode.WebviewViewProvider {
     // column and the reopened code would merge into its group; unpark (below) gives it a fresh group beside the code.
     const mobile = to === TOOL_PREFIX + 'devices' || this.projects().find((p) => p.root === to)?.platform === 'mobile';
     await vscode.commands.executeCommand('nuclear.parkDevices');
+    if (await this.showTool(to)) return true;
+    for (const t of (saved[to] ?? []).sort((a, b) => Number(a.active) - Number(b.active))) {
+      try {
+        await vscode.window.showTextDocument(vscode.Uri.file(t.path), { viewColumn: t.column, preview: false, preserveFocus: !t.active });
+      } catch {
+        // the file is gone
+      }
+    }
+    if (mobile) await vscode.commands.executeCommand('nuclear.unparkDevices'); // beside the code just reopened
+    return true;
+  }
+
+  /** A tool's page, opened (a tool tab entered, or entered again): true when `to` is a tool. */
+  private async showTool(to: string): Promise<boolean> {
     const tool = tools().find((t) => TOOL_PREFIX + t.id === to);
     if (tool) {
       if (tool.id === 'http-connections') ComponentPanel.restore(this.context, this.http, this.http.reopen);
@@ -719,15 +738,7 @@ class Workspace implements vscode.WebviewViewProvider {
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
       return true;
     }
-    for (const t of (saved[to] ?? []).sort((a, b) => Number(a.active) - Number(b.active))) {
-      try {
-        await vscode.window.showTextDocument(vscode.Uri.file(t.path), { viewColumn: t.column, preview: false, preserveFocus: !t.active });
-      } catch {
-        // the file is gone
-      }
-    }
-    if (mobile) await vscode.commands.executeCommand('nuclear.unparkDevices'); // beside the code just reopened
-    return true;
+    return false;
   }
 
   async selectProject(index?: number): Promise<void> {

@@ -78,6 +78,14 @@ ChatTest
   channelMessages(manager: MessagesManager)
     ~manager.open("backend")
 
+  @states("the open channel's read, told back, reads the list only: it is never marked read again (that looped forever)", expect = [ChannelsState.ready([sampleRoom("general", "channel", 0), sampleRoom("backend", "channel", 2), sampleRoom("dm-ada", "dm", 1)])])
+  readOnce(manager: ChannelsManager)
+    manager.workspace = "w1"
+    manager.open = "backend"
+    manager.changed(ChatEvent(n = 1, workspace = "w1", type = "channels", channel = "backend", data = { "read": "backend" }))
+    ~manager.load()
+    verify(ChannelsRepository.read).called(0)
+
   @states("a thread shows the message that opened it and its replies", expect = [ThreadState.ready(Thread(channel = "backend", root = sampleMessage("m1", "ada", 60_000), replies = [sampleMessage("r1", "grace", 61_000, "m1")]))])
   threadMessages(manager: ThreadManager)
     ~manager.open("backend", "m1")

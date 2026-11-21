@@ -41,7 +41,7 @@ of its workspace:
 | `WorkspaceManager` | the workspace (members, teams, `lang`, `theme`) | the screen opens; a `workspace` event (the host registered it again) reads it without the loading state; `edit` tells a profile's change (`POST members/{ws}/{member}/edit`), `chooseTheme` the theme (`PUT workspaces/{id}/theme`) |
 | `ProfileManager` | the member whose profile is open, or closed | a member's name or picture clicked; a thread or the search opened closes it |
 | `PackManager` | the pack's drawings (`GET gifs/pack`) | once |
-| `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels` or `agent.changed` event; the open channel is marked read (`POST …/read`); `chooseAgent` (`PUT …/agent`) |
+| `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels`, `agent.changed` or `workspace` event; only a `message` of the open channel marks it read again (`POST …/read`): the read itself comes back as a `channels` event of that channel, which only reads the list (0.87.0 marked it read again, a loop of thousands of events a second that kept the service near one core and the list never settled); `chooseAgent` (`PUT …/agent`) |
 | `MessagesManager` | the open channel's messages outside threads | a `message` event of that channel; it also says, sends a GIF, reacts, clicks |
 | `ThreadManager` | the open thread (`?thread=`) | a `message` event of its channel |
 | `ActivityManager` | who is typing or using a tool, and the answer as it is written (its text and tools, `Part`s) | `typing`, `tool`, `message.delta`, `done`, the member's `message` |

@@ -14,8 +14,11 @@ statemanager ChannelsManager
     read(channel)
 
   changed(e: ChatEvent)
-    if e.workspace == workspace and (e.type == "message" or e.type == "channels" or e.type == "agent.changed")
-      if e.channel == open
+    // `workspace`: registered again (a team assigned to the folder, a new tech lead): the channels' members changed
+    if e.workspace == workspace and (e.type == "message" or e.type == "channels" or e.type == "agent.changed" or e.type == "workspace")
+      // only a message that came in the open channel marks it read again: the read itself is told back as a
+      // `channels` event of that channel, which only reads the list (marking it read again would loop forever)
+      if e.type == "message" and e.channel == open
         read(open)
       else
         load()

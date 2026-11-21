@@ -22,7 +22,9 @@ run in the team's channel, and does what its buttons ask.
   reaches the role's first member as listed; the channels `home` (the folder's own, named after the workspace or the
   project: its member is the tech lead of the team assigned to the folder or to its workspace), `general` (its
   members: the listed ones but Atlas) and each team's (its members: its tech lead); `assigned`: the team assigned
-  here, null when none is. With `assigned` null the editor (`panel.ts` `offerTeams`) posts in `home`, as Atlas, the
+  here, null when none is. With nobody in `home` (no team assigned: the host file the editor registers keeps the channels, not `assigned`) the
+  editor (`panel.ts` `offerTeams`, listening from the extension's start: `followChat` is called at activation, so the
+  chat's buttons are answered before the Builder's page was ever opened) posts in `home`, as Atlas, the
   saved teams as buttons (`team|assign|<id>`: its tech lead and whether it is free), or *Create a team*
   (`team|create`, the company screen) when there is none; a team chosen is `line set team=<id>` in the folder, and the
   folder is registered again so its tech lead joins `home`. Several teams and none chosen are no error here (`chooseTeam` is gone: every

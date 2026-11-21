@@ -158,7 +158,8 @@ composer (`AtlasPanel.compose`), on the workspace's folder, or before there is o
 
 ## The switch of tabs
 
-`go(key)` calls `switchTabs(from, to)`:
+`go(key)` calls `switchTabs(from, to)`; a tool tab entered again (the active one, kept by a window reloaded) opens its
+page again (`showTool`), which no switch would do:
 
 1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,
    active); leaving the HTTP Connections tool keeps the keys of its open component panels (`model.reopen`);

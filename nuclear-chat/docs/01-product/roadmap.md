@@ -20,11 +20,11 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
   on again needs the local member's answers run end to end again (its typing line `typing.local`, its GIF lines).
 
 ## Untested
-- **A member's profile and the theme (0.87)**: the service's routes and the page's form and panel are tested (vitest,
-  pytest); never seen in a VS Code window: the profile opened from a message, the members list and a direct message's
-  header, a change saved through the host (`team member update`) and the member coming back changed (the `workspace`
-  event), the theme switch kept as `nuclear.chat.theme` and every page following it, light and dark forced over the
-  Chernobyl themes, the inline code and *paid* chip on them. The page was not rendered in Chromium for this change.
+- **A member's profile and the theme (0.87)**: seen in a real VS Code and a real Cursor (0.87.1, driven over CDP):
+  the profile opened from a direct message's header, its edit form, the light theme chosen and kept after a restart,
+  the *paid* chip readable. Never seen: a change saved through the host (`team member update`) and the member coming
+  back changed (the `workspace` event), the profile from a message or the members list, dark forced over a light
+  editor theme.
 - The page's `npm run build:embed` fails on `tsc` over the tests (a test assigns a model's read-only field,
   `ws.members[1].listed = false`); `build-embed.sh` builds with vite alone, so the release is not blocked.
 - A member's GIF with a streaming agent: `MemberLines` holds back a `gif:` line being written (tested with pieces);
@@ -54,12 +54,6 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
 
 ## Pending
 
-- **The service's CPU while a member answers (0.87.0, seen on the user's machine)**: uvicorn near one core for the
-  minutes of a conversation (5 min of CPU in 8, 0 % idle; 770 MB peak before a restart). Suspected: every `message`
-  event makes each mounted page read the whole history and the unread counts, and `MessageStore.unread` / `history`
-  read and fold each channel's whole file again (no cache); the streamed `message.delta` events add to it. Not
-  profiled yet (a profiler attached to the process was not allowed): measure, then cache the folded channels by file
-  size and time.
 - *What this channel remembers* in the channel's menu (spec 023 requirement 8): the memory is the host's
   (`nuclear-builder chat memory <channel> --json`, `--clear`); the UI needs a host action through its bridge (the
   service knows nothing of it) and the VS Code host's handler. Today it is seen and cleared from a terminal.
