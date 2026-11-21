@@ -117,10 +117,14 @@ answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` 
 - **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened
   first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a
   change of VS Code's folder never loses them.
-- **The slots of the strip** are the workspace's apps whose folder exists, in the marker's order (`projectAt` of each,
-  else the app's own JSON), then the projects opened by hand. Without a workspace: the projects of VS Code's folders
-  (`findProjects()`), then the ones opened by hand. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads
-  the workspace again (300 ms after a burst): an app added by the MCP server, an agent or a terminal appears at once.
+- **The slots of the strip** (`shownProjects`) are the workspace's apps whose folder exists, in the marker's order
+  (`projectAt` of each, else the app's own JSON), and nothing else: no scan of VS Code's folders, no project opened by
+  hand (a workspace is the clean folder the editor works on; *Open a Project as a Tab* there offers *Add an app*).
+  Without a workspace: the projects of VS Code's folders (`findProjects()`), then the ones opened by hand. Until
+  `loadWorkspace` has answered once, no slot: the scan of a parent folder never shows, even for a moment, the projects
+  of other workspaces. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads the workspace again (300 ms
+  after a burst): an app added by the MCP server, an agent or a terminal appears at once; a failed reading while the
+  marker is there keeps the workspace (`afterReload`), only a deleted marker closes it.
 - **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,
   one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which
   is why they "disappeared" when VS Code opened another folder: that entry joins the global list when its folder opens

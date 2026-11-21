@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import test from 'node:test';
-import { alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseCli, parseDialects, remember } from '../src/workspaces';
+import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseCli, parseDialects, remember, shownProjects } from '../src/workspaces';
 
 const FIXTURES = path.resolve(__dirname, '..', '..', 'test', 'fixtures', 'compat');
 const fixture = (f: string) => JSON.parse(fs.readFileSync(path.join(FIXTURES, f), 'utf8')) as Record<string, string[]>;
@@ -59,4 +59,22 @@ test("the dialects offered for a platform: the installed ones, the platform's de
   assert.deepEqual(dialectsOf('web', installed), ['react']);
   assert.deepEqual(dialectsOf('mobile', undefined), ['flutter']);
   assert.equal(appFolder(' citofony-api '), 'citofony_api');
+});
+
+test('an open workspace shows its apps only: never VS Code folders scanned nor projects opened by hand elsewhere', () => {
+  const w = parseCli(SHOW, 0)!;
+  const app = [{ root: '/ws/api' }], scan = [{ root: '/other/langgraph' }], byHand = [{ root: '/nuc/rick_and_morty' }, { root: '/other/langgraph' }];
+  assert.deepEqual(shownProjects(true, w, () => app, () => scan, () => byHand), app);
+  // not known yet (the CLI still answering): nothing, not the scan of a parent folder
+  assert.deepEqual(shownProjects(false, undefined, () => app, () => scan, () => byHand), []);
+  // no workspace: the folders' projects, then the ones opened by hand, each once
+  assert.deepEqual(shownProjects(true, undefined, () => app, () => scan, () => byHand), [{ root: '/other/langgraph' }, { root: '/nuc/rick_and_morty' }]);
+});
+
+test('a failed reading after the marker changed keeps the workspace while its marker is there', () => {
+  const w = parseCli(SHOW, 0)!;
+  assert.equal(afterReload(w, null, true), w);
+  assert.equal(afterReload(w, null, false), undefined);
+  const fresh = { ...w, name: 'renamed' };
+  assert.equal(afterReload(w, fresh, true), fresh);
 });

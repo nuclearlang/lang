@@ -118,3 +118,22 @@ export function parseDialects(out: string): string[] {
 
 /** An app's name as `nuclear new` makes its folder: letters, digits and `_`. */
 export const appFolder = (name: string): string => name.trim().replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+
+/**
+ * The projects the column shows. A workspace open: its apps and nothing else, so the editor works on a clean folder
+ * (no scan of VS Code's folders, no project opened by hand in another window). No workspace: the projects found in
+ * VS Code's folders, then the ones opened by hand. Not known yet (`nuclear workspace find` still answering): none, so a
+ * scan of a parent folder never shows, even for a moment, the projects of other workspaces or none.
+ */
+export function shownProjects<T extends { root: string }>(known: boolean, w: WorkspaceInfo | undefined, apps: () => T[], folders: () => T[], saved: () => T[]): T[] {
+  if (!known) return [];
+  if (w) return apps();
+  const out = folders();
+  const seen = new Set(out.map((p) => p.root));
+  return [...out, ...saved().filter((p) => !seen.has(p.root))];
+}
+
+/** The workspace after its marker changed: the CLI's new reading; when that failed while the marker is still there (a
+ * write in progress, `nuclear` busy), the workspace it was, never none (none would scan VS Code's folders instead). */
+export const afterReload = (current: WorkspaceInfo | undefined, fresh: WorkspaceInfo | null, markerThere: boolean): WorkspaceInfo | undefined =>
+  fresh ?? (markerThere ? current : undefined);

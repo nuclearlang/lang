@@ -40,9 +40,10 @@ tour of each tool.
 
 ## Project tabs
 
-The apps of the workspace are at the top of the strip, in the order of its marker, then the projects you opened with
-*Open a Project as a Tab* (`Ctrl+Alt+O`), which the editor remembers for every folder. With no workspace open, the
-tabs are the Nuclear projects of the VS Code workspace folders and the ones you opened. Each tab shows its platform's
+With a workspace open, the strip holds its apps and nothing else, in the order of its marker: a project of another
+folder is added to it as an app. With no workspace open, the tabs are the Nuclear projects of the VS Code workspace
+folders and the ones you opened with *Open a Project as a Tab* (`Ctrl+Alt+O`), which the editor remembers for every
+folder. Each tab shows its platform's
 glyph with the dialect's icon as a badge. `Ctrl+1` … `Ctrl+9` go to the first nine.
 
 The pane of a project is its file tree, beside the strip, drawn like VS Code's explorer, with the icons of the

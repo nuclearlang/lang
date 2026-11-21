@@ -862,3 +862,17 @@ fn zed_runs_the_code_lens_command_on_the_server() {
             .contains(&json!("nuclear.showCodeMetricsCodeLensInfo"))
     );
 }
+
+#[test]
+fn the_workspace_marker_is_read_as_a_manifest() {
+    let flutter = dialects::load("flutter", dialects::search_paths(&[], &[repo()]), None).unwrap();
+    let marker = "workspace(name = \"rick\")\napp(folder = \"api\", platform = \"backend\")\n";
+    let doc = Doc::new("file:///w/rick/.workspace/workspace.nuc".into(), 1, marker.into(), Some(&flutter));
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+    // a mistake is still told
+    let bad = Doc::new("file:///w/rick/.workspace/workspace.nuc".into(), 1, "app(folder = api)\n".into(), Some(&flutter));
+    assert!(!bad.diagnostics.is_empty());
+    // the same calls elsewhere are code: unknown names
+    let code = Doc::new("file:///w/rick/main.nuc".into(), 1, marker.into(), Some(&flutter));
+    assert!(!code.diagnostics.is_empty());
+}

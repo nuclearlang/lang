@@ -31,7 +31,7 @@ import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } fr
 import { STRIP } from './workspaceL10n';
 import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
-import { alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, WorkspaceInfo, workspaceCli } from './workspaces';
+import { afterReload, alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, shownProjects, WorkspaceInfo, workspaceCli } from './workspaces';
 import { nuclearCommand } from './toolchains';
 import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED } from './onboarding';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
@@ -321,6 +321,8 @@ class Workspace implements vscode.WebviewViewProvider {
   readonly onDidChange = new vscode.EventEmitter<void>();
   /** The Nuclear workspace open in this window (`nuclear workspace show --json`), when there is one. */
   private current: WorkspaceInfo | undefined;
+  /** `loadWorkspace` answered once: until then the column shows no project (see `shownProjects`). */
+  private known = false;
   private markerWatch: vscode.Disposable | undefined;
   private installedDialects: Promise<string[]> | undefined;
   /** The onboarding is not done: it owns the AI services' offer (extension.ts makes none). */
@@ -345,24 +347,22 @@ class Workspace implements vscode.WebviewViewProvider {
 
   // ---------- what is open ----------
 
-  /** The apps of the open workspace (else the projects of VS Code's folders), then the ones opened by hand. */
+  /** The apps of the open workspace only; without one, the projects of VS Code's folders, then the ones opened by hand. */
   projects(): Project[] {
     const w = this.current;
-    const out = w
-      ? w.apps
+    return shownProjects(
+      this.known,
+      w,
+      () =>
+        w!.apps
           .filter((a) => a.exists)
           .map((a) => {
-            const root = path.join(w.root, a.folder);
+            const root = path.join(w!.root, a.folder);
             return projectAt(root) ?? { root, name: a.name, platform: a.platform, dialect: a.dialect ?? '', contracts: [] };
-          })
-      : findProjects();
-    const seen = new Set(out.map((p) => p.root));
-    for (const root of this.saved()) {
-      if (seen.has(root)) continue;
-      const p = projectAt(root);
-      if (p) out.push(p);
-    }
-    return out;
+          }),
+      () => findProjects(),
+      () => this.saved().flatMap((root) => projectAt(root) ?? []),
+    );
   }
 
   /** The active tab: a project's root, or `tool:<id>`. */
@@ -419,6 +419,7 @@ class Workspace implements vscode.WebviewViewProvider {
   private async setWorkspace(w: WorkspaceInfo | undefined): Promise<void> {
     const moved = w?.root !== this.current?.root;
     this.current = w;
+    this.known = true;
     if (w) await this.context.globalState.update(RECENT, remember(this.context.globalState.get<Recent[]>(RECENT), w, Date.now()));
     if (moved) this.watchMarker();
     this.http.refresh();
@@ -443,7 +444,7 @@ class Workspace implements vscode.WebviewViewProvider {
 
   private async reload(): Promise<void> {
     const root = this.current?.root;
-    if (root) await this.setWorkspace((await this.cli(['show', '--workspace', root], root).catch(() => null)) ?? undefined);
+    if (root) await this.setWorkspace(afterReload(this.current, await this.cli(['show', '--workspace', root], root).catch(() => null), fs.existsSync(markerOf(root))));
   }
 
   /** Runs a change of the workspace with a progress notification; a refusal is shown with the command's message. */
@@ -744,6 +745,12 @@ class Workspace implements vscode.WebviewViewProvider {
   }
 
   async openProject(): Promise<void> {
+    // a workspace shows its apps only: a project of elsewhere would never appear in it
+    if (this.current) {
+      const add = l10n.t('Add an app');
+      if ((await vscode.window.showInformationMessage(l10n.t('The workspace {0} shows only its apps. Add one to it, or open another workspace.', this.current.name), add)) === add) await this.addApp();
+      return;
+    }
     const picked = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, openLabel: l10n.t('Open as a Nuclear project') });
     const root = picked?.[0]?.fsPath;
     if (!root) return;
@@ -924,7 +931,7 @@ class Workspace implements vscode.WebviewViewProvider {
       type: 'state',
       // the open Nuclear workspace (its name heads the column), or why there is nothing (the empty panel)
       workspace: w ? { name: w.name, root: w.root } : null,
-      empty: emptyState(w, this.projects().length, (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath), this.recent()),
+      empty: !this.known ? null : emptyState(w, this.projects().length, (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath), this.recent()),
       projects: this.projects().map((p) => ({
         app: apps.has(p.root),
         root: p.root,

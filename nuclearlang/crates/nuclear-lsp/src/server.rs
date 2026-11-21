@@ -43,8 +43,12 @@ impl Doc {
         project: Option<(Arc<Project>, String)>,
     ) -> Doc {
         let lines = LineIndex::new(&text);
-        let (index, diagnostics, ast) =
+        let (index, mut diagnostics, ast) =
             analyze(&text, dialect, project.as_ref().map(|(p, path)| (p.as_ref(), path.as_str())));
+        // the workspace's marker is a manifest, read as `nuclear workspace` reads it, not code (no N0106 for `app`)
+        if is_workspace_marker(&uri) {
+            diagnostics = nuclear_transpile::project::read_calls(&text, &["workspace".to_string(), "app".to_string()]).1;
+        }
         Doc { uri, version, text, lines, index, diagnostics, ast, project }
     }
 
@@ -61,6 +65,11 @@ impl Doc {
         }
         catch_unwind(AssertUnwindSafe(|| metrics::compute(&self.text, &self.lines, &self.ast, cfg))).ok()
     }
+}
+
+/// `.workspace/workspace.nuc` (spec 022), the marker of a Nuclear workspace.
+pub fn is_workspace_marker(uri: &str) -> bool {
+    uri.replace('\\', "/").ends_with("/.workspace/workspace.nuc")
 }
 
 /// Parses, indexes and checks a source. A panic in the compiler never takes the server down.

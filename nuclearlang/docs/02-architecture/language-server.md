@@ -68,6 +68,8 @@ transpiler feature is built there, never copied into the server.
   root. A file equal to disk takes the project's diagnostics (N0301/N0302/N0303, imports, other files' names) and
   `nuclear/transpile` returns its project output; with unsaved changes it is checked alone (no N0106 for names the
   project knows).
+- A workspace's marker (`.workspace/workspace.nuc`, `server::is_workspace_marker`) is a manifest: it is checked as
+  `nuclear workspace` reads it (`read_calls` of `workspace` and `app`, N0303), never as code (no N0106 for `app`).
 - Other files' names: completion, hover ("Declared in …"), go to definition; their members (`Object::Project`) and
   the named parameters of `Class(`.
 
