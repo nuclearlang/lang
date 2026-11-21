@@ -305,26 +305,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.0be422",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.",
-    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
-    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
-    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -509,6 +489,27 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- **A channel is a memory** (spec 023 requirement 8): a team's channel is its tech lead, exactly as its direct message (the same prompt, tools, spending and run reports; another team's channel, that team's lead). Every channel, thread and direct message keeps its own durable memory, `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (the user's requests, the specs written, the runs started with their state, the plans stated, the open questions, a line per message older than the chat's 40-message window), given to the member as *What this channel remembers* (newest first, capped) and read only in that channel. `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows or forgets it. The tech lead's plan starts with a line `Plan: …`.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.c36986",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix (the editor): the Nuclear workspace follows VS Code's folder as VS Code does: no project of another window, nor a deleted one, nor the last workspace opened elsewhere.",
+    "- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.",
+    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
+    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
+    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
