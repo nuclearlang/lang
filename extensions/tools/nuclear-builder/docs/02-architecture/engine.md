@@ -111,7 +111,9 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line
   for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already
   right; skipped, and said, when the role is local). QA's plan is the list: the run stops there until the
-  user goes on with every check of theirs that is on marked (`checks <id> mark <check> passed|failed`).
+  user goes on with every check of theirs that is on, of the stations up to Quality, marked (`checks <id> mark
+  <check> passed|failed`); a check of the user's with `gate = true` (*the user approves the analysis*, the design, QA's
+  plan, the push) is marked by the user's yes at its station's gate, never asked twice.
 - **Delivery**, approved: `git switch -c factory/<id>`, `git add` of the files the run wrote and the spec's folder,
   `git commit` with git's own identity (the user's; no other author), `git push -u origin`, `gh pr create
   --body-file <the spec's folder>/pr.md`. Never a merge.

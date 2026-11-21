@@ -35,6 +35,8 @@ title_es = "El usuario aprueba el pull request antes de subir nada"
 station = "delivery"
 on = true
 by = "user"
+# answered by the station's gate: the user's yes there marks it, never asked twice
+gate = true
 prompt = "Read specs/{{id}}/pr.md and the change; approve the push and the pull request, or say what to change. The merge stays yours."
 
 [[check]]

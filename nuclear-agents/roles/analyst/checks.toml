@@ -26,4 +26,6 @@ title_es = "El usuario lee el análisis y responde las preguntas"
 station = "analysis"
 on = true
 by = "user"
+# answered by the station's gate: the user's yes there marks it, never asked twice
+gate = true
 prompt = "Read specs/{{id}}/analysis.md and questions.md; answer the questions and approve, or change, the acceptance criteria."

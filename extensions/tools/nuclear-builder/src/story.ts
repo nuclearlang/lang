@@ -39,7 +39,8 @@ export function storyOf(run: Run): StoryBeat[] {
     const stations = run.stages.filter((s) => beatOf(s.id) === id);
     const steps = stations.flatMap((s) => s.steps);
     const state = beatState(stations);
-    const made = (form: string, ...args: (string | number)[]) => ({ key: `flow.story.made.${id}.${form}`, args });
+    // one of a count is said in the singular (`.one`): '1 decision taken', not '1 decisions'
+    const made = (form: string, ...args: (string | number)[]) => ({ key: `flow.story.made.${id}.${form}${args.length === 1 && args[0] === 1 ? '.one' : ''}`, args });
     if (id === 'understand') return { id, stations, state, made: run.spec.criteria.length ? made('criteria', run.spec.criteria.length) : made('spec') };
     if (id === 'design') {
       const decisions = steps.reduce((n, x) => n + (x.decisions?.length ?? 0), 0);

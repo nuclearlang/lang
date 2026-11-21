@@ -8,6 +8,8 @@ title_es = "El usuario aprueba el plan de pruebas antes de que corra ninguna com
 station = "quality"
 on = true
 by = "user"
+# answered by the station's gate: the user's yes there marks it, never asked twice
+gate = true
 prompt = "Read specs/{{id}}/test-plan.md; switch checks on or off, add your own, and approve."
 
 [[check]]

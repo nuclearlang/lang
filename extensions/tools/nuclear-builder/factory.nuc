@@ -1274,6 +1274,19 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     saveChecks(root(), "${run["id"]}", checks)
     ok
 
+  // The user's checks of a station that its gate answers (`gate = true`), marked passed by the user's yes there: never
+  // asked twice.
+  gateChecks(station: string) void
+    checks = loadChecks(root(), "${run["id"]}")
+    marked = false
+    for c in checks
+      if c["gate"] == true and c["station"] == station and c["by"] == "user" and c["state"] == "pending"
+        c["state"] = "passed"
+        c["note"] = "approved at the gate"
+        marked = true
+    if marked
+      saveChecks(root(), "${run["id"]}", checks)
+
   // A gate after a station: the user approves, asks for a change (the station's role works again with it), or the
   // run waits.
   gate(st: <string, any>, role: Role) boolean
@@ -1290,6 +1303,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       answer = askUser(asked)
       if answer["answer"] == "approve" or answer["answer"] == "yes"
         end(step(st, "You approved it", "you", "", "youApproved"), "passed", "${answer["text"] ?? ""}")
+        gateChecks("${st["id"]}")
         return true
       if answer["answer"] != "change"
         throw RunStop("you stopped the run at the ${STATION_INFO["${st["id"]}"]!["title"]}")
@@ -1319,7 +1333,10 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       answer = askUser({ "id": "qa-plan", "kind": "checks", "station": "quality", "question": "QA's plan is in ${specPathOf(run)}/checks.json: switch checks, add yours, run yours and mark them (nuclear-builder checks ${run["id"]} ...). Go on?", "key": "qaPlan", "args": [] as string[], "checks": "${specPathOf(run)}/checks.json" })
       if answer["answer"] != "yes" and answer["answer"] != "approve"
         throw RunStop("waiting for the checks of QA's plan")
-      left = loadChecks(root(), "${run["id"]}").filter((c) => c["on"] == true and c["by"] == "user" and c["state"] == "pending")
+      gateChecks("quality")
+      // only the checks of the stations up to Quality: Delivery's are asked at Delivery
+      up = ["analysis", "design", "tests", "code", "quality"]
+      left = loadChecks(root(), "${run["id"]}").filter((c) => c["on"] == true and c["by"] == "user" and c["state"] == "pending" and "${c["station"]}" in up)
       if left.isEmpty
         end(step(st, "You went on with QA's plan", "you", "", "youWentOn"), "passed", "")
         return true
@@ -1341,6 +1358,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       end(step(st, "No pull request", "you", "", "noPullRequest"), "skipped", "you did not approve the delivery")
       return true
     end(step(st, "You approved the delivery", "you", "", "youApprovedDelivery"), "passed", "")
+    gateChecks("delivery")
     branch = "factory/${specId}"
     files = [...((run["writes"] ?? []) as <string, any>[]).map((w) => "${w["path"]}"), "${specPathOf(run)}"].unique().filter((f) => Path(root(), f).exists())
     title = "${(run["spec"] as <string, any>)["title"]}"

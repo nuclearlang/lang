@@ -33,6 +33,9 @@ seedChecks(root: string, id: string, roles: Role[], team: <string, any>) <string
       // `expect = "fail"`: the command must fail (the tests written before their code)
       if c["expect"] == "fail"
         check["expect"] = "fail"
+      // `gate = true`: a check of the user's that the station's gate answers (their yes there marks it)
+      if c["gate"] == true
+        check["gate"] = true
       // the title in Spanish beside the English (checks.toml's `title_es`): the screens show the one of their language
       if c["title_es"] != null
         check["title_es"] = c["title_es"]
