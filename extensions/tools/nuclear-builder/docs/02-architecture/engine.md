@@ -208,7 +208,10 @@ same station in the process: the run fails as before, the diagnosis kept for the
 *Why it failed, and the repair* (`skipped`: whatever it wrote is undone) and an entry of the run's `repairs`
 (`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`), what the team's channel tells; its cost is the
 run's. When it is Quality that failed, its findings are in the code: the diagnosis goes to the Code station, which
-works once more with it, and Quality judges again.
+works once more with it, and Quality judges again. What the station cannot fix alone (`NOT FIXABLE`: a criterion that contradicts a contract,
+a decision of the architect's) is asked of the user with its diagnosis (`userDecides`, the question `decide-<station>`,
+kept in `deciding` so a resumed run asks again without working the station first): a change with the user's
+decision works the station once more with it, an approval goes on as it is, later leaves the run waiting.
 
 ### The run file
 

@@ -673,16 +673,23 @@ testAFailedStationIsDiagnosedOnceAndRunsAgainWithTheDiagnosis(tmpPath: Path, mon
   expect(done["repairing"] == null and stepsOf(done).any((s) => s["title"] == "Why it failed, and the repair" and s["status"] == "skipped"))
 
 // A diagnosis that says NOT FIXABLE stops the run for the user: no second attempt, the diagnosis kept.
-testADiagnosisThatCannotFixItStopsTheRun(tmpPath: Path, monkeypatch: any) void
+// What the station cannot fix alone is asked of the user with its diagnosis (spec 024 requirement 6): nobody answers,
+// the run waits on it (the station not worked again); resumed with the user's decision, the station works once more
+// with it in its task.
+testADiagnosisThatCannotFixItAsksTheUser(tmpPath: Path, monkeypatch: any) void
   root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
   repairingClaude(tmpPath, monkeypatch, "NOT FIXABLE\nThe user must decide which ADRs apply.")
   team = repairTeam()
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
   done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
   repairs: <string, any>[] = done["repairs"]!
-  expect(done["status"] == "failed" and repairs.length == 1 and repairs[0]["fixable"] == false)
+  waiting: <string, any> = done["waiting"]!
+  expect(done["status"] == "waiting" and repairs.length == 1 and repairs[0]["fixable"] == false and waiting["id"] == "decide-design" and "which ADRs apply" in "${waiting["question"]}", json.dumps(waiting))
   works = tmpPath.joinpath("prompts.log").readText().split("=====").filter((p) => "Design what the generators did not write" in p)
   expect(works.length == 1)
+  again = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), (q: <string, any>) => { "answer": "change", "text": "Only ADR-0001 applies." }, (e: <string, any>) => null, { "preflight": false }).start()
+  decided = tmpPath.joinpath("prompts.log").readText().split("=====").filter((p) => "Design what the generators did not write" in p)
+  expect(decided.length == 2 and "The user decided: Only ADR-0001 applies." in decided.last and again["deciding"] == null, "${decided.length}")
 
 // spec 024 requirement 2: one run of two specs, one bill: each spec through every station in order, the first kept in
 // its entry with its stations, what its steps wrote settled (never undone by the second's failure).

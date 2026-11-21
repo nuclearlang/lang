@@ -1577,7 +1577,7 @@ function gate(r) {
       + '<div class="muted">' + esc(mine.length ? t('qaPlanMine', mine.length) : t('qaPlanReady')) + '</div>'
       + '<div class="acts"><button data-over="1">☰ ' + esc(t('openConsole')) + '</button><button class="primary" data-answer="yes"' + (mine.length ? ' disabled title="' + esc(t('markYoursFirst')) + '"' : '') + '>▶ ' + esc(t('goOn')) + '</button><button data-answer="stop">' + esc(t('later')) + '</button></div></div>';
   }
-  return '<div class="gate" role="alert"><div class="q"><span class="bell">?</span>' + (role ? av(role) : '') + '<b>' + esc(st ? t('gateAsk', st.title, nameOf(role)) : w.question) + '</b></div>'
+  return '<div class="gate" role="alert"><div class="q"><span class="bell">?</span>' + (role ? av(role) : '') + '<b>' + esc(st && w.key !== 'decide' ? t('gateAsk', st.title, nameOf(role)) : w.question) + '</b></div>'
     + (docs ? '<div class="docs"><span class="muted">' + esc(t('readFirst')) + '</span>' + docs + '</div>' : '')
     + ((st && st.needsYou && st.needsYou.length) ? '<div class="decide"><span class="muted">' + esc(t('decideAlso')) + '</span><ul>' + st.needsYou.map((q) => '<li>' + esc(q) + '</li>').join('') + '</ul></div>' : '')
     + '<textarea id="changeText" placeholder="' + esc(t('changePlaceholder')) + '"></textarea>'

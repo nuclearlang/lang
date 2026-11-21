@@ -180,9 +180,12 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
           st["status"] = "running"
           st["started"] = st["started"] ?? nowMs()
           save()
-          ok = station(st)
+          // a decision left for the user (`deciding`): asked again on resume, the station not worked again before it
+          deciding: <string, any>? = run["deciding"]
+          waits = deciding != null and deciding!["station"] == st["id"]
+          ok = waits ? false : station(st)
           // diagnosed once; when the diagnosis says the station can fix it, the station runs once more with it
-          if not ok and repair(st)
+          if not ok and not waits and repair(st)
             // Quality's findings are in the code: the Developer works again with the diagnosis, then Quality judges again
             code = stages().find((x) => "${x["id"]}" == "code")
             if "${st["id"]}" == "quality" and code != null and wanted(code!)
@@ -197,6 +200,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
             else
               ok = station(st)
             run["repairing"] = null
+          // what the station cannot fix alone is asked of the user, with the diagnosis (spec 024 requirement 6)
+          if not ok
+            ok = userDecides(st)
           st["status"] = ok ? "passed" : "failed"
           st["ended"] = nowMs()
           save()
@@ -1298,6 +1304,37 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       ok = ok and passed
     saveChecks(root(), "${run["id"]}", checks)
     ok
+
+  // A station its diagnosis says it cannot fix alone (a contradiction between a criterion and a contract, a decision
+  // of the architect's): the run waits with the diagnosis as its question. Asking for a change with the user's decision
+  // works the station once more with it; approving goes on as it is; later leaves the run waiting. False: no
+  // diagnosis to ask with (a local role, no answer from the provider).
+  userDecides(st: <string, any>) boolean
+    id = "${st["id"]}"
+    kept: <string, any>? = run["deciding"]
+    mine = ((run["repairs"] ?? []) as <string, any>[]).filter((x) => x["station"] == id and x["fixable"] != true and "${x["diagnosis"] ?? ""}".trim().length > 0)
+    diagnosis = kept != null and kept!["station"] == id ? "${kept!["diagnosis"]}" : mine.isEmpty ? "" : "${mine.last["diagnosis"]}"
+    if diagnosis.isEmpty
+      return false
+    run["deciding"] = { "station": id, "diagnosis": diagnosis }
+    save()
+    shown = diagnosis.length > 900 ? "${diagnosis.substring(0, 899)}…" : diagnosis
+    answer = askUser({ "id": "decide-${id}", "kind": "gate", "station": id, "question": "The ${STATION_INFO[id]!["title"]} cannot fix this alone; its diagnosis: ${shown} Ask for a change with your decision, approve to go on as it is, or later.", "key": "decide", "args": [id, shown], "documents": [] as string[] })
+    run["deciding"] = null
+    said = "${answer["answer"] ?? ""}"
+    if said == "approve" or said == "yes"
+      end(step(st, "You went on as it is", "you", "", "youApproved"), "passed", "")
+      return true
+    if said != "change"
+      throw RunStop("you left the ${STATION_INFO[id]!["title"]} for later")
+    end(step(st, "You decided", "you", "", "youAskedChange"), "passed", "${answer["text"] ?? ""}")
+    undoFailed()
+    st["phases"] = ((st["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
+    run["repairing"] = { "station": id, "diagnosis": "${diagnosis}\n\nThe user decided: ${answer["text"] ?? ""}" }
+    save()
+    done = station(st)
+    run["repairing"] = null
+    done
 
   // A decision only the user can take, found by a check of the station (`NEEDS YOU:`): asked at the station's gate.
   youDecide(st: <string, any>, question: string) void
