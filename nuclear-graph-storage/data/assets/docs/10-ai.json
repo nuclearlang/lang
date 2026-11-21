@@ -2080,7 +2080,26 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-a-failure-diagnosed-and-repaired-spec-024-requi",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-a-failure-diagnosed-and-repaired-spec-024-requi.c7db1d",
+   "type": "context",
+   "title": "The engine — A failure diagnosed and repaired (spec 024 requirement 6)",
+   "summary": "a decision of the architect's) is asked of the user with its diagnosis (`userDecides`, the question `decide-<station>`, kept in `deciding` so a resumed run asks again without working the station first): a change with the user's decision works the station once more with it, an approval goes on as…",
+   "body": [
+    "a decision of the architect's) is asked of the user with its diagnosis (`userDecides`, the question `decide-<station>`,",
+    "kept in `deciding` so a resumed run asks again without working the station first): a change with the user's",
+    "decision works the station once more with it, an approval goes on as it is, later leaves the run waiting."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-a-failure-diagnosed-and-repaired-spec-024-requi.d58f7e",
    "type": "context",
    "title": "The engine — A failure diagnosed and repaired (spec 024 requirement 6)",
    "summary": "A station that fails (a step, a check by prompt, QA's report) gets one diagnosis (`repair`; its verdict read through any Markdown, `verdictOf`: a real one came back `FIXABLE`) by the provider of its own role: its last failed step's summary and the tail of its log (a check's findings: 6,000…",
@@ -2096,7 +2115,7 @@
     "*Why it failed, and the repair* (`skipped`: whatever it wrote is undone) and an entry of the run's `repairs`",
     "(`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`), what the team's channel tells; its cost is the",
     "run's. When it is Quality that failed, its findings are in the code: the diagnosis goes to the Code station, which",
-    "works once more with it, and Quality judges again."
+    "works once more with it, and Quality judges again. What the station cannot fix alone (`NOT FIXABLE`: a criterion that contradicts a contract,"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -4932,6 +4951,26 @@
     "`test-plan.md` and the tests, the code with `work-log.md`, `qa-report.md`, then `definition-of-done.md`,",
     "`user-story.md` and `pr.md`. DevOps (the Delivery station) makes the branch, the commit in your name and the pull request only after you",
     "approve; it never merges. The run's drawer lists the documents."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#what-only-you-can-decide",
+   "type": "guide",
+   "title": "Follow a run — What only you can decide",
+   "summary": "A check that finds something only you can decide (replacing your CI file, choosing the CI host, a repository to create) does not fail the run: the station's gate lists it under *Only you can decide*, one short question each, with the station's own question.",
+   "body": [
+    "A check that finds something only you can decide (replacing your CI file, choosing the CI host, a repository to",
+    "create) does not fail the run: the station's gate lists it under *Only you can decide*, one short question each, with",
+    "the station's own question. QA's *Go on* waits only for your own checks up to Quality: those a gate answers (you",
+    "approve the analysis, the design, QA's plan, the push) are marked by your yes there."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
