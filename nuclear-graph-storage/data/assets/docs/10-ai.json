@@ -16539,6 +16539,33 @@
    }
   },
   {
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.a32e85",
+   "type": "context",
+   "title": "The UI (`ui/`) — The screen",
+   "summary": "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead, also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's `face`, else their initials on a color of their own, or the…",
+   "body": [
+    "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead,",
+    "also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's",
+    "`face`, else their initials on a color of their own, or the chat's own mark, name, role chip, *Tech lead* and *paid* chips, time, cost); the text as markdown built into",
+    "elements (fenced code, inline code, bold, italic, strike, quotes, headings `#`–`####`, rules `---`, tables `| a | b |` over",
+    "`|---|---|` in their own sideways scroll, lists bulleted, numbered, of tasks `- [x]` and nested by two spaces, links,",
+    "`@mentions`, `#channels` that open them, `spec:`/`run:`), never as HTML (an agent's HTML table shows as text); the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts",
+    "never run) and a service's by URL; a host's log (`details`) folded under its message (`LogFold`: one line, *Log*, opens",
+    "it in a monospace block, closed by default, its height capped; no `aria-expanded` yet: a named argument cannot spell",
+    "it); the buttons of a member's question; reactions (the user's own marked, click to",
+    "add or take away) and six quick ones on hover with *Reply in thread*; a thread's count and last reply. The thread",
+    "opens beside the channel."
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/ui.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.a507eb",
    "type": "context",
    "title": "The UI (`ui/`) — The screen",
@@ -16608,32 +16635,6 @@
     "| `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels`, `agent.changed` or `workspace` event; only a `message` of the open channel marks it read again (`POST …/read`): the read itself comes back as a `channels` event of that channel, which only reads the list (0.87.0 marked it read again, a loop of thousands of events a second that kept the service near one core and the list never settled); `chooseAgent` (`PUT …/agent`) |",
     "| `MessagesManager` | the open channel's messages outside threads | a `message` event of that channel; it also says, sends a GIF, reacts, clicks |",
     "| `ThreadManager` | the open thread (`?thread=`) | a `message` event of its channel |"
-   ],
-   "sources": [
-    "nuclear-chat/docs/02-architecture/ui.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.f815bb",
-   "type": "context",
-   "title": "The UI (`ui/`) — The screen",
-   "summary": "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead, also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's `face`, else their initials on a color of their own, or the…",
-   "body": [
-    "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead,",
-    "also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's",
-    "`face`, else their initials on a color of their own, or the chat's own mark, name, role chip, *Tech lead* and *paid* chips, time, cost); the text as markdown built into",
-    "elements (fenced code, inline code, bold, italic, strike, quotes, lists, links, `@mentions`, `#channels` that open",
-    "them, `spec:`/`run:`), never as HTML; the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts",
-    "never run) and a service's by URL; a host's log (`details`) folded under its message (`LogFold`: one line, *Log*, opens",
-    "it in a monospace block, closed by default, its height capped; no `aria-expanded` yet: a named argument cannot spell",
-    "it); the buttons of a member's question; reactions (the user's own marked, click to",
-    "add or take away) and six quick ones on hover with *Reply in thread*; a thread's count and last reply. The thread",
-    "opens beside the channel."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"

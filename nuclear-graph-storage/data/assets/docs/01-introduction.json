@@ -305,11 +305,16 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.235e5e",
+   "id": "doc:CHANGELOG.md#unreleased.0be422",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": "- **Teams that work like human teams** (spec 023, the engine): Nuclear Atlas only informs (Nuclear, the workspace and the projects, from the Smart Graph); asked for a task it names the free teams (no run in progress) with their tech lead, or offers to make one with the MCP server's team tools; its MCP servers run with `--informs` (`nuclear-mcp --informs`, `nuclear-builder mcp --informs`: no tool that writes a spec, starts a run or builds). The tech lead's first answer to a task is the plan: what, through which stations, who of the team does each part; then the spec and the run. A team has its `method` (Scrum by default) and `instructions`, in every member's prompt (`nuclear-builder team update --method … --instructions …`), and a model for every member (`--kind --provider --model`, `--no-brain`; a member's own wins, `team member update --team-brain` gives it back; `team show` gives each member's `inheritsBrain`). `team list` gives each team's `lead`, its runs in progress and whether it is `free`. `chat-host` gives every team, only the tech leads and Atlas `listed`; Nuclear Chat opens a direct message only for a listed member, keeps the older ones readable (out of the sidebar, found by the switcher). The spending is asked only for an API paid by use; an agent's subscription is not asked unless `forceConfirm`. The MCP server's `team_create` and `team_edit` take `method`, `instruc",
+   "body": [
+    "- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.",
+    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
+    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
+    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -320,15 +325,11 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.3a5854",
+   "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": [
-    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
-    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*).",
-    "- **Nuclear Builder for big work, told as a story** (spec 024): an agent measures a task before the work (≤ 3 files and ≤ 100 lines small, ≤ 10 files and ≤ 400 lines medium: its own; larger, a new feature or several specs: it proposes Nuclear Builder with its count as the reason; playbook `size-a-task`). A run takes several specs (`run_start` `specs`), worked in order, one bill. The specs' language is asked once per project (the editor's offered; `spec new --language`, `spec_create` `language`, kept as `specLanguage`), their headings included."
-   ],
+   "body": "- **Teams that work like human teams** (spec 023, the engine): Nuclear Atlas only informs (Nuclear, the workspace and the projects, from the Smart Graph); asked for a task it names the free teams (no run in progress) with their tech lead, or offers to make one with the MCP server's team tools; its MCP servers run with `--informs` (`nuclear-mcp --informs`, `nuclear-builder mcp --informs`: no tool that writes a spec, starts a run or builds). The tech lead's first answer to a task is the plan: what, through which stations, who of the team does each part; then the spec and the run. A team has its `method` (Scrum by default) and `instructions`, in every member's prompt (`nuclear-builder team update --method … --instructions …`), and a model for every member (`--kind --provider --model`, `--no-brain`; a member's own wins, `team member update --team-brain` gives it back; `team show` gives each member's `inheritsBrain`). `team list` gives each team's `lead`, its runs in progress and whether it is `free`. `chat-host` gives every team, only the tech leads and Atlas `listed`; Nuclear Chat opens a direct message only for a listed member, keeps the older ones readable (out of the sidebar, found by the switcher). The spending is asked only for an API paid by use; an agent's subscription is not asked unless `forceConfirm`. The MCP server's `team_create` and `team_edit` take `method`, `instruc",
    "sources": [
     "CHANGELOG.md"
    ],
