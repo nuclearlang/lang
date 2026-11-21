@@ -2912,13 +2912,15 @@
   {
    "id": "tool:nuclear.update",
    "type": "cli",
-   "title": "`nuclear update` — Install the latest release (the installer, run again; nothing when it is already here,…",
-   "summary": "Install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+   "title": "`nuclear update` — Install the latest release now (the installer, run again; nothing when it is already here,…",
+   "summary": "Install the latest release now (the installer, run again; nothing when it is already here, --reinstall: all the same). Automatic: a newer release (looked for once a day, on a use) installs itself when you stop working (30 min without a use) or within 12 hours; --check [--json] says what is known, --auto on|off, NUCLEAR_AUTO_UPDATE=0 or CI: never",
    "body": [
     "```text",
-    "  nuclear update [--reinstall]                                install the latest release (the installer, run again; nothing when it is",
-    "                                                              already here, --reinstall: all the same); in a terminal every",
-    "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+    "  nuclear update [--reinstall]                                install the latest release now (the installer, run again; nothing when it",
+    "                                                              is already here, --reinstall: all the same). Automatic: a newer release",
+    "                                                              (looked for once a day, on a use) installs itself when you stop working",
+    "                                                              (30 min without a use) or within 12 hours; --check [--json] says what",
+    "                                                              is known, --auto on|off, NUCLEAR_AUTO_UPDATE=0 or CI: never",
     "```"
    ],
    "keys": [
@@ -2940,7 +2942,7 @@
       "usage": "nuclear update [--reinstall]",
       "alias": "",
       "note": "",
-      "does": "Install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)"
+      "does": "Install the latest release now (the installer, run again; nothing when it is already here, --reinstall: all the same). Automatic: a newer release (looked for once a day, on a use) installs itself when you stop working (30 min without a use) or within 12 hours; --check [--json] says what is known, --auto on|off, NUCLEAR_AUTO_UPDATE=0 or CI: never"
      }
     ]
    }
