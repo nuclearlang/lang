@@ -742,31 +742,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#folders.652ca0",
-   "type": "readme",
-   "title": "The installers and the release — Folders",
-   "summary": "80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
-   "body": [
-    "80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the",
-    "  sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link",
-    "  (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
-    "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
-    "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:",
-    "  `package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
-    "- `dist/`: what `package.sh` writes (ignored by git).",
-    "- `docs/`: this project's documents (the table below)."
-   ],
-   "sources": [
-    "installer/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/AGENTS.md#folders.c7bb75",
+   "id": "doc:installer/AGENTS.md#folders.3234bb",
    "type": "readme",
    "title": "The installers and the release — Folders",
    "summary": "`nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
@@ -782,9 +758,34 @@
     "- `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).",
     "- `release/delivery.sh`: the delivery gate, one command that must pass before a tag (its header lists the steps; logs",
     "  in `target/delivery/`). `release/after-release.sh`: the checks after the tag, where the user gets the release.",
-    "- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.",
+    "- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user;",
+    "  `editor.Dockerfile` adds VS Code and a virtual display, to drive the extension there ([the runbook](docs/06-runbooks/release.md))."
+   ],
+   "sources": [
+    "installer/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/AGENTS.md#folders.f77ced",
+   "type": "readme",
+   "title": "The installers and the release — Folders",
+   "summary": "`package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of 80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the sign once); `UPD1` updates the previous published release and runs…",
+   "body": [
     "- `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive",
-    "  `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of"
+    "  `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of",
+    "  80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the",
+    "  sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link",
+    "  (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
+    "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
+    "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:",
+    "  `package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
+    "- `dist/`: what `package.sh` writes (ignored by git).",
+    "- `docs/`: this project's documents (the table below)."
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -1614,6 +1615,28 @@
    }
   },
   {
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.0dee74",
+   "type": "context",
+   "title": "Release, and test an installer — Test an installer without touching your machine",
+   "summary": "virtual display, the public installer from the internet; the extension is driven over VS Code's debugging port, published to the host through `socat` (Electron listens only on the container's own `127.0.0.1`).",
+   "body": [
+    "- **The clean machine with an editor** (`clean-machine/editor.Dockerfile`, on top of the image above): VS Code and a",
+    "  virtual display, the public installer from the internet; the extension is driven over VS Code's debugging port,",
+    "  published to the host through `socat` (Electron listens only on the container's own `127.0.0.1`). Start Electron",
+    "  itself (`/usr/share/code/code`, not the `code` launcher, which returns and takes `xvfb-run`'s display with it), and",
+    "  set `\"security.workspace.trust.enabled\": false` and `\"window.dialogStyle\": \"custom\"` before it starts (the trust",
+    "  question and VS Code's dialogs are native windows a debugging port cannot reach)."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.400988",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
@@ -1660,6 +1683,31 @@
     "  who can sudo, systemd as on a real machine (so the AI set-up registers its services the usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
     "  Python). The installer reads the archive mounted at",
     "  `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`)."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.b8ee61",
+   "type": "context",
+   "title": "Release, and test an installer — Test an installer without touching your machine",
+   "summary": "docker build -t nuclear-clean-editor -f installer/release/clean-machine/editor.Dockerfile installer/release/clean-machine docker run -d --name nuclear-editor --cgroupns=private --security-opt writable-cgroups=true --cpus 2 --memory 4g \\ docker exec nuclear-editor su - dev -c 'curl -fsSL…",
+   "body": [
+    "```sh",
+    "  docker build -t nuclear-clean-editor -f installer/release/clean-machine/editor.Dockerfile installer/release/clean-machine",
+    "  docker run -d --name nuclear-editor --cgroupns=private --security-opt writable-cgroups=true --cpus 2 --memory 4g \\",
+    "    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -p 127.0.0.1:9444:9444 nuclear-clean-editor",
+    "  docker exec nuclear-editor su - dev -c 'curl -fsSL https://nuclearlang.github.io/install.sh | sh'",
+    "  docker exec -d nuclear-editor su - dev -c 'xvfb-run -a -s \"-screen 0 1600x1000x24\" /usr/share/code/code \\",
+    "    --no-sandbox --disable-gpu --remote-debugging-port=9443 ~/projects'",
+    "  docker exec -d nuclear-editor socat TCP-LISTEN:9444,fork,reuseaddr TCP:127.0.0.1:9443   # apt-get install socat first",
+    "  ```"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
