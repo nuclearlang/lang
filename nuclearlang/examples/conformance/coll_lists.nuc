@@ -21,6 +21,7 @@ main() void
   print("test", xs.any((x) => x == 8), xs.all((x) => x > 0), xs.all((x) => x > 2), xs.count((x) => x % 2 == 1))
   print("fold", xs.reduce(0, (a, b) => a + b), xs.reduce(1, (a, b) => a * b), xs.reduce("", (a, b) => "${a}${b}"), xs.sum(), xs.min(), xs.max())
   print("slice", xs.slice(1, 3).join(","), xs.slice(2).join(","), xs.take(2).join(","), xs.skip(2).join(","), xs.take(0).length, xs.take(99).length, xs.skip(99).length)
+  print("clamp", xs.slice(3, 99).join(","), xs.slice(9).length, xs.slice(4, 2).length, xs.slice(-2).join(","), xs.slice(0, -1).length)
   print("order", xs.sorted().join(","), xs.reversed().join(","), xs.sorted().reversed().join(","), xs.join(","))
   ys = xs.copy()
   ys.sort()

@@ -93,9 +93,11 @@ each printing a labelled line per case, with the text every target must print in
 
 Rules:
 
-- **Every change to the transpiler, a dialect or the library runs the three folders** before it is done:
-  `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh` and
-  `DIR=examples/conformance tools/stdlib-check.sh`, every line `ok`.
+- **Every change to the transpiler, a dialect or the library runs the three folders and the library of helpers**
+  before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`,
+  `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (a real
+  library of several files: generics, lambdas given to functions, `any` data, imports between files), every line
+  `ok`.
 - A case reads its values at run time (a function's result, a parameter), never a constant the target's checker
   folds: `true and false` written as literals is dead code for Dart and an error for TypeScript, and proves nothing.
 - A new feature of the language adds its cases to the program of its area, or a new program; a bug found in a

@@ -18,7 +18,8 @@ startsWith = "{{recv}}.startsWith({{args}})"
 endsWith = "{{recv}}.endsWith({{args}})"
 indexOf = "{{recv}}.indexOf({{args}})"
 lastIndexOf = "{{recv}}.lastIndexOf({{args}})"
-substring = "{{recv}}.substring({{args}})"
+# `slice`, not `substring`: an end before the start is an empty text (substring swaps them), as in every other target
+substring = "{{recv}}.slice({{args}})"
 split = "{{recv}}.split({{arg0}})"
 chars = "[...{{recv}}]"
 # JavaScript reads `$&` and `$1` in a replacement text: a text that is not a plain literal is given as a function.

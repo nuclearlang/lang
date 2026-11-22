@@ -192,7 +192,10 @@ renamed_params = { template = "@_public_names({{#renamed}}{{local}}=\"{{name}}\"
 # does it through `_print`)
 show_nullable = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
 show_bool = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
+show_any = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
 optional_member = "({{object}}.{{name}} if {{object}} is not None else None)"
+# the object is a call: made once
+optional_member_once = { template = "_opt({{object}}, lambda v: v.{{name}})", helper = "def _opt[T, R](value: T | None, read: Callable[[T], R]) -> R | None:\n    return None if value is None else read(value)" }
 # a chain after a `?.` (`u?.name.upper()`): all of it waits for each receiver, as `?.` does in TypeScript and Dart
 optional_chain = "({{value}} if {{conds}} else None)"
 optional_cond = "{{object}} is not None"
@@ -204,7 +207,7 @@ map_get_or = "{{object}}.get({{index}}, {{default}})"
 await = "await {{expr}}"
 ternary = "{{then}} if {{cond}} else {{else}}"
 # `x is int` must not accept booleans (bool is a subclass of int in Python)
-is = "{{#t.list}}isinstance({{expr}}, list){{/t.list}}{{^t.list}}{{#t.is.int}}type({{expr}}) is int{{/t.is.int}}{{^t.is.int}}isinstance({{expr}}, {{type}}){{/t.is.int}}{{/t.list}}"
+is = "{{#t.map}}isinstance({{expr}}, dict){{/t.map}}{{^t.map}}{{#t.list}}isinstance({{expr}}, list){{/t.list}}{{^t.list}}{{#t.is.int}}type({{expr}}) is int{{/t.is.int}}{{^t.is.int}}isinstance({{expr}}, {{type}}){{/t.is.int}}{{/t.list}}{{/t.map}}"
 cast = "cast({{type}}, {{expr}})"
 non_null = { template = "_sure({{expr}})", helper = "def _sure[T](x: T | None) -> T:\n    assert x is not None\n    return x" }   # pyright: the value is not None
 # never written: options.hoist_block_lambdas turns a lambda with a block into a local_function

@@ -1,0 +1,255 @@
+// Lists: the helpers of lodash's Array category that Nuclear's library does not have already
+// (`map`, `filter`, `take`, `skip`, `unique`, `flatten`, `reversed`... are members of every list).
+
+// A pair of values: what `zip`, `partition` and `toPairs` give, since Nuclear has no tuples.
+Pair<A, B>(first: A, second: B)
+
+// The list split into groups of `size`; the last group holds what is left.
+chunk<T>(xs: T[], size: int) T[][]
+  out: T[][] = []
+  if size < 1
+    return out
+  i = 0
+  while i < xs.length
+    out.add(xs.slice(i, i + size))
+    i += size
+  out
+
+// The values that are not null.
+compact<T>(xs: T?[]) T[]
+  out: T[] = []
+  for x in xs
+    if x != null
+      out.add(x)
+  out
+
+// The values of `xs` that are not in `ys`, in order.
+difference<T>(xs: T[], ys: T[]) T[]
+  xs.filter((x) => not (x in ys))
+
+// `difference` comparing what `key` gives for each value.
+differenceBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]
+  seen = Set.of(ys.map((y) => key(y)))
+  xs.filter((x) => not (key(x) in seen))
+
+// `difference` with `same` deciding whether two values are equal.
+differenceWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]
+  xs.filter((x) => not ys.any((y) => same(x, y)))
+
+// The list without its last `n` values.
+dropRight<T>(xs: T[], n: int = 1) T[]
+  xs.take(Math.max(xs.length - Math.max(n, 0), 0))
+
+// The list without the first values for which `test` is true.
+dropWhile<T>(xs: T[], test: (x: T) => boolean) T[]
+  i = 0
+  while i < xs.length and test(xs[i])
+    i += 1
+  xs.skip(i)
+
+// The list without the last values for which `test` is true.
+dropRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]
+  end = xs.length
+  while end > 0 and test(xs[end - 1])
+    end -= 1
+  xs.take(end)
+
+// The first values for which `test` is true.
+takeWhile<T>(xs: T[], test: (x: T) => boolean) T[]
+  i = 0
+  while i < xs.length and test(xs[i])
+    i += 1
+  xs.take(i)
+
+// The last `n` values.
+takeRight<T>(xs: T[], n: int = 1) T[]
+  xs.skip(Math.max(xs.length - Math.max(n, 0), 0))
+
+// The last values for which `test` is true.
+takeRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]
+  start = xs.length
+  while start > 0 and test(xs[start - 1])
+    start -= 1
+  xs.skip(start)
+
+// Sets `value` from `start` up to `end` (not included), in place.
+fill<T>(xs: T[], value: T, start: int = 0, end?: int) T[]
+  last = Math.min(end ?? xs.length, xs.length)
+  i = Math.max(start, 0)
+  while i < last
+    xs[i] = value
+    i += 1
+  xs
+
+// The index of the last value for which `test` is true, or -1.
+findLastIndex<T>(xs: T[], test: (x: T) => boolean) int
+  i = xs.length - 1
+  while i >= 0
+    if test(xs[i])
+      return i
+    i -= 1
+  - 1
+
+// The last value for which `test` is true.
+findLast<T>(xs: T[], test: (x: T) => boolean) T?
+  i = findLastIndex(xs, test)
+  i < 0 ? null : xs[i]
+
+// Every value but the last.
+initial<T>(xs: T[]) T[]
+  xs.take(Math.max(xs.length - 1, 0))
+
+// Every value but the first.
+tail<T>(xs: T[]) T[]
+  xs.skip(1)
+
+// The value at `n`; a negative `n` counts from the end. Null when out of the list.
+nth<T>(xs: T[], n: int) T?
+  i = n < 0 ? xs.length + n : n
+  i < 0 or i >= xs.length ? null : xs[i]
+
+// The values that are in both lists, once each, in the order of `xs`.
+intersection<T>(xs: T[], ys: T[]) T[]
+  xs.filter((x) => x in ys).unique()
+
+// `intersection` comparing what `key` gives for each value.
+intersectionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]
+  seen = Set.of(ys.map((y) => key(y)))
+  uniqBy(xs.filter((x) => key(x) in seen), key)
+
+// `intersection` with `same` deciding whether two values are equal.
+intersectionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]
+  uniqWith(xs.filter((x) => ys.any((y) => same(x, y))), same)
+
+// The values of both lists, once each, in order.
+union<T>(xs: T[], ys: T[]) T[]
+  [...xs, ...ys].unique()
+
+// `union` comparing what `key` gives for each value.
+unionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]
+  uniqBy([...xs, ...ys], key)
+
+// `union` with `same` deciding whether two values are equal.
+unionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]
+  uniqWith([...xs, ...ys], same)
+
+// The first value of each key, in order.
+uniqBy<T>(xs: T[], key: (x: T) => string) T[]
+  seen = Set<string>()
+  out: T[] = []
+  for x in xs
+    if seen.add(key(x))
+      out.add(x)
+  out
+
+// The values without those `same` says were seen before.
+uniqWith<T>(xs: T[], same: (a: T, b: T) => boolean) T[]
+  out: T[] = []
+  for x in xs
+    if not out.any((y) => same(y, x))
+      out.add(x)
+  out
+
+// The values that are in only one of the lists, once each.
+xor<T>(xs: T[], ys: T[]) T[]
+  [...difference(xs, ys), ...difference(ys, xs)].unique()
+
+// `xor` comparing what `key` gives for each value.
+xorBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]
+  uniqBy([...differenceBy(xs, ys, key), ...differenceBy(ys, xs, key)], key)
+
+// The list without the given values.
+without<T>(xs: T[], values: T[]) T[]
+  difference(xs, values)
+
+// Removes the given values from the list, in place.
+pull<T>(xs: T[], values: T[]) T[]
+  kept = xs.filter((x) => not (x in values))
+  xs.clear()
+  xs.addAll(kept)
+  xs
+
+// Removes the values at `indexes` from the list, in place, and gives them in the order asked.
+pullAt<T>(xs: T[], indexes: int[]) T[]
+  taken = indexes.filter((i) => i >= 0 and i < xs.length).map((i) => xs[i])
+  kept: T[] = []
+  for i in 0..xs.length
+    if not (i in indexes)
+      kept.add(xs[i])
+  xs.clear()
+  xs.addAll(kept)
+  taken
+
+// Removes the values for which `test` is true from the list, in place, and gives them.
+remove<T>(xs: T[], test: (x: T) => boolean) T[]
+  removed = xs.filter((x) => test(x))
+  kept = xs.filter((x) => not test(x))
+  xs.clear()
+  xs.addAll(kept)
+  removed
+
+// The lowest index at which `value` keeps a sorted list of numbers sorted.
+sortedIndex(xs: double[], value: double) int
+  low = 0
+  high = xs.length
+  while low < high
+    mid = (low + high) ~/ 2
+    if xs[mid] < value
+      low = mid + 1
+    else
+      high = mid
+  low
+
+// The highest index at which `value` keeps a sorted list of numbers sorted.
+sortedLastIndex(xs: double[], value: double) int
+  low = 0
+  high = xs.length
+  while low < high
+    mid = (low + high) ~/ 2
+    if xs[mid] <= value
+      low = mid + 1
+    else
+      high = mid
+  low
+
+// `sortedIndex` for a list sorted by what `key` gives.
+sortedIndexBy<T>(xs: T[], value: T, key: (x: T) => double) int
+  sortedIndex(xs.map((x) => key(x)), key(value))
+
+// The index of `value` in a sorted list of numbers, by binary search, or -1.
+sortedIndexOf(xs: double[], value: double) int
+  i = sortedIndex(xs, value)
+  i < xs.length and xs[i] == value ? i : -1
+
+// A sorted list without its repeated values.
+sortedUniq<T>(xs: T[]) T[]
+  out: T[] = []
+  for x in xs
+    if out.isEmpty or out.last != x
+      out.add(x)
+  out
+
+// Pairs of the values at the same index; as long as the shorter list.
+zip<A, B>(xs: A[], ys: B[]) Pair<A, B>[]
+  out: Pair<A, B>[] = []
+  for i in 0..Math.min(xs.length, ys.length)
+    out.add(Pair(xs[i], ys[i]))
+  out
+
+// The two lists a list of pairs came from.
+unzip<A, B>(pairs: Pair<A, B>[]) Pair<A[], B[]>
+  Pair(pairs.map((p) => p.first), pairs.map((p) => p.second))
+
+// What `f` gives for the values at the same index.
+zipWith<A, B, R>(xs: A[], ys: B[], f: (a: A, b: B) => R) R[]
+  out: R[] = []
+  for i in 0..Math.min(xs.length, ys.length)
+    out.add(f(xs[i], ys[i]))
+  out
+
+// A map of each key to the value at its index.
+zipObject<V>(keys: string[], values: V[]) <string, V>
+  out: <string, V> = {}
+  for i in 0..Math.min(keys.length, values.length)
+    out[keys[i]] = values[i]
+  out

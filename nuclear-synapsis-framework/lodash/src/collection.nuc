@@ -1,0 +1,92 @@
+// Collections: the helpers of lodash's Collection category that Nuclear's library does not have already
+// (`map`, `filter`, `find`, `any`, `all`, `reduce`, `groupBy`, `sortedBy`, `x in xs`... are the library's).
+
+// How many values each key has.
+countBy<T>(xs: T[], key: (x: T) => string) <string, int>
+  out: <string, int> = {}
+  for x in xs
+    k = key(x)
+    out[k] = (out[k] ?? 0) + 1
+  out
+
+// The last value of each key.
+keyBy<T>(xs: T[], key: (x: T) => string) <string, T>
+  out: <string, T> = {}
+  for x in xs
+    out[key(x)] = x
+  out
+
+// The values for which `test` is true, then those for which it is not.
+partition<T>(xs: T[], test: (x: T) => boolean) Pair<T[], T[]>
+  yes: T[] = []
+  no: T[] = []
+  for x in xs
+    if test(x)
+      yes.add(x)
+    else
+      no.add(x)
+  Pair(yes, no)
+
+// The values for which `test` is not true.
+reject<T>(xs: T[], test: (x: T) => boolean) T[]
+  xs.filter((x) => not test(x))
+
+// What `f` gives for each value, as one list.
+flatMap<T, R>(xs: T[], f: (x: T) => R[]) R[]
+  out: R[] = []
+  for x in xs
+    out.addAll(f(x))
+  out
+
+// `reduce` from the last value to the first.
+reduceRight<T, R>(xs: T[], initial: R, f: (acc: R, x: T) => R) R
+  acc = initial
+  i = xs.length - 1
+  while i >= 0
+    acc = f(acc, xs[i])
+    i -= 1
+  acc
+
+// The list sorted by several keys, each ascending or descending (`descending[i]` is for `keys[i]`); values with
+// the same keys keep their order.
+orderBy<T>(xs: T[], keys: ((x: T) => double)[], descending: boolean[] = []) T[]
+  out = xs.copy()
+  i = keys.length - 1
+  while i >= 0
+    key = keys[i]
+    down = i < descending.length and descending[i]
+    out = out.sortedBy((x) => down ? -key(x) : key(x))
+    i -= 1
+  out
+
+// One value of the list, chosen by `random` (a number in [0, 1)); null for an empty list.
+sample<T>(xs: T[], random: () => double) T?
+  xs.isEmpty ? null : xs[(random() * xs.length).floor()]
+
+// The list in a random order (Fisher-Yates), each choice made by `random`.
+shuffle<T>(xs: T[], random: () => double) T[]
+  out = xs.copy()
+  i = out.length - 1
+  while i > 0
+    j = (random() * (i + 1)).floor()
+    held = out[i]
+    out[i] = out[j]
+    out[j] = held
+    i -= 1
+  out
+
+// `n` different values of the list in a random order.
+sampleSize<T>(xs: T[], n: int, random: () => double) T[]
+  shuffle(xs, random).take(Math.max(n, 0))
+
+// Calls `f` with each value and its index.
+forEachIndexed<T>(xs: T[], f: (x: T, index: int) => void) void
+  for i in 0..xs.length
+    f(xs[i], i)
+
+// Calls `f` with each value, from the last to the first.
+forEachRight<T>(xs: T[], f: (x: T) => void) void
+  i = xs.length - 1
+  while i >= 0
+    f(xs[i])
+    i -= 1

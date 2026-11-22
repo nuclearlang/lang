@@ -17,6 +17,7 @@ of the one project the task touches, then only the document whose line there mat
 | `nuclearlang/` | The language: the compiler crates, the language server, the base words, the examples | [AGENTS.md](nuclearlang/AGENTS.md) |
 | `nuclearlang/dialects/<language>/` | A dialect of a target language (`python`, `typescript`, `dart`, `nodejs`) with its `frameworks/`, `defs/` and docs | [README.md](nuclearlang/dialects/README.md) |
 | `nuclear-synapsis-framework/` | The framework, Synapsis: what it adds to Nuclear | [AGENTS.md](nuclear-synapsis-framework/AGENTS.md) |
+| `nuclear-synapsis-framework/lodash/` | The helpers of lodash that serve Nuclear (lists, maps, texts, numbers, functions), written in Nuclear for every dialect | [AGENTS.md](nuclear-synapsis-framework/lodash/AGENTS.md) |
 | `nuclear-synapsis-framework/platforms/<platform>/` | A platform (`mobile`, `backend`, `web`): its contract, runtime packages, examples, checks | [AGENTS.md](nuclear-synapsis-framework/platforms/AGENTS.md) |
 | `tools/cli/` | The `nuclear` command: the compiler's commands and the framework's | [AGENTS.md](tools/cli/AGENTS.md) |
 | `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |

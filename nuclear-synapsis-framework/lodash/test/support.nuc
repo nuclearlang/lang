@@ -1,0 +1,9 @@
+// What every test uses: a case prints `ok <name>` or what it got and what was wanted.
+check(name: string, got: string, want: string) void
+  print(got == want ? "ok ${name}" : "FAIL ${name}: got [${got}] want [${want}]")
+
+// A list of numbers as text.
+ints(xs: int[]) string = xs.join(",")
+
+// Lists of numbers as text.
+groups(xs: int[][]) string = xs.map((g) => "[${g.join(",")}]").join("")

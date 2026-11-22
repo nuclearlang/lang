@@ -1,0 +1,55 @@
+// The cases of lodash's own tests and documentation for its Function and Util categories.
+main() void
+  check("identity", "${identity(5)} ${identity("a")}", "5 a")
+  seven = constant(7)
+  check("constant", "${seven()} ${seven()}", "7 7")
+  isEven = (n: int) => n % 2 == 0
+  check("negate", ints([1, 2, 3, 4, 5, 6].filter(negate(isEven))), "1,3,5")
+  calls = 0
+  make = ()
+    calls += 1
+    calls * 10
+  first = once(make)
+  check("once", "${first()} ${first()} ${first()} ${calls}", "10 10 10 1")
+  squares = 0
+  square = (n: int)
+    squares += 1
+    n * n
+  fast = memoize(square)
+  check("memoize", "${fast(4)} ${fast(4)} ${fast(5)} ${fast(4)} ${squares}", "16 16 25 16 2")
+  lengths = 0
+  size = (text: string)
+    lengths += 1
+    text.length
+  byFirst = memoize(size, (text: string) => text[0])
+  check("memoize with a key", "${byFirst("apple")} ${byFirst("avocado")} ${byFirst("banana")} ${lengths}", "5 5 6 2")
+  done = after(3, () => "done")
+  results: string?[] = [done(), done(), done(), done()]
+  check("after", results.map((r) => r ?? "null").join(" "), "null null done done")
+  count = 0
+  bump = ()
+    count += 1
+    count
+  limited = before(3, bump)
+  check("before", "${limited()} ${limited()} ${limited()} ${limited()} ${count}", "1 2 2 2 2")
+  minus = (a: int, b: int) => a - b
+  check("flip", "${flip(minus)(1, 10)}", "9")
+  check("partial", "${partial(minus, 10)(3)}", "7")
+  check("partialRight", "${partialRight(minus, 10)(3)}", "-7")
+  check("curry", "${curry(minus)(10)(4)}", "6")
+  addOne = (n: int) => n + 1
+  double = (n: int) => n * 2
+  check("flow", "${flow([addOne, double])(3)}", "8")
+  check("flowRight", "${flowRight([addOne, double])(3)}", "7")
+  check("flow of nothing", "${flow<int>([])(3)}", "3")
+  check("times", ints(times(4, (i) => i * i)), "0,1,4,9")
+  check("times of nothing", "${times(0, (i) => i).length}", "0")
+  parse = (text: string)
+    n = text.toInt()
+    if n == null
+      throw Error("not a number")
+    n
+  check("attempt", "${attempt(() => parse("12") + 1, -1)} ${attempt(() => parse("x") + 1, -1)}", "13 -1")
+  next = uniqueIds("id_")
+  other = uniqueIds()
+  check("uniqueIds", "${next()} ${next()} ${other()} ${next()}", "id_1 id_2 1 id_3")

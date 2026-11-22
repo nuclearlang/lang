@@ -1367,3 +1367,82 @@ fn what_an_undeclared_method_of_a_class_gives_is_not_a_list() {
     // a list of the program keeps the library's
     has(&build("f(xs: int[]) int = xs.filter((x) => x > 1).count((x) => x > 2)\n", "python"), "sum(1 for");
 }
+
+// ---------- found by the library of helpers (nuclear-synapsis-framework/lodash, 2026-11-21) ----------
+
+#[test]
+fn a_lambda_takes_its_parameters_types_from_the_function_it_is_given_to() {
+    // `(i) => i.name.upper()`: `i` is the T that `items` fixes
+    let src = "Item(name: string)\n\nuniqBy<T>(xs: T[], key: (x: T) => string) T[]\n  xs\n\nmain() void\n  items = [Item(\"a\")]\n  print(uniqBy(items, (i) => i.name.upper()).length)\n";
+    has(&ts(src), "uniqBy(items, (i) => i.name.toUpperCase())");
+    // in a list of functions the lambda writes its types: Dart cannot infer them there
+    let list = "Item(age: int)\n\norderBy<T>(xs: T[], keys: ((x: T) => double)[]) T[]\n  xs\n\nmain() void\n  items = [Item(1)]\n  print(orderBy(items, [(i) => i.age.toDouble()]).length)\n";
+    has(&build(list, "dart"), "[(Item i) => i.age.toDouble()]");
+}
+
+#[test]
+fn slices_and_substrings_are_clamped_the_same_in_every_target() {
+    let src = "f(xs: int[], s: string) string = xs.slice(1, 99).join(\",\") + s.substring(3, 1)\n";
+    has(&build(src, "dart"), "_slice(xs, 1, 99)");
+    has(&build(src, "dart"), "_substring(s, 3, 1)");
+    // `substring` of JavaScript swaps an end before the start: `slice` does not
+    has(&ts(src), "s.slice(3, 1)");
+}
+
+#[test]
+fn a_method_given_as_a_value_keeps_its_object_in_typescript() {
+    let src = "Dice\n  roll() int\n    4\n\ncall(f: () => int) int = f()\n\nmain() void\n  d = Dice()\n  print(call(d.roll), d.roll())\n";
+    has(&ts(src), "call(d.roll.bind(d)), d.roll()");
+}
+
+#[test]
+fn a_parameter_list_split_over_lines_has_no_comma_after_its_optional_group_in_dart() {
+    let src = "orderBy<T>(valuesToSortInThisCall: T[], keysToSortThemBy: ((x: T) => double)[], descending: boolean[] = []) T[]\n  valuesToSortInThisCall\n";
+    let code = build(src, "dart");
+    has(&code, "[List<bool>? descending]\n)");
+}
+
+#[test]
+fn an_optional_member_of_a_call_makes_the_call_once_in_python() {
+    let src = "User(name: string)\n\nfind(id: int) User?\n  id == 1 ? User(\"a\") : null\n\nmain() void\n  print(find(1)?.name)\n";
+    has(&build(src, "python"), "_opt(find(1), lambda v: v.name)");
+}
+
+#[test]
+fn a_type_parameter_is_never_imported_nor_unknown() {
+    // `A` is `re.A` in Python's definitions
+    let code = build("Pair<A, B>(first: A, second: B)\n", "python");
+    assert!(!code.contains("import A"), "{code}");
+}
+
+#[test]
+fn is_of_a_map_type_is_the_targets_own_check() {
+    let src = "f(x: any) boolean = x is <string, any>\n";
+    has(&ts(src), "typeof x === 'object' && x !== null && !Array.isArray(x)");
+    has(&build(src, "python"), "isinstance(x, dict)");
+    has(&build(src, "dart"), "x is Map<String, dynamic>");
+}
+
+#[test]
+fn two_texts_are_compared_with_compare_to_in_dart() {
+    let code = build("f(a: string, b: string) boolean = a < b and a >= \"m\"\n", "dart");
+    has(&code, "a.compareTo(b) < 0 && a.compareTo('m') >= 0");
+    has(&build("f(a: int, b: int) boolean = a < b\n", "dart"), "a < b");
+}
+
+#[test]
+fn a_literal_inside_a_value_declared_any_holds_any_in_dart() {
+    let code = build("main() void\n  m: <string, any> = { \"a\": { \"x\": 1 }, \"l\": [1] }\n  n: <string, int> = { \"a\": 1 }\n  print(m.length, n.length)\n", "dart");
+    has(&code, "{'a': <String, dynamic>{'x': 1}, 'l': <dynamic>[1]}");
+    has(&code, "{'a': 1}");
+}
+
+#[test]
+fn a_value_declared_any_is_shown_as_nuclear_shows_it_in_python() {
+    has(&build("f(x: any) string = \"${x}\"\n", "python"), "f\"{_text(x)}\"");
+}
+
+#[test]
+fn a_nullable_decimal_keeps_its_decimals_in_typescript() {
+    has(&ts("mean(xs: double[]) double?\n  xs.isEmpty ? null : xs.sum() / xs.length\n\nmain() void\n  print(mean([4, 6]))\n"), "_doubleOrNull(mean([4, 6]))");
+}

@@ -1,0 +1,124 @@
+// Texts: the helpers of lodash's String category that Nuclear's library does not have already
+// (`upper`, `lower`, `trim`, `padStart`, `padEnd`, `repeat`, `replace`, `split`, `startsWith`... are the library's).
+
+// The words of a text: runs of letters and digits, split also where a lower-case letter meets an upper-case one.
+words(text: string) string[]
+  out: string[] = []
+  current = ""
+  previous = ""
+  for c in text.chars()
+    letter = c.lower() != c.upper()
+    digit = c >= "0" and c <= "9"
+    if not letter and not digit
+      if not current.isEmpty
+        out.add(current)
+      current = ""
+    else
+      upper = letter and c == c.upper()
+      wasLower = previous.lower() != previous.upper() and previous == previous.lower()
+      if upper and wasLower and not current.isEmpty
+        out.add(current)
+        current = ""
+      current += c
+    previous = c
+  if not current.isEmpty
+    out.add(current)
+  out
+
+// The first character in upper case and the rest in lower case.
+capitalize(text: string) string
+  text.isEmpty ? "" : text[0].upper() + text.substring(1).lower()
+
+// The first character in upper case; the rest as it is.
+upperFirst(text: string) string
+  text.isEmpty ? "" : text[0].upper() + text.substring(1)
+
+// The first character in lower case; the rest as it is.
+lowerFirst(text: string) string
+  text.isEmpty ? "" : text[0].lower() + text.substring(1)
+
+// `fooBar`: the words joined, each but the first capitalized.
+camelCase(text: string) string
+  parts = words(text)
+  parts.isEmpty ? "" : parts[0].lower() + parts.skip(1).map((w) => capitalize(w)).join("")
+
+// `foo-bar`: the words in lower case joined by dashes.
+kebabCase(text: string) string
+  words(text).map((w) => w.lower()).join("-")
+
+// `foo_bar`: the words in lower case joined by underscores.
+snakeCase(text: string) string
+  words(text).map((w) => w.lower()).join("_")
+
+// `Foo Bar`: the words joined by spaces, each with its first character in upper case.
+startCase(text: string) string
+  words(text).map((w) => upperFirst(w)).join(" ")
+
+// `foo bar`: the words in lower case joined by spaces.
+lowerCase(text: string) string
+  words(text).map((w) => w.lower()).join(" ")
+
+// `FOO BAR`: the words in upper case joined by spaces.
+upperCase(text: string) string
+  words(text).map((w) => w.upper()).join(" ")
+
+// The text cut to `length` characters, its end replaced by `omission` when it was longer.
+truncate(text: string, length: int = 30, omission: string = "...") string
+  if text.length <= length
+    return text
+  text.substring(0, Math.max(length - omission.length, 0)) + omission
+
+// The first `n` characters of `fill` repeated.
+fillText(fill: string, n: int) string
+  n <= 0 or fill.isEmpty ? "" : fill.repeat(n ~/ fill.length + 1).substring(0, n)
+
+// The text with `fill` on both sides up to `length` characters; the extra character goes to the right.
+pad(text: string, length: int, fill: string = " ") string
+  missing = length - text.length
+  if missing <= 0 or fill.isEmpty
+    return text
+  left = missing ~/ 2
+  fillText(fill, left) + text + fillText(fill, missing - left)
+
+// The text with `&`, `<`, `>`, `"` and `'` written as HTML entities.
+escape(text: string) string
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;")
+
+// The opposite of `escape`.
+unescape(text: string) string
+  text
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", "\"")
+    .replaceAll("&#39;", "'")
+    .replaceAll("&amp;", "&")
+
+// The text with the characters a regular expression gives a meaning to escaped.
+escapeRegExp(text: string) string
+  out = ""
+  for c in text.chars()
+    out += c in "^$\\.*+?()[]{}|" ? "\\${c}" : c
+  out
+
+// The text without the characters of `chars` at its start and its end.
+trimChars(text: string, chars: string) string
+  trimCharsEnd(trimCharsStart(text, chars), chars)
+
+// The text without the characters of `chars` at its start.
+trimCharsStart(text: string, chars: string) string
+  i = 0
+  while i < text.length and text[i] in chars
+    i += 1
+  text.substring(i)
+
+// The text without the characters of `chars` at its end.
+trimCharsEnd(text: string, chars: string) string
+  end = text.length
+  while end > 0 and text[end - 1] in chars
+    end -= 1
+  text.substring(0, end)

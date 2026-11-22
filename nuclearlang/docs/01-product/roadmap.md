@@ -91,14 +91,12 @@ Each passes `nuclear check`. The plan is [spec 010](../../../docs/04-specs/010-m
 
 **One target fails where another goes on:**
 - Out of range: `xs[10]`, `xs.first` on an empty list and `m["x"]!` give `undefined`/`NaN` in TypeScript (no error)
-  and throw in Dart and Python; `xs[-1]` is the last element in Python; `substring(3, 1)`, `substring(1, 99)` and
-  `slice(-1)` throw in Dart and are clamped elsewhere.
+  and throw in Dart and Python; `xs[-1]` is the last element in Python.
 - Zero: `1.0 / 0.0` and `0.0 / 0.0` throw in Python; `1 ~/ 0` is `Infinity` in TypeScript; `1 % 0` is `NaN` in
   TypeScript.
 - Python stops at about 1000 nested calls; `"abc".split("")` and a set of lists are errors in Python.
 
 **The generated code does not compile:**
-- Dart: `"a" < "b"` (no `<` on `String`).
 - `Set<int>.add(1.0)` and `true in [1, 2]` pass `nuclear check` and fail `tsc` / Dart.
 - `a is b` with a variable `b` passes the check and fails in every target.
 - `Dog(name: string) : Animal(name)` passes the check and calls the base without its argument.
@@ -121,11 +119,25 @@ Fixed and kept as cases of `examples/conformance/` and tests of `rules.rs`. Left
 - **Dart promotes after a `!`**: `u!.name` then `u!.address` on a local warns `unnecessary_non_null_assertion` on
   the second one, and TypeScript needs both. The same for `(x as Dog).breed` inside `if x is Dog`
   (`unnecessary_cast`); there `x.breed` is enough since the branch narrows `x`.
-- **A nullable decimal** (`rate: double? = -1`) is printed without its `.0` in TypeScript.
 - **A comparison the target can decide by itself** fails its checker: two different literals compared in TypeScript
   (TS2367, also a constant narrowed by its declaration), a condition Dart knows (`dead_code`,
   `unnecessary_type_check`). The conformance programs read their values at run time for this reason.
 - `x **= 2` and `x ~/= 2` are not in the grammar (`x = x ** 2`).
+
+### Found writing the library of helpers (2026-11-21)
+
+Fixed, each with its test in `rules.rs` and its cases in `nuclear-synapsis-framework/lodash/test/`. Left:
+
+- **A lambda whose parameter is a type parameter another function argument fixes** is not inferred by Dart
+  (`memoize(size, (text) => text[0])`: `text` is `Object?`); the compiler writes the lambda's types only inside a
+  list of functions. Wanted: the type of a local lambda (`size = (text: string) ...`) known to `static_type`, so
+  the parameter is written with it.
+- **`x!` of a missing value** throws in Dart and Python and is `undefined` in TypeScript, which goes on.
+- **`find()?.a.b()`** (a chain after a `?.` on a call) still makes the call twice in Python; only `find()?.a` makes
+  it once.
+- **A literal given for `any` is typed `any` in Dart only inside the value** (`m: <string, any> = { "a": [1] }`
+  holds a `<dynamic>[1]`); a list built elsewhere and stored later keeps its own type, so adding another kind of
+  value to it fails in Dart alone.
 
 ### Found writing Nuclear Builder's set-up (2026-11-17)
 

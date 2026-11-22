@@ -495,6 +495,15 @@ pub struct Emitter<'a> {
     lazy: Lazy,
     /// Types for the untyped parameters of the next lambda (the element type of a library receiver).
     lambda_hints: Vec<Type>,
+    /// How deep the next literal holds `any` (`any_level`), and the level of the literal being written.
+    any_literal: u8,
+    any_here: u8,
+    /// The same for the lambdas of a list given for a parameter that is a list of functions.
+    item_hints: Vec<Type>,
+    /// The next lambda writes the types of its hints.
+    typed_hints: bool,
+    /// The type parameters the call being written fixes, for the lambdas among its arguments.
+    callee_bound: HashMap<String, Type>,
     /// Functions and lambdas being emitted (innermost last).
     fn_ctx: Vec<FnCtx>,
     /// Lines that run before the current statement: the Results it unwraps.
@@ -713,6 +722,11 @@ impl<'a> Emitter<'a> {
             helpers: BTreeMap::new(),
             lazy: Lazy::default(),
             lambda_hints: Vec::new(),
+            any_literal: 0,
+            any_here: 0,
+            item_hints: Vec::new(),
+            typed_hints: false,
+            callee_bound: HashMap::new(),
             fn_ctx: Vec::new(),
             line_starts: vec![0],
             kind_name: String::new(),
@@ -1309,6 +1323,19 @@ impl<'a> Emitter<'a> {
 
     /// First pass: every top-level name, so code can refer to declarations below it.
     fn collect(&mut self, f: &File) {
+        // the type parameters of every declaration: a header's parameters name them before its body is written
+        for item in &f.items {
+            if let Item::Decl(d) = item {
+                self.generic_names.extend(d.generics.iter().map(|g| g.name.clone()));
+                if let Body::Members(members) = &d.body {
+                    for m in members {
+                        if let Member::Method(md) = m {
+                            self.generic_names.extend(md.generics.iter().map(|g| g.name.clone()));
+                        }
+                    }
+                }
+            }
+        }
         for item in &f.items {
             match item {
                 Item::Use(u) => {
@@ -1679,7 +1706,17 @@ impl<'a> Emitter<'a> {
                 if self.local_names.contains(n) && !self.free_names.contains(n) {
                     continue;
                 }
-                let path = match p.decls.get(n) {
+                // a declaration named like a name of the target (`range`) is written escaped (`range_`): the plain
+                // word in the code is the target's own, and the escaped one is the declaration's
+                if p.decls.contains_key(n) && self.escape_value(n) != *n {
+                    continue;
+                }
+                let plain = [n.strip_suffix('_'), n.strip_prefix('_')]
+                    .into_iter()
+                    .flatten()
+                    .find(|c| !p.decls.contains_key(n) && p.decls.contains_key(*c) && self.escape_value(c) == *n);
+                let source = plain.unwrap_or(n.as_str());
+                let path = match p.decls.get(source) {
                     Some(_) if self.member_only.contains(n) => None,
                     Some(ext) if ext.path != self.file_path && p.visible(&ext.path, &self.file_path) => {
                         Some(ext.path.clone())
@@ -1688,7 +1725,7 @@ impl<'a> Emitter<'a> {
                     None => p.generated.get(n).cloned(),
                 };
                 // a declaration of a kind with `type_imports` used by one of the same kind: a type-only import
-                let type_only = p.decls.get(n).is_some_and(|ext| match &ext.info.kind {
+                let type_only = p.decls.get(source).is_some_and(|ext| match &ext.info.kind {
                     DeclKind::Kind(k) => {
                         self.kinds_used.contains(k)
                             && self.d.kinds.get(k).is_some_and(|e| e.value.type_imports)
@@ -2365,6 +2402,10 @@ impl<'a> Emitter<'a> {
             m.insert("list".into(), Value::Bool(true));
             inner = (**x).clone();
         }
+        // `<K, V>`: a map of the language (`x is <string, any>`)
+        if matches!(inner.kind, TypeKind::Map(..)) {
+            m.insert("map".into(), Value::Bool(true));
+        }
         m.insert("item".into(), Value::str(self.ty(&inner)));
         if let TypeKind::Named { name, args } = &inner.kind {
             m.insert("name".into(), Value::str(name));
@@ -2795,7 +2836,13 @@ impl<'a> Emitter<'a> {
             let inner = named.join(", ");
             parts.push(self.tpl("params_named_group", Ctx::new().set("params", inner), span));
         }
-        self.join_items(&parts, 16)
+        let grouped = parts.last().is_some_and(|p| p.ends_with([']', '}'])) && (group_optional || group_named);
+        let joined = self.join_items(&parts, 16);
+        // one parameter per line: no comma follows a closing group (`[int? b],` is not Dart)
+        match joined.strip_suffix(",\n") {
+            Some(without) if grouped => format!("{without}\n"),
+            _ => joined,
+        }
     }
 
     fn enum_decl(&mut self, d: &Decl) -> String {
@@ -4741,7 +4788,10 @@ impl<'a> Emitter<'a> {
     /// A value written where `want` is expected. In a target whose integers and decimals are different values
     /// (`options.decimal_literals`), an integer literal given for a `double` is written as a decimal (`3` → `3.0`).
     fn expr_as(&mut self, e: &Expr, want: Option<&Type>) -> String {
+        // a literal given for `any`: the literals inside it hold `any` too (Dart would type them by what they hold)
+        self.any_literal = want.map_or(0, any_level);
         let text = self.expr(e).0;
+        self.any_literal = 0;
         if !self.d.options.decimal_literals {
             return text;
         }
@@ -5399,6 +5449,9 @@ impl<'a> Emitter<'a> {
     }
 
     fn expr(&mut self, e: &Expr) -> (String, u8) {
+        // only a list or a map literal reads the level, and only the one it was set for
+        let level = std::mem::take(&mut self.any_literal);
+        self.any_here = if matches!(e.kind, ExprKind::List(_) | ExprKind::Object(_)) { level } else { 0 };
         // `u?.name.upper()` where `?.` is not native (Python): the whole chain waits for its receivers, as it does in
         // TypeScript and Dart (`(u.name.upper() if u is not None else None)`)
         if self.has("optional_chain") && has_inner_optional(e) {
@@ -5445,15 +5498,27 @@ impl<'a> Emitter<'a> {
             ExprKind::List(items) => {
                 // only the items of the list given to a slot argument, not lists inside them
                 let slot = std::mem::take(&mut self.slot_list);
+                // a list given for a parameter that is a list of functions: each lambda takes their parameters' types
+                let item_hints = std::mem::take(&mut self.item_hints);
+                let any_here = std::mem::take(&mut self.any_here);
                 let rendered: Vec<String> = items
                     .iter()
                     .map(|i| {
+                        self.any_literal = if any_here > 0 { 2 } else { 0 };
                         self.slot_item = slot && matches!(i.kind, ExprKind::ListIf { .. });
-                        self.expr(i).0
+                        if matches!(i.kind, ExprKind::Lambda(_)) {
+                            self.lambda_hints = item_hints.clone();
+                            self.typed_hints = !item_hints.is_empty();
+                        }
+                        let text = self.expr(i).0;
+                        self.lambda_hints.clear();
+                        text
                     })
                     .collect();
+                self.any_literal = 0;
                 let items = self.join_items(&rendered, 2);
-                let text = self.tpl("list", Ctx::new().set("items", items.clone()), e.span);
+                let key = if any_here >= 2 && self.has("list_any") { "list_any" } else { "list" };
+                let text = self.tpl(key, Ctx::new().set("items", items.clone()), e.span);
                 (close_on_own_line(text, &items), P_PRIMARY)
             }
             ExprKind::Object(entries) => (self.object(entries, e.span), P_PRIMARY),
@@ -5518,7 +5583,26 @@ impl<'a> Emitter<'a> {
                 {
                     o = format!("({o})");
                 }
-                let key = if *optional { "optional_member" } else { "member" };
+                // `dice.roll` given as a value: a target whose methods forget their object binds it
+                if !*optional
+                    && !callee
+                    && self.has("method_ref")
+                    && let Some(t) = self.static_type(object)
+                    && let Some(info) = class_name(&t).and_then(|c| self.decl_info(&c))
+                    && info.methods.contains_key(&name.name)
+                    && !info.field_types.contains_key(&name.name)
+                {
+                    return (self.tpl("method_ref", Ctx::new().set("object", o).set("name", &name.name), e.span), P_POSTFIX);
+                }
+                // `find()?.name` where the target has no `?.`: the call is made once
+                let once = *optional && !is_plain_path(object) && self.has("optional_member_once");
+                let key = if once {
+                    "optional_member_once"
+                } else if *optional {
+                    "optional_member"
+                } else {
+                    "member"
+                };
                 (self.tpl(key, Ctx::new().set("object", o).set("name", &name.name), e.span), P_POSTFIX)
             }
             ExprKind::Index { object, index } => {
@@ -5628,6 +5712,7 @@ impl<'a> Emitter<'a> {
     }
 
     fn binary(&mut self, op: BinaryOp, left: &Expr, right: &Expr, span: Span) -> (String, u8) {
+        let ordered = matches!(op, BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq);
         // `m[k] ?? 0` with a plain default: the target's lookup with a default (Python's `m.get(k, 0)`)
         if op == BinaryOp::Coalesce
             && let ExprKind::Index { object, index } = &left.kind
@@ -5717,6 +5802,10 @@ impl<'a> Emitter<'a> {
             .flag("object", is_object)
             .flag("int", lk == Some(NumKind::Int) && rk == Some(NumKind::Int))
             .flag("double", lk == Some(NumKind::Double) || rk == Some(NumKind::Double))
+            // `a < b` of two texts, for a target whose texts have no `<` (Dart's `compareTo`)
+            .flag("string", ordered && [left, right].iter().any(|x| {
+                matches!(self.static_type(x).map(|t| receiver_base(&t)), Some(Recv::Base("string")))
+            }))
             // a comparison with `null` (Python: `x is None`)
             .flag("null", matches!(left.kind, ExprKind::Null) || matches!(right.kind, ExprKind::Null));
         let text = t.render(&ctx.into_value());
@@ -5742,6 +5831,15 @@ impl<'a> Emitter<'a> {
         if double && self.has("show_double") {
             return self.tpl("show_double", Ctx::new().set("expr", text.0), e.span);
         }
+        // a decimal that may be missing: its `.0`, or `null`
+        let maybe_double = !is_library_call(e)
+            && self.static_type(e).is_some_and(|t| match &t.kind {
+                TypeKind::Nullable(inner) => matches!(&inner.kind, TypeKind::Named { name, .. } if name == "double"),
+                _ => false,
+            });
+        if maybe_double && self.has("show_double_nullable") {
+            return self.tpl("show_double_nullable", Ctx::new().set("expr", text.0), e.span);
+        }
         let nullable = is_optional_member(e)
             || has_inner_optional(e)
             || self.static_type(e).is_some_and(|t| matches!(t.kind, TypeKind::Nullable(_)));
@@ -5754,6 +5852,11 @@ impl<'a> Emitter<'a> {
             || self.static_type(e).is_some_and(|t| matches!(&t.kind, TypeKind::Named { name, .. } if name == "boolean"));
         if boolean && self.has("show_bool") {
             return self.tpl("show_bool", Ctx::new().set("expr", text.0), e.span);
+        }
+        // a value declared `any` may be a boolean or missing: written as Nuclear writes them (Python's `None`)
+        let any = self.static_type(e).is_some_and(|t| is_any(&t));
+        if any && self.has("show_any") {
+            return self.tpl("show_any", Ctx::new().set("expr", text.0), e.span);
         }
         text.0
     }
@@ -6939,6 +7042,7 @@ impl<'a> Emitter<'a> {
     }
 
     fn object(&mut self, entries: &[ObjEntry], span: Span) -> String {
+        let any_here = std::mem::take(&mut self.any_here);
         let mut rendered = Vec::new();
         for en in entries {
             let text = match en {
@@ -6947,7 +7051,9 @@ impl<'a> Emitter<'a> {
                         ObjKey::Ident(i) => self.tpl("object_key_ident", Ctx::new().set("key", &i.name), i.span),
                         ObjKey::Str(s) => self.tpl("object_key_string", Ctx::new().set("key", s), span),
                     };
+                    self.any_literal = if any_here > 0 { 2 } else { 0 };
                     let v = self.expr(value).0;
+                    self.any_literal = 0;
                     self.tpl("object_entry", Ctx::new().set("key", k).set("value", v), span)
                 }
                 ObjEntry::Shorthand(i) => {
@@ -6970,7 +7076,8 @@ impl<'a> Emitter<'a> {
             rendered.push(text);
         }
         let joined = self.join_items(&rendered, 4);
-        let text = self.tpl("object", Ctx::new().set("entries", joined.clone()), span);
+        let key = if any_here >= 2 && self.has("object_any") { "object_any" } else { "object" };
+        let text = self.tpl(key, Ctx::new().set("entries", joined.clone()), span);
         close_on_own_line(text, &joined)
     }
 
@@ -7202,6 +7309,27 @@ impl<'a> Emitter<'a> {
             }
         }
         self.callee_takes_props = self.takes_props(callee);
+        // the type parameters this call fixes (`uniqBy(items, (i) => i.name)`: T is Item), for its lambdas
+        self.callee_bound = match (&callee.kind, &params) {
+            (ExprKind::Name(n), Some(ps)) => match self.decl_info(n) {
+                Some(info) if !info.generics.is_empty() => {
+                    if type_args.len() == info.generics.len() {
+                        info.generics.iter().cloned().zip(type_args.iter().cloned()).collect()
+                    } else {
+                        self.bind_generics(&info.generics, ps, args)
+                    }
+                }
+                _ => HashMap::new(),
+            },
+            (ExprKind::Member { object, .. }, Some(_)) => match self.static_type(object) {
+                Some(t) => match class_name(&t).and_then(|c| self.decl_info(&c)) {
+                    Some(info) => class_generics(info, &t),
+                    None => HashMap::new(),
+                },
+                None => HashMap::new(),
+            },
+            _ => HashMap::new(),
+        };
         let mut a = self.args(args, params.as_deref(), span, c.len());
         if !type_names.is_empty() {
             // Python: inject<Repo>() → inject(Repo)
@@ -7272,6 +7400,7 @@ impl<'a> Emitter<'a> {
     /// `callee_len` counts toward the line width (plus a margin for the indentation).
     fn args(&mut self, args: &[Arg], params: Option<&[Param]>, span: Span, callee_len: usize) -> String {
         let has_named = args.iter().any(|a| a.name.is_some());
+        let bound = std::mem::take(&mut self.callee_bound);
         let props = std::mem::take(&mut self.callee_takes_props);
         let ordered: Option<Vec<Arg>> = match (has_named, params) {
             (true, Some(ps)) => reorder(args, ps, self.d.options.named_args_native, props),
@@ -7301,7 +7430,21 @@ impl<'a> Emitter<'a> {
             let slot = a.name.as_ref().is_some_and(|n| self.d.options.slot_lists.contains(&n.name))
                 && matches!(a.value.kind, ExprKind::List(_));
             self.slot_list = slot;
+            // a lambda given for a parameter of a function type takes its parameters' types from it
+            if matches!(a.value.kind, ExprKind::Lambda(_))
+                && let Some(Type { kind: TypeKind::Func { params: wanted, .. }, .. }) = param.and_then(|p| p.ty.as_ref())
+            {
+                self.lambda_hints = wanted.iter().filter_map(|w| w.ty.as_ref().map(|t| subst_type(t, &bound))).collect();
+            }
+            if matches!(a.value.kind, ExprKind::List(_))
+                && let Some(Type { kind: TypeKind::List(item), .. }) = param.and_then(|p| p.ty.as_ref())
+                && let TypeKind::Func { params: wanted, .. } = &item.kind
+            {
+                self.item_hints = wanted.iter().filter_map(|w| w.ty.as_ref().map(|t| subst_type(t, &bound))).collect();
+            }
             let v = self.expr_as(&a.value, param.and_then(|p| p.ty.as_ref()));
+            self.lambda_hints.clear();
+            self.item_hints.clear();
             self.slot_list = false;
             match &a.name {
                 None => {
@@ -7341,7 +7484,14 @@ impl<'a> Emitter<'a> {
         let bound = self.loop_captures(l, &loops);
         self.frames.push(Frame::default());
         let hints = std::mem::take(&mut self.lambda_hints);
-        let mut params = self.params(&l.params, false, l.span);
+        // a lambda of a list of functions writes its parameters' types: the target cannot infer them there (Dart)
+        let typed: Vec<Param> = if std::mem::take(&mut self.typed_hints) {
+            let with = |(i, p): (usize, &Param)| Param { ty: p.ty.clone().or_else(|| hints.get(i).cloned()), ..p.clone() };
+            l.params.iter().enumerate().map(with).collect()
+        } else {
+            Vec::new()
+        };
+        let mut params = self.params(if typed.is_empty() { &l.params } else { &typed }, false, l.span);
         // an untyped parameter of a library callback has the receiver's element type (`xs.map((x) => x.upper())`)
         for (i, p) in l.params.iter().enumerate() {
             if p.ty.is_none()
@@ -7562,7 +7712,9 @@ impl<'a> Emitter<'a> {
                 {
                     self.check_construct(name, &[], t.span);
                 }
-                if !self.decl_names.contains_key(root) && !self.imported.contains(root) {
+                // a type parameter (`A` of `Pair<A, B>`) is never a class to import (`re.A` in Python)
+                let type_param = self.type_params.iter().any(|p| p == root) || self.generic_names.contains(root);
+                if !self.decl_names.contains_key(root) && !self.imported.contains(root) && !type_param {
                     self.check_plugin_name(root, t.span);
                     // a type the dialect writes with another class name (`Page` → `PageOf`) is imported by that name
                     let renamed = self.d.types.get(root).map(|e| e.value.render(&Value::Map(BTreeMap::new())));
@@ -7845,6 +7997,15 @@ pub(crate) fn code_words(code: &str) -> HashSet<String> {
 
 /// Every word of `code_words`, once per time it is written.
 fn code_word_list(code: &str) -> Vec<String> {
+    code_text(code)
+        .split(|ch: char| !(ch.is_alphanumeric() || ch == '_'))
+        .filter(|w| !w.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// The code without its comments and the text of its strings (their interpolations stay).
+fn code_text(code: &str) -> String {
     let c: Vec<char> = code.chars().collect();
     let mut kept = String::with_capacity(code.len());
     // None = code (with its depth of `{`), Some(quote) = inside a string
@@ -7943,7 +8104,7 @@ fn code_word_list(code: &str) -> Vec<String> {
         }
         i += 1;
     }
-    kept.split(|ch: char| !(ch.is_alphanumeric() || ch == '_')).filter(|w| !w.is_empty()).map(str::to_string).collect()
+    kept
 }
 
 /// A call of a library object (`Math.min(3, 9)`): its type is the one of its arguments in the targets.
@@ -8007,6 +8168,9 @@ fn strip_optionals(e: &Expr, guards: &mut Vec<Expr>) -> Expr {
 /// `..add`), which are attributes of their receiver; a spread (`...items`) still reads its name.
 pub(crate) fn free_code_words(code: &str) -> HashSet<String> {
     let mut out = HashSet::new();
+    // a word of a comment is not a use of a name (`/** The entries ... */` next to `Object.entries(m)`)
+    let text = code_text(code);
+    let code = text.as_str();
     for w in code_words(code) {
         let mut free = false;
         let mut seen = false;
@@ -8217,6 +8381,23 @@ fn unify_type(want: &Type, got: &Type, generics: &[String], bound: &mut HashMap<
     }
 }
 
+/// `any` (or the target's own word for it).
+fn is_any(t: &Type) -> bool {
+    matches!(&t.kind, TypeKind::Named { name, args } if args.is_empty() && matches!(name.as_str(), "any" | "dynamic"))
+}
+
+/// How deep the literals given for a type hold `any`: 2 for `any` itself (the literal too), 1 for a map or a list
+/// of `any` (the literals inside it), 0 otherwise.
+fn any_level(t: &Type) -> u8 {
+    match &t.kind {
+        TypeKind::Nullable(inner) => any_level(inner),
+        _ if is_any(t) => 2,
+        TypeKind::Map(_, v) if is_any(v) => 1,
+        TypeKind::List(x) if is_any(x) || any_level(x) == 1 => 1,
+        _ => 0,
+    }
+}
+
 fn class_name(t: &Type) -> Option<String> {
     match &t.kind {
         TypeKind::Nullable(inner) => class_name(inner),
@@ -8265,6 +8446,15 @@ fn is_plain_path(e: &Expr) -> bool {
 #[cfg(test)]
 mod tests {
     use super::code_words;
+    use super::free_code_words;
+
+    #[test]
+    fn a_word_of_a_comment_is_not_a_free_name() {
+        // `entries` in a comment next to `Object.entries(m)` imported a function of another file
+        let words = free_code_words("/** The entries of m. */\nfor (const [k, v] of Object.entries(m)) {}\n");
+        assert!(!words.contains("entries"), "{words:?}");
+        assert!(words.contains("m"));
+    }
 
     #[test]
     fn code_words_skip_comments_and_text() {

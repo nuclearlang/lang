@@ -44,6 +44,8 @@ The checks of each platform against the target's own tools: `platforms/docs/05-s
 - `platforms/`: what is common to the three platforms ([`platforms/AGENTS.md`](platforms/AGENTS.md)) and one
   folder per platform, each its own project: [`mobile/`](platforms/mobile/AGENTS.md),
   [`backend/`](platforms/backend/AGENTS.md), [`web/`](platforms/web/AGENTS.md).
+- `lodash/`: the helpers of lodash that serve Nuclear, written in Nuclear and tested in every language dialect
+  ([`lodash/AGENTS.md`](lodash/AGENTS.md)).
 - Not here: the framework's commands are [`tools/cli/`](../tools/cli/AGENTS.md), what `make` and `gen` write is
   [`tools/code_generator/`](../tools/code_generator/AGENTS.md), the devices are
   [`device-emulators/`](../device-emulators/AGENTS.md).

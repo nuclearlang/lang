@@ -1,0 +1,95 @@
+// Functions: the helpers of lodash's Function and Util categories that keep their types in Nuclear
+// (a function of any number of parameters has no type here: each helper names the parameters it takes).
+
+// The value it is given.
+identity<T>(value: T) T
+  value
+
+// A function that always gives `value`.
+constant<T>(value: T)() => T
+  () => value
+
+// A function that gives the opposite of `test`.
+negate<T>(test: (x: T) => boolean)(x: T) => boolean
+  (x: T) => not test(x)
+
+// A function that calls `f` once and gives that first result ever after.
+once<T>(f: () => T)() => T
+  called = false
+  result: T? = null
+  ()
+    if not called
+      called = true
+      result = f()
+    result as T
+
+// A function that remembers what `f` gave for each key (`key` names an argument: by default its text).
+memoize<A, R>(f: (x: A) => R, key?: (x: A) => string)(x: A) => R
+  cache: <string, R> = {}
+  (x: A)
+    k = key == null ? "${x}" : key(x)
+    if not (k in cache)
+      cache[k] = f(x)
+    cache[k] as R
+
+// A function that calls `f` only from its `n`th call on; before, it gives null.
+after<T>(n: int, f: () => T)() => T?
+  calls = 0
+  ()
+    calls += 1
+    calls >= n ? f() : null
+
+// A function that calls `f` while it has been called fewer than `n` times; then it gives the last result.
+before<T>(n: int, f: () => T)() => T?
+  calls = 0
+  last: T? = null
+  ()
+    calls += 1
+    if calls < n
+      last = f()
+    last
+
+// `f` with its two parameters swapped.
+flip<A, B, R>(f: (a: A, b: B) => R)(b: B, a: A) => R
+  (b: B, a: A) => f(a, b)
+
+// `f` with its first parameter given.
+partial<A, B, R>(f: (a: A, b: B) => R, first: A)(b: B) => R
+  (b: B) => f(first, b)
+
+// `f` with its last parameter given.
+partialRight<A, B, R>(f: (a: A, b: B) => R, last: B)(a: A) => R
+  (a: A) => f(a, last)
+
+// `f` of two parameters as two functions of one.
+curry<A, B, R>(f: (a: A, b: B) => R)(a: A) => (b: B) => R
+  (a: A) => (b: B) => f(a, b)
+
+// The functions applied one after another, the first one first.
+flow<T>(fs: ((x: T) => T)[])(x: T) => T
+  (x: T) => fs.reduce(x, (acc, f) => f(acc))
+
+// The functions applied one after another, the last one first.
+flowRight<T>(fs: ((x: T) => T)[])(x: T) => T
+  flow(fs.reversed())
+
+// What `f` gives for each number from 0 up to `n` (not included).
+times<T>(n: int, f: (index: int) => T) T[]
+  out: T[] = []
+  for i in 0..n
+    out.add(f(i))
+  out
+
+// What `f` gives, or `fallback` when it throws.
+attempt<T>(f: () => T, fallback: T) T
+  try
+    f()
+  catch e
+    fallback
+
+// A maker of identifiers: each call gives the prefix and the next number, from 1.
+uniqueIds(prefix: string = "")() => string
+  count = 0
+  ()
+    count += 1
+    "${prefix}${count}"

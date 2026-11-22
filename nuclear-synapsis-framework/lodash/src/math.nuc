@@ -1,0 +1,81 @@
+// Numbers: the helpers of lodash's Math and Number categories that Nuclear's library does not have already
+// (`sum`, `min`, `max`, `Math.clamp`, `round`, `floor`, `ceil` are the library's).
+
+// The average; null for an empty list.
+mean(xs: double[]) double?
+  xs.isEmpty ? null : xs.sum() / xs.length
+
+// The average of what `f` gives; null for an empty list.
+meanBy<T>(xs: T[], f: (x: T) => double) double?
+  mean(xs.map((x) => f(x)))
+
+// The total of what `f` gives.
+sumBy<T>(xs: T[], f: (x: T) => double) double
+  total = 0.0
+  for x in xs
+    total += f(x)
+  total
+
+// The first value for which `f` gives the most; null for an empty list.
+maxBy<T>(xs: T[], f: (x: T) => double) T?
+  best: T? = null
+  most = 0.0
+  for x in xs
+    v = f(x)
+    if best == null or v > most
+      best = x
+      most = v
+  best
+
+// The first value for which `f` gives the least; null for an empty list.
+minBy<T>(xs: T[], f: (x: T) => double) T?
+  best: T? = null
+  least = 0.0
+  for x in xs
+    v = f(x)
+    if best == null or v < least
+      best = x
+      least = v
+  best
+
+// `n` rounded to `precision` decimals; a negative precision rounds to tens, hundreds...
+roundTo(n: double, precision: int = 0) double
+  factor = 10.0 ** precision
+  (n * factor).round() / factor
+
+// `n` rounded down to `precision` decimals.
+floorTo(n: double, precision: int = 0) double
+  factor = 10.0 ** precision
+  (n * factor).floor() / factor
+
+// `n` rounded up to `precision` decimals.
+ceilTo(n: double, precision: int = 0) double
+  factor = 10.0 ** precision
+  (n * factor).ceil() / factor
+
+// Whether `n` is from `start` up to `end` (not included); the bounds may come in any order.
+inRange(n: double, start: double, end: double) boolean
+  low = Math.min(start, end)
+  high = Math.max(start, end)
+  n >= low and n < high
+
+// A whole number from `lower` to `upper`, both included, chosen by `random` (a number in [0, 1)).
+randomInt(lower: int, upper: int, random: () => double) int
+  low = Math.min(lower, upper)
+  high = Math.max(lower, upper)
+  low + (random() * (high - low + 1)).floor()
+
+// The numbers from `start` up to `end` (not included) by `step`; a negative step counts down.
+range(start: int, end: int, step: int = 1) int[]
+  out: int[] = []
+  if step == 0
+    return out
+  i = start
+  while (step > 0 and i < end) or (step < 0 and i > end)
+    out.add(i)
+    i += step
+  out
+
+// `range` from its last number to its first.
+rangeRight(start: int, end: int, step: int = 1) int[]
+  range(start, end, step).reversed()

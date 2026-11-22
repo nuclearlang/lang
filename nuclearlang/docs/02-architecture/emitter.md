@@ -30,6 +30,13 @@ options a dialect sets and what the targets without braces needed are in [emitte
   return type of a generic function and of a method or attribute of a generic module with them replaced
   (`subst_type`), an optional attribute as nullable, a getter as an attribute, `xs.map((x) => ...)` as a list of what
   the lambda gives, and a variable narrowed inside `if x is T` (the branch only).
+- A lambda given for a parameter of a function type takes its parameters' types from it, with the type parameters
+  the call fixes replaced (`callee_bound`, `lambda_hints`); in a list of functions it also writes them
+  (`item_hints`, `typed_hints`).
+- A literal given for `any`, or inside a map or a list of `any`, is written with the dialect's `object_any` /
+  `list_any` (`any_level`, `any_literal`); a value declared `any` is shown with `show_any`, a nullable decimal with
+  `show_double_nullable`.
+- `obj.method` given as a value: `method_ref`. `call()?.name` where `?.` is not native: `optional_member_once`.
 - A block lambda that assigns a variable of the function around it: `Closure` collects the names and the dialect
   writes its `nonlocal_decl` / `global_decl` line first (Python).
 - A `[names] written` name the code holds only as a local (`log`, `max`) imports nothing: the times the local was

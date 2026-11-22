@@ -1,0 +1,71 @@
+// The cases of lodash's own tests and documentation for its Collection, Math and Number categories.
+User(name: string, age: int, active: boolean)
+
+people(xs: User[]) string = xs.map((u) => u.name).join(",")
+
+// A generator of fixed "random" numbers, so every target takes the same path.
+Dice(values: double[])
+  at: int = 0
+
+  roll() double
+    v = values[at % values.length]
+    at += 1
+    v
+
+main() void
+  empty: int[] = []
+  users = [User("barney", 36, false), User("fred", 40, true), User("pebbles", 1, false), User("wilma", 36, true)]
+  counts = countBy([6, 4, 6, 3], (x) => x % 2 == 0 ? "even" : "odd")
+  check("countBy", "${counts["even"]} ${counts["odd"]} ${counts.length}", "3 1 2")
+  lengths = countBy(["one", "two", "three"], (w) => "${w.length}")
+  check("countBy keeps the order of first appearance", lengths.keys.join(","), "3,5")
+  byName = keyBy(users, (u) => u.name)
+  check("keyBy", "${byName["fred"]!.age} ${byName.length}", "40 4")
+  byAge = keyBy(users, (u) => "${u.age}")
+  check("keyBy keeps the last", "${byAge["36"]!.name}", "wilma")
+  parts = partition(users, (u) => u.active)
+  check("partition", "${people(parts.first)} | ${people(parts.second)}", "fred,wilma | barney,pebbles")
+  none = partition(users, (u) => u.age > 100)
+  check("partition with no match", "${none.first.length} ${none.second.length}", "0 4")
+  check("reject", people(reject(users, (u) => u.active)), "barney,pebbles")
+  check("flatMap", ints(flatMap([1, 2], (n) => [n, n])), "1,1,2,2")
+  check("flatMap of nothing", ints(flatMap([1, 2], (n) => n > 5 ? [n] : [])), "")
+  check("reduceRight", reduceRight([[0, 1], [2, 3], [4, 5]], "", (acc, x) => acc + x.join("")), "452301")
+  check("reduceRight of nothing", "${reduceRight(empty, 7, (acc, x) => acc + x)}", "7")
+  check("orderBy", people(orderBy(users, [(u) => u.age.toDouble()])), "pebbles,barney,wilma,fred")
+  check("orderBy descending", people(orderBy(users, [(u) => u.age.toDouble()], [true])), "fred,barney,wilma,pebbles")
+  byTwo = orderBy(users, [(u) => u.age.toDouble(), (u) => u.name.length.toDouble()], [false, true])
+  check("orderBy two keys", people(byTwo), "pebbles,barney,wilma,fred")
+  check("orderBy leaves the list", people(users), "barney,fred,pebbles,wilma")
+  dice = Dice([0.0, 0.5, 0.99])
+  check("sample", "${sample([10, 20, 30, 40], dice.roll)} ${sample([10, 20, 30, 40], dice.roll)} ${sample([10, 20, 30, 40], dice.roll)}", "10 30 40")
+  check("sample of nothing", "${sample(empty, dice.roll)}", "null")
+  shuffled = shuffle([1, 2, 3, 4, 5], Dice([0.1, 0.7, 0.4, 0.9]).roll)
+  check("shuffle keeps every value", ints(shuffled.sorted()), "1,2,3,4,5")
+  check("shuffle moves the values", ints(shuffled), "5,4,2,3,1")
+  check("sampleSize", "${sampleSize([1, 2, 3], 2, dice.roll).length} ${sampleSize([1, 2, 3], 9, dice.roll).length} ${sampleSize([1, 2, 3], 0, dice.roll).length}", "2 3 0")
+  seen: string[] = []
+  forEachIndexed(["a", "b"], (x, i) => seen.add("${i}${x}"))
+  forEachRight([1, 2, 3], (x) => seen.add("${x}"))
+  check("forEachIndexed and forEachRight", seen.join(","), "0a,1b,3,2,1")
+  check("mean", "${mean([4, 2, 8, 6])}", "5.0")
+  check("mean of nothing", "${mean([])}", "null")
+  check("meanBy", "${meanBy(users, (u) => u.age.toDouble())}", "28.25")
+  check("sumBy", "${sumBy(users, (u) => u.age.toDouble())}", "113.0")
+  check("sumBy of nothing", "${sumBy(empty, (n) => n.toDouble())}", "0.0")
+  check("maxBy", "${maxBy(users, (u) => u.age.toDouble())?.name}", "fred")
+  check("maxBy takes the first of equals", "${maxBy(users, (u) => u.age == 36 ? 1.0 : 0.0)?.name}", "barney")
+  check("minBy", "${minBy(users, (u) => u.age.toDouble())?.name}", "pebbles")
+  check("maxBy of nothing", "${maxBy(empty, (n) => n.toDouble())} ${minBy(empty, (n) => n.toDouble())}", "null null")
+  check("maxBy of negatives", "${maxBy([-3, -1, -2], (n) => n.toDouble())}", "-1")
+  check("roundTo", "${roundTo(4.006)} ${roundTo(4.006, 2)} ${roundTo(4060, -2)}", "4.0 4.01 4100.0")
+  check("floorTo", "${floorTo(4.006)} ${floorTo(0.046, 2)} ${floorTo(4060, -2)}", "4.0 0.04 4000.0")
+  check("ceilTo", "${ceilTo(4.006)} ${ceilTo(6.004, 2)} ${ceilTo(6040, -2)}", "5.0 6.01 6100.0")
+  check("inRange", "${inRange(3, 2, 4)} ${inRange(4, 0, 8)} ${inRange(4, 0, 2)} ${inRange(2, 0, 2)} ${inRange(1.2, 0, 2)}", "true true false false true")
+  check("inRange with swapped bounds", "${inRange(-3, -2, -6)} ${inRange(5.2, 4, 0)}", "true false")
+  check("randomInt", "${randomInt(1, 6, Dice([0.0]).roll)} ${randomInt(1, 6, Dice([0.999]).roll)} ${randomInt(6, 1, Dice([0.5]).roll)}", "1 6 4")
+  check("range", ints(range(0, 4)), "0,1,2,3")
+  check("range by a step", ints(range(0, 20, 5)), "0,5,10,15")
+  check("range down", ints(range(0, -4, -1)), "0,-1,-2,-3")
+  check("range of nothing", "${range(0, 0).length} ${range(1, 4, 0).length} ${range(4, 0).length}", "0 0 0")
+  check("rangeRight", ints(rangeRight(0, 4)), "3,2,1,0")

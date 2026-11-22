@@ -32,6 +32,12 @@ fn every_nuc_of_the_repository_is_formatted() {
             nuc_files(&root.join(d), &mut files);
         }
     }
+    // the library of helpers (lodash in Nuclear)
+    let helpers = Path::new(ROOT).join("../nuclear-synapsis-framework/lodash");
+    let before = files.len();
+    nuc_files(&helpers.join("src"), &mut files);
+    nuc_files(&helpers.join("test"), &mut files);
+    assert!(files.len() > before, "found no .nuc files of the library of helpers");
     assert!(!files.is_empty(), "found no .nuc files");
     let bad: Vec<String> = files
         .iter()

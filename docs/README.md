@@ -24,6 +24,7 @@ platform**. Each project documents itself, in its own folder, the same way.
 | The language, the compiler, the language server | `nuclearlang/` | `lang` |
 | A language dialect and its frameworks | `nuclearlang/dialects/{python,typescript,dart,nodejs}/` | `python` `typescript` `dart` `nodejs` |
 | The framework, Synapsis | `nuclear-synapsis-framework/` | `synapsis` |
+| The helpers of lodash, in Nuclear | `nuclear-synapsis-framework/lodash/` | — |
 | A platform of the framework | `nuclear-synapsis-framework/platforms/{mobile,backend,web}/` | `mobile` `backend` `web` |
 | The `nuclear` command | `tools/cli/` | `cli` |
 | The code generator (the crate `nuclear-codegen`) | `tools/code_generator/` | `codegen` |

@@ -1,0 +1,192 @@
+// Maps: the helpers of lodash's Object category, over Nuclear's maps with text keys
+// (`keys`, `values`, `length`, `key in map`, `{ ...a, ...b }` are the language's).
+
+// The entries whose key is in `keys`.
+pick<V>(m: <string, V>, keys: string[]) <string, V>
+  out: <string, V> = {}
+  for k in keys
+    if k in m
+      out[k] = m[k]!
+  out
+
+// The entries whose key is not in `keys`.
+omit<V>(m: <string, V>, keys: string[]) <string, V>
+  out: <string, V> = {}
+  for k, v in m
+    if not (k in keys)
+      out[k] = v
+  out
+
+// The entries for which `test` is true.
+pickBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>
+  out: <string, V> = {}
+  for k, v in m
+    if test(v, k)
+      out[k] = v
+  out
+
+// The entries for which `test` is not true.
+omitBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>
+  pickBy(m, (v, k) => not test(v, k))
+
+// The same keys with what `f` gives for each value.
+mapValues<V, R>(m: <string, V>, f: (value: V, key: string) => R) <string, R>
+  out: <string, R> = {}
+  for k, v in m
+    out[k] = f(v, k)
+  out
+
+// The same values under the key `f` gives for each.
+mapKeys<V>(m: <string, V>, f: (value: V, key: string) => string) <string, V>
+  out: <string, V> = {}
+  for k, v in m
+    out[f(v, k)] = v
+  out
+
+// Each value as the key of its key; a repeated value keeps its last key.
+invert(m: <string, string>) <string, string>
+  out: <string, string> = {}
+  for k, v in m
+    out[v] = k
+  out
+
+// Each value as the key of the keys that had it.
+invertBy(m: <string, string>) <string, string[]>
+  out: <string, string[]> = {}
+  for k, v in m
+    if not (v in out)
+      out[v] = []
+    out[v]!.add(k)
+  out
+
+// The entries of `m`, and those of `fallback` whose key `m` does not have.
+defaults<V>(m: <string, V>, fallback: <string, V>) <string, V>
+  { ...fallback, ...m }
+
+// The first key for whose value `test` is true.
+findKey<V>(m: <string, V>, test: (value: V) => boolean) string?
+  for k, v in m
+    if test(v)
+      return k
+  null
+
+// The last key for whose value `test` is true.
+findLastKey<V>(m: <string, V>, test: (value: V) => boolean) string?
+  found: string? = null
+  for k, v in m
+    if test(v)
+      found = k
+  found
+
+// The entries as pairs of key and value.
+toPairs<V>(m: <string, V>) Pair<string, V>[]
+  out: Pair<string, V>[] = []
+  for k, v in m
+    out.add(Pair(k, v))
+  out
+
+// A map of the pairs.
+fromPairs<V>(pairs: Pair<string, V>[]) <string, V>
+  out: <string, V> = {}
+  for p in pairs
+    out[p.first] = p.second
+  out
+
+// The keys of a path: `a.b[0].c` is `a`, `b`, `0`, `c`.
+pathKeys(path: string) string[]
+  path.replaceAll("[", ".").replaceAll("]", "").split(".").filter((k) => not k.isEmpty)
+
+// The value at `path` (`"a.b[0].c"`) inside maps and lists; `fallback` when the path leads nowhere.
+get(data: any, path: string, fallback: any = null) any
+  current: any = data
+  for key in pathKeys(path)
+    if not has(current, key)
+      return fallback
+    current = child(current, key)
+  current == null ? fallback : current
+
+// Whether `path` leads to a value inside maps and lists.
+has(data: any, path: string) boolean
+  current: any = data
+  for key in pathKeys(path)
+    if current is any[]
+      i = key.toInt()
+      if i == null or i < 0 or i >= current.length
+        return false
+    else if current is <string, any>
+      if not (key in current)
+        return false
+    else
+      return false
+    current = child(current, key)
+  true
+
+// What a list or a map holds at one key of a path.
+child(data: any, key: string) any
+  if data is any[]
+    return data[key.toInt() ?? 0]
+  if data is <string, any>
+    return data[key]
+  null
+
+// The map at `key` of `data`, or null when `data` holds something else there.
+mapAt(data: <string, any>, key: string) <string, any>?
+  next = data[key]
+  if next is <string, any>
+    return next
+  null
+
+// Sets the value at `path` inside a map, making the maps the path needs, in place.
+set(data: <string, any>, path: string, value: any) <string, any>
+  keys = pathKeys(path)
+  if keys.isEmpty
+    return data
+  current = data
+  for key in initial(keys)
+    next = mapAt(current, key)
+    if next == null
+      made: <string, any> = {}
+      current[key] = made
+      current = made
+    else
+      current = next
+  current[keys.last] = value
+  data
+
+// Removes the value at `path` inside a map, in place; whether it was there.
+unset(data: <string, any>, path: string) boolean
+  keys = pathKeys(path)
+  if keys.isEmpty
+    return false
+  current = data
+  for key in initial(keys)
+    next = mapAt(current, key)
+    if next == null
+      return false
+    current = next
+  if not (keys.last in current)
+    return false
+  current.remove(keys.last)
+  true
+
+// A copy of maps and lists and of everything inside them.
+cloneDeep(value: any) any
+  if value is any[]
+    return value.map((x) => cloneDeep(x))
+  if value is <string, any>
+    out: <string, any> = {}
+    for k, v in value
+      out[k] = cloneDeep(v)
+    return out
+  value
+
+// `source` merged into `target`, in place: a map inside both is merged, anything else of `source` replaces.
+merge(target: <string, any>, source: <string, any>) <string, any>
+  for k, v in source
+    mine = mapAt(target, k)
+    theirs = mapAt(source, k)
+    if mine != null and theirs != null
+      merge(mine, theirs)
+    else
+      target[k] = cloneDeep(v)
+  target

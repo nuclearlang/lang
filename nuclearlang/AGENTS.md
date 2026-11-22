@@ -31,6 +31,7 @@ tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <di
 tools/stdlib-check.sh [area...]    # examples/stdlib/ in TypeScript, Dart and Python: the same output
 DIR=examples/semantics tools/stdlib-check.sh   # the rules a target could break, the same way
 DIR=examples/conformance tools/stdlib-check.sh # every feature of the language, the same way
+../nuclear-synapsis-framework/lodash/check.sh  # a library of several files in the three targets, the same way
 FLUTTER_ROOT=~/develop/flutter tools/defs/generate.sh    # dialects/dart/defs/ (about 45 s)
 tools/defs/python/generate.sh      # dialects/python/defs/
 tools/defs/typescript/generate.sh  # dialects/typescript/defs/
@@ -76,8 +77,9 @@ The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`..., and t
 - `dialects/<language>/defs/` is generated: never edited by hand.
 - Generated code changed: `UPDATE_GOLDEN=1 cargo test` and the diff reviewed.
 - **Every change to the transpiler, a dialect or the library runs the three program folders** (`examples/stdlib`,
-  `examples/semantics`, `examples/conformance`) with `tools/stdlib-check.sh`, every line `ok`: the same output in
-  TypeScript, Dart and Python, with no warning of the target's own checker (`docs/05-standards/testing.md`).
+  `examples/semantics`, `examples/conformance`) with `tools/stdlib-check.sh`, and the library of helpers
+  (`../nuclear-synapsis-framework/lodash/check.sh`), every line `ok`: the same output in TypeScript, Dart and
+  Python, with no warning of the target's own checker (`docs/05-standards/testing.md`).
 - A feature starts as a spec in `docs/04-specs/`; a decision of the user becomes a new ADR in `docs/03-adr/`.
 - Node.js/Express is postponed by the user: do not touch it until asked.
 - What is not documented and cannot be read from the code is asked, not invented.

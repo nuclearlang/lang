@@ -155,13 +155,16 @@ member = "{{object}}.{{name}}"
 # a decimal written as Nuclear writes it (`2.0`, not `2`) and a missing value as `null` (not `undefined`), in print
 # and in an interpolated text
 show_double = { template = "_double({{expr}})", helper = "function _double(n: number): string {\n  return Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
+show_double_nullable = { template = "_doubleOrNull({{expr}})", helper = "function _doubleOrNull(n: number | null | undefined): string | null {\n  return n == null ? null : Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
 show_nullable = "({{expr}} ?? null)"
 optional_member = "{{object}}?.{{name}}"
 index = "{{object}}[{{index}}]"
+# a method given as a value keeps its object (`this` is lost otherwise)
+method_ref = "{{object}}.{{name}}.bind({{object}})"
 await = "await {{expr}}"
 ternary = "{{cond}} ? {{then}} : {{else}}"
 # basic types have no class at run time: typeof (int: Number.isInteger), lists: Array.isArray
-is = "{{#t.list}}Array.isArray({{expr}}){{/t.list}}{{^t.list}}{{#t.primitive}}{{#t.is.int}}Number.isInteger({{expr}}){{/t.is.int}}{{^t.is.int}}typeof {{expr}} === '{{#t.is.string}}string{{/t.is.string}}{{#t.is.double}}number{{/t.is.double}}{{#t.is.number}}number{{/t.is.number}}{{#t.is.boolean}}boolean{{/t.is.boolean}}'{{/t.is.int}}{{/t.primitive}}{{^t.primitive}}{{expr}} instanceof {{type}}{{/t.primitive}}{{/t.list}}"
+is = "{{#t.map}}(typeof {{expr}} === 'object' && {{expr}} !== null && !Array.isArray({{expr}})){{/t.map}}{{^t.map}}{{#t.list}}Array.isArray({{expr}}){{/t.list}}{{^t.list}}{{#t.primitive}}{{#t.is.int}}Number.isInteger({{expr}}){{/t.is.int}}{{^t.is.int}}typeof {{expr}} === '{{#t.is.string}}string{{/t.is.string}}{{#t.is.double}}number{{/t.is.double}}{{#t.is.number}}number{{/t.is.number}}{{#t.is.boolean}}boolean{{/t.is.boolean}}'{{/t.is.int}}{{/t.primitive}}{{^t.primitive}}{{expr}} instanceof {{type}}{{/t.primitive}}{{/t.list}}{{/t.map}}"
 cast = "{{expr}} as {{type}}"
 non_null = "{{expr}}!"
 lambda = """

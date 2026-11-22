@@ -6,9 +6,9 @@ name: language
 on:
   push:
     branches: [main]
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
+    paths: ['nuclearlang/**', 'nuclear-synapsis-framework/lodash/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
   pull_request:
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
+    paths: ['nuclearlang/**', 'nuclear-synapsis-framework/lodash/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
   workflow_dispatch:
 
 permissions:
@@ -49,3 +49,5 @@ jobs:
       - name: "The conformance programs: every feature of the language"
         working-directory: nuclearlang
         run: DIR=examples/conformance tools/stdlib-check.sh
+      - name: "The library of helpers (lodash in Nuclear): several files, the three targets"
+        run: nuclear-synapsis-framework/lodash/check.sh
