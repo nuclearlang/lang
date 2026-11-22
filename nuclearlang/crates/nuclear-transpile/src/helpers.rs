@@ -68,6 +68,12 @@ fn registry() -> &'static HashMap<String, Helper> {
     })
 }
 
+/// The helpers a program can call, in no order: the name and the declaration with its doc comment (the editor
+/// offers and explains them like the declarations of a project).
+pub fn public() -> impl Iterator<Item = (&'static str, &'static str)> {
+    registry().iter().filter(|(n, _)| !INTERNAL.contains(&n.as_str())).map(|(n, h)| (n.as_str(), h.text.as_str()))
+}
+
 /// Every identifier of the tokens (also inside the interpolations of a text), with the token before and after it.
 fn words(tokens: &[Token], f: &mut impl FnMut(&str, Option<&TokenKind>, Option<&TokenKind>)) {
     for (i, t) in tokens.iter().enumerate() {
@@ -214,6 +220,14 @@ mod tests {
         let src = source(&BTreeSet::from(["kebabCase".to_string()]), &HashSet::from(["words".to_string()]));
         assert!(src.contains("nuclearWords(text: string) string[]") && src.contains("nuclearWords(text).map"), "{src}");
         assert!(!src.contains("\nwords("), "{src}");
+    }
+
+    #[test]
+    fn what_the_helpers_use_among_themselves_is_not_offered() {
+        let names: HashSet<&str> = public().map(|(n, _)| n).collect();
+        assert!(names.contains("chunk") && names.contains("Pair"), "{names:?}");
+        assert!(INTERNAL.iter().all(|n| !names.contains(n)), "{names:?}");
+        assert!(public().any(|(n, text)| n == "chunk" && text.starts_with("// ") && text.contains("\nchunk<T>(")));
     }
 
     #[test]

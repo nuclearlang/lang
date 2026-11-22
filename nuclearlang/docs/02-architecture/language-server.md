@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-22
 related: [integrations.md, projects.md, dialects.md, ../../crates/nuclear-lsp/README.md, ../01-product/roadmap.md]
 ---
 # The language server (`crates/nuclear-lsp`)
@@ -70,8 +70,22 @@ transpiler feature is built there, never copied into the server.
   project knows).
 - A workspace's marker (`.workspace/workspace.nuc`, `server::is_workspace_marker`) is a manifest: it is checked as
   `nuclear workspace` reads it (`read_calls` of `workspace` and `app`, N0303), never as code (no N0106 for `app`).
-- Other files' names: completion, hover ("Declared in …"), go to definition; their members (`Object::Project`) and
-  the named parameters of `Class(`.
+- Other files' names: completion, hover ("Declared in …"), go to definition, signature help; their members
+  (`Object::Project`) and the named parameters of `Class(`.
+
+## The helpers of the language
+
+The helpers every file has without a `use` (`chunk`, `uniqBy`, `Pair`: ADR-lang-0013) are read from the compiler
+(`nuclear_transpile::helpers::public`: each name with its declaration and doc comment) and indexed once, each like
+a file of a project (`features::helpers`). `features::outer_decl` answers a name the file does not declare: a
+declaration of another file of the project, or else a helper; hover, the named arguments and signature help go
+through it, so a helper is shown as a function of the project is.
+
+- Completion offers them wherever it offers the names of the file (signature as detail, doc comment as
+  documentation, the label `helper`), after the file's and the project's.
+- A name of the file, of its project or of the dialect (`dialect_has`) is never the helper; a key or a named
+  argument of that name (`{ tail: 2 }`) neither.
+- No go to definition: a helper is inside the compiler, there is no file to open on an installed machine.
 
 ## Bundles
 
@@ -85,4 +99,4 @@ the server is released with them.
 
 ## Done
 
-`cargo test -p nuclear-lsp` (14 unit tests + 35 server tests) and `cargo clippy --all-targets`.
+`cargo test -p nuclear-lsp` (14 unit tests + 39 server tests) and `cargo clippy --all-targets`.

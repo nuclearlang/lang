@@ -876,3 +876,49 @@ fn the_workspace_marker_is_read_as_a_manifest() {
     let code = Doc::new("file:///w/rick/main.nuc".into(), 1, marker.into(), Some(&flutter));
     assert!(!code.diagnostics.is_empty());
 }
+
+// ---------------------------------------------------------------- the helpers of the language
+
+#[test]
+fn completion_offers_the_helpers_of_the_language() {
+    let mut s = Session::open("main() void\n  groups = chu\n", "base");
+    let items = s.at("textDocument/completion", "chu\n", 0, 3);
+    let chunk = item(&items, "chunk");
+    assert_eq!(chunk["detail"], "chunk<T>(xs: T[], size: int) T[][]");
+    assert!(chunk["documentation"]["value"].as_str().unwrap().contains("split into groups"), "{chunk}");
+    let labels = labels(&items);
+    assert!(labels.contains(&"Pair".to_string()), "{labels:?}");
+    // what the helpers use among themselves is not a name of the language
+    assert!(!labels.contains(&"pathKeys".to_string()), "{labels:?}");
+}
+
+#[test]
+fn a_name_of_the_file_wins_over_a_helper() {
+    let src = "// Mine.\nchunk(text: string) string\n  text\n\nmain() void\n  print(chunk('a'))\n  x = chu\n";
+    let mut s = Session::open(src, "base");
+    let items = s.at("textDocument/completion", "chu\n", 0, 3);
+    let chunks: Vec<&Value> = items["items"].as_array().unwrap().iter().filter(|i| i["label"] == "chunk").collect();
+    assert_eq!(chunks.len(), 1, "{chunks:?}");
+    assert_eq!(chunks[0]["detail"], "chunk(text: string) string");
+    let md = s.at("textDocument/hover", "chunk('a')", 0, 1)["contents"]["value"].as_str().unwrap().to_string();
+    assert!(md.contains("chunk(text: string) string") && !md.contains("helper"), "{md}");
+}
+
+#[test]
+fn hover_and_signature_help_of_a_helper() {
+    let src = "main() void\n  names = uniqBy(['a', 'A'], (x) => x.lower())\n  print({ tail: 2 })\n";
+    for dialect in ["base", "flutter"] {
+        let mut s = Session::open(src, dialect);
+        let md = s.at("textDocument/hover", "uniqBy(", 0, 1)["contents"]["value"].as_str().unwrap().to_string();
+        assert!(md.contains("uniqBy<T>(xs: T[], key: (x: T) => string) T[]"), "{dialect}: {md}");
+        assert!(md.contains("A helper of the language") && md.contains("The first value of each key"), "{dialect}: {md}");
+        let help = s.at("textDocument/signatureHelp", "uniqBy(", 0, 7);
+        assert_eq!(help["signatures"][0]["label"], "uniqBy(xs: T[], key: (x: T) => string)", "{dialect}");
+        assert_eq!(help["activeParameter"], 0, "{dialect}");
+        // a key of a map is not the helper of that name (`tail`)
+        let hover = s.at("textDocument/hover", "tail:", 0, 1);
+        assert!(!hover.to_string().contains("helper"), "{dialect}: {hover}");
+        // the helpers are the compiler's: there is no file to go to
+        assert!(s.at("textDocument/definition", "uniqBy(", 0, 1).is_null(), "{dialect}");
+    }
+}

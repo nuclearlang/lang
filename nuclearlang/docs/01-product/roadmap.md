@@ -126,9 +126,10 @@ Fixed and kept as cases of `examples/conformance/` and tests of `rules.rs`. Left
 
 ### The helpers of the language (ADR-lang-0013, 2026-11-22)
 
-- The language server does not complete, document nor go to a helper (`chunk`, `uniqBy`...): it reads the
-  declarations of a file and of its project, and the helpers are the compiler's. Wanted: their names and doc
-  comments from `helpers.rs` in completion and hover.
+- The language server does not go to the definition of a helper (`chunk`, `uniqBy`...): a helper is inside the
+  compiler, and an installed machine has no file of it. Wanted: a read-only document the server gives the editor
+  (each client needs its content provider), never a path of the source tree. The helpers are not colored as
+  functions of the library either, and hover does not put the call's types in place of `T`.
 - A helper is not brought inside a module that extends a class nothing describes, nor in a file with a whole-module
   `use`: a free name there is taken for the other's.
 - A file that uses a helper is emitted twice (once to find the names nothing defines): measured as nothing on the

@@ -14,7 +14,7 @@ What other projects use of this one. A change here is a change for them.
 |---|---|
 | `nuclear_syntax` | `parse`, `lex`, `parse_type`, `ast`, `token`, `DocComment`, `fmt::format`, `habits` |
 | `nuclear_dialect` | `Loader`, `Dialect`, `Report`, `Home`, `homes`, `install_dir`, `defs_cache_dir`, `base_doc`, `defs` (`TypeDefs`, `Decl`, `Member`, `Constructor`, `Param`, `render*`), `library` (`MEMBERS`, `BASES`, `OBJECTS`, `WRONG`) |
-| `nuclear_transpile` | `transpile`, `check`, `Output`, `project` (`Manifest`, `build`, `output_dir`, `with_project_defs`, `metadata`, `write_metadata`, `line_map`), `contract` (`contract`, `openapi`, `write`, `sync`), `map` (`map`, `inventory`, `shape`) |
+| `nuclear_transpile` | `transpile`, `check`, `Output`, `project` (`Manifest`, `build`, `output_dir`, `with_project_defs`, `metadata`, `write_metadata`, `line_map`), `contract` (`contract`, `openapi`, `write`, `sync`), `map` (`map`, `inventory`, `shape`), `helpers` (`public`: each helper a program can call with its declaration and doc comment; `declared`, `used`, `source`, `PATH`) |
 | `nuclear_diag` | `Diagnostic`, `SourceFile`, the codes |
 
 The language server walks the AST itself, and so do the two command line tools: a changed variant of `ast.rs` or

@@ -11,8 +11,47 @@ use nuclear_syntax::DocComment;
 use nuclear_syntax::ast::is_pascal;
 use nuclear_syntax::token::{Keyword, TokenKind};
 use serde_json::{Value, json};
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::collections::{BTreeMap, HashSet};
+use std::sync::{Arc, OnceLock};
+
+/// A declaration the file does not hold: its source, that source's index and its binding there.
+type Outer<'a> = (&'a str, &'a Index, usize);
+
+/// The helpers of the language (`chunk`, `Pair`), each indexed like a file of a project.
+fn helpers() -> &'static BTreeMap<&'static str, (&'static str, Index, usize)> {
+    static HELPERS: OnceLock<BTreeMap<&'static str, (&'static str, Index, usize)>> = OnceLock::new();
+    HELPERS.get_or_init(|| {
+        nuclear_transpile::helpers::public()
+            .filter_map(|(name, src)| {
+                let ix = Index::build(src, &nuclear_syntax::parse(src).file, None, None);
+                let b = ix.toplevel.iter().copied().find(|&b| ix.bindings[b].name == name)?;
+                Some((name, (src, ix, b)))
+            })
+            .collect()
+    })
+}
+
+/// Does the dialect have that name? Then it is the dialect's, never a helper (as the compiler decides).
+fn dialect_has(dialect: Option<&Dialect>, name: &str) -> bool {
+    dialect.is_some_and(|d| {
+        d.auto_imports.contains_key(name)
+            || d.functions.contains_key(name)
+            || d.globals.contains(name)
+            || (is_pascal(name) && d.defs.contains_key(name))
+    })
+}
+
+/// The declaration of `name` outside the file: another file of the project's, or else a helper of the language.
+fn outer_decl<'a>(doc: &'a Doc, dialect: Option<&Dialect>, name: &str) -> Option<(Outer<'a>, Option<&'a str>)> {
+    if let Some(n) = doc.project_name(name) {
+        let (p, from) = doc.project.as_ref()?;
+        return Some((p.decl(from, name)?, Some(n.path.as_str())));
+    }
+    if dialect_has(dialect, name) {
+        return None;
+    }
+    helpers().get(name).map(|(src, ix, b)| ((*src, ix, *b), None))
+}
 
 fn offset(doc: &Doc, p: &Value) -> usize {
     doc.lines.offset_of(&doc.text, &p["position"])
@@ -397,14 +436,19 @@ pub fn hover(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value {
             }
             Target::HeaderWord(role) => header_word_markdown(word, *role, dialect),
             Target::None => {
-                if let Some(n) = doc.project_name(word).filter(|_| object_before(text, o.span.start).is_none()) {
-                    let mut md = format!("```nuclear\n{}\n```\nDeclared in `{}.nuc`.", n.signature, n.path);
-                    let comment = doc
-                        .project
-                        .as_ref()
-                        .and_then(|(p, from)| p.decl(from, word))
-                        .and_then(|(src, ix, b)| ix.doc_comment(src, b));
-                    if let Some(c) = comment {
+                if let Some(((src, other, b), path)) =
+                    // a key or a named argument (`size = 2`) is never the helper of that name
+                    outer_decl(doc, dialect, word).filter(|(_, path)| {
+                        object_before(text, o.span.start).is_none()
+                            && (path.is_some() || !matches!(o.tok, Tok::Property | Tok::Parameter))
+                    })
+                {
+                    let from = match path {
+                        Some(path) => format!("Declared in `{path}.nuc`."),
+                        None => "A helper of the language: every file has it without a `use`.".to_string(),
+                    };
+                    let mut md = format!("```nuclear\n{}\n```\n{from}", other.signature(src, b));
+                    if let Some(c) = other.doc_comment(src, b) {
                         md.push_str("\n\n---\n");
                         md.push_str(&DocComment::parse(&c).markdown());
                     }
@@ -736,7 +780,7 @@ pub fn completion(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value {
     // named arguments of a call to a declaration of another file of the project: `CharacterTile(character = ...)`
     if (before.ends_with('(') || before.ends_with(',') || (before.ends_with('\n') || at_line_start))
         && let Some((paren, None)) = enclosing_call(doc, at)
-        && let Some((src, other, callable)) = project_callable(doc, paren)
+        && let Some((src, other, callable)) = outer_callable(doc, dialect, paren)
     {
         named_param_items(src, other, callable, &written_named_args(text, at), &mut items);
     }
@@ -872,6 +916,14 @@ pub fn completion(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value {
             }
         }
     }
+    // the helpers of the language, after the names of the file and of its project
+    for (name, (src, other, b)) in helpers() {
+        if !dialect_has(dialect, name) && seen.insert((*name).to_string()) {
+            let mut item = binding_item_in(src, other, *b, "4");
+            item["labelDetails"] = json!({ "description": "helper" });
+            items.push(item);
+        }
+    }
     // members inherited from external bases (`emit`, `state`, `context`)
     if let Some((td, names)) = type_defs(dialect) {
         for base in module_bases(doc, dialect, at) {
@@ -941,15 +993,17 @@ pub fn completion(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value {
     json!({ "isIncomplete": incomplete, "items": items })
 }
 
-/// The declaration of another file of the project called at `paren` (`CharacterTile(`).
-fn project_callable(doc: &Doc, paren: usize) -> Option<(&str, &Index, usize)> {
-    let (p, path) = doc.project.as_ref()?;
+/// The declaration of another file of the project, or the helper, called at `paren` (`CharacterTile(`, `chunk(`).
+fn outer_callable<'a>(doc: &'a Doc, dialect: Option<&Dialect>, paren: usize) -> Option<Outer<'a>> {
     let end = generic_start(&doc.text, paren);
     let name = &doc.text[word_start(&doc.text, end)..end];
     if name.is_empty() || doc.index.visible(paren).into_iter().any(|b| doc.index.bindings[b].name == name) {
         return None;
     }
-    p.decl(path, name).filter(|(_, ix, b)| ix.bindings[*b].kind.is_callable())
+    if end.checked_sub(name.len() + 1).is_some_and(|i| doc.text.as_bytes()[i] == b'.') {
+        return None; // a member: `xs.chunk(`
+    }
+    outer_decl(doc, dialect, name).map(|(decl, _)| decl).filter(|(_, ix, b)| ix.bindings[*b].kind.is_callable())
 }
 
 /// `name =` items for the parameters of `callable` (a binding of `ix`, whose source is `text`) not yet written.
@@ -1069,11 +1123,17 @@ pub fn on_type_formatting(doc: &Doc, p: &Value) -> Value {
 pub fn signature_help(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value {
     let at = offset(doc, p);
     let Some((paren, callable)) = enclosing_call(doc, at) else { return Value::Null };
-    let Some(callable) = callable else {
-        return external_callable(doc, dialect, paren).map_or(Value::Null, |c| external_signature(doc, &c, paren, at));
+    // declared in the file; in another file of the project or a helper; of the type definitions
+    let (text, ix, callable) = match callable {
+        Some(b) => (doc.text.as_str(), &doc.index, b),
+        None => match outer_callable(doc, dialect, paren) {
+            Some(decl) => decl,
+            None => {
+                let c = external_callable(doc, dialect, paren);
+                return c.map_or(Value::Null, |c| external_signature(doc, &c, paren, at));
+            }
+        },
     };
-    let ix = &doc.index;
-    let text = &doc.text;
     let bind = &ix.bindings[callable];
     if bind.params.is_empty() {
         return Value::Null;
@@ -1101,7 +1161,7 @@ pub fn signature_help(doc: &Doc, dialect: Option<&Dialect>, p: &Value) -> Value 
     }
     label.push(')');
 
-    let (position, named) = current_argument(text, paren, at);
+    let (position, named) = current_argument(&doc.text, paren, at);
     let active = named
         .and_then(|n| bind.params.iter().position(|&p| ix.bindings[p].name == n))
         .unwrap_or(position.min(bind.params.len() - 1));
