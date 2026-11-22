@@ -166,14 +166,56 @@
       },
       "Error": {
         "properties": {
+          "errors": {
+            "description": "an invalid body or parameter: one reason per field, in the order of the fields' names",
+            "items": {
+              "$ref": "#/components/schemas/ErrorReason"
+            },
+            "type": "array"
+          },
           "message": {
             "type": "string"
           },
           "status": {
+            "description": "the HTTP status",
             "type": "integer"
           }
         },
         "required": [
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "ErrorReason": {
+        "properties": {
+          "field": {
+            "description": "the field's path (items.0.name); empty for the body itself",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "rule": {
+            "enum": [
+              "required",
+              "type",
+              "minLength",
+              "maxLength",
+              "min",
+              "max",
+              "pattern",
+              "email",
+              "url",
+              "json",
+              "invalid"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "rule",
           "message"
         ],
         "type": "object"
@@ -355,7 +397,7 @@
   },
   "info": {
     "title": "nuclear_developer",
-    "version": "0.90.0"
+    "version": "0.94.1"
   },
   "openapi": "3.1.0",
   "paths": {

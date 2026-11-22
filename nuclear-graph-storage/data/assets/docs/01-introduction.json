@@ -343,6 +343,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.185ae6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fixed (0.94.1): a `fastapi` model with a field named `type` crashed when its class was made (`TypeError: unhashable type: 'dict'`), since 0.94.0's rule of JSON types read the field's schema as a kind; the AI services have such a model, so the release's AI archive did not build.",
+    "- **Five decisions on the backend, the same in every dialect and on SQLite, PostgreSQL, MySQL and MariaDB**: a value of another JSON type is refused in a body (a text is never a number or a boolean; `30.0` is a whole number; **a `fastapi` app converted them until now**); a `DateTime` column keeps the fraction of a second everywhere (`DATETIME(6)` on MySQL and MariaDB, from the next `nuclear migrate make` of an existing project); a model built in code is checked in `nestjs` as in `fastapi`; `createTables` makes the schema the migrations make, so `nuclear migrate --fake` over it leaves nothing unseen; the reference says `like` follows the database's case rule and `ilike` is the same everywhere. The database check compares each one between the dialects."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -358,14 +376,11 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.23e40a",
+   "id": "doc:CHANGELOG.md#unreleased.24fec2",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": [
-    "- **TypeORM is the rule of behaviour for migrations in every backend dialect** (ADR-backend-0002): the history is the table `migrations`, one row per migration applied (a database migrated by 0.91 or 0.92 is converted in place); the migrations are ordered by their timestamp, a pending one older than the applied ones runs, `nuclear migrate down` reverts the last one applied; new `--fake` (the history changes, nothing runs: a database that already has its tables comes under migrations) and `--transaction all|each|none` on `up` and `down`, **with `all` as the default** (it was one transaction per migration); `@created` / `@updated` are `NOT NULL DEFAULT CURRENT_TIMESTAMP`, a foreign key has only the rule its relation says, and SQLite's types have the same names, in `fastapi` and `nestjs` (the next `nuclear migrate make` of an existing project writes the change); `make` refuses a changed key. The MCP server's `project_migrate` takes `fake` and `transaction`. The database check fails on any difference between the schemas the dialects leave: there is none on SQLite, PostgreSQL, MySQL and MariaDB.",
-    "- The MCP server runs a project's tests: `project_test(project)` builds it and runs them with its dialect's runner, and answers the same in every dialect: how many passed and failed, each failure at its `.nuc` line, and what it means."
-   ],
+   "body": "- **A backend checked against real databases** (`platforms/backend/checks/database-check`, Docker): the same Nuclear project (`store_api`: relations, pagination, a transaction that rolls back, validation, conflicts) built with `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB: migrations made, applied, read back from the schema, extended on a table with rows and reverted; 57 answers over HTTP that must be byte-identical in both dialects on every database; its unit tests. Fixes it found: in `fastapi` a `DateTime` lost its time zone and its JSON was not `toIso()`'s, changing a row with `@updated` answered 500, route parameters of several words did not bind, a related row carried Python's names, a `@manyToMany` list set on a found row failed, `MariaDB(url)` could not be imported, a `string` column had no length on MySQL; in `nestjs` `ilike` failed off PostgreSQL, a null column was missing from the answer of a create, a `@manyToMany` row carried its join row and a list of texts in a model was validated as one text. Fix (the compiler): `repository.where(...).count()` was written as a list's `count`.",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -376,11 +391,17 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.24fec2",
+   "id": "doc:CHANGELOG.md#unreleased.3ccce3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- **A backend checked against real databases** (`platforms/backend/checks/database-check`, Docker): the same Nuclear project (`store_api`: relations, pagination, a transaction that rolls back, validation, conflicts) built with `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB: migrations made, applied, read back from the schema, extended on a table with rows and reverted; 57 answers over HTTP that must be byte-identical in both dialects on every database; its unit tests. Fixes it found: in `fastapi` a `DateTime` lost its time zone and its JSON was not `toIso()`'s, changing a row with `@updated` answered 500, route parameters of several words did not bind, a related row carried Python's names, a `@manyToMany` list set on a found row failed, `MariaDB(url)` could not be imported, a `string` column had no length on MySQL; in `nestjs` `ilike` failed off PostgreSQL, a null column was missing from the answer of a create, a `@manyToMany` row carried its join row and a list of texts in a model was validated as one text. Fix (the compiler): `repository.where(...).count()` was written as a list's `count`.",
+   "summary": "transaction`.",
+   "body": [
+    "transaction`. The database check fails on any difference between the schemas the dialects leave: there is none on SQLite, PostgreSQL, MySQL and MariaDB.",
+    "- The MCP server runs a project's tests: `project_test(project)` builds it and runs them with its dialect's runner, and answers the same in every dialect: how many passed and failed, each failure at its `.nuc` line, and what it means.",
+    "- The Smart Graph knows the helpers and the tests: a row per helper of the language (`lib:helper-<name>`: its signature, its meaning and the cases its tests state), the conformance, semantics and benchmark programs as examples with what they print, and what can be answered about them (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`), with the questions the chat is held to.",
+    "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
+    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -442,6 +463,24 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- ADR-platform-0003: any step, stage or run of the Builder runs again (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`), each step keeps the decisions it took and why, the run is drawn as a graph, and the acceptance criteria are held against what the run left (`docs/ai/loop.md`).",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.712ec3",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The language server knows the helpers of the language (`chunk`, `uniqBy`, `Pair`...): completion offers them with their signature and doc comment, hover and signature help explain a call of one, like a function of the project (signature help now also answers for a function of another file of the project). A name the file, its project or the dialect has is never the helper. No go to definition: a helper has no file on an installed machine.",
+    "- **TypeORM is the rule of behaviour for migrations in every backend dialect** (ADR-backend-0002): the history is the table `migrations`, one row per migration applied (a database migrated by 0.91 or 0.92 is converted in place); the migrations are ordered by their timestamp, a pending one older than the applied ones runs, `nuclear migrate down` reverts the last one applied; new `--fake` (the history changes, nothing runs: a database that already has its tables comes under migrations) and `--transaction all|each|none` on `up` and `down`, **with `all` as the default** (it was one transaction per migration); `@created` / `@updated` are `NOT NULL DEFAULT CURRENT_TIMESTAMP`, a foreign key has only the rule its relation says, and SQLite's types have the same names, in `fastapi` and `nestjs` (the next `nuclear migrate make` of an existing project writes the change); `make` refuses a changed key. The MCP server's `project_migrate` takes `fake` and `"
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -532,24 +571,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.8feed6",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- **Five decisions on the backend, the same in every dialect and on SQLite, PostgreSQL, MySQL and MariaDB**: a value of another JSON type is refused in a body (a text is never a number or a boolean; `30.0` is a whole number; **a `fastapi` app converted them until now**); a `DateTime` column keeps the fraction of a second everywhere (`DATETIME(6)` on MySQL and MariaDB, from the next `nuclear migrate make` of an existing project); a model built in code is checked in `nestjs` as in `fastapi`; `createTables` makes the schema the migrations make, so `nuclear migrate --fake` over it leaves nothing unseen; the reference says `like` follows the database's case rule and `ilike` is the same everywhere. The database check compares each one between the dialects.",
-    "- The language server knows the helpers of the language (`chunk`, `uniqBy`, `Pair`...): completion offers them with their signature and doc comment, hover and signature help explain a call of one, like a function of the project (signature help now also answers for a function of another file of the project). A name the file, its project or the dialect has is never the helper. No go to definition: a helper has no file on an installed machine."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.a0dea1",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -629,25 +650,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- The generated code measured against an expert's in eight programs (`nuclear-synapsis-framework/eval/thesis/bench`: n-body, binary trees, fannkuch, a collections pipeline, texts, calls, primes, word frequencies), and what they showed fixed: Python reads a map as an expert does (`m.get(k, 0)`, `m[k]`, no helper call in a loop), `sortedBy` / `sortBy` read each key once in TypeScript and Dart and keep the order of equal keys in Dart (its sort did not promise it). Fix (texts are data): the replacement of `replace` / `replaceAll` is never a pattern (JavaScript read `$&` and `$1`, Python's regex `\\\\1`), `replace` with a `Regex` replaces the first match only in TypeScript and works in Python, and a doc comment with a `\\\\` is a valid Python docstring.",
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.d8127a",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- The Smart Graph knows the helpers and the tests: a row per helper of the language (`lib:helper-<name>`: its signature, its meaning and the cases its tests state), the conformance, semantics and benchmark programs as examples with what they print, and what can be answered about them (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`), with the questions the chat is held to.",
-    "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
-    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
-   ],
    "sources": [
     "CHANGELOG.md"
    ],
