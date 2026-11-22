@@ -2459,9 +2459,9 @@
    "id": "mcp:nuclear_project",
    "type": "mcp",
    "title": "`nuclear_project` — a tool of the Nuclear MCP server",
-   "summary": "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain.",
+   "summary": "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), add, remove, explain (the migrations of a database are project_migrate).",
    "body": [
-    "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain. Example: command=\"make\", args=[\"component\", \"orders\"]. A library the project lacks (npm, PyPI, pub.dev): command=\"add\", args=[\"lodash\"] installs it and generates its type definitions.",
+    "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), add, remove, explain (the migrations of a database are project_migrate). Example: command=\"make\", args=[\"component\", \"orders\"]. A library the project lacks (npm, PyPI, pub.dev): command=\"add\", args=[\"lodash\"] installs it and generates its type definitions.",
     "",
     "Parameters:",
     "",
@@ -2603,6 +2603,80 @@
       "type": "string",
       "required": true,
       "default": ""
+     }
+    ]
+   }
+  },
+  {
+   "id": "mcp:project_migrate",
+   "type": "mcp",
+   "title": "`project_migrate` — a tool of the Nuclear MCP server",
+   "summary": "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database).",
+   "body": [
+    "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database). action: status (every migration, applied or pending: read it first), make (message: what changed; writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that migration), down (reverts the last one applied; to: back to that migration). project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot ask): up and down change the database of the project's active environment, and down drops what the migration made, with its data. Build the project first (nuclear_build): the migration reads the built entities.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `action`: string = `\"status\"`",
+    "- `message`: string = `\"\"`",
+    "- `to`: string = `\"\"`",
+    "- `confirm`: string = `\"\"`"
+   ],
+   "keys": [
+    "project_migrate",
+    "project migrate"
+   ],
+   "asks": [
+    "what does project_migrate do",
+    "que hace project_migrate"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "project_migrate"
+   },
+   "data": {
+    "group": "project",
+    "runs": "",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "action",
+      "type": "string",
+      "required": false,
+      "default": "\"status\""
+     },
+     {
+      "name": "message",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "to",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
      }
     ]
    }
@@ -3278,13 +3352,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 88 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 89 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
     "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `project_migrate`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
    ],
    "keys": [
     "mcp",

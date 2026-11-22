@@ -321,6 +321,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.1cc3be",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Migrations that behave the same in every backend dialect and database**: `nuclear migrate status`, `nuclear migrate [up] --to <migration>`, `nuclear migrate down --to <migration>`; one transaction per migration (a failed one is never recorded); every unique and foreign key named the same; `make` also warns of a required column added without a default; a database that already has the tables, a migration applied and missing from the folder and two migrations made after the same one are refused with the same message. Fixes: in `nestjs` on SQLite, changing or dropping a column deleted the rows of the tables that pointed to it, a removed unique or foreign key stayed in the database, and a failing migration left half of itself; in `fastapi`, adding or dropping a unique failed, and SQLite's schema changes ran outside the transaction. `nuclear migrate` runs from a build of the tree. The database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -492,24 +507,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.a0dea1",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- **One body for every error and one OpenAPI document, in every backend dialect** (ADR-synapsis-0013): an error answers `{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`) in Nuclear's words; each runtime converts what its framework reports. `GET /openapi.json` answers the document the transpiler writes from the project, the same in `fastapi` and `nestjs`. A client that read `detail` or `statusCode` reads `message` and `status`.",
-    "- **Migrations that behave the same in every backend dialect and database**: `nuclear migrate status`, `nuclear migrate [up] --to <migration>`, `nuclear migrate down --to <migration>`; one transaction per migration (a failed one is never recorded); every unique and foreign key named the same; `make` also warns of a required column added without a default; a database that already has the tables, a migration applied and missing from the folder and two migrations made after the same one are refused with the same message. Fixes: in `nestjs` on SQLite, changing or dropping a column deleted the rows of the tables that pointed to it, a removed unique or foreign key stayed in the database, and a failing migration left half of itself; in `fastapi`, adding or dropping a unique failed, and SQLite's schema changes ran outside the transaction. `nuclear migrate` runs from a build of the tree. Th"
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.a3fe6e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -566,6 +563,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.c6341a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing.",
+    "- **One body for every error and one OpenAPI document, in every backend dialect** (ADR-synapsis-0013): an error answers `{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`) in Nuclear's words; each runtime converts what its framework reports. `GET /openapi.json` answers the document the transpiler writes from the project, the same in `fastapi` and `nestjs`. A client that read `detail` or `statusCode` reads `message` and `status`."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.c7e90b",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -581,14 +596,11 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.d85e1b",
+   "id": "doc:CHANGELOG.md#unreleased.df205a",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "e database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
-   "body": [
-    "e database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
-    "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name."
-   ],
+   "summary": "Unreleased",
+   "body": "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name.",
    "sources": [
     "CHANGELOG.md"
    ],
