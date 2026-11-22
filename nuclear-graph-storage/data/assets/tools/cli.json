@@ -40,6 +40,7 @@
     "  diagnostics          spec: every error code (N0001...)",
     "  projects             spec: projects of several files",
     "  library              spec: the standard library of Nuclear (strings, lists, maps, Math, Json, Regex, DateTime...)",
+    "  helpers              the helpers every file has without a use (chunk, uniqBy, partition, camelCase, pick, get, memoize...): each signature",
     "  context-docs         the context documents of a project: AGENTS.md, docs/ in layers, specs, ADRs, the roadmap",
     "  generators           Generators: the standard code, written by a command",
     "  kinds                Kinds: the libraries of Synapsis",
@@ -2495,11 +2496,13 @@
    "id": "tool:nuclear.migrate",
    "type": "cli",
    "title": "`nuclear migrate` — One migration of the database: the entities minus the last one; Applies the pending migrations, or…",
-   "summary": "One migration of the database: the entities minus the last one; Applies the pending migrations, or reverts the last one",
+   "summary": "One migration of the database: the entities minus the last one; Applies the pending migrations, or reverts the last one (--to <migration>: up to that one, or back to it); Every migration: applied or pending",
    "body": [
     "```text",
     "  migrate make <message>                     one migration of the database: the entities minus the last one",
     "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
+    "                                             (--to <migration>: up to that one, or back to it)",
+    "  migrate status                             every migration: applied or pending",
     "```"
    ],
    "keys": [
@@ -2528,7 +2531,14 @@
       "usage": "nuclear migrate [up] | migrate down",
       "alias": "",
       "note": "",
-      "does": "Applies the pending migrations, or reverts the last one"
+      "does": "Applies the pending migrations, or reverts the last one (--to <migration>: up to that one, or back to it)"
+     },
+     {
+      "what": "migrate",
+      "usage": "nuclear migrate status",
+      "alias": "",
+      "note": "",
+      "does": "Every migration: applied or pending"
      }
     ]
    }
