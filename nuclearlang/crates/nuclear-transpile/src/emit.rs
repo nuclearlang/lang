@@ -409,6 +409,11 @@ pub struct Emitter<'a> {
     callee_takes_props: bool,
     /// The variables of the file the function being written assigns (Python's `global`).
     global_names: Vec<String>,
+    /// Where the helpers written into a file built alone start in its source (`helpers.rs`).
+    pub(crate) helpers_from: Option<usize>,
+    /// The free names the file, its imports and the project do not define: one that is a helper of the language
+    /// brings it (`helpers.rs`).
+    pub(crate) undefined: BTreeSet<String>,
     /// The parameters of a lambda whose value is being typed (`static_type` of `xs.map((x) => ...)`), innermost last.
     hint_types: std::cell::RefCell<Vec<(String, Type)>>,
     /// The block lambdas being emitted, innermost last.
@@ -675,6 +680,8 @@ impl<'a> Emitter<'a> {
             default_inits: Vec::new(),
             callee_takes_props: false,
             global_names: Vec::new(),
+            helpers_from: None,
+            undefined: BTreeSet::new(),
             hint_types: std::cell::RefCell::new(Vec::new()),
             closures: Vec::new(),
             default_kind: None,
@@ -1163,6 +1170,7 @@ impl<'a> Emitter<'a> {
 
         let mut uses = Vec::new();
         let mut decl_out: Vec<(bool, String)> = Vec::new(); // (is_statement, code)
+        let mut prelude: Vec<(bool, String)> = Vec::new();
         // top-level statements where the target runs them in main: (position in decl_out, code, span, the
         // variable it declares)
         let mut pending: Vec<(usize, String, Span, Option<String>)> = Vec::new();
@@ -1174,8 +1182,12 @@ impl<'a> Emitter<'a> {
                     let pre = self.doc_into(d.span.start);
                     let code = self.top_decl(d);
                     self.inner_doc = None;
-                    let code = attach(pre, mark(d.span.start, code));
-                    decl_out.push((false, code));
+                    // a helper written into the file (`helpers_from`) goes before the file's own code
+                    if self.helpers_from.is_some_and(|from| d.span.start >= from) {
+                        prelude.push((false, attach(pre, code)));
+                    } else {
+                        decl_out.push((false, attach(pre, mark(d.span.start, code))));
+                    }
                 }
                 Item::Stmt(s) => {
                     let declared = match s {
@@ -1225,6 +1237,7 @@ impl<'a> Emitter<'a> {
             }
             decl_out.push((false, self.tpl("main", Ctx::new().set("body", main_stmts.join("\n")), Span::default())));
         }
+        decl_out.splice(0..0, prelude);
         let trailing = self.comments_before(usize::MAX);
         // names the generated code contains: in a project, the files to import (aliases and templates
         // write names the source does not) and the Result runtime; in any file, the names of
@@ -6831,6 +6844,15 @@ impl<'a> Emitter<'a> {
         }
         if let Some(out) = self.decl_names.get(n) {
             return out.clone();
+        }
+        // a name of neither the file, its imports nor the project: when it is a helper of the language
+        // (`helpers.rs`) the helper is brought, also where the target has a function of that name
+        if !self.imported.contains(n)
+            && !self.project.is_some_and(|p| p.decls.contains_key(n))
+            && !self.open_imports
+            && !self.module.as_ref().is_some_and(|m| m.open)
+        {
+            self.undefined.insert(n.to_string());
         }
         self.check_defined(n, span);
         if !self.known_symbol(n) || self.d.auto_imports.contains_key(n) {

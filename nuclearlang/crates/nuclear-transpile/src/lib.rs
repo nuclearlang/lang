@@ -6,6 +6,7 @@
 mod alias;
 mod analysis;
 mod emit;
+pub mod helpers;
 mod naming;
 pub mod contract;
 pub mod map;
@@ -42,16 +43,48 @@ pub fn transpile_alone(src: &str, dialect: &Dialect, plugins: &[String], lazy_im
     if diagnostics.iter().any(Diagnostic::is_error) {
         return Output { code: String::new(), diagnostics, lines: Vec::new() };
     }
-    let mut file = parsed.file;
+    // the file as it is; then, when it uses helpers of the language (`chunk`, `uniqBy`...: names nothing defines),
+    // once more with them written into it
+    let own = helpers::declared(&parsed.file);
+    let first = emit_alone(src, parsed.file, None, dialect, plugins, lazy_imports);
+    let used = helpers::used(src, &first.1, &own, dialect);
+    if used.is_empty() {
+        diagnostics.extend(first.0.diagnostics);
+        diagnostics.sort_by_key(|d| d.span.start);
+        return Output { diagnostics, ..first.0 };
+    }
+    // their source goes after the file's, so every position of the file stays what it is; their code goes first
+    let whole = format!("{src}\n\n{}\n", helpers::source(&used, &own));
+    let file = nuclear_syntax::parse(&whole).file;
+    let (out, _) = emit_alone(&whole, file, Some(src.len()), dialect, plugins, lazy_imports);
+    diagnostics.extend(out.diagnostics);
+    diagnostics.sort_by_key(|d| d.span.start);
+    Output { diagnostics, ..out }
+}
+
+/// One emission of a file built alone: its output and the names nothing defines. `helpers_from` is where the
+/// helpers written into it start in `src`.
+fn emit_alone(
+    src: &str,
+    mut file: nuclear_syntax::ast::File,
+    helpers_from: Option<usize>,
+    dialect: &Dialect,
+    plugins: &[String],
+    lazy_imports: bool,
+) -> (Output, std::collections::BTreeSet<String>) {
+    let mut diagnostics = Vec::new();
     let names = naming::apply(&mut file, dialect);
     diagnostics.extend(alias::expand(&mut file, &Default::default(), &|d| alias_via(dialect, d)));
     let mut emitter = emit::Emitter::new(dialect, file.comments.clone()).with_source(src).with_plugins(plugins);
     emitter.lazy_alone = lazy_imports;
+    emitter.helpers_from = helpers_from;
     let code = emitter.file(&file);
     diagnostics.append(&mut emitter.diags);
     naming::restore(&mut diagnostics, &names);
-    diagnostics.sort_by_key(|d| d.span.start);
-    Output { code, diagnostics, lines: line_map(src, &emitter.marks) }
+    // by the names the source wrote (a dialect may have renamed them: `uniq_by`)
+    let undefined =
+        std::mem::take(&mut emitter.undefined).into_iter().map(|n| names.get(&n).cloned().unwrap_or(n)).collect();
+    (Output { code, diagnostics, lines: line_map(src, &emitter.marks) }, undefined)
 }
 
 /// (output line, source offset) → (output line, source line).

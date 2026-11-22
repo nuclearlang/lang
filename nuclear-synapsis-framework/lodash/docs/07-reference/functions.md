@@ -6,7 +6,9 @@ related: [../01-product/roadmap.md]
 ---
 # The functions
 
-Every helper of the library, by category, with its signature. A name is lodash's unless the text says otherwise.
+The helpers every Nuclear file has without a `use` (ADR-lang-0013), by category, with their signatures. A name is
+lodash's unless the text says otherwise. `pathKeys`, `child`, `mapAt` and `fillText` are what the helpers use among
+themselves: a program does not call them.
 
 ## Lists (`src/array.nuc`)
 

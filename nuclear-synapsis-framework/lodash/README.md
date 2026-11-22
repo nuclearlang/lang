@@ -2,9 +2,10 @@
 
 [![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/language.yml)
 
-**What it is.** 121 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions
+**What it is.** 117 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions
 (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written
-once in Nuclear and transpiled to TypeScript, Dart and Python.
+once in Nuclear. They are part of the language: a program calls them with no `use`, and the transpiler writes only
+the ones it calls, in every dialect.
 
 **Why it exists.** Two reasons. A Nuclear program gets the helpers every program ends up writing, the same in every
 dialect. And the compiler gets a real library to prove itself on: writing it found more than a dozen places where the same Nuclear

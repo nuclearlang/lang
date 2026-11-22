@@ -165,3 +165,29 @@ same text in every dialect: a list or a map is printed through `join` or `Json.e
 
 `Error(message)` is the base error (`e.message`); `throw`, `try`/`catch` and `Result` are in
 [nuclear-base.md](nuclear-base.md) §3.2 and §7.
+
+## 13. Helpers
+
+Functions every file has without a `use` (ADR-lang-0013): the helpers of lodash that serve Nuclear, written in
+Nuclear. A program gets only the ones it calls: in the file itself when it is built alone, in one generated file of
+the project otherwise. Each one's signature and meaning: `nuclear help helpers`.
+
+| Area | Helpers |
+|---|---|
+| Lists | `chunk`, `compact`, `difference`, `differenceBy`, `differenceWith`, `dropRight`, `dropWhile`, `dropRightWhile`, `takeWhile`, `takeRight`, `takeRightWhile`, `fill`, `findLastIndex`, `findLast`, `initial`, `tail`, `nth`, `intersection`, `intersectionBy`, `intersectionWith`, `union`, `unionBy`, `unionWith`, `uniqBy`, `uniqWith`, `xor`, `xorBy`, `without`, `pull`, `pullAt`, `remove`, `sortedIndex`, `sortedLastIndex`, `sortedIndexBy`, `sortedIndexOf`, `sortedUniq`, `zip`, `unzip`, `zipWith`, `zipObject` |
+| Collections | `countBy`, `keyBy`, `partition`, `reject`, `flatMap`, `reduceRight`, `orderBy`, `sample`, `shuffle`, `sampleSize`, `forEachIndexed`, `forEachRight` |
+| Numbers | `mean`, `meanBy`, `sumBy`, `maxBy`, `minBy`, `roundTo`, `floorTo`, `ceilTo`, `inRange`, `randomInt`, `range`, `rangeRight` |
+| Texts | `words`, `capitalize`, `upperFirst`, `lowerFirst`, `camelCase`, `kebabCase`, `snakeCase`, `startCase`, `lowerCase`, `upperCase`, `truncate`, `pad`, `escape`, `unescape`, `escapeRegExp`, `trimChars`, `trimCharsStart`, `trimCharsEnd` |
+| Maps and data | `pick`, `omit`, `pickBy`, `omitBy`, `mapValues`, `mapKeys`, `invert`, `invertBy`, `defaults`, `findKey`, `findLastKey`, `toPairs`, `fromPairs`, `get`, `has`, `set`, `unset`, `cloneDeep`, `merge` |
+| Functions | `identity`, `constant`, `negate`, `once`, `memoize`, `after`, `before`, `flip`, `partial`, `partialRight`, `curry`, `flow`, `flowRight`, `times`, `attempt`, `uniqueIds` |
+
+`Pair<A, B>` (`first`, `second`) is what `zip`, `unzip`, `partition`, `toPairs` and `fromPairs` use, since Nuclear
+has no tuples.
+
+- A helper is a function, never a member: `chunk(xs, 2)`, `camelCase(text)`. What a base type already has stays its
+  member (`xs.map(f)`, `xs.unique()`, `s.trim()`): no helper repeats it.
+- An iteratee is a lambda, and its parameters take their types from the helper: `uniqBy(users, (u) => u.name)`.
+- A name is a helper only where nothing nearer defines it: a local, a member, a declaration of the file or of the
+  project, or a name imported with `use` is the program's own.
+- A helper wins over a function a target has under the same name; that function is reached with its `use`.
+- Inside a module that extends a class nothing describes, a free name is that class's member: no helper is brought.

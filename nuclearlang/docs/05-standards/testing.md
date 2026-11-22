@@ -89,15 +89,16 @@ each printing a labelled line per case, with the text every target must print in
 | `err_try`, `err_results` | `try`/`catch`/`finally` and their order, nesting, custom errors, `Result` propagation, kept results, `match` on `Ok`/`Err`, callbacks |
 | `async_basics`, `gen_basics` | `~`, `awaitAll`, errors through an await, asynchronous methods, lambdas and loops, generators and `yield ...` |
 | `str_basics`, `coll_lists`, `coll_maps`, `scope_vars` | texts and their members, lists, maps and sets with their edge cases (empty, missing, nested, a stable sort by key), block scope, values and references |
+| `lib_helpers` | the helpers of the language (ADR-lang-0013) called with no `use`: only the ones used are written, a name the file declares stays its own, a helper another helper calls gives way to it |
 | `str_escapes` | a text is data, never code: quotes, back-ticks, braces, `$`, `%`, `\` and `#` in plain, interpolated, multi-line and raw texts, as map keys, in JSON, and as the replacement of `replace` / `replaceAll` (no `$&` of JavaScript, no `\1` of Python) |
 
 Rules:
 
 - **Every change to the transpiler, a dialect or the library runs the three folders and the library of helpers**
   before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`,
-  `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (a real
-  library of several files: generics, lambdas given to functions, `any` data, imports between files), every line
-  `ok`.
+  `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (the helpers of
+  the language, twice: as a project's own files, and brought by the compiler with no source of them in the project),
+  every line `ok`.
 - A case reads its values at run time (a function's result, a parameter), never a constant the target's checker
   folds: `true and false` written as literals is dead code for Dart and an error for TypeScript, and proves nothing.
 - A new feature of the language adds its cases to the program of its area, or a new program; a bug found in a

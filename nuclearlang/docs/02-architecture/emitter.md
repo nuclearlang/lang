@@ -30,6 +30,12 @@ options a dialect sets and what the targets without braces needed are in [emitte
   return type of a generic function and of a method or attribute of a generic module with them replaced
   (`subst_type`), an optional attribute as nullable, a getter as an attribute, `xs.map((x) => ...)` as a list of what
   the lambda gives, and a variable narrowed inside `if x is T` (the branch only).
+- The helpers of the language (ADR-lang-0013, `helpers.rs`): `name_value` records each free name the file, its
+  imports and the project do not define (`undefined`), also when the dialect has a function of that name. When one
+  is a helper, the file is emitted once more with the helpers' source after its own (`transpile_alone`: every
+  position of the file stays; `helpers_from` puts their code first), and a project is built once more with the file
+  `nuclear_helpers` (`project::build_with`), which the others import from by name like any file. Not inside an open
+  module nor a file with a whole-module `use`.
 - A lambda given for a parameter of a function type takes its parameters' types from it, with the type parameters
   the call fixes replaced (`callee_bound`, `lambda_hints`); in a list of functions it also writes them
   (`item_hints`, `typed_hints`).

@@ -124,6 +124,16 @@ Fixed and kept as cases of `examples/conformance/` and tests of `rules.rs`. Left
   `unnecessary_type_check`). The conformance programs read their values at run time for this reason.
 - `x **= 2` and `x ~/= 2` are not in the grammar (`x = x ** 2`).
 
+### The helpers of the language (ADR-lang-0013, 2026-11-22)
+
+- The language server does not complete, document nor go to a helper (`chunk`, `uniqBy`...): it reads the
+  declarations of a file and of its project, and the helpers are the compiler's. Wanted: their names and doc
+  comments from `helpers.rs` in completion and hover.
+- A helper is not brought inside a module that extends a class nothing describes, nor in a file with a whole-module
+  `use`: a free name there is taken for the other's.
+- A file that uses a helper is emitted twice (once to find the names nothing defines): measured as nothing on the
+  examples, not on a large project.
+
 ### Found writing the library of helpers (2026-11-21)
 
 Fixed, each with its test in `rules.rs` and its cases in `nuclear-synapsis-framework/lodash/test/`. Left:

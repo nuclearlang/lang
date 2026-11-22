@@ -675,6 +675,19 @@ struct Parsed {
 
 /// Transpiles every `.nuc` of the project in `root` with `dialect`.
 pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutput {
+    // the project as it is; then, when it uses helpers of the language (`helpers.rs`: names nothing defines), once
+    // more with the file that holds them
+    let (out, used) = build_with(root, manifest, dialect, &Default::default());
+    if used.is_empty() { out } else { build_with(root, manifest, dialect, &used).0 }
+}
+
+/// `build` with the helpers `helpers` as one more file of the project; also gives the helpers it found missing.
+fn build_with(
+    root: &Path,
+    manifest: &Manifest,
+    dialect: &Dialect,
+    helpers: &std::collections::BTreeSet<String>,
+) -> (ProjectOutput, std::collections::BTreeSet<String>) {
     let out_dir = root.join(output_dir(manifest, dialect));
     // the contracts the manifest declares become `contracts/<name>/*.nuc` before the sources are read
     let contract_diags = crate::contract::sync(root, dialect);
@@ -711,6 +724,26 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             diagnostics: p.diagnostics,
         });
     }
+
+    // the helpers the project uses (`helpers.rs`): one more file, written by the build, that the others import
+    // from by name
+    let own: HashSet<String> =
+        parsed.iter().filter_map(|p| p.file.as_ref()).flat_map(crate::helpers::declared).collect();
+    let used = helpers;
+    if !used.is_empty() {
+        let source = format!("{}\n", crate::helpers::source(used, &own));
+        let mut p = nuclear_syntax::parse(&source);
+        names.extend(crate::naming::apply(&mut p.file, dialect));
+        parsed.push(Parsed {
+            default_kind: None,
+            rel: PathBuf::from(format!("{}.nuc", crate::helpers::PATH)),
+            path: crate::helpers::PATH.to_string(),
+            source,
+            file: Some(p.file),
+            diagnostics: p.diagnostics,
+        });
+    }
+    let mut missing = std::collections::BTreeSet::new();
 
     // pass 1: every declaration of every file
     let mut ctx = ProjectCtx {
@@ -803,14 +836,18 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
     let mut uses_monitor = false;
     // the variables the code reads with env(): the only values a client's values module carries (spec 021)
     let mut env_read: HashSet<String> = HashSet::new();
+    let mut helpers_code = None;
     for p in parsed {
+        let helpers = p.path == crate::helpers::PATH && !used.is_empty();
         let mut diagnostics = p.diagnostics;
         let mut code = String::new();
         let mut lines = Vec::new();
         if let Some(mut file) = p.file {
             let mut idents = Vec::new();
             identifiers(&nuclear_syntax::lex(&p.source).tokens, &mut idents);
-            diagnostics.extend(architecture(dialect, &ctx, &kinds, &public_decls, &file, &p.path, &idents));
+            if !helpers {
+                diagnostics.extend(architecture(dialect, &ctx, &kinds, &public_decls, &file, &p.path, &idents));
+            }
             if dialect.platform.is_some() {
                 let (found, diags) = crate::contract::env_uses(&file);
                 env_read.extend(found.into_iter().map(|u| u.name));
@@ -829,7 +866,17 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             uses_result |= e.uses_result();
             uses_monitor |= e.uses_monitor();
             diagnostics.append(&mut e.diags);
-            summaries.extend(e.summaries.into_iter().map(|s| (p.path.clone(), s)));
+            // by the names the source wrote (a dialect may have renamed them: `uniq_by`)
+            let undefined = e.undefined.iter().map(|n| names.get(n).cloned().unwrap_or_else(|| n.clone())).collect();
+            missing.extend(crate::helpers::used(&p.source, &undefined, &own, dialect));
+            if !helpers {
+                summaries.extend(e.summaries.into_iter().map(|s| (p.path.clone(), s)));
+            }
+        }
+        // the helpers are a file the build writes, not a source of the project
+        if helpers {
+            helpers_code = Some((out_path(&p.path), code));
+            continue;
         }
         crate::naming::restore(&mut diagnostics, &names);
         diagnostics.sort_by_key(|d| d.span.start);
@@ -845,6 +892,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
 
     ctx.env.retain(|(name, _)| env_read.contains(name));
     let mut generated = Vec::new();
+    generated.extend(helpers_code);
     if uses_result && let Some(t) = dialect.syntax("result_runtime") {
         let prelude = dialect.syntax("file_prelude").map(|p| format!("{}\n\n", p.render(&Ctx::new().into_value()).trim_end()));
         let runtime = t.render(&Ctx::new().into_value());
@@ -895,7 +943,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
         copies.extend(other);
     }
     files.extend(config_file);
-    ProjectOutput { files, generated, copies }
+    (ProjectOutput { files, generated, copies }, missing)
 }
 
 /// The line map of a build, under its output folder: what the editors' debuggers read to put a breakpoint of a `.nuc`

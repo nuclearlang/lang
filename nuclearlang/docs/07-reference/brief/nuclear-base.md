@@ -98,6 +98,10 @@ classes of a type definition (`dio`, `numpy`, `Text(...)`) are written as the li
 that dialect. Not sure an API exists: `nuclear defs show <Name>
 --dialect <d>` instead of guessing.
 
+Helpers need no `use` (`nuclear help helpers`): `chunk(xs, 2)`, `uniqBy(users, (u) => u.name)`, `partition`,
+`orderBy`, `zip`, `camelCase(text)`, `pick(m, keys)`, `get(data, "a.b[0]")`, `merge`, `memoize(f)`... They are functions,
+never members; what a base type already has (`xs.map`, `xs.unique()`, `s.trim()`) stays its member.
+
 ## The compiler corrects habits
 
 Writing TypeScript, Dart or Python by reflex (`{ }` blocks, `await x`, `const x =`, `new`, `class A extends B`,

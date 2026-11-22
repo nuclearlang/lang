@@ -2,22 +2,17 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-21
-related: [../07-reference/functions.md]
+related: [../07-reference/functions.md, ../../../../nuclearlang/docs/03-adr/0013-helpers-are-part-of-the-language.md]
 ---
 # Roadmap
 
 The pending work of the library. A done item is deleted.
 
-## To decide with the user
-
-- **How a project takes the library.** Today it is a project of its own, built and tested for every dialect by
-  `check.sh`; a Synapsis project cannot add it yet. Nuclear has no way for one project to use a library written in
-  Nuclear (only kind packages and the type definitions of a target's packages). Asked on 2026-11-21, the answer was
-  that the library is written in Nuclear and the transpiler writes it for each dialect; which tool brings its
-  `.nuc` files into a project (a form of `nuclear add`, or the installer) was not decided.
-
 ## Pending
 
+- The editors do not complete nor show the documentation of a helper yet (the language server reads the
+  declarations of a file and of its project; the helpers are neither).
+- Inside a module that extends a class nothing describes, a helper is not brought (ADR-lang-0013).
 - The helpers left out for now, to add when a program asks for them: `deburr`, `flattenDeep` over `any`, `debounce`
   and `throttle` over `~delay`, `intersection` and `zip` of more than two lists (a list of lists).
 - `words` does not split a run of capitals nor letters from digits, as lodash does.

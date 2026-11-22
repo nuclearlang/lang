@@ -80,6 +80,12 @@ pub const TOPICS: &[Topic] = &[
         "spec: the standard library of Nuclear (strings, lists, maps, Math, Json, Regex, DateTime...)",
         "nuclearlang/docs/07-reference/library.md"
     ),
+    topic!(
+        "helpers",
+        "library",
+        "the helpers every file has without a use (chunk, uniqBy, partition, camelCase, pick, get, memoize...): each signature",
+        "nuclear-synapsis-framework/lodash/docs/07-reference/functions.md"
+    ),
     topic!("typescript", "dialect", "dialect typescript", "nuclearlang/dialects/typescript/docs/07-reference/typescript.md"),
     topic!("nodejs", "dialect", "dialect nodejs", "nuclearlang/dialects/nodejs/docs/07-reference/nodejs.md"),
     topic!("dart", "dialect", "dialect dart", "nuclearlang/dialects/dart/docs/07-reference/dart.md"),

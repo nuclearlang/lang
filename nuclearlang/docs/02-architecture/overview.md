@@ -61,6 +61,7 @@ Each stage knows only the previous one. Diagnostics accumulate in all of them (t
 | `crates/nuclear-transpile/src/analysis.rs` | reassigned names per block (const/let), awaits → async, `yields_block`, `pattern_names` |
 | `crates/nuclear-transpile/src/alias.rs` | `f() = Module.method` rewritten before emitting → [result.md](result.md) |
 | `crates/nuclear-transpile/src/emit.rs` | the template-driven emitter (the largest file) → [emitter.md](emitter.md); the standard library rewrite: `static_type` (the receiver's type), `library_access`, `library_render`, N0114/N0115 |
+| `crates/nuclear-transpile/src/helpers.rs` | the helpers of the language (lodash in Nuclear, embedded): which ones a file uses, their source with the ones they call (ADR-lang-0013) |
 | `crates/nuclear-transpile/src/naming.rs` | `options.snake_case_names`: camelCase names written in snake_case → [emitter-options.md](emitter-options.md) |
 | `crates/nuclear-transpile/src/project.rs` | projects of several files → [projects.md](projects.md) |
 | `crates/nuclear-transpile/src/contract.rs` | the contract of a project (`.nuclear/contract.json`), its OpenAPI document, and the Nuclear a client generates from the contracts its manifest declares → [integrations.md](integrations.md) |

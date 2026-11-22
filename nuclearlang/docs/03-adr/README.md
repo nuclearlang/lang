@@ -30,6 +30,7 @@ answers your question.
 | [0010](0010-compiler-helps-editors-and-agents.md) | Every word is documented for the editor, and the compiler corrects what an agent writes by reflex or invents | accepted | 2026-11-03 |
 | [0011](0011-debugging-nuc.md) | A `.nuc` is debugged through the target's debugger with a line map, not with aligned output nor a debugger of its own | accepted | 2026-11-03 |
 | [0012](0012-lazy-imports.md) | Imports are made lazy by the transpiler where a project asks (`lazy_imports`); `use` stays at the top of a file | accepted | 2026-11-19 |
+| [0013](0013-helpers-are-part-of-the-language.md) | The helpers of lodash that serve Nuclear are the language's own: no `use`, and the transpiler writes only the ones a program calls | accepted | 2026-11-22 |
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).

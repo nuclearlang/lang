@@ -1,0 +1,17 @@
+// The helpers of the language (the functions of lodash that serve Nuclear) need no `use`: a file that calls one
+// gets it and the ones it calls, and nothing else; a name the file declares is its own.
+User(name: string, age: int)
+
+// the file's own `words` is not the helper of that name
+words(text: string) int = text.length
+
+main() void
+  users = [User("ana", 30), User("luis", 25), User("eva", 30)]
+  print(chunk([1, 2, 3, 4, 5], 2).map((c) => c.join("-")).join(" "))
+  print(uniqBy(users, (u) => "${u.age}").map((u) => u.name).join(","), camelCase("hello big world"))
+  parts = partition(users, (u) => u.age > 26)
+  print(parts.first.length, parts.second.length, intersectionBy(users, [User("x", 25)], (u) => "${u.age}").length)
+  print(["a", "b"].map(capitalize).join(""), get({ "a": { "b": 7 } }, "a.b"))
+  print(words("abc"), kebabCase("the Helper words"), orderBy(users, [(u) => u.age.toDouble()], [true])[0].name)
+  merged = merge({ "a": { "x": 1 } }, { "a": { "y": 2 } })
+  print(Json.encode(merged), range(0, 10, 5).join(","), zip([1, 2], ["a", "b"]).map((p) => "${p.first}${p.second}").join(""))

@@ -1448,3 +1448,44 @@ fn a_value_declared_any_is_shown_as_nuclear_shows_it_in_python() {
 fn a_nullable_decimal_keeps_its_decimals_in_typescript() {
     has(&ts("mean(xs: double[]) double?\n  xs.isEmpty ? null : xs.sum() / xs.length\n\nmain() void\n  print(mean([4, 6]))\n"), "_doubleOrNull(mean([4, 6]))");
 }
+
+// ---------- the helpers of the language (helpers.rs) ----------
+
+#[test]
+fn a_file_that_calls_a_helper_gets_it_and_what_it_calls() {
+    let code = ts("main() void\n  print(intersectionBy([\"a\"], [\"A\"], (s) => s.lower()).length)\n");
+    has(&code, "export function intersectionBy<T>(");
+    has(&code, "export function uniqBy<T>(");
+    assert!(!code.contains("function chunk"), "{code}");
+    // the helpers come before the file's own code
+    assert!(code.find("function uniqBy").unwrap() < code.find("function main").unwrap(), "{code}");
+    // a file that calls none is what it was
+    assert!(!ts("main() void\n  print(1)\n").contains("uniqBy"));
+}
+
+#[test]
+fn a_name_the_file_declares_or_a_member_is_never_a_helper() {
+    let own = ts("chunk(n: int) int = n\n\nmain() void\n  print(chunk(2))\n");
+    assert!(!own.contains("size: number"), "{own}");
+    let member = ts("Repo\n  get(id: int) int\n    id\n\n  twice(id: int) int\n    get(id) * 2\n\nmain() void\n  print(Repo().get(1))\n");
+    assert!(!member.contains("pathKeys"), "{member}");
+}
+
+#[test]
+fn a_helper_wins_over_a_function_of_the_target_with_its_name() {
+    // `zip` and `range` are Python's own: the Nuclear of a file means the same in every dialect
+    let code = build("main() void\n  print(zip([1], [\"a\"]).length, range(0, 4, 2).length)\n", "python");
+    has(&code, "def zip[A, B](xs: list[A], ys: list[B]) -> list[Pair[A, B]]:");
+    has(&code, "def range_(start: int, end: int, step: int = 1) -> list[int]:");
+    has(&code, "len(range_(0, 4, 2))");
+}
+
+#[test]
+fn a_helper_keeps_the_positions_of_the_file() {
+    // an error after a helper call is reported where the file has it
+    let src = "main() void\n  print(chunk([1], 1).length)\n  print(nothing)\n";
+    let out = nuclear_transpile::transpile(src, &dialect("typescript"));
+    let d = out.diagnostics.iter().find(|d| d.code.id == "N0106").expect("N0106");
+    assert_eq!(&src[d.span.start..d.span.end], "nothing");
+    assert_eq!(out.diagnostics.len(), 1, "{:#?}", out.diagnostics);
+}
