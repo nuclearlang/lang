@@ -29,6 +29,28 @@
    }
   },
   {
+   "id": "doc:AGENTS.md#hard-rules.82780b",
+   "type": "readme",
+   "title": "NuclearLang — Hard rules",
+   "summary": "16. The same Nuclear means the same everywhere (ADR-platform-0014).",
+   "body": [
+    "16. **The same Nuclear means the same everywhere** ([ADR-platform-0014](docs/03-adr/0014-stability-and-parity.md)).",
+    "    The language's rules are not changed by a fix. Every change to the transpiler, a dialect or the library runs",
+    "    every test set first (`nuclearlang/docs/05-standards/testing.md`); generated code compiles with no warning of its",
+    "    target. What a client sees never depends on the dialect: a runtime converts what its framework answers to one",
+    "    output of Nuclear's, and where nothing is decided one mature tool is the rule for every dialect (TypeORM for",
+    "    migrations). A capability of a project has its MCP tool, and the knowledge base its rows."
+   ],
+   "sources": [
+    "AGENTS.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:AGENTS.md#hard-rules.9a9f12",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
@@ -321,21 +343,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.1cc3be",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- **Migrations that behave the same in every backend dialect and database**: `nuclear migrate status`, `nuclear migrate [up] --to <migration>`, `nuclear migrate down --to <migration>`; one transaction per migration (a failed one is never recorded); every unique and foreign key named the same; `make` also warns of a required column added without a default; a database that already has the tables, a migration applied and missing from the folder and two migrations made after the same one are refused with the same message. Fixes: in `nestjs` on SQLite, changing or dropping a column deleted the rows of the tables that pointed to it, a removed unique or foreign key stayed in the database, and a failing migration left half of itself; in `fastapi`, adding or dropping a unique failed, and SQLite's schema changes ran outside the transaction. `nuclear migrate` runs from a build of the tree. The database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -507,6 +514,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.a0dea1",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **One body for every error and one OpenAPI document, in every backend dialect** (ADR-synapsis-0013): an error answers `{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`) in Nuclear's words; each runtime converts what its framework reports. `GET /openapi.json` answers the document the transpiler writes from the project, the same in `fastapi` and `nestjs`. A client that read `detail` or `statusCode` reads `message` and `status`.",
+    "- **Migrations that behave the same in every backend dialect and database**: `nuclear migrate status`, `nuclear migrate [up] --to <migration>`, `nuclear migrate down --to <migration>`; one transaction per migration (a failed one is never recorded); every unique and foreign key named the same; `make` also warns of a required column added without a default; a database that already has the tables, a migration applied and missing from the folder and two migrations made after the same one are refused with the same message. Fixes: in `nestjs` on SQLite, changing or dropping a column deleted the rows of the tables that pointed to it, a removed unique or foreign key stayed in the database, and a failing migration left half of itself; in `fastapi`, adding or dropping a unique failed, and SQLite's schema changes ran outside the transaction. `nuclear migrate` runs from a build of the tree. Th"
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.a3fe6e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -545,13 +570,15 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.b00ac5",
+   "id": "doc:CHANGELOG.md#unreleased.aee43c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
-    "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
+    "- The MCP server runs a project's tests: `project_test(project)` builds it and runs them with its dialect's runner, and answers the same in every dialect: how many passed and failed, each failure at its `.nuc` line, and what it means.",
+    "- The Smart Graph knows the helpers and the tests: a row per helper of the language (`lib:helper-<name>`: its signature, its meaning and the cases its tests state), the conformance, semantics and benchmark programs as examples with what they print, and what can be answered about them (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`), with the questions the chat is held to.",
+    "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
+    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -563,13 +590,13 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.c6341a",
+   "id": "doc:CHANGELOG.md#unreleased.b00ac5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing.",
-    "- **One body for every error and one OpenAPI document, in every backend dialect** (ADR-synapsis-0013): an error answers `{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`) in Nuclear's words; each runtime converts what its framework reports. `GET /openapi.json` answers the document the transpiler writes from the project, the same in `fastapi` and `nestjs`. A client that read `detail` or `statusCode` reads `message` and `status`."
+    "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
+    "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -596,11 +623,14 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.df205a",
+   "id": "doc:CHANGELOG.md#unreleased.d85e1b",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name.",
+   "summary": "e database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
+   "body": [
+    "e database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
+    "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -1868,7 +1898,7 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.d52995",
+   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.f4afe6",
    "type": "context",
    "title": "How code is written here — A change is done when",
    "summary": "server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root `uv tool install --reinstall tools/mcp`) and the installation (point 6).",
@@ -1876,6 +1906,10 @@
     "server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root",
     "   `uv tool install --reinstall tools/mcp`) and the installation (point 6). `nuclear-graph knowledge check` says",
     "   the graph holds every row.",
+    "8. **Proven the same in every dialect, and reachable** (ADR-platform-0014): a change to the transpiler, a dialect",
+    "   or the library ran every test set (`nuclearlang/docs/05-standards/testing.md`); a behaviour two dialects answer",
+    "   differently is converted to one output of Nuclear's; a capability of a project has its MCP tool; and the",
+    "   knowledge base holds its rows: what is new, and the tests with the cases they state.",
     "",
     "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare",
     "contents through git, never file dates: a project is behind when its code differs from the last commit (or changed",

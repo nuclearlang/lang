@@ -62,6 +62,10 @@ The rules every project shares. A project's own conventions are in its `docs/05-
    server (`cd tools/mcp && nuclear check . && nuclear build .`, its tests, then from the root
    `uv tool install --reinstall tools/mcp`) and the installation (point 6). `nuclear-graph knowledge check` says
    the graph holds every row.
+8. **Proven the same in every dialect, and reachable** (ADR-platform-0014): a change to the transpiler, a dialect
+   or the library ran every test set (`nuclearlang/docs/05-standards/testing.md`); a behaviour two dialects answer
+   differently is converted to one output of Nuclear's; a capability of a project has its MCP tool; and the
+   knowledge base holds its rows: what is new, and the tests with the cases they state.
 
 The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare
 contents through git, never file dates: a project is behind when its code differs from the last commit (or changed

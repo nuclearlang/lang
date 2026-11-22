@@ -21,6 +21,7 @@ rows: `{shelf, origin, about, rows}`. The files of the folder and an example row
 | the diagnostics | the compiler's `Code` table joined with `nuclearlang/docs/07-reference/diagnostics.md`; a code without documentation fails the build |
 | the habits of other languages | the table of the base brief (`nuclearlang/docs/07-reference/brief/nuclear-base.md`) |
 | the standard library, and the names of other languages it replaces | `nuclearlang/crates/nuclear-dialect/src/library.rs` |
+| each helper of the language (`lib:helper-<name>`): its signature, its meaning and the cases its tests state | `nuclear-synapsis-framework/lodash/src/*.nuc` and each `check(name, got, want)` of `test/*_test.nuc` |
 | each platform's kinds, decorators, layout and plugins | `nuclear-synapsis-framework/platforms/<platform>/platform.toml`, and the `docs.toml` and `dialect.toml` of the platform's default dialect |
 | what each generator writes | the `generators` table of `tools/code_generator/platforms/<platform>/generators.toml` (the extractor still reads `platform.toml`: [roadmap](../01-product/roadmap.md)) |
 | the commands of `nuclear`, `nuclear-builder` and `nuclear-graph` | their help, read from the installed binaries |
@@ -29,7 +30,7 @@ rows: `{shelf, origin, about, rows}`. The files of the folder and an example row
 | the Builder's stages, the editor's commands and settings | `extensions/tools/nuclear-builder/src/engine.ts`, `extensions/vscode/package.json` |
 | the local agents | their own sources in `nuclear-agents/nuclear_developer/` |
 | each component's version (and its repository: `nuclearlang/lang`, the whole tree) | its manifest (`COMPONENTS` in `extract_tools.nuc`) |
-| the examples | every `.nuc` of the example projects, by kind and platform |
+| the examples | every `.nuc` of the example projects, by kind and platform; and the programs that run the same in every dialect, each with what it prints: the standard library's, the conformance suite's (`example:conformance/<name>`), the semantics' and the benchmarks' |
 | the solved tasks | the validated answers of the `train` tasks of the Developer's evaluation, never the held-out ones |
 | the documents | every markdown file of the tree and the website: one row per heading section, on the shelf its section of `data/sections.toml` names |
 

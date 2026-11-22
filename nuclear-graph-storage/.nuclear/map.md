@@ -461,6 +461,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - `testAnIngestEmbedsOnlyWhatChangedKeepsWhatAgentsWroteAndFillsTheFacts(tmpPath: Path) void` — (no description)
   - `testAHelpTextBecomesOneRowPerCommandWithItsUsageAsData() void` — (no description)
   - `testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter() void` — (no description)
+  - `testAHelperOfTheLanguageIsARowWithItsCases(tmpPath: Path) void` — A helper of the language is one row: its signature, what its comment says and the cases its tests state; a function the helpers use among themselves is not one.
 - `tests/test_secrets.nuc`
   - `testASecretOfAClosedKeyringIsRefusedAndNeverMadeAgain(tmpPath: Path, monkeypatch: any) void` — (no description)
 - `tests/test_vectors.nuc`

@@ -1208,6 +1208,154 @@
     "area": "tools",
     "status": "done"
    }
+  },
+  {
+   "id": "can:helpers",
+   "type": "can",
+   "title": "Can: call the helpers of lodash with no import (chunk, uniqBy, partition, camelCase, get, merge...)",
+   "summary": "Nuclear has 117 helpers over lists, maps, texts, numbers and functions (the functions of lodash that serve Nuclear), called with no `use` in every dialect; the transpiler writes into the output only the helpers a program calls.",
+   "body": [
+    "- Lists: `chunk(xs, 2)`, `compact`, `difference`, `intersection`, `union`, `xor` (and their `By` / `With` forms), `uniqBy(users, (u) => u.name)`, `dropWhile`, `takeRight`, `fill`, `nth`, `pull`, `remove`, `sortedIndex`, `zip`, `unzip`, `zipWith`, `zipObject`.",
+    "- Collections: `countBy`, `keyBy`, `partition`, `reject`, `flatMap`, `reduceRight`, `orderBy(xs, keys, descending)`, `sample`, `shuffle`.",
+    "- Numbers: `mean`, `meanBy`, `sumBy`, `maxBy`, `minBy`, `roundTo(n, 2)`, `floorTo`, `ceilTo`, `inRange`, `randomInt`, `range(0, 20, 5)`, `rangeRight`.",
+    "- Texts: `camelCase`, `kebabCase`, `snakeCase`, `startCase`, `lowerCase`, `upperCase`, `capitalize`, `upperFirst`, `lowerFirst`, `words`, `truncate`, `pad`, `escape`, `unescape`, `escapeRegExp`, `trimChars`.",
+    "- Maps and data: `pick`, `omit`, `pickBy`, `omitBy`, `mapValues`, `mapKeys`, `invert`, `defaults`, `findKey`, `toPairs`, `fromPairs`, `get(data, \"a.b[0]\")`, `set`, `has`, `unset`, `cloneDeep`, `merge`.",
+    "- Functions: `once`, `memoize`, `after`, `before`, `negate`, `flip`, `partial`, `curry`, `flow`, `flowRight`, `times`, `attempt`, `identity`, `constant`, `uniqueIds`.",
+    "- They are functions, never members: what a base type already has stays its member (`xs.map(f)`, `xs.unique()`, `xs.groupBy(key)`, `s.trim()`), and no helper repeats it.",
+    "- An iteratee is a lambda, and its parameters take their types from the helper. `zip`, `partition` and `toPairs` give `Pair<A, B>` (`first`, `second`): Nuclear has no tuples.",
+    "- A name is a helper only where nothing nearer defines it: a local, a member, a declaration of the project or a name imported with `use` is the program's own. A helper wins over a function a target has under the same name.",
+    "- Each helper has its own row (`lib:helper-<name>`) with its signature and the cases its tests state. Every signature: `nuclear help helpers`."
+   ],
+   "keys": [
+    "lodash",
+    "helpers",
+    "utilities",
+    "chunk",
+    "uniqby",
+    "groupby",
+    "camelcase",
+    "deep merge",
+    "deep get",
+    "memoize",
+    "utilidades"
+   ],
+   "asks": [
+    "does nuclear have lodash",
+    "how do I split a list into chunks",
+    "how do I remove duplicates by a key",
+    "how do I read a nested value by its path",
+    "how do I merge two maps deeply",
+    "tiene nuclear lodash",
+    "como parto una lista en grupos"
+   ],
+   "links": [],
+   "sources": [
+    "nuclearlang/docs/03-adr/0013-helpers-are-part-of-the-language.md",
+    "nuclearlang/docs/07-reference/library.md",
+    "nuclear-synapsis-framework/lodash/docs/07-reference/functions.md"
+   ],
+   "meta": {
+    "area": "compiler",
+    "status": "done"
+   }
+  },
+  {
+   "id": "can:tested-in-every-dialect",
+   "type": "can",
+   "title": "Can: prove that the same Nuclear runs the same in every dialect (the test sets of the language and the backend)",
+   "summary": "Nuclear is tested by running the same programs in TypeScript, Dart and Python and comparing what they print, with no warning of each target's checker allowed; a backend is tested on real databases in Docker with both dialects answering the same bytes.",
+   "body": [
+    "- **The conformance programs** (`nuclearlang/examples/conformance`, 26): one per feature, each case a labelled line. Operators (arithmetic, comparison, logic, bits, assignment, null, conditional); `if`, `match`, loops; functions, lambdas and closures; modules, inheritance, enums, generics; `try`, `Result`; `~` and generators; texts, lists, maps, scope; texts as data (no `$&`, no `\\1`); the helpers. Run: `DIR=examples/conformance nuclearlang/tools/stdlib-check.sh`.",
+    "- **The semantics programs** (`examples/semantics`): one rule a target once broke each (a lambda made in a loop, `==` of two lists, a decimal printed with its `.0`). **The standard library programs** (`examples/stdlib`): one per area.",
+    "- **The helpers' cases** (`nuclear-synapsis-framework/lodash/check.sh`): 226 cases from lodash's own tests, run twice: with the helpers as a project's files, and brought by the compiler.",
+    "- **The database check** (`platforms/backend/checks/database-check`, Docker): one project built with `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB: 11 migration scenarios through `nuclear migrate` (add, change, rename and drop columns, foreign keys, a failure half way, `--to`), 57 HTTP answers that must be the same bytes (CRUD, relations, pages, a transaction that rolls back, 400 / 404 / 409 with their bodies), and its unit tests.",
+    "- **The benchmarks** (`eval/thesis/bench`, 8): the generated code against an expert's in each target (n-body, binary trees, fannkuch, a collections pipeline, texts, calls, primes, word frequencies).",
+    "- Each target's own checker runs with no warning allowed: `tsc --strict` with no unused name, `dart analyze --fatal-warnings`, pyright.",
+    "- Every change to the transpiler, a dialect or the library runs them all first (ADR-platform-0014); the CI runs them (`language`, `platform-backend`).",
+    "- The programs are in the base as examples: `example:conformance/<name>`, `example:semantics/<name>`, `example:bench/<name>`, each with what it prints."
+   ],
+   "keys": [
+    "conformance",
+    "test suite",
+    "regression",
+    "same output",
+    "cross dialect",
+    "database check",
+    "benchmark",
+    "pruebas",
+    "integridad"
+   ],
+   "asks": [
+    "how is nuclear tested",
+    "what tests does the language have",
+    "how do you know the dialects behave the same",
+    "is the generated code as fast as hand written code",
+    "como se prueba el lenguaje",
+    "que pruebas tiene nuclear"
+   ],
+   "links": [
+    {
+     "rel": "can",
+     "to": "can:helpers"
+    }
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md",
+    "docs/03-adr/0014-stability-and-parity.md",
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md",
+    "nuclear-synapsis-framework/eval/thesis/README.md"
+   ],
+   "meta": {
+    "area": "compiler",
+    "status": "done"
+   }
+  },
+  {
+   "id": "can:backend-errors",
+   "type": "can",
+   "title": "Can: one body for every error and one OpenAPI document, whatever the dialect (backend)",
+   "summary": "Every error of a backend answers `{status, message}`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`); `GET /openapi.json` answers the document written from the project. The same in `fastapi` and `nestjs`.",
+   "body": [
+    "- An error: `{ \"status\": 404, \"message\": \"no task 9\" }`. The message is the `Err`'s (`NotFound(\"no task 9\")`), `not found` for a route that does not exist, `error` for what nothing handled (a 500 never says why).",
+    "- An invalid body or parameter: 400, `message` `invalid`, and `errors`: one reason per field, in the order of the fields' names: `{ \"field\": \"priority\", \"rule\": \"max\", \"message\": \"priority must be at most 3\" }`.",
+    "- `rule` is the validation's name in Nuclear: `required`, `type`, `minLength`, `maxLength`, `min`, `max`, `pattern`, `email`, `url`, `json` (the body is not JSON), `invalid`. A field that breaks several names the first of that list. `field` is a path (`items.0.name`).",
+    "- Each runtime converts what its framework reports into that body, so a client never knows the dialect.",
+    "- `GET /openapi.json` and `GET /.nuclear/openapi.json`: the OpenAPI 3.1 document the transpiler writes from the contract; its `Error` schema is this body.",
+    "- A client that read `detail` or `statusCode` (before 0.91) reads `message` and `status`."
+   ],
+   "keys": [
+    "error body",
+    "error format",
+    "validation errors",
+    "openapi",
+    "400",
+    "error response",
+    "cuerpo de error"
+   ],
+   "asks": [
+    "what does an error answer look like",
+    "what is the body of a validation error",
+    "does the error format depend on the dialect",
+    "where is the openapi document of my backend",
+    "como responde un error"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "links": [
+    {
+     "rel": "can",
+     "to": "can:backend-api"
+    }
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/0013-errors-and-openapi-are-nuclears.md",
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ],
+   "meta": {
+    "area": "backend",
+    "status": "done"
+   }
   }
  ]
 }

@@ -64,6 +64,9 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 6. **No `developer_*` tool while `LOCAL_MODELS` is false**, and a machine set up for remote agents only gets none
    either; the `graph_*` tools are on every machine. A new tool that needs the graph or the local developer takes one
    of those prefixes.
+9. **What an agent needs on a project has its tool** (ADR-platform-0014): building, checking, generating, the
+   migrations of a database (`project_migrate`), the tests (`project_test`). A capability added to `nuclear` for a
+   project gets its tool in the same change, with an answer that is the same in every dialect.
 7. **Every tool that changes the user's work asks the user first** (`confirmed`): MCP elicitation, or a preview
    with a `confirm` token (bound to the tool and its exact arguments, 5 minutes, once, kept in the process only).
    A tool never changes anything before that yes, and never deletes a folder unless its argument says so.

@@ -420,6 +420,50 @@ kind = "controller"
 expect = ["example:*", "solved:*"]
 top = 1
 
+# ---- the helpers, the tests and the error body (ADR-platform-0014) ----
+
+[[question]]
+ask = "does nuclear have lodash"
+exact = false
+expect = ["can:helpers", "lib:helper-*"]
+
+[[question]]
+ask = "como parto una lista en grupos de tres"
+expect = ["lib:helper-chunk", "can:helpers"]
+
+[[question]]
+ask = "how do I remove the duplicates of a list by a key"
+expect = ["lib:helper-uniqBy", "can:helpers"]
+
+[[question]]
+ask = "how do I read a nested value of a map by its path"
+expect = ["lib:helper-get", "can:helpers"]
+
+[[question]]
+ask = "how do I turn a text into camel case"
+expect = ["lib:helper-camelCase", "can:helpers"]
+
+[[question]]
+ask = "how is nuclear tested in every dialect"
+expect = ["can:tested-in-every-dialect"]
+
+[[question]]
+ask = "que pruebas tiene el lenguaje"
+expect = ["can:tested-in-every-dialect", "example:conformance/*"]
+
+[[question]]
+ask = "what does the body of a validation error look like"
+platform = "backend"
+expect = ["can:backend-errors"]
+
+[[question]]
+ask = "como corro las pruebas de un proyecto desde el mcp"
+expect = ["mcp:project_test", "concept:mcp"]
+
+[[question]]
+ask = "how do I apply a migration from an agent"
+expect = ["mcp:project_migrate", "playbook:migrate-the-database"]
+
 # ---- the tools ----
 
 [[question]]

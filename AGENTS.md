@@ -93,6 +93,13 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     `uv tool install --reinstall tools/mcp`), and what the user runs installed again (`installer/install.sh`; an
     extension's version raised and installed) ([docs/05-standards/coding.md](docs/05-standards/coding.md)).
 
+16. **The same Nuclear means the same everywhere** ([ADR-platform-0014](docs/03-adr/0014-stability-and-parity.md)).
+    The language's rules are not changed by a fix. Every change to the transpiler, a dialect or the library runs
+    every test set first (`nuclearlang/docs/05-standards/testing.md`); generated code compiles with no warning of its
+    target. What a client sees never depends on the dialect: a runtime converts what its framework answers to one
+    output of Nuclear's, and where nothing is decided one mature tool is the rule for every dialect (TypeORM for
+    migrations). A capability of a project has its MCP tool, and the knowledge base its rows.
+
 ## Commands of the whole tree
 
 ```sh

@@ -4,6 +4,7 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- A row per helper of the language (`lib:helper-<name>`), read from the helpers' sources and their tests' cases; the conformance, semantics and benchmark programs are examples, each with what it prints; three capabilities (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`) and ten questions about them.
 - 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them; the release builds nothing when the knowledge base was not built at the tag's version (its component rows name each one's version).
 - The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every
   system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so

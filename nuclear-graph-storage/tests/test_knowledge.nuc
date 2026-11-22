@@ -148,3 +148,19 @@ testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter() void
   expect("feature" in byName and "agent.repair" in byName and not ("write-a-piece" in byName))
   expect(byName["agent.repair"]!.startsWith("{{prompt}}") and byName["piece"]!.startsWith("# Use case: one piece of code"))
   expect(prompts.all((p) => not "${p["document"]}".startsWith("---")))
+
+// A helper of the language is one row: its signature, what its comment says and the cases its tests state; a
+// function the helpers use among themselves is not one.
+testAHelperOfTheLanguageIsARowWithItsCases(tmpPath: Path) void
+  ctx = knowledgeTree(tmpPath)
+  lodash = tmpPath.joinpath("tree", "nuclear-synapsis-framework", "lodash")
+  lodash.joinpath("src").mkdir(parents = true)
+  lodash.joinpath("test").mkdir(parents = true)
+  lodash.joinpath("src", "array.nuc").writeText("// Lists.\n\n// The list split into groups of `size`.\nchunk<T>(xs: T[], size: int) T[][]\n  []\n")
+  lodash.joinpath("src", "object.nuc").writeText("// The keys of a path.\npathKeys(path: string) string[]\n  []\n")
+  lodash.joinpath("test", "array_test.nuc").writeText("main() void\n  check(\"chunk even\", groups(chunk([1, 2, 3, 4], 2)), \"[1,2][3,4]\")\n  check(\"another\", ints(tail([1])), \"\")\n")
+  rows = ExtractLibrary.helpers(ctx)
+  expect(rows.length == 1 and rows[0]["id"] == "lib:helper-chunk" and rows[0]["summary"] == "The list split into groups of `size`.")
+  body: string = rows[0]["body"]
+  expect("chunk<T>(xs: T[], size: int) T[][]" in body and "- chunk even: `groups(chunk([1, 2, 3, 4], 2))` gives `[1,2][3,4]`" in body)
+  expect(not ("another" in body) and "lodash chunk" in rows[0]["keys"])
