@@ -1,0 +1,26 @@
+// Binary trees: complete trees built and walked (allocation, recursion, nullable links).
+Tree(left: Tree?, right: Tree?)
+
+build(depth: int) Tree
+  depth == 0 ? Tree(null, null) : Tree(build(depth - 1), build(depth - 1))
+
+count(t: Tree) int
+  l = t.left
+  r = t.right
+  if l == null or r == null
+    return 1
+  1 + count(l) + count(r)
+
+main() void
+  maxDepth = 16
+  print("stretch ${count(build(maxDepth + 1))}")
+  long = build(maxDepth)
+  depth = 4
+  while depth <= maxDepth
+    rounds = 1 << (maxDepth - depth + 4)
+    total = 0
+    for i in 0..rounds
+      total += count(build(depth))
+    print("${rounds} trees of depth ${depth}: ${total}")
+    depth += 4
+  print("long lived ${count(long)}")

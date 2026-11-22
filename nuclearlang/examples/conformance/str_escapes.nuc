@@ -1,0 +1,38 @@
+// Texts are data, never code: the characters a target gives a meaning to (quotes, back-ticks, braces, `$`, `%`,
+// `\`, `#`) stay the text they are, in a plain text, next to an interpolation, in a multi-line and in a raw text.
+show(label: string, text: string) void
+  print(label, text.length, text)
+
+main() void
+  name = "ana"
+  show("backtick", "a`b`c")
+  show("braces", "{name} {0} {{x}} }{")
+  show("dollar", "cost: \$5 \$name \${name}")
+  show("percent", "100% %s %d %(name)s")
+  show("backslash", "C:\\dir\\new\\table")
+  show("quotes", "she said \"hi\" and 'bye'")
+  show("hash", "#tag # not a comment // nor this")
+  show("mixed", "`${name}` {${name}} \$${name} %${name}% '${name}' \"${name}\"")
+  show("format", "{} {:>5} {0!r} f\"{x}\"")
+  show("unicode", "tab\there \u{e9}\u{2713} end")
+  show("newline", "a\\nb")
+  show("raw", r"\d+{2}\$\n`%s`")
+  block = """
+    {name} `tick` $5 100% "quoted" 'single'
+    C:\\dir and ${name} end
+  """
+  show("block", block.trim())
+  key = "it's \"x\""
+  m: <string, string> = {}
+  m[key] = "`v` {v} \$v"
+  show("map", m[key] ?? "")
+  parts = "a|b\\c`d".split("|")
+  show("split", parts.join("/"))
+  print("json", Json.encode({ "k": "q\"uote`{}\$" }))
+  print("contains", "`" in "a`b", "\$" in "a\$b", "{" in "a{b", "\\" in "a\\b")
+  print("replace", "a.b.c".replaceAll(".", "\$&"), "x".replaceAll("x", "\\1"), "a+b".replaceAll("+", "{}"))
+  digit = Regex(r"(\d)")
+  print("regex-first", "a1b2".replace(digit, "[\$&\$1]"), "a1b2".replace("1", "\$&"))
+  print("regex-all", "a1b2".replaceAll(digit, "[\\1\$1]"), "a1b2".replaceAll(digit, "\\g<0>"))
+  to = "\$\$"
+  print("variable", "a.b".replaceAll(".", to), "a.b".replace(".", to), "a1".replaceAll(digit, to))

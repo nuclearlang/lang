@@ -36,6 +36,25 @@ Builds every `bench/<name>.nuc` three times (TypeScript compiled with `tsc --str
 to a native executable; Python run as it is), runs each version and its hand-written twin five times, keeps the
 median, checks both print the same text, and counts source lines. Output: `results/bench.json`.
 
+The programs, each one area of the generated code:
+
+| Program | What it measures |
+|---|---|
+| `primes` | integer arithmetic and loops |
+| `nbody` | decimal arithmetic, attributes of objects changed in nested loops |
+| `binarytrees` | allocation, recursion, nullable links |
+| `fannkuch` | lists of integers changed in place |
+| `wordfreq` | a map counted and ranked |
+| `pipeline` | the library's collections: `filter`, `map`, `sum`, `groupBy`, `sortedBy`, `any`, `all`, `unique` |
+| `texts` | the library's string members: `join`, `split`, `upper`, `replace`, `padStart`, `indexOf` |
+| `dispatch` | methods chosen at run time, functions as values, closures that change a variable |
+
+A generated version slower than its hand-written twin by more than the threshold is a finding: read both sources,
+and fix the dialect's template or helper (2026-11-21: Python's `m[k] ?? 0` and `m[k]!` called a helper in the
+loop; TypeScript's and Dart's `sortedBy` read the key twice per comparison). What is left: a Python class of the
+program has no `__slots__` (`binarytrees`: 1.5 times its twin, which declares them), kept so because a module may
+be extended and given attributes later.
+
 To add a program: write `bench/<name>.nuc` (a `main()`), then `bench/hand/<name>.ts`, `.dart`, `.py` the way an
 expert in that language would write it (they must print exactly the same). Keep the work a few hundred
 milliseconds so the measurement is not process start-up.

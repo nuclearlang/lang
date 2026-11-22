@@ -1321,3 +1321,39 @@ fn a_comparison_with_null_is_never_deep() {
     let code = ts("f(m: <string, <string, int>>) boolean = m[\"c\"] == null\n");
     assert!(!code.contains("_equals"), "{code}");
 }
+
+#[test]
+fn a_replacement_text_is_never_a_pattern() {
+    // JavaScript reads `$&` in a replacement and Python's `re.sub` reads `\\1`: only a plain literal is given as it is
+    let src = "f(s: string, to: string) string = s.replaceAll(\".\", to) + s.replace(\"a\", \"b\") + s.replace(\"a\", to)\n";
+    has(&ts(src), "s.replaceAll('.', () => to) + s.replace('a', 'b') + s.replace('a', () => to)");
+    let re = "f(s: string, to: string) string\n  digit = Regex(r\"\\d\")\n  s.replaceAll(digit, to) + s.replace(digit, to) + s.replaceAll(digit, \"x\")\n";
+    has(&build(re, "python"), "digit.sub(lambda _: to, s) + digit.sub(lambda _: to, s, 1) + digit.sub(\"x\", s)");
+    // a Regex is global in TypeScript: its first match is replaced by hand
+    has(&ts(re), "_replaceFirst(s, digit, to)");
+}
+
+#[test]
+fn sorting_by_a_key_reads_each_key_once_and_is_stable() {
+    let src = "f(xs: int[]) int[] = xs.sortedBy((x) => x % 5)\n";
+    has(&ts(src), "const keyed = xs.map((x) => ({ k: key(x), x }));");
+    // Dart's List.sort does not keep the order of equal keys
+    has(&build(src, "dart"), "return c != 0 ? c : a - b;");
+}
+
+#[test]
+fn a_doc_comment_with_a_backslash_is_a_valid_docstring() {
+    has(&build("// Splits on `\\` and on \"\"\".\nf() int = 1\n", "python"), "Splits on `\\\\` and on \\\"\\\"\\\".");
+}
+
+#[test]
+fn a_map_of_plain_values_is_read_as_an_expert_reads_it_in_python() {
+    let src = "f(m: <string, int>, k: string) int\n  m[k] = (m[k] ?? 0) + 1\n  m[k]!\n";
+    let code = build(src, "python");
+    has(&code, "m[k] = m.get(k, 0) + 1");
+    has(&code, "return m[k]");
+    // a map whose values may be null keeps the checks: a stored null is not a missing key
+    let nullable = build("f(m: <string, int?>, k: string) int = (m[k] ?? 0) + m[k]!\n", "python");
+    assert!(!nullable.contains(".get(k, 0)"), "{nullable}");
+    has(&nullable, "_sure(m.get(k))");
+}

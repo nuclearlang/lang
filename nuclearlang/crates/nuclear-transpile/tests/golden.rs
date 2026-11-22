@@ -110,7 +110,7 @@ fn stdlib_programs_transpile_in_both_targets() {
 #[test]
 fn semantics_and_conformance_programs_transpile_in_the_three_targets() {
     programs_transpile("examples/semantics", 10);
-    programs_transpile("examples/conformance", 24);
+    programs_transpile("examples/conformance", 25);
 }
 
 fn programs_transpile(folder: &str, at_least: usize) {

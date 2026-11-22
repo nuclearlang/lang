@@ -21,8 +21,10 @@ lastIndexOf = "{{recv}}.lastIndexOf({{args}})"
 substring = "{{recv}}.substring({{args}})"
 split = "{{recv}}.split({{arg0}})"
 chars = "[...{{recv}}]"
-replace = "{{recv}}.replace({{arg0}}, {{arg1}})"
-replaceAll = { template = "{{#fn}}_replaceWith({{recv}}, {{arg0}}, {{arg1}}){{/fn}}{{^fn}}{{recv}}.replaceAll({{arg0}}, {{arg1}}){{/fn}}", helper = "function _replaceWith(s: string, re: RegExp, f: (m: RegExpMatchArray) => string): string {\n  let out = '';\n  let last = 0;\n  for (const m of s.matchAll(re)) {\n    out += s.slice(last, m.index) + f(m);\n    last = m.index! + m[0].length;\n  }\n  return out + s.slice(last);\n}" }
+# JavaScript reads `$&` and `$1` in a replacement text: a text that is not a plain literal is given as a function.
+# A Regex is global (`findAll`), so its first match is replaced by hand.
+replace = { template = "{{#arg0_is.regex}}_replaceFirst({{recv}}, {{arg0}}, {{arg1}}){{/arg0_is.regex}}{{^arg0_is.regex}}{{recv}}.replace({{arg0}}, {{#arg1_is.plain}}{{arg1}}{{/arg1_is.plain}}{{^arg1_is.plain}}() => {{arg1}}{{/arg1_is.plain}}){{/arg0_is.regex}}", helper = "function _replaceFirst(s: string, re: RegExp, to: string): string {\n  const m = new RegExp(re.source, re.flags.replace('g', '')).exec(s);\n  return m ? s.slice(0, m.index) + to + s.slice(m.index + m[0].length) : s;\n}" }
+replaceAll = { template = "{{#fn}}_replaceWith({{recv}}, {{arg0}}, {{arg1}}){{/fn}}{{^fn}}{{recv}}.replaceAll({{arg0}}, {{#arg1_is.plain}}{{arg1}}{{/arg1_is.plain}}{{^arg1_is.plain}}() => {{arg1}}{{/arg1_is.plain}}){{/fn}}", helper = "function _replaceWith(s: string, re: RegExp, f: (m: RegExpMatchArray) => string): string {\n  let out = '';\n  let last = 0;\n  for (const m of s.matchAll(re)) {\n    out += s.slice(last, m.index) + f(m);\n    last = m.index! + m[0].length;\n  }\n  return out + s.slice(last);\n}" }
 repeat = "{{recv}}.repeat({{arg0}})"
 padStart = "{{recv}}.padStart({{args}})"
 padEnd = "{{recv}}.padEnd({{args}})"
@@ -63,10 +65,10 @@ take = "{{recv}}.slice(0, {{arg0}})"
 skip = "{{recv}}.slice({{arg0}})"
 reversed = "[...{{recv}}].reverse()"
 sorted = "[...{{recv}}].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))"
-sortedBy = { template = "_sortBy([...{{recv}}], {{arg0}})", helper = "function _sortBy<T, K>(xs: T[], key: (x: T) => K): T[] {\n  return xs.sort((a, b) => {\n    const ka = key(a);\n    const kb = key(b);\n    return ka < kb ? -1 : ka > kb ? 1 : 0;\n  });\n}" }
+sortedBy = { template = "_sortBy([...{{recv}}], {{arg0}})", helper = "function _sortBy<T, K>(xs: T[], key: (x: T) => K): T[] {\n  // each key is read once\n  const keyed = xs.map((x) => ({ k: key(x), x }));\n  keyed.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));\n  for (let i = 0; i < xs.length; i++) xs[i] = keyed[i]!.x;\n  return xs;\n}" }
 reverse = "{{recv}}.reverse()"
 sort = "{{recv}}.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))"
-sortBy = { template = "_sortBy({{recv}}, {{arg0}})", helper = "function _sortBy<T, K>(xs: T[], key: (x: T) => K): T[] {\n  return xs.sort((a, b) => {\n    const ka = key(a);\n    const kb = key(b);\n    return ka < kb ? -1 : ka > kb ? 1 : 0;\n  });\n}" }
+sortBy = { template = "_sortBy({{recv}}, {{arg0}})", helper = "function _sortBy<T, K>(xs: T[], key: (x: T) => K): T[] {\n  // each key is read once\n  const keyed = xs.map((x) => ({ k: key(x), x }));\n  keyed.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));\n  for (let i = 0; i < xs.length; i++) xs[i] = keyed[i]!.x;\n  return xs;\n}" }
 unique = "[...new Set({{recv}})]"
 flatten = "{{recv}}.flat()"
 copy = "[...{{recv}}]"

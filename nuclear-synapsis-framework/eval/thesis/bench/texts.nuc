@@ -1,0 +1,21 @@
+// Texts: 200 000 lines built, split, changed and joined (the library's string members).
+main() void
+  parts: string[] = []
+  for i in 0..200000
+    parts.add("item-${i % 1000}:${i * 7 % 13}")
+  text = parts.join(";")
+  fields = text.split(";")
+  upper = 0
+  long = 0
+  for f in fields
+    pair = f.split(":")
+    name = pair[0].upper().replace("ITEM-", "")
+    if name.length == 3
+      long += 1
+    if pair[1] == "0" and f.startsWith("item-1")
+      upper += 1
+  padded = fields.take(5).map((f) => f.padStart(12, ".")).join("|")
+  print(padded)
+  print("length ${text.length} fields ${fields.length} long ${long} upper ${upper}")
+  print("index ${text.indexOf("item-999")} last ${text.lastIndexOf("item-0:")} has ${"item-500:" in text}")
+  print(text.substring(0, 40).replaceAll("-", "_").trim())

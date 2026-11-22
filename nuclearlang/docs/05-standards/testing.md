@@ -88,7 +88,8 @@ each printing a labelled line per case, with the text every target must print in
 | `mod_basics`, `mod_inheritance`, `mod_enums`, `mod_generics` | both constructor forms, attributes, `$field`, static members, getters, cascades, `super`, interfaces, overriding, `is` and `as`, enums, generic modules and functions |
 | `err_try`, `err_results` | `try`/`catch`/`finally` and their order, nesting, custom errors, `Result` propagation, kept results, `match` on `Ok`/`Err`, callbacks |
 | `async_basics`, `gen_basics` | `~`, `awaitAll`, errors through an await, asynchronous methods, lambdas and loops, generators and `yield ...` |
-| `str_basics`, `coll_lists`, `coll_maps`, `scope_vars` | texts and their members, lists, maps and sets with their edge cases (empty, missing, nested), block scope, values and references |
+| `str_basics`, `coll_lists`, `coll_maps`, `scope_vars` | texts and their members, lists, maps and sets with their edge cases (empty, missing, nested, a stable sort by key), block scope, values and references |
+| `str_escapes` | a text is data, never code: quotes, back-ticks, braces, `$`, `%`, `\` and `#` in plain, interpolated, multi-line and raw texts, as map keys, in JSON, and as the replacement of `replace` / `replaceAll` (no `$&` of JavaScript, no `\1` of Python) |
 
 Rules:
 

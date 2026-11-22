@@ -1,0 +1,45 @@
+// Fannkuch: every permutation of 9 numbers flipped until its first is 1 (integer lists changed in place).
+main() void
+  n = 9
+  perm: int[] = (0..n).copy()
+  counts: int[] = (0..n).map((i) => i * 0)
+  maxFlips = 0
+  checksum = 0
+  sign = 1
+  r = n
+  while true
+    while r != 1
+      counts[r - 1] = r
+      r -= 1
+    work = perm.copy()
+    flips = 0
+    k = work[0]
+    while k != 0
+      i = 0
+      j = k
+      while i < j
+        t = work[i]
+        work[i] = work[j]
+        work[j] = t
+        i += 1
+        j -= 1
+      flips += 1
+      k = work[0]
+    if flips > maxFlips
+      maxFlips = flips
+    checksum += sign * flips
+    sign = -sign
+    done = true
+    while r != n
+      first = perm[0]
+      for i in 0..r
+        perm[i] = perm[i + 1]
+      perm[r] = first
+      counts[r] -= 1
+      if counts[r] > 0
+        done = false
+        break
+      r += 1
+    if done
+      break
+  print("${checksum} ${maxFlips}")

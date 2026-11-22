@@ -1,0 +1,24 @@
+// A data pipeline: 300 000 orders filtered, mapped, grouped, sorted and summed (the library's collections).
+Order(id: int, customer: string, amount: int, paid: boolean)
+
+next(seed: int) int
+  (seed * 48271) % 2147483647
+
+main() void
+  names = ["ana", "luis", "eva", "bob", "zoe", "max", "kim", "sam"]
+  orders: Order[] = []
+  seed = 7
+  for i in 0..300000
+    seed = next(seed)
+    orders.add(Order(i, names[seed % names.length], seed % 1000, seed % 3 != 0))
+  paid = orders.filter((o) => o.paid)
+  total = paid.map((o) => o.amount).sum()
+  big = paid.filter((o) => o.amount > 900).length
+  byCustomer = paid.groupBy((o) => o.customer)
+  ranked = byCustomer.keys.sortedBy((c) => -byCustomer[c]!.length)
+  for c in ranked.take(3)
+    group = byCustomer[c]!
+    print("${c} ${group.length} ${group.map((o) => o.amount).max()}")
+  top = paid.sortedBy((o) => -o.amount * 1000000 + o.id).take(3).map((o) => o.id)
+  print("total ${total} big ${big} top ${top.join(",")}")
+  print("any ${orders.any((o) => o.amount == 999)} all ${orders.all((o) => o.amount < 1000)} unique ${orders.map((o) => o.amount % 97).unique().length}")

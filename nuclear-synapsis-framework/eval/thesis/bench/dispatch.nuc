@@ -1,0 +1,40 @@
+// Calls: closures, functions as values and methods chosen at run time, three million times.
+Shape
+  area() int
+
+Square(side: int) > Shape
+  area() int
+    side * side
+
+Rect(w: int, h: int) > Shape
+  area() int
+    w * h
+
+Tri(b: int, h: int) > Shape
+  area() int
+    b * h ~/ 2
+
+adder(n: int) (x: int) => int
+  (x: int) => x + n
+
+compose(f: (x: int) => int, g: (x: int) => int) (x: int) => int
+  (x: int) => g(f(x))
+
+main() void
+  shapes: Shape[] = []
+  for i in 0..1000
+    shapes.add(i % 3 == 0 ? Square(i % 7) : i % 3 == 1 ? Rect(i % 5, i % 11) : Tri(i % 13, i % 4))
+  total = 0
+  for round in 0..1000
+    for s in shapes
+      total += s.area()
+  f = compose(adder(3), compose((x: int) => x * 2, adder(-1)))
+  acc = 0
+  for i in 0..2000000
+    acc = (acc + f(i)) % 1000003
+  count = 0
+  bump = ()
+    count += 1
+  for i in 0..500000
+    bump()
+  print("${total} ${acc} ${count}")

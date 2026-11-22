@@ -1,0 +1,22 @@
+backtick 5 a`b`c
+braces 19 {name} {0} {{x}} }{
+dollar 22 cost: $5 $name ${name}
+percent 19 100% %s %d %(name)s
+backslash 16 C:\dir\new\table
+quotes 23 she said "hi" and 'bye'
+hash 32 #tag # not a comment // nor this
+mixed 34 `ana` {ana} $ana %ana% 'ana' "ana"
+format 21 {} {:>5} {0!r} f"{x}"
+unicode 15 tab	here é✓ end
+newline 4 a\nb
+raw 14 \d+{2}\$\n`%s`
+block 58 {name} `tick` $5 100% "quoted" 'single'
+C:\dir and ana end
+map 10 `v` {v} $v
+split 7 a/b\c`d
+json {"k":"q\"uote`{}$"}
+contains true true true true
+replace a$&b$&c \1 a{}b
+regex-first a[$&$1]b2 a$&b2
+regex-all a[\1$1]b[\1$1] a\g<0>b\g<0>
+variable a$$b a$$b a$$

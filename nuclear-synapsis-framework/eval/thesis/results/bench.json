@@ -1,30 +1,186 @@
 {
-  "date": "2026-11-06",
-  "runs": 5,
+  "date": "2026-11-21",
+  "runs": 3,
   "programs": {
+    "binarytrees": {
+      "nuclear_lines": 22,
+      "langs": {
+        "ts": {
+          "generated_ms": 130.2,
+          "hand_ms": 124.9,
+          "same_output": true,
+          "generated_lines": 30,
+          "hand_lines": 23
+        },
+        "dart": {
+          "generated_ms": 274.9,
+          "hand_ms": 236.6,
+          "same_output": true,
+          "generated_lines": 32,
+          "hand_lines": 26
+        },
+        "py": {
+          "generated_ms": 1761.3,
+          "hand_ms": 1180.3,
+          "same_output": true,
+          "generated_lines": 39,
+          "hand_lines": 22
+        }
+      }
+    },
+    "dispatch": {
+      "nuclear_lines": 33,
+      "langs": {
+        "ts": {
+          "generated_ms": 55.3,
+          "hand_ms": 56.2,
+          "same_output": true,
+          "generated_lines": 52,
+          "hand_lines": 44
+        },
+        "dart": {
+          "generated_ms": 25.9,
+          "hand_ms": 22.4,
+          "same_output": true,
+          "generated_lines": 60,
+          "hand_lines": 47
+        },
+        "py": {
+          "generated_ms": 387.5,
+          "hand_ms": 354.3,
+          "same_output": true,
+          "generated_lines": 65,
+          "hand_lines": 46
+        }
+      }
+    },
+    "fannkuch": {
+      "nuclear_lines": 44,
+      "langs": {
+        "ts": {
+          "generated_ms": 44.0,
+          "hand_ms": 42.8,
+          "same_output": true,
+          "generated_lines": 54,
+          "hand_lines": 38
+        },
+        "dart": {
+          "generated_ms": 24.2,
+          "hand_ms": 25.4,
+          "same_output": true,
+          "generated_lines": 54,
+          "hand_lines": 41
+        },
+        "py": {
+          "generated_ms": 333.6,
+          "hand_ms": 275.0,
+          "same_output": true,
+          "generated_lines": 56,
+          "hand_lines": 35
+        }
+      }
+    },
+    "nbody": {
+      "nuclear_lines": 46,
+      "langs": {
+        "ts": {
+          "generated_ms": 118.4,
+          "hand_ms": 119.8,
+          "same_output": true,
+          "generated_lines": 97,
+          "hand_lines": 60
+        },
+        "dart": {
+          "generated_ms": 14.8,
+          "hand_ms": 10.8,
+          "same_output": true,
+          "generated_lines": 97,
+          "hand_lines": 60
+        },
+        "py": {
+          "generated_ms": 659.8,
+          "hand_ms": 675.8,
+          "same_output": true,
+          "generated_lines": 114,
+          "hand_lines": 51
+        }
+      }
+    },
+    "pipeline": {
+      "nuclear_lines": 21,
+      "langs": {
+        "ts": {
+          "generated_ms": 169.8,
+          "hand_ms": 143.4,
+          "same_output": true,
+          "generated_lines": 49,
+          "hand_lines": 35
+        },
+        "dart": {
+          "generated_ms": 112.2,
+          "hand_ms": 101.9,
+          "same_output": true,
+          "generated_lines": 42,
+          "hand_lines": 35
+        },
+        "py": {
+          "generated_ms": 231.9,
+          "hand_ms": 275.1,
+          "same_output": true,
+          "generated_lines": 57,
+          "hand_lines": 34
+        }
+      }
+    },
     "primes": {
       "nuclear_lines": 21,
       "langs": {
         "ts": {
-          "generated_ms": 111.4,
-          "hand_ms": 106.3,
+          "generated_ms": 115.6,
+          "hand_ms": 117.3,
           "same_output": true,
           "generated_lines": 28,
           "hand_lines": 21
         },
         "dart": {
-          "generated_ms": 135.0,
-          "hand_ms": 137.5,
+          "generated_ms": 94.6,
+          "hand_ms": 95.8,
           "same_output": true,
           "generated_lines": 28,
           "hand_lines": 20
         },
         "py": {
-          "generated_ms": 2122.0,
-          "hand_ms": 2099.0,
+          "generated_ms": 2436.1,
+          "hand_ms": 2371.0,
           "same_output": true,
-          "generated_lines": 32,
+          "generated_lines": 33,
           "hand_lines": 20
+        }
+      }
+    },
+    "texts": {
+      "nuclear_lines": 20,
+      "langs": {
+        "ts": {
+          "generated_ms": 100.6,
+          "hand_ms": 105.5,
+          "same_output": true,
+          "generated_lines": 25,
+          "hand_lines": 19
+        },
+        "dart": {
+          "generated_ms": 66.1,
+          "hand_ms": 65.7,
+          "same_output": true,
+          "generated_lines": 25,
+          "hand_lines": 17
+        },
+        "py": {
+          "generated_ms": 80.3,
+          "hand_ms": 73.6,
+          "same_output": true,
+          "generated_lines": 40,
+          "hand_lines": 18
         }
       }
     },
@@ -32,24 +188,24 @@
       "nuclear_lines": 16,
       "langs": {
         "ts": {
-          "generated_ms": 109.0,
-          "hand_ms": 100.4,
+          "generated_ms": 119.6,
+          "hand_ms": 107.4,
           "same_output": true,
           "generated_lines": 44,
           "hand_lines": 21
         },
         "dart": {
-          "generated_ms": 65.1,
-          "hand_ms": 64.2,
+          "generated_ms": 50.8,
+          "hand_ms": 49.2,
           "same_output": true,
           "generated_lines": 39,
           "hand_lines": 19
         },
         "py": {
-          "generated_ms": 325.3,
-          "hand_ms": 292.3,
+          "generated_ms": 325.4,
+          "hand_ms": 341.5,
           "same_output": true,
-          "generated_lines": 49,
+          "generated_lines": 55,
           "hand_lines": 17
         }
       }

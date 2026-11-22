@@ -14,13 +14,14 @@ added as an option any dialect can set, never as a case of one language.
 `implicit_self named_args declare_ctor_fields const_collection_defaults optional_params_nullable
 number_separators string_quote interp_quote interp_open interp_close dollar_escape reserved_escape max_bases
 catch_var toplevel_statements line_width trailing_comma omit_null_default interp_bare_names binary_literals
-int_member_parens map_patterns decimal_literals`
+int_member_parens map_patterns decimal_literals doc_in_text`
 
 - `omit_null_default`, `interp_bare_names`: Dart without `= null` and with `$name`, to avoid lint warnings.
 - `binary_literals = false`: Dart writes `0b1010` as `0xa`.
 - `int_member_parens`: TS `(5).toString()`.
 - `decimal_literals`: Python writes an integer literal given for a `double` (a typed value, a default, an
   argument of a function of the program) as a decimal (`deposit(50)` → `deposit(50.0)`), so it prints as the others.
+- `doc_in_text`: Python writes a doc comment as a docstring, so a `\` and a `"""` of the comment are escaped.
 - `map_patterns = false`: Python writes `{ low, high } = m` as `low = m["low"]` and `high = m["high"]` (a value
   that is not a name is read once into a variable first).
 

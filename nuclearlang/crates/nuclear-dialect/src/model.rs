@@ -311,6 +311,7 @@ pub struct Options {
     pub map_patterns: bool,
     pub int_member_parens: bool,
     pub decimal_literals: bool,
+    pub doc_in_text: bool,
     pub string_quote: String,
     pub interp_quote: String,
     pub interp_open: String,
@@ -357,6 +358,7 @@ impl Default for Options {
             map_patterns: true,
             int_member_parens: false,
             decimal_literals: false,
+            doc_in_text: false,
             string_quote: "'".into(),
             interp_quote: "`".into(),
             interp_open: "${".into(),
@@ -673,6 +675,8 @@ impl Dialect {
             "optional_chain",
             "bound_param",
             "default_init",
+            "map_sure",
+            "map_get_or",
             "map_compound",
             "global_decl",
             "nonlocal_decl",
@@ -2324,6 +2328,7 @@ fn parse_options(t: &toml::Table) -> Options {
     o.map_patterns = b("map_patterns", o.map_patterns);
     o.int_member_parens = b("int_member_parens", o.int_member_parens);
     o.decimal_literals = b("decimal_literals", o.decimal_literals);
+    o.doc_in_text = b("doc_in_text", o.doc_in_text);
     o.string_quote = s("string_quote", &o.string_quote);
     o.interp_quote = s("interp_quote", &o.interp_quote);
     o.interp_open = s("interp_open", &o.interp_open);

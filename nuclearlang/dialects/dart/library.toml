@@ -61,10 +61,10 @@ take = "{{recv}}.take({{arg0}}).toList()"
 skip = "{{recv}}.skip({{arg0}}).toList()"
 reversed = "{{recv}}.reversed.toList()"
 sorted = "(List.of({{recv}})..sort())"
-sortedBy = { template = "_sortBy(List.of({{recv}}), {{arg0}})", helper = "List<T> _sortBy<T, K extends Comparable<dynamic>>(List<T> xs, K Function(T) key) =>\n    xs..sort((a, b) => key(a).compareTo(key(b)));" }
+sortedBy = { template = "_sortBy(List.of({{recv}}), {{arg0}})", helper = "List<T> _sortBy<T, K extends Comparable<dynamic>>(List<T> xs, K Function(T) key) {\n  // each key is read once, and equal keys keep their order (List.sort does not promise it)\n  final keys = [for (final x in xs) key(x)];\n  final order = [for (var i = 0; i < xs.length; i++) i]\n    ..sort((a, b) {\n      final c = keys[a].compareTo(keys[b]);\n      return c != 0 ? c : a - b;\n    });\n  xs.setAll(0, [for (final i in order) xs[i]]);\n  return xs;\n}" }
 reverse = { template = "_reverse({{recv}})", helper = "void _reverse<T>(List<T> xs) => xs.setAll(0, xs.reversed.toList());" }
 sort = "{{recv}}.sort()"
-sortBy = { template = "_sortBy({{recv}}, {{arg0}})", helper = "List<T> _sortBy<T, K extends Comparable<dynamic>>(List<T> xs, K Function(T) key) =>\n    xs..sort((a, b) => key(a).compareTo(key(b)));" }
+sortBy = { template = "_sortBy({{recv}}, {{arg0}})", helper = "List<T> _sortBy<T, K extends Comparable<dynamic>>(List<T> xs, K Function(T) key) {\n  // each key is read once, and equal keys keep their order (List.sort does not promise it)\n  final keys = [for (final x in xs) key(x)];\n  final order = [for (var i = 0; i < xs.length; i++) i]\n    ..sort((a, b) {\n      final c = keys[a].compareTo(keys[b]);\n      return c != 0 ? c : a - b;\n    });\n  xs.setAll(0, [for (final i in order) xs[i]]);\n  return xs;\n}" }
 unique = "{{recv}}.toSet().toList()"
 flatten = "{{recv}}.expand((x) => x).toList()"
 copy = "List.of({{recv}})"

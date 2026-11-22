@@ -31,6 +31,7 @@ max_bases = 0                    # multiple inheritance
 catch_var = "error"
 map_patterns = false             # no `{"k": v} = m` in an assignment: one line per name
 decimal_literals = true          # `price: double = 3` is `3.0`: an int and a float print differently
+doc_in_text = true               # a docstring is a text: a `\` of the comment is written `\\`
 cascade_statements = true        # p = Paint() + ..color = x → p = Paint(); p.color = x
 module_separator = "."           # use langchain_core/tools → from langchain_core.tools import ...
 type_args_as_args = true         # inject<Repo>() → inject(Repo): Python passes classes as values
@@ -197,6 +198,9 @@ optional_chain = "({{value}} if {{conds}} else None)"
 optional_cond = "{{object}} is not None"
 # a map read is None when the key is absent (nuclearlang/docs/07-reference/library.md §3); a list index stays an index
 index = "{{#map}}{{object}}.get({{index}}){{/map}}{{^map}}{{object}}[{{index}}]{{/map}}"
+# a map whose values are never null: the expert's forms, with no helper call in a loop
+map_sure = "{{object}}[{{index}}]"
+map_get_or = "{{object}}.get({{index}}, {{default}})"
 await = "await {{expr}}"
 ternary = "{{then}} if {{cond}} else {{else}}"
 # `x is int` must not accept booleans (bool is a subclass of int in Python)

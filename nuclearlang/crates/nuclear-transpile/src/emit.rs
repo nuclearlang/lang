@@ -962,7 +962,15 @@ impl<'a> Emitter<'a> {
             plain.push('\n'); // keeps the blank line between a loose comment and the doc comment
         }
         let text: Vec<&str> = self.comments[first..end].iter().map(|c| c.text.as_str()).collect();
-        let doc = DocComment::parse(&text.join("\n"));
+        let raw = text.join("\n");
+        // a target that writes the comment inside a text (Python's docstring): its backslashes and its
+        // closing quotes are the comment's own
+        let doc = if self.d.options.doc_in_text {
+            DocComment::parse(&raw.replace('\\', "\\\\").replace("\"\"\"", "\\\"\\\"\\\""))
+        } else {
+            DocComment::parse(&raw)
+        };
+        let deprecated = if self.d.options.doc_in_text { DocComment::parse(&raw).deprecated } else { doc.deprecated.clone() };
         self.doc_summary = Some(doc.summary.join(" ").trim().to_string()).filter(|s| !s.is_empty());
         self.next_comment = end;
         let strs = |v: &[String]| Value::List(v.iter().map(|s| Value::str(s.as_str())).collect());
@@ -986,7 +994,7 @@ impl<'a> Emitter<'a> {
             .value("see", strs(&doc.see))
             .flag("deprecated", doc.deprecated.is_some())
             .opt("deprecated_text", doc.deprecated.clone())
-            .opt("deprecated_literal", doc.deprecated.clone().map(|t| self.string(&[StrPiece::Text(t)])))
+            .opt("deprecated_literal", deprecated.map(|t| self.string(&[StrPiece::Text(t)])))
             .flag("one_line", doc.summary.len() == 1 && !doc.has_tags())
             .opt("since", doc.since.clone())
             .value("other", pairs(&doc.other, "tag", "text"))
@@ -5549,6 +5557,16 @@ impl<'a> Emitter<'a> {
             }
             ExprKind::CascadeSelf => (self.cascade_self.last().cloned().unwrap_or_default(), P_PRIMARY),
             ExprKind::NonNull(x) => {
+                // `m[k]!` of a map whose values are never null: the target's own read that fails when absent
+                if let ExprKind::Index { object, index } = &x.kind
+                    && self.has("map_sure")
+                    && self.plain_values_map(object)
+                {
+                    let o = self.expr(object);
+                    let o = self.wrap(o, P_POSTFIX);
+                    let i = self.expr(index).0;
+                    return (self.tpl("map_sure", Ctx::new().set("object", o).set("index", i), e.span), P_POSTFIX);
+                }
                 let v = self.expr(x);
                 let v = self.wrap(v, P_POSTFIX);
                 (self.tpl("non_null", Ctx::new().set("expr", v), e.span), P_POSTFIX)
@@ -5599,7 +5617,31 @@ impl<'a> Emitter<'a> {
         }
     }
 
+    /// A map (a literal's type, `<K, V>`) whose values are known and never null: a missing key is its only null.
+    fn plain_values_map(&self, object: &Expr) -> bool {
+        let Some(t) = self.static_type(object) else { return false };
+        match map_types(&t) {
+            Some((_, v)) => !matches!(&v.kind, TypeKind::Nullable(_))
+                && !matches!(&v.kind, TypeKind::Named { name, .. } if matches!(name.as_str(), "any" | "dynamic" | "Object")),
+            None => false,
+        }
+    }
+
     fn binary(&mut self, op: BinaryOp, left: &Expr, right: &Expr, span: Span) -> (String, u8) {
+        // `m[k] ?? 0` with a plain default: the target's lookup with a default (Python's `m.get(k, 0)`)
+        if op == BinaryOp::Coalesce
+            && let ExprKind::Index { object, index } = &left.kind
+            && matches!(right.kind, ExprKind::Number(_) | ExprKind::Bool(_) | ExprKind::Name(_))
+            && self.has("map_get_or")
+            && self.plain_values_map(object)
+        {
+            let o = self.expr(object);
+            let o = self.wrap(o, P_POSTFIX);
+            let i = self.expr(index).0;
+            let d = self.expr(right).0;
+            let ctx = Ctx::new().set("object", o).set("index", i).set("default", d);
+            return (self.tpl("map_get_or", ctx, span), P_POSTFIX);
+        }
         let prec = op.precedence();
         // the right side of and, or, ?? may not run
         let lazy = u32::from(matches!(op, BinaryOp::And | BinaryOp::Or | BinaryOp::Coalesce));
@@ -5963,6 +6005,7 @@ impl<'a> Emitter<'a> {
         let mut named_texts = Vec::new();
         let mut fn_parts: Option<Value> = None;
         let mut arg_bases = Vec::new();
+        let mut arg_plain = Vec::new();
         let mut positional_prec = Vec::new();
         for a in args {
             let lambda = match &a.value.kind {
@@ -6000,7 +6043,15 @@ impl<'a> Emitter<'a> {
                         Some(Recv::Base(b)) => Some(b),
                         _ => None,
                     };
+                    // a text with nothing a target reads as a pattern (`$&` in JavaScript, `\1` in Python)
+                    let plain = match &a.value.kind {
+                        ExprKind::Str(pieces) => pieces
+                            .iter()
+                            .all(|p| matches!(p, StrPiece::Text(t) if !t.contains(['$', '\\']))),
+                        _ => false,
+                    };
                     arg_bases.push(base);
+                    arg_plain.push(plain);
                     positional.push(text);
                     positional_prec.push(prec);
                 }
@@ -6015,6 +6066,10 @@ impl<'a> Emitter<'a> {
             let mut is = BTreeMap::new();
             if let Some(b) = base {
                 is.insert(b.to_string(), Value::Bool(true));
+            }
+            // `arg1_is.plain`: a literal text that is the same text for every target's replace
+            if arg_plain.get(i) == Some(&true) {
+                is.insert("plain".to_string(), Value::Bool(true));
             }
             ctx = ctx.value(&format!("arg{i}_is"), Value::Map(is));
         }
