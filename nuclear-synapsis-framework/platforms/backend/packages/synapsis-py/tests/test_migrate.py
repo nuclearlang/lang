@@ -275,6 +275,8 @@ def test_a_database_migrated_by_an_older_version_goes_on(tmp_path: Path) -> None
 # an app with every kind of thing `createTables` and a migration must write the same way: a unique, defaults, a
 # `DateTime`, the timestamps, a foreign key, a join table
 STAMPED = '''
+from __future__ import annotations
+
 from datetime import datetime
 
 from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, created, many_to_many, many_to_one, primary, updated
