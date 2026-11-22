@@ -52,7 +52,7 @@ any = "{{recv}}.any({{arg0}})"
 all = "{{recv}}.every({{arg0}})"
 count = "{{recv}}.where({{arg0}}).length"
 reduce = "{{recv}}.fold({{arg0}}, {{arg1}})"
-sum = "{{recv}}.fold(0, (a, b) => a + b)"
+sum = "{{recv}}.fold({{#elem_is.double}}0.0{{/elem_is.double}}{{^elem_is.double}}0{{/elem_is.double}}, (a, b) => a + b)"
 min = { template = "_min({{recv}})", helper = "T? _min<T extends Comparable<dynamic>>(List<T> xs) =>\n    xs.isEmpty ? null : xs.reduce((a, b) => a.compareTo(b) <= 0 ? a : b);" }
 max = { template = "_max({{recv}})", helper = "T? _max<T extends Comparable<dynamic>>(List<T> xs) =>\n    xs.isEmpty ? null : xs.reduce((a, b) => a.compareTo(b) >= 0 ? a : b);" }
 join = "{{recv}}.join({{#has_args}}{{arg0}}{{/has_args}})"

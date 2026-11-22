@@ -1,0 +1,53 @@
+// Enums: simple and key-value, comparison, match, enums in collections and as attributes.
+Color
+  red
+  green
+  blue
+
+Level
+  low("Low")
+  high("High")
+  medium
+
+Task(title: string, level: Level = Level.medium, color: Color = Color.red)
+
+weight(level: Level) int
+  match level
+    Level.low -> 1
+    Level.medium -> 5
+    _ -> 10
+
+next(c: Color) Color
+  match c
+    Color.red -> Color.green
+    Color.green -> Color.blue
+    _ -> Color.red
+
+pick(i: int) Color
+  [Color.red, Color.green, Color.blue][i]
+
+main() void
+  c = pick(0)
+  print("equal", c == Color.red, c == Color.blue, c != Color.green, pick(1) == pick(1))
+  print("cycle", next(c) == Color.green, next(next(next(c))) == c)
+  print("weight", weight(Level.low), weight(Level.medium), weight(Level.high))
+  tasks = [Task("a"), Task("b", Level.high), Task("c", Level.low, Color.blue)]
+  print("default", tasks[0].level == Level.medium, tasks[0].color == Color.red)
+  urgent = tasks.filter((t) => t.level == Level.high)
+  print("filter", urgent.length, urgent[0].title)
+  print("sum", tasks.map((t) => weight(t.level)).sum())
+  byColor = tasks.groupBy((t) => t.color == Color.red ? "red" : "other")
+  print("group", byColor["red"]!.length, byColor["other"]!.length)
+  seen: Color[] = []
+  for t in tasks
+    if not (t.color in seen)
+      seen.add(t.color)
+  print("in", seen.length, Color.blue in seen, Color.green in seen)
+  counts: <string, int> = {}
+  for t in tasks
+    key = match t.level
+      Level.low -> "low"
+      Level.high -> "high"
+      _ -> "medium"
+    counts[key] = (counts[key] ?? 0) + 1
+  print("count", counts["low"], counts["medium"], counts["high"])

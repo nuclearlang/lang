@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Runs every program of examples/stdlib/ (or of DIR: examples/semantics/, the rules a target could break) in the three
 # language dialects and compares what it prints with
-# <area>.out: <area>.nuc → TypeScript (tsc --strict → node), Dart (dart run) and Python (pyright --strict →
-# python). The three must print the same text (docs/07-reference/library.md, ADR-lang-0009).
+# <area>.out: <area>.nuc → TypeScript (tsc --strict with no unused names → node), Dart (dart analyze with no
+# warnings → dart run) and Python (pyright → python). The three must print the same text
+# (docs/07-reference/library.md, ADR-lang-0009).
 #   nuclearlang/tools/stdlib-check.sh [area...]        (UPDATE=1: the TypeScript output becomes the expected <area>.out)
 #   DIR=examples/semantics nuclearlang/tools/stdlib-check.sh
+#   DIR=examples/conformance nuclearlang/tools/stdlib-check.sh   (every feature of the language: testing.md)
 # Needs node, dart (FLUTTER_ROOT or PATH), TypeScript (TSC=<path to tsc>, or tsc in PATH) and nuclearlang/tools/python/.venv
 # (pyright there; PY=<python> to use another interpreter).
 set -uo pipefail
@@ -15,6 +17,9 @@ TSC="${TSC:-$(command -v tsc || echo tools/node/node_modules/typescript/bin/tsc)
 PY="${PY:-tools/python/.venv/bin/python3}"
 PYRIGHT="${PYRIGHT:-tools/python/.venv/bin/pyright}"
 [ -f "$TSC" ] || { echo "TypeScript not found: set TSC=<path to tsc>"; exit 2; }
+# the packages a Dart program may import (a Result is fpdart's Either): those of the definitions' host project
+PACKAGES="tools/defs/flutter_project/.dart_tool/package_config.json"
+[ -f "$PACKAGES" ] && PACKAGES="--packages=$PWD/$PACKAGES" || PACKAGES=""
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 cargo build -q --bin nuclear || exit 2
@@ -28,7 +33,8 @@ for a in "${areas[@]}"; do
   mkdir -p "$OUT/$a"
   if $NUC build "$src" --dialect typescript -o "$OUT/$a/$a.ts" \
     && printf 'import { main } from "./%s.js";\nawait main();\n' "$a" > "$OUT/$a/run.ts" \
-    && node "$TSC" --strict --target es2022 --module es2022 --moduleResolution bundler --lib esnext,dom \
+    && node "$TSC" --strict --noUnusedLocals --noUnusedParameters --noImplicitReturns --noFallthroughCasesInSwitch \
+         --target es2022 --module es2022 --moduleResolution bundler --lib esnext,dom \
          --outDir "$OUT/$a/js" "$OUT/$a/run.ts" \
     && echo '{"type":"module"}' > "$OUT/$a/js/package.json" \
     && { [ -z "${UPDATE:-}" ] || node "$OUT/$a/js/run.js" > "$want"; } \
@@ -38,9 +44,11 @@ for a in "${areas[@]}"; do
     echo "FAIL  $a typescript"; fail=1
   fi
   if $NUC build "$src" --dialect dart -o "$OUT/$a/$a.dart" \
-    && "$DART" run "$OUT/$a/$a.dart" | diff "$want" - ; then
+    && "$DART" analyze $PACKAGES --fatal-warnings "$OUT/$a/$a.dart" > "$OUT/$a/analyze.txt" 2>&1 \
+    && "$DART" run $PACKAGES "$OUT/$a/$a.dart" | diff "$want" - ; then
     echo "ok    $a dart"
   else
+    grep -E '^ *(error|warning) -' "$OUT/$a/analyze.txt" 2>/dev/null
     echo "FAIL  $a dart"; fail=1
   fi
   if $NUC build "$src" --dialect python -o "$OUT/$a/$a.py" \

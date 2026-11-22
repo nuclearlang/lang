@@ -1,0 +1,35 @@
+// Null handling: ??, ?., !, ??=, nullable chains, nullable in collections.
+Address(city: string, zip: string? = null)
+
+User(name: string, address: Address? = null, friend: User? = null)
+  label() string
+    name.upper()
+
+find(id: int) User?
+  id == 1 ? User("ana", Address("Lima")) : null
+
+main() void
+  a: string? = null
+  b: string? = "b"
+  print("coalesce", a ?? "x", b ?? "x", a ?? b ?? "y", a ?? a ?? "z")
+  u = find(1)
+  v = find(2)
+  print("safe", u?.name, v?.name, u?.address?.city, v?.address?.city, u?.address?.zip)
+  print("safe-call", u?.label(), v?.label(), v?.label() ?? "none")
+  print("deep", u?.friend?.address?.city ?? "nowhere")
+  print("length", u?.name.length, v?.name.length ?? 0)
+  print("bang", u!.name, find(1)!.address!.city)
+  xs: int?[] = [1, null, 3]
+  print("list", xs.filter((x) => x != null).length, xs[1] ?? -1, xs[0] ?? -1)
+  m: <string, int> = { "a": 1 }
+  print("map", m["a"] ?? 0, m["z"] ?? 0, m["z"] == null)
+  count = xs[1]
+  count ??= 0
+  count += 1
+  print("assign", count)
+  w = find(1)
+  print("ternary", w != null ? w.name : "none", v == null ? "none" : "some")
+  zero: int? = 0
+  empty: string? = ""
+  no: boolean? = false
+  print("falsy", zero ?? 5, "[${empty ?? "x"}]", no ?? true)

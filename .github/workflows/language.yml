@@ -1,0 +1,51 @@
+# The language in its three targets: the standard library, the rules a target could break and the conformance
+# programs (every operator, statement and feature) built, checked with each target's own tools with no warning
+# allowed, run, and compared: TypeScript, Dart and Python must print the same text.
+name: language
+
+on:
+  push:
+    branches: [main]
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
+  pull_request:
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/language.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      # The version the type definitions are generated from (the same as the mobile platform's checks).
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+      - name: Node tools of the checks
+        run: cd nuclearlang/tools/node && npm ci --no-audit --no-fund
+      - name: Python tools of the checks
+        run: |
+          python -m venv nuclearlang/tools/python/.venv
+          nuclearlang/tools/python/.venv/bin/pip install -q -r nuclearlang/tools/python/requirements.txt
+      - name: Dart packages of the checks (a Result is fpdart's Either)
+        working-directory: nuclearlang/tools/defs/flutter_project
+        run: flutter pub get
+      - name: "The standard library: the same output in the three targets"
+        working-directory: nuclearlang
+        run: tools/stdlib-check.sh
+      - name: "The rules a target could break"
+        working-directory: nuclearlang
+        run: DIR=examples/semantics tools/stdlib-check.sh
+      - name: "The conformance programs: every feature of the language"
+        working-directory: nuclearlang
+        run: DIR=examples/conformance tools/stdlib-check.sh

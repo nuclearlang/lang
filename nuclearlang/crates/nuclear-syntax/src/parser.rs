@@ -441,6 +441,10 @@ impl<'s> Parser<'s> {
                     TokenKind::Newline => matches!(self.peek_at(close + 2), TokenKind::Indent),
                     TokenKind::Punct(Punct::Eq) => true,
                     TokenKind::Ident(_) | TokenKind::Punct(Punct::Lt) => true,
+                    // `counter() () => int`: a function type as the return type
+                    TokenKind::Punct(Punct::LParen) => self
+                        .matching_close(close + 1)
+                        .is_some_and(|end| self.at_punct_at(end + 1, Punct::FatArrow)),
                     _ => false,
                 }
             }

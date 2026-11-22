@@ -1,0 +1,78 @@
+// match: literals, several patterns, the default, types, blocks, as a value.
+Color
+  red
+  green
+  blue
+
+Shape
+  area() double
+
+Circle(radius: double) > Shape
+  area() double
+    3.0 * radius * radius
+
+Square(side: double) > Shape
+  area() double
+    side * side
+
+name(n: int) string
+  match n
+    0 -> "zero"
+    1 | 2 | 3 -> "few"
+    _ -> "many"
+
+kind(word: string) string
+  match word
+    "yes" | "y" -> "accept"
+    "no" ->
+      short = word.upper()
+      "reject ${short}"
+    _ -> "unknown"
+
+hex(c: Color) string
+  match c
+    Color.red -> "#f00"
+    Color.green -> "#0f0"
+    _ -> "#00f"
+
+describe(x: any) string
+  match x
+    is string -> "text"
+    is int -> "int"
+    is boolean -> "boolean"
+    is Circle -> "circle"
+    _ -> "other"
+
+total(shapes: Shape[]) double
+  sum = 0.0
+  for s in shapes
+    sum += match s
+      is Circle -> s.area()
+      is Square -> s.area() * 2
+      _ -> 0.0
+  sum
+
+steps0() int = 2
+
+main() void
+  print("int", name(0), name(1), name(3), name(9))
+  print("string", kind("yes"), kind("y"), kind("no"), kind("maybe"))
+  print("enum", hex(Color.red), hex(Color.green), hex(Color.blue))
+  print("type", describe("a"), describe(1), describe(true), describe(Circle(1)), describe(null))
+  print("value", total([Circle(1), Square(2)]))
+  n = steps0()
+  size = match n
+    0 -> "none"
+    1 | 2 -> "small"
+    _ -> "big"
+  flag = match size
+    "small" -> true
+    _ -> false
+  print("assigned", size, flag)
+  steps: string[] = []
+  for i in 0..4
+    match i
+      0 -> steps.add("start")
+      3 -> steps.add("end")
+      _ -> steps.add("step${i}")
+  print("statement", steps.join(","))

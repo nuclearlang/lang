@@ -101,15 +101,31 @@ fn line_map_points_statements_to_their_source_line() {
 /// `nuclearlang/tools/stdlib-check.sh` runs them with node and dart and compares what they print.
 #[test]
 fn stdlib_programs_transpile_in_both_targets() {
+    programs_transpile("examples/stdlib", 10);
+}
+
+/// The rules a target could break (`examples/semantics`) and every feature of the language
+/// (`examples/conformance`): each program has its expected output and transpiles without errors in the three
+/// targets. `DIR=examples/<folder> nuclearlang/tools/stdlib-check.sh` runs them and compares what they print.
+#[test]
+fn semantics_and_conformance_programs_transpile_in_the_three_targets() {
+    programs_transpile("examples/semantics", 10);
+    programs_transpile("examples/conformance", 24);
+}
+
+fn programs_transpile(folder: &str, at_least: usize) {
     let loader = Loader::of(Vec::new(), &[nuclear_dialect::Home::tree()]);
-    let dir = PathBuf::from(ROOT).join("examples/stdlib");
+    let dir = PathBuf::from(ROOT).join(folder);
     let mut areas: Vec<String> = std::fs::read_dir(&dir)
         .unwrap()
         .flatten()
         .filter_map(|e| e.file_name().to_str()?.strip_suffix(".out").map(String::from))
         .collect();
     areas.sort();
-    assert!(areas.len() >= 10, "{areas:?}");
+    assert!(areas.len() >= at_least, "{areas:?}");
+    // every program has its expected output: one without it would never be run
+    let sources = std::fs::read_dir(&dir).unwrap().flatten().filter(|e| e.path().extension().is_some_and(|x| x == "nuc"));
+    assert_eq!(sources.count(), areas.len(), "{folder}: a .nuc without its .out, or a .out without its .nuc");
     for dialect in ["typescript", "dart", "python"] {
         let (d, report) = loader.load(dialect);
         let d = d.unwrap_or_else(|| panic!("dialect {dialect}: {:#?}", report.diags));

@@ -1,0 +1,84 @@
+// Generics: generic modules, generic functions, bounds, nested generics, generic interfaces.
+Box<T>(value: T)
+  get() T
+    value
+
+  map<R>(f: (value: T) => R) Box<R>
+    Box(f(value))
+
+Pair<K, V>(key: K, value: V)
+  swap() Pair<V, K>
+    Pair(value, key)
+
+Stack<T>
+  items: T[] = []
+
+  push(item: T) void
+    items.add(item)
+
+  pop() T?
+    items.isEmpty ? null : items.removeLast()
+
+  peek() T?
+    items.isEmpty ? null : items.last
+
+  get size() int
+    items.length
+
+Ranked
+  rank() int
+
+Card(name: string, points: int) > Ranked
+  rank() int
+    points
+
+first<T>(xs: T[]) T
+  xs[0]
+
+lastOr<T>(xs: T[], fallback: T) T
+  xs.isEmpty ? fallback : xs.last
+
+best<T: Ranked>(a: T, b: T) T
+  a.rank() >= b.rank() ? a : b
+
+pairUp<A, B>(a: A, b: B) Pair<A, B>
+  Pair(a, b)
+
+mapAll<T, R>(xs: T[], f: (x: T) => R) R[]
+  out: R[] = []
+  for x in xs
+    out.add(f(x))
+  out
+
+Cache<V>
+  entries: <string, V> = {}
+
+  put(key: string, value: V) void
+    entries[key] = value
+
+  get(key: string) V?
+    entries[key]
+
+main() void
+  b = Box(21)
+  s = Box("hi")
+  print("box", b.get() * 2, s.get().upper(), b.map((v) => "n${v}").get())
+  p = Pair("a", 1)
+  q = p.swap()
+  print("pair", p.key, p.value, q.key, q.value)
+  st = Stack<int>()
+  st.push(1)
+  st.push(2)
+  st.push(3)
+  print("stack", st.pop(), st.peek(), st.size, Stack<string>().pop())
+  print("function", first([7, 8]), first(["x", "y"]), lastOr<int>([], 9), lastOr([1, 2], 9))
+  print("bound", best(Card("a", 3), Card("b", 5)).name)
+  pp = pairUp("k", [1, 2])
+  print("infer", pp.key, pp.value.length)
+  print("mapAll", mapAll([1, 2, 3], (x: int) => "${x * x}").join(","))
+  nested = Box(Box(5))
+  boxes: Box<int>[] = [Box(1), Box(2)]
+  print("nested", nested.get().get(), boxes.map((x) => x.get()).sum())
+  cache = Cache<int>()
+  cache.put("a", 1)
+  print("cache", cache.get("a"), cache.get("b"))

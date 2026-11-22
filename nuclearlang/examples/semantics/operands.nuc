@@ -3,7 +3,7 @@
 main() void
   a = 1
   b = 2
-  on = true
+  on = a < b
   print("x".repeat(a + b), "y".repeat(on ? a : b))
   base: <string, int> = { "k": 1 }
   more: <string, int> = { "m": 2 }

@@ -308,7 +308,9 @@ pub struct Options {
     pub optional_params_nullable: bool,
     pub number_separators: bool,
     pub binary_literals: bool,
+    pub map_patterns: bool,
     pub int_member_parens: bool,
+    pub decimal_literals: bool,
     pub string_quote: String,
     pub interp_quote: String,
     pub interp_open: String,
@@ -352,7 +354,9 @@ impl Default for Options {
             optional_params_nullable: false,
             number_separators: true,
             binary_literals: true,
+            map_patterns: true,
             int_member_parens: false,
+            decimal_literals: false,
             string_quote: "'".into(),
             interp_quote: "`".into(),
             interp_open: "${".into(),
@@ -671,6 +675,7 @@ impl Dialect {
             "default_init",
             "map_compound",
             "global_decl",
+            "nonlocal_decl",
             "show_double",
             "show_nullable",
             "show_bool",
@@ -2316,7 +2321,9 @@ fn parse_options(t: &toml::Table) -> Options {
     o.optional_params_nullable = b("optional_params_nullable", o.optional_params_nullable);
     o.number_separators = b("number_separators", o.number_separators);
     o.binary_literals = b("binary_literals", o.binary_literals);
+    o.map_patterns = b("map_patterns", o.map_patterns);
     o.int_member_parens = b("int_member_parens", o.int_member_parens);
+    o.decimal_literals = b("decimal_literals", o.decimal_literals);
     o.string_quote = s("string_quote", &o.string_quote);
     o.interp_quote = s("interp_quote", &o.interp_quote);
     o.interp_open = s("interp_open", &o.interp_open);

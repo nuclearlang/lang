@@ -1,0 +1,16 @@
+// The conditional operator: nesting, associativity, mixed with other operators.
+grade(n: int) string = n >= 90 ? "A" : n >= 80 ? "B" : n >= 70 ? "C" : "F"
+
+main() void
+  yes = grade(95) == "A"
+  print("basic", yes ? 1 : 2, not yes ? 1 : 2)
+  print("nested", grade(95), grade(85), grade(75), grade(10))
+  x = 5
+  print("arith", x > 3 ? x * 2 : x + 2, (x > 3 ? 1 : 2) + 10, x > 3 ? 1 : 2 + 10)
+  print("logic", x > 3 and x < 10 ? "in" : "out", not (x > 3) ? "low" : "high")
+  n = x > 9 ? x : null
+  print("null", (n ?? 4) > 0 ? "pos" : "zero", n == null ? "none" : "some")
+  label = x % 2 == 0 ? "even" : "odd"
+  print("text", "x is ${label}", "${x > 0 ? "plus" : "minus"}")
+  xs = x > 3 ? [1, 2] : [3]
+  print("list", xs.length, (x < 3 ? [1, 2] : [3]).length)

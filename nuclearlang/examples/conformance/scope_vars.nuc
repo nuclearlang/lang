@@ -1,0 +1,78 @@
+// Variables and scope: declaration and reassignment, block scope, shadowing through parameters,
+// variables of the file, values and references, constants of the file.
+limit = 3
+counter = 0
+names: string[] = []
+
+bump() int
+  counter += 1
+  counter
+
+record(name: string) void
+  names.add(name)
+
+change(xs: int[], n: int) int
+  xs.add(n)
+  n += 1
+  n
+
+Holder
+  value: int = 1
+
+  apply(value: int) int
+    $value = $value + value
+    value * 10
+
+main() void
+  x = 1
+  x = x + 1
+  y = x
+  x = 10
+  print("reassign", x, y)
+  total = 0
+  for i in 0..limit
+    step = i * 2
+    total += step
+  print("block", total)
+  label = ""
+  if total > 3
+    label = "big"
+  else
+    label = "small"
+  print("outer", label)
+  print("file", bump(), bump(), counter)
+  record("a")
+  record("b")
+  print("shared", names.length, names.join(","))
+  list = [1]
+  n = 5
+  result = change(list, n)
+  print("params", list.join(","), n, result)
+  a = [1, 2]
+  b = a
+  b.add(3)
+  c = a.copy()
+  c.add(4)
+  print("reference", a.length, b.length, c.length)
+  h = Holder()
+  print("field", h.apply(4), h.value)
+  first = 1
+  second = first
+  first = 2
+  print("value", first, second)
+  s = "a"
+  t = s
+  s += "b"
+  print("string", s, t)
+  acc: int[] = []
+  for i in 0..3
+    for j in 0..2
+      inner = i * 10 + j
+      acc.add(inner)
+  print("nested", acc.join(","))
+  k = 0
+  while k < 3
+    k += 1
+    last = k * k
+    acc.add(last)
+  print("while", acc.length, k)

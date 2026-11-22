@@ -1,0 +1,60 @@
+// Results: Ok and Err, automatic propagation, keeping a Result, ok and error callbacks, match.
+User(id: int, name: string)
+
+find(id: int) Result<string, User>
+  if id <= 0
+    return Err("invalid id")
+  if id > 2
+    return Err("no user ${id}")
+  Ok(User(id, id == 1 ? "ana" : "luis"))
+
+nameOf(id: int) Result<string, string>
+  user = find(id)
+  Ok(user.name.upper())
+
+both(a: int, b: int) Result<string, string>
+  first = nameOf(a)
+  second = nameOf(b)
+  Ok("${first}+${second}")
+
+half(n: int) Result<string, int>
+  n % 2 == 0 ? Ok(n ~/ 2) : Err("${n} is odd")
+
+quarter(n: int) Result<string, int>
+  h = half(n)
+  half(h)
+
+save(name: string) Result<string, void>
+  if name.isEmpty
+    return Err("empty")
+  Ok()
+
+describe(id: int) string
+  match find(id)
+    Ok(user) -> "ok ${user.name}"
+    Err(e) -> "err ${e}"
+
+main() void
+  print("match", describe(1), describe(2), describe(0), describe(9))
+  r: Result<string, string> = nameOf(1)
+  bad: Result<string, string> = nameOf(5)
+  print("keep", r.isOk, bad.isOk)
+  print("chain", describe(1))
+  for pair in [[1, 2], [1, 7], [0, 1]]
+    match both(pair[0], pair[1])
+      Ok(text) -> print("both", text)
+      Err(e) -> print("both failed", e)
+  for n in [8, 6, 5]
+    match quarter(n)
+      Ok(v) -> print("quarter", v)
+      Err(e) -> print("quarter failed", e)
+  match save("")
+    Ok(_) -> print("saved")
+    Err(e) -> print("save failed", e)
+  match save("x")
+    Ok(_) -> print("saved")
+    Err(e) -> print("save failed", e)
+  seen: string[] = []
+  half(10).ok((v) => seen.add("ok ${v}")).error((e) => seen.add("err ${e}"))
+  half(7).ok((v) => seen.add("ok ${v}")).error((e) => seen.add("err ${e}"))
+  print("callbacks", seen.join(","))

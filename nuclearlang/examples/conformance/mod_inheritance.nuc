@@ -1,0 +1,91 @@
+// Inheritance: extends, super constructor, super methods, override, interfaces, polymorphism, abstract.
+Named
+  name: string
+
+Speaker
+  speak() string
+
+Animal > Named
+  (name: string, legs: int = 4)
+
+  speak() string
+    "..."
+
+  describe() string
+    "${name} has ${legs} legs and says ${speak()}"
+
+Dog: Animal > Speaker
+  (name: string, breed: string)
+    super(name)
+
+  speak() string
+    "woof"
+
+Puppy: Dog
+  (name: string)
+    super(name, "mixed")
+
+  speak() string
+    "${super.speak()}!"
+
+  describe() string
+    "puppy: ${super.describe()}"
+
+Bird: Animal > Speaker
+  (name: string)
+    super(name, 2)
+
+  speak() string
+    "tweet"
+
+Robot(name: string) > Speaker, Named
+  speak() string
+    "beep"
+
+abstract Shape
+  (label: string)
+
+  area() double
+    0.0
+
+  info() string
+    "${label}=${area()}"
+
+Rect: Shape
+  (w: double, h: double)
+    super("rect")
+
+  area() double
+    w * h
+
+Square: Rect
+  (side: double)
+    super(side, side)
+
+chorus(all: Speaker[]) string
+  all.map((s) => s.speak()).join(" ")
+
+greet(n: Named) string = "hi ${n.name}"
+
+main() void
+  a = Animal("cat")
+  d = Dog("rex", "lab")
+  p = Puppy("bit")
+  b = Bird("tui")
+  print("base", a.describe())
+  print("override", d.describe(), d.breed)
+  print("super", p.describe(), p.breed, p.legs)
+  print("args", b.describe())
+  print("interface", chorus([d, p, b, Robot("r2")]))
+  print("named", greet(a), greet(p), greet(Robot("r2")))
+  zoo: Animal[] = [a, d, p, b]
+  print("poly", zoo.map((z) => z.speak()).join(","))
+  print("is", zoo[1] is Dog, zoo[1] is Puppy, zoo[2] is Dog, zoo[2] is Puppy, zoo[0] is Dog, zoo[3] is Bird)
+  dogs = zoo.filter((z) => z is Dog)
+  print("filter", dogs.length)
+  shapes: Shape[] = [Rect(2, 3), Square(4)]
+  print("abstract", shapes.map((s) => s.info()).join(","))
+  first = zoo[1]
+  if first is Dog
+    print("narrow", first.breed)
+  print("cast", (zoo[2] as Dog).breed)

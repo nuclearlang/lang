@@ -1180,3 +1180,144 @@ fn a_use_stands_only_at_the_top_of_a_file() {
     // ADR-lang-0012: no `use` inside a function; a project's `lazy_imports` moves an import into a body instead
     assert!(!codes("heavy(x: string) string\n  use textwrap{ dedent }\n  dedent(x)\n", "python").is_empty());
 }
+
+// ---------- found by the conformance programs (examples/conformance, 2026-11-21) ----------
+
+#[test]
+fn a_negated_negative_keeps_its_parentheses() {
+    // `--5` is a decrement in TypeScript and Dart
+    for d in ["typescript", "dart", "python"] {
+        has(&build("f(n: int) int\n  -(-n)\n", d), "-(-n)");
+    }
+}
+
+#[test]
+fn an_assignment_as_the_last_line_of_a_typed_function_returns_what_it_assigned() {
+    let src = "Counter\n  count: int = 0\n\n  bump(by: int) int\n    count += by\n";
+    has(&ts(src), "this.count += by;\n    return this.count;");
+    has(&build(src, "python"), "self.count += by\n        return self.count");
+    // a function without a return type keeps the rule of the new variable only
+    assert!(!ts("Counter\n  count: int = 0\n\n  bump(by: int) void\n    count += by\n").contains("return"));
+}
+
+#[test]
+fn a_map_pattern_reads_each_key_where_the_target_has_no_map_patterns() {
+    let src = "f(m: <string, int>) int\n  { low, \"high-value\": high } = m\n  low + high\n";
+    has(&build(src, "python"), "low = m[\"low\"]\n    high = m[\"high-value\"]");
+    has(&ts(src), "const { low, 'high-value': high } = m;");
+    // a value that is not a name is read once
+    let lit = build("f() int\n  { low } = { \"low\": 1 }\n  low\n", "python");
+    has(&lit, "= {\"low\": 1}");
+    assert!(!lit.contains("{\"low\": low} ="), "{lit}");
+}
+
+#[test]
+fn a_local_named_like_a_library_function_imports_nothing() {
+    let code = build("main() void\n  log: string[] = []\n  log.add(\"a\")\n  print(log.length)\n", "dart");
+    assert!(!code.contains("dart:math"), "{code}");
+    // the function of the library used elsewhere in the file still imports its module
+    has(&build("main() void\n  log: string[] = []\n  print(log.length)\n\ng(x: double) double = Math.log(x)\n", "dart"), "dart:math");
+}
+
+#[test]
+fn a_function_may_return_a_function_type() {
+    has(&ts("adder(n: int) (x: int) => int\n  (x: int) => x + n\n"), "export function adder(n: number): (x: number) => number {");
+}
+
+#[test]
+fn a_block_lambda_that_assigns_an_outer_variable_declares_it_nonlocal() {
+    let code = build("counter()\n  count = 0\n  ()\n    count += 1\n    count\n", "python");
+    has(&code, "nonlocal count\n        count += 1");
+    // a variable of its own stays its own
+    assert!(!build("f()\n  ()\n    own = 1\n    own += 1\n    own\n", "python").contains("nonlocal"));
+}
+
+#[test]
+fn an_inverted_range_is_empty_in_dart() {
+    has(&build("f(a: int, b: int) int[] = a..b\n", "dart"), "[for (var i = a; i < b; i++) i]");
+}
+
+#[test]
+fn an_optional_attribute_starts_as_null_in_python() {
+    has(&build("User(name: string)\n  nick?: string\n", "python"), "self.nick = None");
+}
+
+#[test]
+fn the_type_arguments_of_a_generic_of_the_program_are_types_in_python() {
+    let src = "Stack<T>\n  items: T[] = []\n\nlastOr<T>(xs: T[], fallback: T) T\n  xs.isEmpty ? fallback : xs.last\n\nmain() void\n  st = Stack<int>()\n  print(lastOr<int>(st.items, 9))\n";
+    let code = build(src, "python");
+    has(&code, "st = Stack[int]()");
+    has(&code, "last_or(st.items, 9)");
+}
+
+#[test]
+fn an_optional_attribute_and_a_getter_have_their_types() {
+    // TypeScript prints a missing optional attribute as `null` and a getter's decimal with its `.0`
+    let src = "T(celsius: double)\n  nick?: string\n\n  get fahrenheit() double\n    celsius * 9 / 5 + 32\n\nmain() void\n  t = T(1.0)\n  print(t.nick, t.fahrenheit)\n";
+    has(&ts(src), "console.log((t.nick ?? null), _double(t.fahrenheit));");
+}
+
+#[test]
+fn an_integer_literal_given_for_a_decimal_is_a_decimal_in_python() {
+    let src = "Account(balance: double = 0)\n  deposit(amount: double) void\n    balance += amount\n\nmain() void\n  a = Account()\n  a.deposit(50)\n  price: double = 3\n  price = -4\n  print(price, 0xff)\n";
+    let code = build(src, "python");
+    has(&code, "balance: float = 0.0");
+    has(&code, "a.deposit(50.0)");
+    has(&code, "price: float = 3.0\n    price = -4.0");
+    has(&ts(src), "a.deposit(50);");
+}
+
+#[test]
+fn the_sum_of_a_list_has_the_type_of_its_elements() {
+    // unknown elements are not decimals: TypeScript printed `12.0`
+    let code = ts("f(xs: any) void\n  print(xs.sum())\n\ng(xs: double[]) void\n  print(xs.sum())\n");
+    has(&code, "console.log(xs.reduce((a, b) => a + b, 0));");
+    has(&code, "console.log(_double(xs.reduce((a, b) => a + b, 0)));");
+    has(&build("g(xs: double[]) double = xs.sum()\n", "dart"), "xs.fold(0.0, (a, b) => a + b)");
+}
+
+#[test]
+fn a_variable_is_narrowed_inside_an_is_branch() {
+    let src = "Animal(name: string)\n\nDog: Animal\n  (name: string, breed: string)\n    super(name)\n\nf(a: Animal) string\n  if a is Dog\n    return a.breed\n  a.name\n";
+    assert!(codes(src, "typescript").is_empty(), "{:?}", codes(src, "typescript"));
+    // outside the branch it is an Animal again
+    let outside = "Animal(name: string)\n\nDog: Animal\n  (name: string, breed: string)\n    super(name)\n\nf(a: Animal) string\n  if a is Dog\n    print(a.breed)\n  a.breed\n";
+    assert!(codes(outside, "typescript").contains(&"N0116"));
+}
+
+#[test]
+fn type_parameters_reach_the_members_of_the_library() {
+    let src = "Box<T>(value: T)\n  get() T\n    value\n\nfirst<T>(xs: T[]) T\n  xs[0]\n\nmain() void\n  s = Box(\"hi\")\n  print(s.get().upper(), s.value.length, first([\"a\"]).upper(), Box<string[]>([]).value.length)\n";
+    has(&ts(src), "s.get().toUpperCase(), s.value.length, first(['a']).toUpperCase()");
+    has(&build(src, "python"), "s.get().upper(), len(s.value), first([\"a\"]).upper(), len(Box[list[str]]([]).value)");
+}
+
+#[test]
+fn the_members_of_a_kept_result_are_the_dialects() {
+    let src = "half(n: int) Result<string, int>\n  n % 2 == 0 ? Ok(n ~/ 2) : Err(\"odd\")\n\nmain() void\n  r: Result<string, int> = half(4)\n  print(r.isOk, r.isErr)\n";
+    has(&build(src, "dart"), "r.isRight(), r.isLeft()");
+    has(&ts(src), "r.isOk, r.isErr");
+}
+
+#[test]
+fn a_literal_in_a_text_is_never_a_bare_name_in_dart() {
+    has(&build("main() void\n  print(\"${true} ${null}\")\n", "dart"), "'${true} ${null}'");
+}
+
+#[test]
+fn a_helper_is_written_only_for_the_form_that_calls_it() {
+    assert!(!ts("f(s: string) string = s.replaceAll(\"a\", \"b\")\n").contains("_replaceWith"));
+    has(&ts("f(s: string) string = s.replaceAll(Regex(r\"a\"), (m) => m.text)\n"), "function _replaceWith(");
+}
+
+#[test]
+fn a_list_of_decimals_keeps_its_decimals_when_joined_in_typescript() {
+    let code = ts("f(xs: double[], ys: int[]) string = xs.map((x) => x * 2).join(\",\") + ys.join(\",\")\n");
+    has(&code, "xs.map((x) => x * 2).map(_double).join(',') + ys.join(',')");
+}
+
+#[test]
+fn a_comparison_with_null_is_never_deep() {
+    let code = ts("f(m: <string, <string, int>>) boolean = m[\"c\"] == null\n");
+    assert!(!code.contains("_equals"), "{code}");
+}

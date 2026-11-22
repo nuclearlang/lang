@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-21
 related: [coding.md, ../02-architecture/emitter.md, ../../../docs/05-standards/testing.md]
 ---
 # Testing
@@ -18,7 +18,7 @@ The levels of the whole platform are in [`../docs/05-standards/testing.md`](../.
 | `crates/nuclear-syntax/src/habits.rs` (unit tests) | the habits scan (N0022) |
 | `crates/nuclear-dialect/tests/loader.rs` | dialect validation and type definitions (package order, import priority, full API, errors, project packages); `every_dialect_word_has_editor_docs` |
 | `crates/nuclear-diag/src/lib.rs` (`every_code_is_documented`) | every diagnostic code is in `docs/07-reference/diagnostics.md` |
-| `crates/nuclear-transpile/tests/golden.rs` | each example `.nuc` against its expected file: `examples/examples-nodejs/chat`, `examples/examples-python/tour`, `examples/spec/base` (to TypeScript and to Dart), and from the platforms' examples `examples-nestjs/users` and `examples-flutter-dialect/{flutter_app,dart_extension,widgets_tour,framework_libs}`; `stdlib_programs_transpile_in_both_targets`: every program of `examples/stdlib/` transpiles in TypeScript, Dart and Python |
+| `crates/nuclear-transpile/tests/golden.rs` | each example `.nuc` against its expected file: `examples/examples-nodejs/chat`, `examples/examples-python/tour`, `examples/spec/base` (to TypeScript and to Dart), and from the platforms' examples `examples-nestjs/users` and `examples-flutter-dialect/{flutter_app,dart_extension,widgets_tour,framework_libs}`; `stdlib_programs_transpile_in_both_targets` and `semantics_and_conformance_programs_transpile_in_the_three_targets`: every program of `examples/stdlib/`, `examples/semantics/` and `examples/conformance/` has its expected output and transpiles in TypeScript, Dart and Python |
 | `crates/nuclear-transpile/tests/rules.rs` | one test per language rule |
 | `crates/nuclear-transpile/tests/projects.rs` | each `examples/projects/<p>/` against `examples/expected/<p>/`, and the platforms' example projects (`clean-flutter-project`, `genkit-assistant`, `rick_api`, `tasks_api`, `characters`) against their `expected/`; architecture rules, kind by folder, `[project.files]`, duplicate names, contracts, the project map; `synapsis_spec_shows_the_real_output` (the blocks captioned `Output (` / `Generated (` in the `flutter` reference) |
 | `crates/nuclear-lsp/tests/server.rs` | the server end to end with the examples (no prefix of any example panics; a project's packages bring their definitions) |
@@ -52,9 +52,14 @@ From `nuclearlang/`:
   line is `// config.nuc: plugins(x = true)` is built with those plugins, one with `// nuclear.toml: lazy_imports = true`
   as a file of a project with lazy imports (each followed by an empty line).
 - **The standard library in the three targets:** `tools/stdlib-check.sh [area...]` builds each program of
-  `examples/stdlib/`, checks it (`tsc --strict`, pyright), runs it (node, `dart run`, python) and compares what it
-  prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one. It needs node, dart,
-  TypeScript and `tools/python/.venv`; the cargo test only checks that the programs transpile.
+  `examples/stdlib/`, checks it with the target's own tools and no warning allowed (`tsc --strict` with no unused
+  name and no missing return, `dart analyze --fatal-warnings`, pyright), runs it (node, `dart run`, python) and
+  compares what it prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one: read the new
+  `.out` before keeping it. It needs node, dart, TypeScript and `tools/python/.venv`; a Dart program that uses a
+  `Result` takes fpdart from `tools/defs/flutter_project` (`flutter pub get` there once). The cargo test only checks
+  that the programs transpile.
+- **Every feature of the language:** `DIR=examples/conformance tools/stdlib-check.sh` the same way, over the
+  conformance programs ([below](#the-conformance-programs)).
 - **The rules a target could break:** `DIR=examples/semantics tools/stdlib-check.sh` the same way, over the programs
   of `examples/semantics/`: a name that a target's function has, a lambda made in a loop, a default list, a static
   field, `~/` with negatives, a chain after `?.`, a variable of the file a function changes, `==` of two lists or
@@ -69,6 +74,34 @@ From `nuclearlang/`:
   `../nuclear-synapsis-framework/platforms/<platform>/checks/`.
 - **Agents:** `../nuclear-synapsis-framework/eval/agent-eval/run.py --mode agent` spends the user's Claude quota:
   ask first.
+
+## The conformance programs
+
+`examples/conformance/` is the language's own test suite, as other languages have theirs: one program per feature,
+each printing a labelled line per case, with the text every target must print in `<name>.out`.
+
+| Programs | What they cover |
+|---|---|
+| `op_arithmetic`, `op_comparison`, `op_logical`, `op_bitwise`, `op_assignment`, `op_null`, `op_conditional` | every operator: precedence, associativity, short circuit, compound assignment, patterns, `??`, `?.`, `!`, `? :` |
+| `flow_if`, `flow_match`, `flow_loops` | `if` and `match` as statements and as values, `for` over ranges, lists and maps, `while`, `break`, `continue` |
+| `fn_basics`, `fn_lambdas` | defaults, optional and named parameters, early and implicit return, recursion, functions as values, closures that keep and change state, currying, lambdas made in loops |
+| `mod_basics`, `mod_inheritance`, `mod_enums`, `mod_generics` | both constructor forms, attributes, `$field`, static members, getters, cascades, `super`, interfaces, overriding, `is` and `as`, enums, generic modules and functions |
+| `err_try`, `err_results` | `try`/`catch`/`finally` and their order, nesting, custom errors, `Result` propagation, kept results, `match` on `Ok`/`Err`, callbacks |
+| `async_basics`, `gen_basics` | `~`, `awaitAll`, errors through an await, asynchronous methods, lambdas and loops, generators and `yield ...` |
+| `str_basics`, `coll_lists`, `coll_maps`, `scope_vars` | texts and their members, lists, maps and sets with their edge cases (empty, missing, nested), block scope, values and references |
+
+Rules:
+
+- **Every change to the transpiler, a dialect or the library runs the three folders** before it is done:
+  `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh` and
+  `DIR=examples/conformance tools/stdlib-check.sh`, every line `ok`.
+- A case reads its values at run time (a function's result, a parameter), never a constant the target's checker
+  folds: `true and false` written as literals is dead code for Dart and an error for TypeScript, and proves nothing.
+- A new feature of the language adds its cases to the program of its area, or a new program; a bug found in a
+  target adds the case that shows it (to `examples/semantics/` when it is one rule a target broke).
+- The CI runs the three folders on every change of the language (`.github/workflows/language.yml`).
+- A case that cannot print the same in every target is not written here: it is recorded in the
+  [roadmap](../01-product/roadmap.md) with what each target does.
 
 The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and
 `base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a

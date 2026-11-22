@@ -1,0 +1,56 @@
+// Assignment: declaration, reassignment, every compound form, ??=, destructuring, swap.
+Counter
+  count: int = 0
+
+  bump(by: int) int
+    count += by
+
+maybe(given: boolean) int?
+  given ? 1 : null
+
+main() void
+  x = 10
+  x += 5
+  x -= 3
+  x *= 4
+  x = x ~/ 6
+  x %= 5
+  x = x ** 3
+  print("int", x)
+  d = 9.0
+  d /= 2
+  d += 0.5
+  d *= 2
+  d -= 1
+  print("double", d)
+  s = "a"
+  s += "b"
+  s += "${1 + 1}"
+  print("string", s)
+  n = maybe(false)
+  n ??= 7
+  k = maybe(true)
+  k ??= 9
+  print("nullish", n, k)
+  xs = [1, 2, 3]
+  xs[0] += 10
+  xs[2] *= 3
+  print("index", xs.join(","))
+  m: <string, int> = { "a": 1 }
+  m["b"] = 2
+  m["a"] = 5
+  print("map", m["a"], m["b"], m.length)
+  c = Counter()
+  c.count += 2
+  c.count *= 5
+  print("member", c.count, c.bump(1), c.count)
+  a = 1
+  b = 2
+  [a, b] = [b, a]
+  print("swap", a, b)
+  [first, second, ...rest] = [1, 2, 3, 4, 5]
+  [_, mid] = [7, 8]
+  print("list", first, second, rest.join(","), mid)
+  { low, high } = { "low": 1, "high": 9 }
+  { "first-name": name } = { "first-name": "Ana" }
+  print("map-pattern", low, high, name)

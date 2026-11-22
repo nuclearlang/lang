@@ -29,6 +29,8 @@ dollar_escape = "never"
 reserved_escape = "suffix"
 max_bases = 0                    # multiple inheritance
 catch_var = "error"
+map_patterns = false             # no `{"k": v} = m` in an assignment: one line per name
+decimal_literals = true          # `price: double = 3` is `3.0`: an int and a float print differently
 cascade_statements = true        # p = Paint() + ..color = x → p = Paint(); p.color = x
 module_separator = "."           # use langchain_core/tools → from langchain_core.tools import ...
 type_args_as_args = true         # inject<Repo>() → inject(Repo): Python passes classes as values
@@ -89,7 +91,7 @@ method_signature = """
 {{/mods.get}}{{#override}}@override
 {{/override}}{{#async}}async {{/async}}def {{name}}{{generics}}({{^mods.static}}self{{#params}}, {{/params}}{{/mods.static}}{{params}}) -> {{#ret}}{{ret}}{{/ret}}{{^ret}}None{{/ret}}: ..."""
 # a static field is the class's own (`ClassVar`), with its value; the others are set by `__init__` (init_fields)
-field = "{{decorators}}{{name}}: {{#static}}ClassVar[{{/static}}{{#type}}{{type}}{{#optional}} | None{{/optional}}{{/type}}{{^type}}Any{{/type}}{{#static}}]{{/static}}{{^in_init}}{{#default}} = {{default}}{{/default}}{{/in_init}}"
+field = "{{decorators}}{{name}}: {{#static}}ClassVar[{{/static}}{{#type}}{{type}}{{#optional}} | None{{/optional}}{{/type}}{{^type}}Any{{/type}}{{#static}}]{{/static}}{{^in_init}}{{#default}} = {{default}}{{/default}}{{^default}}{{#optional}} = None{{/optional}}{{/default}}{{/in_init}}"
 constructor = """
 def __init__(self{{#params}}, {{params}}{{/params}}) -> None:
     {{#body}}{{body}}{{/body}}{{^body}}pass{{/body}}"""
@@ -98,6 +100,7 @@ super_ctor = "super().__init__({{args}})"
 ctor_param = "{{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}{{^default}}{{#optional}} = None{{/optional}}{{/default}}"
 # a function that assigns a variable of its file names it first (else Python makes it a local of the function)
 global_decl = "global {{names}}"
+nonlocal_decl = "nonlocal {{names}}"
 # a parameter whose default is a list or a map: None, and the function makes a new one (a default is made once)
 default_init = "if {{name}} is None:\n    {{name}} = {{value}}"
 param = "{{decorators}}{{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}{{^default}}{{#optional}} = None{{/optional}}{{/default}}"

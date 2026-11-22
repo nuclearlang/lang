@@ -1,0 +1,37 @@
+// Comparison and equality: numbers, strings, booleans, null.
+Point(x: int, y: int)
+
+num(n: int) int = n
+
+dec(n: double) double = n
+
+text(s: string) string = s
+
+flag(b: boolean) boolean = b
+
+maybe(n: int, given: boolean) int?
+  given ? n : null
+
+main() void
+  one = num(1)
+  two = num(2)
+  print("int", one == one, one != one, one < two, two < one, two <= two, two + 1 >= 4, two + 1 > two)
+  half = dec(1.5)
+  print("double", half == dec(1.5), half < 1.6, half * 2 >= 3.0, dec(0.1) + dec(0.2) == 0.3)
+  print("mixed", one == dec(1.0), two < 2.5, two + 1 >= 3.0)
+  a = text("a")
+  b = text("b")
+  print("string", a == a, a != b, "abc" == "ab" + text("c"), text("") == "", a == "A", a + b == "ab")
+  print("compare", a.compareTo(b) < 0, b.compareTo(a) > 0, a.compareTo(a) == 0, text("B").compareTo(a) < 0)
+  yes = flag(true)
+  no = flag(false)
+  print("bool", yes == yes, yes != no, no == no, yes == no)
+  n = maybe(3, false)
+  m = maybe(3, true)
+  print("null", n == null, m == null, n != null, m != null, n == m, m == maybe(3, true))
+  p = Point(1, 2)
+  q = Point(1, 2)
+  r = p
+  print("identity", p == r, p == q, p != q)
+  print("chain", one < two and two < 3, (one < two) == (two < 3), (one > two) != (two > one))
+  print("negative", -one < 0, -one > -two, dec(-0.5) <= -0.5)

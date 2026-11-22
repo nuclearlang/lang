@@ -56,7 +56,8 @@ reduce = "{{recv}}.reduce({{arg1}}, {{arg0}})"
 sum = "{{recv}}.reduce((a, b) => a + b, 0)"
 min = { template = "_min({{recv}})", helper = "function _min<T extends string | number>(xs: T[]): T | null {\n  let m: T | null = null;\n  for (const x of xs) if (m === null || x < m) m = x;\n  return m;\n}" }
 max = { template = "_max({{recv}})", helper = "function _max<T extends string | number>(xs: T[]): T | null {\n  let m: T | null = null;\n  for (const x of xs) if (m === null || x > m) m = x;\n  return m;\n}" }
-join = "{{recv}}.join({{#has_args}}{{arg0}}{{/has_args}}{{^has_args}}''{{/has_args}})"
+# a list of decimals keeps each `.0` in its text, as `print` does
+join = { template = "{{recv}}{{#elem_is.double}}.map(_double){{/elem_is.double}}.join({{#has_args}}{{arg0}}{{/has_args}}{{^has_args}}''{{/has_args}})", helper = "function _double(n: number): string {\n  return Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
 slice = "{{recv}}.slice({{args}})"
 take = "{{recv}}.slice(0, {{arg0}})"
 skip = "{{recv}}.slice({{arg0}})"

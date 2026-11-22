@@ -21,8 +21,19 @@ options a dialect sets and what the targets without braces needed are in [emitte
   line of each branch (`Tail::Assign`); one expression per branch → ternary. The last if/match of a function
   with a return type → `return` in each branch (`Tail::Return`). `match` becomes if/else or chained ternaries.
 - Implicit return of the last line in functions, methods and block lambdas, except with return type `void`
-  and in setters. An assignment as last line returns the created variable. A modifier with `void = true`
+  and in setters. An assignment as last line returns the created variable; in a function with a written return
+  type, also a reassignment or a compound one of a name or an attribute (`count += by` → `return this.count`,
+  `assigned_tail`). A modifier with `void = true`
   (`set`) never returns.
+- Types the emitter follows for the library and the checks (`static_type`): a module's type parameters
+  (`Box("hi")` is a `Box<string>`, from the written ones or from the constructor's arguments, `bind_generics`), the
+  return type of a generic function and of a method or attribute of a generic module with them replaced
+  (`subst_type`), an optional attribute as nullable, a getter as an attribute, `xs.map((x) => ...)` as a list of what
+  the lambda gives, and a variable narrowed inside `if x is T` (the branch only).
+- A block lambda that assigns a variable of the function around it: `Closure` collects the names and the dialect
+  writes its `nonlocal_decl` / `global_decl` line first (Python).
+- A `[names] written` name the code holds only as a local (`log`, `max`) imports nothing: the times the local was
+  written (`local_writes`) are compared with the times the word is in the code.
 - Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`; it gets the parameter's `default`, written in the target, from `ModCtx.ctor_defaults`).
 - async is automatic when there is a `~call()`. `Sig.sync`: a body that awaits and yields nothing, in a kind without
   `async_methods` / `awaitable_methods`; `~` on a call of it is N0224 (`check_not_async`, the mirror of N0222's

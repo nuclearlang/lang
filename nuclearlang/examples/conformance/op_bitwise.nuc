@@ -1,0 +1,19 @@
+// Bitwise operators inside 31 bits, where every target agrees.
+main() void
+  a = 0b1100
+  b = 0b1010
+  print("and", a & b, "or", a | b, "xor", a ^ b)
+  print("shift", 1 << 4, 256 >> 2, 255 >>> 4, 1 << 30)
+  print("complement", ^0, ^5, ^(-1), (^a) & 0xff)
+  print("precedence", 1 | 2 & 3, (1 | 2) & 3, 1 ^ 3 | 4, 1 << 2 + 1, 6 & 3 == 2)
+  flags = 0
+  flags |= 1 << 2
+  flags |= 1 << 0
+  flags &= ^(1 << 0)
+  flags ^= 0b11
+  flags <<= 2
+  flags >>= 1
+  flags >>>= 1
+  print("compound", flags)
+  print("mask", (0xabcd >> 8) & 0xff, 0xabcd & 0xff, (0xab << 8) | 0xcd)
+  print("parity", 7 & 1, 8 & 1, (5 ^ 5) == 0)

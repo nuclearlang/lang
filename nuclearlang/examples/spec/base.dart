@@ -1,4 +1,3 @@
-import 'dart:math' hide Comparable;
 import 'package:fpdart/fpdart.dart';
 
 // Examples of spec/nuclear-base.md: the same file is transpiled with typescript and with dart.
@@ -103,7 +102,7 @@ Future<User> fetchUser(String id) async {
 
 run() {
   final doubles = [1, 2, 3].map((n) => n * 2).toList();
-  final adults = List.generate(10 - 1, (i) => 1 + i).map((int i) => i * 2).toList();
+  final adults = [for (var i = 1; i < 10; i++) i].map((int i) => i * 2).toList();
   final log = (String message) => print(message);
   log('done $doubles $adults');
   final config = {'debug': true, 'retries': 3};

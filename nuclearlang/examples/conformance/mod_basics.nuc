@@ -1,0 +1,105 @@
+// Modules: attributes, the two constructor forms, methods, $field, defaults, named construction, cascades,
+// static members and getters, objects as values.
+Counter
+  count: int = 0
+  step: int = 1
+
+  increment() void
+    count += step
+
+  reset(count: int) void
+    $count = count
+
+  current() int
+    count
+
+Point(x: int, y: int)
+  plus(other: Point) Point
+    Point(x + other.x, y + other.y)
+
+  scale(by: int) Point
+    Point(x * by, y * by)
+
+  label() string
+    "(${x},${y})"
+
+Account
+  history: string[] = []
+
+  (owner: string, balance: double = 0)
+    history.add("open ${owner}")
+
+  deposit(amount: double) void
+    balance += amount
+    history.add("deposit")
+
+  withdraw(amount: double) boolean
+    if amount > balance
+      return false
+    balance -= amount
+    history.add("withdraw")
+    true
+
+User(name: string, role: string = "user", active: boolean = true)
+  tags: string[] = []
+  nick?: string
+
+  describe() string
+    "${name}/${role}/${active}/${nick ?? "-"}"
+
+Temperature(celsius: double)
+  static freezing() Temperature
+    Temperature(0.0)
+
+  static fromFahrenheit(f: double) Temperature
+    Temperature((f - 32) * 5 / 9)
+
+  get fahrenheit() double
+    celsius * 9 / 5 + 32
+
+  get isCold() boolean
+    celsius < 10
+
+Node(value: int, next: Node? = null)
+
+length(node: Node?) int
+  node == null ? 0 : 1 + length(node.next)
+
+main() void
+  c = Counter()
+  c.increment()
+  c.increment()
+  c.step = 5
+  c.increment()
+  print("counter", c.current(), c.count)
+  c.reset(100)
+  print("reset", c.current())
+  p = Point(1, 2).plus(Point(10, 20)).scale(2)
+  print("point", p.label(), p.x, p.y)
+  a = Account("ana")
+  a.deposit(50)
+  ok = a.withdraw(20)
+  no = a.withdraw(100)
+  print("account", a.owner, a.balance, ok, no, a.history.join(","))
+  u = User("ana")
+  v = User("luis", "admin", false)
+  w = User("eva", active = false)
+  w.nick = "e"
+  w.tags.add("x")
+  print("user", u.describe(), v.describe(), w.describe(), u.tags.length, w.tags.length)
+  t = Temperature.fromFahrenheit(212)
+  print("static", t.celsius, Temperature.freezing().fahrenheit, t.isCold, Temperature.freezing().isCold)
+  list = Node(1, Node(2, Node(3)))
+  print("linked", length(list), list.next!.value)
+  x = Counter()
+  y = x
+  y.increment()
+  print("reference", x.count, x == y)
+  made = Counter()
+    ..step = 10
+    ..increment()
+    ..increment()
+  print("cascade", made.count)
+  counters = [Counter(), Counter()]
+  counters[0].increment()
+  print("each", counters.map((k) => k.count).join(","))

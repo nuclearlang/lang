@@ -1,0 +1,96 @@
+// Errors: throw, catch, finally, the order of execution, nesting, rethrow, errors through calls,
+// try as a value, custom errors.
+NotFound: Error
+  (key: string)
+    super("not found: ${key}")
+
+fail(message: string) int
+  throw Error(message)
+
+parse(text: string) int
+  n = text.toInt()
+  if n == null
+    throw Error("bad number '${text}'")
+  n
+
+safeParse(text: string) int
+  try
+    parse(text)
+  catch e
+    - 1
+
+lookup(m: <string, int>, key: string) int
+  value = m[key]
+  if value == null
+    throw NotFound(key)
+  value
+
+order(doFail: boolean) string
+  steps: string[] = []
+  try
+    steps.add("try")
+    if doFail
+      fail("x")
+    steps.add("after")
+  catch e
+    steps.add("catch")
+  finally
+    steps.add("finally")
+  steps.add("end")
+  steps.join(">")
+
+nested() string
+  log: string[] = []
+  try
+    try
+      fail("inner")
+    catch e
+      log.add("caught ${e.message}")
+      throw Error("outer")
+    finally
+      log.add("inner finally")
+  catch e
+    log.add("caught ${e.message}")
+  log.join("; ")
+
+cleanup() string[]
+  log: string[] = []
+  for i in 0..3
+    try
+      if i == 1
+        continue
+      log.add("body${i}")
+    finally
+      log.add("finally${i}")
+  log
+
+depth(n: int) int
+  if n == 0
+    throw Error("bottom")
+  depth(n - 1)
+
+main() void
+  print("value", safeParse("42"), safeParse("x"))
+  print("order", order(false), order(true))
+  print("nested", nested())
+  print("loop", cleanup().join(","))
+  message = ""
+  try
+    depth(5)
+  catch e
+    message = e.message
+  print("unwind", message)
+  try
+    parse("abc")
+  catch e
+    print("message", e.message)
+  try
+    lookup({ "a": 1 }, "b")
+  catch e
+    print("custom", e.message, e is NotFound, e is Error)
+  print("found", lookup({ "a": 1 }, "a"))
+  ran = false
+  try
+    ran = true
+  finally
+    print("finally-only", ran)

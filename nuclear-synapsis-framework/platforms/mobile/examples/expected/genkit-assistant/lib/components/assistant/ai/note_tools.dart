@@ -19,7 +19,7 @@ class NoteTools extends Tools {
   }
 
   String numbered(List<String> items) {
-    return List.generate(items.length - 0, (i) => 0 + i).map((i) => '${i + 1}. ${items[i]}').toList().join('\n');
+    return [for (var i = 0; i < items.length; i++) i].map((i) => '${i + 1}. ${items[i]}').toList().join('\n');
   }
 
   /// The tools the model can call: the methods with a doc comment.

@@ -1,0 +1,70 @@
+// Functions: block and one-line bodies, implicit and early return, defaults, optional parameters,
+// named arguments, recursion, mutual recursion, functions as values.
+add(a: int, b: int) int
+  a + b
+
+twice(n: int) int = n * 2
+
+greet(name: string, greeting: string = "Hello", mark: string = "!") string
+  "${greeting} ${name}${mark}"
+
+tag(text: string, label?: string) string
+  label == null ? text : "${label}:${text}"
+
+inferred(a: int, b: int)
+  product = a * b
+
+abs(n: int) int
+  if n < 0
+    return -n
+  n
+
+firstEven(xs: int[]) int?
+  for x in xs
+    if x % 2 == 0
+      return x
+  null
+
+factorial(n: int) int
+  n <= 1 ? 1 : n * factorial(n - 1)
+
+fib(n: int) int
+  if n < 2
+    return n
+  fib(n - 1) + fib(n - 2)
+
+isEven(n: int) boolean
+  n == 0 ? true : isOdd(n - 1)
+
+isOdd(n: int) boolean
+  n == 0 ? false : isEven(n - 1)
+
+gcd(a: int, b: int) int
+  b == 0 ? a : gcd(b, a % b)
+
+apply(f: (n: int) => int, value: int) int
+  f(value)
+
+compose(f: (n: int) => int, g: (n: int) => int)(n: int) => int
+  (n: int) => g(f(n))
+
+sumAll(xs: int[]) int
+  xs.isEmpty ? 0 : xs[0] + sumAll(xs.skip(1))
+
+log(message: string) void
+  print("log", message)
+
+main() void
+  print("call", add(2, 3), twice(21), inferred(6, 7))
+  print("defaults", greet("Ana"), greet("Ana", "Hi"), greet("Ana", "Hi", "?"))
+  print("named", greet("Ana", mark = "."), greet(name = "Luis", greeting = "Hey"))
+  print("optional", tag("a"), tag("a", "b"))
+  print("early", abs(-4), abs(4), firstEven([1, 3, 4, 6]), firstEven([1, 3]))
+  print("recursion", factorial(10), fib(15), gcd(48, 18), sumAll([1, 2, 3, 4]))
+  print("mutual", isEven(10), isOdd(10), isOdd(7))
+  print("higher", apply(twice, 5), apply((n: int) => n + 1, 5))
+  plusOneTwice = compose((n: int) => n + 1, twice)
+  print("compose", plusOneTwice(4), compose(twice, twice)(3))
+  f = add
+  print("value", f(1, 2))
+  log("done")

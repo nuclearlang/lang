@@ -1,0 +1,56 @@
+// if / else if / else: as a statement, as the returned value, as an assigned value, nested.
+sign(x: int) string
+  if x > 0
+    "positive"
+  else if x < 0
+    "negative"
+  else
+    "zero"
+
+bucket(n: int) string
+  if n < 10
+    if n % 2 == 0
+      return "small-even"
+    return "small-odd"
+  size = if n < 100
+    "medium"
+  else
+    "large"
+  size
+
+clamp(n: int, low: int, high: int) int
+  if n < low
+    return low
+  if n > high
+    return high
+  n
+
+main() void
+  print("sign", sign(5), sign(-5), sign(0))
+  print("bucket", bucket(4), bucket(7), bucket(50), bucket(500))
+  print("clamp", clamp(5, 0, 10), clamp(-5, 0, 10), clamp(50, 0, 10))
+  log: string[] = []
+  for i in 0..6
+    if i == 0
+      log.add("zero")
+    else if i % 2 == 0 and i > 2
+      log.add("big-even")
+    else if i % 2 == 0
+      log.add("even")
+    else
+      log.add("odd")
+  print("chain", log.join(","))
+  count = 0
+  if log.length > 3
+    count += 1
+    if log[0] == "zero"
+      count += 10
+  if log.isEmpty
+    count += 100
+  print("nested", count)
+  label = if count > 10
+    prefix = "many"
+    "${prefix}:${count}"
+  else
+    "few"
+  print("value", label)

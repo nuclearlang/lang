@@ -124,7 +124,7 @@ pub const MEMBERS: &[Member] = &[
     m("list", "all", Bool),
     m("list", "count", Int),
     m("list", "reduce", Any),
-    m("list", "sum", Num),
+    m("list", "sum", Elem),
     m("list", "min", ElemOpt),
     m("list", "max", ElemOpt),
     m("list", "join", Str),

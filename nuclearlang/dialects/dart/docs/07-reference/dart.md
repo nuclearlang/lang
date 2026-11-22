@@ -948,7 +948,7 @@ class User {
 }
 
 void main() {
-  final users = List.generate(10 - 1, (i) => 1 + i).map((int iterator) => User('Julian')).toList();
+  final users = [for (var i = 1; i < 10; i++) i].map((int iterator) => User('Julian')).toList();
   final active = usersRepo.get(active: true);
   final filtered = active.where((User user) => user.age > 18).toList();
   final doubled = numbers.map((n) => n * 2).toList();

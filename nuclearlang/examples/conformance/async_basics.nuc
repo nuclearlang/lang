@@ -1,0 +1,78 @@
+// Asynchronous code: await, order of execution, awaitAll, errors through await, async in loops,
+// async lambdas, async methods, sequential and concurrent work.
+log: string[] = []
+
+slow(ms: int, value: string) string
+  ~delay(ms)
+  log.add(value)
+  value
+
+~quick(value: int) int
+  value * 2
+
+chain(n: int) int
+  a = ~quick(n)
+  b = ~quick(a)
+  ~quick(b)
+
+failing(ms: int) string
+  ~delay(ms)
+  throw Error("failed after ${ms}")
+
+guarded() string
+  try
+    ~failing(5)
+  catch e
+    "caught: ${e.message}"
+
+sequence(names: string[]) string[]
+  out: string[] = []
+  for name in names
+    out.add(~slow(1, name))
+  out
+
+Service(prefix: string)
+  calls: int = 0
+
+  fetch(id: int) string
+    ~delay(1)
+    calls += 1
+    "${prefix}${id}"
+
+  fetchAll(ids: int[]) string[]
+    out: string[] = []
+    for id in ids
+      out.add(~fetch(id))
+    out
+
+sumAsync(xs: int[]) int
+  total = 0
+  for x in xs
+    total += ~quick(x)
+  total
+
+main() void
+  print("await", ~slow(1, "a"), ~quick(21), ~chain(1))
+  log.clear()
+  both = ~awaitAll([slow(30, "slow"), slow(5, "fast")])
+  print("all", both.join(","), "finished", log.join(","))
+  log.clear()
+  print("sequence", (~sequence(["x", "y", "z"])).join(","), log.join(","))
+  print("error", ~guarded())
+  message = ""
+  try
+    ~failing(1)
+  catch e
+    message = e.message
+  print("propagate", message)
+  s = Service("u")
+  print("method", ~s.fetch(1), (~s.fetchAll([2, 3])).join(","), s.calls)
+  print("loop", ~sumAsync([1, 2, 3]))
+  double = (n: int)
+    ~delay(1)
+    n * 2
+  print("lambda", ~double(4))
+  results = ~awaitAll([quick(1), quick(2), quick(3)])
+  print("gather", results.join(","), results.sum())
+  pending: Future<int> = quick(50)
+  print("future", ~pending)

@@ -1,0 +1,25 @@
+// Logical operators: and, or, not, short circuit, precedence.
+calls: string[] = []
+
+mark(name: string, value: boolean) boolean
+  calls.add(name)
+  value
+
+flag(b: boolean) boolean = b
+
+main() void
+  t = flag(true)
+  f = flag(false)
+  one = calls.length + 1
+  print("and", t and t, t and f, f and t, f and f)
+  print("or", t or t, t or f, f or t, f or f)
+  print("not", not t, not f, not not t)
+  print("precedence", t or f and f, (t or f) and f, not t or t, not (t or t))
+  print("not-compare", not one == 2, not one < 2 and t)
+  a = mark("a", false) and mark("b", true)
+  c = mark("c", true) or mark("d", false)
+  e = mark("e", true) and mark("f", false) or mark("g", true)
+  print("short", a, c, e, calls.join(","))
+  x = 5
+  print("range", x > 0 and x < 10, x < 0 or x > 3, not (x > 0 and x < 3))
+  print("demorgan", (not (t and f)) == (not t or not f), (not (f or f)) == (not f and not f))

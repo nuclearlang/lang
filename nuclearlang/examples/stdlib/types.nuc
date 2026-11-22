@@ -36,7 +36,8 @@ main() void
   print("areas", shapes.map((s) => s.area().toFixed(2)).join(","))
   print("match", shapes.filter((s) => s is Square).length)
   b = Box(20).map((v) => "${v * 2}")
-  print("generic", b.value, b.value is string)
+  held: any = b.value
+  print("generic", b.value, held is string)
   value: any = 41
   print("cast", (value as int) + 1)
   o = { "name": "Ana", "age": 31 }

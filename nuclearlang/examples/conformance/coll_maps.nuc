@@ -1,0 +1,57 @@
+// Maps and sets: literals, read, write, remove, keys and values in insertion order, iteration, nested maps,
+// counting, spread, equality, sets and their algebra.
+main() void
+  ages: <string, int> = { "ana": 31, "luis": 25 }
+  empty: <string, int> = {}
+  print("basics", ages.length, ages.isEmpty, empty.isEmpty, ages["ana"], ages["nobody"], ages["nobody"] ?? -1)
+  ages["eva"] = 40
+  ages["ana"] = 32
+  print("write", ages.length, ages["ana"], ages["eva"], "eva" in ages, "zoe" in ages)
+  print("remove", ages.remove("luis"), ages.remove("luis"), ages.length, "luis" in ages)
+  print("order", ages.keys.join(","), ages.values.join(","), ages.values.sum())
+  ages["luis"] = 1
+  ages["bob"] = 2
+  print("insertion", ages.keys.join(","))
+  lines: string[] = []
+  for name, age in ages
+    lines.add("${name}:${age}")
+  print("iterate", lines.join(" "))
+  total = 0
+  for key in ages.keys
+    total += ages[key] ?? 0
+  print("keys-loop", total, ages.keys.length, ages.values.max())
+  counts: <string, int> = {}
+  for w in "a b a c b a".split(" ")
+    counts[w] = (counts[w] ?? 0) + 1
+  print("count", counts["a"], counts["b"], counts["c"], counts.keys.sortedBy((k) => -(counts[k] ?? 0)).join(""))
+  literal = { "x": 1, "y": 2 }
+  merged = { ...literal, "z": 3, "x": 10 }
+  print("spread", merged.length, merged["x"], merged["z"], literal["x"])
+  name = "n"
+  short = { name, "k": 1 }
+  print("shorthand", short.length, short["name"])
+  nested: <string, <string, int>> = { "a": { "x": 1 }, "b": {} }
+  nested["b"]!["y"] = 2
+  print("nested", nested["a"]!["x"], nested["b"]!["y"], nested["a"]!["zz"], nested["c"] == null)
+  lists: <string, int[]> = {}
+  for n in [1, 2, 3, 4]
+    key = n % 2 == 0 ? "even" : "odd"
+    if not (key in lists)
+      lists[key] = []
+    lists[key]!.add(n)
+  print("lists", lists["even"]!.join(","), lists["odd"]!.join(","))
+  print("equal", { "a": 1 } == { "a": 1 }, { "a": 1 } == { "a": 2 }, { "a": 1 } != { "b": 1 })
+  byId: <int, string> = {}
+  byId[1] = "one"
+  byId[2] = "two"
+  byId[3] = "three"
+  print("int-keys", byId[1], byId[3], byId[9], byId.length, 2 in byId)
+  s = Set.of([3, 1, 3, 2])
+  print("set", s.length, 3 in s, 9 in s, s.add(9), s.add(9), s.remove(1), s.remove(1), s.length)
+  a = Set.of([1, 2, 3])
+  b = Set.of([2, 3, 4])
+  print("algebra", a.union(b).length, a.intersection(b).length, a.difference(b).length, a.difference(b).toList().join(","))
+  e = Set<string>()
+  e.add("x")
+  print("typed", e.length, e.isEmpty, "x" in e, Set<int>().isEmpty)
+  print("dedupe", Set.of(["b", "a", "b"]).length, Set.of([1, 1, 1]).toList().join(","))

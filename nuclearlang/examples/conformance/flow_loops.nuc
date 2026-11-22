@@ -1,0 +1,84 @@
+// for and while: ranges, lists, maps, break, continue, nested loops, accumulators.
+main() void
+  total = 0
+  for i in 0..5
+    total += i
+  print("range", total)
+  low = 3
+  high = 7
+  steps: int[] = []
+  for i in low..high
+    steps.add(i)
+  print("bounds", steps.join(","), (high..low).length, (2..2).length)
+  words = ["a", "b", "c"]
+  joined = ""
+  for w in words
+    joined += w.upper()
+  print("list", joined)
+  ages: <string, int> = { "ana": 31, "luis": 25, "eva": 40 }
+  keys: string[] = []
+  sum = 0
+  for name, age in ages
+    keys.add(name)
+    sum += age
+  print("map", keys.join(","), sum)
+  found = -1
+  for i in 0..100
+    if i * i > 50
+      found = i
+      break
+  print("break", found)
+  odds: int[] = []
+  for i in 0..10
+    if i % 2 == 0
+      continue
+    odds.add(i)
+  print("continue", odds.join(","))
+  pairs: string[] = []
+  for i in 0..3
+    for j in 0..3
+      if j > i
+        break
+      if i == 1
+        continue
+      pairs.add("${i}${j}")
+  print("nested", pairs.join(","))
+  n = 27
+  count = 0
+  while n != 1
+    n = n % 2 == 0 ? n ~/ 2 : 3 * n + 1
+    count += 1
+  print("while", count)
+  k = 0
+  while true
+    k += 3
+    if k > 10
+      break
+  print("while-break", k)
+  i = 0
+  evens = 0
+  while i < 10
+    i += 1
+    if i % 2 == 1
+      continue
+    evens += 1
+  print("while-continue", evens)
+  grid = [[1, 2, 3], [4, 5, 6]]
+  flat: int[] = []
+  for row in grid
+    for cell in row
+      flat.add(cell * 10)
+  print("grid", flat.join(","))
+  empty: int[] = []
+  ran = false
+  for x in empty
+    ran = x > 0
+  print("empty", ran)
+  for i in 0..3
+    words.add("x${i}")
+  print("grow", words.length)
+  vowels = 0
+  for c in "héllo".chars()
+    if c in "aeo"
+      vowels += 1
+  print("chars", vowels)

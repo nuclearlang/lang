@@ -1,0 +1,49 @@
+// Generators: yield, yield of another generator, early exit, generators with state, consumed in loops.
+count(limit: int) int
+  for i in 0..limit
+    yield i
+
+evens(limit: int) int
+  for i in count(limit)
+    if i % 2 == 0
+      yield i
+
+both(a: int, b: int) int
+  yield ...count(a)
+  yield -1
+  yield ...count(b)
+
+fibs(limit: int) int
+  a = 0
+  b = 1
+  while a < limit
+    yield a
+    next = a + b
+    a = b
+    b = next
+
+words(text: string) string
+  for w in text.split(" ")
+    if w.isEmpty
+      continue
+    yield w.upper()
+
+firstOver(limit: int) int
+  for n in fibs(1000)
+    if n > limit
+      return n
+  - 1
+
+main() void
+  print("count", [...count(4)].join(","))
+  print("filter", [...evens(9)].join(","))
+  print("delegate", [...both(2, 3)].join(","))
+  print("state", [...fibs(60)].join(","))
+  print("text", [...words("a  bb ccc")].join(","))
+  total = 0
+  for n in count(5)
+    total += n
+  print("loop", total)
+  print("early", firstOver(50))
+  squares = [...count(4)].map((n) => n * n)
+  print("map", squares.join(","), [...count(0)].length)

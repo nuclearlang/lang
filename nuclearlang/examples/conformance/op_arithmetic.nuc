@@ -1,0 +1,20 @@
+// Arithmetic operators: integers, decimals, precedence, associativity, unary minus, power.
+dec(n: double) double = n
+
+main() void
+  print("add", 1 + 2, 1.5 + 2.25, 1 + 2.5, -1 + -2)
+  print("sub", 5 - 8, 2.5 - 0.5, 10 - 2 - 3, 10 - (2 - 3))
+  print("mul", 6 * 7, 1.5 * 4, -3 * -3, 2 * 3 * 4)
+  print("div", 7 / 2, 8 / 2, 1 / 4, 9.0 / 3, -7 / 2)
+  print("intdiv", 7 ~/ 2, 8 ~/ 2, 1 ~/ 4, 100 ~/ 7 ~/ 2)
+  print("rem", 7 % 3, 8 % 2, 10 % 4, 5.5 % 2, 7 % 3 % 2)
+  print("pow", 2 ** 3, 2 ** 3 ** 2, (2 ** 3) ** 2, 2 ** 0, 10 ** 2, 2.0 ** 3, 4 ** 0.5)
+  print("unary", -5, -(-5), -(2 + 3), -2 ** 2, (-2) ** 2)
+  print("precedence", 1 + 2 * 3, (1 + 2) * 3, 10 - 4 / 2, 2 + 3 * 4 ** 2, 20 ~/ 3 * 2, 20 % 6 + 1)
+  print("mixed", 1 + 2 - 3 * 4 / 8, 7 ~/ 2 + 7 % 2, 2 * (3 + 4) * 5)
+  a = 17
+  b = 5
+  print("identity", a ~/ b * b + a % b == a, (a + b) * (a - b) == a ** 2 - b ** 2)
+  x = dec(0.1) + dec(0.2)
+  print("float", x == 0.3, (x - 0.3).abs() < 1e-9, x.toFixed(2))
+  print("large", 2 ** 31, 2 ** 40, 1_000_000 * 1_000_000, 9007199254740991)

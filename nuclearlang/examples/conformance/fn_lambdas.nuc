@@ -1,0 +1,72 @@
+// Lambdas and closures: capture, shared state, counters, currying, block bodies, lambdas in collections.
+counter()() => int
+  count = 0
+  ()
+    count += 1
+    count
+
+adder(n: int)(x: int) => int
+  (x: int) => x + n
+
+curry(a: int)(b: int) => (c: int) => int
+  (b: int) => (c: int) => a * 100 + b * 10 + c
+
+each(xs: int[], f: (x: int) => void) void
+  for x in xs
+    f(x)
+
+memo(f: (n: int) => int)(n: int) => int
+  cache: <int, int> = {}
+  (n: int)
+    known = cache[n]
+    if known != null
+      return known
+    value = f(n)
+    cache[n] = value
+    value
+
+main() void
+  next = counter()
+  other = counter()
+  next()
+  next()
+  print("counter", next(), other())
+  add5 = adder(5)
+  add10 = adder(10)
+  print("capture", add5(1), add10(1), adder(1)(1))
+  print("curry", curry(1)(2)(3))
+  seen: int[] = []
+  each([1, 2, 3], (x: int)
+    seen.add(x * x)
+  )
+  print("effect", seen.join(","))
+  total = 0
+  bump = (by: int)
+    total += by
+  bump(2)
+  bump(3)
+  print("mutate", total)
+  ops: <string, (a: int, b: int) => int> = {
+    "add": (a: int, b: int) => a + b,
+    "sub": (a: int, b: int) => a - b,
+    "mul": (a: int, b: int) => a * b,
+  }
+  print("table", ops["add"]!(6, 3), ops["sub"]!(6, 3), ops["mul"]!(6, 3))
+  fns: ((n: int) => int)[] = []
+  for i in 1..4
+    fns.add((n: int) => n * i)
+  print("loop", fns.map((f) => f(10)).join(","))
+  calls = 0
+  slow = (n: int)
+    calls += 1
+    n * n
+  fast = memo(slow)
+  print("memo", fast(4), fast(4), fast(5), calls)
+  words = ["bb", "a", "ccc"]
+  lengths = words.map((w) => w.length)
+  long = words.filter(w: string)
+    size = w.length
+    size > 1
+  print("chain", lengths.join(","), long.join(","))
+  immediate = ((n: int) => n + 1)(1)
+  print("immediate", immediate)

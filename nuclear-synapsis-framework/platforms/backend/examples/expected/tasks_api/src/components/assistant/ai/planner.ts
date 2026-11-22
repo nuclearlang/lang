@@ -6,16 +6,6 @@ import { Injectable } from '@nestjs/common';
 import { AppError, Result } from 'synapsis-nest';
 import { Graph, chatModel, next, start, textOf } from 'synapsis-nest/ai';
 
-function _replaceWith(s: string, re: RegExp, f: (m: RegExpMatchArray) => string): string {
-  let out = '';
-  let last = 0;
-  for (const m of s.matchAll(re)) {
-    out += s.slice(last, m.index) + f(m);
-    last = m.index! + m[0].length;
-  }
-  return out + s.slice(last);
-}
-
 /** Turns a goal into tasks: the model splits it, then each step becomes a task. */
 @Injectable()
 export class Planner extends Graph<typeof PlanState> {

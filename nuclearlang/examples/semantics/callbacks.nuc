@@ -4,5 +4,5 @@ apply(xs: int[], f: (int) => int) int[] = xs.map((x) => f(x))
 main() void
   print(apply([1, 2], (x) => x * 10).join(","))
   // a conditional body where the target writes a condition
-  strict = false
+  strict = apply([1], (x) => x).isEmpty
   print([1, 2, 3, 4].filter((x) => strict ? x > 2 : x % 2 == 0).join(","))

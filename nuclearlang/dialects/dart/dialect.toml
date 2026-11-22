@@ -292,7 +292,8 @@ shl = "<<"
 shr = ">>"
 ushr = ">>>"
 in = "{{#map}}{{right}}.containsKey({{left}}){{/map}}{{#object}}{{right}}.containsKey({{left}}){{/object}}{{^map}}{{^object}}{{right}}.contains({{left}}){{/object}}{{/map}}"
-range = "List.generate({{right}} - {{left}}, (i) => {{left}} + i)"
+# a collection for: an empty list when the range is empty or inverted (List.generate throws on a negative length)
+range = "[for (var i = {{left}}; i < {{right}}; i++) i]"
 
 [functions]
 # print takes one value in Dart: several are joined with spaces, like console.log
