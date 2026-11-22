@@ -1,0 +1,12 @@
+// What it takes to add or change a customer.
+NewCustomer
+  @email
+  email: string
+  @minLength(1)
+  @maxLength(200)
+  name: string
+  @maxLength(40)
+  nickname?: string
+  vip: boolean = false
+  @min(0)
+  credit: double = 0.0

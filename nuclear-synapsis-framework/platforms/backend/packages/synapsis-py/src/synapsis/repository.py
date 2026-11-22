@@ -21,12 +21,12 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, cast, get_args, get_origin
 
-from sqlalchemy import Select, delete as sql_delete, func, select, update as sql_update
+from sqlalchemy import Select, Table, delete as sql_delete, func, inspect, select, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from .errors import NotFound
-from .orm import Entity
+from .orm import PENDING, Entity
 from .result import Err, Ok, Result
 
 __all__ = [
@@ -181,8 +181,22 @@ class Repository[T: Entity]:
         return await self.query().get_many()
 
     async def save(self, entity: T) -> T:
+        """Writes the row; a `@manyToMany` list set on a found row whose list was not loaded replaces its rows of the
+        join table."""
+        pending: dict[str, list[Entity]] = inspect(entity).dict.pop(PENDING, {})
         async with self.use(write=True) as s:
             merged = await s.merge(entity)
+            for name, rows in pending.items():
+                relation = self.entity.__mapper__.relationships[name]
+                join = cast(Table, relation.secondary)
+                related = [await s.merge(r) for r in rows]
+                await s.flush()
+                mine = {c.name: getattr(merged, str(p.key)) for p, c in relation.synchronize_pairs}
+                pairs = relation.secondary_synchronize_pairs or []
+                theirs = [{**mine, **{c.name: getattr(r, str(p.key)) for p, c in pairs}} for r in related]
+                await s.execute(join.delete().where(*[join.c[k] == v for k, v in mine.items()]))
+                if theirs:
+                    await s.execute(join.insert(), theirs)
         return merged
 
     async def remove(self, id: Any) -> bool:

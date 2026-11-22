@@ -2,19 +2,19 @@
 @IsOptional()
 {{/optional}}
 {{#tinfo.is.string}}
-@IsString()
+@IsString({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.string}}
 {{#tinfo.is.int}}
-@IsInt()
+@IsInt({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.int}}
 {{#tinfo.is.double}}
-@IsNumber()
+@IsNumber({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.double}}
 {{#tinfo.is.number}}
-@IsNumber()
+@IsNumber({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.number}}
 {{#tinfo.is.boolean}}
-@IsBoolean()
+@IsBoolean({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.boolean}}
 {{#tinfo.list}}
 @IsArray()

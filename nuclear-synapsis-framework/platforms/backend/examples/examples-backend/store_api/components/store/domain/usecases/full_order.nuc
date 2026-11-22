@@ -1,0 +1,4 @@
+// What OrderRepository.full answers, for the rest of store.
+usecase FullOrder(repository: OrderRepository)
+  exec(id: int) Result<Error, Order>
+    ~repository.full(id)

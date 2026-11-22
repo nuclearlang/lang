@@ -82,4 +82,4 @@ def test_make_up_and_down_follow_the_entities_and_keep_the_data(tmp_path: Path) 
     migrate(tmp_path, "down")
     with sqlite3.connect(db) as c:
         tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert tables <= {"alembic_version"}
+    assert tables <= {"alembic_version", "sqlite_sequence"}  # SQLite's own table of generated keys

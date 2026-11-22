@@ -53,7 +53,17 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
   relation that was not asked for is never queried. The foreign key is appended to the table in
   `Entity.__init_subclass__`. Join tables are made when the mappers are configured, so `Database.open` calls
   `configure_mappers()`; SQLite runs `PRAGMA foreign_keys=ON`.
-- **Answers**: `to_dict` and `EntitySchema` leave an unloaded relation out.
+- **Answers**: `wire_of` turns a row and every related row that was loaded into their schemas (`schema_of`), so
+  the JSON has Nuclear's names at every level; `EntitySchema` leaves an unloaded relation out. A `DateTime` is
+  written as `toIso()` writes it (`models.wire_date`: UTC, milliseconds, `Z`), in entities and models.
+- **A route's parameters** keep Nuclear's names for the client: `{customerId}` and `?minTotal=` reach
+  `customer_id` and `min_total` (`web._public`).
+- **Columns**: a `DateTime` is `UtcDateTime` (written in UTC and read back in UTC on every database: SQLite, MySQL
+  and MariaDB keep no time zone); a text without `length` is `String(255)`, as the other runtime; the mapper reads
+  back what the database writes (`eager_defaults`: `@created`, `@updated`, defaults), so the row a use case answers
+  is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.
+- **A `@manyToMany` list set on a found row** whose list was not loaded is kept on the row (`Entity.__setattr__`)
+  and written by `Repository.save`, which replaces its rows of the join table.
 - **What the generated project gives the runtime**: `main.py` and `conftest.py` list every entity
   (`entities=[...]`), so SQLAlchemy knows all the tables; two entities that name each other are imported only for
   the type checker (`if TYPE_CHECKING:`).

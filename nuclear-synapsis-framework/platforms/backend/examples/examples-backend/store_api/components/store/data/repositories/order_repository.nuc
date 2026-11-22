@@ -1,0 +1,32 @@
+// The orders of the database: find, findAll, save and remove come with it.
+repository OrderRepository
+  page(page: int, size: int = 20) Page<Order>
+    orderBy("id")
+    paginate(page, size)
+
+  // the order with its customer and its tags
+  full(id: int) Result<Error, Order>
+    where({ "id": id })
+    relations("customer", "tags")
+    getOne()
+
+  // the orders of a customer of at least that total, the largest first
+  ofCustomer(customerId: int, minTotal: double = 0.0) Order[]
+    where({ "customerId": customerId, "total": gte(minTotal) })
+    orderBy("total", desc = true)
+    orderBy("id")
+    getMany()
+
+  unnoted() Order[]
+    where({ "note": isNull() })
+    orderBy("id")
+    getMany()
+
+  // marks the unpaid orders of a customer as paid: how many
+  markPaid(customerId: int) int
+    where({ "customerId": customerId, "paid": false })
+    update({ "paid": true, "status": "paid" })
+
+  paidCount() int
+    where({ "paid": true })
+    count()

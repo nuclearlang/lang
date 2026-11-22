@@ -1,0 +1,5 @@
+// Adds an order of a customer; NotFound (404) when there is no such customer.
+usecase CreateOrder(repository: OrderRepository, customers: CustomerRepository)
+  exec(input: NewOrder) Result<Error, Order>
+    customer = ~customers.find(input.customerId)
+    Ok(~repository.save(Order(customerId = customer.id, quantity = input.quantity, total = input.total, note = input.note, status = input.status, paid = input.paid, placedAt = input.placedAt)))

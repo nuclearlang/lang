@@ -1357,3 +1357,13 @@ fn a_map_of_plain_values_is_read_as_an_expert_reads_it_in_python() {
     assert!(!nullable.contains(".get(k, 0)"), "{nullable}");
     has(&nullable, "_sure(m.get(k))");
 }
+
+#[test]
+fn what_an_undeclared_method_of_a_class_gives_is_not_a_list() {
+    // `orders.where(...)` is a query of the runtime: its `count()` was written as a list's
+    let src = "Orders: Repository\n  size() int\n    0\n\nf(orders: Orders) int = orders.where(1).count()\n";
+    has(&build(src, "python"), "orders.where(1).count()");
+    has(&ts(src), "orders.where(1).count()");
+    // a list of the program keeps the library's
+    has(&build("f(xs: int[]) int = xs.filter((x) => x > 1).count((x) => x > 2)\n", "python"), "sum(1 for");
+}

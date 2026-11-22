@@ -1,0 +1,24 @@
+// What the rest of the app sees of store: an alias for each of its use cases.
+appcomponent StoreAppComponent
+  listCustomers() = ListCustomers.exec
+  getCustomer() = GetCustomer.exec
+  createCustomer() = CreateCustomer.exec
+  updateCustomer() = UpdateCustomer.exec
+  deleteCustomer() = DeleteCustomer.exec
+  listOrders() = ListOrders.exec
+  getOrder() = GetOrder.exec
+  createOrder() = CreateOrder.exec
+  updateOrder() = UpdateOrder.exec
+  deleteOrder() = DeleteOrder.exec
+  listTags() = ListTags.exec
+  createTag() = CreateTag.exec
+  pageCustomers() = PageCustomers.exec
+  searchCustomers() = SearchCustomers.exec
+  vipCustomers() = VipCustomers.exec
+  customerOrders() = CustomerOrders.exec
+  fullOrder() = FullOrder.exec
+  ordersOfCustomer() = OrdersOfCustomer.exec
+  unnotedOrders() = UnnotedOrders.exec
+  checkout() = Checkout.exec
+  payOrders() = PayOrders.exec
+  tagOrder() = TagOrder.exec

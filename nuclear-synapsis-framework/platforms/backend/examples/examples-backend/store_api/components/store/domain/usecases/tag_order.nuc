@@ -1,0 +1,15 @@
+// Sets the tags of an order by their labels, adding the tags that do not exist, in one transaction.
+usecase TagOrder(orders: OrderRepository, tags: TagRepository)
+  @transactional
+  exec(id: int, input: TagList) Result<Error, Order>
+    order = ~orders.find(id)
+    found: Tag[] = []
+    for label in input.labels
+      known = ~tags.where({ "label": label }).exists()
+      if not known
+        ~tags.save(Tag(label = label))
+      tag = ~tags.byLabel(label)
+      found.add(tag)
+    order.tags = found
+    ~orders.save(order)
+    ~orders.full(id)

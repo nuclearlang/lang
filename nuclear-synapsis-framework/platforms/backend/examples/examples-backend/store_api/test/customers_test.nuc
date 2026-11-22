@@ -1,0 +1,15 @@
+// The tests of customers: the database is in memory and empty in each test.
+tests CustomersTest
+  @test("adds a customer and finds it")
+  addsAndFinds() void
+    app = inject<StoreAppComponent>()
+    made = ~app.createCustomer(NewCustomer(email = "ana@example.com", name = "name", nickname = "nickname", vip = true, credit = 1.5))
+    expect(made.isOk)
+    found = ~app.getCustomer(made.value.id)
+    expect(found.isOk)
+
+  @test("a missing customer is not found")
+  missing() void
+    app = inject<StoreAppComponent>()
+    found = ~app.getCustomer(999)
+    expect(found.error.status == 404)

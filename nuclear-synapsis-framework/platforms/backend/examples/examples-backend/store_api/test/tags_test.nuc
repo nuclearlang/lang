@@ -1,0 +1,7 @@
+// The tests of tags: the database is in memory and empty in each test.
+tests TagsTest
+  @test("adds a tag and finds it")
+  addsAndFinds() void
+    app = inject<StoreAppComponent>()
+    made = ~app.createTag(NewTag(label = "label"))
+    expect(made.isOk)

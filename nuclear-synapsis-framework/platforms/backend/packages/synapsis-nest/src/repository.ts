@@ -7,7 +7,10 @@
 // Every method of a `repository` writes on its own query (`q`), so two calls never share state. Inside a
 // `@transactional` method every call joins one transaction of the default database.
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { BuildOptions, FindOptions, IncludeOptions, Op, Order, Transaction, WhereOptions } from 'sequelize';
+import {
+  BuildOptions, FindOptions, IncludeOptions, Model as SequelizeModel, ModelStatic, Op, Order, Transaction, WhereOptions, col, fn,
+  where as whereOf,
+} from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
 import { NotFound } from './errors.js';
 import { Err, Ok, Result } from './result.js';
@@ -83,8 +86,9 @@ export function joinTable(name: string, foreignKey: string, otherKey: string): B
   return { through: name, foreignKey, otherKey, timestamps: false } as BelongsToManyOptions<object, object>;
 }
 
-/** `['tasks.tags', 'owner']` → the nested includes of sequelize. */
-function includes(paths: string[]): IncludeOptions[] {
+/** `['tasks.tags', 'owner']` → the nested includes of sequelize; the rows of a `@manyToMany` come without their row
+ * of the join table (the answer has the related rows only, as in every dialect). */
+function includes(model: ModelStatic<SequelizeModel>, paths: string[]): IncludeOptions[] {
   const byRoot = new Map<string, string[]>();
   for (const p of paths) {
     const [root, ...rest] = p.split('.');
@@ -92,12 +96,20 @@ function includes(paths: string[]): IncludeOptions[] {
     if (rest.length) list.push(rest.join('.'));
     byRoot.set(root, list);
   }
-  return [...byRoot].map(([association, inner]) => (inner.length ? { association, include: includes(inner) } : { association }));
+  return [...byRoot].map(([association, inner]) => {
+    const found = model.associations[association];
+    if (!found) throw new Error(`${model.name} has no relation '${association}'`);
+    return {
+      association,
+      ...(found.associationType === 'BelongsToMany' ? { through: { attributes: [] } } : {}),
+      ...(inner.length ? { include: includes(found.target, inner) } : {}),
+    };
+  });
 }
 
-/** A comparison of `where` other than equality. */
+/** A comparison of `where` other than equality; `anyCase`: a `like` that ignores the case (`ilike`). */
 export class Operator {
-  constructor(readonly value: Record<symbol, unknown>) {}
+  constructor(readonly value: Record<symbol, unknown>, readonly anyCase?: string) {}
 }
 
 export const gt = (v: unknown) => new Operator({ [Op.gt]: v });
@@ -110,17 +122,27 @@ export const like = (pattern: string) => new Operator({ [Op.like]: pattern });
 export type SortOrder = { desc?: boolean } | boolean;
 
 // `ilike` is the platform's word (nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md), the same in every backend dialect
-export const ilike = (pattern: string) => new Operator({ [Op.iLike]: pattern });
+// (only PostgreSQL has an ILIKE: on the others it is written lower(column) LIKE lower(pattern), as SQLAlchemy does)
+export const ilike = (pattern: string) => new Operator({ [Op.iLike]: pattern }, pattern);
 export const oneOf = (values: unknown[]) => new Operator({ [Op.in]: values });
 export const isNull = (isNullValue = true) => new Operator(isNullValue ? { [Op.is]: null } : { [Op.not]: null });
 export const between = (low: unknown, high: unknown) => new Operator({ [Op.between]: [low, high] });
 
 type Conditions = Record<string, unknown>;
 
-function toWhere(conditions: Conditions): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(conditions)) out[k] = v instanceof Operator ? v.value : v;
-  return out;
+/** `conditions` as sequelize's; `aliased`: the query names its table by the model (a read), so a column is told
+ * apart from a loaded relation's. */
+function toWhere(model: ModelCtor<Model>, conditions: Conditions[], aliased: boolean): WhereOptions {
+  const all: WhereOptions[] = [];
+  for (const [k, v] of conditions.flatMap((c) => Object.entries(c))) {
+    if (v instanceof Operator && v.anyCase !== undefined && model.sequelize?.getDialect() !== 'postgres') {
+      const column = model.getAttributes()[k]?.field ?? k;
+      all.push(whereOf(fn('lower', col(aliased ? `${model.name}.${column}` : column)), { [Op.like]: v.anyCase.toLowerCase() }));
+    } else {
+      all.push({ [k]: v instanceof Operator ? v.value : v });
+    }
+  }
+  return all.length ? { [Op.and]: all } : {};
 }
 
 /** The data of one entity: CRUD without writing it (find, findAll, save, remove) and a query builder. */
@@ -154,6 +176,11 @@ export class Repository<T extends Model> {
       }
     }
     const saved = await entity.save(inTransaction());
+    // a column the insert did not name is null in the database: the row says so (sequelize leaves it undefined, and
+    // the JSON answer would lack it), as a row that was read does
+    for (const name of Object.keys(this.model.getAttributes())) {
+      if (saved.dataValues[name] === undefined) saved.dataValues[name] = null;
+    }
     for (const [name, a] of Object.entries(this.model.associations)) {
       const v = related(name);
       if (a.associationType === 'BelongsToMany' && Array.isArray(v)) await saved.$set(name as never, v, inTransaction());
@@ -209,7 +236,7 @@ export class Repository<T extends Model> {
 
 /** One query of a repository: where / orderBy / limit / offset add to it; the others run it. */
 export class Query<T extends Model> {
-  private conditions: Record<string, unknown> = {};
+  private conditions: Conditions[] = [];
   private orders: [string, string][] = [];
   private max?: number;
   private skip?: number;
@@ -218,7 +245,7 @@ export class Query<T extends Model> {
   constructor(readonly repo: Repository<T>) {}
 
   where(conditions: Conditions): Query<T> {
-    Object.assign(this.conditions, toWhere(conditions));
+    this.conditions.push(conditions);
     return this;
   }
 
@@ -244,13 +271,17 @@ export class Query<T extends Model> {
     return this;
   }
 
+  private filter(aliased = true): WhereOptions {
+    return toWhere(this.repo.model as ModelCtor<Model>, this.conditions, aliased);
+  }
+
   private options(): FindOptions {
     return {
-      where: this.conditions as WhereOptions,
+      where: this.filter(),
       order: this.orders as Order,
       ...(this.max !== undefined ? { limit: this.max } : {}),
       ...(this.skip !== undefined ? { offset: this.skip } : {}),
-      ...(this.loads.length ? { include: includes(this.loads) } : {}),
+      ...(this.loads.length ? { include: includes(this.repo.model, this.loads) } : {}),
       ...inTransaction(),
     };
   }
@@ -275,7 +306,7 @@ export class Query<T extends Model> {
   }
 
   count(): Promise<number> {
-    return this.repo.model.count({ where: this.conditions as WhereOptions, ...inTransaction() });
+    return this.repo.model.count({ where: this.filter(), ...inTransaction() });
   }
 
   async exists(): Promise<boolean> {
@@ -283,12 +314,12 @@ export class Query<T extends Model> {
   }
 
   async update(values: Record<string, unknown>): Promise<number> {
-    const [n] = await this.repo.model.update(values as never, { where: this.conditions as WhereOptions, ...inTransaction() });
+    const [n] = await this.repo.model.update(values as never, { where: this.filter(false), ...inTransaction() });
     return n;
   }
 
   delete(): Promise<number> {
-    return this.repo.model.destroy({ where: this.conditions as WhereOptions, ...inTransaction() });
+    return this.repo.model.destroy({ where: this.filter(false), ...inTransaction() });
   }
 
   // CRUD of the repository, so a repository method can use them on its query

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from synapsis import (
     AppConfig, AppError, Conflict, Entity, Err, Mapped, Ok, Page, Repository, Result, SQLite, column, controller,
-    create_app, get, inject, many_to_many, many_to_one, one_to_many, primary, transactional,
+    create_app, get, ilike, inject, many_to_many, many_to_one, one_to_many, primary, transactional,
 )
 from synapsis.testing import client, memory_database
 
@@ -24,6 +25,8 @@ class Task(Entity):
     title: Mapped[str] = column()
     project: Mapped[Project | None] = many_to_one("Task", "project_id", "projects.id", "tasks", "cascade")
     project_id: Mapped[int] = column()
+    note: Mapped[str | None] = column(nullable=True)
+    due_at: Mapped[datetime | None] = column(nullable=True)
     tags: Mapped[list[Tag]] = many_to_many("Task", "tags", "Tag", "tasks", join=True)
 
 
@@ -74,6 +77,10 @@ class ProjectController:
     async def plain(self, id: int) -> Result[AppError, Project]:
         return await self.projects.find(id)
 
+    @get("tasks/of/{projectId}")
+    async def of(self, project_id: int, min_id: int = 0) -> list[Task]:
+        return [t for t in await self.tasks.where({"projectId": project_id}).order_by("id").get_many() if t.id >= min_id]
+
     @get("tasks/page/{page}")
     async def page(self, page: int) -> Page[Task]:
         return await self.tasks.query().order_by("id").paginate(page, 2)
@@ -118,3 +125,36 @@ async def test_relations_pages_and_transactions() -> None:
 
         await projects.remove(work.id)  # ON DELETE CASCADE
         assert await tasks.count() == 0
+
+
+async def test_the_same_rows_in_every_dialect() -> None:
+    """What packages/synapsis-nest/test/data.test.ts checks too: found running one project with both dialects on
+    PostgreSQL, MySQL, MariaDB and SQLite (checks/database-check)."""
+    app = create_app(Config(), controllers=[ProjectController])
+    async with client(app, Config(), memory_database()) as http:
+        projects, tasks, tags = inject(ProjectRepository), inject(TaskRepository), inject(TagRepository)
+        home = await projects.save(Project(name="Home Sweet"))
+        due = datetime(2026, 3, 4, 5, 6, 7, 123000, tzinfo=timezone(timedelta(hours=2)))
+        task = await tasks.save(Task(title="paint", project_id=home.id, due_at=due))
+        assert task.note is None  # a column left out is null in the row `save` answers
+        assert await projects.where({"name": ilike("%SWEET%")}).count() == 1  # any case, on every database
+
+        found = (await tasks.find(task.id)).value
+        assert found.due_at == due and found.due_at.utcoffset() == timedelta(0)  # an instant, read back in UTC
+
+        a, b = await tags.save(Tag(label="a")), await tags.save(Tag(label="b"))
+        found.tags = [a, b]  # a list set on a found row replaces its rows of the join table
+        await tasks.save(found)
+        again = (await tasks.find(task.id)).value
+        again.tags = [b]
+        await tasks.save(again)
+
+        body: dict[str, Any] = (await http.get(f"/projects/{home.id}")).json()
+        row = body["tasks"][0]
+        assert [t["label"] for t in row["tags"]] == ["b"]
+        assert sorted(row["tags"][0]) == ["id", "label"]  # the related row only, with Nuclear's names
+        assert (row["dueAt"], row["projectId"], row["note"]) == ("2026-03-04T03:06:07.123Z", home.id, None)
+        # a parameter of several words is read by its Nuclear name, in the path and in the query
+        listed = (await http.get(f"/projects/tasks/of/{home.id}?minId={task.id}")).json()
+        assert [t["title"] for t in listed] == ["paint"]
+        assert (await http.get(f"/projects/tasks/of/{home.id}?minId={task.id + 1}")).json() == []

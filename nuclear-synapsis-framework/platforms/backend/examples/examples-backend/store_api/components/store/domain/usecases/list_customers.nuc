@@ -1,0 +1,5 @@
+// One page of customers.
+usecase ListCustomers(repository: CustomerRepository)
+  exec(page: int) Result<Error, Customer[]>
+    found = ~repository.page(page, 20)
+    Ok(found.items)

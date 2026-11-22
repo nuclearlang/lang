@@ -24,6 +24,11 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 
 ## Pending
 
+- **Found making the backend's `store_api` (2026-11-21):** `gen resource --source db` with a `DateTime` field writes
+  a test that does not parse (`NewOrder(..., placedAt =)`: no example value for a `DateTime`); the test says "adds a
+  order"; a use case made with `--calls` drops the defaults of the repository method's parameters
+  (`page: int = 1` becomes a required `page: int`).
+
 - **Found making Nuclear Chat's service (spec 013, 2026-11-18):**
   - `nuclear make component <c>` is listed by `nuclear help` but refused in a backend project (its kinds have no
     `component`): each piece was made with `make appcomponent|usecase|service|model|controller|listener`;

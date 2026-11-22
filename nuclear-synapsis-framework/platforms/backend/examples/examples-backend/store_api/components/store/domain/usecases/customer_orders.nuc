@@ -1,0 +1,4 @@
+// What CustomerRepository.withOrders answers, for the rest of store.
+usecase CustomerOrders(repository: CustomerRepository)
+  exec(id: int) Result<Error, Customer>
+    ~repository.withOrders(id)

@@ -1,0 +1,10 @@
+// Changes a customer; NotFound (404) when there is none.
+usecase UpdateCustomer(repository: CustomerRepository)
+  exec(id: int, input: NewCustomer) Result<Error, Customer>
+    found = ~repository.find(id)
+    found.email = input.email
+    found.name = input.name
+    found.nickname = input.nickname
+    found.vip = input.vip
+    found.credit = input.credit
+    Ok(~repository.save(found))

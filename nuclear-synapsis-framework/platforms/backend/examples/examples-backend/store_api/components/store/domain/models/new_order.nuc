@@ -1,0 +1,10 @@
+// What it takes to add or change an order.
+NewOrder
+  customerId: int
+  quantity: int = 1
+  total: double
+  note?: string
+  @maxLength(20)
+  status: string = "pending"
+  paid: boolean = false
+  placedAt?: DateTime

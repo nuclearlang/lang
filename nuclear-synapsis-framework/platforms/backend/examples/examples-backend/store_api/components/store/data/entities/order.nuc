@@ -1,0 +1,22 @@
+// What an order is: a row of the table orders, of one customer and with tags; removing the customer removes it.
+@entity("orders")
+Order()
+  @primary(generated = true)
+  id: int
+  @manyToOne(inverse = "orders", onDelete = "cascade")
+  customer?: Customer
+  customerId: int
+  quantity: int = 1
+  total: double
+  @column(length = 2000)
+  note?: string
+  @column(length = 20)
+  status: string = "pending"
+  paid: boolean = false
+  // when the customer asked for it, as the client said
+  placedAt?: DateTime
+  @created()
+  createdAt?: DateTime
+  @manyToMany(inverse = "orders")
+  @joinTable()
+  tags?: Tag[]

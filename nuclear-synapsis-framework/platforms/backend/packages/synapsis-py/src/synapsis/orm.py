@@ -8,19 +8,20 @@ from __future__ import annotations
 import re
 import uuid
 from collections.abc import Callable
-from datetime import datetime
-from typing import Any, ClassVar
+from datetime import UTC, datetime
+from typing import Any, ClassVar, cast
 
 from pydantic.alias_generators import to_camel
-from pydantic import BaseModel, SerializerFunctionWrapHandler, create_model, model_serializer
+from pydantic import BaseModel, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
 from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, RelationshipProperty, mapped_column, relationship
 
-from .models import WIRE
+from .models import WIRE, wire_dates
 
 __all__ = [
-    "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of",
+    "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of", "wire_of", "UtcDateTime",
     "many_to_one", "one_to_many", "many_to_many", "one_to_one",
 ]
 
@@ -29,8 +30,53 @@ def _snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
+# where an entity keeps the @manyToMany lists set on it while they were not loaded (Repository.save writes them)
+PENDING = "_synapsis_pending"
+
+# a text column without `length`: what every database takes as a key, a unique column or a column with a default
+# (the same length the nestjs dialect writes)
+TEXT_LENGTH = 255
+
+
+class UtcDateTime(TypeDecorator[datetime]):
+    """A `DateTime` column: an instant. It is written in UTC and read back as UTC on every database (SQLite, MySQL and
+    MariaDB keep no time zone, and their drivers would drop the one of the value); a value without a time zone is
+    local time, as in the nestjs dialect."""
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect: Any) -> datetime | None:
+        del dialect
+        return value if value is None else value.astimezone(UTC)
+
+    def process_result_value(self, value: datetime | None, dialect: Any) -> datetime | None:
+        del dialect
+        if value is None:
+            return None
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
 class Entity(AsyncAttrs, DeclarativeBase):
     """The base of every entity (a table). `entity.to_dict()` gives its columns and its loaded relations."""
+
+    type_annotation_map = {datetime: UtcDateTime(), str: String(TEXT_LENGTH)}
+    # what the database writes (a default, @created, @updated) is read back with the write: the row an use case
+    # answers is complete on every database, with or without RETURNING
+    __mapper_args__ = {"eager_defaults": True}
+    # SQLite: a generated key is never given again after its row is removed, as on the other databases
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        # a list given to a @manyToMany that was not loaded (`order.tags = tags` on a found row): SQLAlchemy would have
+        # to read the old list first, which it cannot do here; it is kept for `save`, which writes the join table
+        relation = self.__mapper__.relationships.get(key)
+        if relation is not None and relation.secondary is not None:
+            state = inspect(self)
+            if state.key is not None and key in state.unloaded:
+                state.dict.setdefault(PENDING, {})[key] = value
+                return
+        super().__setattr__(key, value)
 
     def __init_subclass__(cls, **kw: Any) -> None:
         # the join column of a @manyToOne / @oneToOne gets its foreign key once the table exists
@@ -61,7 +107,8 @@ def primary(length: int | None = None, generated: bool = False, uuid_key: bool =
         return mapped_column(String(length or 36), primary_key=True, default=lambda: str(uuid.uuid4()))
     if generated:
         return mapped_column(primary_key=True, autoincrement=True)
-    return mapped_column(String(length) if length else None, primary_key=True)
+    # without a length the field's type decides (a text: TEXT_LENGTH)
+    return mapped_column(String(length), primary_key=True) if length else mapped_column(primary_key=True)
 
 
 def column(
@@ -101,12 +148,12 @@ def _sql_literal(value: Any) -> str | None:
 
 def created() -> Any:
     """When the row was inserted (set by the database)."""
-    return mapped_column(DateTime(timezone=True), server_default=func.now())
+    return mapped_column(UtcDateTime(), server_default=func.now())
 
 
 def updated() -> Any:
     """When the row last changed (set by the database)."""
-    return mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    return mapped_column(UtcDateTime(), server_default=func.now(), onupdate=func.now())
 
 
 _ACTIONS = {"cascade": "CASCADE", "set null": "SET NULL", "restrict": "RESTRICT", "no action": "NO ACTION"}
@@ -182,8 +229,8 @@ class EntitySchema(BaseModel):
     relations: ClassVar[frozenset[str]] = frozenset()
 
     @model_serializer(mode="wrap")
-    def _loaded_only(self, handler: SerializerFunctionWrapHandler) -> Any:
-        data = handler(self)
+    def _loaded_only(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Any:
+        data = wire_dates(self, handler(self), info)
         if isinstance(data, dict):
             for r in self.relations - self.model_fields_set:
                 data.pop(to_camel(r), None)  # type: ignore[union-attr]
@@ -222,3 +269,21 @@ def schema_of(entity: type[Entity], create: bool = False) -> type[BaseModel]:
         model.relations = relations
         _schemas[key] = model
     return _schemas[key]
+
+
+def wire_of(entity: Entity, _seen: set[int] | None = None) -> BaseModel:
+    """`entity` as the answer of a route: its schema, and the schema of every related row that was loaded (their JSON
+    has Nuclear's names too); a relation that was not loaded is left out, never fetched."""
+    seen = (_seen or set()) | {id(entity)}
+    data: dict[str, Any] = {c.key: getattr(entity, c.key) for c in entity.__mapper__.column_attrs}
+    unloaded = inspect(entity).unloaded
+    for r in entity.__mapper__.relationships:
+        if r.key in unloaded:
+            continue
+        v = getattr(entity, r.key)
+        if isinstance(v, list):
+            rows = cast(list[Entity], v)
+            data[r.key] = [wire_of(x, seen) for x in rows if id(x) not in seen]
+        elif v is None or id(v) not in seen:
+            data[r.key] = wire_of(v, seen) if v is not None else None
+    return schema_of(type(entity)).model_validate(data)

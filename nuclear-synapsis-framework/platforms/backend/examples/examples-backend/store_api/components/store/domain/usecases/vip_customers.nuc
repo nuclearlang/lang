@@ -1,0 +1,4 @@
+// What CustomerRepository.vips answers, for the rest of store.
+usecase VipCustomers(repository: CustomerRepository)
+  exec(credit: double) Result<Error, Customer[]>
+    Ok(~repository.vips(credit))

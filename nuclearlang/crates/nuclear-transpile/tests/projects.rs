@@ -39,6 +39,8 @@ fn projects_match_expected_output() {
         "examples-flutter-dialect/genkit-assistant",
         "examples-fastapi/rick_api",
         "examples-backend/tasks_api",
+        // one project on real databases, with every backend dialect (checks/database-check)
+        "examples-backend/store_api",
         "examples-web/characters",
         "examples-web/tasks_live",
         // the apps of the onboardings: made only by the tools (the website runs their commands again)

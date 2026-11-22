@@ -1,0 +1,13 @@
+// Places an order and takes its total from the customer's credit, in one transaction: without enough credit it is
+// a Conflict (409) and the order is not kept.
+usecase Checkout(customers: CustomerRepository, orders: OrderRepository)
+  @transactional
+  exec(input: NewOrder) Result<Error, Order>
+    customer = ~customers.find(input.customerId)
+    order = ~orders.save(Order(customerId = customer.id, quantity = input.quantity, total = input.total, note = input.note, placedAt = input.placedAt))
+    // checked after the order is written, on purpose: the Err takes the order back
+    if customer.credit < input.total
+      return Err(Conflict("customer ${customer.id} has not enough credit"))
+    customer.credit -= input.total
+    ~customers.save(customer)
+    Ok(order)

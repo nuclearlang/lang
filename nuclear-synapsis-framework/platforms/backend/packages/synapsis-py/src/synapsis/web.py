@@ -17,10 +17,11 @@ from typing import Annotated, Any, overload, get_args, get_origin
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, create_model
+from pydantic.alias_generators import to_camel
 
 from .errors import AppError
 from .guards import Guard, refusal
-from .orm import Entity, schema_of
+from .orm import Entity, schema_of, wire_of
 from .repository import Page
 from .result import Result
 
@@ -163,7 +164,7 @@ def _is_entity(t: Any) -> bool:
 def _out(value: Any) -> Any:
     if isinstance(value, Entity):
         # only the loaded relations are read (an unloaded one is left out, never fetched)
-        return schema_of(type(value)).model_validate(value.to_dict())
+        return wire_of(value)
     if isinstance(value, Page):
         p = typing.cast(Page[Any], value)
         items = [_out(i) for i in p.items]
@@ -174,21 +175,26 @@ def _out(value: Any) -> Any:
 
 
 def _public(name: str) -> str | None:
-    """The name a client uses for a parameter Nuclear wrote with a trailing `_` because its own name is a Python word
-    or builtin (`type_` → `type`, `from_` → `from`); None for any other parameter."""
+    """The name a client uses for a parameter whose Python name is not Nuclear's: one written with a trailing `_`
+    because its own name is a Python word or builtin (`type_` → `type`, `from_` → `from`), or one of several words
+    (`min_total` → `minTotal`: the wire has Nuclear's names, as the models do); None for any other parameter."""
     base = name[:-1]
     if name.endswith("_") and base and (keyword.iskeyword(base) or hasattr(builtins, base)):
         return base
-    return None
+    camel = to_camel(name)
+    return camel if camel != name else None
 
 
 def _route_path(path: str, fn: Callable[..., Any]) -> str:
-    """The route's path with each `{x}` a renamed parameter takes written `{x_}`: the URL it matches is the same."""
+    """The route's path with each `{x}` written as the parameter that takes it (`{type}` → `{type_}`, `{customerId}` →
+    `{customer_id}`): the URL it matches is the same."""
     names = inspect.signature(fn).parameters
 
     def segment(m: re.Match[str]) -> str:
         name = m.group(1)
-        return f"{{{name}_}}" if name not in names and f"{name}_" in names else m.group(0)
+        if name in names:
+            return m.group(0)
+        return next((f"{{{n}}}" for n in names if _public(n) == name), m.group(0))
 
     return re.sub(r"\{(\w+)\}", segment, path)
 

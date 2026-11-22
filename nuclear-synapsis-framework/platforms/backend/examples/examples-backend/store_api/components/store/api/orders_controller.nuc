@@ -1,0 +1,46 @@
+// The routes of orders.
+@controller("orders")
+controller OrdersController(app: StoreAppComponent)
+  @get
+  list(page: int = 1) Result<Error, Order[]>
+    ~app.listOrders(page)
+
+  @get("{id}")
+  one(id: int) Result<Error, Order>
+    ~app.getOrder(id)
+
+  @post
+  create(input: NewOrder) Result<Error, Order>
+    ~app.createOrder(input)
+
+  @put("{id}")
+  update(id: int, input: NewOrder) Result<Error, Order>
+    ~app.updateOrder(id, input)
+
+  @delete("{id}")
+  remove(id: int) Result<Error, boolean>
+    ~app.deleteOrder(id)
+
+  @get("{id}/full")
+  fullOrder(id: int) Result<Error, Order>
+    ~app.fullOrder(id)
+
+  @get("of/{customerId}")
+  ordersOfCustomer(customerId: int, minTotal: double) Result<Error, Order[]>
+    ~app.ordersOfCustomer(customerId, minTotal)
+
+  @get("unnoted")
+  unnotedOrders() Result<Error, Order[]>
+    ~app.unnotedOrders()
+
+  @post("checkout")
+  checkout(input: NewOrder) Result<Error, Order>
+    ~app.checkout(input)
+
+  @post("pay/{customerId}")
+  payOrders(customerId: int) Result<Error, Paid>
+    ~app.payOrders(customerId)
+
+  @put("{id}/tags")
+  tagOrder(id: int, input: TagList) Result<Error, Order>
+    ~app.tagOrder(id, input)

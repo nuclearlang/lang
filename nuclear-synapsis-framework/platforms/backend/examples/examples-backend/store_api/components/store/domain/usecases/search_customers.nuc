@@ -1,0 +1,4 @@
+// What CustomerRepository.search answers, for the rest of store.
+usecase SearchCustomers(repository: CustomerRepository)
+  exec(text: string, page: int, size: int) Result<Error, Page<Customer>>
+    Ok(~repository.search(text, page, size))

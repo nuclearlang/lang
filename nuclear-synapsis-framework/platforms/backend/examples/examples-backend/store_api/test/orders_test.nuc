@@ -1,0 +1,27 @@
+// The tests of orders: the database is in memory and empty in each test.
+tests OrdersTest
+  @test("adds an order and finds it")
+  addsAndFinds() void
+    app = inject<StoreAppComponent>()
+    customer = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))).value
+    made = ~app.createOrder(NewOrder(customerId = customer.id, quantity = 2, total = 1.5, note = "note", placedAt = DateTime.utc(2026, 3, 4, 5, 6, 7)))
+    expect(made.isOk)
+    found = ~app.getOrder(made.value.id)
+    expect(found.isOk)
+    expect(found.value.quantity == 2)
+    expect(found.value.total == 1.5)
+    expect(found.value.status == "pending")
+    expect(not found.value.paid)
+    expect(found.value.placedAt!.millis == DateTime.utc(2026, 3, 4, 5, 6, 7).millis)
+
+  @test("a missing order is not found")
+  missing() void
+    app = inject<StoreAppComponent>()
+    found = ~app.getOrder(999)
+    expect(found.error.status == 404)
+
+  @test("an order of a missing customer is not found")
+  missingCustomer() void
+    app = inject<StoreAppComponent>()
+    made = ~app.createOrder(NewOrder(customerId = 999, total = 1.0))
+    expect(made.error.status == 404)

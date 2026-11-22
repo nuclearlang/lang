@@ -1,0 +1,5 @@
+// One page of tags.
+usecase ListTags(repository: TagRepository)
+  exec(page: int) Result<Error, Tag[]>
+    found = ~repository.page(page, 20)
+    Ok(found.items)

@@ -1,0 +1,123 @@
+// The tests of the store's own rules: the unique email, the pages, the searches, the relations and the
+// transactions. The database is in memory and empty in each test.
+tests StoreTest
+  @test("a repeated email is a conflict")
+  repeatedEmail() void
+    app = inject<StoreAppComponent>()
+    ~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))
+    again = ~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Another Ana"))
+    expect(again.error.status == 409)
+
+  @test("the defaults of a customer and what the database fills")
+  defaults() void
+    app = inject<StoreAppComponent>()
+    made = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))).value
+    found = (~app.getCustomer(made.id)).value
+    expect(found.id > 0)
+    expect(not found.vip)
+    expect(found.credit == 0.0)
+    expect(found.nickname == null)
+    expect(found.createdAt != null)
+    expect(found.updatedAt != null)
+
+  @test("the customers come in pages")
+  pages() void
+    app = inject<StoreAppComponent>()
+    for name in ["a", "b", "c", "d", "e"]
+      ~app.createCustomer(NewCustomer(email = "${name}@example.com", name = name))
+    second = (~app.pageCustomers(2, 2)).value
+    items: Customer[] = second.items
+    expect(items.length == 2)
+    expect(items[0].name == "c")
+    expect(second.page == 2)
+    expect(second.total == 5)
+    expect(second.pages == 3)
+    last = (~app.pageCustomers(3, 2)).value
+    rest: Customer[] = last.items
+    expect(rest.length == 1)
+
+  @test("a search ignores the case and sorts by name")
+  search() void
+    app = inject<StoreAppComponent>()
+    ~app.createCustomer(NewCustomer(email = "z@example.com", name = "maria zeta"))
+    ~app.createCustomer(NewCustomer(email = "a@example.com", name = "Maria alfa"))
+    ~app.createCustomer(NewCustomer(email = "l@example.com", name = "luis"))
+    found = (~app.searchCustomers("MARIA", 1, 10)).value
+    items: Customer[] = found.items
+    expect(found.total == 2)
+    expect(items[0].email == "a@example.com")
+
+  @test("the queries of the repository: operators, order and update")
+  queries() void
+    customers = inject<CustomerRepository>()
+    orders = inject<OrderRepository>()
+    ana = ~customers.save(Customer(email = "ana@example.com", name = "Ana", vip = true, credit = 500.0))
+    ~customers.save(Customer(email = "luis@example.com", name = "Luis", vip = true, credit = 50.0))
+    ~customers.save(Customer(email = "eva@example.com", name = "Eva", credit = 900.0))
+    vips = ~customers.vips(100.0)
+    expect(vips.length == 1)
+    expect(vips[0].email == "ana@example.com")
+    expect((~customers.byEmail("eva@example.com")).isOk)
+    expect((~customers.byEmail("nobody@example.com")).error.status == 404)
+    ~orders.save(Order(customerId = ana.id, total = 10.0, note = "first"))
+    ~orders.save(Order(customerId = ana.id, total = 30.0))
+    ~orders.save(Order(customerId = ana.id, total = 20.0, note = ""))
+    large = ~orders.ofCustomer(ana.id, 15.0)
+    expect(large.length == 2)
+    expect(large[0].total == 30.0)
+    unnoted = ~orders.unnoted()
+    expect(unnoted.length == 1)
+    expect(~orders.markPaid(ana.id) == 3)
+    expect(~orders.markPaid(ana.id) == 0)
+    expect(~orders.paidCount() == 3)
+
+  @test("a customer has its orders and an order its customer and its tags")
+  relations() void
+    app = inject<StoreAppComponent>()
+    ana = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))).value
+    order = (~app.createOrder(NewOrder(customerId = ana.id, total = 5.0))).value
+    ~app.createOrder(NewOrder(customerId = ana.id, total = 6.0))
+    tagged = (~app.tagOrder(order.id, TagList(labels = ["gift", "urgent"]))).value
+    expect(tagged.tags!.length == 2)
+    expect(tagged.customer!.email == "ana@example.com")
+    again = (~app.tagOrder(order.id, TagList(labels = ["gift"]))).value
+    expect(again.tags!.length == 1)
+    expect((~app.listTags(1)).value.length == 2)
+    loaded = (~app.customerOrders(ana.id)).value
+    expect(loaded.orders!.length == 2)
+
+  @test("removing a customer removes its orders")
+  cascade() void
+    app = inject<StoreAppComponent>()
+    orders = inject<OrderRepository>()
+    ana = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))).value
+    ~app.createOrder(NewOrder(customerId = ana.id, total = 5.0))
+    expect(~orders.count() == 1)
+    expect((~app.deleteCustomer(ana.id)).isOk)
+    expect(~orders.count() == 0)
+
+  @test("a checkout takes the credit; without enough credit nothing is written")
+  checkout() void
+    app = inject<StoreAppComponent>()
+    orders = inject<OrderRepository>()
+    ana = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana", credit = 100.0))).value
+    bought = ~app.checkout(NewOrder(customerId = ana.id, total = 60.0))
+    expect(bought.isOk)
+    expect((~app.getCustomer(ana.id)).value.credit == 40.0)
+    refused = ~app.checkout(NewOrder(customerId = ana.id, total = 60.0))
+    expect(refused.error.status == 409)
+    expect(~orders.count() == 1)
+    expect((~app.getCustomer(ana.id)).value.credit == 40.0)
+
+  @test("paying too many orders at once pays none")
+  payRollsBack() void
+    app = inject<StoreAppComponent>()
+    orders = inject<OrderRepository>()
+    ana = (~app.createCustomer(NewCustomer(email = "ana@example.com", name = "Ana"))).value
+    ~app.createOrder(NewOrder(customerId = ana.id, total = 5.0))
+    expect((~app.payOrders(ana.id)).value.count == 1)
+    for total in [1.0, 2.0, 3.0]
+      ~app.createOrder(NewOrder(customerId = ana.id, total = total))
+    expect((~app.payOrders(ana.id)).error.status == 409)
+    expect(~orders.paidCount() == 1)
+    expect((~app.payOrders(999)).error.status == 404)

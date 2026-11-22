@@ -1,0 +1,4 @@
+// What OrderRepository.ofCustomer answers, for the rest of store.
+usecase OrdersOfCustomer(repository: OrderRepository)
+  exec(customerId: int, minTotal: double) Result<Error, Order[]>
+    Ok(~repository.ofCustomer(customerId, minTotal))

@@ -1,0 +1,4 @@
+// What CustomerRepository.page answers, for the rest of store.
+usecase PageCustomers(repository: CustomerRepository)
+  exec(page: int, size: int) Result<Error, Page<Customer>>
+    Ok(~repository.page(page, size))

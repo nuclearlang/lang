@@ -1,0 +1,4 @@
+// One customer by its id; NotFound (404) when there is none.
+usecase GetCustomer(repository: CustomerRepository)
+  exec(id: int) Result<Error, Customer>
+    ~repository.find(id)

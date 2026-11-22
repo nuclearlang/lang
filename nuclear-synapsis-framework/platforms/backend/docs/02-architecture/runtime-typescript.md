@@ -56,7 +56,10 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **Relations**: the runtime's `Entity` base keeps the relations given to the constructor (sequelize drops them).
   `save` writes a `@manyToOne` that is set to a row and `$set`s a `@manyToMany` list. Only the side with the column
   declares the foreign key (`constraints: false` on `@HasMany` / `@HasOne`). `joinTable(name, fk, other)` makes the
-  join table (no timestamps).
+  join table (no timestamps); a loaded `@manyToMany` comes without its rows of the join table.
+- **Rows**: after an insert `save` sets `null` in every column the insert did not name (sequelize leaves them
+  undefined, and the JSON answer would lack them).
+- **`ilike`** is PostgreSQL's `ILIKE` there and `lower(column) LIKE lower(pattern)` on the other databases.
 - **Types**: `Related<T>` types a single relation, so the decorator metadata never reads the other class (two ES
   modules that import each other).
 - **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It

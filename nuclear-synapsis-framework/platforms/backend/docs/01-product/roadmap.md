@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-21
 related: [../04-specs/004-backend-parity/plan.md, ../03-adr/0001-backend-data.md]
 ---
 # Roadmap
@@ -46,10 +46,36 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   4. `Grafana(url, instanceId, token)` against a Grafana Cloud stack's OTLP gateway: traces in Tempo, metrics in
      Mimir.
   5. The app stopping with the destination down (today the exporter retries for about ten seconds).
-- The migrations (ADR-backend-0001) against PostgreSQL, MySQL and MariaDB: only SQLite ran.
+- The database check is not in the CI (`.github/workflows/platform-backend.yml`): it ran on a developer's machine
+  only (Docker 29; `postgres:16-alpine`, `mysql:8.0`, `mariadb:11`). Other versions of the servers never ran.
+- `nuclear migrate` itself against PostgreSQL, MySQL and MariaDB: the database check calls the dialects' migration
+  tools as the other checks do, not the command.
+- Two requests that change the same row at once inside `@transactional` (two checkouts of one customer): the
+  platform has no word to lock a row, and no check says what each database does.
 - `nuclear migrate` on Windows (`cmd /C` quoting).
 
 ## To decide with the user
+
+Found by the database check (2026-11-21): the same in both dialects today, or different, but not what a user would
+expect; each needs a rule before it is changed.
+
+- **A unique column the use case did not check answers 500.** Of 16 requests at once for one email, one makes the
+  row, those the use case saw answer 409 and the rest reach the database's unique error: a 500 in both dialects.
+  Wanted: a rule (409?) for a unique violation.
+- **The body of an error is each framework's.** `{"detail": "..."}` in one dialect, `{"statusCode": 409, "message":
+  "..."}` in the other; the reasons of a 400 are each validator's words and count. Only the status and the message
+  of a `Result`'s error are the same. A client generated from the contract reads the status.
+- **A `DateTime` keeps its milliseconds on PostgreSQL and SQLite and loses them on MySQL and MariaDB** (both
+  dialects write a `DATETIME` without fraction).
+- **No text column longer than `@column(length = n)`.** A `string` field without a length is 255 characters in both
+  dialects; there is no word for a text of any length.
+- **`@created` / `@updated` are written by the database in one dialect** (a nullable column with the default
+  `CURRENT_TIMESTAMP`) **and by the app in the other** (a `NOT NULL` column without a default): the same answers
+  through the app, but a row inserted by SQL needs them in the second.
+- **A model built in code is validated in one dialect only** (`NewCustomer(email = "nope")` throws in fastapi; in
+  nestjs only a request's body is validated).
+- **`like` follows the database's case rule** (PostgreSQL tells the case apart; MySQL, MariaDB and SQLite do not for
+  ASCII); `ilike` is the same everywhere.
 
 - The first provider of authentication: JWT only, or also sessions with cookies for web clients
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).

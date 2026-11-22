@@ -5844,6 +5844,14 @@ impl<'a> Emitter<'a> {
                 if !is_call {
                     return None;
                 }
+                // what a method of a class gives and nothing declares (`orders.where(...)`, a query of the runtime)
+                // is that class's own value: its `count()` is not a list's
+                if let ExprKind::Call { callee, .. } = &object.kind
+                    && let ExprKind::Member { object: owner, .. } = &callee.kind
+                    && self.static_type(owner).is_some_and(|t| receiver_base(&t) == Recv::Other)
+                {
+                    return None;
+                }
                 let candidates = library::bases_with(&member_name);
                 if candidates.is_empty() {
                     // `toString` exists on every value

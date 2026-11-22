@@ -1,0 +1,4 @@
+// One order by its id; NotFound (404) when there is none.
+usecase GetOrder(repository: OrderRepository)
+  exec(id: int) Result<Error, Order>
+    ~repository.find(id)

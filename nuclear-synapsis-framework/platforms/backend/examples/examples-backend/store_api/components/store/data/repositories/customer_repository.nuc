@@ -1,0 +1,28 @@
+// The customers of the database: find, findAll, save and remove come with it.
+repository CustomerRepository
+  page(page: int, size: int = 20) Page<Customer>
+    orderBy("id")
+    paginate(page, size)
+
+  byEmail(email: string) Result<Error, Customer>
+    where({ "email": email })
+    getOne()
+
+  // the customers whose name has the text, in any case, by name
+  search(text: string, page: int = 1, size: int = 20) Page<Customer>
+    where({ "name": ilike("%${text}%") })
+    orderBy("name")
+    orderBy("id")
+    paginate(page, size)
+
+  // the vip customers with at least that credit, the richest first
+  vips(credit: double = 0.0) Customer[]
+    where({ "vip": true, "credit": gte(credit) })
+    orderBy("credit", desc = true)
+    orderBy("id")
+    getMany()
+
+  withOrders(id: int) Result<Error, Customer>
+    where({ "id": id })
+    relations("orders.tags")
+    getOne()

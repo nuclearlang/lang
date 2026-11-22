@@ -1,0 +1,10 @@
+// The routes of tags.
+@controller("tags")
+controller TagsController(app: StoreAppComponent)
+  @get
+  list(page: int = 1) Result<Error, Tag[]>
+    ~app.listTags(page)
+
+  @post
+  create(input: NewTag) Result<Error, Tag>
+    ~app.createTag(input)

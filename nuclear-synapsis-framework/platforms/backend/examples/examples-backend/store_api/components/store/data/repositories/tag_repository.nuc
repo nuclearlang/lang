@@ -1,0 +1,9 @@
+// The tags of the database: find, findAll, save and remove come with it.
+repository TagRepository
+  page(page: int, size: int = 20) Page<Tag>
+    orderBy("id")
+    paginate(page, size)
+
+  byLabel(label: string) Result<Error, Tag>
+    where({ "label": label })
+    getOne()

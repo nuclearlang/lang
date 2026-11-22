@@ -75,7 +75,9 @@ A table. `@entity("name")` names it (default: the class name in snake_case, plur
 columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a
 uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,
 `@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the
-column's default.
+column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it
+comes back as the same instant on every database, and its JSON is what `toIso()` writes
+(`2026-03-04T03:06:07.000Z`).
 
 ```nuclear
 @entity("tasks")

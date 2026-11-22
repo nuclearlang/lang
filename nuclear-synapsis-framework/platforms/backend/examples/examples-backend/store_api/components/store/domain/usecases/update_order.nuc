@@ -1,0 +1,12 @@
+// Changes a order; NotFound (404) when there is none.
+usecase UpdateOrder(repository: OrderRepository)
+  exec(id: int, input: NewOrder) Result<Error, Order>
+    found = ~repository.find(id)
+    found.customerId = input.customerId
+    found.quantity = input.quantity
+    found.total = input.total
+    found.note = input.note
+    found.status = input.status
+    found.paid = input.paid
+    found.placedAt = input.placedAt
+    Ok(~repository.save(found))

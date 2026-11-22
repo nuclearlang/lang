@@ -1,0 +1,19 @@
+// What a customer is: a row of the table customers, with its orders.
+@entity("customers")
+Customer()
+  @primary(generated = true)
+  id: int
+  @column(length = 120, unique = true)
+  email: string
+  @column(length = 200)
+  name: string
+  nickname?: string
+  vip: boolean = false
+  // what the customer can still spend
+  credit: double = 0.0
+  @created()
+  createdAt?: DateTime
+  @updated()
+  updatedAt?: DateTime
+  @oneToMany(inverse = "customer")
+  orders?: Order[]

@@ -1,0 +1,38 @@
+// The routes of customers.
+@controller("customers")
+controller CustomersController(app: StoreAppComponent)
+  @get
+  list(page: int = 1) Result<Error, Customer[]>
+    ~app.listCustomers(page)
+
+  @get("{id}")
+  one(id: int) Result<Error, Customer>
+    ~app.getCustomer(id)
+
+  @post
+  create(input: NewCustomer) Result<Error, Customer>
+    ~app.createCustomer(input)
+
+  @put("{id}")
+  update(id: int, input: NewCustomer) Result<Error, Customer>
+    ~app.updateCustomer(id, input)
+
+  @delete("{id}")
+  remove(id: int) Result<Error, boolean>
+    ~app.deleteCustomer(id)
+
+  @get("page")
+  pageCustomers(page: int, size: int) Result<Error, Page<Customer>>
+    ~app.pageCustomers(page, size)
+
+  @get("search")
+  searchCustomers(text: string, page: int, size: int) Result<Error, Page<Customer>>
+    ~app.searchCustomers(text, page, size)
+
+  @get("vips")
+  vipCustomers(credit: double) Result<Error, Customer[]>
+    ~app.vipCustomers(credit)
+
+  @get("{id}/orders")
+  customerOrders(id: int) Result<Error, Customer>
+    ~app.customerOrders(id)

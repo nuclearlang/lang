@@ -2,11 +2,11 @@
 // packages/synapsis-py/tests/test_data.py).
 import 'reflect-metadata';
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { after, before, describe, it } from 'node:test';
 import {
   AutoIncrement, BelongsTo, BelongsToMany, Column, DataType, HasMany, PrimaryKey, Sequelize, Table,
 } from 'sequelize-typescript';
-import { AppError, Conflict, Entity, Err, Ok, Repository, Result, joinTable, transactional } from '../src/index.js';
+import { AppError, Conflict, Entity, Err, Ok, Repository, Result, ilike, joinTable, transactional } from '../src/index.js';
 
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
 class Project extends Entity {
@@ -32,6 +32,10 @@ class Task extends Entity {
   declare project?: Project;
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare projectId?: number;
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare note?: string;
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare dueAt?: Date;
   @BelongsToMany(() => Tag, joinTable('tasks_tags', 'task_id', 'tag_id'))
   declare tags?: Tag[];
 }
@@ -60,9 +64,14 @@ class MoveTasks {
 }
 
 describe('data (ADR-backend-0001)', () => {
-  it('loads relations explicitly, pages, and rolls a transaction back', async () => {
-    const db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag] });
+  let db: Sequelize;
+  before(async () => {
+    db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag] });
     await db.sync();
+  });
+  after(() => db.close());
+
+  it('loads relations explicitly, pages, and rolls a transaction back', async () => {
     const projects = new Repository(Project);
     const tasks = new Repository(Task);
     const tags = new Repository(Tag);
@@ -97,6 +106,36 @@ describe('data (ADR-backend-0001)', () => {
 
     await projects.remove(work.id); // ON DELETE CASCADE
     assert.equal(await tasks.count(), 0);
-    await db.close();
+  });
+
+  // what packages/synapsis-py/tests/test_data.py checks too: found running one project with both dialects on
+  // PostgreSQL, MySQL, MariaDB and SQLite (checks/database-check)
+  it('answers the same rows as every dialect', async () => {
+    const projects = new Repository(Project);
+    const tasks = new Repository(Task);
+    const tags = new Repository(Tag);
+    const home = await projects.save(new Project({ name: 'Home Sweet' }));
+    const due = new Date('2026-03-04T05:06:07.123+02:00');
+    const task = await tasks.save(new Task({ title: 'paint', projectId: home.id, dueAt: due }));
+    assert.equal(task.note, null); // a column left out is null in the row `save` answers
+    assert.equal(await projects.where({ name: ilike('%SWEET%') }).count(), 1); // any case, on every database
+
+    const found = (await tasks.find(task.id)).value;
+    assert.equal(found.dueAt?.getTime(), due.getTime()); // an instant
+
+    const a = await tags.save(new Tag({ label: 'a' }));
+    const b = await tags.save(new Tag({ label: 'b' }));
+    found.tags = [a, b]; // a list set on a found row replaces its rows of the join table
+    await tasks.save(found);
+    const again = (await tasks.find(task.id)).value;
+    again.tags = [b];
+    await tasks.save(again);
+
+    const loaded = (await projects.where({ id: home.id }).relations('tasks.tags').getOne()).value;
+    const body = JSON.parse(JSON.stringify(loaded)) as { tasks: { tags: { label: string }[]; dueAt: string; projectId: number; note: null }[] };
+    const row = body.tasks[0];
+    assert.deepEqual(row.tags.map((t) => t.label), ['b']);
+    assert.deepEqual(Object.keys(row.tags[0]).sort(), ['id', 'label']); // the related row only, with Nuclear's names
+    assert.deepEqual([row.dueAt, row.projectId, row.note], ['2026-03-04T03:06:07.123Z', home.id, null]);
   });
 });

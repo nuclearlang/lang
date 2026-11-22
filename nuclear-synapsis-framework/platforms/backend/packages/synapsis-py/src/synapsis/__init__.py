@@ -14,6 +14,7 @@ from .config import (
     Database,
     Embeddings,
     Kafka,
+    MariaDB,
     MySQL,
     Ollama,
     OpenAI,
@@ -49,7 +50,7 @@ from .web import controller, delete, get, patch, post, put, status, untraced
 
 __all__ = [
     "AppConfig", "AppError", "ChatModel", "Chroma", "ComponentConfig", "Conflict", "Connection", "Database",
-    "Embeddings", "Entity", "Err", "Forbidden", "Guard", "NoOrigin", "Token", "Http", "HttpRepository", "Invalid", "Kafka", "Mapped", "Model", "MySQL",
+    "Embeddings", "Entity", "Err", "Forbidden", "Guard", "NoOrigin", "Token", "Http", "HttpRepository", "Invalid", "Kafka", "Mapped", "MariaDB", "Model", "MySQL",
     "NotFound", "Ok", "Ollama", "OpenAI", "Page", "Postgres", "Query", "Redis", "Repository", "Result", "SQLite", "Unauthorized", "between", "bind", "column", "connection", "connections",
     "controller", "create_app", "created", "delete", "env", "get", "gt", "gte", "ilike", "one_of", "status",
     "inject", "is_null", "like", "lt", "lte", "many_to_many", "many_to_one", "ne", "one_to_many", "one_to_one",

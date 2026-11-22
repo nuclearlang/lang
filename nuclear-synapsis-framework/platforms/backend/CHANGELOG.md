@@ -4,6 +4,34 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- The database check (`checks/database-check/check.sh`, needs Docker): the new example `store_api` (customers,
+  orders, tags) built with `fastapi` and `nestjs` on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11: the migrations
+  against the real database (made, applied, the schema read back, a column added to a table with rows, reverted),
+  one HTTP scenario and the project's tests; the answers are the same bytes in both dialects on the four databases.
+  What it found and fixed, each with the same test in both runtimes:
+  - fastapi: a `DateTime` column is an instant on every database (written in UTC, read back in UTC; SQLite, MySQL
+    and MariaDB dropped the time zone, so `05:06+02:00` came back as `05:06` UTC), and a `DateTime` in a JSON answer
+    is written as `toIso()` writes it (`2026-03-04T03:06:07.000Z`), as nestjs does.
+  - fastapi: changing a row with an `@updated` column answered 500 (`DetachedInstanceError`): what the database
+    writes is read back with the write, on every database.
+  - fastapi: a route's parameter of several words is read by its Nuclear name (`{customerId}` in the path,
+    `?minTotal=` in the query); it answered 400 asking for `customer_id` and `min_total`.
+  - fastapi: a related row inside an answer (`order.customer`) had Python's names (`created_at`) and dates without a
+    time zone; it has Nuclear's now, like the row itself.
+  - fastapi: a `@manyToMany` list set on a found row (`order.tags = tags`, then `save`) failed
+    (`lazy='raise'`); `save` replaces its rows of the join table, as nestjs does.
+  - fastapi: `MariaDB(url)` could not be imported (`synapsis` did not export it): a project with a MariaDB
+    connection did not start.
+  - fastapi: a `string` column without `@column(length)` is 255 characters, as in nestjs (MySQL and MariaDB refused
+    the table); on SQLite a generated key is never given again after its row is removed, as in nestjs.
+  - nestjs: `ilike` works on every database (it was PostgreSQL's `ILIKE`: a syntax error on SQLite, MySQL and
+    MariaDB).
+  - nestjs: the row `save` answers has `null` in a column that was left out (the key was missing from the JSON
+    answer of a `POST`, and present in the one of a `GET`).
+  - nestjs: the rows of a loaded `@manyToMany` come without their row of the join table (each tag carried an
+    `orders_tags` object).
+  - nestjs: a model's list of texts, numbers or booleans (`labels: string[]`) is validated item by item; every body
+    with one answered 400 ("labels must be a string").
 - Environments (spec 021): synapsis-py (`synapsis.config.load_env_file`) and synapsis-nest (`loadEnvFile` of
   `config.ts`) load the app's `.env` (written by `nuclear build --env <name>`) at start, never replacing a variable
   the process has. The reference says `env()`, the files, `--env` and `nuclear env` (§2.8).

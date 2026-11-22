@@ -1,0 +1,9 @@
+// What a tag is: a row of the table tags; an order has many tags and a tag many orders (table orders_tags).
+@entity("tags")
+Tag()
+  @primary(generated = true)
+  id: int
+  @column(length = 50, unique = true)
+  label: string
+  @manyToMany(inverse = "tags")
+  orders?: Order[]

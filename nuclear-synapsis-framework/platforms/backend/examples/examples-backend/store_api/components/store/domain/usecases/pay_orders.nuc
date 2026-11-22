@@ -1,0 +1,11 @@
+// Marks every unpaid order of a customer as paid, in one transaction. NotFound (404) when there is no such
+// customer; Conflict (409) when a customer who is not vip pays more than two at once: none is paid then.
+usecase PayOrders(customers: CustomerRepository, orders: OrderRepository)
+  @transactional
+  exec(customerId: int) Result<Error, Paid>
+    customer = ~customers.find(customerId)
+    count = ~orders.markPaid(customerId)
+    // checked after the orders changed, on purpose: the Err takes the change back
+    if count > 2 and not customer.vip
+      return Err(Conflict("customer ${customer.id} pays at most two orders at once"))
+    Ok(Paid(count = count))

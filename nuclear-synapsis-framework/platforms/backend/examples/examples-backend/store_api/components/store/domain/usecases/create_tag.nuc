@@ -1,0 +1,4 @@
+// Adds a tag.
+usecase CreateTag(repository: TagRepository)
+  exec(input: NewTag) Result<Error, Tag>
+    Ok(~repository.save(Tag(label = input.label)))

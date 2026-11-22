@@ -34,12 +34,12 @@ export class PlanRequest {
 }
 
 export class PlanReply {
-  @IsString()
+  @IsString({ each: true })
   @IsArray()
   titles!: string[];
   @IsInt()
   created!: number;
-  @IsString()
+  @IsString({ each: true })
   @IsArray()
   failed!: string[];
 

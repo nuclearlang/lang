@@ -1,0 +1,4 @@
+// What OrderRepository.unnoted answers, for the rest of store.
+usecase UnnotedOrders(repository: OrderRepository)
+  exec() Result<Error, Order[]>
+    Ok(~repository.unnoted())

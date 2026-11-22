@@ -21,7 +21,7 @@ import shutil
 import sys
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 __all__ = ["make", "up", "down", "run_env"]
 
@@ -97,7 +97,12 @@ def run_env() -> None:
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy.orm import configure_mappers
 
-    from .orm import Entity
+    from .orm import Entity, UtcDateTime
+
+    def render(kind: str, item: Any, autogen: Any) -> str | Literal[False]:
+        # the runtime's own column type is written as SQLAlchemy's: a migration imports nothing of the app
+        del autogen
+        return "sa.DateTime(timezone=True)" if kind == "type" and isinstance(item, UtcDateTime) else False
 
     cfg = context.config
     if context.is_offline_mode():
@@ -108,6 +113,7 @@ def run_env() -> None:
             connection=connection,
             target_metadata=Entity.metadata,
             render_as_batch=True,
+            render_item=render,
             compare_type=True,
             compare_server_default=True,
             process_revision_directives=_directives,

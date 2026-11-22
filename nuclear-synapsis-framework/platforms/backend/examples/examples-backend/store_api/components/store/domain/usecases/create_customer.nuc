@@ -1,0 +1,7 @@
+// Adds a customer; Conflict (409) when the email is taken.
+usecase CreateCustomer(repository: CustomerRepository)
+  exec(input: NewCustomer) Result<Error, Customer>
+    taken = ~repository.where({ "email": input.email }).exists()
+    if taken
+      return Err(Conflict("there is already a customer '${input.email}'"))
+    Ok(~repository.save(Customer(email = input.email, name = input.name, nickname = input.nickname, vip = input.vip, credit = input.credit)))

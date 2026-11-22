@@ -1,4 +1,5 @@
-# The backend platform: fastapi and nestjs against the examples, the runtimes' tests, the migrations, a live run.
+# The backend platform: fastapi and nestjs against the examples, the runtimes' tests, the migrations, a live run,
+# and both dialects against real databases in Docker.
 name: platform-backend
 
 on:
@@ -44,3 +45,5 @@ jobs:
         run: sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh
       - name: "nestjs: tsc, node:test, migrations, a live run"
         run: sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh
+      - name: "Real databases in Docker: both dialects on SQLite, PostgreSQL, MySQL and MariaDB, the same answers"
+        run: sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh

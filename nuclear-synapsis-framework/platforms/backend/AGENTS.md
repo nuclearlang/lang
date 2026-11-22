@@ -37,6 +37,7 @@ nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/pla
 cargo test                                   # the examples with both dialects, the goldens
 sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, migrations, a live run
 sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, migrations, a live run
+sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite
 UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff
 installer/install.sh                         # the user runs the installed copy: install after a change
 ```
@@ -49,13 +50,17 @@ installer/install.sh                         # the user runs the installed copy:
 - `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).
 - `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).
 - `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.
+- `examples/examples-backend/store_api/`: the example of the database check (customers, orders, tags: relations,
+  pages, searches, transactions), made with `nuclear new` and `nuclear gen`.
 - `examples/examples-fastapi/rick_api/`: the example of the fastapi check.
 - `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.
 - `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
   website runs those commands again and fails if they do not give it).
-- `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.
+- `examples/expected/{rick_api,store_api,tasks_api,todos_api}/`: the golden output of the projects.
 - `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the
   guards and the WebSocket of `tasks_api`; `smoke.mjs`).
+- `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the
+  seed, SQL) and `scenario.py` (the one HTTP scenario whose answers are compared).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
 Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,
@@ -75,7 +80,8 @@ Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fasta
    `[decorators.fields]`): no decorator name is written in Rust.
 4. **The runtimes behave the same.** A behaviour added to one is added to the other, with the same test in both
    (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the guards and the
-   WebSocket: `tests/test_sockets.py`, `test/sockets.test.ts`).
+   WebSocket: `tests/test_sockets.py`, `test/sockets.test.ts`). The database check compares their answers on every
+   database: a change of the data words runs it.
 5. **A changed public API of a runtime** means its type definitions are regenerated
    ([runbook](docs/06-runbooks/change-a-runtime.md)).
 6. **The examples are goldens.** Output that changed on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff.
