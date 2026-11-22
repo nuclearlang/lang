@@ -6440,7 +6440,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.89.1\")",
+    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.90.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend): the events a component publishes, and the app's",
     "// WebSocket, which serves the same controllers and pushes the events to the clients subscribed to them.",
@@ -7610,7 +7610,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.89.1\")",
+    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.90.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend).",
     "plugins(ai = true, ollama = true)",
@@ -8903,7 +8903,8 @@
     "  print(\"areas\", shapes.map((s) => s.area().toFixed(2)).join(\",\"))",
     "  print(\"match\", shapes.filter((s) => s is Square).length)",
     "  b = Box(20).map((v) => \"${v * 2}\")",
-    "  print(\"generic\", b.value, b.value is string)",
+    "  held: any = b.value",
+    "  print(\"generic\", b.value, held is string)",
     "  value: any = 41",
     "  print(\"cast\", (value as int) + 1)",
     "  o = { \"name\": \"Ana\", \"age\": 31 }",
@@ -8921,6 +8922,1346 @@
     "kind": "program",
     "name": "types",
     "project": "stdlib"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/api/customers_controller",
+   "type": "file",
+   "title": "`controller` CustomersController — the example project store_api (backend)",
+   "summary": "The routes of customers.",
+   "body": [
+    "`components/store/api/customers_controller.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The routes of customers.",
+    "@controller(\"customers\")",
+    "controller CustomersController(app: StoreAppComponent)",
+    "  @get",
+    "  list(page: int = 1) Result<Error, Customer[]>",
+    "    ~app.listCustomers(page)",
+    "",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Customer>",
+    "    ~app.getCustomer(id)",
+    "",
+    "  @post",
+    "  create(input: NewCustomer) Result<Error, Customer>",
+    "    ~app.createCustomer(input)",
+    "",
+    "  @put(\"{id}\")",
+    "  update(id: int, input: NewCustomer) Result<Error, Customer>",
+    "    ~app.updateCustomer(id, input)",
+    "",
+    "  @delete(\"{id}\")",
+    "  remove(id: int) Result<Error, boolean>",
+    "    ~app.deleteCustomer(id)",
+    "",
+    "  @get(\"page\")",
+    "  pageCustomers(page: int, size: int) Result<Error, Page<Customer>>",
+    "    ~app.pageCustomers(page, size)",
+    "",
+    "  @get(\"search\")",
+    "  searchCustomers(text: string, page: int, size: int) Result<Error, Page<Customer>>",
+    "    ~app.searchCustomers(text, page, size)",
+    "",
+    "  @get(\"vips\")",
+    "  vipCustomers(credit: double) Result<Error, Customer[]>",
+    "    ~app.vipCustomers(credit)",
+    "",
+    "  @get(\"{id}/orders\")",
+    "  customerOrders(id: int) Result<Error, Customer>",
+    "    ~app.customerOrders(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/api/customers_controller.nuc"
+   ],
+   "meta": {
+    "kind": "controller",
+    "name": "CustomersController",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/api/orders_controller",
+   "type": "file",
+   "title": "`controller` OrdersController — the example project store_api (backend)",
+   "summary": "The routes of orders.",
+   "body": [
+    "`components/store/api/orders_controller.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The routes of orders.",
+    "@controller(\"orders\")",
+    "controller OrdersController(app: StoreAppComponent)",
+    "  @get",
+    "  list(page: int = 1) Result<Error, Order[]>",
+    "    ~app.listOrders(page)",
+    "",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Order>",
+    "    ~app.getOrder(id)",
+    "",
+    "  @post",
+    "  create(input: NewOrder) Result<Error, Order>",
+    "    ~app.createOrder(input)",
+    "",
+    "  @put(\"{id}\")",
+    "  update(id: int, input: NewOrder) Result<Error, Order>",
+    "    ~app.updateOrder(id, input)",
+    "",
+    "  @delete(\"{id}\")",
+    "  remove(id: int) Result<Error, boolean>",
+    "    ~app.deleteOrder(id)",
+    "",
+    "  @get(\"{id}/full\")",
+    "  fullOrder(id: int) Result<Error, Order>",
+    "    ~app.fullOrder(id)",
+    "",
+    "  @get(\"of/{customerId}\")",
+    "  ordersOfCustomer(customerId: int, minTotal: double) Result<Error, Order[]>",
+    "    ~app.ordersOfCustomer(customerId, minTotal)",
+    "",
+    "  @get(\"unnoted\")",
+    "  unnotedOrders() Result<Error, Order[]>",
+    "    ~app.unnotedOrders()",
+    "",
+    "  @post(\"checkout\")",
+    "  checkout(input: NewOrder) Result<Error, Order>",
+    "    ~app.checkout(input)",
+    "",
+    "  @post(\"pay/{customerId}\")",
+    "  payOrders(customerId: int) Result<Error, Paid>",
+    "    ~app.payOrders(customerId)",
+    "",
+    "  @put(\"{id}/tags\")",
+    "  tagOrder(id: int, input: TagList) Result<Error, Order>",
+    "    ~app.tagOrder(id, input)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/api/orders_controller.nuc"
+   ],
+   "meta": {
+    "kind": "controller",
+    "name": "OrdersController",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/api/tags_controller",
+   "type": "file",
+   "title": "`controller` TagsController — the example project store_api (backend)",
+   "summary": "The routes of tags.",
+   "body": [
+    "`components/store/api/tags_controller.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The routes of tags.",
+    "@controller(\"tags\")",
+    "controller TagsController(app: StoreAppComponent)",
+    "  @get",
+    "  list(page: int = 1) Result<Error, Tag[]>",
+    "    ~app.listTags(page)",
+    "",
+    "  @post",
+    "  create(input: NewTag) Result<Error, Tag>",
+    "    ~app.createTag(input)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/api/tags_controller.nuc"
+   ],
+   "meta": {
+    "kind": "controller",
+    "name": "TagsController",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/models/new_customer",
+   "type": "file",
+   "title": "`model` NewCustomer — the example project store_api (backend)",
+   "summary": "What it takes to add or change a customer.",
+   "body": [
+    "`components/store/domain/models/new_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What it takes to add or change a customer.",
+    "NewCustomer",
+    "  @email",
+    "  email: string",
+    "  @minLength(1)",
+    "  @maxLength(200)",
+    "  name: string",
+    "  @maxLength(40)",
+    "  nickname?: string",
+    "  vip: boolean = false",
+    "  @min(0)",
+    "  credit: double = 0.0",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/new_customer.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "NewCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/models/new_order",
+   "type": "file",
+   "title": "`model` NewOrder — the example project store_api (backend)",
+   "summary": "What it takes to add or change an order.",
+   "body": [
+    "`components/store/domain/models/new_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What it takes to add or change an order.",
+    "NewOrder",
+    "  customerId: int",
+    "  quantity: int = 1",
+    "  total: double",
+    "  note?: string",
+    "  @maxLength(20)",
+    "  status: string = \"pending\"",
+    "  paid: boolean = false",
+    "  placedAt?: DateTime",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/new_order.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "NewOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/models/new_tag",
+   "type": "file",
+   "title": "`model` NewTag — the example project store_api (backend)",
+   "summary": "What it takes to add or change a tag.",
+   "body": [
+    "`components/store/domain/models/new_tag.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What it takes to add or change a tag.",
+    "NewTag",
+    "  label: string",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/new_tag.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "NewTag",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/models/paid",
+   "type": "file",
+   "title": "`model` Paid — the example project store_api (backend)",
+   "summary": "How many orders were paid.",
+   "body": [
+    "`components/store/domain/models/paid.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// How many orders were paid.",
+    "Paid",
+    "  count: int",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/paid.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Paid",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/models/tag_list",
+   "type": "file",
+   "title": "`model` TagList — the example project store_api (backend)",
+   "summary": "The labels an order is tagged with.",
+   "body": [
+    "`components/store/domain/models/tag_list.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The labels an order is tagged with.",
+    "TagList",
+    "  labels: string[]",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/tag_list.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "TagList",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/checkout",
+   "type": "file",
+   "title": "`usecase` Checkout — the example project store_api (backend)",
+   "summary": "Places an order and takes its total from the customer's credit, in one transaction: without enough credit it is a Conflict (409) and the order is not kept.",
+   "body": [
+    "`components/store/domain/usecases/checkout.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Places an order and takes its total from the customer's credit, in one transaction: without enough credit it is",
+    "// a Conflict (409) and the order is not kept.",
+    "usecase Checkout(customers: CustomerRepository, orders: OrderRepository)",
+    "  @transactional",
+    "  exec(input: NewOrder) Result<Error, Order>",
+    "    customer = ~customers.find(input.customerId)",
+    "    order = ~orders.save(Order(customerId = customer.id, quantity = input.quantity, total = input.total, note = input.note, placedAt = input.placedAt))",
+    "    // checked after the order is written, on purpose: the Err takes the order back",
+    "    if customer.credit < input.total",
+    "      return Err(Conflict(\"customer ${customer.id} has not enough credit\"))",
+    "    customer.credit -= input.total",
+    "    ~customers.save(customer)",
+    "    Ok(order)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/checkout.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "Checkout",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/create_customer",
+   "type": "file",
+   "title": "`usecase` CreateCustomer — the example project store_api (backend)",
+   "summary": "Adds a customer; Conflict (409) when the email is taken.",
+   "body": [
+    "`components/store/domain/usecases/create_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Adds a customer; Conflict (409) when the email is taken.",
+    "usecase CreateCustomer(repository: CustomerRepository)",
+    "  exec(input: NewCustomer) Result<Error, Customer>",
+    "    taken = ~repository.where({ \"email\": input.email }).exists()",
+    "    if taken",
+    "      return Err(Conflict(\"there is already a customer '${input.email}'\"))",
+    "    Ok(~repository.save(Customer(email = input.email, name = input.name, nickname = input.nickname, vip = input.vip, credit = input.credit)))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/create_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CreateCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/create_order",
+   "type": "file",
+   "title": "`usecase` CreateOrder — the example project store_api (backend)",
+   "summary": "Adds an order of a customer; NotFound (404) when there is no such customer.",
+   "body": [
+    "`components/store/domain/usecases/create_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Adds an order of a customer; NotFound (404) when there is no such customer.",
+    "usecase CreateOrder(repository: OrderRepository, customers: CustomerRepository)",
+    "  exec(input: NewOrder) Result<Error, Order>",
+    "    customer = ~customers.find(input.customerId)",
+    "    Ok(~repository.save(Order(customerId = customer.id, quantity = input.quantity, total = input.total, note = input.note, status = input.status, paid = input.paid, placedAt = input.placedAt)))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/create_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CreateOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/create_tag",
+   "type": "file",
+   "title": "`usecase` CreateTag — the example project store_api (backend)",
+   "summary": "Adds a tag.",
+   "body": [
+    "`components/store/domain/usecases/create_tag.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Adds a tag.",
+    "usecase CreateTag(repository: TagRepository)",
+    "  exec(input: NewTag) Result<Error, Tag>",
+    "    Ok(~repository.save(Tag(label = input.label)))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/create_tag.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CreateTag",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/customer_orders",
+   "type": "file",
+   "title": "`usecase` CustomerOrders — the example project store_api (backend)",
+   "summary": "What CustomerRepository.withOrders answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/customer_orders.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What CustomerRepository.withOrders answers, for the rest of store.",
+    "usecase CustomerOrders(repository: CustomerRepository)",
+    "  exec(id: int) Result<Error, Customer>",
+    "    ~repository.withOrders(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/customer_orders.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CustomerOrders",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/delete_customer",
+   "type": "file",
+   "title": "`usecase` DeleteCustomer — the example project store_api (backend)",
+   "summary": "Removes a customer; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/delete_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Removes a customer; NotFound (404) when there is none.",
+    "usecase DeleteCustomer(repository: CustomerRepository)",
+    "  exec(id: int) Result<Error, boolean>",
+    "    found = ~repository.find(id)",
+    "    ~repository.remove(found.id)",
+    "    Ok(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/delete_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "DeleteCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/delete_order",
+   "type": "file",
+   "title": "`usecase` DeleteOrder — the example project store_api (backend)",
+   "summary": "Removes a order; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/delete_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Removes a order; NotFound (404) when there is none.",
+    "usecase DeleteOrder(repository: OrderRepository)",
+    "  exec(id: int) Result<Error, boolean>",
+    "    found = ~repository.find(id)",
+    "    ~repository.remove(found.id)",
+    "    Ok(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/delete_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "DeleteOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/full_order",
+   "type": "file",
+   "title": "`usecase` FullOrder — the example project store_api (backend)",
+   "summary": "What OrderRepository.full answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/full_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What OrderRepository.full answers, for the rest of store.",
+    "usecase FullOrder(repository: OrderRepository)",
+    "  exec(id: int) Result<Error, Order>",
+    "    ~repository.full(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/full_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "FullOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/get_customer",
+   "type": "file",
+   "title": "`usecase` GetCustomer — the example project store_api (backend)",
+   "summary": "One customer by its id; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/get_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One customer by its id; NotFound (404) when there is none.",
+    "usecase GetCustomer(repository: CustomerRepository)",
+    "  exec(id: int) Result<Error, Customer>",
+    "    ~repository.find(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/get_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/get_order",
+   "type": "file",
+   "title": "`usecase` GetOrder — the example project store_api (backend)",
+   "summary": "One order by its id; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/get_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One order by its id; NotFound (404) when there is none.",
+    "usecase GetOrder(repository: OrderRepository)",
+    "  exec(id: int) Result<Error, Order>",
+    "    ~repository.find(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/get_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/list_customers",
+   "type": "file",
+   "title": "`usecase` ListCustomers — the example project store_api (backend)",
+   "summary": "One page of customers.",
+   "body": [
+    "`components/store/domain/usecases/list_customers.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One page of customers.",
+    "usecase ListCustomers(repository: CustomerRepository)",
+    "  exec(page: int) Result<Error, Customer[]>",
+    "    found = ~repository.page(page, 20)",
+    "    Ok(found.items)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/list_customers.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListCustomers",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/list_orders",
+   "type": "file",
+   "title": "`usecase` ListOrders — the example project store_api (backend)",
+   "summary": "One page of orders.",
+   "body": [
+    "`components/store/domain/usecases/list_orders.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One page of orders.",
+    "usecase ListOrders(repository: OrderRepository)",
+    "  exec(page: int) Result<Error, Order[]>",
+    "    found = ~repository.page(page, 20)",
+    "    Ok(found.items)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/list_orders.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListOrders",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/list_tags",
+   "type": "file",
+   "title": "`usecase` ListTags — the example project store_api (backend)",
+   "summary": "One page of tags.",
+   "body": [
+    "`components/store/domain/usecases/list_tags.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One page of tags.",
+    "usecase ListTags(repository: TagRepository)",
+    "  exec(page: int) Result<Error, Tag[]>",
+    "    found = ~repository.page(page, 20)",
+    "    Ok(found.items)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/list_tags.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListTags",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/orders_of_customer",
+   "type": "file",
+   "title": "`usecase` OrdersOfCustomer — the example project store_api (backend)",
+   "summary": "What OrderRepository.ofCustomer answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/orders_of_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What OrderRepository.ofCustomer answers, for the rest of store.",
+    "usecase OrdersOfCustomer(repository: OrderRepository)",
+    "  exec(customerId: int, minTotal: double) Result<Error, Order[]>",
+    "    Ok(~repository.ofCustomer(customerId, minTotal))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/orders_of_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "OrdersOfCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/page_customers",
+   "type": "file",
+   "title": "`usecase` PageCustomers — the example project store_api (backend)",
+   "summary": "What CustomerRepository.page answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/page_customers.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What CustomerRepository.page answers, for the rest of store.",
+    "usecase PageCustomers(repository: CustomerRepository)",
+    "  exec(page: int, size: int) Result<Error, Page<Customer>>",
+    "    Ok(~repository.page(page, size))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/page_customers.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "PageCustomers",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/pay_orders",
+   "type": "file",
+   "title": "`usecase` PayOrders — the example project store_api (backend)",
+   "summary": "Marks every unpaid order of a customer as paid, in one transaction. NotFound (404) when there is no such customer; Conflict (409) when a customer who is not vip pays more than two at once: none is paid then.",
+   "body": [
+    "`components/store/domain/usecases/pay_orders.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Marks every unpaid order of a customer as paid, in one transaction. NotFound (404) when there is no such",
+    "// customer; Conflict (409) when a customer who is not vip pays more than two at once: none is paid then.",
+    "usecase PayOrders(customers: CustomerRepository, orders: OrderRepository)",
+    "  @transactional",
+    "  exec(customerId: int) Result<Error, Paid>",
+    "    customer = ~customers.find(customerId)",
+    "    count = ~orders.markPaid(customerId)",
+    "    // checked after the orders changed, on purpose: the Err takes the change back",
+    "    if count > 2 and not customer.vip",
+    "      return Err(Conflict(\"customer ${customer.id} pays at most two orders at once\"))",
+    "    Ok(Paid(count = count))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/pay_orders.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "PayOrders",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/search_customers",
+   "type": "file",
+   "title": "`usecase` SearchCustomers — the example project store_api (backend)",
+   "summary": "What CustomerRepository.search answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/search_customers.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What CustomerRepository.search answers, for the rest of store.",
+    "usecase SearchCustomers(repository: CustomerRepository)",
+    "  exec(text: string, page: int, size: int) Result<Error, Page<Customer>>",
+    "    Ok(~repository.search(text, page, size))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/search_customers.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "SearchCustomers",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/tag_order",
+   "type": "file",
+   "title": "`usecase` TagOrder — the example project store_api (backend)",
+   "summary": "Sets the tags of an order by their labels, adding the tags that do not exist, in one transaction.",
+   "body": [
+    "`components/store/domain/usecases/tag_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Sets the tags of an order by their labels, adding the tags that do not exist, in one transaction.",
+    "usecase TagOrder(orders: OrderRepository, tags: TagRepository)",
+    "  @transactional",
+    "  exec(id: int, input: TagList) Result<Error, Order>",
+    "    order = ~orders.find(id)",
+    "    found: Tag[] = []",
+    "    for label in input.labels",
+    "      known = ~tags.where({ \"label\": label }).exists()",
+    "      if not known",
+    "        ~tags.save(Tag(label = label))",
+    "      tag = ~tags.byLabel(label)",
+    "      found.add(tag)",
+    "    order.tags = found",
+    "    ~orders.save(order)",
+    "    ~orders.full(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/tag_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "TagOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/unnoted_orders",
+   "type": "file",
+   "title": "`usecase` UnnotedOrders — the example project store_api (backend)",
+   "summary": "What OrderRepository.unnoted answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/unnoted_orders.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What OrderRepository.unnoted answers, for the rest of store.",
+    "usecase UnnotedOrders(repository: OrderRepository)",
+    "  exec() Result<Error, Order[]>",
+    "    Ok(~repository.unnoted())",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/unnoted_orders.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "UnnotedOrders",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/update_customer",
+   "type": "file",
+   "title": "`usecase` UpdateCustomer — the example project store_api (backend)",
+   "summary": "Changes a customer; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/update_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Changes a customer; NotFound (404) when there is none.",
+    "usecase UpdateCustomer(repository: CustomerRepository)",
+    "  exec(id: int, input: NewCustomer) Result<Error, Customer>",
+    "    found = ~repository.find(id)",
+    "    found.email = input.email",
+    "    found.name = input.name",
+    "    found.nickname = input.nickname",
+    "    found.vip = input.vip",
+    "    found.credit = input.credit",
+    "    Ok(~repository.save(found))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/update_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "UpdateCustomer",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/update_order",
+   "type": "file",
+   "title": "`usecase` UpdateOrder — the example project store_api (backend)",
+   "summary": "Changes a order; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/update_order.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Changes a order; NotFound (404) when there is none.",
+    "usecase UpdateOrder(repository: OrderRepository)",
+    "  exec(id: int, input: NewOrder) Result<Error, Order>",
+    "    found = ~repository.find(id)",
+    "    found.customerId = input.customerId",
+    "    found.quantity = input.quantity",
+    "    found.total = input.total",
+    "    found.note = input.note",
+    "    found.status = input.status",
+    "    found.paid = input.paid",
+    "    found.placedAt = input.placedAt",
+    "    Ok(~repository.save(found))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/update_order.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "UpdateOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/vip_customers",
+   "type": "file",
+   "title": "`usecase` VipCustomers — the example project store_api (backend)",
+   "summary": "What CustomerRepository.vips answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/vip_customers.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What CustomerRepository.vips answers, for the rest of store.",
+    "usecase VipCustomers(repository: CustomerRepository)",
+    "  exec(credit: double) Result<Error, Customer[]>",
+    "    Ok(~repository.vips(credit))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/vip_customers.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "VipCustomers",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/store_appcomponent",
+   "type": "file",
+   "title": "`appcomponent` StoreAppComponent — the example project store_api (backend)",
+   "summary": "What the rest of the app sees of store: an alias for each of its use cases.",
+   "body": [
+    "`components/store/store_appcomponent.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What the rest of the app sees of store: an alias for each of its use cases.",
+    "appcomponent StoreAppComponent",
+    "  listCustomers() = ListCustomers.exec",
+    "  getCustomer() = GetCustomer.exec",
+    "  createCustomer() = CreateCustomer.exec",
+    "  updateCustomer() = UpdateCustomer.exec",
+    "  deleteCustomer() = DeleteCustomer.exec",
+    "  listOrders() = ListOrders.exec",
+    "  getOrder() = GetOrder.exec",
+    "  createOrder() = CreateOrder.exec",
+    "  updateOrder() = UpdateOrder.exec",
+    "  deleteOrder() = DeleteOrder.exec",
+    "  listTags() = ListTags.exec",
+    "  createTag() = CreateTag.exec",
+    "  pageCustomers() = PageCustomers.exec",
+    "  searchCustomers() = SearchCustomers.exec",
+    "  vipCustomers() = VipCustomers.exec",
+    "  customerOrders() = CustomerOrders.exec",
+    "  fullOrder() = FullOrder.exec",
+    "  ordersOfCustomer() = OrdersOfCustomer.exec",
+    "  unnotedOrders() = UnnotedOrders.exec",
+    "  checkout() = Checkout.exec",
+    "  payOrders() = PayOrders.exec",
+    "  tagOrder() = TagOrder.exec",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/store_appcomponent.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "StoreAppComponent",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/config",
+   "type": "file",
+   "title": "`config` config — the example project store_api (backend)",
+   "summary": "A `config` of the example project `store_api`, a backend project.",
+   "body": [
+    "`config.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
+    "synapsis(platform = \"backend\", dialect = \"nestjs\")",
+    "app(name = \"store_api\", description = \"A Synapsis backend.\", version = \"0.1.0\")",
+    "",
+    "// The optional parts this project uses, only these go to the generated project (nuclear help backend):",
+    "// sqlite, postgres, mysql, mariadb, redis, kafka, events, websocket, ai, openai, ollama, chroma, telemetry",
+    "plugins(sqlite = true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/config.nuc"
+   ],
+   "meta": {
+    "kind": "config",
+    "name": "config",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/config/project_config",
+   "type": "file",
+   "title": "`appConfig` ProjectConfig — the example project store_api (backend)",
+   "summary": "The connections of the whole app: databases, chat models, Kafka, Redis (nuclear help backend, §2.8). Each one needs its plugin in config.nuc.",
+   "body": [
+    "`config/project_config.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The connections of the whole app: databases, chat models, Kafka, Redis (nuclear help backend, §2.8).",
+    "// Each one needs its plugin in config.nuc.",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true),",
+    "  ]",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/config/project_config.nuc"
+   ],
+   "meta": {
+    "kind": "appConfig",
+    "name": "ProjectConfig",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/app_test",
+   "type": "file",
+   "title": "`tests` App — the example project store_api (backend)",
+   "summary": "The first test (nuclear help backend, §2.13): every test runs with the connections open and the databases in memory; inject<X>() gives the app's instances, expect(condition) asserts.",
+   "body": [
+    "`test/app_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The first test (nuclear help backend, §2.13): every test runs with the connections open and the databases in",
+    "// memory; inject<X>() gives the app's instances, expect(condition) asserts.",
+    "tests App",
+    "  @test(\"the app starts with its connections\")",
+    "  starts() void",
+    "    expect(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/app_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "App",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/customers_test",
+   "type": "file",
+   "title": "`tests` CustomersTest — the example project store_api (backend)",
+   "summary": "The tests of customers: the database is in memory and empty in each test.",
+   "body": [
+    "`test/customers_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The tests of customers: the database is in memory and empty in each test.",
+    "tests CustomersTest",
+    "  @test(\"adds a customer and finds it\")",
+    "  addsAndFinds() void",
+    "    app = inject<StoreAppComponent>()",
+    "    made = ~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"name\", nickname = \"nickname\", vip = true, credit = 1.5))",
+    "    expect(made.isOk)",
+    "    found = ~app.getCustomer(made.value.id)",
+    "    expect(found.isOk)",
+    "",
+    "  @test(\"a missing customer is not found\")",
+    "  missing() void",
+    "    app = inject<StoreAppComponent>()",
+    "    found = ~app.getCustomer(999)",
+    "    expect(found.error.status == 404)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/customers_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "CustomersTest",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/orders_test",
+   "type": "file",
+   "title": "`tests` OrdersTest — the example project store_api (backend)",
+   "summary": "The tests of orders: the database is in memory and empty in each test.",
+   "body": [
+    "`test/orders_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The tests of orders: the database is in memory and empty in each test.",
+    "tests OrdersTest",
+    "  @test(\"adds an order and finds it\")",
+    "  addsAndFinds() void",
+    "    app = inject<StoreAppComponent>()",
+    "    customer = (~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\"))).value",
+    "    made = ~app.createOrder(NewOrder(customerId = customer.id, quantity = 2, total = 1.5, note = \"note\", placedAt = DateTime.utc(2026, 3, 4, 5, 6, 7)))",
+    "    expect(made.isOk)",
+    "    found = ~app.getOrder(made.value.id)",
+    "    expect(found.isOk)",
+    "    expect(found.value.quantity == 2)",
+    "    expect(found.value.total == 1.5)",
+    "    expect(found.value.status == \"pending\")",
+    "    expect(not found.value.paid)",
+    "    expect(found.value.placedAt!.millis == DateTime.utc(2026, 3, 4, 5, 6, 7).millis)",
+    "",
+    "  @test(\"a missing order is not found\")",
+    "  missing() void",
+    "    app = inject<StoreAppComponent>()",
+    "    found = ~app.getOrder(999)",
+    "    expect(found.error.status == 404)",
+    "",
+    "  @test(\"an order of a missing customer is not found\")",
+    "  missingCustomer() void",
+    "    app = inject<StoreAppComponent>()",
+    "    made = ~app.createOrder(NewOrder(customerId = 999, total = 1.0))",
+    "    expect(made.error.status == 404)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/orders_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "OrdersTest",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/store_test",
+   "type": "file",
+   "title": "`tests` StoreTest — the example project store_api (backend)",
+   "summary": "The tests of the store's own rules: the unique email, the pages, the searches, the relations and the transactions. The database is in memory and empty in each test.",
+   "body": [
+    "`test/store_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The tests of the store's own rules: the unique email, the pages, the searches, the relations and the",
+    "// transactions. The database is in memory and empty in each test.",
+    "tests StoreTest",
+    "  @test(\"a repeated email is a conflict\")",
+    "  repeatedEmail() void",
+    "    app = inject<StoreAppComponent>()",
+    "    ~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\"))",
+    "    again = ~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Another Ana\"))",
+    "    expect(again.error.status == 409)",
+    "",
+    "  @test(\"the defaults of a customer and what the database fills\")",
+    "  defaults() void",
+    "    app = inject<StoreAppComponent>()",
+    "    made = (~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\"))).value",
+    "    found = (~app.getCustomer(made.id)).value",
+    "    expect(found.id > 0)",
+    "    expect(not found.vip)",
+    "    expect(found.credit == 0.0)",
+    "    expect(found.nickname == null)",
+    "    expect(found.createdAt != null)",
+    "    expect(found.updatedAt != null)",
+    "",
+    "  @test(\"the customers come in pages\")",
+    "  pages() void",
+    "    app = inject<StoreAppComponent>()",
+    "    for name in [\"a\", \"b\", \"c\", \"d\", \"e\"]",
+    "      ~app.createCustomer(NewCustomer(email = \"${name}@example.com\", name = name))",
+    "    second = (~app.pageCustomers(2, 2)).value",
+    "    items: Customer[] = second.items",
+    "    expect(items.length == 2)",
+    "    expect(items[0].name == \"c\")",
+    "    expect(second.page == 2)",
+    "    expect(second.total == 5)",
+    "    expect(second.pages == 3)",
+    "    last = (~app.pageCustomers(3, 2)).value",
+    "    rest: Customer[] = last.items",
+    "    expect(rest.length == 1)",
+    "",
+    "  @test(\"a search ignores the case and sorts by name\")",
+    "  search() void",
+    "    app = inject<StoreAppComponent>()",
+    "    ~app.createCustomer(NewCustomer(email = \"z@example.com\", name = \"maria zeta\"))",
+    "    ~app.createCustomer(NewCustomer(email = \"a@example.com\", name = \"Maria alfa\"))",
+    "    ~app.createCustomer(NewCustomer(email = \"l@example.com\", name = \"luis\"))",
+    "    found = (~app.searchCustomers(\"MARIA\", 1, 10)).value",
+    "    items: Customer[] = found.items",
+    "    expect(found.total == 2)",
+    "    expect(items[0].email == \"a@example.com\")",
+    "",
+    "  @test(\"the queries of the repository: operators, order and update\")",
+    "  queries() void",
+    "    customers = inject<CustomerRepository>()",
+    "    orders = inject<OrderRepository>()",
+    "    ana = ~customers.save(Customer(email = \"ana@example.com\", name = \"Ana\", vip = true, credit = 500.0))",
+    "    ~customers.save(Customer(email = \"luis@example.com\", name = \"Luis\", vip = true, credit = 50.0))",
+    "    ~customers.save(Customer(email = \"eva@example.com\", name = \"Eva\", credit = 900.0))",
+    "    vips = ~customers.vips(100.0)",
+    "    expect(vips.length == 1)",
+    "    expect(vips[0].email == \"ana@example.com\")",
+    "    expect((~customers.byEmail(\"eva@example.com\")).isOk)",
+    "    expect((~customers.byEmail(\"nobody@example.com\")).error.status == 404)",
+    "    ~orders.save(Order(customerId = ana.id, total = 10.0, note = \"first\"))",
+    "    ~orders.save(Order(customerId = ana.id, total = 30.0))",
+    "    ~orders.save(Order(customerId = ana.id, total = 20.0, note = \"\"))",
+    "    large = ~orders.ofCustomer(ana.id, 15.0)",
+    "    expect(large.length == 2)",
+    "    expect(large[0].total == 30.0)",
+    "    unnoted = ~orders.unnoted()",
+    "    expect(unnoted.length == 1)",
+    "    expect(~orders.markPaid(ana.id) == 3)",
+    "    expect(~orders.markPaid(ana.id) == 0)",
+    "    expect(~orders.paidCount() == 3)",
+    "",
+    "  @test(\"a customer has its orders and an order its customer and its tags\")",
+    "  relations() void",
+    "    app = inject<StoreAppComponent>()",
+    "    ana = (~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\"))).value",
+    "    order = (~app.createOrder(NewOrder(customerId = ana.id, total = 5.0))).value",
+    "    ~app.createOrder(NewOrder(customerId = ana.id, total = 6.0))",
+    "    tagged = (~app.tagOrder(order.id, TagList(labels = [\"gift\", \"urgent\"]))).value",
+    "    expect(tagged.tags!.length == 2)",
+    "    expect(tagged.customer!.email == \"ana@example.com\")",
+    "    again = (~app.tagOrder(order.id, TagList(labels = [\"gift\"]))).value",
+    "    expect(again.tags!.length == 1)",
+    "    expect((~app.listTags(1)).value.length == 2)",
+    "    loaded = (~app.customerOrders(ana.id)).value",
+    "    expect(loaded.orders!.length == 2)",
+    "",
+    "  @test(\"removing a customer removes its orders\")",
+    "  cascade() void",
+    "    app = inject<StoreAppComponent>()",
+    "    orders = inject<OrderRepository>()",
+    "    ana = (~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\"))).value",
+    "    ~app.createOrder(NewOrder(customerId = ana.id, total = 5.0))",
+    "    expect(~orders.count() == 1)",
+    "    expect((~app.deleteCustomer(ana.id)).isOk)",
+    "    expect(~orders.count() == 0)",
+    "",
+    "  @test(\"a checkout takes the credit; without enough credit nothing is written\")",
+    "  checkout() void",
+    "    app = inject<StoreAppComponent>()",
+    "    orders = inject<OrderRepository>()",
+    "    ana = (~app.createCustomer(NewCustomer(email = \"ana@example.com\", name = \"Ana\", credit = 100.0))).value",
+    "    bought = ~app.checkout(NewOrder(customerId = ana.id, total = 60.0))",
+    "    expect(bought.isOk)",
+    "    expect((~app.getCustomer(ana.id)).value.credit == 40.0)",
+    "    refused = ~app.checkout(NewOrder(customerId = ana.id, total = 60.0))",
+    "    expect(refused.error.status == 409)",
+    "// ... (the file goes on)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/store_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "StoreTest",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/tags_test",
+   "type": "file",
+   "title": "`tests` TagsTest — the example project store_api (backend)",
+   "summary": "The tests of tags: the database is in memory and empty in each test.",
+   "body": [
+    "`test/tags_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The tests of tags: the database is in memory and empty in each test.",
+    "tests TagsTest",
+    "  @test(\"adds a tag and finds it\")",
+    "  addsAndFinds() void",
+    "    app = inject<StoreAppComponent>()",
+    "    made = ~app.createTag(NewTag(label = \"label\"))",
+    "    expect(made.isOk)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/tags_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "TagsTest",
+    "project": "store_api"
    }
   },
   {
@@ -15946,7 +17287,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
     "synapsis(platform = \"web\", dialect = \"react\")",
-    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.89.1\")",
+    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.90.0\")",
     "",
     "// The chat service (../nuclear_chat): its models and a repository per controller are generated into contracts/.",
     "contracts(nuclear_chat = \"../nuclear_chat\")",

@@ -36,6 +36,9 @@ options a dialect sets and what the targets without braces needed are in [emitte
 - A literal given for `any`, or inside a map or a list of `any`, is written with the dialect's `object_any` /
   `list_any` (`any_level`, `any_literal`); a value declared `any` is shown with `show_any`, a nullable decimal with
   `show_double_nullable`.
+- What a method of a module of the program gives and nothing declares (`orders.where(...)`, a query of its base
+  class) is not taken for a base type by the name of the next member (`count()`); a class of the type definitions
+  keeps the rule of the name (`file.readText().trim()`).
 - `obj.method` given as a value: `method_ref`. `call()?.name` where `?.` is not native: `optional_member_once`.
 - A block lambda that assigns a variable of the function around it: `Closure` collects the names and the dialect
   writes its `nonlocal_decl` / `global_decl` line first (Python).

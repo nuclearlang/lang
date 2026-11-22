@@ -12,6 +12,13 @@ MCP server, in the project [`tools/mcp`](../../../tools/mcp/AGENTS.md).
 
 ## Pending
 
+- **Found at the 0.90.0 release (2026-11-21), not caused by it:** `nuclear-graph knowledge examples` reports 4 errors
+  in one block, `concept:workspace` #1: a `workspace.nuc` manifest (`workspace(...)`, `app(...)`) compiled as a
+  backend file is N0106; the block should be checked as a manifest, or not be a `nuclear` block. And
+  `nuclear-graph knowledge ask` finds 198 of 199 rows: "a test reads an empty database" gets
+  `pitfall:test-reads-an-empty-database` fourth, after `strategy:bug-interface`, `error:N0301` and
+  `kind:web.repository`.
+
 - **`knowledge review <id>` run once per row forgets the rows reviewed before** (found 2026-11-21): reviewing eight
   rows one call each left seven asking again; `knowledge review` with no ids (or all the ids in one call) keeps them.
   Wanted: a review adds to the reviewed rows.

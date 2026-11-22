@@ -113,11 +113,18 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.2915be",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.95fa2d",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.1 Entity",
    "summary": "`onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"` (default: the database's).",
    "body": [
+    "| Decorator | On | Means |",
+    "|---|---|---|",
+    "| `@manyToOne(inverse, onDelete)` | `x?: T` + a field `xId` | this row points to one row of T by its column `xId` |",
+    "| `@oneToMany(inverse)` | `xs?: T[]` | the rows of T whose `@manyToOne` field `inverse` points here |",
+    "| `@manyToMany(inverse)` + `@joinTable()` on one side | `xs?: T[]` | through the table `<table>_<field>` (columns `<entity>_id`) |",
+    "| `@oneToOne(inverse, onDelete)` + `@joinColumn()` on one side | `x?: T` | the `@joinColumn` side keeps the column `xId` |",
+    "",
     "`onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"` (default: the database's). A relation field is optional: it is",
     "there only when a query loads it (`relations(\"tasks\")`, `relations(\"tasks.tags\")`), and an unloaded one is absent from",
     "the JSON answer, never `null` and never a hidden query. The join column is a field of its own: a row is related",
@@ -131,8 +138,21 @@
     "  id: int",
     "  name: string",
     "  @oneToMany(inverse = \"project\")",
-    "  tasks?: Task[]",
-    "",
+    "  tasks?: Task[]"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.a92ec8",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.1 Entity",
+   "summary": "@entity(\"tasks\") Task() @primary(generated = true) id: int title: string @manyToOne(inverse = \"tasks\", onDelete = \"cascade\") project?: Project projectId?: int @manyToMany(inverse = \"tasks\") @joinTable() tags?: Tag[]",
+   "body": [
     "@entity(\"tasks\")",
     "Task()",
     "  @primary(generated = true)",
@@ -154,7 +174,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.ca0201",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.b65b4c",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.1 Entity",
    "summary": "A table.",
@@ -163,7 +183,9 @@
     "columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a",
     "uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,",
     "`@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the",
-    "column's default.",
+    "column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it",
+    "comes back as the same instant on every database, and its JSON is what `toIso()` writes",
+    "(`2026-03-04T03:06:07.000Z`).",
     "",
     "```nuclear",
     "@entity(\"tasks\")",
@@ -181,14 +203,7 @@
     "",
     "#### Relations (ADR-backend-0001)",
     "",
-    "Decorators on the relation field; the related entity is the field's type, never repeated:",
-    "",
-    "| Decorator | On | Means |",
-    "|---|---|---|",
-    "| `@manyToOne(inverse, onDelete)` | `x?: T` + a field `xId` | this row points to one row of T by its column `xId` |",
-    "| `@oneToMany(inverse)` | `xs?: T[]` | the rows of T whose `@manyToOne` field `inverse` points here |",
-    "| `@manyToMany(inverse)` + `@joinTable()` on one side | `xs?: T[]` | through the table `<table>_<field>` (columns `<entity>_id`) |",
-    "| `@oneToOne(inverse, onDelete)` + `@joinColumn()` on one side | `x?: T` | the `@joinColumn` side keeps the column `xId` |"
+    "Decorators on the relation field; the related entity is the field's type, never repeated:"
    ],
    "platforms": [
     "backend"

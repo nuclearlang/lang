@@ -211,20 +211,21 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#the-projects.306a53",
+   "id": "doc:AGENTS.md#the-projects.9a9633",
    "type": "readme",
    "title": "NuclearLang — The projects",
-   "summary": "`github-profile/` is the organization's profile: a repository of its own inside the tree.",
+   "summary": "The projects",
    "body": [
-    "| `nuclear-chat/` | Nuclear Chat, the factory's workplace: a Synapsis service, its system library, the GIF pack, the UI library | [AGENTS.md](nuclear-chat/AGENTS.md) |",
-    "| `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |",
-    "| `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |",
-    "| `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |",
-    "| `installer/` | The installers and the release | [AGENTS.md](installer/AGENTS.md) |",
-    "| `website/` | The documentation site, written in Nuclear (web platform, `react`) | [AGENTS.md](website/AGENTS.md) |",
-    "| `docs/` | Only what is about the whole platform | [README.md](docs/README.md) |",
-    "",
-    "`github-profile/` is the organization's profile: a repository of its own inside the tree."
+    "| Folder | What it is | Start here |",
+    "|---|---|---|",
+    "| `nuclearlang/` | The language: the compiler crates, the language server, the base words, the examples | [AGENTS.md](nuclearlang/AGENTS.md) |",
+    "| `nuclearlang/dialects/<language>/` | A dialect of a target language (`python`, `typescript`, `dart`, `nodejs`) with its `frameworks/`, `defs/` and docs | [README.md](nuclearlang/dialects/README.md) |",
+    "| `nuclear-synapsis-framework/` | The framework, Synapsis: what it adds to Nuclear | [AGENTS.md](nuclear-synapsis-framework/AGENTS.md) |",
+    "| `nuclear-synapsis-framework/lodash/` | The helpers of lodash that serve Nuclear (lists, maps, texts, numbers, functions), written in Nuclear for every dialect | [AGENTS.md](nuclear-synapsis-framework/lodash/AGENTS.md) |",
+    "| `nuclear-synapsis-framework/platforms/<platform>/` | A platform (`mobile`, `backend`, `web`): its contract, runtime packages, examples, checks | [AGENTS.md](nuclear-synapsis-framework/platforms/AGENTS.md) |",
+    "| `tools/cli/` | The `nuclear` command: the compiler's commands and the framework's | [AGENTS.md](tools/cli/AGENTS.md) |",
+    "| `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |",
+    "| `tools/mcp/` | The MCP server, `nuclear-mcp` (a Nuclear project, `python` dialect) | [AGENTS.md](tools/mcp/AGENTS.md) |"
    ],
    "sources": [
     "AGENTS.md"
@@ -236,21 +237,21 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#the-projects.33ac96",
+   "id": "doc:AGENTS.md#the-projects.ff62d4",
    "type": "readme",
    "title": "NuclearLang — The projects",
-   "summary": "The projects",
+   "summary": "`github-profile/` is the organization's profile: a repository of its own inside the tree.",
    "body": [
-    "| Folder | What it is | Start here |",
-    "|---|---|---|",
-    "| `nuclearlang/` | The language: the compiler crates, the language server, the base words, the examples | [AGENTS.md](nuclearlang/AGENTS.md) |",
-    "| `nuclearlang/dialects/<language>/` | A dialect of a target language (`python`, `typescript`, `dart`, `nodejs`) with its `frameworks/`, `defs/` and docs | [README.md](nuclearlang/dialects/README.md) |",
-    "| `nuclear-synapsis-framework/` | The framework, Synapsis: what it adds to Nuclear | [AGENTS.md](nuclear-synapsis-framework/AGENTS.md) |",
-    "| `nuclear-synapsis-framework/platforms/<platform>/` | A platform (`mobile`, `backend`, `web`): its contract, runtime packages, examples, checks | [AGENTS.md](nuclear-synapsis-framework/platforms/AGENTS.md) |",
-    "| `tools/cli/` | The `nuclear` command: the compiler's commands and the framework's | [AGENTS.md](tools/cli/AGENTS.md) |",
-    "| `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |",
-    "| `tools/mcp/` | The MCP server, `nuclear-mcp` (a Nuclear project, `python` dialect) | [AGENTS.md](tools/mcp/AGENTS.md) |",
-    "| `extensions/` | The editors: `vscode/`, `jetbrains/`, `zed/`, and their tools in `tools/<tool>/` | [AGENTS.md](extensions/AGENTS.md) |"
+    "| `extensions/` | The editors: `vscode/`, `jetbrains/`, `zed/`, and their tools in `tools/<tool>/` | [AGENTS.md](extensions/AGENTS.md) |",
+    "| `nuclear-chat/` | Nuclear Chat, the factory's workplace: a Synapsis service, its system library, the GIF pack, the UI library | [AGENTS.md](nuclear-chat/AGENTS.md) |",
+    "| `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |",
+    "| `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |",
+    "| `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |",
+    "| `installer/` | The installers and the release | [AGENTS.md](installer/AGENTS.md) |",
+    "| `website/` | The documentation site, written in Nuclear (web platform, `react`) | [AGENTS.md](website/AGENTS.md) |",
+    "| `docs/` | Only what is about the whole platform | [README.md](docs/README.md) |",
+    "",
+    "`github-profile/` is the organization's profile: a repository of its own inside the tree."
    ],
    "sources": [
     "AGENTS.md"
@@ -305,11 +306,41 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.084182",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **The language's conformance programs** (`nuclearlang/examples/conformance`): every operator, statement and feature of the language as one program per area, built for TypeScript, Dart and Python, checked with each target's own tools with no warning allowed, run and compared; the three must print the same text, on every change of the transpiler (the CI's `language` workflow). Fixes they found: `-(-x)` was a decrement in TypeScript and Dart; a compound assignment as the last line of a typed function returned nothing; a map pattern (`{ low, high } = m`) was not Python; a block lambda that changes a variable of its function failed in Python (`nonlocal`); an optional attribute never set did not exist in Python; `Stack<int>()` and `first<int>(xs)` passed the type as a value in Python; an integer given for a `double` printed without its decimals in Python; an inverted range threw in Dart; `\"${true}\"`, the sum of a `double[]` and `isOk` of a kept `Result` did not compile in Dart; a local named like a library function (`log`) imported `dart:math`; TypeScript printed the sum of unknown numbers as a decimal, a missing optional attribute as `undefined`, a getter's decimal and a joined list of decimals without `.0`, and compared `m[k] == null` by content; a helper was written for a form that never calls it. New: a function may return a function type (`adder(n: int) (x: int) => int`), a va",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- **Teams that work like human teams** (spec 023, the engine): Nuclear Atlas only informs (Nuclear, the workspace and the projects, from the Smart Graph); asked for a task it names the free teams (no run in progress) with their tech lead, or offers to make one with the MCP server's team tools; its MCP servers run with `--informs` (`nuclear-mcp --informs`, `nuclear-builder mcp --informs`: no tool that writes a spec, starts a run or builds). The tech lead's first answer to a task is the plan: what, through which stations, who of the team does each part; then the spec and the run. A team has its `method` (Scrum by default) and `instructions`, in every member's prompt (`nuclear-builder team update --method … --instructions …`), and a model for every member (`--kind --provider --model`, `--no-brain`; a member's own wins, `team member update --team-brain` gives it back; `team show` gives each member's `inheritsBrain`). `team list` gives each team's `lead`, its runs in progress and whether it is `free`. `chat-host` gives every team, only the tech leads and Atlas `listed`; Nuclear Chat opens a direct message only for a listed member, keeps the older ones readable (out of the sidebar, found by the switcher). The spending is asked only for an API paid by use; an agent's subscription is not asked unless `forceConfirm`. The MCP server's `team_create` and `team_edit` take `method`, `instruc",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.24fec2",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A backend checked against real databases** (`platforms/backend/checks/database-check`, Docker): the same Nuclear project (`store_api`: relations, pagination, a transaction that rolls back, validation, conflicts) built with `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB: migrations made, applied, read back from the schema, extended on a table with rows and reverted; 57 answers over HTTP that must be byte-identical in both dialects on every database; its unit tests. Fixes it found: in `fastapi` a `DateTime` lost its time zone and its JSON was not `toIso()`'s, changing a row with `@updated` answered 500, route parameters of several words did not bind, a related row carried Python's names, a `@manyToMany` list set on a found row failed, `MariaDB(url)` could not be imported, a `string` column had no length on MySQL; in `nestjs` `ilike` failed off PostgreSQL, a null column was missing from the answer of a create, a `@manyToMany` row carried its join row and a list of texts in a model was validated as one text. Fix (the compiler): `repository.where(...).count()` was written as a list's `count`.",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -381,28 +412,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.7450a9",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Fix (found on a clean machine in Docker): the welcome's app name, a team without members, the installer's editor box wording.",
-    "- The automatic update: every use of NuclearLang (the `nuclear` command, VS Code, the MCP server) looks for a newer release once a day; it installs itself when the user stops working (30 minutes without a use) or within 12 hours. `nuclear update --auto off`, the setting `nuclear.update.auto` or `NUCLEAR_AUTO_UPDATE=0` turn it off.",
-    "- Fix (the editor): the Nuclear workspace follows VS Code's folder as VS Code does: no project of another window, nor a deleted one, nor the last workspace opened elsewhere.",
-    "- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.",
-    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
-    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*)."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.75c525",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -433,6 +442,21 @@
     "- `[project] package` in `nuclear.toml`: the package a project's files are emitted into (`build/<package>/...`; imports between the project's files are relative to it, `{{package}}` in a dialect's `project_import`); the `python` dialect uses it, so a Nuclear project is a Python package another tool can package (`spec/projects.md`, `spec/python.md`).",
     "- ADR-graph-0002: questions with one right answer are answered from exact facts (SQLite, in the memory of the graph) by a query planner that asks no model; the Smart Graph is written in Nuclear (the `python` dialect), `tools/release/stage.sh` carries its `.nuc` sources and the set-up builds them; rule 12 of `AGENTS.md`: Nuclear and Synapsis first for every new development."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.874e9d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **The helpers of lodash, in Nuclear** (`nuclear-synapsis-framework/lodash`): 121 functions over lists, maps, texts, numbers and functions (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `zip`, `camelCase`, `truncate`, `pick`, `get`, `set`, `merge`, `cloneDeep`, `memoize`, `once`, `flow`...), adapted to Nuclear (typed, a lambda as the iteratee, nothing the language's library already has), with 226 cases from lodash's own tests that print the same in TypeScript, Dart and Python. What writing it fixed in the compiler: a lambda takes its parameters' types from the function it is given to; `slice` and `substring` out of range are clamped the same in every target (Dart threw, TypeScript swapped the ends); a method given as a value keeps its object in TypeScript; `x is <string, any>` works in TypeScript and Python and `x is T[]` asks the same in Dart; two texts are compared with `<` in Dart; a map or list literal inside `any` data accepts any value in Dart; a value declared `any` and a nullable decimal are printed the same everywhere; `find()?.name` makes its call once in Python; type parameters named `A`, `B` and declarations named like a word of the target (`range`) are imported right between the files of a project; a parameter list split over lines compiles in Dart.",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -524,6 +548,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.c7e90b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- The generated code measured against an expert's in eight programs (`nuclear-synapsis-framework/eval/thesis/bench`: n-body, binary trees, fannkuch, a collections pipeline, texts, calls, primes, word frequencies), and what they showed fixed: Python reads a map as an expert does (`m.get(k, 0)`, `m[k]`, no helper call in a loop), `sortedBy` / `sortBy` read each key once in TypeScript and Dart and keep the order of equal keys in Dart (its sort did not promise it). Fix (texts are data): the replacement of `replace` / `replaceAll` is never a pattern (JavaScript read `$&` and `$1`, Python's regex `\\\\1`), `replace` with a `Regex` replaces the first match only in TypeScript and works in Python, and a doc comment with a `\\\\` is a valid Python docstring.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.e462e7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -555,6 +594,29 @@
     "- `ci_preview` (and `nuclear-builder export --print`): the CI file the line would write and whether the project's is the same, without writing it. The developer's \"tests first\" check passes when the new tests fail before their code (`expect = \"fail\"`); a gate's own user checks (`gate = true`) are answered by its yes. The design cites only the project's ADRs.",
     "- A backend lets the web apps of its config's origins call it (CORS): `origins: string[]` in the `appConfig`, the same in nestjs and fastapi. An invalid body is a 400 in every backend dialect (the fastapi documentation said 422).",
     "- **A channel is a memory** (spec 023 requirement 8): a team's channel is its tech lead, exactly as its direct message (the same prompt, tools, spending and run reports; another team's channel, that team's lead). Every channel, thread and direct message keeps its own durable memory, `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (the user's requests, the specs written, the runs started with their state, the plans stated, the open questions, a line per message older than the chat's 40-message window), given to the member as *What this channel remembers* (newest first, capped) and read only in that channel. `nuclear-builder chat memory <channel> [--thread <t>] [--clear] --json` shows or forgets it. The tech lead's plan starts with a line `Plan: …`."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.f00a80",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "riable is narrowed inside `if x is T`, and type parameters reach the library (`Box(\"hi\").get().upper()`).",
+   "body": [
+    "riable is narrowed inside `if x is T`, and type parameters reach the library (`Box(\"hi\").get().upper()`).",
+    "- Fix (found on a clean machine in Docker): the welcome's app name, a team without members, the installer's editor box wording.",
+    "- The automatic update: every use of NuclearLang (the `nuclear` command, VS Code, the MCP server) looks for a newer release once a day; it installs itself when the user stops working (30 minutes without a use) or within 12 hours. `nuclear update --auto off`, the setting `nuclear.update.auto` or `NUCLEAR_AUTO_UPDATE=0` turn it off.",
+    "- Fix (the editor): the Nuclear workspace follows VS Code's folder as VS Code does: no project of another window, nor a deleted one, nor the last workspace opened elsewhere.",
+    "- Nuclear Chat renders an agent's Markdown tables, headings, rules, numbered, task and nested lists.",
+    "- Fix (the editor): a workspace deleted from the disk no longer blocks the extension: the welcome starts again from creating or opening one, and nothing makes the deleted folder again.",
+    "- The editor: a workspace or an app deleted from the disk is shown crossed out, never used (Nuclear Atlas failed on its folder); the welcome asks only what matters (the spending, the notices, the chat's colors); the teams, the reports and Nuclear Builder in a calmer look (*Sala de control*)."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -1935,14 +1997,16 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/testing.md#how-the-platform-is-tested.184c53",
+   "id": "doc:docs/05-standards/testing.md#how-the-platform-is-tested.553058",
    "type": "context",
    "title": "How the platform is tested",
-   "summary": "Rules:",
+   "summary": "Rules: conformance programs before it is done: one feature must never break another.",
    "body": [
     "Rules:",
     "- A test that cannot find a folder of the tree fails; it never skips itself.",
     "- A golden file changes only with `UPDATE_GOLDEN=1` and a review of the difference.",
+    "- Every change to the transpiler, a dialect or the library runs the standard library, the semantics and the",
+    "  conformance programs before it is done: one feature must never break another.",
     "- A check that needs an SDK the machine lacks is listed as *Untested* in the project's roadmap, not left out."
    ],
    "sources": [
@@ -1955,22 +2019,36 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/testing.md#how-the-platform-is-tested.8abd5e",
+   "id": "doc:docs/05-standards/testing.md#how-the-platform-is-tested.a3b6bb",
    "type": "context",
    "title": "How the platform is tested",
-   "summary": "Each project's tests and how to run them are in its `AGENTS.md` and its `docs/05-standards/testing.md`.",
+   "summary": "How the platform is tested",
    "body": [
-    "Each project's tests and how to run them are in its `AGENTS.md` and its `docs/05-standards/testing.md`.",
-    "",
     "| Level | What it covers | Command (from the root) |",
     "|---|---|---|",
     "| Rust crates | the lexer, the parser, the resolver, the emitter, the loader, the language server, the command line tools; golden files of every dialect's examples | `cargo test` |",
     "| The references | every Nuclear → target block of a dialect's reference is the transpiler's real output | `cd nuclearlang && tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` |",
     "| The standard library | the same program prints the same in TypeScript, Dart and Python | `nuclearlang/tools/stdlib-check.sh` |",
+    "| The language's conformance | every operator, statement and feature of the language: the same output in TypeScript, Dart and Python, no warning of the target's checker | `DIR=examples/conformance nuclearlang/tools/stdlib-check.sh` (and `DIR=examples/semantics`) |",
     "| A platform with a dialect | its example built, the target's analyzer in strict mode, its tests, a live run | `nuclear-synapsis-framework/platforms/<platform>/checks/` |",
     "| The extensions | compile, the pipeline's and the set-up's tests, the bundled server loads every dialect | `extensions/vscode`: `npm run compile && npm test && npm run server` |",
     "| The agents | a bank of tasks against a frontier model | `nuclear-agents/nuclear_developer/eval/run.py` |"
    ],
+   "sources": [
+    "docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/05-standards/testing.md#how-the-platform-is-tested.dd2fe0",
+   "type": "context",
+   "title": "How the platform is tested",
+   "summary": "Each project's tests and how to run them are in its `AGENTS.md` and its `docs/05-standards/testing.md`.",
+   "body": "Each project's tests and how to run them are in its `AGENTS.md` and its `docs/05-standards/testing.md`.",
    "sources": [
     "docs/05-standards/testing.md"
    ],
@@ -2114,6 +2192,7 @@
     "| The language, the compiler, the language server | `nuclearlang/` | `lang` |",
     "| A language dialect and its frameworks | `nuclearlang/dialects/{python,typescript,dart,nodejs}/` | `python` `typescript` `dart` `nodejs` |",
     "| The framework, Synapsis | `nuclear-synapsis-framework/` | `synapsis` |",
+    "| The helpers of lodash, in Nuclear | `nuclear-synapsis-framework/lodash/` | — |",
     "| A platform of the framework | `nuclear-synapsis-framework/platforms/{mobile,backend,web}/` | `mobile` `backend` `web` |",
     "| The `nuclear` command | `tools/cli/` | `cli` |",
     "| The code generator (the crate `nuclear-codegen`) | `tools/code_generator/` | `codegen` |",

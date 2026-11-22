@@ -1366,6 +1366,8 @@ fn what_an_undeclared_method_of_a_class_gives_is_not_a_list() {
     has(&ts(src), "orders.where(1).count()");
     // a list of the program keeps the library's
     has(&build("f(xs: int[]) int = xs.filter((x) => x > 1).count((x) => x > 2)\n", "python"), "sum(1 for");
+    // a class of the type definitions too: what its method gives is known by the member's name
+    has(&build("f(file: Path) string = file.readText().trim()\n", "python"), ".strip()");
 }
 
 // ---------- found by the library of helpers (nuclear-synapsis-framework/lodash, 2026-11-21) ----------
