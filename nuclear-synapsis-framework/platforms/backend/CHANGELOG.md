@@ -4,6 +4,7 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- Fixed (0.94.1): a `fastapi` model with a field named `type` crashed when its class was made (`TypeError: unhashable type: 'dict'`), since 0.94.0's rule of JSON types read the field's schema as a kind; the AI services have such a model, so the release's AI archive did not build.
 - **Five decisions of the user (2026-11-22), the same in `fastapi` and `nestjs`** (reference §2.1, §2.2, §2.3, §2.8):
   - **a value of another JSON type is refused** in a body: a text is never a number or a boolean, a number is never
     a text, a boolean or a `DateTime`; a number without a fraction is a whole number (`30.0`) and a whole number is a

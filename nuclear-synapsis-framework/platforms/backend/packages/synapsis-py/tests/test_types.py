@@ -94,3 +94,18 @@ async def test_a_model_built_in_code_is_checked() -> None:
         r = await http.get("/typed/built?name=x")
         assert (r.status_code, r.json()) == (500, {"status": 500, "message": "error"})
         assert (await http.get("/typed/built?name=ok")).json()["name"] == "ok"
+
+
+def test_a_field_may_have_the_name_of_a_key_of_the_schema() -> None:
+    """A field named `type`, `schema` or `fields` is a field like any other: its number is still checked."""
+
+    class Event(Model):
+        type: int
+        schema_: Annotated[int, MinLen(0)] | None = None
+        fields: list[int] = []
+
+    assert Event(type=3, fields=[1]).type == 3
+    with pytest.raises(ValidationError):
+        Event(type="3")  # pyright: ignore[reportArgumentType]
+    with pytest.raises(ValidationError):
+        Event(type=1, fields=["1"])  # pyright: ignore[reportArgumentType]

@@ -63,6 +63,8 @@ def typed(schema: Any) -> Any:
     if not isinstance(schema, dict):
         return schema
     kind = schema.get("type")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    if not isinstance(kind, str):
+        kind = None  # the fields of a model, one of them named `type`: its value is that field's schema
     if kind == "function-before" and schema["function"].get("function") in _CHECKS.values():  # pyright: ignore[reportUnknownMemberType]
         return schema  # a nested model: its own schema is already typed  # pyright: ignore[reportUnknownVariableType]
     skipped = ("serialization", "metadata", "keys_schema")

@@ -94,4 +94,4 @@ The pending work of the installers, the release and the set-up of the AI service
     `4b` as assistant.
 
 ## Pending
-
+- The delivery gate does not build and try the AI archive (`ai` jobs of the release workflow): 0.94.0 passed the gate and failed there, on a model of the AI services the new backend runtime could not make (found 2026-11-22). Wanted: the gate imports the AI services with the tree's runtimes before a tag.
