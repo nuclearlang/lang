@@ -70,7 +70,7 @@ The first two scripts find the tree from their own place (`NUCLEAR_ROOT` overrid
    must answer "no changes".
 6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).
 
-**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twelve minutes). It proves that
+**`database-check/check.sh`** (needs Docker running, besides the set-up above; about fourteen minutes). It proves that
 one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those
 dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one
 `ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed.
@@ -92,18 +92,24 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      their `ON DELETE`) and the rows. A `down` must leave exactly the schema read before its `up`. One line per
      scenario is printed under the stage (`+`):
      1. `make`, `up`, nothing left to make, `status`, `down` to an empty database, `down` with nothing applied.
-     2. The tables are there and the history is empty: `up` is refused whole.
-     3. A column with a default added to a table with rows (`points: int = 7`).
+     2. The tables are there and the history is empty: `up` is refused whole; `up --fake` and `down --fake` change
+        the history only.
+     3. A column with a default added to a table with rows (`points: int = 7`); the rows were inserted by SQL
+        without `created_at` / `updated_at` (their default).
      4. A column's type, null, default and length changed, a unique added.
      5. A table, a foreign key on a table with rows (`@manyToOne`) and a join table (`@manyToMany`).
      6. A table and a column renamed: `make` writes a drop and an add and warns; the file is edited into a rename
         in the dialect's migration language; the rows and the foreign key follow.
-     7. A column, a unique and a foreign key dropped (its column stays).
-     8. A migration that fails half way (a statement added to it): exit 1, still pending; PostgreSQL and SQLite
-        keep nothing of it, MySQL and MariaDB keep the column it made and the message says so; fixed, it applies.
-     9. A migration applied and missing from the folder; two migrations made after the same one: refused.
-     10. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`.
-     11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs
+     7. A column, a unique and a foreign key dropped (its column stays); the unique first renamed in the database
+        to the name a database gives one made without a name.
+     8. A failing migration after a good one, with `--transaction all` (PostgreSQL and SQLite keep neither), `each`
+        (the good one stays) and `none` (what the failed one did stays); MySQL and MariaDB keep what ran and the
+        message says so; fixed, it applies.
+     9. A pending migration older than the applied ones (applied, and reverted first by `down`); a migration
+        missing from the folder (only its revert is refused).
+     10. The history as 0.91 / 0.92 kept it (`alembic_version`, `SequelizeMeta`) converted in place.
+     11. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`.
+     12. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs
          on that schema.
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
@@ -113,9 +119,9 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique
      value (one row), the cascade of a delete.
    - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).
-3. **schemas**: `db.py compare` lists every difference between the schemas the two dialects left on the same
-   database after each step (`~` lines). It is not a failure: what differs is in the
-   [roadmap](../01-product/roadmap.md).
+3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step
+   (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and
+   `ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.
 4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,
    `createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are
    compared byte by byte: the same in every dialect on every database.

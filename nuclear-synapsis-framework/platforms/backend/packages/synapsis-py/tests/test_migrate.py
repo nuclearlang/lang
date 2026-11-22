@@ -1,5 +1,5 @@
-"""ADR-backend-0001: migrations from the entities, compared with the last migration, applied to and reverted from SQLite
-(the same cases as packages/synapsis-nest/test/migrate.test.ts). Every step runs in its own process, as
+"""ADR-backend-0001, ADR-backend-0002: migrations from the entities, compared with the migrations before, applied to and
+reverted from SQLite with TypeORM's rules (the same cases as packages/synapsis-nest/test/migrate.test.ts). Every step runs in its own process, as
 `nuclear migrate` does: the entities of one version are a new app."""
 
 from __future__ import annotations
@@ -41,6 +41,8 @@ V1 = APP.format(name="length=100", code="", title=200, done="")
 V2 = APP.format(name="length=100", code="", title=300, done="\n    done: Mapped[bool] = column(default=False)")
 # the third: the name of a project (a table other rows point to) gets longer and unique
 V3 = APP.format(name="length=150, unique=True", code="", title=300, done="\n    done: Mapped[bool] = column(default=False)")
+# the name of a project unique, made by someone who does not have `done` yet
+V5 = APP.format(name="length=150, unique=True", code="", title=200, done="")
 # a required column without a default
 V4 = APP.format(name="length=100", code="\n    code: Mapped[str] = column(length=8)", title=200, done="")
 
@@ -95,6 +97,8 @@ def test_make_up_and_down_follow_the_entities_and_keep_the_data(tmp_path: Path) 
     assert p.migrate("up").strip() == f"applied {second}"
     assert "the database is up to date" in p.migrate("up"), "nothing pending"
     assert p.migrate("status").split() == ["applied", first, "applied", second]
+    # the history: one row per migration applied
+    assert p.sql("SELECT id, timestamp, name FROM migrations") == [(1, int(first[:14]), first), (2, int(second[:14]), second)]
     assert "done" in p.columns("tasks")
     assert p.sql("SELECT title, done FROM tasks") == [("paint", 0)], "the data stays"
 
@@ -103,7 +107,7 @@ def test_make_up_and_down_follow_the_entities_and_keep_the_data(tmp_path: Path) 
     assert p.migrate("down").strip() == f"reverted {first}"
     assert "no migration is applied" in p.migrate("down")
     tables = {r[0] for r in p.sql("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert tables <= {"alembic_version", "sqlite_sequence"}  # SQLite's own table of generated keys
+    assert tables <= {"migrations", "sqlite_sequence"}  # SQLite's own table of generated keys
     assert len(list(p.versions.glob("*.py"))) == 2
 
 
@@ -136,7 +140,7 @@ def test_a_changed_column_keeps_the_rows_the_key_and_the_constraints(tmp_path: P
     p.sql("INSERT INTO projects (name) VALUES ('home')")  # unique no more
 
 
-def test_make_warns_of_what_loses_data_or_is_refused(tmp_path: Path) -> None:
+def test_make_warns_of_what_loses_data_and_refuses_a_changed_key(tmp_path: Path) -> None:
     p = Project(tmp_path)
     p.app(V2)
     p.made("first")
@@ -144,28 +148,47 @@ def test_make_warns_of_what_loses_data_or_is_refused(tmp_path: Path) -> None:
     text = p.migrate("make", "less and more")
     assert "warning: the migration drops column tasks.done; if it was renamed, edit it" in text
     assert "warning: the migration adds the required column projects.code without a default: a table with rows refuses it" in text
+    # the key of a table: no migration changes it, and make says so
+    p.app(V4.replace("id: Mapped[int] = primary(generated=True)\n    name", "id: Mapped[int] = column()\n    key: Mapped[int] = primary(generated=True)\n    name"))
+    text = p.migrate("make", "another key", code=1)
+    assert "error: the key of projects changed (id to key): a migration does not change a key" in text
+    assert len(list(p.versions.glob("*.py"))) == 2
 
 
 def test_a_failed_migration_is_not_applied(tmp_path: Path) -> None:
     p = Project(tmp_path)
     p.app(V1)
     first = p.made("first").stem
-    p.migrate("up")
     p.app(V2)
     file = p.made("done")
     good = file.read_text()
     file.write_text(good.replace("\n\n\ndef downgrade", '\n    op.execute("SELECT * FROM nothing")\n\n\ndef downgrade', 1))
+    # one transaction for the whole run: nothing of it stays, the migration before the failed one neither
     text = p.migrate("up", code=1)
-    assert f"error: the migration {file.stem} failed:" in text and "nothing of it was kept" in text
-    assert "Traceback" not in text
+    assert f"error: the migration {file.stem} failed:" in text and "nothing of this run was kept" in text
+    assert "Traceback" not in text and "applied" not in text
+    assert p.migrate("status").split() == ["pending", first, "pending", file.stem]
+    assert p.sql("SELECT name FROM sqlite_master WHERE name IN ('projects', 'tasks')") == []
+    # one transaction per migration: the ones before the failed one stay
+    text = p.migrate("up", "--transaction", "each", code=1)
+    assert f"applied {first}" in text and "nothing of it was kept" in text
     assert "done" not in p.columns("tasks"), "what the migration did before failing is undone"
     assert p.migrate("status").split() == ["applied", first, "pending", file.stem]
+    # no transaction: what it did before failing stays
+    text = p.migrate("up", "--transaction", "none", code=1)
+    assert "it ran without a transaction: what it did before failing is still there" in text
+    assert "done" in p.columns("tasks") and p.migrate("status").split() == ["applied", first, "pending", file.stem]
+    # brought under the history without running it
     file.write_text(good)
-    assert p.migrate("up").strip() == f"applied {file.stem}"
-    assert "done" in p.columns("tasks")
+    assert p.migrate("up", "--fake").strip() == f"applied {file.stem} (fake)"
+    assert p.migrate("down", "--fake").strip() == f"reverted {file.stem} (fake)"
+    assert "done" in p.columns("tasks") and p.migrate("status").split() == ["applied", first, "pending", file.stem]
+    p.migrate("up", "--fake")
+    assert p.migrate("down").strip() == f"reverted {file.stem}"
+    assert "done" not in p.columns("tasks")
 
 
-def test_the_history_is_one_line(tmp_path: Path) -> None:
+def test_the_history_is_what_was_applied(tmp_path: Path) -> None:
     p = Project(tmp_path)
     p.app(V1)
     first = p.made("first").stem
@@ -184,38 +207,66 @@ def test_the_history_is_one_line(tmp_path: Path) -> None:
     assert p.migrate("down", "--to", first).split() == ["reverted", third, "reverted", second]
     assert "nothing to revert" in p.migrate("down", "--to", first)
 
-    # a migration the database has and the folder does not
-    p.migrate("up", "--to", second)
-    hidden = [f.rename(f.with_suffix(".gone")) for f in sorted(p.versions.glob("*.py"))[1:]]
-    for command in ("status", "up", "down"):
-        assert "error: the database has the migration" in p.migrate(command, code=1)
-    for f in hidden:
-        f.rename(f.with_suffix(".py"))
+    # a pending migration older than an applied one runs, and `down` reverts the last one applied, not the newest
+    hidden = file.rename(file.with_suffix(".later"))
+    assert p.migrate("up").strip() == f"applied {third}"
+    hidden.rename(file)
+    assert p.migrate("status").split() == ["applied", first, "pending", second, "applied", third]
+    assert p.migrate("up").strip() == f"applied {second}"
+    assert p.migrate("down").strip() == f"reverted {second}"
+    p.migrate("up")
 
-    # two migrations made after the same one (two people at once)
-    twin = file.with_name("29990101000000_twin.py")
-    twin.write_text(re.sub(r"^(revision: str = )'\d+'", r"\1'29990101000000'", file.read_text(), flags=re.M))
-    for command in (("status",), ("up",), ("down",), ("make", "more")):
-        text = p.migrate(*command, code=1)
-        assert f"error: the migrations {second} and 29990101000000_twin both follow {first}" in text
-    twin.unlink()
-    assert p.migrate("status").split() == ["applied", first, "applied", second, "pending", third]
+    # a migration the database has and the folder does not: nothing but its revert needs the file
+    hidden = file.rename(file.with_suffix(".gone"))
+    assert p.migrate("status").split() == ["applied", first, "applied", third]
+    assert "the database is up to date" in p.migrate("up")
+    assert f"error: the migration {second} is applied and is not in" in p.migrate("down", code=1)
+    hidden.rename(file)
+    assert p.migrate("down").strip() == f"reverted {second}"
 
 
-def test_migrations_made_by_an_older_version_still_run(tmp_path: Path) -> None:
-    """Before 0.91 a revision was a random id and constraints had no name: the files are ordered by their parents."""
+def test_two_migrations_made_at_the_same_time_both_count(tmp_path: Path) -> None:
     p = Project(tmp_path)
     p.app(V1)
-    first = p.made("first")
+    p.made("first")
     p.app(V2)
-    second = p.made("done")
-    first.write_text(first.read_text().replace(first.stem[:14], "f1e2d3c4b5a6").replace(", name='fk_tasks_project_id'", ""))
-    second.write_text(second.read_text().replace(second.stem[:14], "0a1b2c3d4e5f").replace(first.stem[:14], "f1e2d3c4b5a6"))
-    assert "fk_tasks_project_id" not in first.read_text() and "down_revision: Union[str, Sequence[str], None] = 'f1e2d3c4b5a6'" in second.read_text()
-    assert p.migrate("up").split() == ["applied", first.stem, "applied", second.stem]
-    assert p.sql("SELECT version_num FROM alembic_version") == [("0a1b2c3d4e5f",)]
-    assert "no changes" in p.migrate("make", "nothing"), "a constraint without a name is the same constraint"
+    mine = p.made("done")
+    hidden = mine.rename(mine.with_suffix(".theirs"))
+    p.app(V5)
+    yours = p.made("unique names")
+    hidden.rename(mine)
+    # the entities with both changes: nothing left to make, and both apply
     p.app(V3)
-    third = p.made("unique names").stem
+    assert "no changes" in p.migrate("make", "nothing")
+    assert p.migrate("up").split()[3::2] == [mine.stem, yours.stem]
+    assert "done" in p.columns("tasks") and "uq_projects_name" in str(p.sql("SELECT sql FROM sqlite_master WHERE name = 'projects'"))
+
+
+def test_a_database_migrated_by_an_older_version_goes_on(tmp_path: Path) -> None:
+    """Before 0.93 the history was Alembic's (`alembic_version`: the last revision); before 0.91 a constraint had no
+    name."""
+    p = Project(tmp_path)
+    p.app(V5)
+    first = p.made("first")
+    p.app(V3)
+    second = p.made("done")
+    first.write_text(first.read_text().replace(", name='uq_projects_name'", "").replace(", name='fk_tasks_project_id'", ""))
+    second.write_text(second.read_text().replace("\ndef upgrade", "revision: str = 'f1e2d3c4b5a6'\n\n\ndef upgrade"))
+    assert "uq_projects_name" not in first.read_text()
+    p.migrate("up")
+    p.sql("DROP TABLE migrations")
+    p.sql("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)")
+    p.sql("INSERT INTO alembic_version VALUES ('f1e2d3c4b5a6')")
+
+    assert p.migrate("status").split() == ["applied", first.stem, "applied", second.stem]
+    assert p.sql("SELECT name FROM migrations ORDER BY id") == [(first.stem,), (second.stem,)]
+    assert "no changes" in p.migrate("make", "nothing"), "a constraint without a name is the same constraint"
+    # the unique made without a name goes: it is found by its column
+    p.app(V2)
+    third = p.made("names again").stem
     assert p.migrate("up").strip() == f"applied {third}"
+    p.sql("INSERT INTO projects (name) VALUES ('home')")
+    p.sql("INSERT INTO projects (name) VALUES ('home')")
+    assert p.migrate("down", "--to", first.stem, code=1).count("reverted") == 0, "two rows with one name: the unique cannot come back"
+    p.sql("DELETE FROM projects")
     assert p.migrate("down", "--to", first.stem).split() == ["reverted", third, "reverted", second.stem]

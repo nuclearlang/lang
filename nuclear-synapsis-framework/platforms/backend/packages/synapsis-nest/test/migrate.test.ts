@@ -1,5 +1,5 @@
-// ADR-backend-0001: migrations from the entities, compared with the last migration, applied to and reverted from SQLite
-// (the same cases as packages/synapsis-py/tests/test_migrate.py).
+// ADR-backend-0001, ADR-backend-0002: migrations from the entities, compared with the migrations before, applied to and
+// reverted from SQLite with TypeORM's rules (the same cases as packages/synapsis-py/tests/test_migrate.py).
 import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import { copyFileSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
@@ -9,6 +9,8 @@ import { describe, it } from 'node:test';
 import { AutoIncrement, BelongsTo, Column, DataType, PrimaryKey, Sequelize, Table } from 'sequelize-typescript';
 import { Entity } from '../src/index.js';
 import { down, make, status, up } from '../src/migrate.js';
+
+const rejected = (work: Promise<unknown>): Promise<string> => work.then(() => assert.fail('it did not fail'), (e: Error) => e.message);
 
 // the first version of the app: projects and their tasks
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
@@ -69,6 +71,21 @@ const V1 = [Project, tasksOf(() => Project, false)];
 const V2 = [Project, tasksOf(() => Project, true)];
 const V3 = [ProjectV3, tasksOf(() => ProjectV3, true)];
 const V4 = [ProjectV4, tasksOf(() => ProjectV4, false)];
+// the name of a project unique, made by someone who does not have `done` yet
+const V5 = [ProjectV3, tasksOf(() => ProjectV3, false)];
+
+// another key
+@Table({ tableName: 'projects', underscored: true, timestamps: false })
+class ProjectKey extends Entity {
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  declare id: number;
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare key: number;
+  @Column({ type: DataType.STRING(100), allowNull: false })
+  declare name: string;
+}
 
 /** A migrations folder and its database; `made` is `make` at an hour of its own, by the migration's name. */
 async function project(work: (p: { dir: string; db: Sequelize; made: (message: string, models: unknown[]) => Promise<string>; sql: <T = Record<string, unknown>>(s: string) => Promise<T[]> }) => Promise<void>): Promise<void> {
@@ -113,6 +130,11 @@ describe('migrations', () => {
       assert.deepEqual(await up(dir, db), [second]);
       assert.deepEqual(await up(dir, db), [], 'nothing pending');
       assert.deepEqual(await states(dir, db), ['applied', first, 'applied', second]);
+      // the history: one row per migration applied
+      assert.deepEqual(await sql('SELECT id, timestamp, name FROM migrations'), [
+        { id: 1, timestamp: 20261110100000, name: first },
+        { id: 2, timestamp: 20261110110000, name: second },
+      ]);
       const [row] = await sql<{ title: string; done: number }>('SELECT title, done FROM tasks');
       assert.equal(row.title, 'paint', 'the data stays');
       assert.equal(Number(row.done), 0);
@@ -122,7 +144,7 @@ describe('migrations', () => {
       assert.deepEqual(await down(dir, db), [first]);
       assert.deepEqual(await down(dir, db), []);
       const tables = (await sql<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'")).map((t) => t.name);
-      assert.deepEqual(tables.filter((t) => !['SequelizeMeta', 'sqlite_sequence'].includes(t)), []);
+      assert.deepEqual(tables.filter((t) => !['migrations', 'sqlite_sequence'].includes(t)), []);
       assert.equal(readdirSync(dir).length, 2);
     }));
 
@@ -154,8 +176,8 @@ describe('migrations', () => {
       await sql("INSERT INTO projects (name) VALUES ('home')"); // unique no more
     }));
 
-  it('make warns of what loses data or is refused', () =>
-    project(async ({ made }) => {
+  it('make warns of what loses data and refuses a changed key', () =>
+    project(async ({ dir, made }) => {
       await made('first', V2);
       const warnings: string[] = [];
       const warn = console.warn;
@@ -167,71 +189,124 @@ describe('migrations', () => {
       }
       assert.ok(warnings.includes('warning: the migration drops column tasks.done; if it was renamed, edit it'), warnings.join('\n'));
       assert.ok(warnings.includes('warning: the migration adds the required column projects.code without a default: a table with rows refuses it'));
+      // the key of a table: no migration changes it, and make says so
+      const text = await rejected(make(dir, 'another key', [ProjectKey, tasksOf(() => ProjectKey, false)]));
+      assert.ok(text.startsWith('the key of projects changed (id to key): a migration does not change a key'), text);
+      assert.equal(readdirSync(dir).length, 2);
     }));
 
   it('a failed migration is not applied', () =>
-    project(async ({ dir, db, made }) => {
+    project(async ({ dir, db, made, sql }) => {
       const first = await made('first', V1);
-      await up(dir, db);
       const name = await made('done', V2);
       const file = join(dir, `${name}.js`);
       const good = readFileSync(file, 'utf8');
       writeFileSync(file, good.replace('\n}\n', '\n  await queryInterface.sequelize.query("SELECT * FROM nothing");\n}\n'));
-      await assert.rejects(up(dir, db), (e: Error) => e.message.startsWith(`the migration ${name} failed:`) && e.message.endsWith('nothing of it was kept'));
-      assert.ok(!('done' in (await db.getQueryInterface().describeTable('tasks'))), 'what the migration did before failing is undone');
+      const columns = async (): Promise<string[]> => Object.keys(await db.getQueryInterface().describeTable('tasks'));
+      const kept: string[] = [];
+      const each = (applied: string): void => void kept.push(applied);
+      // one transaction for the whole run: nothing of it stays, the migration before the failed one neither
+      let text = await rejected(up(dir, db, { each }));
+      assert.ok(text.startsWith(`the migration ${name} failed:`) && text.endsWith('nothing of this run was kept'), text);
+      assert.deepEqual(kept, []);
+      assert.deepEqual(await states(dir, db), ['pending', first, 'pending', name]);
+      assert.deepEqual(await sql("SELECT name FROM sqlite_master WHERE name IN ('projects', 'tasks')"), []);
+      // one transaction per migration: the ones before the failed one stay
+      text = await rejected(up(dir, db, { each, transaction: 'each' }));
+      assert.ok(text.endsWith('nothing of it was kept'), text);
+      assert.deepEqual(kept, [first]);
+      assert.ok(!(await columns()).includes('done'), 'what the migration did before failing is undone');
       assert.deepEqual(await states(dir, db), ['applied', first, 'pending', name]);
+      // no transaction: what it did before failing stays
+      text = await rejected(up(dir, db, { transaction: 'none' }));
+      assert.match(text, /it ran without a transaction: what it did before failing is still there/);
+      assert.ok((await columns()).includes('done'));
+      assert.deepEqual(await states(dir, db), ['applied', first, 'pending', name]);
+      // brought under the history without running it
       writeFileSync(file, `${good}\n`);
-      assert.deepEqual(await up(dir, db), [name]);
-      assert.ok('done' in (await db.getQueryInterface().describeTable('tasks')));
+      assert.deepEqual(await up(dir, db, { fake: true }), [name]);
+      assert.deepEqual(await down(dir, db, { fake: true }), [name]);
+      assert.ok((await columns()).includes('done'));
+      assert.deepEqual(await states(dir, db), ['applied', first, 'pending', name]);
+      await up(dir, db, { fake: true });
+      assert.deepEqual(await down(dir, db), [name]);
+      assert.ok(!(await columns()).includes('done'));
     }));
 
-  it('the history is one line', () =>
+  it('the history is what was applied', () =>
     project(async ({ dir, db, made }) => {
       const first = await made('first', V1);
       const second = await made('done', V2);
       const third = await made('unique names', V3);
+      const file = join(dir, `${second}.js`);
 
       // up to a migration, down to a migration (its name, or the timestamp it starts with)
-      assert.deepEqual(await up(dir, db, second.slice(0, 14)), [first, second]);
+      assert.deepEqual(await up(dir, db, { to: second.slice(0, 14) }), [first, second]);
       assert.deepEqual(await states(dir, db), ['applied', first, 'applied', second, 'pending', third]);
-      await assert.rejects(down(dir, db, third), { message: `the migration ${third} is not applied` });
-      await assert.rejects(up(dir, db, 'nothing'), /^Error: no migration nothing in/);
+      assert.equal(await rejected(down(dir, db, { to: third })), `the migration ${third} is not applied`);
+      assert.match(await rejected(up(dir, db, { to: 'nothing' })), /^no migration nothing in/);
       await up(dir, db);
-      assert.deepEqual(await down(dir, db, first), [third, second]);
-      assert.deepEqual(await down(dir, db, first), [], 'nothing to revert');
+      assert.deepEqual(await down(dir, db, { to: first }), [third, second]);
+      assert.deepEqual(await down(dir, db, { to: first }), [], 'nothing to revert');
 
-      // a migration the database has and the folder does not
-      await up(dir, db, second);
-      for (const name of [second, third]) renameSync(join(dir, `${name}.js`), join(dir, `${name}.gone`));
-      for (const command of [status, up, down]) await assert.rejects(command(dir, db), /^Error: the database has the migration/);
-      for (const name of [second, third]) renameSync(join(dir, `${name}.gone`), join(dir, `${name}.js`));
+      // a pending migration older than an applied one runs, and `down` reverts the last one applied, not the newest
+      renameSync(file, `${file}.later`);
+      assert.deepEqual(await up(dir, db), [third]);
+      renameSync(`${file}.later`, file);
+      assert.deepEqual(await states(dir, db), ['applied', first, 'pending', second, 'applied', third]);
+      assert.deepEqual(await up(dir, db), [second]);
+      assert.deepEqual(await down(dir, db), [second]);
+      await up(dir, db);
 
-      // two migrations made after the same one (two people at once)
-      const twin = join(dir, '29990101000000_twin.js');
-      copyFileSync(join(dir, `${second}.js`), twin);
-      const refused = new RegExp(`^Error: the migrations ${second} and 29990101000000_twin both follow ${first}`);
-      for (const command of [status, up, down]) await assert.rejects(command(dir, db), refused);
-      await assert.rejects(make(dir, 'more', V3), refused);
-      unlinkSync(twin);
-      assert.deepEqual(await states(dir, db), ['applied', first, 'applied', second, 'pending', third]);
+      // a migration the database has and the folder does not: nothing but its revert needs the file
+      renameSync(file, `${file}.gone`);
+      assert.deepEqual(await states(dir, db), ['applied', first, 'applied', third]);
+      assert.deepEqual(await up(dir, db), []);
+      assert.match(await rejected(down(dir, db)), new RegExp(`^the migration ${second} is applied and is not in`));
+      renameSync(`${file}.gone`, file);
+      assert.deepEqual(await down(dir, db), [second]);
     }));
 
-  it('migrations made by an older version still run', () =>
-    // before 0.91 a migration had no `parent`: the files follow each other by name
-    project(async ({ dir, db, made }) => {
-      const first = await made('first', V1);
-      const second = await made('done', V2);
-      for (const name of [first, second]) {
-        const file = join(dir, `${name}.js`);
-        const text = readFileSync(file, 'utf8').replace(/\/\/ the migration this one was made after[^]*?\n\n/, '');
-        assert.ok(!text.includes('export const parent'));
-        writeFileSync(file, text);
-      }
-      assert.deepEqual(await up(dir, db), [first, second]);
-      assert.equal(await make(dir, 'nothing', V2), null);
-      const third = await made('unique names', V3);
-      assert.match(readFileSync(join(dir, `${third}.js`), 'utf8'), new RegExp(`export const parent = "${second}";`));
+  it('two migrations made at the same time both count', () =>
+    project(async ({ dir, db, made, sql }) => {
+      await made('first', V1);
+      const mine = await made('done', V2);
+      renameSync(join(dir, `${mine}.js`), join(dir, `${mine}.theirs`));
+      const yours = await made('unique names', V5);
+      renameSync(join(dir, `${mine}.theirs`), join(dir, `${mine}.js`));
+      // the entities with both changes: nothing left to make, and both apply
+      assert.equal(await make(dir, 'nothing', V3), null);
+      assert.deepEqual((await up(dir, db)).slice(1), [mine, yours]);
+      assert.ok('done' in (await db.getQueryInterface().describeTable('tasks')));
+      assert.match((await sql<{ sql: string }>("SELECT sql FROM sqlite_master WHERE name = 'projects'"))[0].sql, /uq_projects_name/);
+    }));
+
+  it('a database migrated by an older version goes on', () =>
+    // before 0.93 the history was SequelizeMeta (the files' names) and a migration had no `parent` or had to have one
+    project(async ({ dir, db, made, sql }) => {
+      const first = await made('first', V5);
+      const second = await made('done', V3);
+      const bare = join(dir, `${first}.js`);
+      writeFileSync(bare, readFileSync(bare, 'utf8').replace(/\/\/ the migrations this one was made after[^]*?\n\n/, ''));
+      assert.ok(!readFileSync(bare, 'utf8').includes('export const known'));
+      const old = join(dir, `${second}.js`);
+      writeFileSync(old, readFileSync(old, 'utf8').replace(/export const known = .*;/, `export const parent = "${first}";`));
+      assert.ok(readFileSync(old, 'utf8').includes('export const parent'));
+      await up(dir, db);
+      await sql('DROP TABLE migrations');
+      await sql('CREATE TABLE `SequelizeMeta` (`name` VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY)');
+      await sql(`INSERT INTO \`SequelizeMeta\` VALUES ('${second}.js'), ('${first}.js')`);
+
+      assert.deepEqual(await states(dir, db), ['applied', first, 'applied', second]);
+      assert.deepEqual((await sql<{ name: string }>('SELECT name FROM migrations ORDER BY id')).map((r) => r.name), [first, second]);
+      assert.equal(await make(dir, 'nothing', V3), null);
+      // the unique goes: it is found by its column
+      const third = await made('names again', V2);
       assert.deepEqual(await up(dir, db), [third]);
-      assert.deepEqual(await down(dir, db, first), [third, second]);
+      await sql("INSERT INTO projects (name) VALUES ('home')");
+      await sql("INSERT INTO projects (name) VALUES ('home')");
+      await assert.rejects(down(dir, db, { to: first }), 'two rows with one name: the unique cannot come back');
+      await sql('DELETE FROM projects');
+      assert.deepEqual(await down(dir, db, { to: first }), [third, second]);
     }));
 });

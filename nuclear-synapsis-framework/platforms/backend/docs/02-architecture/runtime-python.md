@@ -73,36 +73,42 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 
 ## Migrations
 
-`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,
+`synapsis.migrate` is what `nuclear migrate` runs (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,
 `migrate_down`, `migrate_status`):
 
 ```sh
-python -m synapsis.migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
+python -m synapsis.migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the migrations
 python -m synapsis.migrate up [--to <name>] --dir <migrations>           # applies the pending ones
-python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>
+python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one applied, or every one applied after <name>
 python -m synapsis.migrate status --dir <migrations>                     # every migration: applied or pending
+# up, down: --fake (only the history changes), --transaction all|each|none (default all)
 ```
 
-The rules a user sees are the reference's (§2.8), the same words and exit codes as the TypeScript runtime. How this
-one keeps them:
+The rules a user sees are the reference's (§2.8): TypeORM's behaviour (ADR-backend-0002), the same words and exit
+codes as the TypeScript runtime. How this one keeps them:
 
-- `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's
-  autogenerate write the difference. `_prepare` then names every unique and foreign key the migration makes
-  (`uq_<table>_<column>`, `fk_<table>_<column>`: Alembic cannot drop a constraint without a name) and collects the
-  warnings. The entities themselves carry no constraint names, so the migrations of before still compare equal.
-- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written by the first `make`.
-  A migration's revision is its timestamp; its file is `<timestamp>_<slug>.py`, the same slug as the other runtime.
-- `_chain` reads the files one by one and orders them by `down_revision`; it refuses two files with the same parent
-  and a parent that is missing (Alembic's own map would call them branches and heads).
+- Alembic writes and runs the operations; its revisions, its `env.py` and its `alembic_version` are not used. A
+  migration is `versions/<timestamp>_<slug>.py` with `upgrade()` and `downgrade()` over `op`, loaded as a module
+  and run inside `Operations.context` (`_apply`). The files are ordered by their name (`_files`).
+- `make` never reads the database: it runs every migration on an empty SQLite in memory and asks Alembic's
+  autogenerate for the difference with the entities (`produce_migrations`, `render_python_code`, in batch mode).
+  `_prepare` names every unique and foreign key the migration makes or drops (`uq_<table>_<column>`,
+  `fk_<table>_<column>`) and collects the warnings. A changed key is compared here, because Alembic does not see
+  it, and refused. The entities carry no constraint names, so a migration of before 0.91 still compares equal.
+- The history is the table `migrations` (`_history_table`: `id`, `timestamp`, `name`), read by `_history` in the
+  order of `id`. When it is missing it is made, from `alembic_version` if the database was migrated before 0.93
+  (every file up to that revision, or to that timestamp, was applied); `alembic_version` is left as it was.
 - `up`, `down` and `status` open one connection to the default database of the app's configuration (`create_app`
-  keeps it in `app.state`) and hand it to `env.py`; `alembic_version` holds the last migration applied, and the
-  ones before it in the line are the applied ones.
-- `_run` applies or reverts one migration in a transaction of its own (`connection.begin()` before Alembic, so
-  Alembic opens none). SQLite's driver is opened with `autocommit=False`, or a schema change would run outside the
-  transaction; after a migration `PRAGMA foreign_key_check` must be empty.
-- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the same
-  file. Alembic rebuilds a table of SQLite from what it reads in the database, where `AUTOINCREMENT` is not read:
-  `_keep_generated_keys` (a `column_reflect` listener) says it, so a rebuilt table still never gives a key twice.
+  keeps it in `app.state`). `_execute` runs the steps and writes the history with each: one transaction for the
+  run (`all`), one per migration (`each`) or an engine in `AUTOCOMMIT` (`none`). SQLite's driver is opened with
+  `autocommit=False`, or a schema change would run outside the transaction; after each migration
+  `PRAGMA foreign_key_check` must be empty.
+- Batch mode makes SQLite (which cannot alter a column) and the other databases run the same file. Alembic rebuilds
+  a table of SQLite from what it reads in the database; `_reflected` (a `column_reflect` listener) says the two
+  things that are not read there: `AUTOINCREMENT`, and the name of a constraint made without one.
+- `_drop_constraint` replaces Alembic's implementation of `drop_constraint`: on PostgreSQL, MySQL and MariaDB a
+  unique or a foreign key whose name is not in the database is found by its columns.
+- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `CURRENT_TIMESTAMP` as the server default.
 - `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback.
 
 ## Tests and type definitions

@@ -1,30 +1,31 @@
-"""Migrations of the database schema (ADR-backend-0001) with Alembic, run by `nuclear migrate` in the generated project:
+"""Migrations of the database schema (ADR-backend-0001, ADR-backend-0002), run by `nuclear migrate` in the generated
+project:
 
     python -m synapsis.migrate make "add done to tasks" --dir ../migrations    one migration: the entities minus the last one
     python -m synapsis.migrate up [--to <name>] --dir ../migrations            applies the pending ones (up to <name>)
-    python -m synapsis.migrate down [--to <name>] --dir ../migrations          reverts the last one (or every one after <name>)
+    python -m synapsis.migrate down [--to <name>] --dir ../migrations          reverts the last one applied (or every one applied after <name>)
     python -m synapsis.migrate status --dir ../migrations                      every migration: applied or pending
 
-`make` compares the entities with the last migration, never with the database: it brings an empty SQLite in memory to
-the last migration and lets Alembic's autogenerate write the difference (the same rule as the nestjs dialect). The
-folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written the first time; `up` and `down`
-use the default database of the app's configuration (`alembic_version` holds the last one applied). Migrations are
-written in batch mode, so SQLite (which cannot alter a column) and the other databases run the same file.
+    up and down take --fake (the history changes, nothing runs) and --transaction all|each|none (default: all)
 
-The same rules as the nestjs dialect's tool, with the same words: a migration's name is its file without `.py`; the
-history is one line (two migrations made after the same one are refused); each migration runs in a transaction of its
-own; every unique and foreign key has a name (`uq_<table>_<column>`, `fk_<table>_<column>`), so it can be dropped.
+A migration is `versions/<timestamp>_<slug>.py` with `upgrade()` and `downgrade()` over Alembic's operations (`op`), in
+batch mode, so SQLite (which cannot alter a column) and the other databases run the same file. `make` compares the
+entities with the migrations, never with the database: it runs every migration on an empty SQLite in memory and lets
+Alembic's autogenerate write the difference (the same rule as the nestjs dialect).
+
+The behaviour is TypeORM's (ADR-backend-0002), the same as the nestjs dialect's tool, with the same words: the table
+`migrations` holds one row per migration applied (`id`, `timestamp`, `name`); the migrations are ordered by their
+timestamp; a pending one runs whatever its place; `down` reverts the last one applied. Alembic writes and runs the
+operations; its revisions and its `alembic_version` are not used (a database migrated with them is converted once).
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
-import contextlib
 import importlib
-import io
+import importlib.util
 import re
-import shutil
 import sys
 import warnings
 from collections.abc import Callable, Iterator
@@ -32,39 +33,37 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
-__all__ = ["make", "up", "down", "status", "run_env", "MigrateError"]
+__all__ = ["make", "up", "down", "status", "MigrateError", "run_env"]
+
+HISTORY = "migrations"
+Transaction = Literal["all", "each", "none"]
 
 
 class MigrateError(Exception):
     """What the user must know or do: printed as it is, without a traceback."""
 
 
-ENV = '''"""Alembic's environment of a Synapsis project, written once by `nuclear migrate make` (synapsis.migrate)."""
+FILE = '''"""{message}
 
-from synapsis.migrate import run_env
+Written by `nuclear migrate make` from the entities; it is the project's from now on (a renamed table or column shows
+as a drop and an add: change it to a rename to keep the data).
+"""
+from alembic import op
+import sqlalchemy as sa
 
-run_env()
+
+def upgrade() -> None:
+{upgrade}
+
+
+def downgrade() -> None:
+{downgrade}
 '''
 
 
-def _config(folder: str | Path, app: str, create: bool = False) -> Any:
-    from alembic.config import Config
-
-    import alembic
-
-    d = Path(folder).resolve()
-    if create:
-        (d / "versions").mkdir(parents=True, exist_ok=True)
-        if not (d / "env.py").exists():
-            (d / "env.py").write_text(ENV)
-        if not (d / "script.py.mako").exists():
-            shutil.copy(Path(alembic.__file__).parent / "templates" / "generic" / "script.py.mako", d / "script.py.mako")
-    cfg = Config()
-    cfg.set_main_option("script_location", str(d))
-    # the file is named again by `make` (the same slug as the nestjs dialect's)
-    cfg.set_main_option("file_template", "%%(rev)s_%%(slug)s")
-    cfg.attributes["app"] = app
-    return cfg
+def run_env() -> None:
+    """What the `env.py` of a folder made before 0.93 calls: nothing runs through Alembic's own commands any more."""
+    raise RuntimeError("synapsis migrations run through `nuclear migrate` (python -m synapsis.migrate)")
 
 
 def _database(app: str) -> Any:
@@ -81,65 +80,132 @@ def _database(app: str) -> Any:
     return next((c for c in found if c.name == "default"), found[0])
 
 
-def _name(revision: Any) -> str:
-    return Path(revision.path).stem
+def _files(folder: str | Path) -> list[Path]:
+    """The migrations of the folder, by their timestamp."""
+    return sorted(p for p in (Path(folder).resolve() / "versions").glob("*.py") if re.match(r"\d{14}_", p.name))
 
 
-def _chain(folder: str | Path, cfg: Any) -> list[Any]:
-    """The migrations of the folder from the first to the last. The history is one line: two migrations made after the
-    same one (two people at once) are refused, and so is one whose parent is not in the folder."""
-    from alembic.script import ScriptDirectory
+def _load(file: Path) -> Any:
+    spec = importlib.util.spec_from_file_location(f"synapsis_migration_{file.stem}", file)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-    d = Path(folder).resolve()
-    if not (d / "env.py").exists():
-        return []
-    script = ScriptDirectory.from_config(cfg)
-    # every file of versions/, read one by one: Alembic's own map refuses to load a history that is not one line
-    all_: list[Any] = sorted(script._load_revisions(), key=_name)  # pyright: ignore[reportPrivateUsage]
-    by_id = {r.revision: r for r in all_}
-    out: list[Any] = []
-    at: Any = None
-    while True:
-        following = [r for r in all_ if r.down_revision == at]
-        if len(following) > 1:
-            first, second = _name(following[0]), _name(following[1])
-            after = _name(by_id[at]) if at else "no migration"
-            raise MigrateError(
-                f"the migrations {first} and {second} both follow {after}: they were made at the same time; "
-                "delete one, apply the other and make it again"
-            )
-        if not following:
-            break
-        out.append(following[0])
-        at = following[0].revision
-    lost = next((r for r in all_ if r.down_revision is not None and r.down_revision not in by_id), None)
-    if lost is not None:
-        raise MigrateError(f"the migration {_name(lost)} follows {lost.down_revision}, which is not in {d}")
-    return out
 
+def _find(files: list[Path], to: str, folder: str | Path) -> int:
+    """The migration `to` names: its name, or the timestamp it starts with."""
+    name = Path(to).name.removesuffix(".py")
+    for i, f in enumerate(files):
+        if f.stem == name or f.stem.startswith(f"{name}_"):
+            return i
+    raise MigrateError(f"no migration {to} in {Path(folder).resolve()}")
+
+
+# --- Alembic's operations over one connection
+
+NAMES = {"uq": "uq_%(table_name)s_%(column_0_N_name)s", "fk": "fk_%(table_name)s_%(column_0_N_name)s"}
+
+
+def _reflected(inspector: Any, table: Any, column: dict[str, Any]) -> None:
+    """SQLite: Alembic makes a table again from what it reads in the database. Two things are not read there and are
+    said here: AUTOINCREMENT (a key is never given twice, as on the other databases), and the name of a unique or a
+    foreign key that was made without one (so it can be dropped, and has its name from then on)."""
+    del column
+    bind = inspector.bind
+    if bind.dialect.name != "sqlite":
+        return
+    if not table.metadata.naming_convention.get("uq"):
+        table.metadata.naming_convention = {**table.metadata.naming_convention, **NAMES}
+    if not table.dialect_options["sqlite"]["autoincrement"]:
+        made = bind.exec_driver_sql("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table.name,)).scalar()
+        if made and re.search(r"\bAUTOINCREMENT\b", made, re.I):
+            table.dialect_options["sqlite"]["autoincrement"] = True
+
+
+def _drop_constraint(operations: Any, operation: Any) -> None:
+    """A unique or a foreign key goes by the name it has in the database: the one the migration says, or the one the
+    database gave it when it was made without a name (found by its columns)."""
+    name, table, kind = operation.constraint_name, operation.table_name, operation.constraint_type
+    bind = operations.get_bind()
+    if bind.dialect.name != "sqlite" and name and kind in ("unique", "foreignkey"):
+        from sqlalchemy import inspect
+
+        i = inspect(bind)
+        if kind == "unique":
+            found = [(u["name"], u["column_names"]) for u in i.get_unique_constraints(table)]
+            found += [(x["name"], x["column_names"]) for x in i.get_indexes(table) if x.get("unique")]
+            prefix = "uq"
+        else:
+            found = [(f["name"], f["constrained_columns"]) for f in i.get_foreign_keys(table)]
+            prefix = "fk"
+        if not any(n == name for n, _ in found):
+            name = next((n for n, columns in found if f"{prefix}_{table}_{'_'.join(c or '' for c in columns)}" == name), name)
+    options = {} if operation.if_exists is None else {"if_exists": operation.if_exists}
+    operations.impl.drop_constraint(operations.schema_obj.generic_constraint(name, table, kind, schema=operation.schema), **options)
+
+
+def _render(kind: str, item: Any, autogen: Any) -> str | Literal[False]:
+    # the runtime's own column type is written as SQLAlchemy's: a migration imports nothing of the app
+    from .orm import UtcDateTime
+
+    del autogen
+    return "sa.DateTime(timezone=True)" if kind == "type" and isinstance(item, UtcDateTime) else False
+
+
+def _context(connection: Any) -> Any:
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations, ops
+    from sqlalchemy import Table, event
+
+    from .orm import Entity
+
+    if not event.contains(Table, "column_reflect", _reflected):
+        event.listen(Table, "column_reflect", _reflected)
+        Operations.implementation_for(ops.DropConstraintOp, replace=True)(_drop_constraint)
+    options = {
+        "target_metadata": Entity.metadata, "render_as_batch": True, "render_item": _render,
+        "compare_type": True, "compare_server_default": True,
+    }
+    return MigrationContext.configure(connection, opts=options)
+
+
+def _apply(connection: Any, module: Any, direction: Literal["up", "down"]) -> None:
+    from alembic.operations import Operations
+
+    with Operations.context(_context(connection)):
+        (module.upgrade if direction == "up" else module.downgrade)()
+
+
+# --- make
 
 def _prepare(ops: list[Any], table: str = "") -> Iterator[str]:
-    """Names every unique and foreign key a migration makes (a constraint without a name cannot be dropped later) and
+    """Names every unique and foreign key a migration makes or drops (`uq_<table>_<column>`, `fk_<table>_<column>`) and
     gives what the user must know before applying it: data that is lost, a change a table with rows refuses."""
     from alembic.operations import ops as o
     from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 
+    def named(table_name: str, c: Any) -> str | None:
+        if isinstance(c, UniqueConstraint):
+            return f"uq_{table_name}_{'_'.join(col.name for col in c.columns)}"
+        if isinstance(c, ForeignKeyConstraint):
+            return f"fk_{table_name}_{'_'.join(c.column_keys)}"
+        return None
+
     for op in ops:
         if isinstance(op, o.CreateTableOp):
-            for c in op.columns:
-                if isinstance(c, UniqueConstraint) and c.name is None:
-                    c.name = f"uq_{op.table_name}_{'_'.join(col.name for col in c.columns)}"
-                elif isinstance(c, ForeignKeyConstraint) and c.name is None:
-                    c.name = f"fk_{op.table_name}_{'_'.join(c.column_keys)}"
+            columns: list[Any] = list(op.columns)
+            for c in columns:
+                if getattr(c, "name", None) is None and named(op.table_name, c):
+                    c.name = named(op.table_name, c)
         elif isinstance(op, o.CreateUniqueConstraintOp):
             op.constraint_name = op.constraint_name or f"uq_{op.table_name}_{'_'.join(op.columns)}"
         elif isinstance(op, o.CreateForeignKeyOp):
             op.constraint_name = op.constraint_name or f"fk_{op.source_table}_{'_'.join(op.local_cols)}"
-        elif isinstance(op, o.DropConstraintOp) and op.constraint_name is None:
-            yield (
-                f"the migration drops a constraint of {op.table_name} that an older migration made without a name: "
-                "write the name it has in the database into the migration's drop_constraint"
-            )
+        elif isinstance(op, o.DropConstraintOp):
+            # made without a name by a migration of before 0.91: the name it would have; the database's own is found
+            # by its columns when the migration runs (_drop_constraint, _reflected)
+            op.constraint_name = op.constraint_name or named(op.table_name, op.to_constraint())
         elif isinstance(op, o.DropTableOp):
             yield f"the migration drops table {op.table_name}; if it was renamed, edit it"
         elif isinstance(op, o.DropColumnOp):
@@ -155,108 +221,128 @@ def _prepare(ops: list[Any], table: str = "") -> Iterator[str]:
             yield from _prepare(op.ops, getattr(op, "table_name", table))
 
 
-def _directives(context: Any, revision: Any, directives: list[Any]) -> None:
-    del revision
-    script = directives[0]
-    if script.upgrade_ops.is_empty():
-        directives[:] = []
-        return
-    context.config.attributes["warnings"] = list(_prepare(script.upgrade_ops.ops))
-    # the way back, from the operations with their names
-    script.upgrade_ops.reverse_into(script.downgrade_ops)
-
-
-def _keep_generated_keys(inspector: Any, table: Any, column: dict[str, Any]) -> None:
-    """SQLite: Alembic makes a table again from what it reads in the database, where AUTOINCREMENT (a key is never
-    given twice, as on the other databases) is not read: the table read is told it has it."""
-    del column
-    bind = inspector.bind
-    if bind.dialect.name != "sqlite" or table.dialect_options["sqlite"]["autoincrement"]:
-        return
-    made = bind.exec_driver_sql("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table.name,)).scalar()
-    if made and re.search(r"\bAUTOINCREMENT\b", made, re.I):
-        table.dialect_options["sqlite"]["autoincrement"] = True
-
-
-def run_env() -> None:
-    """The body of the folder's env.py: Alembic over the connection the command opened (the scratch database of `make`,
-    or the app's)."""
-    from alembic import context
-    from sqlalchemy import Table, event
-    from sqlalchemy.orm import configure_mappers
-
-    from .orm import Entity, UtcDateTime
-
-    def render(kind: str, item: Any, autogen: Any) -> str | Literal[False]:
-        # the runtime's own column type is written as SQLAlchemy's: a migration imports nothing of the app
-        del autogen
-        return "sa.DateTime(timezone=True)" if kind == "type" and isinstance(item, UtcDateTime) else False
-
-    cfg = context.config
-    connection = cfg.attributes.get("connection")
-    if connection is None or context.is_offline_mode():
-        raise RuntimeError("synapsis migrations run through `nuclear migrate` (python -m synapsis.migrate)")
-    importlib.import_module(cfg.attributes["app"])
-    configure_mappers()
-    context.configure(
-        connection=connection,
-        target_metadata=Entity.metadata,
-        render_as_batch=True,
-        render_item=render,
-        compare_type=True,
-        compare_server_default=True,
-        process_revision_directives=_directives,
-    )
-    if not event.contains(Table, "column_reflect", _keep_generated_keys):
-        event.listen(Table, "column_reflect", _keep_generated_keys)
-    with context.begin_transaction():
-        context.run_migrations()
-
-
 def _slug(message: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", message.lower()).strip("_")[:60] or "migration"
 
 
 def make(folder: str | Path, message: str, app: str = "app.main", now: datetime | None = None) -> Path | None:
-    """Writes the migration from the last one to the entities; None when nothing changed."""
-    from alembic import command
-    from sqlalchemy import create_engine
+    """Writes the migration from the migrations of the folder to the entities; None when nothing changed."""
+    from alembic.autogenerate import produce_migrations, render_python_code
+    from sqlalchemy import create_engine, inspect
+    from sqlalchemy.orm import configure_mappers
 
-    cfg = _config(folder, app, create=True)
-    _chain(folder, cfg)
+    from .orm import Entity
+
+    importlib.import_module(app)
+    configure_mappers()
+    engine = create_engine("sqlite://")
+    try:
+        with engine.begin() as connection, warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # Alembic's notes on a constraint without a name: _prepare names it
+            for file in _files(folder):
+                _apply(connection, _load(file), "up")
+            context = _context(connection)
+            # Alembic does not see a changed key, and no migration of the platform changes one: said, never skipped
+            reader = inspect(connection)
+            for table in Entity.metadata.sorted_tables:
+                if reader.has_table(table.name):
+                    old, new = reader.get_pk_constraint(table.name)["constrained_columns"], [c.name for c in table.primary_key.columns]
+                    if sorted(old) != sorted(new):
+                        raise MigrateError(_key_changed(table.name, old, new))
+            script = produce_migrations(context, Entity.metadata)
+            ops = script.upgrade_ops
+            assert ops is not None and script.downgrade_ops is not None
+            if ops.is_empty():
+                return None
+            warned = list(_prepare(ops.ops))
+            ops.reverse_into(script.downgrade_ops)  # the way back, from the operations with their names
+            # Alembic renders a body for its own template: the first line bare, the others indented, between two notes
+            body = {
+                side: "\n".join(
+                    line
+                    for line in ("    " + render_python_code(o, render_as_batch=True, render_item=_render, migration_context=context)).splitlines()
+                    if "###" not in line
+                ).rstrip()
+                for side, o in (("upgrade", ops), ("downgrade", script.downgrade_ops))
+            }
+    finally:
+        engine.dispose()
     versions = Path(folder).resolve() / "versions"
-    # local time, as the nestjs dialect names its migrations; it is also Alembic's revision
+    versions.mkdir(parents=True, exist_ok=True)
+    # local time, as the nestjs dialect names its migrations
     at = now or datetime.now()
     while any(versions.glob(f"{at:%Y%m%d%H%M%S}_*.py")):  # two in one second: the next one
         at += timedelta(seconds=1)
-    stamp = f"{at:%Y%m%d%H%M%S}"
-    engine = create_engine("sqlite://")
-    try:
-        with engine.begin() as connection, contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings():
-            warnings.simplefilter("ignore")  # Alembic's notes on a constraint without a name: said by _prepare
-            cfg.attributes["connection"] = connection
-            command.upgrade(cfg, "head")
-            command.revision(cfg, message=" ".join(message.split()), autogenerate=True, rev_id=stamp)
-    finally:
-        engine.dispose()
-    made = sorted(versions.glob(f"{stamp}_*.py"))
-    if not made:
-        return None
-    file = made[0].rename(versions / f"{stamp}_{_slug(message)}.py")
-    for warning in cfg.attributes.get("warnings", []):
+    file = versions / f"{at:%Y%m%d%H%M%S}_{_slug(message)}.py"
+    file.write_text(FILE.format(message=" ".join(message.split()).replace('"""', "'''"), **body))
+    for warning in warned:
         print(f"warning: {warning}", file=sys.stderr)
     return file
 
 
-def _on_database[T](app: str, work: Callable[[Any], T]) -> T:
+def _key_changed(table: str, old: list[str], new: list[str]) -> str:
+    return (
+        f"the key of {table} changed ({', '.join(sorted(old))} to {', '.join(sorted(new))}): a migration does not change a key; "
+        "make the table under another name and move its rows"
+    )
+
+
+# --- the history: the table `migrations`, one row per migration applied
+
+def _history_table() -> Any:
+    from sqlalchemy import BigInteger, Column, Integer, MetaData, String, Table
+
+    return Table(
+        HISTORY, MetaData(),
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("timestamp", BigInteger, nullable=False),
+        Column("name", String(255), nullable=False),
+    )
+
+
+def _history(connection: Any, folder: str | Path) -> list[str]:
+    """The names of the applied migrations in the order they were applied; the table is made when it is missing, from
+    Alembic's `alembic_version` when the database was migrated before 0.93 (it held the last revision only: every
+    migration up to it was applied)."""
+    from sqlalchemy import inspect, select, text
+
+    table = _history_table()
+    reader = inspect(connection)
+    if not reader.has_table(HISTORY):
+        applied: list[str] = []
+        if reader.has_table("alembic_version"):
+            last = connection.execute(text("SELECT version_num FROM alembic_version")).scalar()
+            if last is not None:
+                files = _files(folder)
+                at = next((i for i, f in enumerate(files) if getattr(_load(f), "revision", f.stem[:14]) == last), None)
+                if at is None:
+                    raise MigrateError(f"the database has the migration {last} applied (by an older version), which is not in {Path(folder).resolve()}")
+                applied = [f.stem for f in files[: at + 1]]
+        connection.rollback()
+        table.create(connection)
+        if applied:
+            connection.execute(table.insert(), [{"timestamp": int(name[:14]), "name": name} for name in applied])
+        connection.commit()
+    names = [str(n) for n in connection.execute(select(table.c.name).order_by(table.c.id)).scalars()]
+    connection.rollback()  # the read opened a transaction: the migrations have their own
+    return names
+
+
+def _on_database[T](app: str, work: Callable[[Any], T], transaction: Transaction = "all") -> T:
     """`work` over one connection to the app's default database."""
     from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlalchemy.orm import configure_mappers
 
     db = _database(app)
+    configure_mappers()
 
     async def run() -> T:
-        # SQLite: Python's driver opens no transaction for a schema change unless it is told to
-        options: dict[str, Any] = {"connect_args": {"autocommit": False}} if db.url.startswith("sqlite") else {}
+        options: dict[str, Any] = {}
+        if transaction == "none":
+            options["isolation_level"] = "AUTOCOMMIT"
+        elif db.url.startswith("sqlite"):
+            # SQLite: Python's driver opens no transaction for a schema change unless it is told to
+            options["connect_args"] = {"autocommit": False}
         engine = create_async_engine(db.url, **options)
         try:
             async with engine.connect() as connection:
@@ -267,109 +353,110 @@ def _on_database[T](app: str, work: Callable[[Any], T]) -> T:
     return asyncio.run(run())
 
 
-def _state(folder: str | Path, cfg: Any, connection: Any) -> list[tuple[Any, bool]]:
-    """Every migration of the folder and whether the database has it: the applied ones are the first of the line."""
-    from alembic.migration import MigrationContext
-
-    all_ = _chain(folder, cfg)
-    heads = MigrationContext.configure(connection).get_current_heads()
-    connection.rollback()  # the read opened a transaction: each migration has its own
-    ids = [r.revision for r in all_]
-    if heads and heads[0] not in ids:
-        raise MigrateError(f"the database has the migration {heads[0]} applied, which is not in {Path(folder).resolve()}")
-    done = ids.index(heads[0]) + 1 if heads else 0
-    return [(r, i < done) for i, r in enumerate(all_)]
-
-
-def _find(all_: list[tuple[Any, bool]], to: str, folder: str | Path) -> int:
-    """The migration `to` names: its name, or the timestamp it starts with."""
-    name = Path(to).name.removesuffix(".py")
-    for i, (r, _) in enumerate(all_):
-        if _name(r) == name or _name(r).startswith(f"{name}_"):
-            return i
-    raise MigrateError(f"no migration {to} in {Path(folder).resolve()}")
-
-
-def _run(cfg: Any, connection: Any, revision: Any, direction: Literal["up", "down"]) -> None:
-    """One migration, up or down, in a transaction of its own with Alembic's version: all of it or nothing where the
-    database undoes schema changes (PostgreSQL, SQLite; MySQL and MariaDB commit each one as it runs)."""
-    from alembic import command
-
-    cfg.attributes["connection"] = connection
+def _execute(
+    connection: Any, steps: list[tuple[str, Path]], direction: Literal["up", "down"], fake: bool, transaction: Transaction,
+    each: Callable[[str], None],
+) -> list[str]:
+    """Applies or reverts `steps` and writes the history with each one. `all`: one transaction for the whole run;
+    `each`: one per migration; `none`: no transaction. PostgreSQL and SQLite undo what a failed transaction did; MySQL
+    and MariaDB commit every schema change as it runs."""
+    table = _history_table()
     dialect = connection.dialect.name
-    connection.begin()
+    undoes = dialect not in ("mysql", "mariadb") and transaction != "none"
+    done: list[str] = []
+    name = ""
     try:
-        if direction == "up":
-            command.upgrade(cfg, revision.revision)
-        else:
-            command.downgrade(cfg, revision.down_revision or "base")
-        if dialect == "sqlite":
-            # the tables are rebuilt with the foreign keys off: what they left is checked before it is kept
-            broken = connection.exec_driver_sql("PRAGMA foreign_key_check").first()
-            if broken is not None:
-                raise MigrateError(f"rows of {broken[0]} point to rows of {broken[2]} that do not exist")
+        if transaction == "all":
+            connection.begin()
+        for name, file in steps:
+            if transaction == "each":
+                connection.begin()
+            if not fake:
+                _apply(connection, _load(file), direction)
+                if dialect == "sqlite":
+                    # the tables are rebuilt with the foreign keys off: what they left is checked before it is kept
+                    broken = connection.exec_driver_sql("PRAGMA foreign_key_check").first()
+                    if broken is not None:
+                        raise MigrateError(f"rows of {broken[0]} point to rows of {broken[2]} that do not exist")
+            if direction == "up":
+                connection.execute(table.insert().values(timestamp=int(name[:14]), name=name))
+            else:
+                connection.execute(table.delete().where(table.c.name == name))
+            if transaction != "all":
+                connection.commit()
+            done.append(name)
         connection.commit()
     except Exception as e:
         connection.rollback()
+        # what stays applied of this run: nothing where one transaction held it all
+        for kept in [] if transaction == "all" and undoes else done:
+            each(kept)
         reason = str(getattr(e, "orig", None) or e).split("\n")[0]
-        left = (
-            "this database does not undo schema changes: what it did before failing is still there, undo it by hand before running it again"
-            if dialect in ("mysql", "mariadb")
-            else "nothing of it was kept"
-        )
-        raise MigrateError(f"the migration {_name(revision)} failed{' to revert' if direction == 'down' else ''}: {reason}\n{left}") from e
+        if dialect in ("mysql", "mariadb"):
+            left = "this database does not undo schema changes: what it did before failing is still there, undo it by hand before running it again"
+        elif transaction == "none":
+            left = "it ran without a transaction: what it did before failing is still there, undo it by hand before running it again"
+        else:
+            left = "nothing of this run was kept" if transaction == "all" else "nothing of it was kept"
+        raise MigrateError(f"the migration {name} failed{' to revert' if direction == 'down' else ''}: {reason}\n{left}") from e
+    for name in done:
+        each(name)
+    return done
 
 
 def _silent(name: str) -> None:
     del name
 
 
-def up(folder: str | Path, app: str = "app.main", to: str | None = None, each: Callable[[str], None] = _silent) -> list[str]:
-    """Applies the pending migrations to the app's database (up to `to`, when given); returns their names. `each` hears
-    every one as it is done."""
-    cfg = _config(folder, app)
+def up(
+    folder: str | Path, app: str = "app.main", to: str | None = None, each: Callable[[str], None] = _silent, fake: bool = False,
+    transaction: Transaction = "all",
+) -> list[str]:
+    """Applies the pending migrations to the app's database, by their timestamp (up to `to`, when given); returns their
+    names. `each` hears every one that stays applied. `fake`: the history says they are applied and nothing runs."""
 
     def work(connection: Any) -> list[str]:
-        all_ = _state(folder, cfg, connection)
-        last = len(all_) - 1 if to is None else _find(all_, to, folder)
-        done: list[str] = []
-        for revision, applied in all_[: last + 1]:
-            if not applied:
-                _run(cfg, connection, revision, "up")
-                done.append(_name(revision))
-                each(done[-1])
-        return done
+        applied = set(_history(connection, folder))
+        files = _files(folder)
+        last = len(files) - 1 if to is None else _find(files, to, folder)
+        steps = [(f.stem, f) for f in files[: last + 1] if f.stem not in applied]
+        return _execute(connection, steps, "up", fake, transaction, each)
 
-    return _on_database(app, work)
+    return _on_database(app, work, transaction)
 
 
-def down(folder: str | Path, app: str = "app.main", to: str | None = None, each: Callable[[str], None] = _silent) -> list[str]:
-    """Reverts the last applied migration, or every one made after `to`; returns their names, the last one first."""
-    cfg = _config(folder, app)
+def down(
+    folder: str | Path, app: str = "app.main", to: str | None = None, each: Callable[[str], None] = _silent, fake: bool = False,
+    transaction: Transaction = "all",
+) -> list[str]:
+    """Reverts the last migration applied, or every one applied after `to`; returns their names, the last one first.
+    `fake`: the history forgets them and nothing runs."""
 
     def work(connection: Any) -> list[str]:
-        all_ = _state(folder, cfg, connection)
-        on = [r for r, applied in all_ if applied]
-        keep = len(on) - 1
+        applied = _history(connection, folder)
+        files = {f.stem: f for f in _files(folder)}
+        back = applied[-1:]
         if to is not None:
-            i = _find(all_, to, folder)
-            if not all_[i][1]:
-                raise MigrateError(f"the migration {_name(all_[i][0])} is not applied")
-            keep = i + 1
-        done: list[str] = []
-        for revision in reversed(on[max(keep, 0) :]):
-            _run(cfg, connection, revision, "down")
-            done.append(_name(revision))
-            each(done[-1])
-        return done
+            name = _files(folder)[_find(_files(folder), to, folder)].stem
+            if name not in applied:
+                raise MigrateError(f"the migration {name} is not applied")
+            back = applied[applied.index(name) + 1 :]
+        for name in back:
+            if name not in files:
+                raise MigrateError(f"the migration {name} is applied and is not in {Path(folder).resolve()}: it cannot be reverted without its file")
+        return _execute(connection, [(name, files[name]) for name in reversed(back)], "down", fake, transaction, each)
 
-    return _on_database(app, work)
+    return _on_database(app, work, transaction)
 
 
 def status(folder: str | Path, app: str = "app.main") -> list[tuple[str, bool]]:
-    """Every migration of the folder, from the first to the last, and whether the database has it."""
-    cfg = _config(folder, app)
-    return _on_database(app, lambda connection: [(_name(r), applied) for r, applied in _state(folder, cfg, connection)])
+    """Every migration of the folder, by its timestamp, and whether the database has it."""
+
+    def work(connection: Any) -> list[tuple[str, bool]]:
+        applied = set(_history(connection, folder))
+        return [(f.stem, f.stem in applied) for f in _files(folder)]
+
+    return _on_database(app, work)
 
 
 def main(argv: list[str]) -> None:
@@ -379,9 +466,12 @@ def main(argv: list[str]) -> None:
     parser.add_argument("--dir", default="../migrations")
     parser.add_argument("--app", default="app.main")
     parser.add_argument("--to")
+    parser.add_argument("--fake", action="store_true")
+    parser.add_argument("--transaction", choices=["all", "each", "none"], default="all")
     a = parser.parse_args(argv)
     sys.path.insert(0, str(Path.cwd()))
     sys.dont_write_bytecode = True  # no __pycache__ in the project's migrations folder
+    fake = " (fake)" if a.fake else ""
     try:
         if a.command == "make":
             if not a.message:
@@ -392,9 +482,9 @@ def main(argv: list[str]) -> None:
             all_ = status(a.dir, a.app)
             print("\n".join(f"{'applied' if applied else 'pending'}  {name}" for name, applied in all_) if all_ else f"no migrations in {Path(a.dir).resolve()}")
         elif a.command == "up":
-            if not up(a.dir, a.app, a.to, lambda name: print(f"applied {name}", flush=True)):
+            if not up(a.dir, a.app, a.to, lambda name: print(f"applied {name}{fake}", flush=True), a.fake, a.transaction):
                 print("the database is up to date")
-        elif not down(a.dir, a.app, a.to, lambda name: print(f"reverted {name}", flush=True)):
+        elif not down(a.dir, a.app, a.to, lambda name: print(f"reverted {name}{fake}", flush=True), a.fake, a.transaction):
             print("nothing to revert" if a.to else "no migration is applied")
     except (MigrateError, LookupError) as e:
         print(f"error: {e}", file=sys.stderr)

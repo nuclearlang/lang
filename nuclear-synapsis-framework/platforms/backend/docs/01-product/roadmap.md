@@ -51,10 +51,12 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 - `nuclear migrate` after a real `nuclear install` with `nestjs` (with `fastapi` it ran on a project made by
   `nuclear new`, through the MCP server's `project_migrate`, 2026-11-22): the database check gives the project's
   `build/` the shared tools of the checks (`.venv`, `node_modules`) in place of `nuclear install`.
-- Two `nuclear migrate` at the same time on one database (two instances of an app deployed at once): nothing locks
-  the history.
-- A migration that changes the key of a table: `make` writes nothing for it in one dialect and a change that does
-  nothing in the other.
+- A project whose tables `createTables` made, brought under migrations with `nuclear migrate --fake`: those tables
+  are the dialect's own (no default on the timestamps, other type names on SQLite), not the ones the migrations
+  write; the next `make` does not see the difference, since it never reads the database. The check runs `--fake`
+  only on tables a migration made.
+- A unique or a foreign key made without a name by a migration of before 0.91, dropped on a real PostgreSQL, MySQL
+  or MariaDB with a database that old: the check renames a constraint to the database's own name to stand for it.
 - A migration on a table with millions of rows (SQLite rebuilds the table; the other databases alter it in place).
 - Two requests that change the same row at once inside `@transactional` (two checkouts of one customer): the
   platform has no word to lock a row, and no check says what each database does.
@@ -74,34 +76,12 @@ expect; each needs a rule before it is changed.
   dialects write a `DATETIME` without fraction).
 - **No text column longer than `@column(length = n)`.** A `string` field without a length is 255 characters in both
   dialects; there is no word for a text of any length.
-- **`@created` / `@updated` are written by the database in one dialect** (a nullable column with the default
-  `CURRENT_TIMESTAMP`) **and by the app in the other** (a `NOT NULL` column without a default): the same answers
-  through the app, but a row inserted by SQL needs them in the second. It is the one difference of meaning the
-  database check lists between the schemas the two dialects' migrations leave (`~` lines); the others are spelling
-  (below).
-- **The schemas of the two dialects are not the same bytes.** Besides the timestamps: a foreign key has
-  `ON UPDATE CASCADE` in one dialect and no rule in the other (a key never changes through the app); on SQLite a
-  `boolean` is `BOOLEAN` in one and `TINYINT(1)` in the other, a `double` is `DOUBLE` and `DOUBLE PRECISION`, and a
-  table made by its first migration and never rebuilt has unnamed constraints in one. Wanted: one schema, column by
-  column, with a check that compares the databases' own DDL.
-- **What the migrations do not do, and the tools they follow do** (each needs a rule first):
-  - *A database made before its migrations* (`createTables`, then the first `nuclear migrate`): it is refused
-    (`table ... already exists`). Flyway has `baseline`, Alembic `stamp`: a command that marks the migrations as
-    applied without running them.
-  - *A migration edited after it was applied* is not noticed. Flyway and Liquibase keep a checksum of each file in
-    the history and refuse; Alembic, Sequelize, TypeORM and Rails do not.
-  - *The SQL of a migration without running it* (`--sql`, a dry run): Flyway, Alembic (offline mode) and Rails
-    print it.
-  - *A lock against two runs at once*: Flyway and Liquibase lock the history table, Rails takes an advisory lock;
-    Alembic, Sequelize and TypeORM do not.
-  - *A rename found by `make`*: every tool writes a drop and an add, and none guesses; Django and Prisma ask the
-    user at `make` time. Today the file is edited by hand, in the dialect's migration language: the same Nuclear
-    project needs two different edits. A word in Nuclear for it (a rename said in the entity) would be a change of
-    the language.
-  - *Data that goes with the schema* (seeds; Flyway's repeatable migrations, Sequelize's seeders) and *one
-    migration from many* (squash: Django, Rails' schema file).
-  - *A history of applied migrations with their date* in one table of the same shape in every dialect: today each
-    dialect keeps its tool's table (one holds the last migration, the other the list).
+- **`createTables` does not make the schema the migrations make** in every dialect (the timestamps' default, the
+  foreign keys of a join table, SQLite's type names): it is for development and tests, and its tables are each
+  target library's. Wanted or not: the same schema from both ways.
+- **A migration is edited by hand in the dialect's migration language** (a rename): the same Nuclear project needs
+  two different edits. TypeORM finds no rename either (ADR-backend-0002), so `make` will not; a word in Nuclear
+  for it would be a change of the language.
 - **A model built in code is validated in one dialect only** (`NewCustomer(email = "nope")` throws in fastapi; in
   nestjs only a request's body is validated).
 - **`like` follows the database's case rule** (PostgreSQL tells the case apart; MySQL, MariaDB and SQLite do not for
@@ -111,12 +91,6 @@ expect; each needs a rule before it is changed.
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).
 
 ## Pending
-
-- **A unique or a foreign key made by a migration of before 0.91 has no name** (the database chose one). Dropping it:
-  one dialect finds it by its column; the other writes `drop_constraint(None)` and `make` warns to write the name by
-  hand. Wanted: found by its column in both.
-- **A pending migration before an applied one** (a file added in the middle of the line) is refused in one dialect
-  and not seen in the other, whose history holds only the last migration applied.
 
 - **Found writing the skills library (2026-11-18)**: no users with password hashing or JWT auth; no multipart upload; no background jobs; no documented way to read a raw request body or headers (webhook signatures); no `graph` make-kind. `@status` is in the reference but undocumented for fastapi, and the reference says 400 for an invalid body where fastapi answers 422.
 - **The listeners of one test receive the events of the next** (synapsis-py): `testing.running` resets the injector

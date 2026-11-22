@@ -77,14 +77,19 @@ testMigrationsAreReadFreelyAndChangeTheDatabaseOnlyOnTheUsersYes(tmpPath: Path) 
   expect(done["ok"] == true and runner.calls[1][0] == ["nuclear", "migrate", "up"])
   // a client that asks: the user reads what is dropped before a down
   yes = asking("accept")
-  asyncio.run(tools.projectMigrate(root, "down", "", "20261122100000_notes", "", yes))
+  asyncio.run(tools.projectMigrate(root, "down", "", "20261122100000_notes", "", false, "", yes))
   expect(runner.calls[2][0] == ["nuclear", "migrate", "down", "--to", "20261122100000_notes"])
   expect("dropped, with its data" in yes.session.asked[0])
   made = asking("accept")
-  asyncio.run(tools.projectMigrate(root, "make", "notes on tasks", "", "", made))
+  asyncio.run(tools.projectMigrate(root, "make", "notes on tasks", "", "", false, "", made))
   expect(runner.calls[3][0] == ["nuclear", "migrate", "make", "notes on tasks"] and "The database is not changed" in made.session.asked[0])
-  no = said(asyncio.run(tools.projectMigrate(root, "up", "", "", "", asking("decline"))))
+  no = said(asyncio.run(tools.projectMigrate(root, "up", "", "", "", false, "", asking("decline"))))
   expect(no["declined"] != null and runner.calls.length == 4)
+  // fake and transaction reach the command; a fake says that nothing runs
+  marked = asking("accept")
+  asyncio.run(tools.projectMigrate(root, "up", "", "", "", true, "each", marked))
+  expect(runner.calls[4][0] == ["nuclear", "migrate", "up", "--fake", "--transaction", "each"])
+  expect("without running them" in marked.session.asked[0])
   // what is refused before anything runs
   for wrong in [
     tools.projectMigrate("${tmpPath}", "status"),
@@ -93,9 +98,11 @@ testMigrationsAreReadFreelyAndChangeTheDatabaseOnlyOnTheUsersYes(tmpPath: Path) 
     tools.projectMigrate(root, "up", "a message"),
     tools.projectMigrate(root, "status", "", "20261122100000_notes"),
     tools.projectMigrate(root, "up", "", "--force"),
+    tools.projectMigrate(root, "status", "", "", "", true),
+    tools.projectMigrate(root, "up", "", "", "", false, "some"),
   ]
     expect(said(asyncio.run(wrong))["error"] != null)
-  expect(runner.calls.length == 4)
+  expect(runner.calls.length == 5)
 
 // A runner of `nuclear test` (its exit code and output) and of `nuclear explain` (its JSON), with every call kept.
 FakeTests(code: int, out: string, explained: string = "{}")

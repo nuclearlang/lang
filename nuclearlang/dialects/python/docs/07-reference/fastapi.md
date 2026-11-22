@@ -731,13 +731,14 @@ class FindOrder:
 
 ### Migrations
 
-Migrations of the database schema (ADR-backend-0001): Alembic over `migrations/` (`env.py`, `versions/`), made by
-`nuclear migrate make` against an empty SQLite at the last migration, in batch mode. The commands and the rules:
-`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:
+Migrations of the database schema (ADR-backend-0001, ADR-backend-0002): Alembic's operations in
+`migrations/versions/`, made by `nuclear migrate make` against an empty SQLite where every migration ran, in batch
+mode. The commands and the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8.
+What is this dialect's:
 
-- A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`; its `revision`
-  is its timestamp and `down_revision` the migration it was made after. `alembic_version` holds the last one applied.
-- They run through `nuclear migrate` only (the folder has no `alembic.ini`).
+- A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`. The table
+  `migrations` lists the ones applied.
+- They run through `nuclear migrate` only: Alembic's own commands, revisions and `alembic_version` are not used.
 - A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's
   `existing_type`):
 

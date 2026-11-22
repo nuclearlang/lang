@@ -397,7 +397,7 @@
     "5. `nuclear migrate status` lists every migration as applied or pending.",
     "6. From an agent, the MCP tool `project_migrate(project, action)` does each of these (`status`, `make` with `message`, `up`, `down`, `to`): `make`, `up` and `down` ask the user first.",
     "",
-    "A new column that is not optional needs a default: the rows that exist need a value (`make` warns of it, and of every drop). Each migration runs in its own transaction: PostgreSQL and SQLite keep nothing of one that fails; MySQL and MariaDB cannot undo a schema change, and the message says so. A rename is written by `make` as a drop and an add: edit the file into a rename to keep the data. A database whose tables were made by `createTables = true` is refused: migrations start from an empty one."
+    "A new column that is not optional needs a default: the rows that exist need a value (`make` warns of it, and of every drop). The pending migrations run in one transaction (`--transaction all`, the default; `each`: one per migration; `none`): PostgreSQL and SQLite keep nothing of a run that fails; MySQL and MariaDB cannot undo a schema change, and the message says so. A rename is written by `make` as a drop and an add: edit the file into a rename to keep the data. A database that already has the tables (made by `createTables = true`, or by hand): `nuclear migrate --fake` marks the migrations applied without running them. The history is the table `migrations`, one row per migration applied, in the order of their names; a change of a table's key is refused at `make`."
    ],
    "keys": [
     "migration",

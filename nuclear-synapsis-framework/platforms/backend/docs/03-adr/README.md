@@ -1,8 +1,8 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
-related: [0001-backend-data.md]
+updated: 2026-11-22
+related: [0001-backend-data.md, 0002-typeorm-is-the-rule-of-migrations.md]
 ---
 # Decisions of the backend platform
 
@@ -13,6 +13,7 @@ edited: a change is a new ADR, and the old one is marked `superseded by ADR-back
 | ADR | Decision | Status | Date |
 |---|---|---|---|
 | [0001](0001-backend-data.md) | Backend data is written with one key decorator, a decorator per relation, `paginate`, `@transactional` and generated migrations | accepted | 2026-11-10 |
+| [0002](0002-typeorm-is-the-rule-of-migrations.md) | TypeORM is the rule of behaviour for migrations: the history, the order, `--fake`, the transactions, the schema of the timestamps and the foreign keys | accepted | 2026-11-22 |
 
 Decided in other projects and binding here: what a platform and a dialect are, the contract every dialect
 implements and the conformance example (ADR-synapsis-0002); the contract a backend shares with its apps (ADR-synapsis-0006);

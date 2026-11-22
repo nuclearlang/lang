@@ -116,25 +116,32 @@ def read_schema(url: str) -> dict[str, Any]:
     def foreign_of(i: Any, sync: Any, table: str) -> list[str]:
         if sync.dialect.name == "sqlite":
             rows = sync.exec_driver_sql(f'PRAGMA foreign_key_list("{table}")').all()
-            keys = [(r[3], r[2], r[4], str(r[6]).lower()) for r in rows]
+            keys = [(r[3], r[2], r[4], str(r[6]).lower(), str(r[5]).lower()) for r in rows]
         else:
             keys = [
-                (f["constrained_columns"][0], f["referred_table"], f["referred_columns"][0], str(f.get("options", {}).get("ondelete") or "").lower())
+                (
+                    f["constrained_columns"][0], f["referred_table"], f["referred_columns"][0],
+                    str(f.get("options", {}).get("ondelete") or "").lower(), str(f.get("options", {}).get("onupdate") or "").lower(),
+                )
                 for f in i.get_foreign_keys(table)
             ]
-        return sorted(f"{c} -> {t}.{k}" + (f" on delete {d}" if d not in ("", "no action") else "") for c, t, k, d in keys)
+        # no rule and NO ACTION are the same rule
+        rule = lambda word, r: f" on {word} {r}" if r not in ("", "no action", "none") else ""  # noqa: E731
+        return sorted(f"{c} -> {t}.{k}{rule('delete', d)}{rule('update', u)}" for c, t, k, d, u in keys)
 
     def read(sync: Any) -> dict[str, Any]:
         i = inspect(sync)
         out: dict[str, Any] = {}
         for table in sorted(i.get_table_names()):
-            if table in ("alembic_version", "SequelizeMeta", "sqlite_sequence"):
+            if table in ("migrations", "alembic_version", "SequelizeMeta", "sqlite_sequence"):
                 continue
             key = i.get_pk_constraint(table)["constrained_columns"]
             out[table] = {
                 "columns": {
                     c["name"]: {
                         "type": family(c["type"]),
+                        # the type as the database names it (SQLite keeps the words it was written with)
+                        "sql": str(c["type"]).upper(),
                         "length": getattr(c["type"], "length", None),
                         # SQLite says a key may be null (it never is)
                         "nullable": bool(c["nullable"]) and c["name"] not in key,
@@ -154,12 +161,12 @@ def read_schema(url: str) -> dict[str, Any]:
     return asyncio.run(_with(url, work))
 
 
-# what the entities of store_api say: table → column → nullable (the timestamps are checked by their presence only)
+# what the entities of store_api say: table → column → nullable
 EXPECTED: dict[str, dict[str, bool | None]] = {
-    "customers": {"id": False, "email": False, "name": False, "nickname": True, "vip": False, "credit": False, "created_at": None, "updated_at": None},
+    "customers": {"id": False, "email": False, "name": False, "nickname": True, "vip": False, "credit": False, "created_at": False, "updated_at": False},
     "orders": {
         "id": False, "customer_id": False, "quantity": False, "total": False, "note": True, "status": False, "paid": False,
-        "placed_at": True, "created_at": None,
+        "placed_at": True, "created_at": False,
     },
     "tags": {"id": False, "label": False},
     "orders_tags": {"order_id": False, "tag_id": False},
@@ -211,12 +218,13 @@ def check_schema(url: str, points: bool = False) -> dict[str, Any]:
 
 def seed(url: str) -> None:
     """Rows written before the second migration, by SQL: the columns with a default are left to the database."""
-    stamp = "'2026-01-02 03:04:05'"
     execute(
         url,
-        f"INSERT INTO customers (email, name, created_at, updated_at) VALUES ('seed@example.com', 'Seed', {stamp}, {stamp})",
-        f"INSERT INTO orders (customer_id, total, created_at) SELECT id, 9.5, {stamp} FROM customers WHERE email = 'seed@example.com'",
+        "INSERT INTO customers (email, name) VALUES ('seed@example.com', 'Seed')",
+        "INSERT INTO orders (customer_id, total) SELECT id, 9.5 FROM customers WHERE email = 'seed@example.com'",
     )
+    if scalar(url, "SELECT COUNT(*) FROM customers WHERE created_at IS NOT NULL AND updated_at IS NOT NULL") != 1:
+        raise SystemExit("a row inserted by SQL has no created_at / updated_at: the columns have no default")
     row = scalar(url, "SELECT COUNT(*) FROM orders WHERE quantity = 1 AND status = 'pending' AND NOT paid")
     vip = scalar(url, "SELECT COUNT(*) FROM customers WHERE NOT vip AND credit = 0")
     if (row, vip) != (1, 1):

@@ -209,8 +209,12 @@ for f in "$work"/answers-*.json; do
     failed=1
   fi
 done
-# --- the schemas the migrations left: every difference between the dialects, said (not a failure: docs/01-product/roadmap.md)
+# --- the schemas the migrations left: the same in every dialect on each database, step by step (ADR-backend-0002)
 differences=$("$py" "$self/db.py" compare "$work")
-[ -n "$differences" ] && { echo "the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; }
+if [ -n "$differences" ]; then
+  echo "FAIL the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; failed=1
+elif ls "$work"/schema-fastapi-* >/dev/null 2>&1 && ls "$work"/schema-nestjs-* >/dev/null 2>&1; then
+  echo "ok   the schemas of the dialects are the same on every database, after every step"
+fi
 [ "$failed" -eq 0 ] && echo "database-check: every dialect on every database ok" || echo "database-check: FAILED"
 exit "$failed"

@@ -88,8 +88,9 @@ mobile app. For it (ADR-cli-0001):
   manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions
   ([packages.md](packages.md)).
 - `nuclear migrate [make "<message>" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /
-  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--to <migration>` (up, down)
-  goes to the dialect's tool as it is (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5).
+  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; the options of up and down
+  (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's tool as they are
+  (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`).
 - A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:
   `fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.
 - `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).

@@ -27,7 +27,8 @@ dialect, database, url, project, out = sys.argv[1], sys.argv[2], sys.argv[3], Pa
 entities = project / "components/store/data/entities"
 log = (out / f"migrations-{dialect}-{database}.log").open("w")
 transactional = database in ("sqlite", "postgres")  # MySQL and MariaDB commit each schema change as it runs
-HISTORY = "alembic_version" if dialect == "fastapi" else "SequelizeMeta"
+HISTORY = "migrations"  # one row per migration applied, the same table in every dialect (ADR-backend-0002)
+OLD_HISTORY = "alembic_version" if dialect == "fastapi" else "SequelizeMeta"  # before 0.93
 
 
 def fail(message: str) -> Any:
@@ -133,16 +134,21 @@ expect(migrate("down"), "no migration is applied")
 migrate("up")
 done("make, up, nothing left to make, status, down to an empty database, down with nothing applied, up")
 
-# the tables are there and the history says nothing is applied (a database made before its migrations): refused whole
+# the tables are there and the history says nothing is applied (a database made before its migrations): applying is
+# refused whole; --fake brings it under the migrations without running them, and takes it out again
 db.execute(url, f"DELETE FROM {quoted(HISTORY)}")
 text = migrate("up", code=1)
-expect(text, f"error: the migration {first} failed:", "nothing of it was kept" if transactional else "does not undo schema changes")
+expect(text, f"error: the migration {first} failed:", "nothing of this run was kept" if transactional else "does not undo schema changes")
 db.check_schema(url)
 expect(migrate("status"), f"pending  {first}")
-db.execute(url, *(f"DROP TABLE {t}" for t in ("orders_tags", "orders", "tags", "customers")))
-migrate("up")
+expect(migrate("up", "--fake"), f"applied {first} (fake)")
+expect(migrate("status"), f"applied  {first}")
+expect(migrate("down", "--fake"), f"reverted {first} (fake)")
+expect(migrate("status"), f"pending  {first}")
+expect(migrate("--fake"), f"applied {first} (fake)")
 db.check_schema(url)
-done("a database that already has the tables: refused, exit 1, nothing changed, the history still empty")
+expect(migrate("make", "again"), "no changes: the entities match the last migration")
+done("a database that already has the tables: up refused (exit 1, nothing changed); up --fake and down --fake change the history only")
 
 db.seed(url)
 db.execute(url, "INSERT INTO tags (label) VALUES ('seeded')", "INSERT INTO orders_tags (order_id, tag_id) SELECT o.id, t.id FROM orders o, tags t")
@@ -247,7 +253,7 @@ else:
         '  await queryInterface.renameColumn("orders", "store_id", "shop_id");\n'
         '  await queryInterface.renameTable("stores", "shops");\n'
         "}\n\n"
-    ) + body[body.index("// the migration this one was made after") :]
+    ) + body[body.index("// the migrations this one was made after") :]
 renamed.write_text(body)
 expect(migrate("make", "again"), "no changes: the entities match the last migration")
 migrate("up")
@@ -272,6 +278,11 @@ edit("order.nuc", '  @manyToOne(inverse = "orders", onDelete = "set null")\n  st
 edit("shop.nuc", '  @oneToMany(inverse = "store")\n  orders?: Order[]\n', "")
 text = migrate("make", "less")
 expect(text, "warning: the migration drops column customers.phone; if it was renamed, edit it")
+# the unique under the name the database gives one made without a name (a migration of before 0.91): found by its column
+if database == "postgres":
+    db.execute(url, "ALTER TABLE customers RENAME CONSTRAINT uq_customers_name TO customers_name_key")
+elif database in ("mysql", "mariadb"):
+    db.execute(url, "ALTER TABLE customers RENAME INDEX uq_customers_name TO name")
 migrate("up")
 s6 = schema("6-drops")
 if "phone" in s6["customers"]["columns"] or s6["customers"]["unique"] != ["email"]:
@@ -286,9 +297,11 @@ same(schema(), s5, "the drops reverted")
 kept("the drops reverted")
 migrate("up")
 same(schema(), s6, "the drops applied again")
-done("drop a column, a unique and a foreign key (make warns of the column): the other values stay; down: the schema of before")
+done("drop a column, a unique (under the database's own name) and a foreign key; make warns of the column; down: the schema of before")
 
-# --- 7. a migration that fails half way: the history never says it is applied
+# --- 7. a migration that fails half way, after one that works: what each transaction mode keeps
+edit("tag.nuc", "  label: string\n", "  label: string\n  @column(length = 20)\n  color?: string\n")
+color = made(migrate("make", "color of a tag")).stem
 edit("tag.nuc", "  label: string\n", "  label: string\n  rank: int = 1\n")
 failing = made(migrate("make", "rank of a tag"))
 good = failing.read_text()
@@ -299,66 +312,119 @@ else:
 if bad == good:
     fail("the failing statement was not written into the migration")
 failing.write_text(bad)
+RANK = "`rank`" if database in ("mysql", "mariadb") else '"rank"'
+
+
+def by_hand() -> None:
+    """As the message says: what the failed migration did is undone by hand before it runs again."""
+    if "rank" not in schema()["tags"]["columns"]:
+        fail("the column made before the failure was expected to stay")
+    db.execute(url, f"ALTER TABLE tags DROP COLUMN {RANK}")
+
+
+# all (the default): one transaction for the two
 text = migrate("up", code=1)
+expect(text, f"error: the migration {failing.stem} failed:", "nothing of this run was kept" if transactional else "does not undo schema changes")
+if transactional:
+    same(schema(), s6, "a failed run in one transaction")
+    if [state for state, _ in names()][-2:] != ["pending", "pending"] or f"applied {color}" in text:
+        fail(f"one transaction for the run: the migration before the failed one must not stay: {names()}")
+else:
+    expect(text, f"applied {color}")
+    by_hand()
+# each: the migration before the failed one stays
+text = migrate("up", "--transaction", "each", code=1)
 expect(text, f"error: the migration {failing.stem} failed:", "nothing of it was kept" if transactional else "does not undo schema changes")
+if transactional:
+    expect(text, f"applied {color}")
+else:
+    by_hand()
+if names()[-2:] != [("applied", color), ("pending", failing.stem)]:
+    fail(f"a transaction per migration: {names()}")
+s6c = schema()
+if sorted(set(s6c["tags"]["columns"]) - set(s6["tags"]["columns"])) != ["color"]:
+    fail(f"tags should have color and not rank: {sorted(s6c['tags']['columns'])}")
+# none: what the failed one did stays, on every database
+text = migrate("up", "--transaction", "none", code=1)
+expect(text, f"error: the migration {failing.stem} failed:", "it ran without a transaction" if transactional else "does not undo schema changes", "what it did before failing is still there")
+by_hand()
+same(schema(), s6c, "the failed migration, undone by hand")
 if names()[-1] != ("pending", failing.stem):
     fail(f"a failed migration is not pending: {names()}")
-half = schema()
-if transactional:
-    same(half, s6, "the failed migration")
-else:
-    if "rank" not in half["tags"]["columns"]:
-        fail("MySQL and MariaDB were expected to keep the column made before the failure")
-    # as the message says: what it did is undone by hand before it runs again
-    db.execute(url, "ALTER TABLE tags DROP COLUMN `rank`")
-    same(schema(), s6, "the failed migration, undone by hand")
 kept("a failed migration")
 failing.write_text(good)
-expect(migrate("up"), f"applied {failing.stem}")
+expect(migrate("up", "--transaction", "none"), f"applied {failing.stem}")
 s7 = schema("7-after-failure")
-if "rank" not in s7["tags"]["columns"] or db.scalar(url, "SELECT `rank` FROM tags" if not transactional else 'SELECT "rank" FROM tags') != 1:
+if "rank" not in s7["tags"]["columns"] or db.scalar(url, f"SELECT {RANK} FROM tags") != 1:
     fail("the migration applied after its failure did not add tags.rank with its default")
 done(
-    "a migration that fails half way: exit 1, still pending, "
-    + ("nothing of it kept" if transactional else "what it did stays and the message says so (no transactional schema changes)")
-    + "; fixed, it applies"
+    "a failing migration after a good one: exit 1, still pending; --transaction all: "
+    + ("neither stays" if transactional else "the good one stays (no transactional schema changes) and the message says what is left")
+    + "; each: the good one stays; none: what it did stays; fixed, it applies"
 )
 
-# --- 8. the history: a migration applied and gone from the folder, two made after the same one
+# --- 8. the history is what was applied: a pending migration older than the applied ones, one missing from the folder
+(entities / "note.nuc").write_text('// A note of the shop.\n@entity("notes")\nNote()\n  @primary(generated = true)\n  id: int\n  @column(length = 80)\n  text: string\n')
+note = made(migrate("make", "notes"))
+note = note.rename(note.with_name("20000101000000" + note.name[14:]))
+if names()[0] != ("pending", note.stem) or any(state != "applied" for state, _ in names()[1:]):
+    fail(f"an older pending migration should be listed first, pending: {names()}")
+expect(migrate("up"), f"applied {note.stem}")
+if "notes" not in schema():
+    fail("the older pending migration was not applied")
+expect(migrate("make", "again"), "no changes: the entities match the last migration")
+# down reverts the last one applied, not the one with the last timestamp
+expect(migrate("down"), f"reverted {note.stem}")
+expect(migrate("up"), f"applied {note.stem}")
+s8 = schema("8-out-of-order")
+# a migration the database has and the folder does not: only its revert needs the file
+gone = note.rename(note.with_suffix(".gone"))
+if note.stem in migrate("status"):
+    fail("status lists a migration that is not in the folder")
+expect(migrate("up"), "the database is up to date")
+expect(migrate("down", code=1), f"error: the migration {note.stem} is applied and is not in")
+note = gone.rename(note)
+same(schema(), s8, "the refused revert")
 last = names()[-1][1]
-gone = failing.with_suffix(".gone")
-failing.rename(gone)
-for command in ("status", "up", "down"):
-    expect(migrate(command, code=1), "error: the database has the migration", "applied, which is not in")
-gone.rename(failing)
-twin = failing.with_name(failing.name.replace(failing.stem[:14], "29990101000000"))
-twin.write_text(re.sub(r"^(revision: str = )'\d+'", r"\1'29990101000000'", good, flags=re.M))
-for command in (("status",), ("up",), ("down",), ("make", "third")):
-    expect(migrate(*command, code=1), f"error: the migrations {failing.stem} and {twin.stem} both follow", "delete one, apply the other and make it again")
-twin.unlink()
-same(schema(), s7, "the refused commands")
-expect(migrate("status"), f"applied  {last}")
-done("a migration applied and missing from the folder, two migrations made after the same one: refused, exit 1, nothing changed")
+done("a pending migration older than the applied ones: applied, and reverted first by down; a migration missing from the folder: only its revert is refused")
+
+# --- 8b. a database migrated by 0.91 or 0.92: its history is converted in place, once
+applied_before = [name for state, name in names() if state == "applied"]
+db.execute(url, f"DROP TABLE {quoted(HISTORY)}")
+if dialect == "fastapi":
+    db.execute(url, "CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)", f"INSERT INTO alembic_version VALUES ('{last[:14]}')")
+else:
+    db.execute(url, f"CREATE TABLE {quoted(OLD_HISTORY)} (name VARCHAR(255) NOT NULL PRIMARY KEY)")
+    db.execute(url, *(f"INSERT INTO {quoted(OLD_HISTORY)} VALUES ('{name}.js')" for name in applied_before))
+if [name for state, name in names() if state == "applied"] != applied_before:
+    fail(f"the history of before was not converted: {names()}")
+if db.scalar(url, f"SELECT COUNT(*) FROM {quoted(HISTORY)}") != len(applied_before):
+    fail("the table migrations does not hold one row per migration applied")
+expect(migrate("up"), "the database is up to date")
+same(schema(), s8, "the converted history")
+done("the history of 0.91 / 0.92 (the tool's own table) converted in place: the same migrations applied, nothing run again")
 
 # --- 9. down to a migration, up to a migration
 text = migrate("down", "--to", first)
 reverted = re.findall(r"^reverted (\S+)$", text, re.M)
-if reverted != [n for _, n in reversed(names())][: len(reverted)] or len(reverted) != 6:
+# every migration applied after the first one: the converted history has them by their timestamp, so not the notes
+if len(reverted) != 7 or sorted(reverted) != sorted(n for _, n in names() if n not in (first, note.stem)):
     fail(f"down --to the first migration reverted {reverted}")
-same(schema(), s1, "every migration after the first reverted")
+same({t: v for t, v in schema().items() if t != "notes"}, s1, "every migration applied after the first reverted")
 kept("every migration after the first reverted")
 expect(migrate("down", "--to", first), "nothing to revert")
 expect(migrate("up", "--to", points[:14]), f"applied {points}")
-same(schema(), s2, "up to the second migration")
-if [state for state, _ in names()] != ["applied", "applied", "pending", "pending", "pending", "pending", "pending"]:
+if {t: v for t, v in schema().items() if t != "notes"} != s2:
+    fail("up --to the second migration: not its schema")
+if [state for state, _ in names()] != ["applied", "applied", "applied"] + ["pending"] * 6:
     fail(f"after up --to the second migration: {names()}")
 expect(migrate("up", "--to", "nothing", code=1), "error: no migration nothing in")
 expect(migrate("down", "--to", last, code=1), f"error: the migration {last} is not applied")
-if len(re.findall(r"^applied ", migrate("up"), re.M)) != 5:
-    fail("up did not apply the five pending migrations")
-same(schema(), s7, "every migration applied again")
+if len(re.findall(r"^applied ", migrate("up"), re.M)) != 6:
+    fail("up did not apply the six pending migrations")
+same(schema(), s8, "every migration applied again")
 kept("every migration applied again")
-done("down --to the first migration (six reverted in order: the first schema, the rows kept), up --to the second, up: the last schema again")
+done("down --to the first migration (seven reverted: the first schema, the rows kept), up --to the second, up: the last schema again")
 
 # --- 10. the entities of step 2 again: one migration takes everything added away, and the app of the next stage runs on it
 for f in entities.glob("*.nuc"):
@@ -369,7 +435,7 @@ for name, text in original.items():
 # with the column of step 2: the scenario of the next stage reads it through the app
 edit("customer.nuc", "  credit: double = 0.0\n", "  credit: double = 0.0\n  points: int = 7\n")
 text = migrate("make", "back to the first entities")
-expect(text, "warning: the migration drops table stores", "warning: the migration drops table customers_favorites", "warning: the migration drops column tags.rank")
+expect(text, "warning: the migration drops table stores", "warning: the migration drops table customers_favorites", "warning: the migration drops column tags.rank", "warning: the migration drops table notes")
 migrate("up")
 db.check_schema(url, True)
 same(schema("10-back"), s2, "the first entities again")

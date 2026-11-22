@@ -378,24 +378,26 @@ appConfig ProjectConfig
   origins: string[] = ["http://localhost:5173"]
 ```
 
-#### Migrations of the database (ADR-backend-0001)
+#### Migrations of the database (ADR-backend-0001, ADR-backend-0002)
 
 `createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the
 project's `migrations/` folder (with the sources, not in `build/`):
 
 ```sh
-nuclear migrate make "notes on tasks"   # one migration: what the entities changed since the last migration
+nuclear migrate make "notes on tasks"   # one migration: what the entities changed since the migrations of the folder
 nuclear migrate                         # applies the pending ones to the default database (also: nuclear migrate up)
 nuclear migrate --to <migration>        # applies the pending ones up to that one
 nuclear migrate down                    # reverts the last one applied
-nuclear migrate down --to <migration>   # reverts every one made after that one (it stays applied)
-nuclear migrate status                  # every migration in order: applied or pending
+nuclear migrate down --to <migration>   # reverts every one applied after that one (it stays applied)
+nuclear migrate status                  # every migration of the folder: applied or pending
 ```
+
+`up` and `down` take `--fake` (the history changes and nothing runs) and `--transaction all|each|none`.
 
 Making a migration:
 
-- `make` compares the entities with the last migration, never with a database; with no change it writes nothing
-  (`no changes: the entities match the last migration`).
+- `make` compares the entities with the migrations of the folder, never with a database; with no change it writes
+  nothing (`no changes: the entities match the last migration`).
 - A migration's name is `<year month day hour minute second>_<message in snake_case>` (local time); `--to` takes the
   name or its timestamp.
 - A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or
@@ -403,34 +405,45 @@ Making a migration:
 - `make` warns of what loses data or what a table with rows refuses: a dropped table or column, a required column
   added without a default, a column that becomes required.
 - A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows
-  works.
-- Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`.
-- The key of a table is not changed by a migration.
+  works. A `@created` or `@updated` column is required and has the database's clock as its default.
+- Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`. A foreign key does what
+  `onDelete` says and nothing else.
+- `make` refuses a changed key (`the key of <table> changed`): a migration does not change the key of a table.
+- Two migrations made at the same time (two people, each without the other's) both count: the next `make` compares
+  with both.
 
 Applying and reverting:
 
-- The history is one line: each migration follows one migration. Two migrations made after the same one (two
-  people at once) are refused by every command: delete one, apply the other and make the deleted one again.
-- A migration the database has applied and the folder does not hold is refused by every command.
-- Each migration runs in a transaction of its own. When one fails the command stops with exit code 1, the
-  migrations before it stay applied and the failed one stays pending. PostgreSQL and SQLite undo everything the
-  failed migration did; MySQL and MariaDB keep the schema changes it made before failing (they cannot undo them):
-  the message says so, and they are undone by hand before it is applied again.
+- The database keeps one row per migration applied, in the table `migrations` (`id`, `timestamp`, `name`).
+- The migrations are ordered by their timestamp. `up` applies every pending one in that order, also one older than
+  the ones already applied.
+- `down` reverts the last one applied (the last row of the history), whatever its timestamp.
+- A migration the database has applied and the folder does not hold is not listed and stops nothing; only
+  reverting it is refused.
+- `--transaction all` (the default) runs the whole command in one transaction, `each` one per migration, `none`
+  none. When a migration fails the command stops with exit code 1 and that migration stays pending. PostgreSQL and
+  SQLite undo what the failed transaction did: with `all` nothing of the run stays, with `each` the migrations before
+  the failed one stay. MySQL and MariaDB keep every schema change made before the failure (they cannot undo them),
+  and so does `none` on every database: the message says so, and they are undone by hand before it is applied again.
 - A table that is already in the database is never taken as made by a migration: applying a migration that creates
-  it fails.
+  it fails. A database that already has its tables comes under migrations with `nuclear migrate --fake`: the
+  pending migrations are written in the history without running. `nuclear migrate down --fake` takes the last one
+  out of the history without running.
 - `down` runs the way back the migration holds; what `up` dropped comes back empty.
+- A migration edited after it was applied is not applied again.
 - With nothing to do a command says so and ends with exit code 0 (`the database is up to date`, `no migration is
   applied`, `nothing to revert`).
 
 | Command | Prints, one line each |
 |---|---|
 | `make` | `wrote <file>`, and a `warning: ...` per risk |
-| `migrate`, `migrate up` | `applied <migration>` |
-| `migrate down` | `reverted <migration>` |
+| `migrate`, `migrate up` | `applied <migration>` (`applied <migration> (fake)`) |
+| `migrate down` | `reverted <migration>` (`reverted <migration> (fake)`) |
 | `migrate status` | `applied  <migration>` or `pending  <migration>` |
 | a refused command | `error: ...`, exit code 1 |
 
-- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11).
+- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11). The
+  schema they leave is the same in every dialect.
 - A project with migrations leaves `createTables` out of its connection.
 
 ### 2.9 Listener, events and cache

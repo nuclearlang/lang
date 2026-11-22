@@ -1,17 +1,24 @@
 #!/usr/bin/env node
-// Migrations of the database schema (ADR-backend-0001), run by `nuclear migrate` in the generated project once compiled:
+// Migrations of the database schema (ADR-backend-0001, ADR-backend-0002), run by `nuclear migrate` in the generated
+// project once compiled:
 //
 //   synapsis-nest-migrate make "add done to tasks" --dir ../migrations   one migration: the entities minus the last one
 //   synapsis-nest-migrate up [--to <name>] --dir ../migrations           applies the pending ones (up to <name>)
-//   synapsis-nest-migrate down [--to <name>] --dir ../migrations         reverts the last one (or every one after <name>)
+//   synapsis-nest-migrate down [--to <name>] --dir ../migrations         reverts the last one applied (or every one applied after <name>)
 //   synapsis-nest-migrate status --dir ../migrations                     every migration: applied or pending
 //
-// A migration is `<timestamp>_<slug>.js` with `up` and `down` over Sequelize's queryInterface, `parent` (the migration
-// it was made after: the history is one line) and `schema`: the tables once it is applied, which the next `make`
-// compares the entities with (so `make` never reads the database, as in the fastapi dialect). Applied migrations are
-// listed in the table SequelizeMeta, as sequelize-cli and umzug do. Each one runs in a transaction of its own, over
-// `migrator`: Sequelize's queryInterface with what it gets wrong made right (a table of SQLite rebuilt without
-// losing its key, its constraints or the rows that point to it; a column changed with its unique and its foreign key).
+//   up and down take --fake (the history changes, nothing runs) and --transaction all|each|none (default: all)
+//
+// A migration is `<timestamp>_<slug>.js` with `up` and `down` over Sequelize's queryInterface, and `schema`: the tables
+// once it is applied, which the next `make` compares the entities with (so `make` never reads the database, as in the
+// fastapi dialect); `known` lists the migrations it was made after. A migration runs over `migrator`: Sequelize's
+// queryInterface with what it gets wrong made right (a table of SQLite made and rebuilt without losing its key, its
+// constraints or the rows that point to it; a column changed with its unique and its foreign key).
+//
+// The behaviour is TypeORM's (ADR-backend-0002), the same as the fastapi dialect's tool, with the same words: the table
+// `migrations` holds one row per migration applied (`id`, `timestamp`, `name`); the migrations are ordered by their
+// timestamp; a pending one runs whatever its place; `down` reverts the last one applied. A database migrated before
+// 0.93 (its history in SequelizeMeta) is converted once.
 import 'reflect-metadata';
 import { existsSync, mkdirSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
@@ -28,7 +35,7 @@ export interface ColumnSchema {
   primaryKey?: true;
   autoIncrement?: true;
   unique?: true | string;
-  /** a literal, or `{ fn: 'NOW' }` for one of DataTypes' functions */
+  /** a literal, `{ fn: 'NOW' }` for one of DataTypes' functions, or `{ literal: 'CURRENT_TIMESTAMP' }` for SQL */
   defaultValue?: unknown;
   references?: { model: string; key: string };
   onDelete?: string;
@@ -58,6 +65,8 @@ export function schemaOf(models: unknown[]): Schema {
   const schema: Schema = {};
   for (const model of Object.values(s.models)) {
     const table = String(model.getTableName());
+    // @created / @updated: never empty, the database's clock by default (the app writes them too; ADR-backend-0002)
+    const stamps = Object.values((model as unknown as { _timestampAttributes: Record<string, string> })._timestampAttributes ?? {});
     const columns: Record<string, ColumnSchema> = {};
     for (const [key, a] of Object.entries(model.getAttributes()) as [string, ModelAttributeColumnOptions][]) {
       const c: ColumnSchema = { type: typeName(a.type), allowNull: a.allowNull ?? !a.primaryKey };
@@ -73,8 +82,10 @@ export function schemaOf(models: unknown[]): Schema {
         const r = a.references as { model: unknown; key?: string };
         c.references = { model: typeof r.model === 'string' ? r.model : String((r.model as { tableName?: string }).tableName ?? r.model), key: r.key ?? 'id' };
       }
-      if (a.onDelete) c.onDelete = a.onDelete.toUpperCase();
-      if (a.onUpdate) c.onUpdate = a.onUpdate.toUpperCase();
+      if (stamps.includes(key)) c.defaultValue = { literal: 'CURRENT_TIMESTAMP' };
+      // a foreign key does nothing unless the relation says so: no rule is NO ACTION, and Nuclear has no word for
+      // what a changed key does (Sequelize would write ON UPDATE CASCADE by itself)
+      if (a.onDelete && a.onDelete.toUpperCase() !== 'NO ACTION') c.onDelete = a.onDelete.toUpperCase();
       columns[a.field ?? key] = c;
     }
     schema[table] = columns;
@@ -82,7 +93,7 @@ export function schemaOf(models: unknown[]): Schema {
   return schema;
 }
 
-const js = (v: unknown): string => JSON.stringify(v).replace(/"([A-Za-z_$][\w$]*)":/g, '$1: ').replace(/,(?=[A-Za-z_$]+: )/g, ', ');
+const js = (v: unknown): string => (v === undefined ? 'undefined' : JSON.stringify(v)).replace(/"([A-Za-z_$][\w$]*)":/g, '$1: ').replace(/,(?=[A-Za-z_$]+: )/g, ', ');
 
 function column(c: ColumnSchema): string {
   const type = c.options ? `Sequelize.DataTypes.${c.type}(${js(c.options)})` : `Sequelize.DataTypes.${c.type}`;
@@ -91,8 +102,9 @@ function column(c: ColumnSchema): string {
   if (c.autoIncrement) parts.push('autoIncrement: true');
   if (c.unique) parts.push(`unique: ${js(c.unique)}`);
   if (c.defaultValue !== undefined) {
-    const d = c.defaultValue as { fn?: string };
-    parts.push(`defaultValue: ${d && typeof d === 'object' && d.fn ? `Sequelize.DataTypes.${d.fn}` : js(c.defaultValue)}`);
+    const d = c.defaultValue as { fn?: string; literal?: string } | null;
+    const written = d && typeof d === 'object' && d.fn ? `Sequelize.DataTypes.${d.fn}` : d && typeof d === 'object' && d.literal ? `Sequelize.literal(${js(d.literal)})` : js(c.defaultValue);
+    parts.push(`defaultValue: ${written}`);
   }
   if (c.references) parts.push(`references: ${js(c.references)}`);
   if (c.onDelete) parts.push(`onDelete: ${js(c.onDelete)}`);
@@ -123,6 +135,11 @@ export function diff(before: Schema, after: Schema): Change[] {
   for (const t of added) changes.push({ up: table(t, after[t]), down: `await queryInterface.dropTable(${js(t)});` });
   for (const t of Object.keys(after).filter((t) => t in before).sort()) {
     const [old, now] = [before[t], after[t]];
+    // no migration of the platform changes a key: said, never skipped
+    const key = (columns: Record<string, ColumnSchema>): string => Object.keys(columns).filter((c) => columns[c].primaryKey).sort().join(', ');
+    if (key(old) !== key(now)) {
+      throw new Error(`the key of ${t} changed (${key(old)} to ${key(now)}): a migration does not change a key; make the table under another name and move its rows`);
+    }
     for (const c of Object.keys(now).filter((c) => !(c in old))) {
       const required = !now[c].allowNull && now[c].defaultValue === undefined && !now[c].autoIncrement;
       changes.push({
@@ -153,8 +170,8 @@ export function diff(before: Schema, after: Schema): Change[] {
   return changes;
 }
 
-/** The text of a migration file made after the migration `parent` (null: the first one). */
-export function render(message: string, changes: Change[], schema: Schema, parent: string | null = null): string {
+/** The text of a migration file; `known`: the migrations of the folder when it is made. */
+export function render(message: string, changes: Change[], schema: Schema, known: string[] = []): string {
   const indent = (s: string): string => s.split('\n').map((l) => `  ${l}`).join('\n');
   return `// ${message.replace(/\s+/g, ' ')}
 // Written by \`nuclear migrate make\` from the entities; it is the project's from now on (a renamed table or column
@@ -170,8 +187,8 @@ export async function down(queryInterface, Sequelize) {
 ${[...changes].reverse().map((c) => indent(c.down)).join('\n')}
 }
 
-// the migration this one was made after (the history is one line)
-export const parent = ${JSON.stringify(parent)};
+// the migrations this one was made after: what its changes were compared with
+export const known = ${JSON.stringify(known)};
 
 // the tables once this migration is applied: what the next \`nuclear migrate make\` compares the entities with
 export const schema = ${JSON.stringify(schema, null, 2)};
@@ -185,36 +202,60 @@ export interface Migration {
   up: (q: QueryInterface, s: typeof Sequelize) => Promise<void>;
   down: (q: QueryInterface, s: typeof Sequelize) => Promise<void>;
   schema?: Schema;
-  parent: string | null;
+  /** the migrations of the folder when this one was made */
+  known?: string[];
+  /** before 0.93: the last migration when this one was made */
+  parent?: string | null;
 }
 
-/** The migrations of `dir` from the first to the last. The history is one line: two migrations made after the same
- * one (two people at once) are refused, and so is one whose parent is not in the folder. */
-export async function chain(dir: string): Promise<Migration[]> {
+/** The migrations of `dir`, by their timestamp. */
+export async function migrations(dir: string): Promise<Migration[]> {
   const files = existsSync(dir) ? readdirSync(dir).filter((f) => /^\d{14}_.*\.js$/.test(f)).sort() : [];
   const all: Migration[] = [];
   for (const file of files) {
     // read again when the file changed (a migration edited between two commands of one process)
     const m = (await import(`${pathToFileURL(join(dir, file)).href}?${statSync(join(dir, file)).mtimeMs}`)) as Partial<Migration>;
-    // a migration written before `parent` existed follows the file before it
-    const parent = m.parent !== undefined ? m.parent : (all.at(-1)?.name ?? null);
-    all.push({ name: file.slice(0, -3), file, up: m.up!, down: m.down!, schema: m.schema, parent });
+    all.push({ name: file.slice(0, -3), file, up: m.up!, down: m.down!, schema: m.schema, known: m.known, parent: m.parent });
   }
-  const names = new Set(all.map((m) => m.name));
-  const out: Migration[] = [];
-  let at: string | null = null;
-  for (;;) {
-    const next = all.filter((m) => m.parent === at);
-    if (next.length > 1) {
-      throw new Error(`the migrations ${next[0].name} and ${next[1].name} both follow ${at ?? 'no migration'}: they were made at the same time; delete one, apply the other and make it again`);
-    }
-    if (!next.length) break;
-    out.push(next[0]);
-    at = next[0].name;
-  }
-  const lost = all.find((m) => m.parent !== null && !names.has(m.parent));
-  if (lost) throw new Error(`the migration ${lost.name} follows ${lost.parent}, which is not in ${dir}`);
-  return out;
+  return all;
+}
+
+/** The tables once every migration of `all` is applied. Each one brings what it changed since the migrations it was
+ * made after (`known`): two made at the same time, each without the other, both count, and so does one that runs
+ * before the ones it was made after. A file of before 0.93 has `parent` (every migration up to that one) or neither
+ * (the ones before it). */
+export function schemaAfter(all: Migration[]): Schema {
+  const memo = new Map<string, Schema>();
+  const fold = (list: Migration[]): Schema => {
+    const key = list.map((m) => m.name).join('|');
+    const found = memo.get(key);
+    if (found) return found;
+    let state: Schema = {};
+    list.forEach((m, i) => {
+      if (!m.schema) return;
+      const before = list.slice(0, i);
+      const at = m.parent ? all.findIndex((x) => x.name === m.parent) : -1;
+      const known = m.known ? all.filter((x) => x !== m && m.known!.includes(x.name)) : m.parent === null ? [] : at >= 0 ? all.slice(0, at + 1).filter((x) => x !== m) : before;
+      const base = known.length === before.length && known.every((x, k) => x === before[k]) ? state : fold(known);
+      const next: Schema = Object.fromEntries(Object.entries(state).map(([t, columns]) => [t, { ...columns }]));
+      for (const t of new Set([...Object.keys(base), ...Object.keys(m.schema)])) {
+        if (!(t in m.schema)) {
+          delete next[t];
+          continue;
+        }
+        next[t] ??= {};
+        for (const c of new Set([...Object.keys(base[t] ?? {}), ...Object.keys(m.schema[t])])) {
+          if (js(base[t]?.[c]) === js(m.schema[t][c])) continue;
+          if (c in m.schema[t]) next[t][c] = m.schema[t][c];
+          else delete next[t][c];
+        }
+      }
+      state = next;
+    });
+    memo.set(key, state);
+    return state;
+  };
+  return fold(all);
 }
 
 const slug = (message: string): string => message.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 60) || 'migration';
@@ -223,17 +264,17 @@ const slug = (message: string): string => message.toLowerCase().replace(/[^a-z0-
 const stamp = (d = new Date()): string =>
   [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join('');
 
-/** Writes the migration from the last one to `models`; null when nothing changed. */
+/** Writes the migration from the migrations of the folder to `models`; null when nothing changed. */
 export async function make(dir: string, message: string, models: unknown[], now = new Date()): Promise<string | null> {
-  const last = (await chain(dir)).at(-1);
+  const all = await migrations(dir);
   const after = schemaOf(models);
-  const changes = diff(last?.schema ?? {}, after);
+  const changes = diff(schemaAfter(all), after);
   if (!changes.length) return null;
   mkdirSync(dir, { recursive: true });
   const at = new Date(now);
   while (readdirSync(dir).some((f) => f.startsWith(`${stamp(at)}_`))) at.setSeconds(at.getSeconds() + 1); // two in one second: the next one
   const file = join(dir, `${stamp(at)}_${slug(message)}.js`);
-  writeFileSync(file, render(message, changes, after, last?.name ?? null), { flag: 'wx' });
+  writeFileSync(file, render(message, changes, after, all.map((m) => m.name)), { flag: 'wx' });
   for (const c of changes) if (c.warning) console.warn(`warning: ${c.warning}`);
   return file;
 }
@@ -316,12 +357,10 @@ export function migrator(q: QueryInterface): QueryInterface {
     }
     return lite;
   };
-  const rebuild = async (t: string, change: (lite: Lite) => void): Promise<void> => {
-    const lite = await read(t);
-    const had = lite.columns.map((c) => c.name);
-    change(lite);
+  const list = (names: (string | null)[]): string => names.map((n) => id(n!)).join(', ');
+  /** CREATE TABLE `name` with what `lite` says; its constraints are named after the table `t`. */
+  const create = (name: string, t: string, lite: Lite): Promise<unknown> => {
     const single = lite.key.length === 1;
-    const list = (names: (string | null)[]): string => names.map((n) => id(n!)).join(', ');
     const rule = (word: string, r?: string): string => (r && r.toUpperCase() !== 'NO ACTION' ? ` ON ${word} ${r.toUpperCase()}` : '');
     const parts = [
       ...lite.columns.map((c) => `${id(c.name)} ${c.sql}${single && lite.key[0] === c.name ? ` PRIMARY KEY${lite.generated ? ' AUTOINCREMENT' : ''}` : ''}`),
@@ -329,9 +368,15 @@ export function migrator(q: QueryInterface): QueryInterface {
       ...lite.uniques.map((u) => `CONSTRAINT ${id(`uq_${t}_${u.join('_')}`)} UNIQUE (${list(u)})`),
       ...lite.foreign.map((f) => `CONSTRAINT ${id(`fk_${t}_${f.columns.join('_')}`)} FOREIGN KEY (${list(f.columns)}) REFERENCES ${id(f.table)}${f.keys[0] === null ? '' : ` (${list(f.keys)})`}${rule('DELETE', f.onDelete)}${rule('UPDATE', f.onUpdate)}`),
     ];
+    return s.query(`CREATE TABLE ${id(name)} (${parts.join(', ')})`);
+  };
+  const rebuild = async (t: string, change: (lite: Lite) => void): Promise<void> => {
+    const lite = await read(t);
+    const had = lite.columns.map((c) => c.name);
+    change(lite);
     const next = `_nuclear_new_${t}`;
     const kept = list(lite.columns.map((c) => c.name).filter((c) => had.includes(c)));
-    await s.query(`CREATE TABLE ${id(next)} (${parts.join(', ')})`);
+    await create(next, t, lite);
     await s.query(`INSERT INTO ${id(next)} (${kept}) SELECT ${kept} FROM ${id(t)}`);
     await s.query(`DROP TABLE ${id(t)}`);
     await s.query(`ALTER TABLE ${id(next)} RENAME TO ${id(t)}`);
@@ -347,7 +392,9 @@ export function migrator(q: QueryInterface): QueryInterface {
   };
   const sqlOf = (c: string, a: Attribute): string => {
     const { autoIncrement: _a, ...rest } = core(a);
-    return (q.queryGenerator as unknown as { attributesToSQL(a: Record<string, Attribute>): Record<string, string> }).attributesToSQL({ [c]: (s as unknown as { normalizeAttribute(a: Attribute): Attribute }).normalizeAttribute(rest) })[c];
+    const sql = (q.queryGenerator as unknown as { attributesToSQL(a: Record<string, Attribute>): Record<string, string> }).attributesToSQL({ [c]: (s as unknown as { normalizeAttribute(a: Attribute): Attribute }).normalizeAttribute(rest) })[c];
+    // SQLite keeps the name a type is written with: the names the other dialects write (ADR-backend-0002)
+    return sql.replace(/^TINYINT\(1\)/, 'BOOLEAN').replace(/^DOUBLE PRECISION/, 'DOUBLE');
   };
 
   const lite = dialect === 'sqlite';
@@ -355,7 +402,18 @@ export function migrator(q: QueryInterface): QueryInterface {
     async createTable(t: string, attributes: Record<string, Attribute>, options?: object): Promise<void> {
       // Sequelize writes CREATE TABLE IF NOT EXISTS: a table that is already there would pass as made by this migration
       if (await q.tableExists(t)) throw new Error(`table ${t} already exists`);
-      if (lite) return q.createTable(t, attributes, options as never);
+      if (lite) {
+        // written here: the types by their names, the key, the generated ids and every constraint with its name
+        const made: Lite = { columns: [], key: [], generated: false, uniques: [], foreign: [], indexes: [] };
+        for (const [c, a] of Object.entries(attributes)) {
+          made.columns.push({ name: c, sql: sqlOf(c, a) });
+          if (a.primaryKey) made.key.push(c);
+          if (a.autoIncrement) made.generated = true;
+          constrain(made, c, a);
+        }
+        await create(t, t, made);
+        return;
+      }
       // the table, then its uniques and foreign keys by name (inside CREATE TABLE the database names them)
       const plain = Object.fromEntries(Object.entries(attributes).map(([c, a]) => [c, { ...core(a), ...(a.primaryKey ? { primaryKey: true } : {}) }]));
       await q.createTable(t, plain, options as never);
@@ -365,11 +423,12 @@ export function migrator(q: QueryInterface): QueryInterface {
       }
     },
     async addColumn(t: string, c: string, a: Attribute): Promise<void> {
-      await q.addColumn(t, c, core(a));
       if (lite) {
+        await s.query(`ALTER TABLE ${id(t)} ADD COLUMN ${id(c)} ${sqlOf(c, a)}`);
         if (a.unique || a.references) await rebuild(t, (l) => constrain(l, c, a));
         return;
       }
+      await q.addColumn(t, c, core(a));
       if (a.unique) await unique(t, c);
       if (a.references) await foreign(t, c, a);
     },
@@ -412,96 +471,129 @@ export function migrator(q: QueryInterface): QueryInterface {
   return Object.assign(Object.create(q) as QueryInterface, own);
 }
 
-const META = 'SequelizeMeta';
-const transactional = (s: Sequelize): boolean => !['mysql', 'mariadb'].includes(s.getDialect());
+const HISTORY = 'migrations';
+export type Transaction = 'all' | 'each' | 'none';
 
-/** The names of the applied migrations, as the database lists them. */
-async function applied(q: QueryInterface): Promise<string[]> {
-  if (!(await q.tableExists(META))) return [];
-  const rows = (await q.sequelize.query(`SELECT name FROM ${q.quoteIdentifier(META)}`, { type: 'SELECT' })) as { name: string }[];
-  return rows.map((r) => r.name.replace(/\.js$/, ''));
+/** The names of the applied migrations in the order they were applied. The table is made when it is missing, from
+ * SequelizeMeta when the database was migrated before 0.93. */
+async function history(sequelize: Sequelize): Promise<string[]> {
+  const q = sequelize.getQueryInterface();
+  const names = async (table: string, order: string): Promise<string[]> =>
+    ((await sequelize.query(`SELECT name FROM ${q.quoteIdentifier(table)} ORDER BY ${order}`, { type: 'SELECT' })) as { name: string }[]).map((r) => r.name.replace(/\.js$/, ''));
+  if (!(await q.tableExists(HISTORY))) {
+    const before = (await q.tableExists('SequelizeMeta')) ? await names('SequelizeMeta', 'name') : [];
+    await q.createTable(HISTORY, {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      timestamp: { type: DataTypes.BIGINT, allowNull: false },
+      name: { type: DataTypes.STRING, allowNull: false },
+    });
+    if (before.length) await q.bulkInsert(HISTORY, before.map((name) => ({ timestamp: Number(name.slice(0, 14)), name })));
+  }
+  return names(HISTORY, 'id');
 }
 
-/** Every migration of `dir` and whether the database has it. The applied ones are the first of the line: one applied
- * that is not in the folder, or one pending before an applied one, is refused. */
-export async function status(dir: string, sequelize: Sequelize): Promise<{ name: string; applied: boolean; migration: Migration }[]> {
-  const all = await chain(dir);
-  const done = new Set(await applied(sequelize.getQueryInterface()));
-  const lost = [...done].find((n) => !all.some((m) => m.name === n));
-  if (lost) throw new Error(`the database has the migration ${lost} applied, which is not in ${dir}`);
-  const out = all.map((migration) => ({ name: migration.name, applied: done.has(migration.name), migration }));
-  const gap = out.findIndex((m) => !m.applied);
-  const after = out.find((m, i) => gap >= 0 && i > gap && m.applied);
-  if (after) throw new Error(`the migration ${out[gap].name} is not applied and ${after.name}, made after it, is`);
-  return out;
+/** Every migration of `dir`, by its timestamp, and whether the database has it. */
+export async function status(dir: string, sequelize: Sequelize): Promise<{ name: string; applied: boolean }[]> {
+  const applied = new Set(await history(sequelize));
+  return (await migrations(dir)).map((m) => ({ name: m.name, applied: applied.has(m.name) }));
 }
 
 /** The migration `to` names: its name, or the timestamp it starts with. */
-function find<T extends { name: string }>(all: T[], to: string, dir: string): number {
+function find(all: Migration[], to: string, dir: string): number {
   const name = basename(to).replace(/\.js$/, '');
   const i = all.findIndex((m) => m.name === name || m.name.startsWith(`${name}_`));
   if (i < 0) throw new Error(`no migration ${to} in ${dir}`);
   return i;
 }
 
-/** One migration, up or down, in a transaction of its own with its line of SequelizeMeta: all of it or nothing where
- * the database undoes schema changes (PostgreSQL, SQLite; MySQL and MariaDB commit each one as it runs). */
-async function run(sequelize: Sequelize, m: Migration, direction: 'up' | 'down'): Promise<void> {
+/** Applies or reverts `steps` and writes the history with each one. `all`: one transaction for the whole run; `each`:
+ * one per migration; `none`: no transaction. PostgreSQL and SQLite undo what a failed transaction did; MySQL and
+ * MariaDB commit every schema change as it runs. */
+async function execute(
+  sequelize: Sequelize, steps: Migration[], direction: 'up' | 'down', fake: boolean, transaction: Transaction, each: (name: string) => void,
+): Promise<string[]> {
   const q = sequelize.getQueryInterface();
-  const lite = sequelize.getDialect() === 'sqlite';
-  await q.createTable(META, { name: { type: DataTypes.STRING, allowNull: false, primaryKey: true } });
+  const dialect = sequelize.getDialect();
+  const lite = dialect === 'sqlite';
+  const mysql = dialect === 'mysql' || dialect === 'mariadb';
+  const begin = (): Promise<unknown> => sequelize.query(lite ? 'BEGIN' : 'START TRANSACTION');
+  const done: string[] = [];
+  let name = '';
   // SQLite: a rebuilt table must not delete the rows that point to it (the setting cannot change inside a transaction)
   if (lite) await sequelize.query('PRAGMA foreign_keys = OFF');
   try {
-    await sequelize.query(lite ? 'BEGIN' : 'START TRANSACTION');
-    try {
-      await m[direction](migrator(q), Sequelize);
-      if (lite) {
-        const broken = (await sequelize.query('PRAGMA foreign_key_check', { type: 'SELECT' })) as { table: string; parent: string }[];
-        if (broken.length) throw new Error(`rows of ${broken[0].table} point to rows of ${broken[0].parent} that do not exist`);
+    if (transaction === 'all') await begin();
+    for (const m of steps) {
+      name = m.name;
+      if (transaction === 'each') await begin();
+      if (!fake) {
+        await m[direction](migrator(q), Sequelize);
+        if (lite) {
+          const broken = (await sequelize.query('PRAGMA foreign_key_check', { type: 'SELECT' })) as { table: string; parent: string }[];
+          if (broken.length) throw new Error(`rows of ${broken[0].table} point to rows of ${broken[0].parent} that do not exist`);
+        }
       }
-      if (direction === 'up') await q.bulkInsert(META, [{ name: m.file }]);
-      else await q.bulkDelete(META, { name: m.file });
-      await sequelize.query('COMMIT');
-    } catch (e) {
-      await sequelize.query('ROLLBACK').catch(() => undefined);
-      const reason = (e instanceof Error ? e.message : String(e)).split('\n')[0];
-      const left = transactional(sequelize)
-        ? 'nothing of it was kept'
-        : 'this database does not undo schema changes: what it did before failing is still there, undo it by hand before running it again';
-      throw new Error(`the migration ${m.name} failed${direction === 'down' ? ' to revert' : ''}: ${reason}\n${left}`);
+      if (direction === 'up') await q.bulkInsert(HISTORY, [{ timestamp: Number(name.slice(0, 14)), name }]);
+      else await q.bulkDelete(HISTORY, { name });
+      if (transaction === 'each') await sequelize.query('COMMIT');
+      done.push(name);
     }
+    if (transaction === 'all') await sequelize.query('COMMIT');
+  } catch (e) {
+    if (transaction !== 'none') await sequelize.query('ROLLBACK').catch(() => undefined);
+    // what stays applied of this run: nothing where one transaction held it all
+    for (const kept of transaction === 'all' && !mysql ? [] : done) each(kept);
+    const reason = (e instanceof Error ? e.message : String(e)).split('\n')[0];
+    const left = mysql
+      ? 'this database does not undo schema changes: what it did before failing is still there, undo it by hand before running it again'
+      : transaction === 'none'
+        ? 'it ran without a transaction: what it did before failing is still there, undo it by hand before running it again'
+        : transaction === 'all'
+          ? 'nothing of this run was kept'
+          : 'nothing of it was kept';
+    throw new Error(`the migration ${name} failed${direction === 'down' ? ' to revert' : ''}: ${reason}\n${left}`);
   } finally {
     if (lite) await sequelize.query('PRAGMA foreign_keys = ON');
   }
-}
-
-/** Applies the pending migrations (up to `to`, when given); returns their names. `each` hears every one as it is done. */
-export async function up(dir: string, sequelize: Sequelize, to?: string, each: (name: string) => void = () => undefined): Promise<string[]> {
-  const all = await status(dir, sequelize);
-  const last = to === undefined ? all.length - 1 : find(all, to, dir);
-  const done: string[] = [];
-  for (const m of all.slice(0, last + 1).filter((m) => !m.applied)) {
-    await run(sequelize, m.migration, 'up');
-    done.push(m.name);
-    each(m.name);
-  }
+  for (const n of done) each(n);
   return done;
 }
 
-/** Reverts the last applied migration, or every one made after `to`; returns their names, the last one first. */
-export async function down(dir: string, sequelize: Sequelize, to?: string, each: (name: string) => void = () => undefined): Promise<string[]> {
-  const all = await status(dir, sequelize);
-  const on = all.filter((m) => m.applied);
-  if (to !== undefined && !all[find(all, to, dir)].applied) throw new Error(`the migration ${all[find(all, to, dir)].name} is not applied`);
-  const keep = to === undefined ? on.length - 1 : find(all, to, dir) + 1;
-  const done: string[] = [];
-  for (const m of on.slice(Math.max(keep, 0)).reverse()) {
-    await run(sequelize, m.migration, 'down');
-    done.push(m.name);
-    each(m.name);
+export interface RunOptions {
+  /** the migration to stop at: its name or its timestamp */
+  to?: string;
+  /** hears every migration that stays applied (or reverted) */
+  each?: (name: string) => void;
+  /** the history changes and nothing runs */
+  fake?: boolean;
+  transaction?: Transaction;
+}
+
+/** Applies the pending migrations, by their timestamp (up to `to`, when given); returns their names. */
+export async function up(dir: string, sequelize: Sequelize, options: RunOptions = {}): Promise<string[]> {
+  const applied = new Set(await history(sequelize));
+  const all = await migrations(dir);
+  const last = options.to === undefined ? all.length - 1 : find(all, options.to, dir);
+  const steps = all.slice(0, last + 1).filter((m) => !applied.has(m.name));
+  return execute(sequelize, steps, 'up', !!options.fake, options.transaction ?? 'all', options.each ?? (() => undefined));
+}
+
+/** Reverts the last migration applied, or every one applied after `to`; returns their names, the last one first. */
+export async function down(dir: string, sequelize: Sequelize, options: RunOptions = {}): Promise<string[]> {
+  const applied = await history(sequelize);
+  const all = await migrations(dir);
+  let back = applied.slice(-1);
+  if (options.to !== undefined) {
+    const name = all[find(all, options.to, dir)].name;
+    if (!applied.includes(name)) throw new Error(`the migration ${name} is not applied`);
+    back = applied.slice(applied.indexOf(name) + 1);
   }
-  return done;
+  const steps = back.reverse().map((name) => {
+    const m = all.find((x) => x.name === name);
+    if (!m) throw new Error(`the migration ${name} is applied and is not in ${dir}: it cannot be reverted without its file`);
+    return m;
+  });
+  return execute(sequelize, steps, 'down', !!options.fake, options.transaction ?? 'all', options.each ?? (() => undefined));
 }
 
 /** The database of the app's configuration, without the Nest app: one connection, so a migration's transaction holds
@@ -512,7 +604,7 @@ export function databaseOfApp(config: AppConfig, models: unknown[]): Sequelize {
   return uri ? new Sequelize(uri, all) : new Sequelize(all);
 }
 
-const USAGE = 'usage: synapsis-nest-migrate make "<message>" | up [--to <name>] | down [--to <name>] | status [--dir <folder>]';
+const USAGE = 'usage: synapsis-nest-migrate make "<message>" | up | down [--to <name>] [--fake] [--transaction all|each|none] | status [--dir <folder>]';
 
 async function main(argv: string[]): Promise<void> {
   const [command, ...rest] = argv;
@@ -533,14 +625,18 @@ async function main(argv: string[]): Promise<void> {
   }
   const db = databaseOfApp(app.config, app.entities);
   try {
+    const transaction = (flag('--transaction') ?? 'all') as Transaction;
+    if (!['all', 'each', 'none'].includes(transaction)) throw new Error(USAGE);
+    const fake = rest.includes('--fake');
+    const said = (word: string) => (name: string) => console.log(`${word} ${name}${fake ? ' (fake)' : ''}`);
     if (command === 'status') {
       const all = await status(dir, db);
       console.log(all.length ? all.map((m) => `${m.applied ? 'applied' : 'pending'}  ${m.name}`).join('\n') : `no migrations in ${dir}`);
     } else if (command === 'up') {
-      const done = await up(dir, db, flag('--to'), (name) => console.log(`applied ${name}`));
+      const done = await up(dir, db, { to: flag('--to'), each: said('applied'), fake, transaction });
       if (!done.length) console.log('the database is up to date');
     } else {
-      const done = await down(dir, db, flag('--to'), (name) => console.log(`reverted ${name}`));
+      const done = await down(dir, db, { to: flag('--to'), each: said('reverted'), fake, transaction });
       if (!done.length) console.log(flag('--to') ? 'nothing to revert' : 'no migration is applied');
     }
   } finally {

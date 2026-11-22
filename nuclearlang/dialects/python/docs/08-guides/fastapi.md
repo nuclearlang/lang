@@ -144,8 +144,8 @@ nuclear migrate down                    # reverts the last one
 nuclear migrate status                  # every migration: applied or pending
 ```
 
-They are Alembic migrations (`migrations/versions/*.py`, `alembic_version` in the database), written in batch mode so
-SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`batch_op.alter_column(..., new_column_name=...)`, `op.rename_table`). `--to <migration>` after `migrate` or `migrate down` stops at that one.
+They are Alembic operations (`migrations/versions/*.py`; the table `migrations` of the database lists the ones applied), written in batch mode so
+SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`batch_op.alter_column(..., new_column_name=...)`, `op.rename_table`). `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
 
 ## 4. Use cases, models and the API
 

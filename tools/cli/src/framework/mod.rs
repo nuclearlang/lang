@@ -60,7 +60,8 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   test [-- <args>]                           the tests written in Nuclear (pytest, node:test)
   migrate make <message>                     one migration of the database: the entities minus the last one
   migrate [up] | migrate down                applies the pending migrations, or reverts the last one
-                                             (--to <migration>: up to that one, or back to it)
+                                             (--to <migration>: up to that one, or back to it; --fake: only
+                                             the history changes; --transaction all|each|none, default all)
   migrate status                             every migration: applied or pending
   add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project
   agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents
@@ -1021,39 +1022,49 @@ fn cmd_quote(value: &str) -> String {
     })
 }
 
-/// `nuclear migrate [make "<message>" | up | down | status]` (ADR-backend-0001): the dialect's `migrate_make` /
-/// `migrate` / `migrate_down` / `migrate_status` in the generated project, over the project's `migrations/` folder
-/// (kept with the sources). `--to <name>` (up, down) reaches the dialect's tool as it is.
+/// `nuclear migrate [make "<message>" | up | down | status]` (ADR-backend-0001, ADR-backend-0002): the dialect's
+/// `migrate_make` / `migrate` / `migrate_down` / `migrate_status` in the generated project, over the project's
+/// `migrations/` folder (kept with the sources). The options of up and down (`--to`, `--fake`, `--transaction`)
+/// reach the dialect's tool as they are.
 fn migrate_command(root: &Path, rest: &[String]) -> Result<(), String> {
     let m = non_mobile_manifest(root)?.ok_or("migrations are of a backend project's database")?;
-    let (key, message, to) = migrate_args(rest)?;
+    let (key, message, mut options) = migrate_args(rest)?;
     let mut vars = vec![("migrations", root.join("migrations").display().to_string())];
     if let Some(message) = message {
         vars.push(("message", message));
     }
-    let extra: Vec<String> = to.map(|to| vec!["--".into(), "--to".into(), to]).unwrap_or_default();
-    backend_command(root, key, &m, &extra, &vars)
+    if !options.is_empty() {
+        options.insert(0, "--".into());
+    }
+    backend_command(root, key, &m, &options, &vars)
 }
 
-/// The words of `nuclear migrate`: the `[toolchain]` key, the message of `make`, the migration of `--to`.
-fn migrate_args(rest: &[String]) -> Result<(&'static str, Option<String>, Option<String>), String> {
-    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" | nuclear migrate [up] [--to <migration>] | \
-                         nuclear migrate down [--to <migration>] | nuclear migrate status";
-    let mut words: Vec<&str> = rest.iter().take_while(|a| *a != "--").map(String::as_str).collect();
-    let to = match words.iter().position(|w| *w == "--to") {
-        Some(i) if i + 1 < words.len() => {
-            let to = words.remove(i + 1).to_string();
-            words.remove(i);
-            Some(to)
+/// The words of `nuclear migrate`: the `[toolchain]` key, the message of `make`, the options of up and down
+/// (`--to <migration>`, `--fake`, `--transaction all|each|none`) as the dialect's tool takes them.
+fn migrate_args(rest: &[String]) -> Result<(&'static str, Option<String>, Vec<String>), String> {
+    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" | nuclear migrate status | \
+                         nuclear migrate [up|down] [--to <migration>] [--fake] [--transaction all|each|none]";
+    let mut words: Vec<&str> = Vec::new();
+    let mut options: Vec<String> = Vec::new();
+    let mut given = rest.iter().take_while(|a| *a != "--").map(String::as_str);
+    while let Some(word) = given.next() {
+        match word {
+            "--fake" => options.push(word.into()),
+            "--to" | "--transaction" => {
+                let value = given.next().ok_or(USAGE)?;
+                if word == "--transaction" && !["all", "each", "none"].contains(&value) {
+                    return Err(USAGE.into());
+                }
+                options.extend([word.to_string(), value.to_string()]);
+            }
+            _ => words.push(word),
         }
-        Some(_) => return Err(USAGE.into()),
-        None => None,
-    };
-    match (words.as_slice(), to) {
-        (["make", message], None) => Ok(("migrate_make", Some(message.to_string()), None)),
-        ([] | ["up"], to) => Ok(("migrate", None, to)),
-        (["down"], to) => Ok(("migrate_down", None, to)),
-        (["status"], None) => Ok(("migrate_status", None, None)),
+    }
+    match words.as_slice() {
+        ["make", message] if options.is_empty() => Ok(("migrate_make", Some(message.to_string()), options)),
+        [] | ["up"] => Ok(("migrate", None, options)),
+        ["down"] => Ok(("migrate_down", None, options)),
+        ["status"] if options.is_empty() => Ok(("migrate_status", None, options)),
         _ => Err(USAGE.into()),
     }
 }
@@ -2220,13 +2231,29 @@ mod tests {
     #[test]
     fn migrate_reads_its_words() {
         let args = |words: &[&str]| migrate_args(&words.iter().map(|w| w.to_string()).collect::<Vec<_>>());
-        assert_eq!(args(&[]), Ok(("migrate", None, None)));
-        assert_eq!(args(&["up", "--to", "20261110100000"]), Ok(("migrate", None, Some("20261110100000".into()))));
-        assert_eq!(args(&["--to", "first", "down"]), Ok(("migrate_down", None, Some("first".into()))));
-        assert_eq!(args(&["make", "notes on tasks"]), Ok(("migrate_make", Some("notes on tasks".into()), None)));
-        assert_eq!(args(&["status"]), Ok(("migrate_status", None, None)));
-        for wrong in [&["make"][..], &["status", "--to", "x"], &["up", "--to"], &["sideways"], &["make", "a", "--to", "x"]] {
-            assert!(args(wrong).unwrap_err().starts_with("usage: nuclear migrate"), "{wrong:?}");
+        let options = |words: &[&str]| words.iter().map(|w| w.to_string()).collect::<Vec<_>>();
+        assert_eq!(args(&[]), Ok(("migrate", None, vec![])));
+        assert_eq!(args(&["up", "--to", "20261110100000"]), Ok(("migrate", None, options(&["--to", "20261110100000"]))));
+        assert_eq!(args(&["--to", "first", "down"]), Ok(("migrate_down", None, options(&["--to", "first"]))));
+        assert_eq!(args(&["--fake"]), Ok(("migrate", None, options(&["--fake"]))));
+        assert_eq!(
+            args(&["down", "--fake", "--transaction", "each"]),
+            Ok(("migrate_down", None, options(&["--fake", "--transaction", "each"])))
+        );
+        assert_eq!(args(&["make", "notes on tasks"]), Ok(("migrate_make", Some("notes on tasks".into()), vec![])));
+        assert_eq!(args(&["status"]), Ok(("migrate_status", None, vec![])));
+        let wrong: [&[&str]; 8] = [
+            &["make"],
+            &["status", "--to", "x"],
+            &["up", "--to"],
+            &["sideways"],
+            &["make", "a", "--to", "x"],
+            &["status", "--fake"],
+            &["up", "--transaction", "some"],
+            &["up", "--transaction"],
+        ];
+        for words in wrong {
+            assert!(args(words).unwrap_err().starts_with("usage: nuclear migrate"), "{words:?}");
         }
     }
 

@@ -4,6 +4,28 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **TypeORM is the rule of behaviour for migrations** (ADR-backend-0002), in `fastapi` and `nestjs` alike:
+  - the history is the table `migrations`, one row per migration applied (`id`, `timestamp`, `name`), in every
+    dialect; a database migrated by 0.91 or 0.92 is converted by the first command (`alembic_version`,
+    `SequelizeMeta` are read once and left as they were);
+  - the migrations are ordered by their timestamp and need no parent: a pending migration older than the applied
+    ones runs, `down` reverts the last one applied, a migration missing from the folder stops only its own revert,
+    and two migrations made at the same time are no longer refused (the next `make` compares with both);
+  - new: `nuclear migrate up --fake` and `down --fake` (the history changes, nothing runs: a database that already
+    has its tables comes under migrations) and `--transaction all|each|none`. **The default is now `all`**: the
+    whole run in one transaction, where it was one per migration;
+  - `@created` / `@updated` are `NOT NULL DEFAULT CURRENT_TIMESTAMP` in every dialect (a row inserted by SQL gets
+    them); a foreign key has `ON DELETE` as the relation says and no other rule (`nestjs` wrote
+    `ON UPDATE CASCADE`, and `SET NULL` for an optional relation without `onDelete`); on SQLite `nestjs` writes
+    `BOOLEAN` and `DOUBLE` and names its constraints. The next `nuclear migrate make` of an existing project writes
+    these changes as one migration;
+  - `make` refuses a changed key in both dialects (one wrote nothing, the other a change that did nothing), and
+    `fastapi` drops a constraint made without a name by finding it in the database, as `nestjs` did;
+  - `fastapi` no longer uses Alembic's revisions, `env.py` or `alembic_version`: Alembic writes and runs the
+    operations, the files are ordered by name and run only through `nuclear migrate`.
+
+  The database check now fails on any difference between the schemas the two dialects leave (none on SQLite,
+  PostgreSQL, MySQL and MariaDB) and runs 12 migration scenarios with the real command.
 - **Migrations that hold on every database** (`nuclear migrate`, reference §2.8), the same in `fastapi` and `nestjs`:
   the same lines printed, the same exit codes, the same rules. New: `nuclear migrate status` (every migration:
   applied or pending), `nuclear migrate --to <migration>` and `nuclear migrate down --to <migration>`. The rules:

@@ -147,13 +147,13 @@ def _sql_literal(value: Any) -> str | None:
 
 
 def created() -> Any:
-    """When the row was inserted (set by the database)."""
-    return mapped_column(UtcDateTime(), server_default=func.now())
+    """When the row was inserted: never empty, the database's clock by default (ADR-backend-0002)."""
+    return mapped_column(UtcDateTime(), server_default=func.now(), nullable=False)
 
 
 def updated() -> Any:
-    """When the row last changed (set by the database)."""
-    return mapped_column(UtcDateTime(), server_default=func.now(), onupdate=func.now())
+    """When the row last changed: never empty, the database's clock by default, written again with every change."""
+    return mapped_column(UtcDateTime(), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
 _ACTIONS = {"cascade": "CASCADE", "set null": "SET NULL", "restrict": "RESTRICT", "no action": "NO ACTION"}

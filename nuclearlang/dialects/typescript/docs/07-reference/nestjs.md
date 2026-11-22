@@ -160,7 +160,7 @@ export class Task extends Entity {
   declare id: number;
   @Column({ type: DataType.STRING, allowNull: false })
   declare title: string;
-  @BelongsTo(() => Project, { foreignKey: 'projectId', onDelete: 'cascade' })
+  @BelongsTo(() => Project, { foreignKey: 'projectId', onDelete: 'cascade', onUpdate: 'NO ACTION' })
   declare project?: Related<Project>;
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare projectId?: number;
@@ -860,9 +860,8 @@ Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.
 diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports. The commands and
 the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:
 
-- A migration exports `up(queryInterface, Sequelize)`, `down(queryInterface, Sequelize)`, `parent` (the name of the
-  migration it was made after, `null` for the first) and `schema` (the tables once it is applied). `SequelizeMeta`
-  lists the files applied.
+- A migration exports `up(queryInterface, Sequelize)`, `down(queryInterface, Sequelize)`, `schema` (the tables when
+  it was made) and `known` (the migrations it was made after). The table `migrations` lists the ones applied.
 - `queryInterface` is Sequelize's, made right for every database by the runtime: `createTable`, `dropTable`,
   `addColumn`, `changeColumn` (the column as the attribute says: type, `allowNull`, `defaultValue`, `unique`,
   `references`), `removeColumn`, `renameColumn`, `renameTable`; data is changed with

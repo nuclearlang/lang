@@ -16,7 +16,7 @@ export class Order extends Entity {
   @AutoIncrement
   @Column(DataType.INTEGER)
   declare id: number;
-  @BelongsTo(() => Customer, { foreignKey: 'customerId', onDelete: 'cascade' })
+  @BelongsTo(() => Customer, { foreignKey: 'customerId', onDelete: 'cascade', onUpdate: 'NO ACTION' })
   declare customer?: Related<Customer>;
   @Column({ type: DataType.INTEGER, allowNull: false })
   declare customerId: number;

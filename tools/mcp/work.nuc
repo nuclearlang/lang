@@ -128,11 +128,13 @@ WorkTools(runner: any = runCommand)
   // database). action: status (every migration, applied or pending: read it first), make (message: what changed;
   // writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every
   // drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that
-  // migration), down (reverts the last one applied; to: back to that migration). project: the project's folder or
-  // one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot
+  // migration), down (reverts the last one applied; to: back to that migration). fake (up, down): only the history
+  // changes and nothing runs (a database that already has its tables is brought under the migrations with up and
+  // fake). transaction (up, down): all (the default: the whole run in one transaction), each (one per migration)
+  // or none. project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot
   // ask): up and down change the database of the project's active environment, and down drops what the migration
   // made, with its data. Build the project first (nuclear_build): the migration reads the built entities.
-  projectMigrate(project: string, action: string = "status", message: string = "", to: string = "", confirm: string = "", ctx: Context? = null) string
+  projectMigrate(project: string, action: string = "status", message: string = "", to: string = "", confirm: string = "", fake: boolean = false, transaction: string = "", ctx: Context? = null) string
     root = projectOf(project)
     if root == null
       return refused("${project} is not inside a Synapsis project (no config.nuc)")
@@ -147,17 +149,25 @@ WorkTools(runner: any = runCommand)
       return refused("message is for make only")
     if not to.isEmpty and not (action in ["up", "down"])
       return refused("to is for up and down only")
+    if (fake or not transaction.isEmpty) and not (action in ["up", "down"])
+      return refused("fake and transaction are for up and down only")
+    if not (transaction in ["", "all", "each", "none"])
+      return refused("'${transaction}' is not a transaction of project_migrate (all, each, none)")
     args = ["nuclear", "migrate", action]
     if action == "make"
       args = [...args, message]
     if not to.isEmpty
       args = [...args, "--to", to]
+    if fake
+      args = [...args, "--fake"]
+    if not transaction.isEmpty
+      args = [...args, "--transaction", transaction]
     if action != "status"
       change = match action
         "make" -> "Write one migration of ${root} for \"${message}\" into its migrations/ folder (the entities minus the last migration). The database is not changed."
-        "up" -> "Apply the pending migrations of ${root} to the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}."
-        _ -> "Revert ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} in the database of ${root}'s active environment: what they made is dropped, with its data."
-      no = ~confirmed(ctx, "project_migrate", { "project": "${root}", "action": action, "message": message, "to": to }, change, confirm)
+        "up" -> fake ? "Mark the pending migrations of ${root} as applied in the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}, without running them: the schema is not changed." : "Apply the pending migrations of ${root} to the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}."
+        _ -> fake ? "Mark ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} as not applied in the database of ${root}'s active environment, without running anything: the schema is not changed." : "Revert ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} in the database of ${root}'s active environment: what they made is dropped, with its data."
+      no = ~confirmed(ctx, "project_migrate", { "project": "${root}", "action": action, "message": message, "to": to, "fake": fake, "transaction": transaction }, change, confirm)
       if no != null
         return no!
     ran: Ran = ~runner(args, "${root}", "")

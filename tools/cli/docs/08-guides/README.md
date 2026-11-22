@@ -102,7 +102,7 @@ exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-refer
 | | `run` | the server (backend, web) or the app on a device (mobile) |
 | | `test [--integration]` | the tests written in Nuclear |
 | | `watch` | transpile each time a `.nuc` changes |
-| | `migrate make <message>` / `migrate [--to <migration>]` / `migrate down [--to <migration>]` / `migrate status` | the database migrations (backend) |
+| | `migrate make <message>` / `migrate [--to <migration>] [--fake] [--transaction all\|each\|none]` / `migrate down [...]` / `migrate status` | the database migrations (backend) |
 | Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |
 | | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |
 | Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |

@@ -3518,7 +3518,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.537a77",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.84e898",
    "type": "context",
    "title": "The command line tool: overview — Backend and web projects",
    "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
@@ -3533,29 +3533,9 @@
     "  manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions",
     "  ([packages.md](packages.md)).",
     "- `nuclear migrate [make \"<message>\" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /",
-    "  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--to <migration>` (up, down)",
-    "  goes to the dialect's tool as it is (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5).",
-    "- A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.a0f03f",
-   "type": "context",
-   "title": "The command line tool: overview — Backend and web projects",
-   "summary": "`fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.",
-   "body": [
-    "`fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.",
-    "- `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
-    "- `nuclear make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its",
-    "  `[layout]` path ([the code generator](../../../code_generator/docs/02-architecture/overview.md))."
+    "  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; the options of up and down",
+    "  (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's tool as they are",
+    "  (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`)."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3574,6 +3554,27 @@
    "body": [
     "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a",
     "mobile app. For it (ADR-cli-0001):"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.ec47d6",
+   "type": "context",
+   "title": "The command line tool: overview — Backend and web projects",
+   "summary": "`fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.",
+   "body": [
+    "- A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:",
+    "  `fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.",
+    "- `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
+    "- `nuclear make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its",
+    "  `[layout]` path ([the code generator](../../../code_generator/docs/02-architecture/overview.md))."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -4141,34 +4142,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.09d60e",
-   "type": "readme",
-   "title": "The `nuclear` command — The commands, by job",
-   "summary": "The commands, by job",
-   "body": [
-    "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
-    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |",
-    "| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env(\"NAME\", \"default\")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |",
-    "| | `run\\|build\\|test\\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |",
-    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |",
-    "| | `install` | the runtime and the app's packages (backend, web) |",
-    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
-    "| | `test [--integration]` | the tests written in Nuclear |",
-    "| | `watch` | transpile each time a `.nuc` changes |",
-    "| | `migrate make <message>` / `migrate [--to <migration>]` / `migrate down [--to <migration>]` / `migrate status` | the database migrations (backend) |",
-    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
-    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.5c8202",
    "type": "readme",
    "title": "The `nuclear` command — The commands, by job",
@@ -4188,6 +4161,34 @@
     "| | `remove <package>` | the reverse |",
     "| | `defs list` / `defs show` / `defs search` | read the type definitions of a library |",
     "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.76bc14",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "The commands, by job",
+   "body": [
+    "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
+    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |",
+    "| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env(\"NAME\", \"default\")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |",
+    "| | `run\\|build\\|test\\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |",
+    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |",
+    "| | `install` | the runtime and the app's packages (backend, web) |",
+    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
+    "| | `test [--integration]` | the tests written in Nuclear |",
+    "| | `watch` | transpile each time a `.nuc` changes |",
+    "| | `migrate make <message>` / `migrate [--to <migration>] [--fake] [--transaction all\\|each\\|none]` / `migrate down [...]` / `migrate status` | the database migrations (backend) |",
+    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
+    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
@@ -4507,6 +4508,27 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.47f147",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "from scratch, then flutter clean + everything again, until flutter analyze finds no errors (exit 2: the .nuc have errors) explain [--json] a run-time error or a test's output (stdin) at its .nuc lines, explained monitor [--json] the report of the last run with --monitor: its hot spots (slow, async…",
+   "body": [
+    "from scratch, then flutter clean + everything again, until",
+    "                                             flutter analyze finds no errors (exit 2: the .nuc have errors)",
+    "  explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained",
+    "  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
+    "                                             calls in a loop, connections, memory) and each function's time"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.6c5fb5",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4693,6 +4715,36 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.b1da38",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/) build transpile (nuclear build .) install the runtime and the app's packages (a venv, npm install) run [-- <args>] the server (uvicorn, npm run dev) test [-- <args>] the tests written in Nuclear (pytest, node:test) migrate make…",
+   "body": [
+    "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)",
+    "  build                                      transpile (nuclear build .)",
+    "  install                                    the runtime and the app's packages (a venv, npm install)",
+    "  run [-- <args>]                            the server (uvicorn, npm run dev)",
+    "  test [-- <args>]                           the tests written in Nuclear (pytest, node:test)",
+    "  migrate make <message>                     one migration of the database: the entities minus the last one",
+    "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
+    "                                             (--to <migration>: up to that one, or back to it; --fake: only",
+    "                                             the history changes; --transaction all|each|none, default all)",
+    "  migrate status                             every migration: applied or pending",
+    "  add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
+    "  agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
+    "  clean                                      flutter clean in the app",
+    "  repair                                     when the build or the app fails: build, then pub get + build_runner"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.b9c887",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4709,26 +4761,6 @@
     "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
     "                                        --route, its route in the controller (backend)",
     "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.bbf941",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "flutter analyze finds no errors (exit 2: the .nuc have errors) explain [--json] a run-time error or a test's output (stdin) at its .nuc lines, explained monitor [--json] the report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's…",
-   "body": [
-    "flutter analyze finds no errors (exit 2: the .nuc have errors)",
-    "  explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained",
-    "  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
-    "                                             calls in a loop, connections, memory) and each function's time"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4757,36 +4789,6 @@
     "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
     "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)",
     "```"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.d46bb8",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/) build transpile (nuclear build .) install the runtime and the app's packages (a venv, npm install) run [-- <args>] the server (uvicorn, npm run dev) test [-- <args>] the tests written in Nuclear (pytest, node:test) migrate make…",
-   "body": [
-    "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)",
-    "  build                                      transpile (nuclear build .)",
-    "  install                                    the runtime and the app's packages (a venv, npm install)",
-    "  run [-- <args>]                            the server (uvicorn, npm run dev)",
-    "  test [-- <args>]                           the tests written in Nuclear (pytest, node:test)",
-    "  migrate make <message>                     one migration of the database: the entities minus the last one",
-    "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
-    "                                             (--to <migration>: up to that one, or back to it)",
-    "  migrate status                             every migration: applied or pending",
-    "  add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
-    "  agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
-    "  clean                                      flutter clean in the app",
-    "  repair                                     when the build or the app fails: build, then pub get + build_runner",
-    "                                             from scratch, then flutter clean + everything again, until"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

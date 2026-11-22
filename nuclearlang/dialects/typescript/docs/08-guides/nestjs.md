@@ -134,8 +134,8 @@ nuclear migrate down                    # reverts the last one
 nuclear migrate status                  # every migration: applied or pending
 ```
 
-They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`, `SequelizeMeta` in the database);
-each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one.
+They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`; the table `migrations` of the database lists the ones applied);
+each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
 
 ## 3. Use cases and events
 

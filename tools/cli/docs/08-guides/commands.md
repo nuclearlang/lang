@@ -90,7 +90,8 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   test [-- <args>]                           the tests written in Nuclear (pytest, node:test)
   migrate make <message>                     one migration of the database: the entities minus the last one
   migrate [up] | migrate down                applies the pending migrations, or reverts the last one
-                                             (--to <migration>: up to that one, or back to it)
+                                             (--to <migration>: up to that one, or back to it; --fake: only
+                                             the history changes; --transaction all|each|none, default all)
   migrate status                             every migration: applied or pending
   add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project
   agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents

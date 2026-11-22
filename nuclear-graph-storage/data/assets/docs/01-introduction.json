@@ -358,6 +358,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.23e40a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **TypeORM is the rule of behaviour for migrations in every backend dialect** (ADR-backend-0002): the history is the table `migrations`, one row per migration applied (a database migrated by 0.91 or 0.92 is converted in place); the migrations are ordered by their timestamp, a pending one older than the applied ones runs, `nuclear migrate down` reverts the last one applied; new `--fake` (the history changes, nothing runs: a database that already has its tables comes under migrations) and `--transaction all|each|none` on `up` and `down`, **with `all` as the default** (it was one transaction per migration); `@created` / `@updated` are `NOT NULL DEFAULT CURRENT_TIMESTAMP`, a foreign key has only the rule its relation says, and SQLite's types have the same names, in `fastapi` and `nestjs` (the next `nuclear migrate make` of an existing project writes the change); `make` refuses a changed key. The MCP server's `project_migrate` takes `fake` and `transaction`. The database check fails on any difference between the schemas the dialects leave: there is none on SQLite, PostgreSQL, MySQL and MariaDB.",
+    "- The MCP server runs a project's tests: `project_test(project)` builds it and runs them with its dialect's runner, and answers the same in every dialect: how many passed and failed, each failure at its `.nuc` line, and what it means."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.24fec2",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -570,26 +588,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.aee43c",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- The MCP server runs a project's tests: `project_test(project)` builds it and runs them with its dialect's runner, and answers the same in every dialect: how many passed and failed, each failure at its `.nuc` line, and what it means.",
-    "- The Smart Graph knows the helpers and the tests: a row per helper of the language (`lib:helper-<name>`: its signature, its meaning and the cases its tests state), the conformance, semantics and benchmark programs as examples with what they print, and what can be answered about them (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`), with the questions the chat is held to.",
-    "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
-    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.b00ac5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -613,6 +611,25 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- The generated code measured against an expert's in eight programs (`nuclear-synapsis-framework/eval/thesis/bench`: n-body, binary trees, fannkuch, a collections pipeline, texts, calls, primes, word frequencies), and what they showed fixed: Python reads a map as an expert does (`m.get(k, 0)`, `m[k]`, no helper call in a loop), `sortedBy` / `sortBy` read each key once in TypeScript and Dart and keep the order of equal keys in Dart (its sort did not promise it). Fix (texts are data): the replacement of `replace` / `replaceAll` is never a pattern (JavaScript read `$&` and `$1`, Python's regex `\\\\1`), `replace` with a `Regex` replaces the first match only in TypeScript and works in Python, and a doc comment with a `\\\\` is a valid Python docstring.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.d8127a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The Smart Graph knows the helpers and the tests: a row per helper of the language (`lib:helper-<name>`: its signature, its meaning and the cases its tests state), the conformance, semantics and benchmark programs as examples with what they print, and what can be answered about them (`can:helpers`, `can:tested-in-every-dialect`, `can:backend-errors`), with the questions the chat is held to.",
+    "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
+    "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],

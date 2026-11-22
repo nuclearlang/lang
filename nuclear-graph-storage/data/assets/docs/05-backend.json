@@ -320,6 +320,95 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.068069",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`BOOLEAN` and `DOUBLE` and names its constraints.",
+   "body": [
+    "`BOOLEAN` and `DOUBLE` and names its constraints. The next `nuclear migrate make` of an existing project writes",
+    "    these changes as one migration;",
+    "  - `make` refuses a changed key in both dialects (one wrote nothing, the other a change that did nothing), and",
+    "    `fastapi` drops a constraint made without a name by finding it in the database, as `nestjs` did;",
+    "  - `fastapi` no longer uses Alembic's revisions, `env.py` or `alembic_version`: Alembic writes and runs the",
+    "    operations, the files are ordered by name and run only through `nuclear migrate`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.0a87b1",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "dialect; a database migrated by 0.91 or 0.92 is converted by the first command (`alembic_version`, `SequelizeMeta` are read once and left as they were); ones runs, `down` reverts the last one applied, a migration missing from the folder stops only its own revert, and two migrations made at the…",
+   "body": [
+    "- **TypeORM is the rule of behaviour for migrations** (ADR-backend-0002), in `fastapi` and `nestjs` alike:",
+    "  - the history is the table `migrations`, one row per migration applied (`id`, `timestamp`, `name`), in every",
+    "    dialect; a database migrated by 0.91 or 0.92 is converted by the first command (`alembic_version`,",
+    "    `SequelizeMeta` are read once and left as they were);",
+    "  - the migrations are ordered by their timestamp and need no parent: a pending migration older than the applied",
+    "    ones runs, `down` reverts the last one applied, a migration missing from the folder stops only its own revert,",
+    "    and two migrations made at the same time are no longer refused (the next `make` compares with both);",
+    "  - new: `nuclear migrate up --fake` and `down --fake` (the history changes, nothing runs: a database that already",
+    "    has its tables comes under migrations) and `--transaction all|each|none`. **The default is now `all`**: the",
+    "    whole run in one transaction, where it was one per migration;",
+    "  - `@created` / `@updated` are `NOT NULL DEFAULT CURRENT_TIMESTAMP` in every dialect (a row inserted by SQL gets",
+    "    them); a foreign key has `ON DELETE` as the relation says and no other rule (`nestjs` wrote",
+    "    `ON UPDATE CASCADE`, and `SET NULL` for an optional relation without `onDelete`); on SQLite `nestjs` writes"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.4587c2",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "The database check now fails on any difference between the schemas the two dialects leave (none on SQLite, PostgreSQL, MySQL and MariaDB) and runs 12 migration scenarios with the real command.",
+   "body": [
+    "The database check now fails on any difference between the schemas the two dialects leave (none on SQLite,",
+    "  PostgreSQL, MySQL and MariaDB) and runs 12 migration scenarios with the real command.",
+    "- **Migrations that hold on every database** (`nuclear migrate`, reference §2.8), the same in `fastapi` and `nestjs`:",
+    "  the same lines printed, the same exit codes, the same rules. New: `nuclear migrate status` (every migration:",
+    "  applied or pending), `nuclear migrate --to <migration>` and `nuclear migrate down --to <migration>`. The rules:",
+    "  - the history is one line: two migrations made after the same one, or one the database has and the folder does",
+    "    not, are refused by every command;",
+    "  - each migration runs in a transaction of its own: a failed one stays pending, and PostgreSQL and SQLite keep",
+    "    nothing of it (MySQL and MariaDB cannot undo a schema change: the message says what is left);",
+    "  - every unique and foreign key has a name (`uq_<table>_<column>`, `fk_<table>_<column>`), so it can be dropped;",
+    "  - `make` also warns of a required column added without a default and of a column that becomes required; two",
+    "    migrations made in the same second get different names;",
+    "  - migrations made before this version still run."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.545991",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -338,36 +427,6 @@
     "  one HTTP scenario and the project's tests; the answers are the same bytes in both dialects on the four databases.",
     "  What it found and fixed, each with the same test in both runtimes:",
     "  - fastapi: a `DateTime` column is an instant on every database (written in UTC, read back in UTC; SQLite, MySQL"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.5efba8",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "the same lines printed, the same exit codes, the same rules.",
-   "body": [
-    "- **Migrations that hold on every database** (`nuclear migrate`, reference §2.8), the same in `fastapi` and `nestjs`:",
-    "  the same lines printed, the same exit codes, the same rules. New: `nuclear migrate status` (every migration:",
-    "  applied or pending), `nuclear migrate --to <migration>` and `nuclear migrate down --to <migration>`. The rules:",
-    "  - the history is one line: two migrations made after the same one, or one the database has and the folder does",
-    "    not, are refused by every command;",
-    "  - each migration runs in a transaction of its own: a failed one stays pending, and PostgreSQL and SQLite keep",
-    "    nothing of it (MySQL and MariaDB cannot undo a schema change: the message says what is left);",
-    "  - every unique and foreign key has a name (`uq_<table>_<column>`, `fk_<table>_<column>`), so it can be dropped;",
-    "  - `make` also warns of a required column added without a default and of a column that becomes required; two",
-    "    migrations made in the same second get different names;",
-    "  - migrations made before this version still run."
    ],
    "platforms": [
     "backend"
@@ -1324,15 +1383,53 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.083f3f",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.03e290",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Migrations",
-   "summary": "transaction; after a migration `PRAGMA foreign_key_check` must be empty.",
+   "summary": "`synapsis.migrate` is what `nuclear migrate` runs (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`, `migrate_status`): python -m synapsis.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the migrations python -m synapsis.migrate up…",
    "body": [
-    "transaction; after a migration `PRAGMA foreign_key_check` must be empty.",
-    "- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the same",
-    "  file. Alembic rebuilds a table of SQLite from what it reads in the database, where `AUTOINCREMENT` is not read:",
-    "  `_keep_generated_keys` (a `column_reflect` listener) says it, so a rebuilt table still never gives a key twice.",
+    "`synapsis.migrate` is what `nuclear migrate` runs (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,",
+    "`migrate_down`, `migrate_status`):",
+    "",
+    "```sh",
+    "python -m synapsis.migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the migrations",
+    "python -m synapsis.migrate up [--to <name>] --dir <migrations>           # applies the pending ones",
+    "python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one applied, or every one applied after <name>",
+    "python -m synapsis.migrate status --dir <migrations>                     # every migration: applied or pending",
+    "# up, down: --fake (only the history changes), --transaction all|each|none (default all)",
+    "```",
+    "",
+    "The rules a user sees are the reference's (§2.8): TypeORM's behaviour (ADR-backend-0002), the same words and exit",
+    "codes as the TypeScript runtime. How this one keeps them:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.2b83e5",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Migrations",
+   "summary": "keeps it in `app.state`).",
+   "body": [
+    "keeps it in `app.state`). `_execute` runs the steps and writes the history with each: one transaction for the",
+    "  run (`all`), one per migration (`each`) or an engine in `AUTOCOMMIT` (`none`). SQLite's driver is opened with",
+    "  `autocommit=False`, or a schema change would run outside the transaction; after each migration",
+    "  `PRAGMA foreign_key_check` must be empty.",
+    "- Batch mode makes SQLite (which cannot alter a column) and the other databases run the same file. Alembic rebuilds",
+    "  a table of SQLite from what it reads in the database; `_reflected` (a `column_reflect` listener) says the two",
+    "  things that are not read there: `AUTOINCREMENT`, and the name of a constraint made without one.",
+    "- `_drop_constraint` replaces Alembic's implementation of `drop_constraint`: on PostgreSQL, MySQL and MariaDB a",
+    "  unique or a foreign key whose name is not in the database is found by its columns.",
+    "- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `CURRENT_TIMESTAMP` as the server default.",
     "- `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback."
    ],
    "platforms": [
@@ -1348,55 +1445,23 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.40ffed",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.686bd5",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Migrations",
-   "summary": "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`, `migrate_status`): python -m synapsis.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the last one python -m synapsis.migrate…",
+   "summary": "migration is `versions/<timestamp>_<slug>.py` with `upgrade()` and `downgrade()` over `op`, loaded as a module and run inside `Operations.context` (`_apply`).",
    "body": [
-    "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,",
-    "`migrate_down`, `migrate_status`):",
-    "",
-    "```sh",
-    "python -m synapsis.migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
-    "python -m synapsis.migrate up [--to <name>] --dir <migrations>           # applies the pending ones",
-    "python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>",
-    "python -m synapsis.migrate status --dir <migrations>                     # every migration: applied or pending",
-    "```",
-    "",
-    "The rules a user sees are the reference's (§2.8), the same words and exit codes as the TypeScript runtime. How this",
-    "one keeps them:"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.511d35",
-   "type": "context",
-   "title": "The Python runtime: `synapsis-py` — Migrations",
-   "summary": "autogenerate write the difference.",
-   "body": [
-    "- `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's",
-    "  autogenerate write the difference. `_prepare` then names every unique and foreign key the migration makes",
-    "  (`uq_<table>_<column>`, `fk_<table>_<column>`: Alembic cannot drop a constraint without a name) and collects the",
-    "  warnings. The entities themselves carry no constraint names, so the migrations of before still compare equal.",
-    "- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written by the first `make`.",
-    "  A migration's revision is its timestamp; its file is `<timestamp>_<slug>.py`, the same slug as the other runtime.",
-    "- `_chain` reads the files one by one and orders them by `down_revision`; it refuses two files with the same parent",
-    "  and a parent that is missing (Alembic's own map would call them branches and heads).",
-    "- `up`, `down` and `status` open one connection to the default database of the app's configuration (`create_app`",
-    "  keeps it in `app.state`) and hand it to `env.py`; `alembic_version` holds the last migration applied, and the",
-    "  ones before it in the line are the applied ones.",
-    "- `_run` applies or reverts one migration in a transaction of its own (`connection.begin()` before Alembic, so",
-    "  Alembic opens none). SQLite's driver is opened with `autocommit=False`, or a schema change would run outside the"
+    "- Alembic writes and runs the operations; its revisions, its `env.py` and its `alembic_version` are not used. A",
+    "  migration is `versions/<timestamp>_<slug>.py` with `upgrade()` and `downgrade()` over `op`, loaded as a module",
+    "  and run inside `Operations.context` (`_apply`). The files are ordered by their name (`_files`).",
+    "- `make` never reads the database: it runs every migration on an empty SQLite in memory and asks Alembic's",
+    "  autogenerate for the difference with the entities (`produce_migrations`, `render_python_code`, in batch mode).",
+    "  `_prepare` names every unique and foreign key the migration makes or drops (`uq_<table>_<column>`,",
+    "  `fk_<table>_<column>`) and collects the warnings. A changed key is compared here, because Alembic does not see",
+    "  it, and refused. The entities carry no constraint names, so a migration of before 0.91 still compares equal.",
+    "- The history is the table `migrations` (`_history_table`: `id`, `timestamp`, `name`), read by `_history` in the",
+    "  order of `id`. When it is missing it is made, from `alembic_version` if the database was migrated before 0.93",
+    "  (every file up to that revision, or to that timestamp, was applied); `alembic_version` is left as it was.",
+    "- `up`, `down` and `status` open one connection to the default database of the app's configuration (`create_app`"
    ],
    "platforms": [
     "backend"
@@ -1670,7 +1735,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.2a158d",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.1f560c",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
    "summary": "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`, `migrate_status`): npx synapsis-nest-migrate make \"add done to tasks\"…",
@@ -1680,14 +1745,15 @@
     "`migrate_status`):",
     "",
     "```sh",
-    "npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
+    "npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the migrations",
     "npx synapsis-nest-migrate up [--to <name>] --dir <migrations>           # applies the pending ones",
-    "npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>",
+    "npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one applied, or every one applied after <name>",
     "npx synapsis-nest-migrate status --dir <migrations>                     # every migration: applied or pending",
+    "# up, down: --fake (only the history changes), --transaction all|each|none (default all)",
     "```",
     "",
-    "The rules a user sees are the reference's (§2.8), the same words and exit codes as the Python runtime. How this one",
-    "keeps them:"
+    "The rules a user sees are the reference's (§2.8): TypeORM's behaviour (ADR-backend-0002), the same words and exit",
+    "codes as the Python runtime. How this one keeps them:"
    ],
    "platforms": [
     "backend"
@@ -1702,25 +1768,25 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.8fbd69",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.904d62",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
-   "summary": "`make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`: the migration it was made after.",
+   "summary": "default `CURRENT_TIMESTAMP`, and a foreign key keeps only its `onDelete` (never Sequelize's own `ON UPDATE CASCADE`; the dialect's template writes `NO ACTION` for a relation without a rule).",
    "body": [
     "- It reads the `entities` and the `config` the app module exports.",
-    "- `schemaOf` reads the entities' attributes, `diff` compares them with the `schema` the last migration exports (so",
-    "  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`:",
-    "  the migration it was made after.",
-    "- `chain` orders the files by `parent` and refuses two files with the same parent and a parent that is missing. A",
-    "  file written before `parent` existed follows the file before it by name.",
-    "- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table: the file's name). `status` refuses a name",
-    "  that is not in the folder and a pending migration before an applied one. umzug was not needed.",
-    "- `run` applies or reverts one migration in a transaction of its own, with its line of `SequelizeMeta`. The",
-    "  migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so `START TRANSACTION` holds everything",
-    "  the migration runs. On SQLite the foreign keys are off while it runs and `PRAGMA foreign_key_check` must be empty",
-    "  before it is kept.",
-    "- A migration gets `migrator(queryInterface)`: Sequelize's queryInterface with what it gets wrong made right.",
-    "  - `createTable` refuses a table that exists (Sequelize writes `CREATE TABLE IF NOT EXISTS`); on PostgreSQL, MySQL"
+    "- `schemaOf` reads the entities' attributes as the migrations write them: a `@created` / `@updated` column gets the",
+    "  default `CURRENT_TIMESTAMP`, and a foreign key keeps only its `onDelete` (never Sequelize's own",
+    "  `ON UPDATE CASCADE`; the dialect's template writes `NO ACTION` for a relation without a rule).",
+    "- `diff` compares them with `schemaAfter`: the tables once every migration of the folder is applied. Each file",
+    "  exports `schema` (the tables when it was made) and `known` (the migrations it was made after), so a file brings",
+    "  only what it changed: two made at the same time both count. A file of before 0.93 has `parent` or neither.",
+    "  `diff` refuses a changed key. `render` writes `up` / `down` over `queryInterface`.",
+    "- The history is the table `migrations` (`id`, `timestamp`, `name`), read by `history` in the order of `id`. When",
+    "  it is missing it is made, from `SequelizeMeta` if the database was migrated before 0.93; `SequelizeMeta` is left",
+    "  as it was. umzug was not needed.",
+    "- `execute` runs the steps and writes the history with each: one transaction for the run (`all`), one per",
+    "  migration (`each`) or none. The migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so",
+    "  `START TRANSACTION` holds everything a migration runs. On SQLite the foreign keys are off while it runs and"
    ],
    "platforms": [
     "backend"
@@ -1735,12 +1801,34 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.b2d326",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.cf4c38",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
-   "summary": "and MariaDB it adds each unique and foreign key by name after the table.",
+   "summary": "`TINYINT(1)`.",
+   "body": "`TINYINT(1)`. Only the migrations write the schema of ADR-backend-0002.",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.ec7a4a",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
+   "summary": "`PRAGMA foreign_key_check` must be empty after each migration.",
    "body": [
-    "and MariaDB it adds each unique and foreign key by name after the table.",
+    "`PRAGMA foreign_key_check` must be empty after each migration.",
+    "- A migration gets `migrator(queryInterface)`: Sequelize's queryInterface with what it gets wrong made right.",
+    "  - `createTable` refuses a table that exists (Sequelize writes `CREATE TABLE IF NOT EXISTS`); on PostgreSQL, MySQL",
+    "    and MariaDB it adds each unique and foreign key by name after the table; on SQLite it writes the statement",
+    "    itself, with the types by the names the other dialect writes (`BOOLEAN`, `DOUBLE`) and every constraint named.",
     "  - `addColumn` and `changeColumn` leave the column as the attribute says, with its unique and its foreign key: a",
     "    constraint that goes is found by its column in the database's catalog, whatever name it has.",
     "  - `removeColumn` drops the column's constraints first; `renameColumn` is `ALTER TABLE ... RENAME COLUMN` on every",
@@ -1748,7 +1836,8 @@
     "  - SQLite cannot alter a column: `rebuild` reads the table from the database (`pragma_table_info`, `index_list`,",
     "    `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild",
     "    loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point",
-    "    to the table (their `ON DELETE CASCADE` runs when it is dropped)."
+    "    to the table (their `ON DELETE CASCADE` runs when it is dropped).",
+    "- The tables `createTables` makes (development, tests) are Sequelize's own: no default on the timestamps, SQLite's"
    ],
    "platforms": [
     "backend"
@@ -1866,25 +1955,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.01affc",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.171df0",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs on that schema.",
+   "summary": "3. schemas: `db.py compare` compares the schemas the two dialects left on the same database after each step (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and `ON UPDATE`).",
    "body": [
-    "11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs",
-    "         on that schema.",
-    "   - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for",
-    "     every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),",
-    "     pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
-    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the relations loaded and",
-    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
-    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
-    "     value (one row), the cascade of a delete.",
-    "   - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).",
-    "3. **schemas**: `db.py compare` lists every difference between the schemas the two dialects left on the same",
-    "   database after each step (`~` lines). It is not a failure: what differs is in the",
-    "   [roadmap](../01-product/roadmap.md).",
-    "4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,"
+    "3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step",
+    "   (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and",
+    "   `ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.",
+    "4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,",
+    "   `createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are",
+    "   compared byte by byte: the same in every dialect on every database.",
+    "",
+    "What the scenario leaves out of the comparison because it differs by database, and says in its line: the",
+    "milliseconds of a `DateTime` (lost on MySQL and MariaDB), and how many of the losers of the race for a unique value",
+    "answer 409 or 500 ([roadmap](../01-product/roadmap.md))."
    ],
    "platforms": [
     "backend"
@@ -1899,7 +1984,76 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.06b743",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.3b8257",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "message says so; fixed, it applies.",
+   "body": [
+    "message says so; fixed, it applies.",
+    "     9. A pending migration older than the applied ones (applied, and reverted first by `down`); a migration",
+    "        missing from the folder (only its revert is refused).",
+    "     10. The history as 0.91 / 0.92 kept it (`alembic_version`, `SequelizeMeta`) converted in place.",
+    "     11. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`.",
+    "     12. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs",
+    "         on that schema.",
+    "   - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for",
+    "     every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),",
+    "     pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
+    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the relations loaded and",
+    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
+    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
+    "     value (one row), the cascade of a delete.",
+    "   - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.50d90b",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
+   "body": [
+    "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules`",
+    "   (`npm install --no-save --install-links`). npm keeps an old copy of the same version, so the script removes it",
+    "   first; a `--no-save` install also prunes the other runtime installed the same way, so the web platform's check",
+    "   installs its own again.",
+    "2. Builds `examples/examples-backend/tasks_api` and links `node_modules` into its `build/`.",
+    "3. `tsc --strict`, then the project's tests (`node --test \"dist/test/**/*.js\"`).",
+    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`SYNAPSIS_DATABASE=memory`), validation (400 with two",
+    "   messages), the errors of a `Result` (409, 404).",
+    "5. **Migrations**: with `DATABASE` set to a fresh SQLite file, `migrate make \"first\"`, `up`, then `make \"again\"`",
+    "   must answer \"no changes\".",
+    "6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).",
+    "",
+    "**`database-check/check.sh`** (needs Docker running, besides the set-up above; about fourteen minutes). It proves that",
+    "one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those",
+    "dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one",
+    "`ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.567d70",
    "type": "context",
    "title": "Testing — Running the checks",
    "summary": "their `ON DELETE`) and the rows.",
@@ -1907,17 +2061,18 @@
     "their `ON DELETE`) and the rows. A `down` must leave exactly the schema read before its `up`. One line per",
     "     scenario is printed under the stage (`+`):",
     "     1. `make`, `up`, nothing left to make, `status`, `down` to an empty database, `down` with nothing applied.",
-    "     2. The tables are there and the history is empty: `up` is refused whole.",
-    "     3. A column with a default added to a table with rows (`points: int = 7`).",
+    "     2. The tables are there and the history is empty: `up` is refused whole; `up --fake` and `down --fake` change",
+    "        the history only.",
+    "     3. A column with a default added to a table with rows (`points: int = 7`); the rows were inserted by SQL",
+    "        without `created_at` / `updated_at` (their default).",
     "     4. A column's type, null, default and length changed, a unique added.",
     "     5. A table, a foreign key on a table with rows (`@manyToOne`) and a join table (`@manyToMany`).",
     "     6. A table and a column renamed: `make` writes a drop and an add and warns; the file is edited into a rename",
     "        in the dialect's migration language; the rows and the foreign key follow.",
-    "     7. A column, a unique and a foreign key dropped (its column stays).",
-    "     8. A migration that fails half way (a statement added to it): exit 1, still pending; PostgreSQL and SQLite",
-    "        keep nothing of it, MySQL and MariaDB keep the column it made and the message says so; fixed, it applies.",
-    "     9. A migration applied and missing from the folder; two migrations made after the same one: refused.",
-    "     10. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`."
+    "     7. A column, a unique and a foreign key dropped (its column stays); the unique first renamed in the database",
+    "        to the name a database gives one made without a name.",
+    "     8. A failing migration after a good one, with `--transaction all` (PostgreSQL and SQLite keep neither), `each`",
+    "        (the good one stays) and `none` (what the failed one did stays); MySQL and MariaDB keep what ran and the"
    ],
    "platforms": [
     "backend"
@@ -1993,66 +2148,6 @@
     "     (`target/debug` is first on `PATH`; the project's `build/` gets the shared tools as `.venv` or",
     "     `node_modules`, in place of `nuclear install`). After each step `db.py` reads the real schema back (tables,",
     "     columns, type, length, null, the default by its meaning, the key, the unique columns, the foreign keys and"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.f3d0b4",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
-   "body": [
-    "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules`",
-    "   (`npm install --no-save --install-links`). npm keeps an old copy of the same version, so the script removes it",
-    "   first; a `--no-save` install also prunes the other runtime installed the same way, so the web platform's check",
-    "   installs its own again.",
-    "2. Builds `examples/examples-backend/tasks_api` and links `node_modules` into its `build/`.",
-    "3. `tsc --strict`, then the project's tests (`node --test \"dist/test/**/*.js\"`).",
-    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`SYNAPSIS_DATABASE=memory`), validation (400 with two",
-    "   messages), the errors of a `Result` (409, 404).",
-    "5. **Migrations**: with `DATABASE` set to a fresh SQLite file, `migrate make \"first\"`, `up`, then `make \"again\"`",
-    "   must answer \"no changes\".",
-    "6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).",
-    "",
-    "**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twelve minutes). It proves that",
-    "one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those",
-    "dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one",
-    "`ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.f5672f",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "`createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are compared byte by byte: the same in every dialect on every database.",
-   "body": [
-    "`createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are",
-    "   compared byte by byte: the same in every dialect on every database.",
-    "",
-    "What the scenario leaves out of the comparison because it differs by database, and says in its line: the",
-    "milliseconds of a `DateTime` (lost on MySQL and MariaDB), and how many of the losers of the race for a unique value",
-    "answer 409 or 500 ([roadmap](../01-product/roadmap.md))."
    ],
    "platforms": [
     "backend"

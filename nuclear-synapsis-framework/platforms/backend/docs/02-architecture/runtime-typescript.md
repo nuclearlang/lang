@@ -72,30 +72,35 @@ by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make
 `migrate_status`):
 
 ```sh
-npx synapsis-nest-migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
+npx synapsis-nest-migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the migrations
 npx synapsis-nest-migrate up [--to <name>] --dir <migrations>           # applies the pending ones
-npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>
+npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one applied, or every one applied after <name>
 npx synapsis-nest-migrate status --dir <migrations>                     # every migration: applied or pending
+# up, down: --fake (only the history changes), --transaction all|each|none (default all)
 ```
 
-The rules a user sees are the reference's (§2.8), the same words and exit codes as the Python runtime. How this one
-keeps them:
+The rules a user sees are the reference's (§2.8): TypeORM's behaviour (ADR-backend-0002), the same words and exit
+codes as the Python runtime. How this one keeps them:
 
 - It reads the `entities` and the `config` the app module exports.
-- `schemaOf` reads the entities' attributes, `diff` compares them with the `schema` the last migration exports (so
-  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`:
-  the migration it was made after.
-- `chain` orders the files by `parent` and refuses two files with the same parent and a parent that is missing. A
-  file written before `parent` existed follows the file before it by name.
-- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table: the file's name). `status` refuses a name
-  that is not in the folder and a pending migration before an applied one. umzug was not needed.
-- `run` applies or reverts one migration in a transaction of its own, with its line of `SequelizeMeta`. The
-  migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so `START TRANSACTION` holds everything
-  the migration runs. On SQLite the foreign keys are off while it runs and `PRAGMA foreign_key_check` must be empty
-  before it is kept.
+- `schemaOf` reads the entities' attributes as the migrations write them: a `@created` / `@updated` column gets the
+  default `CURRENT_TIMESTAMP`, and a foreign key keeps only its `onDelete` (never Sequelize's own
+  `ON UPDATE CASCADE`; the dialect's template writes `NO ACTION` for a relation without a rule).
+- `diff` compares them with `schemaAfter`: the tables once every migration of the folder is applied. Each file
+  exports `schema` (the tables when it was made) and `known` (the migrations it was made after), so a file brings
+  only what it changed: two made at the same time both count. A file of before 0.93 has `parent` or neither.
+  `diff` refuses a changed key. `render` writes `up` / `down` over `queryInterface`.
+- The history is the table `migrations` (`id`, `timestamp`, `name`), read by `history` in the order of `id`. When
+  it is missing it is made, from `SequelizeMeta` if the database was migrated before 0.93; `SequelizeMeta` is left
+  as it was. umzug was not needed.
+- `execute` runs the steps and writes the history with each: one transaction for the run (`all`), one per
+  migration (`each`) or none. The migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so
+  `START TRANSACTION` holds everything a migration runs. On SQLite the foreign keys are off while it runs and
+  `PRAGMA foreign_key_check` must be empty after each migration.
 - A migration gets `migrator(queryInterface)`: Sequelize's queryInterface with what it gets wrong made right.
   - `createTable` refuses a table that exists (Sequelize writes `CREATE TABLE IF NOT EXISTS`); on PostgreSQL, MySQL
-    and MariaDB it adds each unique and foreign key by name after the table.
+    and MariaDB it adds each unique and foreign key by name after the table; on SQLite it writes the statement
+    itself, with the types by the names the other dialect writes (`BOOLEAN`, `DOUBLE`) and every constraint named.
   - `addColumn` and `changeColumn` leave the column as the attribute says, with its unique and its foreign key: a
     constraint that goes is found by its column in the database's catalog, whatever name it has.
   - `removeColumn` drops the column's constraints first; `renameColumn` is `ALTER TABLE ... RENAME COLUMN` on every
@@ -104,6 +109,8 @@ keeps them:
     `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild
     loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point
     to the table (their `ON DELETE CASCADE` runs when it is dropped).
+- The tables `createTables` makes (development, tests) are Sequelize's own: no default on the timestamps, SQLite's
+  `TINYINT(1)`. Only the migrations write the schema of ADR-backend-0002.
 
 ## Tests and type definitions
 
