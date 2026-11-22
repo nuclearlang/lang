@@ -2613,7 +2613,7 @@
    "title": "`project_migrate` — a tool of the Nuclear MCP server",
    "summary": "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database).",
    "body": [
-    "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database). action: status (every migration, applied or pending: read it first), make (message: what changed; writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that migration), down (reverts the last one applied; to: back to that migration). project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot ask): up and down change the database of the project's active environment, and down drops what the migration made, with its data. Build the project first (nuclear_build): the migration reads the built entities.",
+    "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database). action: status (every migration, applied or pending: read it first), make (message: what changed; writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that migration), down (reverts the last one applied; to: back to that migration). fake (up, down): only the history changes and nothing runs (a database that already has its tables is brought under the migrations with up and fake). transaction (up, down): all (the default: the whole run in one transaction), each (one per migration) or none. project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot ask): up and down change the database of the project's active environment, and down drops what the migration made, with its data. Build the project first (nuclear_build): the migration reads the built entities.",
     "",
     "Parameters:",
     "",
@@ -2621,7 +2621,9 @@
     "- `action`: string = `\"status\"`",
     "- `message`: string = `\"\"`",
     "- `to`: string = `\"\"`",
-    "- `confirm`: string = `\"\"`"
+    "- `confirm`: string = `\"\"`",
+    "- `fake`: boolean = `false`",
+    "- `transaction`: string = `\"\"`"
    ],
    "keys": [
     "project_migrate",
@@ -2674,6 +2676,18 @@
      },
      {
       "name": "confirm",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "fake",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
+     },
+     {
+      "name": "transaction",
       "type": "string",
       "required": false,
       "default": "\"\""
