@@ -3,9 +3,10 @@
 # for each dialect (fastapi, nestjs) and each database (sqlite, postgres, mysql, mariadb) it builds the project with
 # that connection, runs the target's strict checker, the migrations (migrations.py: every kind of schema change made,
 # applied and reverted with the real command, `nuclear migrate`, the real schema and the rows read back after each;
-# a failing migration; the rules of the history), the app over HTTP with one scenario (scenario.py) and the project's
-# tests; then it compares the answers (the same bytes in every dialect on every database) and says where the schemas
-# of the dialects differ. On SQLite it also makes a project with `nuclear new` and migrates it.
+# a failing migration; the rules of the history), the app over HTTP with one scenario (scenario.py), the project's
+# tests, and the same project with `createTables` on an empty database (tables.py: its tables are the ones the first
+# migration makes); then it compares the answers (the same bytes in every dialect on every database) and says where
+# the schemas of the dialects differ. On SQLite it also makes a project with `nuclear new` and migrates it.
 #
 #   check.sh                     everything
 #   check.sh fastapi postgres    only those dialects and databases (any of each)
@@ -123,7 +124,7 @@ fresh() { # a project made now, with `nuclear new` and `nuclear gen`: its migrat
   nuclear migrate status 2>&1 | grep -q "^pending  [0-9]*_the_products$" || { echo "status does not say pending"; return 1; }
   echo "nuclear new, gen resource, migrate status / make / up / make (no changes) / status / down / status"
 }
-integration() {
+start_app() { # the built app of the current folder, answering on $http
   http=$(free_port)
   if [ "$dialect" = fastapi ]; then "$py" -m uvicorn app.main:app --port "$http" --log-level warning >"$work/app.log" 2>&1 &
   else PORT=$http node dist/src/main.js >"$work/app.log" 2>&1 & fi
@@ -134,11 +135,33 @@ integration() {
     if [ "$i" -gt 120 ] || ! kill -0 "$app_pid" 2>/dev/null; then echo "the app did not start:"; cat "$work/app.log"; app_pid=""; return 1; fi
     sleep 0.25
   done
+}
+stop_app() { kill "$app_pid" 2>/dev/null; wait "$app_pid" 2>/dev/null; app_pid=""; }
+integration() {
+  start_app || return 1
   "$py" "$self/scenario.py" "http://127.0.0.1:$http" "$url" "$work/answers-$dialect-$database.json"
   code=$?
-  kill "$app_pid" 2>/dev/null; wait "$app_pid" 2>/dev/null; app_pid=""
+  stop_app
   [ "$code" -eq 0 ] || { echo "--- the app's log:"; tail -40 "$work/app.log"; }
   return "$code"
+}
+tables() { # the same project with createTables on an empty database: the app makes the tables, tables.py reads them
+  project="$work/$dialect-$database-made"
+  mkdir -p "$project" && cp -r "$here/examples/examples-backend/store_api/." "$project" && rm -rf "$project/build" "$project/migrations"
+  sed -i "s/dialect = \"[a-z]*\"/dialect = \"$dialect\"/; s/^plugins(sqlite = true)/plugins($database = true)/" "$project/config.nuc"
+  if [ "$database" = sqlite ]; then url="$project/store.sqlite"; export DATABASE="$url"
+  else
+    create_database "$database" "made_$dialect" || { echo "no database made_$dialect"; return 1; }
+    url="${url%/*}/made_$dialect"; export DATABASE_URL="$url"
+  fi
+  sed -i "s|^    SQLite(.*|    ${connection%)}, createTables = true),|" "$project/config/project_config.nuc"
+  grep -qF "createTables = true" "$project/config/project_config.nuc" || { echo "the connection was not written"; return 1; }
+  build >/dev/null 2>&1 || { echo "the project with createTables does not build"; return 1; }
+  cd "$project/build" || return 1
+  [ "$dialect" = fastapi ] || node "$nm/typescript/bin/tsc" -p tsconfig.json || return 1
+  start_app || return 1
+  stop_app
+  "$py" "$self/tables.py" "$dialect" "$database" "$url" "$project" "$work"
 }
 
 # the runtime of the nestjs dialect, built and copied fresh as the nestjs check does (see its comments)
@@ -189,6 +212,7 @@ for database in $databases; do
     [ -f "$work/migrations-$dialect-$database.log" ] && sed 's/^/     + /' "$work/migrations-$dialect-$database.log"
     stage integration integration
     stage tests unit_tests
+    stage tables tables
     cd "$work" || exit 1
     unset DATABASE DATABASE_URL
   done
@@ -209,7 +233,8 @@ for f in "$work"/answers-*.json; do
     failed=1
   fi
 done
-# --- the schemas the migrations left: the same in every dialect on each database, step by step (ADR-backend-0002)
+# --- the schemas the migrations and createTables left: the same in every dialect on each database, step by step
+# (ADR-backend-0002)
 differences=$("$py" "$self/db.py" compare "$work")
 if [ -n "$differences" ]; then
   echo "FAIL the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; failed=1

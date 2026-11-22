@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Injectable, Param, Post } from '@nestjs/common';
 import { IsEmail, IsString, MinLength } from 'class-validator';
-import { AppError, Err, IntPipe, NotFound, Ok, Result } from 'synapsis-nest';
+import { AppError, Err, IntPipe, NotFound, Ok, Result, checkModel } from 'synapsis-nest';
 
 // nestjs dialect (Synapsis for NestJS) in one file: a DTO, a service and a controller.
 // In a project (nuclear.toml) the same kinds also get entities, repositories over Sequelize, use cases and the
@@ -15,8 +15,11 @@ export class NewUser {
   @IsEmail()
   email!: string;
 
-  constructor(values: Partial<NewUser> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewUser>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 

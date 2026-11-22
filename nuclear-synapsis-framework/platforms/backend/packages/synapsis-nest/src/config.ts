@@ -3,6 +3,7 @@
 // Values usually come from the environment: env('X', 'default').
 import { readFileSync } from 'node:fs';
 import type { SequelizeModuleOptions } from '@nestjs/sequelize';
+import type { Sequelize } from 'sequelize-typescript';
 import type { Guard } from './guards.js';
 
 /**
@@ -63,6 +64,17 @@ export interface DatabaseOptions {
   name?: string;
 }
 
+// `createTables`: the tables are made as a migration makes them (synapsis-nest/migrate), before Sequelize's own
+// `sync` looks: it finds every table there and makes none its own way
+const CREATE_TABLES = {
+  synchronize: true,
+  hooks: {
+    async beforeBulkSync(this: Sequelize): Promise<void> {
+      await (await import('./migrate.js')).createTables(this);
+    },
+  },
+};
+
 /** A SQL database through Sequelize. */
 export abstract class Database extends Connection {
   abstract readonly dialect: 'postgres' | 'mysql' | 'sqlite' | 'mariadb';
@@ -75,14 +87,14 @@ export abstract class Database extends Connection {
   /** What SequelizeModule.forRoot receives. SYNAPSIS_DATABASE=memory (the tests) uses SQLite in memory. */
   sequelize(): SequelizeModuleOptions {
     if (process.env.SYNAPSIS_DATABASE === 'memory') {
-      return { dialect: 'sqlite', storage: ':memory:', autoLoadModels: true, synchronize: true, logging: false };
+      return { dialect: 'sqlite', storage: ':memory:', autoLoadModels: true, logging: false, ...CREATE_TABLES };
     }
     return {
       dialect: this.dialect,
       ...(this.options.url ? { uri: this.options.url } : {}),
       ...(this.options.file ? { storage: this.options.file } : {}),
       autoLoadModels: true,
-      synchronize: this.options.createTables ?? false,
+      ...(this.options.createTables ? CREATE_TABLES : { synchronize: false }),
       logging: this.options.logging ?? false,
     };
   }

@@ -7,13 +7,14 @@ query, the same way for PostgreSQL, MySQL, MariaDB and SQLite. It takes the plat
     seed <url>                     one customer and one order, with only the columns that have no default
     points <url> present|absent    the column customers.points added by the second migration, and its default
     scalar <url> <sql>             the first value of a query
-    compare <folder>               the schemas migrations.py wrote there: what differs between the dialects
+    compare <folder>               the schemas migrations.py and tables.py wrote there: what differs between the dialects
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sys
 import time
 from typing import Any
@@ -88,9 +89,9 @@ def default_of(default: Any) -> str | None:
         return d
 
 
-def read_schema(url: str) -> dict[str, Any]:
+def read_schema(url: str, names: bool = False) -> dict[str, Any]:
     """Every table of the app as the database has it: columns (type family, nullable, default), key, unique columns,
-    foreign keys."""
+    foreign keys; with `names`, the names of its uniques and foreign keys too."""
 
     def family(t: Any) -> str:
         if isinstance(t, Float):  # MySQL's DOUBLE says it is read as a Decimal
@@ -129,6 +130,14 @@ def read_schema(url: str) -> dict[str, Any]:
         rule = lambda word, r: f" on {word} {r}" if r not in ("", "no action", "none") else ""  # noqa: E731
         return sorted(f"{c} -> {t}.{k}{rule('delete', d)}{rule('update', u)}" for c, t, k, d, u in keys)
 
+    def names_of(i: Any, sync: Any, table: str) -> list[str]:
+        if sync.dialect.name == "sqlite":
+            # the names are in the words the table was made with (SQLAlchemy does not read every way of quoting them)
+            made = sync.exec_driver_sql("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)).scalar()
+            return sorted(re.findall(r"CONSTRAINT\s+[`\"\[]?(\w+)", str(made)))
+        found = {u["name"] for u in i.get_unique_constraints(table)} | {x["name"] for x in i.get_indexes(table) if x.get("unique")}
+        return sorted(str(n) for n in found | {f["name"] for f in i.get_foreign_keys(table)})
+
     def read(sync: Any) -> dict[str, Any]:
         i = inspect(sync)
         out: dict[str, Any] = {}
@@ -136,12 +145,17 @@ def read_schema(url: str) -> dict[str, Any]:
             if table in ("migrations", "alembic_version", "SequelizeMeta", "sqlite_sequence"):
                 continue
             key = i.get_pk_constraint(table)["constrained_columns"]
+            # SQLite keeps the words a type was written with; SQLAlchemy reads them without their arguments
+            declared: dict[str, str] = {}
+            if sync.dialect.name == "sqlite":
+                declared = {r[1]: r[2] for r in sync.exec_driver_sql(f'PRAGMA table_info("{table}")').all()}
             out[table] = {
                 "columns": {
                     c["name"]: {
                         "type": family(c["type"]),
                         # the type as the database names it (SQLite keeps the words it was written with)
-                        "sql": str(c["type"]).upper(),
+                        # (and MySQL's fraction of a second is not in the name SQLAlchemy prints)
+                        "sql": declared.get(c["name"], str(c["type"])).upper() + (f"({c['type'].fsp})" if getattr(c["type"], "fsp", None) else ""),
                         "length": getattr(c["type"], "length", None),
                         # SQLite says a key may be null (it never is)
                         "nullable": bool(c["nullable"]) and c["name"] not in key,
@@ -152,6 +166,7 @@ def read_schema(url: str) -> dict[str, Any]:
                 "key": key,
                 "unique": unique_of(i, sync, table),
                 "foreign": foreign_of(i, sync, table),
+                **({"names": names_of(i, sync, table)} if names else {}),
             }
         return out
 
@@ -216,6 +231,26 @@ def check_schema(url: str, points: bool = False) -> dict[str, Any]:
     return schema
 
 
+def same(now: dict[str, Any], before: dict[str, Any], what: str) -> None:
+    """The schema is exactly the one read before: every table, column, type, length, null, default, key, unique, foreign
+    key (and the names of the constraints, when both were read with them)."""
+    if now == before:
+        return
+    lines: list[str] = []
+    for table in sorted({*now, *before}):
+        a, b = before.get(table), now.get(table)
+        if a is None or b is None:
+            lines.append(f"table {table}: {'missing' if b is None else 'not expected'}")
+            continue
+        for column in sorted({*a["columns"], *b["columns"]}):
+            if a["columns"].get(column) != b["columns"].get(column):
+                lines.append(f"{table}.{column}: {b['columns'].get(column)}, was {a['columns'].get(column)}")
+        for part in ("key", "unique", "foreign", "names"):
+            if a.get(part) != b.get(part):
+                lines.append(f"{table} {part}: {b.get(part)}, was {a.get(part)}")
+    raise SystemExit(f"{what}: the schema is not the one before:\n  " + "\n  ".join(lines))
+
+
 def seed(url: str) -> None:
     """Rows written before the second migration, by SQL: the columns with a default are left to the database."""
     execute(
@@ -254,8 +289,9 @@ def compare(folder: str) -> None:
     def flat(schema: dict[str, Any]) -> dict[str, Any]:
         out: dict[str, Any] = {}
         for table, t in schema.items():
-            for part in ("key", "unique", "foreign"):
-                out[f"{table} {part}"] = t[part]
+            for part in ("key", "unique", "foreign", "names"):
+                if part in t:
+                    out[f"{table} {part}"] = t[part]
             for column, c in t["columns"].items():
                 for k, v in c.items():
                     out[f"{table}.{column} {k}"] = v

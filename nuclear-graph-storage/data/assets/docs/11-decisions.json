@@ -15216,7 +15216,8 @@
     "  whole body of an error, not only its status.",
     "- Negative: a client of an existing service that read `detail` or `statusCode` must read `message` and `status`;",
     "  the documentation page of a `fastapi` app shows the contract's document, without the framework's extras.",
-    "- Left: a text given for a number in a body is accepted by one validator and refused by the other (the roadmap)."
+    "- Decided after (the user, 2026-11-22): a value of another JSON type is refused in every dialect, with the rule",
+    "  `type`; nothing converts (the backend's reference, §2.3)."
    ],
    "agents": false,
    "sources": [
@@ -16221,7 +16222,8 @@
    "body": [
     "- Positive: `status`, `up`, `down` and their refusals read the same facts in every dialect; the schemas the dialects",
     "  leave are the same on each database, and the database check fails on any difference.",
-    "- Positive: a database made by `createTables` comes under migrations with `--fake`.",
+    "- Positive: a database made by `createTables` comes under migrations with `--fake`: since 0.94 each runtime makes",
+    "  those tables with what its first migration runs, and the database check holds the two schemas equal.",
     "- Negative: an older pending migration runs after newer ones, as in TypeORM: it must not depend on being first.",
     "- Negative: with `--transaction all` on MySQL and MariaDB a failure leaves the migrations before it applied (they",
     "  commit every schema change); the message says so.",
@@ -16267,14 +16269,11 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.0ec9eb",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.01d72b",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
-   "summary": "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept (`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was.",
-   "body": [
-    "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept",
-    "(`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was."
-   ],
+   "summary": "Decision",
+   "body": "**Where we knowingly differ from TypeORM:**",
    "platforms": [
     "backend"
    ],
@@ -16345,22 +16344,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.779df2",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.6cbf7e",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
    "summary": "files, a lock against two runs at once, a rename found by `make`, seeds, one migration made from many, a baseline other than `--fake`.",
    "body": [
     "| The list | `migration:show`: every migration of the source, `[X]` or `[ ]` | `nuclear migrate status` (the command keeps Nuclear's name and words): every migration of the folder, `applied` or `pending` |",
-    "| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT CURRENT_TIMESTAMP`; the app still writes them |",
+    "| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT (CURRENT_TIMESTAMP)`; the app still writes them |",
+    "| The fraction of a date column on MySQL and MariaDB | `datetime(6)` for the date columns it gives a fraction (`createDatePrecision`, `updateDatePrecision`: 6 in `MysqlDriver`); a plain date column has none (`datetime`, precision 0) | `DATETIME(6)` for every `DateTime` column, the timestamps too (the user, 2026-11-22: a `DateTime` keeps its fraction); SQLite names it the same |",
     "| A foreign key without a rule | `ON DELETE NO ACTION ON UPDATE NO ACTION` | the same; `onDelete` of the relation is the only rule written |",
     "| The names of the types on SQLite | `boolean`, `double` | `BOOLEAN`, `DOUBLE` |",
     "| A constraint that goes | by the name it has in the database, which TypeORM reads there | found in the database by its column when its name is not the expected one |",
     "",
     "**What we do not have because TypeORM does not**, as a decision and not as pending work: a checksum of the applied",
     "files, a lock against two runs at once, a rename found by `make`, seeds, one migration made from many, a baseline",
-    "other than `--fake`.",
-    "",
-    "**Where we knowingly differ from TypeORM:**"
+    "other than `--fake`."
    ],
    "platforms": [
     "backend"
@@ -16376,7 +16374,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.d01ea0",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.76ed14",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
    "summary": "1. *`make` compares the entities with the migrations, never with a database* (ADR-backend-0001), where `migration:generate` compares with the database.",
@@ -16393,8 +16391,35 @@
     "   column with every change, in every dialect.",
     "4. *`nuclear migrate --to <migration>`* (up and down) has no equivalent in TypeORM; it stays, with TypeORM's order:",
     "   up to that timestamp, back to that row of the history.",
-    "5. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the",
-    "   database's error."
+    "5. *The clock of a timestamp is `(CURRENT_TIMESTAMP)`*, where TypeORM writes `CURRENT_TIMESTAMP(6)` on MySQL."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.bbb691",
+   "type": "adr",
+   "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
+   "summary": "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
+   "body": [
+    "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a",
+    "   `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
+    "   On SQLite and MySQL that clock gives whole seconds.",
+    "6. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the",
+    "   database's error.",
+    "",
+    "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept",
+    "(`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was."
    ],
    "platforms": [
     "backend"

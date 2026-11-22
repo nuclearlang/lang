@@ -124,8 +124,9 @@ The same Nuclear builds with the other backend dialect, and `paginate` works the
 
 ### Migrations
 
-`createTables = true` makes the tables at start, for development. Once the database keeps data, leave it out and change
-the schema with migrations in the project's `migrations/` folder:
+`createTables = true` makes the tables at start, for development: the same tables the migrations make. Once the
+database keeps data, leave it out, bring the database under migrations (`nuclear migrate make "first"`, then
+`nuclear migrate --fake`) and change the schema with migrations in the project's `migrations/` folder:
 
 ```sh
 nuclear migrate make "notes on tasks"   # what the entities changed since the last migration

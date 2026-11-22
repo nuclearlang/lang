@@ -1,4 +1,5 @@
 import { IsString } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 /** A public holiday, as the holidays API answers it. */
 export class Holiday {
@@ -7,7 +8,10 @@ export class Holiday {
   @IsString()
   name!: string;
 
-  constructor(values: Partial<Holiday> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<Holiday>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

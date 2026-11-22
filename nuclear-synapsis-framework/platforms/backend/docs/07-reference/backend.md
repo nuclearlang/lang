@@ -76,8 +76,9 @@ columns: `@primary` (the key; `@primary(generated = true)`: the database gives i
 uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,
 `@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the
 column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it
-comes back as the same instant on every database, and its JSON is what `toIso()` writes
-(`2026-03-04T03:06:07.000Z`).
+comes back as the same instant on every database, with its milliseconds, and its JSON is what `toIso()` writes
+(`2026-03-04T03:06:07.000Z`). The column keeps the fraction of a second on every database (six digits on MySQL,
+MariaDB and SQLite, `DATETIME(6)`; PostgreSQL's own).
 
 ```nuclear
 @entity("tasks")
@@ -143,6 +144,10 @@ relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `
 `update({...})`, `delete()`. The caller awaits it:
 `~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ "title": t }).exists()`.
 
+`like` follows the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not (for
+ASCII letters). `ilike` ignores the case on every database: it is the one to use for a search that must find the
+same rows everywhere.
+
 ```nuclear
 repository TaskRepository
   byState(done: boolean) Task[]
@@ -184,6 +189,24 @@ What the API reads and answers, in `domain/models/`. The field decorators of Syn
 `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An
 invalid body answers **400** with the reasons (below). `NewTask(title = "x")` builds one; optional fields (`T?`) may be
 left out.
+
+**A value's JSON type is its field's: nothing is converted.** In a body each field takes only the JSON type of its
+Nuclear type, and any other is refused with the rule `type`:
+
+| Field | JSON it takes | Refused |
+|---|---|---|
+| `string` | a text | a number, `true` / `false` |
+| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number) | a text (`"30"`), `true` / `false`, a number with a fraction |
+| `double` | a number (`1.5`, `30`) | a text (`"1.5"`), `true` / `false` |
+| `boolean` | `true` / `false` | a text (`"true"`), a number (`1`) |
+| `DateTime` | a text that is a date and time (`"2026-03-04T05:06:07Z"`) | a number, a text that is no date |
+| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |
+
+`null` is only for an optional field (`T?`); for a required one the rule is `required`. A parameter of the path or of
+the query has no JSON type: it is a text, converted to its type (`?page=2` is the `int` 2).
+
+**A model built in code is checked like a body.** `NewTask(title = "")` breaks `@minLength(1)` and throws; a use
+case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).
 
 ```nuclear
 NewTask
@@ -380,8 +403,10 @@ appConfig ProjectConfig
 
 #### Migrations of the database (ADR-backend-0001, ADR-backend-0002)
 
-`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the
-project's `migrations/` folder (with the sources, not in `build/`):
+`createTables` is for development and tests: when the app starts it makes the tables of the entities the database
+does not have, and never changes one that is there. It makes them as the migrations make them: the same types,
+defaults, keys, foreign keys (those of a join table too) and names of constraints. A database that keeps its data
+changes by migrations, kept in the project's `migrations/` folder (with the sources, not in `build/`):
 
 ```sh
 nuclear migrate make "notes on tasks"   # one migration: what the entities changed since the migrations of the folder
@@ -406,6 +431,8 @@ Making a migration:
   added without a default, a column that becomes required.
 - A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows
   works. A `@created` or `@updated` column is required and has the database's clock as its default.
+- A `DateTime` column is made with the fraction of a second (§2.1). A project whose migrations made it without one
+  (before 0.94: whole seconds on MySQL and MariaDB) gets the change from its next `nuclear migrate make`.
 - Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`. A foreign key does what
   `onDelete` says and nothing else.
 - `make` refuses a changed key (`the key of <table> changed`): a migration does not change the key of a table.
@@ -428,7 +455,8 @@ Applying and reverting:
 - A table that is already in the database is never taken as made by a migration: applying a migration that creates
   it fails. A database that already has its tables comes under migrations with `nuclear migrate --fake`: the
   pending migrations are written in the history without running. `nuclear migrate down --fake` takes the last one
-  out of the history without running.
+  out of the history without running. The tables `createTables` made are the ones the first migration makes, so
+  after `--fake` the next `make` has nothing to write.
 - `down` runs the way back the migration holds; what `up` dropped comes back empty.
 - A migration edited after it was applied is not applied again.
 - With nothing to do a command says so and ends with exit code 0 (`the database is up to date`, `no migration is

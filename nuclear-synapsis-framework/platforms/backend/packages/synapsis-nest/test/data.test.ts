@@ -34,7 +34,7 @@ class Task extends Entity {
   declare projectId?: number;
   @Column({ type: DataType.STRING, allowNull: true })
   declare note?: string;
-  @Column({ type: DataType.DATE, allowNull: true })
+  @Column({ type: DataType.DATE(6), allowNull: true })
   declare dueAt?: Date;
   @BelongsToMany(() => Tag, joinTable('tasks_tags', 'task_id', 'tag_id'))
   declare tags?: Tag[];

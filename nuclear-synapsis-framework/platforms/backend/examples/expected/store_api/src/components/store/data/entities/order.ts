@@ -31,9 +31,10 @@ export class Order extends Entity {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
   declare paid: boolean;
   /** when the customer asked for it, as the client said */
-  @Column({ type: DataType.DATE, allowNull: true })
+  @Column({ type: DataType.DATE(6), allowNull: true })
   declare placedAt?: Date;
   @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
   declare createdAt?: Date;
   @BelongsToMany(() => Tag, joinTable('orders_tags', 'order_id', 'tag_id'))
   declare tags?: Tag[];

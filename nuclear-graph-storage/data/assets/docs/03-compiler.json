@@ -476,6 +476,33 @@
    }
   },
   {
+   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.36ac7b",
+   "type": "readme",
+   "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
+   "summary": "Dialects reload without restarting when a `.toml` changes (VS Code watches `/dialects/`).",
+   "body": [
+    "| Decorators | Completion after `@` (the dialect's: `@screen`, `@on`, `@test`...) and, inside `@screen(...)`, its arguments (`route = `) and the fields of an object argument (`loggedIn = { forward: `) from `[decorators.args]`, required ones first; hover with the list of arguments. Guide: `nuclear help tutorial` and `dialects/dart/docs/07-reference/flutter.md` §6.9–6.13. |",
+    "| Generated code | The `nuclear/transpile` request: VS Code shows it with **Nuclear: Show Generated Code**. |",
+    "| Code metrics | Complexity (an approximation of the cyclomatic one) on each function, method, module...: see below. |",
+    "",
+    "Dialects reload without restarting when a `.toml` changes (VS Code watches `**/dialects/**`).",
+    "",
+    "Where it looks for dialects, in order: the `nuclear.dialectPaths` setting, `$NUCLEAR_DIALECT_PATH`,",
+    "`<workspace>/dialects`, `dialects/` next to the binary (so it finds them in the packages), the install's and the",
+    "source tree's `nuclearlang/dialects/`. Type definitions (`../../docs/07-reference/definitions.md`) are looked for in",
+    "the `<language>/defs/` folder of each dialects folder and in the `defs/` folder next to it; the full `api.json` is read once per loaded dialect."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/crates/nuclear-lsp/README.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.51938e",
    "type": "readme",
    "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
@@ -500,41 +527,16 @@
    }
   },
   {
-   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.6f3139",
-   "type": "readme",
-   "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
-   "summary": "Dialects reload without restarting when a `.toml` changes (VS Code watches `/dialects/`).",
-   "body": [
-    "Dialects reload without restarting when a `.toml` changes (VS Code watches `**/dialects/**`).",
-    "",
-    "Where it looks for dialects, in order: the `nuclear.dialectPaths` setting, `$NUCLEAR_DIALECT_PATH`,",
-    "`<workspace>/dialects`, `dialects/` next to the binary (so it finds them in the packages), the install's and the",
-    "source tree's `nuclearlang/dialects/`. Type definitions (`../../docs/07-reference/definitions.md`) are looked for in",
-    "the `<language>/defs/` folder of each dialects folder and in the `defs/` folder next to it; the full `api.json` is read once per loaded dialect."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/crates/nuclear-lsp/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.710575",
+   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.7526ac",
    "type": "readme",
    "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
    "summary": "What the server does",
    "body": [
-    "| Signature help | Parameters of the file's functions and widgets and of external constructors, functions and methods (`Scaffold({key?: Key, appBar?: ...})`, positional ones first); highlights the current argument. |",
+    "| Helpers of the language | The helpers every file has without a `use` (`chunk`, `uniqBy`, `Pair`...) in completion (signature and comment), hover and signature help, like a function of the project. A name the file, its project or the dialect has is never the helper. No go to definition: a helper has no file. |",
+    "| Signature help | Parameters of the file's and the project's functions and widgets, of the helpers and of external constructors, functions and methods (`Scaffold({key?: Key, appBar?: ...})`, positional ones first); highlights the current argument. |",
     "| Navigation | Go to definition, find references, highlight uses, rename (it does not allow switching PascalCase ↔ camelCase). |",
     "| Structure | Outline (modules, kinds, fields, methods) and folding by indentation. |",
-    "| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Synapsis) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |",
-    "| Decorators | Completion after `@` (the dialect's: `@screen`, `@on`, `@test`...) and, inside `@screen(...)`, its arguments (`route = `) and the fields of an object argument (`loggedIn = { forward: `) from `[decorators.args]`, required ones first; hover with the list of arguments. Guide: `nuclear help tutorial` and `dialects/dart/docs/07-reference/flutter.md` §6.9–6.13. |",
-    "| Generated code | The `nuclear/transpile` request: VS Code shows it with **Nuclear: Show Generated Code**. |",
-    "| Code metrics | Complexity (an approximation of the cyclomatic one) on each function, method, module...: see below. |"
+    "| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Synapsis) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |"
    ],
    "agents": false,
    "sources": [
@@ -1754,7 +1756,7 @@
     "|---|---|",
     "| `nuclear_syntax` | `parse`, `lex`, `parse_type`, `ast`, `token`, `DocComment`, `fmt::format`, `habits` |",
     "| `nuclear_dialect` | `Loader`, `Dialect`, `Report`, `Home`, `homes`, `install_dir`, `defs_cache_dir`, `base_doc`, `defs` (`TypeDefs`, `Decl`, `Member`, `Constructor`, `Param`, `render*`), `library` (`MEMBERS`, `BASES`, `OBJECTS`, `WRONG`) |",
-    "| `nuclear_transpile` | `transpile`, `check`, `Output`, `project` (`Manifest`, `build`, `output_dir`, `with_project_defs`, `metadata`, `write_metadata`, `line_map`), `contract` (`contract`, `openapi`, `write`, `sync`), `map` (`map`, `inventory`, `shape`) |",
+    "| `nuclear_transpile` | `transpile`, `check`, `Output`, `project` (`Manifest`, `build`, `output_dir`, `with_project_defs`, `metadata`, `write_metadata`, `line_map`), `contract` (`contract`, `openapi`, `write`, `sync`), `map` (`map`, `inventory`, `shape`), `helpers` (`public`: each helper a program can call with its declaration and doc comment; `declared`, `used`, `source`, `PATH`) |",
     "| `nuclear_diag` | `Diagnostic`, `SourceFile`, the codes |",
     "",
     "The language server walks the AST itself, and so do the two command line tools: a changed variant of `ast.rs` or",
@@ -1823,8 +1825,8 @@
    "id": "doc:nuclearlang/docs/02-architecture/language-server.md#done",
    "type": "context",
    "title": "The language server (`crates/nuclear-lsp`) — Done",
-   "summary": "`cargo test -p nuclear-lsp` (14 unit tests + 35 server tests) and `cargo clippy --all-targets`.",
-   "body": "`cargo test -p nuclear-lsp` (14 unit tests + 35 server tests) and `cargo clippy --all-targets`.",
+   "summary": "`cargo test -p nuclear-lsp` (14 unit tests + 39 server tests) and `cargo clippy --all-targets`.",
+   "body": "`cargo test -p nuclear-lsp` (14 unit tests + 39 server tests) and `cargo clippy --all-targets`.",
    "agents": false,
    "sources": [
     "nuclearlang/docs/02-architecture/language-server.md"
@@ -1942,7 +1944,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/language-server.md#projects",
+   "id": "doc:nuclearlang/docs/02-architecture/language-server.md#projects.3828c9",
    "type": "context",
    "title": "The language server (`crates/nuclear-lsp`) — Projects",
    "summary": "`main.nuc` (the same order as `Manifest::find`).",
@@ -1961,7 +1963,51 @@
     "  project knows).",
     "- A workspace's marker (`.workspace/workspace.nuc`, `server::is_workspace_marker`) is a manifest: it is checked as",
     "  `nuclear workspace` reads it (`read_calls` of `workspace` and `app`, N0303), never as code (no N0106 for `app`).",
-    "- Other files' names: completion, hover (\"Declared in …\"), go to definition; their members (`Object::Project`) and"
+    "- Other files' names: completion, hover (\"Declared in …\"), go to definition, signature help; their members"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/language-server.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/02-architecture/language-server.md#projects.ae7c82",
+   "type": "context",
+   "title": "The language server (`crates/nuclear-lsp`) — Projects",
+   "summary": "(`Object::Project`) and the named parameters of `Class(`.",
+   "body": "(`Object::Project`) and the named parameters of `Class(`.",
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/language-server.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/02-architecture/language-server.md#the-helpers-of-the-language",
+   "type": "context",
+   "title": "The language server (`crates/nuclear-lsp`) — The helpers of the language",
+   "summary": "The helpers every file has without a `use` (`chunk`, `uniqBy`, `Pair`: ADR-lang-0013) are read from the compiler (`nuclear_transpile::helpers::public`: each name with its declaration and doc comment) and indexed once, each like a file of a project (`features::helpers`).",
+   "body": [
+    "The helpers every file has without a `use` (`chunk`, `uniqBy`, `Pair`: ADR-lang-0013) are read from the compiler",
+    "(`nuclear_transpile::helpers::public`: each name with its declaration and doc comment) and indexed once, each like",
+    "a file of a project (`features::helpers`). `features::outer_decl` answers a name the file does not declare: a",
+    "declaration of another file of the project, or else a helper; hover, the named arguments and signature help go",
+    "through it, so a helper is shown as a function of the project is.",
+    "",
+    "- Completion offers them wherever it offers the names of the file (signature as detail, doc comment as",
+    "  documentation, the label `helper`), after the file's and the project's.",
+    "- A name of the file, of its project or of the dialect (`dialect_has`) is never the helper; a key or a named",
+    "  argument of that name (`{ tail: 2 }`) neither.",
+    "- No go to definition: a helper is inside the compiler, there is no file to open on an installed machine."
    ],
    "agents": false,
    "sources": [

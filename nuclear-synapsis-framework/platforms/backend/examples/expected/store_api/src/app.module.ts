@@ -19,6 +19,7 @@ import { CreateTag } from './components/store/domain/usecases/create_tag.js';
 import { CustomerOrders } from './components/store/domain/usecases/customer_orders.js';
 import { DeleteCustomer } from './components/store/domain/usecases/delete_customer.js';
 import { DeleteOrder } from './components/store/domain/usecases/delete_order.js';
+import { DraftCustomer } from './components/store/domain/usecases/draft_customer.js';
 import { FullOrder } from './components/store/domain/usecases/full_order.js';
 import { GetCustomer } from './components/store/domain/usecases/get_customer.js';
 import { GetOrder } from './components/store/domain/usecases/get_order.js';
@@ -48,7 +49,7 @@ export const entities = [Customer, Order, Tag];
 @Module({
   imports: [SequelizeModule.forFeature([Customer, Order, Tag])],
   controllers: [CustomersController, OrdersController, TagsController],
-  providers: [CustomerRepository, OrderRepository, TagRepository, Checkout, CreateCustomer, CreateOrder, CreateTag, CustomerOrders, DeleteCustomer, DeleteOrder, FullOrder, GetCustomer, GetOrder, ListCustomers, ListOrders, ListTags, OrdersOfCustomer, PageCustomers, PayOrders, SearchCustomers, TagOrder, UnnotedOrders, UpdateCustomer, UpdateOrder, VipCustomers, StoreAppComponent],
+  providers: [CustomerRepository, OrderRepository, TagRepository, Checkout, CreateCustomer, CreateOrder, CreateTag, CustomerOrders, DeleteCustomer, DeleteOrder, DraftCustomer, FullOrder, GetCustomer, GetOrder, ListCustomers, ListOrders, ListTags, OrdersOfCustomer, PageCustomers, PayOrders, SearchCustomers, TagOrder, UnnotedOrders, UpdateCustomer, UpdateOrder, VipCustomers, StoreAppComponent],
   exports: [StoreAppComponent],
 })
 export class StoreModule {}

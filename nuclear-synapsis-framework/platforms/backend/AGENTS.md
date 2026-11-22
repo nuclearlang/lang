@@ -60,7 +60,8 @@ installer/install.sh                         # the user runs the installed copy:
 - `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the
   guards and the WebSocket of `tasks_api`; `smoke.mjs`).
 - `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the
-  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`) and `scenario.py` (the one HTTP
+  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`), `tables.py` (the tables
+  `createTables` makes against the first migration's) and `scenario.py` (the one HTTP
   scenario whose answers are compared).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
@@ -80,8 +81,9 @@ Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fasta
    loader refuses the dialect (N0305). The rules of a decorator are data there (`[decorators.args]`,
    `[decorators.fields]`): no decorator name is written in Rust.
 4. **The runtimes behave the same.** A behaviour added to one is added to the other, with the same test in both
-   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the guards and the
-   WebSocket: `tests/test_sockets.py`, `test/sockets.test.ts`). The database check compares their answers on every
+   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the types of a body
+   and a model built in code: `tests/test_types.py`, `test/types.test.ts`; the guards and the WebSocket:
+   `tests/test_sockets.py`, `test/sockets.test.ts`). The database check compares their answers on every
    database: a change of the data words runs it.
 5. **A changed public API of a runtime** means its type definitions are regenerated
    ([runbook](docs/06-runbooks/change-a-runtime.md)).

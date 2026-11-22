@@ -12564,6 +12564,10 @@
     "  @get(\"{id}/orders\")",
     "  customerOrders(id: int) Result<Error, Customer>",
     "    ~app.customerOrders(id)",
+    "",
+    "  @get(\"draft\")",
+    "  draftCustomer(email: string) Result<Error, NewCustomer>",
+    "    app.draftCustomer(email)",
     "```"
    ],
    "platforms": [
@@ -13029,6 +13033,33 @@
    "meta": {
     "kind": "usecase",
     "name": "DeleteOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/draft_customer",
+   "type": "file",
+   "title": "`usecase` DraftCustomer — the example project store_api (backend)",
+   "summary": "A customer not saved yet, built in code from what the client said: the model's rules are checked when it is built.",
+   "body": [
+    "`components/store/domain/usecases/draft_customer.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// A customer not saved yet, built in code from what the client said: the model's rules are checked when it is built.",
+    "usecase DraftCustomer()",
+    "  exec(email: string) Result<Error, NewCustomer>",
+    "    Ok(NewCustomer(email = email, name = \"draft\"))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/draft_customer.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "DraftCustomer",
     "project": "store_api"
    }
   },
@@ -13505,6 +13536,7 @@
     "  checkout() = Checkout.exec",
     "  payOrders() = PayOrders.exec",
     "  tagOrder() = TagOrder.exec",
+    "  draftCustomer() = DraftCustomer.exec",
     "```"
    ],
    "platforms": [

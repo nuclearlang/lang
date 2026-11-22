@@ -6,9 +6,9 @@ import { copyFileSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSyn
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { describe, it } from 'node:test';
-import { AutoIncrement, BelongsTo, Column, DataType, PrimaryKey, Sequelize, Table } from 'sequelize-typescript';
-import { Entity } from '../src/index.js';
-import { down, make, status, up } from '../src/migrate.js';
+import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, PrimaryKey, Sequelize, Table, UpdatedAt } from 'sequelize-typescript';
+import { Entity, SQLite, joinTable } from '../src/index.js';
+import { createTables, down, make, status, up } from '../src/migrate.js';
 
 const rejected = (work: Promise<unknown>): Promise<string> => work.then(() => assert.fail('it did not fail'), (e: Error) => e.message);
 
@@ -86,6 +86,52 @@ class ProjectKey extends Entity {
   @Column({ type: DataType.STRING(100), allowNull: false })
   declare name: string;
 }
+
+// an app with every kind of thing `createTables` and a migration must write the same way: a unique, defaults, a
+// `DateTime`, the timestamps, a foreign key, a join table (as the dialect writes its entities)
+@Table({ tableName: 'labels', underscored: true, timestamps: false })
+class Label extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.STRING(30), allowNull: false, unique: true })
+  declare text: string;
+}
+
+@Table({ tableName: 'stamped', underscored: true, timestamps: true, createdAt: 'createdAt', updatedAt: 'updatedAt' })
+class Stamped extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.STRING(100), allowNull: false, unique: true })
+  declare name: string;
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+  declare open: boolean;
+  @Column({ type: DataType.DOUBLE, allowNull: false, defaultValue: 0.5 })
+  declare cost: number;
+  @Column({ type: DataType.DATE(6), allowNull: true })
+  declare due?: Date;
+  @BelongsTo(() => Stamped, { foreignKey: 'ownerId', onDelete: 'set null', onUpdate: 'NO ACTION' })
+  declare owner?: Stamped;
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare ownerId?: number;
+  @BelongsToMany(() => Label, joinTable('stamped_labels', 'stamped_id', 'label_id'))
+  declare labels?: Label[];
+  @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
+  declare createdAt?: Date;
+  @UpdatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
+  declare updatedAt?: Date;
+}
+
+/** Every table as SQLite has it, by the words it was made with. */
+const tables = async (db: Sequelize): Promise<Record<string, string>> =>
+  Object.fromEntries(
+    ((await db.query("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT IN ('migrations', 'sqlite_sequence') ORDER BY name", { type: 'SELECT' })) as { name: string; sql: string }[]).map((t) => [t.name, t.sql]),
+  );
 
 /** A migrations folder and its database; `made` is `make` at an hour of its own, by the migration's name. */
 async function project(work: (p: { dir: string; db: Sequelize; made: (message: string, models: unknown[]) => Promise<string>; sql: <T = Record<string, unknown>>(s: string) => Promise<T[]> }) => Promise<void>): Promise<void> {
@@ -280,6 +326,53 @@ describe('migrations', () => {
       assert.ok('done' in (await db.getQueryInterface().describeTable('tasks')));
       assert.match((await sql<{ sql: string }>("SELECT sql FROM sqlite_master WHERE name = 'projects'"))[0].sql, /uq_projects_name/);
     }));
+
+  it('createTables makes the tables of the first migration, and a DateTime gets its fraction', async () => {
+    // the app's own connection, as `createTables = true` opens it: the hook makes the tables before Sequelize's sync
+    const options = new SQLite({ file: ':memory:', createTables: true }).sequelize() as object;
+    const app = new Sequelize({ ...options, models: [Label, Stamped] } as never);
+    await app.sync();
+    const created = await tables(app);
+    await createTables(app); // the tables are there: nothing to make
+    assert.deepEqual(await tables(app), created);
+    await app.close();
+    assert.deepEqual(Object.keys(created), ['labels', 'stamped', 'stamped_labels']);
+    assert.match(created.stamped, /`due` DATETIME\(6\), /);
+    assert.match(created.stamped, /`created_at` DATETIME\(6\) NOT NULL DEFAULT \(CURRENT_TIMESTAMP\)/);
+    assert.match(created.stamped, /`open` BOOLEAN NOT NULL DEFAULT 1, `cost` DOUBLE NOT NULL DEFAULT '0.5'/);
+    assert.match(created.stamped, /CONSTRAINT `uq_stamped_name` UNIQUE \(`name`\), CONSTRAINT `fk_stamped_owner_id` FOREIGN KEY \(`owner_id`\) REFERENCES `stamped` \(`id`\) ON DELETE SET NULL\)$/);
+    assert.match(created.stamped_labels, /CONSTRAINT `fk_stamped_labels_stamped_id` .* ON DELETE CASCADE, CONSTRAINT `fk_stamped_labels_label_id` .* ON DELETE CASCADE\)$/);
+
+    await project(async ({ dir, db, made, sql }) => {
+      // the migration makes the same tables, word for word
+      const first = await made('first', [Label, Stamped]);
+      await up(dir, db);
+      assert.deepEqual(await tables(db), created);
+      assert.equal(await make(dir, 'nothing', [Label, Stamped]), null);
+
+      // a migration made before 0.94 wrote a DateTime without its fraction: the next make gives it, and the rows stay
+      await down(dir, db);
+      const file = join(dir, `${first}.js`);
+      const old = readFileSync(file, 'utf8')
+        .replaceAll('Sequelize.DataTypes.DATE({length: 6})', 'Sequelize.DataTypes.DATE')
+        .replaceAll('(CURRENT_TIMESTAMP)', 'CURRENT_TIMESTAMP')
+        .replace(/,\s*"options": \{\s*"length": 6\s*\}/g, '');
+      assert.ok(!old.includes('length: 6') && !old.includes('"length": 6'));
+      writeFileSync(file, old);
+      await up(dir, db);
+      assert.match((await tables(db)).stamped, /`due` DATETIME, .*`created_at` DATETIME NOT NULL/);
+      await sql("INSERT INTO stamped (name, due) VALUES ('home', '2026-03-04 05:06:07.089 +00:00')");
+      const second = await made('the fraction', [Label, Stamped]);
+      assert.match(readFileSync(join(dir, `${second}.js`), 'utf8'), /changeColumn\("stamped", "due", \{ type: Sequelize\.DataTypes\.DATE\(\{length: 6\}\)/);
+      assert.deepEqual(await up(dir, db), [second]);
+      const now = await tables(db);
+      for (const column of ['`due` DATETIME(6)', '`created_at` DATETIME(6) NOT NULL DEFAULT (CURRENT_TIMESTAMP)', '`updated_at` DATETIME(6) NOT NULL DEFAULT (CURRENT_TIMESTAMP)']) {
+        assert.ok(now.stamped.includes(column), `${column} in ${now.stamped}`);
+      }
+      assert.deepEqual(await sql('SELECT name, due FROM stamped'), [{ name: 'home', due: '2026-03-04 05:06:07.089 +00:00' }]);
+      assert.equal(await make(dir, 'nothing', [Label, Stamped]), null);
+    });
+  });
 
   it('a database migrated by an older version goes on', () =>
     // before 0.93 the history was SequelizeMeta (the files' names) and a migration had no `parent` or had to have one

@@ -4,6 +4,33 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **Five decisions of the user (2026-11-22), the same in `fastapi` and `nestjs`** (reference §2.1, §2.2, §2.3, §2.8):
+  - **a value of another JSON type is refused** in a body: a text is never a number or a boolean, a number is never
+    a text, a boolean or a `DateTime`; a number without a fraction is a whole number (`30.0`) and a whole number is a
+    `double`. The answer is the 400 with the rule `type`. **Breaking for a client of a `fastapi` app** that sent
+    `"30"` for an `int`, `"1.5"` for a `double`, `"true"` or `1` for a `boolean`, or a number for a `DateTime`: they
+    were converted, and are refused now (`nestjs` refused all but the number for a `DateTime`, which it read as
+    milliseconds where `fastapi` read seconds). An item of a list that breaks its type is named by its place in
+    both (`labels.1`; `nestjs` named the list). A parameter of the path or the query still converts from its text.
+    In `fastapi` the rule is the model's, so it also holds where a model is read from something else than a
+    request (the answer of an HTTP repository: an API that sends `"30"` for an `int` field is refused now);
+  - **a `DateTime` keeps its fraction on MySQL and MariaDB**: the column is `DATETIME(6)` (TypeORM's precision for
+    the date columns it gives a fraction on MySQL), written by the migrations and by `createTables`; SQLite names it
+    the same, PostgreSQL's `TIMESTAMP WITH TIME ZONE` already kept it. The same instant comes back with its
+    milliseconds on the four databases. The next `nuclear migrate make` of an existing project writes the change
+    of each `DateTime` column;
+  - **a model built in code is checked in both dialects**: `NewCustomer(email = "nope")` throws in `nestjs` as it
+    did in `fastapi` (it built the model unchecked), and a use case that lets the error go answers the same 500;
+  - **`createTables` makes the schema the migrations make**, in both dialects on the four databases: the default
+    of the timestamps, the foreign keys (of a join table too), the names of the types on SQLite, the names of the
+    constraints. Each runtime makes the tables with what its first migration runs. After it,
+    `nuclear migrate --fake` leaves nothing for the next `make`;
+  - **`like` follows the case rule of the database** and `ilike` is the same everywhere: said in the reference.
+
+  The database check holds each one: 23 more answers compared byte by byte (the refusals, the milliseconds, the
+  model built in code), and a new stage, `tables` (`tables.py`), on every dialect and database: the schema
+  `createTables` left against the first migration's, the names of the constraints included, and a first migration
+  written as 0.93 wrote it upgraded by the next `make`.
 - **TypeORM is the rule of behaviour for migrations** (ADR-backend-0002), in `fastapi` and `nestjs` alike:
   - the history is the table `migrations`, one row per migration applied (`id`, `timestamp`, `name`), in every
     dialect; a database migrated by 0.91 or 0.92 is converted by the first command (`alembic_version`,

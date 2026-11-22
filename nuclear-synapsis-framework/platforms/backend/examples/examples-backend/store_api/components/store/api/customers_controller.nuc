@@ -36,3 +36,7 @@ controller CustomersController(app: StoreAppComponent)
   @get("{id}/orders")
   customerOrders(id: int) Result<Error, Customer>
     ~app.customerOrders(id)
+
+  @get("draft")
+  draftCustomer(email: string) Result<Error, NewCustomer>
+    app.draftCustomer(email)

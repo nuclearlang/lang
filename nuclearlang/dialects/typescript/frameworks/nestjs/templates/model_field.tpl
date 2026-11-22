@@ -16,6 +16,9 @@
 {{#tinfo.is.boolean}}
 @IsBoolean({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.boolean}}
+{{#tinfo.is.DateTime}}
+@IsDateTime({{#tinfo.list}}{ each: true }{{/tinfo.list}})
+{{/tinfo.is.DateTime}}
 {{#tinfo.list}}
 @IsArray()
 {{/tinfo.list}}

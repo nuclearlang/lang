@@ -51,41 +51,49 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 - `nuclear migrate` after a real `nuclear install` with `nestjs` (with `fastapi` it ran on a project made by
   `nuclear new`, through the MCP server's `project_migrate`, 2026-11-22): the database check gives the project's
   `build/` the shared tools of the checks (`.venv`, `node_modules`) in place of `nuclear install`.
-- A project whose tables `createTables` made, brought under migrations with `nuclear migrate --fake`: those tables
-  are the dialect's own (no default on the timestamps, other type names on SQLite), not the ones the migrations
-  write; the next `make` does not see the difference, since it never reads the database. The check runs `--fake`
-  only on tables a migration made.
 - A unique or a foreign key made without a name by a migration of before 0.91, dropped on a real PostgreSQL, MySQL
   or MariaDB with a database that old: the check renames a constraint to the database's own name to stand for it.
 - A migration on a table with millions of rows (SQLite rebuilds the table; the other databases alter it in place).
 - Two requests that change the same row at once inside `@transactional` (two checkouts of one customer): the
   platform has no word to lock a row, and no check says what each database does.
 - `nuclear migrate` on Windows (`cmd /C` quoting).
+- **The types of a body beyond a model's own fields** (a value of another JSON type is refused, reference §2.3;
+  the runtime tests and the database check cover `string`, `int`, `double`, `boolean`, `DateTime`, a list of
+  texts and of whole numbers, an optional field). Not run in either dialect: a body that is an entity, a model
+  inside a model, a map (its keys are texts: one dialect converts them, the other does not check a map), and a
+  model that reaches the app another way (the payload of an event, the answer of an HTTP repository, what an
+  agent's model returns).
+- **Which texts are a `DateTime`**: a number is refused in both dialects and a text that is no date too; a text
+  with a time zone means the same instant in both (the check). Not compared: a date without a time
+  (`"2026-03-04"`), a time without a zone, a text of digits: each dialect reads them with its own parser.
+- **The migration that gives a `DateTime` its fraction, on a table with many rows or on a database a release
+  before 0.94 really made**: the check writes the first migration as 0.93 wrote it and upgrades two rows.
+- **What a model built in code throws**: each dialect's own error and message (pydantic's `ValidationError`, the
+  runtime's `InvalidModel`); only the 500 a use case answers when it lets it go is compared.
+- **`createTables` on a database that already has some of the tables**, made another way (by 0.93's
+  `createTables`): it makes the missing ones and leaves the others as they are, so those keep the old schema;
+  only an empty database was run.
 
 ## To decide with the user
 
 Found by the database check (2026-11-21): the same in both dialects today, or different, but not what a user would
 expect; each needs a rule before it is changed.
 
+- **An optional field of a model that was left empty is `null` in one dialect's answer and absent in the other's**
+  (found 2026-11-22: `GET /customers/draft` of `store_api` answers `"nickname": null` in fastapi and no `nickname`
+  in nestjs; an entity's answer has `null` in both). The check reads that answer and does not compare it.
+- **`@created` / `@updated` have whole seconds in one dialect and milliseconds in the other** on SQLite and MySQL:
+  fastapi leaves them to the database's clock (`CURRENT_TIMESTAMP`: whole seconds there), nestjs writes the app's
+  clock. The column keeps the fraction in both (the check compares the shape of these two, not their digits).
+
 - **A unique column the use case did not check answers 500.** Of 16 requests at once for one email, one makes the
   row, those the use case saw answer 409 and the rest reach the database's unique error: a 500 in both dialects.
   Wanted: a rule (409?) for a unique violation.
-- **A text given for a number in a body** (`"age": "30"`) is accepted by one dialect's validator and refused by
-  the other's (not run: known from each validator; the error bodies themselves are one, ADR-synapsis-0013).
-- **A `DateTime` keeps its milliseconds on PostgreSQL and SQLite and loses them on MySQL and MariaDB** (both
-  dialects write a `DATETIME` without fraction).
 - **No text column longer than `@column(length = n)`.** A `string` field without a length is 255 characters in both
   dialects; there is no word for a text of any length.
-- **`createTables` does not make the schema the migrations make** in every dialect (the timestamps' default, the
-  foreign keys of a join table, SQLite's type names): it is for development and tests, and its tables are each
-  target library's. Wanted or not: the same schema from both ways.
 - **A migration is edited by hand in the dialect's migration language** (a rename): the same Nuclear project needs
   two different edits. TypeORM finds no rename either (ADR-backend-0002), so `make` will not; a word in Nuclear
   for it would be a change of the language.
-- **A model built in code is validated in one dialect only** (`NewCustomer(email = "nope")` throws in fastapi; in
-  nestjs only a request's body is validated).
-- **`like` follows the database's case rule** (PostgreSQL tells the case apart; MySQL, MariaDB and SQLite do not for
-  ASCII); `ilike` is the same everywhere.
 
 - The first provider of authentication: JWT only, or also sessions with cookies for web clients
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).

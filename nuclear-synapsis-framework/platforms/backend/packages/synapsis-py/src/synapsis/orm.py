@@ -12,13 +12,16 @@ from datetime import UTC, datetime
 from typing import Any, ClassVar, cast
 
 from pydantic.alias_generators import to_camel
-from pydantic import BaseModel, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
+from pydantic import BaseModel, GetCoreSchemaHandler, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
+from pydantic_core import core_schema
 from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
+from sqlalchemy.dialects import mysql, sqlite
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, RelationshipProperty, mapped_column, relationship
 
-from .models import WIRE, wire_dates
+from .models import WIRE, typed, wire_dates
 
 __all__ = [
     "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of", "wire_of", "UtcDateTime",
@@ -38,13 +41,37 @@ PENDING = "_synapsis_pending"
 TEXT_LENGTH = 255
 
 
+class _LiteDateTime(sqlite.DATETIME):
+    """SQLite's date and time, named with its fraction as MySQL and MariaDB name it (SQLite keeps the words of a type)."""
+
+
+@compiles(_LiteDateTime, "sqlite")
+def _lite_date_time(element: Any, compiler: Any, **kw: Any) -> str:
+    del element, compiler, kw
+    return f"DATETIME({FRACTION})"
+
+
+# the digits of a second a `DateTime` column keeps where the database asks: TypeORM's for the date columns it gives a
+# fraction on MySQL (ADR-backend-0002); PostgreSQL's own
+FRACTION = 6
+
+
 class UtcDateTime(TypeDecorator[datetime]):
     """A `DateTime` column: an instant. It is written in UTC and read back as UTC on every database (SQLite, MySQL and
     MariaDB keep no time zone, and their drivers would drop the one of the value); a value without a time zone is
-    local time, as in the nestjs dialect."""
+    local time, as in the nestjs dialect. It keeps the fraction of a second on every database: `DATETIME(6)` on MySQL,
+    MariaDB and SQLite, `TIMESTAMP WITH TIME ZONE` on PostgreSQL. A migration names this type (a migration made before
+    0.94 wrote `sa.DateTime(timezone=True)`: whole seconds on MySQL and MariaDB)."""
 
     impl = DateTime(timezone=True)
     cache_ok = True
+
+    def load_dialect_impl(self, dialect: Any) -> Any:
+        if dialect.name in ("mysql", "mariadb"):
+            return dialect.type_descriptor(mysql.DATETIME(timezone=True, fsp=FRACTION))
+        if dialect.name == "sqlite":
+            return dialect.type_descriptor(_LiteDateTime(timezone=True))
+        return dialect.type_descriptor(self.impl)
 
     def process_bind_param(self, value: datetime | None, dialect: Any) -> datetime | None:
         del dialect
@@ -146,14 +173,19 @@ def _sql_literal(value: Any) -> str | None:
     return None
 
 
+# the database's clock as the default of a column, written the one way the four databases take for a column with a
+# fraction (MySQL refuses CURRENT_TIMESTAMP without the parentheses there)
+CLOCK = "(CURRENT_TIMESTAMP)"
+
+
 def created() -> Any:
     """When the row was inserted: never empty, the database's clock by default (ADR-backend-0002)."""
-    return mapped_column(UtcDateTime(), server_default=func.now(), nullable=False)
+    return mapped_column(UtcDateTime(), server_default=text(CLOCK), nullable=False)
 
 
 def updated() -> Any:
     """When the row last changed: never empty, the database's clock by default, written again with every change."""
-    return mapped_column(UtcDateTime(), server_default=func.now(), onupdate=func.now(), nullable=False)
+    return mapped_column(UtcDateTime(), server_default=text(CLOCK), onupdate=func.now(), nullable=False)
 
 
 _ACTIONS = {"cascade": "CASCADE", "set null": "SET NULL", "restrict": "RESTRICT", "no action": "NO ACTION"}
@@ -227,6 +259,11 @@ class EntitySchema(BaseModel):
 
     model_config = WIRE
     relations: ClassVar[frozenset[str]] = frozenset()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source: type[BaseModel], handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        # a body that is an entity is typed as a model is (synapsis.models)
+        return typed(handler(source))
 
     @model_serializer(mode="wrap")
     def _loaded_only(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Any:

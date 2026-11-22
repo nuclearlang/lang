@@ -1,4 +1,5 @@
 import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDateTime, checkModel } from 'synapsis-nest';
 
 /** What it takes to add or change an order. */
 export class NewOrder {
@@ -17,9 +18,13 @@ export class NewOrder {
   @IsBoolean()
   paid: boolean = false;
   @IsOptional()
+  @IsDateTime()
   placedAt?: Date;
 
-  constructor(values: Partial<NewOrder> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewOrder>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

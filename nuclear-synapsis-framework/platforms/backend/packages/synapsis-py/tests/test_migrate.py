@@ -270,3 +270,95 @@ def test_a_database_migrated_by_an_older_version_goes_on(tmp_path: Path) -> None
     assert p.migrate("down", "--to", first.stem, code=1).count("reverted") == 0, "two rows with one name: the unique cannot come back"
     p.sql("DELETE FROM projects")
     assert p.migrate("down", "--to", first.stem).split() == ["reverted", third, "reverted", second.stem]
+
+
+# an app with every kind of thing `createTables` and a migration must write the same way: a unique, defaults, a
+# `DateTime`, the timestamps, a foreign key, a join table
+STAMPED = '''
+from datetime import datetime
+
+from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, created, many_to_many, many_to_one, primary, updated
+
+
+class ProjectConfig(AppConfig):
+    connections = [SQLite(file="app.sqlite", create_tables=True)]
+
+
+class Label(Entity):
+    __tablename__ = "labels"
+    id: Mapped[int] = primary(generated=True)
+    text: Mapped[str] = column(length=30, unique=True)
+    kind: Mapped[str] = column(length=8, index=True)
+
+
+class Project(Entity):
+    __tablename__ = "projects"
+    id: Mapped[int] = primary(generated=True)
+    name: Mapped[str] = column(length=100, unique=True)
+    open: Mapped[bool] = column(default=True)
+    cost: Mapped[float] = column(default=0.5)
+    due: Mapped[datetime | None] = column(nullable=True)
+    owner: Mapped[Project | None] = many_to_one("Project", "owner_id", "projects.id", "", "set null")
+    owner_id: Mapped[int | None] = column()
+    labels: Mapped[list[Label]] = many_to_many("Project", "labels", "Label", join=True)
+    created_at: Mapped[datetime] = created()
+    updated_at: Mapped[datetime] = updated()
+
+
+app = create_app(ProjectConfig(), entities=[Label, Project])
+'''
+
+
+def shape(p: Project) -> dict[str, object]:
+    """Every table as SQLite has it: its columns (the words of the type, null, the default by its value, the key), its
+    foreign keys and the names of its constraints."""
+    out: dict[str, object] = {}
+    for name, made in p.sql("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT IN ('migrations', 'sqlite_sequence')"):
+        columns = [(c[1], c[2], c[3], str(c[4]).strip("()").lower() if c[4] is not None else None, c[5]) for c in p.sql(f"PRAGMA table_info({name})")]
+        foreign = sorted(r[2:7] for r in p.sql(f"PRAGMA foreign_key_list({name})"))
+        indexes = sorted(str(r[0]) for r in p.sql(f"SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = '{name}' AND sql IS NOT NULL"))
+        out[str(name)] = (columns, foreign, sorted(re.findall(r"CONSTRAINT (\w+)", str(made))) + indexes, "AUTOINCREMENT" in str(made))
+    return out
+
+
+def test_create_tables_makes_the_tables_of_the_first_migration(tmp_path: Path) -> None:
+    p = Project(tmp_path)
+    p.app(STAMPED)
+    # the app opens its database, as it does when it starts
+    opened = "import asyncio, app.main as m; asyncio.run(m.app.state.synapsis_config.connections[0].open())"
+    subprocess.run([sys.executable, "-c", opened], cwd=p.root, check=True)
+    created = shape(p)
+    assert sorted(created) == ["labels", "projects", "projects_labels"]
+    columns, foreign, names, generated = created["projects"]  # type: ignore[misc]
+    assert ("due", "DATETIME(6)", 0, None, 0) in columns and ("created_at", "DATETIME(6)", 1, "current_timestamp", 0) in columns
+    assert ("open", "BOOLEAN", 1, "true", 0) in columns and ("cost", "DOUBLE", 1, "0.5", 0) in columns
+    assert names == ["fk_projects_owner_id", "uq_projects_name"] and generated
+    assert created["labels"][2] == ["uq_labels_text", "CREATE INDEX ix_labels_kind ON labels (kind)"]  # type: ignore[index]
+    assert created["projects_labels"][2] == ["fk_projects_labels_label_id", "fk_projects_labels_project_id"]  # type: ignore[index]
+    subprocess.run([sys.executable, "-c", opened], cwd=p.root, check=True)  # the tables are there: nothing to make
+    assert shape(p) == created
+
+    # the tables createTables made come under the migrations with --fake, and the migration makes the same ones
+    first = p.made("first")
+    assert "failed" in p.migrate("up", code=1)
+    assert "(fake)" in p.migrate("up", "--fake")
+    assert "no changes" in p.migrate("make", "nothing")
+    p.migrate("down")
+    assert shape(p) == {}
+    p.migrate("up")
+    assert shape(p) == created
+
+    # a migration made before 0.94 wrote a DateTime without its fraction: the next make gives it, and the rows stay
+    p.migrate("down")
+    first.write_text(first.read_text().replace("UtcDateTime()", "sa.DateTime(timezone=True)"))
+    p.migrate("up")
+    assert {c[1] for c in shape(p)["projects"][0] if c[0] in ("due", "created_at", "updated_at")} == {"DATETIME"}  # type: ignore[index]
+    p.sql("INSERT INTO projects (name, due) VALUES ('home', '2026-03-04 05:06:07.089000')")
+    second = p.made("the fraction")
+    assert "type_=UtcDateTime()" in second.read_text()
+    # the way back names a type every database has, not SQLite's own
+    assert "type_=sa.DateTime(timezone=True)" in second.read_text() and "sa.DATETIME()" not in second.read_text()
+    p.migrate("up")
+    assert shape(p) == created
+    assert p.sql("SELECT name, due FROM projects") == [("home", "2026-03-04 05:06:07.089000")]
+    assert "no changes" in p.migrate("make", "nothing")

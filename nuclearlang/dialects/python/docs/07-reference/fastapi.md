@@ -56,7 +56,7 @@ plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `list
 
 ### 2.1 Entity
 
-A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column.
+A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database.
 
 ```nuclear
 @entity("characters")
@@ -258,7 +258,7 @@ class CharacterRepository(HttpRepository):
 
 What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:
 its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's
-(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422).
+(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = "")` built in code is checked by pydantic and raises its `ValidationError`.
 
 ```nuclear
 model NewCharacter
@@ -431,7 +431,7 @@ class CharactersController:
 
 ### 2.7 Configuration
 
-The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `"default"`). `env("VAR", "default")` reads the environment. The value is read at run time from the process
+The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables, by the operations a migration runs); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `"default"`). `env("VAR", "default")` reads the environment. The value is read at run time from the process
 (spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a
@@ -739,6 +739,9 @@ What is this dialect's:
 - A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`. The table
   `migrations` lists the ones applied.
 - They run through `nuclear migrate` only: Alembic's own commands, revisions and `alembic_version` are not used.
+- A `DateTime` column is `UtcDateTime()` (imported from `synapsis.orm`): `DATETIME(6)` on MySQL, MariaDB and
+  SQLite, `TIMESTAMP WITH TIME ZONE` on PostgreSQL. A migration of before 0.94 wrote `sa.DateTime(timezone=True)`
+  (whole seconds on MySQL and MariaDB): the next `make` writes the `alter_column` of each.
 - A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's
   `existing_type`):
 

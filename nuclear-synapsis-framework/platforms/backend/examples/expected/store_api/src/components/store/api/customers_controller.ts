@@ -53,4 +53,9 @@ export class CustomersController {
   async customerOrders(@Param('id', IntPipe) id: number): Promise<Result<AppError, Customer>> {
     return await this.app.customerOrders(id);
   }
+
+  @Get('draft')
+  draftCustomer(@Query('email') email: string): Result<AppError, NewCustomer> {
+    return this.app.draftCustomer(email);
+  }
 }

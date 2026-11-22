@@ -3,6 +3,7 @@
 // (Kafka, Redis), 'synapsis-nest/testing' (the generated tests: @nestjs/testing is a dev dependency).
 export * from './result.js';
 export * from './errors.js';
+export * from './model.js';
 export * from './config.js';
 export * from './repository.js';
 export * from './http.js';

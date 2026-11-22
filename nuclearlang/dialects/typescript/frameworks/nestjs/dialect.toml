@@ -48,7 +48,7 @@ written = ["Result", "Ok", "Err", "AppError", "Injectable", "Controller", "Model
   "PrimaryKey", "AutoIncrement", "CreatedAt", "UpdatedAt", "InjectModel", "Repository", "Param", "Body", "Query",
   "IntPipe", "BoolPipe", "DoublePipe", "Get", "Post", "Put", "Patch", "Delete", "HttpCode",
   "IsString", "IsInt", "IsNumber", "IsBoolean", "IsOptional", "IsNotEmpty", "IsEmail", "IsUrl", "MinLength",
-  "MaxLength", "Min", "Max", "Matches", "IsArray", "ValidateNested", "Type", "Expose", "IsDate", "AppConfig", "ComponentConfig",
+  "MaxLength", "Min", "Max", "Matches", "IsArray", "ValidateNested", "Type", "Expose", "IsDate", "IsDateTime", "checkModel", "AppConfig", "ComponentConfig",
   "startTestApp", "stopTestApp", "INestApplication", "describe", "it", "beforeEach", "afterEach",
   "Listener", "Tools", "Agent", "Graph", "Annotation", "Messages", "tool", "z", "StructuredToolInterface", "guardedBy"]
 
@@ -389,7 +389,7 @@ config = "@nestjs/config"
 [auto_imports]
 # the definitions give every other name; these choose the module when two packages export the same name
 "class-transformer" = ["Transform", "Type", "Expose"]
-"synapsis-nest" = ["IntPipe", "DoublePipe", "BoolPipe", "Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
+"synapsis-nest" = ["IsDateTime", "checkModel", "IntPipe", "DoublePipe", "BoolPipe", "Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
 # the optional parts of the runtime: only a project that enables their plugin imports them
 "synapsis-nest/events" = ["publish", "Redis", "Kafka", "Listener", "consumer", "cacheGet", "cacheSet"]
 "synapsis-nest/sockets" = ["WebSocketServer"]

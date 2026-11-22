@@ -13,6 +13,7 @@ import { CreateTag } from './domain/usecases/create_tag.js';
 import { CustomerOrders } from './domain/usecases/customer_orders.js';
 import { DeleteCustomer } from './domain/usecases/delete_customer.js';
 import { DeleteOrder } from './domain/usecases/delete_order.js';
+import { DraftCustomer } from './domain/usecases/draft_customer.js';
 import { FullOrder } from './domain/usecases/full_order.js';
 import { GetCustomer } from './domain/usecases/get_customer.js';
 import { GetOrder } from './domain/usecases/get_order.js';
@@ -57,6 +58,7 @@ export class StoreAppComponent {
     private readonly checkoutInstance: Checkout,
     private readonly payOrdersInstance: PayOrders,
     private readonly tagOrderInstance: TagOrder,
+    private readonly draftCustomerInstance: DraftCustomer,
   ) {}
 
   async listCustomers(page: number): Promise<Result<AppError, Customer[]>> {
@@ -145,5 +147,9 @@ export class StoreAppComponent {
 
   async tagOrder(id: number, input: TagList): Promise<Result<AppError, Order>> {
     return await this.tagOrderInstance.exec(id, input);
+  }
+
+  draftCustomer(email: string): Result<AppError, NewCustomer> {
+    return this.draftCustomerInstance.exec(email);
   }
 }

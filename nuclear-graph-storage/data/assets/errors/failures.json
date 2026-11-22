@@ -640,7 +640,7 @@
    "title": "Failure: the API answers 400, 404 or 409",
    "summary": "A backend written in Nuclear answers the status of its `Result` error: 400 an invalid body (a model's rule: the reasons) or `Invalid`, 401 `Unauthorized`, 403 `Forbidden`, 404 `NotFound`, 409 `Conflict`. It is the code working: send a valid request or expect that status in the test.",
    "body": [
-    "- 400: a field breaks a rule decorator of the model (`@minLength`, `@email`...). The answer names the field.",
+    "- 400: a field breaks a rule decorator of the model (`@minLength`, `@email`...), or its value is of another JSON type than the field's (`\"30\"` for an `int`: rule `type`). The answer names the field.",
     "- 404: `find(id)` or `getOne()` found no row and the use case returned `NotFound`.",
     "- 409: the use case returned `Conflict` (a repeated unique value).",
     "",

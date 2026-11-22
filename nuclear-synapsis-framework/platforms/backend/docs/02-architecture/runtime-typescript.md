@@ -15,6 +15,7 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 |---|---|---|
 | `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |
 | | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |
+| | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |
 | | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |
 | | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
 | | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |
@@ -60,6 +61,16 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **Rows**: after an insert `save` sets `null` in every column the insert did not name (sequelize leaves them
   undefined, and the JSON answer would lack them).
 - **`ilike`** is PostgreSQL's `ILIKE` there and `lower(column) LIKE lower(pattern)` on the other databases.
+- **A value's JSON type is its field's** (the reference, §2.3): the validation pipe converts nothing
+  (`transform` without implicit conversion), so class-validator's type decorators refuse a value of another type.
+  Two things are the runtime's: `IsDateTime` reads the value as it came (class-transformer has already made a
+  `Date` of a number) and takes a text only; `reasonsOf` names the item of a list that breaks its type
+  (`tags.1`), which class-validator does not.
+- **A model built in code** is checked by its constructor when it is given values (`checkModel`:
+  `validateSync`, `InvalidModel` with the same reasons as a body). class-transformer builds the body of a request
+  without values, so the pipe checks it once.
+- **Columns**: a `DateTime` is `DataType.DATE(6)`; Sequelize writes the milliseconds only to a column with a
+  length.
 - **Types**: `Related<T>` types a single relation, so the decorator metadata never reads the other class (two ES
   modules that import each other).
 - **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It
@@ -109,13 +120,19 @@ codes as the Python runtime. How this one keeps them:
     `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild
     loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point
     to the table (their `ON DELETE CASCADE` runs when it is dropped).
-- The tables `createTables` makes (development, tests) are Sequelize's own: no default on the timestamps, SQLite's
-  `TINYINT(1)`. Only the migrations write the schema of ADR-backend-0002.
+- `createTables(sequelize)` makes the tables the database does not have from `schemaFrom(sequelize)` (the schema
+  a migration file holds) through `migrator(...).createTable`: the code of the first migration, so the tables are
+  the same. `Database.sequelize()` gives it to Sequelize as a `beforeBulkSync` hook with `synchronize: true`:
+  Sequelize's own `sync` then finds every table there and makes none (the tests' database in memory too).
+- A `DateTime` is `DATE({length: 6})` in a migration: `DATETIME(6)` on MySQL and MariaDB (Sequelize's), on SQLite
+  (`sqlOf` writes it: Sequelize writes no fraction there), `TIMESTAMP WITH TIME ZONE` on PostgreSQL. The clock of
+  `@created` / `@updated` is the literal `(CURRENT_TIMESTAMP)`: MySQL refuses `CURRENT_TIMESTAMP` without the
+  parentheses as the default of a column with a fraction.
 
 ## Tests and type definitions
 
 - `test/runtime.test.ts`, `data.test.ts` (the same cases as the Python runtime's `test_data.py`),
-  `migrate.test.ts` (the same cases as `test_migrate.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
+  `migrate.test.ts` (the same cases as `test_migrate.py`), `types.test.ts` (the same cases as `test_types.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
   them ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,

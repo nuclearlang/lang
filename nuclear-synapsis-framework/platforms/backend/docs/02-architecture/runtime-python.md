@@ -59,7 +59,8 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **A route's parameters** keep Nuclear's names for the client: `{customerId}` and `?minTotal=` reach
   `customer_id` and `min_total` (`web._public`).
 - **Columns**: a `DateTime` is `UtcDateTime` (written in UTC and read back in UTC on every database: SQLite, MySQL
-  and MariaDB keep no time zone); a text without `length` is `String(255)`, as the other runtime; the mapper reads
+  and MariaDB keep no time zone; its `load_dialect_impl` names the column with its fraction: `DATETIME(6)` on
+  MySQL, MariaDB and SQLite, `TIMESTAMP WITH TIME ZONE` on PostgreSQL); a text without `length` is `String(255)`, as the other runtime; the mapper reads
   back what the database writes (`eager_defaults`: `@created`, `@updated`, defaults), so the row a use case answers
   is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.
 - **A `@manyToMany` list set on a found row** whose list was not loaded is kept on the row (`Entity.__setattr__`)
@@ -67,6 +68,13 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **What the generated project gives the runtime**: `main.py` and `conftest.py` list every entity
   (`entities=[...]`), so SQLAlchemy knows all the tables; two entities that name each other are imported only for
   the type checker (`if TYPE_CHECKING:`).
+- **A value's JSON type is its field's** (the reference, §2.3): `models.typed` rewrites the core schema pydantic
+  makes of a `Model` (and of an entity's schema): a boolean is strict, and a whole number, a number and a date get
+  a check before pydantic's that refuses the Python types pydantic would convert (a text, a boolean; a number for a
+  date). `30.0` stays a whole number and the keys of a map stay texts. A route or query parameter is not a model:
+  FastAPI converts it from its text.
+- **A model built in code** is checked by pydantic when it is made (`ValidationError`); nothing handles it, so it
+  answers 500.
 - **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins.
 - **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),
   so a non-null column can be added to a table that has rows.
@@ -104,17 +112,26 @@ codes as the TypeScript runtime. How this one keeps them:
   `autocommit=False`, or a schema change would run outside the transaction; after each migration
   `PRAGMA foreign_key_check` must be empty.
 - Batch mode makes SQLite (which cannot alter a column) and the other databases run the same file. Alembic rebuilds
-  a table of SQLite from what it reads in the database; `_reflected` (a `column_reflect` listener) says the two
-  things that are not read there: `AUTOINCREMENT`, and the name of a constraint made without one.
+  a table of SQLite from what it reads in the database; `_reflected` (a `column_reflect` listener) says the three
+  things that are not read there: `AUTOINCREMENT`, the name of a constraint made without one, and the fraction of a
+  `DateTime` (`DATETIME(6)` is read as `DATETIME`).
+- A `DateTime` column is written `UtcDateTime()` in a migration (`_render`; the file imports it). A migration of
+  before 0.94 has `sa.DateTime(timezone=True)`, which makes the column without a fraction as it always did:
+  `_compare_type` tells the two apart on `make`'s SQLite by the words of the type, so the next `make` writes the
+  change.
+- `create_tables(connection)` (`createTables`, called by `Database.open`) makes the tables the database does not
+  have with Alembic's own operations (`CreateTableOp.from_table`, `CreateIndexOp.from_index`), named by `_prepare`
+  and run in the migrations' context: what the first migration runs, so the tables are the same.
 - `_drop_constraint` replaces Alembic's implementation of `drop_constraint`: on PostgreSQL, MySQL and MariaDB a
   unique or a foreign key whose name is not in the database is found by its columns.
-- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `CURRENT_TIMESTAMP` as the server default.
+- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `(CURRENT_TIMESTAMP)` as the server default: with the
+  parentheses, the one spelling MySQL takes for a column with a fraction.
 - `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback.
 
 ## Tests and type definitions
 
 - `tests/test_runtime.py`, `test_data.py` (the same cases as the TypeScript runtime's `data.test.ts`),
-  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`); pytest with `asyncio_mode = "auto"`. The fastapi check runs them
+  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`), `test_types.py` (the same cases as `types.test.ts`); pytest with `asyncio_mode = "auto"`. The fastapi check runs them
   ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,

@@ -98,8 +98,6 @@ class Database(Connection):
         from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
         from sqlalchemy.orm import configure_mappers
 
-        from .orm import Entity
-
         self.engine = create_async_engine(self.url, echo=self.echo)
         if self.url.startswith("sqlite"):
             # SQLite checks foreign keys (and their ON DELETE) only when asked, as sequelize does for nestjs
@@ -107,8 +105,10 @@ class Database(Connection):
         self.sessions = async_sessionmaker(self.engine, expire_on_commit=False)
         configure_mappers()  # the relations and their join tables exist before the tables are created
         if self.create_tables:
+            from .migrate import create_tables
+
             async with self.engine.begin() as conn:
-                await conn.run_sync(Entity.metadata.create_all)
+                await conn.run_sync(create_tables)
 
     async def close(self) -> None:
         if self.engine is not None:

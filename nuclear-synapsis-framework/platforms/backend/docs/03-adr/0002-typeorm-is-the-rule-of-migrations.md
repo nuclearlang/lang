@@ -34,7 +34,8 @@ Checked against TypeORM 1.1.3 (`migration/MigrationExecutor`, its drivers and it
 | A database that already has its tables | `migration:run --fake`, `migration:revert --fake`: the history changes, nothing runs | `nuclear migrate up --fake`, `nuclear migrate down --fake` |
 | Transactions | `--transaction all \| each \| none`, default `all`: every pending migration in one transaction | the same option and default |
 | The list | `migration:show`: every migration of the source, `[X]` or `[ ]` | `nuclear migrate status` (the command keeps Nuclear's name and words): every migration of the folder, `applied` or `pending` |
-| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT CURRENT_TIMESTAMP`; the app still writes them |
+| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT (CURRENT_TIMESTAMP)`; the app still writes them |
+| The fraction of a date column on MySQL and MariaDB | `datetime(6)` for the date columns it gives a fraction (`createDatePrecision`, `updateDatePrecision`: 6 in `MysqlDriver`); a plain date column has none (`datetime`, precision 0) | `DATETIME(6)` for every `DateTime` column, the timestamps too (the user, 2026-11-22: a `DateTime` keeps its fraction); SQLite names it the same |
 | A foreign key without a rule | `ON DELETE NO ACTION ON UPDATE NO ACTION` | the same; `onDelete` of the relation is the only rule written |
 | The names of the types on SQLite | `boolean`, `double` | `BOOLEAN`, `DOUBLE` |
 | A constraint that goes | by the name it has in the database, which TypeORM reads there | found in the database by its column when its name is not the expected one |
@@ -57,7 +58,11 @@ other than `--fake`.
    column with every change, in every dialect.
 4. *`nuclear migrate --to <migration>`* (up and down) has no equivalent in TypeORM; it stays, with TypeORM's order:
    up to that timestamp, back to that row of the history.
-5. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the
+5. *The clock of a timestamp is `(CURRENT_TIMESTAMP)`*, where TypeORM writes `CURRENT_TIMESTAMP(6)` on MySQL.
+   `CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a
+   `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.
+   On SQLite and MySQL that clock gives whole seconds.
+6. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the
    database's error.
 
 A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept
@@ -75,7 +80,8 @@ A database migrated by 0.91 or 0.92 keeps working: the first command reads the h
 
 - Positive: `status`, `up`, `down` and their refusals read the same facts in every dialect; the schemas the dialects
   leave are the same on each database, and the database check fails on any difference.
-- Positive: a database made by `createTables` comes under migrations with `--fake`.
+- Positive: a database made by `createTables` comes under migrations with `--fake`: since 0.94 each runtime makes
+  those tables with what its first migration runs, and the database check holds the two schemas equal.
 - Negative: an older pending migration runs after newer ones, as in TypeORM: it must not depend on being first.
 - Negative: with `--transaction all` on MySQL and MariaDB a failure leaves the migrations before it applied (they
   commit every schema change); the message says so.

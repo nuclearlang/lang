@@ -24,6 +24,7 @@ export class Task extends Entity {
   @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 2 })
   declare priority: number;
   @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
   declare createdAt?: Date;
   /** its project, loaded with relations("project"); projectId is its column */
   @BelongsTo(() => Project, { foreignKey: 'projectId', onDelete: 'cascade', onUpdate: 'NO ACTION' })

@@ -27,8 +27,10 @@ export class Customer extends Entity {
   @Column({ type: DataType.DOUBLE, allowNull: false, defaultValue: 0.0 })
   declare credit: number;
   @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
   declare createdAt?: Date;
   @UpdatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
   declare updatedAt?: Date;
   @HasMany(() => Order, { foreignKey: 'customerId', constraints: false })
   declare orders?: Order[];

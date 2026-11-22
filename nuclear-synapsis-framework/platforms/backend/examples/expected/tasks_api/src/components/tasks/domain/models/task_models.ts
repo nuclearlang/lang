@@ -1,4 +1,5 @@
 import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 /** What the API receives to create a task. */
 export class NewTask {
@@ -14,8 +15,11 @@ export class NewTask {
   @IsInt()
   projectId?: number;
 
-  constructor(values: Partial<NewTask> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewTask>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -34,8 +38,11 @@ export class TaskChanges {
   @Max(3)
   priority?: number;
 
-  constructor(values: Partial<TaskChanges> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<TaskChanges>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -44,8 +51,11 @@ export class Removed {
   @IsInt()
   id!: number;
 
-  constructor(values: Partial<Removed> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<Removed>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -56,8 +66,11 @@ export class NewProject {
   @MaxLength(100)
   name!: string;
 
-  constructor(values: Partial<NewProject> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewProject>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -66,7 +79,10 @@ export class Moved {
   @IsInt()
   count!: number;
 
-  constructor(values: Partial<Moved> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<Moved>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

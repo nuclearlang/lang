@@ -147,6 +147,55 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-1-entity.4f708e",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.1 Entity",
+   "summary": "A table.",
+   "body": [
+    "A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity(\"table\")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = \"x\")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database.",
+    "",
+    "```nuclear",
+    "@entity(\"characters\")",
+    "entity Character()",
+    "  @primary(generated = true)",
+    "  id: int",
+    "  @column(length = 100, unique = true)",
+    "  name: string",
+    "  @column(length = 20)",
+    "  status: string = \"alive\"",
+    "  species?: string",
+    "```",
+    "",
+    "```python",
+    "from __future__ import annotations",
+    "",
+    "from synapsis import Entity, Mapped, column, primary",
+    "",
+    "class Character(Entity):",
+    "    __tablename__ = \"characters\"",
+    "",
+    "    id: Mapped[int] = primary(generated=True)",
+    "    name: Mapped[str] = column(length=100, unique=True)",
+    "    status: Mapped[str] = column(length=20, default=\"alive\")",
+    "    species: Mapped[str | None] = column(nullable=True)",
+    "```",
+    "",
+    "#### Relations (ADR-backend-0001)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-1-entity.6f2d7e",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.1 Entity",
@@ -236,55 +285,6 @@
     "from __future__ import annotations",
     "",
     "from synapsis import Entity, Mapped, column, many_to_many, many_to_one, one_to_many, primary"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "fastapi"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-1-entity.ab09cf",
-   "type": "spec",
-   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.1 Entity",
-   "summary": "A table.",
-   "body": [
-    "A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity(\"table\")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = \"x\")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column.",
-    "",
-    "```nuclear",
-    "@entity(\"characters\")",
-    "entity Character()",
-    "  @primary(generated = true)",
-    "  id: int",
-    "  @column(length = 100, unique = true)",
-    "  name: string",
-    "  @column(length = 20)",
-    "  status: string = \"alive\"",
-    "  species?: string",
-    "```",
-    "",
-    "```python",
-    "from __future__ import annotations",
-    "",
-    "from synapsis import Entity, Mapped, column, primary",
-    "",
-    "class Character(Entity):",
-    "    __tablename__ = \"characters\"",
-    "",
-    "    id: Mapped[int] = primary(generated=True)",
-    "    name: Mapped[str] = column(length=100, unique=True)",
-    "    status: Mapped[str] = column(length=20, default=\"alive\")",
-    "    species: Mapped[str | None] = column(nullable=True)",
-    "```",
-    "",
-    "#### Relations (ADR-backend-0001)"
    ],
    "platforms": [
     "backend"
@@ -697,14 +697,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.5e83f3",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.3 Model",
    "summary": "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`: its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's (ADR-synapsis-0012); it reads either name.",
    "body": [
     "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:",
     "its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's",
-    "(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422).",
+    "(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = \"\")` built in code is checked by pydantic and raises its `ValidationError`.",
     "",
     "```nuclear",
     "model NewCharacter",
@@ -723,8 +723,27 @@
     "from pydantic import AfterValidator",
     "from synapsis import Model",
     "from synapsis.validators import is_email",
-    "from typing import Annotated",
-    "",
+    "from typing import Annotated"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.a30db0",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.3 Model",
+   "summary": "class NewCharacter(Model): name: Annotated[str, MinLen(1), MaxLen(100)] status: str = \"alive\" contact: Annotated[str | None, AfterValidator(is_email)] = None",
+   "body": [
     "class NewCharacter(Model):",
     "    name: Annotated[str, MinLen(1), MaxLen(100)]",
     "    status: str = \"alive\"",
@@ -952,11 +971,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.127a9a",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.20731a",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
-   "summary": "from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env class ProjectConfig(AppConfig): connections: list[Connection] = [ Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")), Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")), Kafka(servers=env(\"KAFKA\",…",
+   "summary": "from future import annotations from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env class ProjectConfig(AppConfig): connections: list[Connection] = [ Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")), Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")),…",
    "body": [
+    "```python",
+    "from __future__ import annotations",
+    "",
     "from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env",
     "",
     "class ProjectConfig(AppConfig):",
@@ -997,12 +1019,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.586fe9",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.d88237",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
    "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop.",
    "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables, by the operations a migration runs); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
     "(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,",
     "`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env",
     "<environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a",
@@ -1017,10 +1039,7 @@
     "    Kafka(servers = env(\"KAFKA\", \"localhost:9092\"), group = \"rick\"),",
     "    OpenAI(model = \"gpt-4o-mini\"),",
     "  ]",
-    "```",
-    "",
-    "```python",
-    "from __future__ import annotations"
+    "```"
    ],
    "platforms": [
     "backend"
@@ -1169,7 +1188,32 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-migrations",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-migrations.5e5e46",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — Migrations",
+   "summary": "def downgrade() -> None: with op.batch_alter_table('orders', schema=None) as batch_op: batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True) op.rename_table('stores', 'shops')",
+   "body": [
+    "def downgrade() -> None:",
+    "    with op.batch_alter_table('orders', schema=None) as batch_op:",
+    "        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)",
+    "    op.rename_table('stores', 'shops')",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-migrations.c73b69",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — Migrations",
    "summary": "Migrations of the database schema (ADR-backend-0001, ADR-backend-0002): Alembic's operations in `migrations/versions/`, made by `nuclear migrate make` against an empty SQLite where every migration ran, in batch mode.",
@@ -1182,6 +1226,9 @@
     "- A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`. The table",
     "  `migrations` lists the ones applied.",
     "- They run through `nuclear migrate` only: Alembic's own commands, revisions and `alembic_version` are not used.",
+    "- A `DateTime` column is `UtcDateTime()` (imported from `synapsis.orm`): `DATETIME(6)` on MySQL, MariaDB and",
+    "  SQLite, `TIMESTAMP WITH TIME ZONE` on PostgreSQL. A migration of before 0.94 wrote `sa.DateTime(timezone=True)`",
+    "  (whole seconds on MySQL and MariaDB): the next `make` writes the `alter_column` of each.",
     "- A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's",
     "  `existing_type`):",
     "",
@@ -1189,13 +1236,7 @@
     "def upgrade() -> None:",
     "    op.rename_table('shops', 'stores')",
     "    with op.batch_alter_table('orders', schema=None) as batch_op:",
-    "        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)",
-    "",
-    "def downgrade() -> None:",
-    "    with op.batch_alter_table('orders', schema=None) as batch_op:",
-    "        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)",
-    "    op.rename_table('stores', 'shops')",
-    "```"
+    "        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)"
    ],
    "platforms": [
     "backend"
@@ -1400,10 +1441,11 @@
    "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#3-entity-and-repository-migrations",
    "type": "guide",
    "title": "Synapsis for Python: a backend with FastAPI and LangGraph — Migrations",
-   "summary": "`createTables = true` makes the tables at start, for development.",
+   "summary": "`createTables = true` makes the tables at start, for development: the same tables the migrations make.",
    "body": [
-    "`createTables = true` makes the tables at start, for development. Once the database keeps data, leave it out and change",
-    "the schema with migrations in the project's `migrations/` folder:",
+    "`createTables = true` makes the tables at start, for development: the same tables the migrations make. Once the",
+    "database keeps data, leave it out, bring the database under migrations (`nuclear migrate make \"first\"`, then",
+    "`nuclear migrate --fake`) and change the schema with migrations in the project's `migrations/` folder:",
     "",
     "```sh",
     "nuclear migrate make \"notes on tasks\"   # what the entities changed since the last migration",
@@ -1836,11 +1878,20 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.07e6d3",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.111e89",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.1 Entity",
-   "summary": "@entity(\"tasks\") entity Task() @primary(generated = true) id: int title: string @manyToOne(inverse = \"tasks\", onDelete = \"cascade\") project?: Project projectId?: int @manyToMany(inverse = \"tasks\") @joinTable() tags?: Tag[] @entity(\"tags\") entity Tag() @primary(generated = true) id: int label:…",
+   "summary": "@entity(\"projects\") entity Project() @primary(generated = true) id: int name: string @oneToMany(inverse = \"project\") tasks?: Task[] @entity(\"tasks\") entity Task() @primary(generated = true) id: int title: string @manyToOne(inverse = \"tasks\", onDelete = \"cascade\") project?: Project projectId?: int…",
    "body": [
+    "```nuclear",
+    "@entity(\"projects\")",
+    "entity Project()",
+    "  @primary(generated = true)",
+    "  id: int",
+    "  name: string",
+    "  @oneToMany(inverse = \"project\")",
+    "  tasks?: Task[]",
+    "",
     "@entity(\"tasks\")",
     "entity Task()",
     "  @primary(generated = true)",
@@ -1881,6 +1932,56 @@
     "  @HasMany(() => Task, { foreignKey: 'projectId', constraints: false })",
     "  declare tasks?: Task[];",
     "}"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.781441",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.1 Entity",
+   "summary": "@Table({ tableName: 'tasks', underscored: true, timestamps: true, createdAt: 'createdAt', updatedAt: false, }) export class Task extends Entity { @PrimaryKey @AutoIncrement @Column(DataType.INTEGER) declare id: number; @Column({ type: DataType.STRING(200), allowNull: false, unique: true }) declare…",
+   "body": [
+    "@Table({",
+    "  tableName: 'tasks',",
+    "  underscored: true,",
+    "  timestamps: true,",
+    "  createdAt: 'createdAt',",
+    "  updatedAt: false,",
+    "})",
+    "export class Task extends Entity {",
+    "  @PrimaryKey",
+    "  @AutoIncrement",
+    "  @Column(DataType.INTEGER)",
+    "  declare id: number;",
+    "  @Column({ type: DataType.STRING(200), allowNull: false, unique: true })",
+    "  declare title: string;",
+    "  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })",
+    "  declare done: boolean;",
+    "  @CreatedAt",
+    "  @Column({ type: DataType.DATE(6), allowNull: false })",
+    "  declare createdAt?: Date;",
+    "}",
+    "```",
+    "",
+    "#### Relations (ADR-backend-0001)",
+    "",
+    "TypeORM's decorators; the related entity is the field's type. `@manyToOne x?: T` keeps its column in the field `xId`",
+    "(its own field, set without loading the row); `@oneToMany(inverse)` is the other side; `@manyToMany(inverse)` with",
+    "`@joinTable()` on one side makes the table `<table>_<field>` (columns `<entity>_id`); `@oneToOne` with `@joinColumn()`",
+    "on the side that keeps `xId`. `onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"`. A relation field is optional and",
+    "loaded only when a query asks for it (`relations(\"tasks\")`); an unloaded one is absent from the JSON answer. N0308 when",
+    "a rule is not met. Setting a relation (`Task(projectId = id)`, `task.tags = [a, b]`) and saving writes it."
    ],
    "platforms": [
     "backend"
@@ -1952,12 +2053,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.e9d9ea",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.c921cf",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.1 Entity",
    "summary": "A table (sequelize-typescript).",
    "body": [
-    "A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity(\"table\")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = \"x\")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default.",
+    "A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity(\"table\")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = \"x\")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default. A `DateTime` is `DataType.DATE(6)` (the timestamps too): the column keeps the fraction of a second on every database.",
     "",
     "```nuclear",
     "@entity(\"tasks\")",
@@ -1974,64 +2075,6 @@
     "```typescript",
     "import { AutoIncrement, Column, CreatedAt, DataType, PrimaryKey, Table } from 'sequelize-typescript';",
     "import { Entity } from 'synapsis-nest';"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-1-entity.f9ce69",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.1 Entity",
-   "summary": "@Table({ tableName: 'tasks', underscored: true, timestamps: true, createdAt: 'createdAt', updatedAt: false, }) export class Task extends Entity { @PrimaryKey @AutoIncrement @Column(DataType.INTEGER) declare id: number; @Column({ type: DataType.STRING(200), allowNull: false, unique: true }) declare…",
-   "body": [
-    "@Table({",
-    "  tableName: 'tasks',",
-    "  underscored: true,",
-    "  timestamps: true,",
-    "  createdAt: 'createdAt',",
-    "  updatedAt: false,",
-    "})",
-    "export class Task extends Entity {",
-    "  @PrimaryKey",
-    "  @AutoIncrement",
-    "  @Column(DataType.INTEGER)",
-    "  declare id: number;",
-    "  @Column({ type: DataType.STRING(200), allowNull: false, unique: true })",
-    "  declare title: string;",
-    "  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })",
-    "  declare done: boolean;",
-    "  @CreatedAt",
-    "  declare createdAt?: Date;",
-    "}",
-    "```",
-    "",
-    "#### Relations (ADR-backend-0001)",
-    "",
-    "TypeORM's decorators; the related entity is the field's type. `@manyToOne x?: T` keeps its column in the field `xId`",
-    "(its own field, set without loading the row); `@oneToMany(inverse)` is the other side; `@manyToMany(inverse)` with",
-    "`@joinTable()` on one side makes the table `<table>_<field>` (columns `<entity>_id`); `@oneToOne` with `@joinColumn()`",
-    "on the side that keeps `xId`. `onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"`. A relation field is optional and",
-    "loaded only when a query asks for it (`relations(\"tasks\")`); an unloaded one is absent from the JSON answer. N0308 when",
-    "a rule is not met. Setting a relation (`Task(projectId = id)`, `task.tags = [a, b]`) and saving writes it.",
-    "",
-    "```nuclear",
-    "@entity(\"projects\")",
-    "entity Project()",
-    "  @primary(generated = true)",
-    "  id: int",
-    "  name: string",
-    "  @oneToMany(inverse = \"project\")",
-    "  tasks?: Task[]"
    ],
    "platforms": [
     "backend"
@@ -2482,12 +2525,40 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-3-model",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-3-model.9ca326",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.3 Model",
+   "summary": "constructor(values?: Partial<NewTask>) { if (values) { Object.assign(this, values); checkModel(this); } } }",
+   "body": [
+    "constructor(values?: Partial<NewTask>) {",
+    "    if (values) {",
+    "      Object.assign(this, values);",
+    "      checkModel(this);",
+    "    }",
+    "  }",
+    "}",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-3-model.e9e257",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.3 Model",
    "summary": "What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons).",
    "body": [
-    "What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`. `NewTask(title = \"x\")` builds one.",
+    "What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`. Nothing converts a value (the pipe has no implicit conversion): a text is never a number or a boolean; a `DateTime` field is `@IsDateTime()` (the runtime's: a text read as a `Date`, any other JSON type refused); an item of a list that breaks its type is named by its place (`tags.1`). `NewTask(title = \"x\")` builds one: the constructor that is given values checks them (`checkModel`) and throws `InvalidModel`; the body of a request is built without values and checked once, by the pipe.",
     "",
     "```nuclear",
     "model NewTask",
@@ -2503,6 +2574,7 @@
     "",
     "```typescript",
     "import { IsEmail, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';",
+    "import { checkModel } from 'synapsis-nest';",
     "",
     "export class NewTask {",
     "  @IsString()",
@@ -2516,13 +2588,7 @@
     "  @IsOptional()",
     "  @IsString()",
     "  @IsEmail()",
-    "  owner?: string;",
-    "",
-    "  constructor(values: Partial<NewTask> = {}) {",
-    "    Object.assign(this, values);",
-    "  }",
-    "}",
-    "```"
+    "  owner?: string;"
    ],
    "platforms": [
     "backend"
@@ -2578,7 +2644,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-4-use-case.72e69b",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-4-use-case.2a5939",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.4 Use case",
    "summary": "One business operation (`@Injectable`): its dependencies are constructor parameters, injected by Nest; `exec` returns `Result<E, T>`.",
@@ -2609,15 +2675,18 @@
     "import { InjectModel } from '@nestjs/sequelize';",
     "import { IsBoolean, IsOptional } from 'class-validator';",
     "import { AutoIncrement, Column, DataType, PrimaryKey, Table } from 'sequelize-typescript';",
-    "import { AppError, Entity, Err, Ok, Repository, Result } from 'synapsis-nest';",
+    "import { AppError, Entity, Err, Ok, Repository, Result, checkModel } from 'synapsis-nest';",
     "",
     "export class TaskChanges {",
     "  @IsOptional()",
     "  @IsBoolean()",
     "  done?: boolean;",
     "",
-    "  constructor(values: Partial<TaskChanges> = {}) {",
-    "    Object.assign(this, values);",
+    "  constructor(values?: Partial<TaskChanges>) {",
+    "    if (values) {",
+    "      Object.assign(this, values);",
+    "      checkModel(this);",
+    "    }",
     "  }",
     "}"
    ],
@@ -2746,38 +2815,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.d1d096",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
-   "summary": "@Patch(':id') async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await this.tasks.complete(id, changes); } @Get() search(@Query('text') text?: string): string { return text ??",
-   "body": [
-    "@Patch(':id')",
-    "  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
-    "    return await this.tasks.complete(id, changes);",
-    "  }",
-    "",
-    "  @Get()",
-    "  search(@Query('text') text?: string): string {",
-    "    return text ?? '';",
-    "  }",
-    "}",
-    "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.f2dfac",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.3556bd",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
    "summary": "REST routes, like NestJS: `@controller(\"tasks\")` and `@get`, `@post` (201), `@put`, `@patch`, `@delete` with Nest's route (`\":id\"`), and `@status(204)`.",
@@ -2806,26 +2844,60 @@
     "```typescript",
     "import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';",
     "import { IsBoolean, IsOptional } from 'class-validator';",
-    "import { AppError, IntPipe, Result } from 'synapsis-nest';",
+    "import { AppError, IntPipe, Result, checkModel } from 'synapsis-nest';",
     "",
     "export class TaskChanges {",
     "  @IsOptional()",
     "  @IsBoolean()",
     "  done?: boolean;",
     "",
-    "  constructor(values: Partial<TaskChanges> = {}) {",
-    "    Object.assign(this, values);",
+    "  constructor(values?: Partial<TaskChanges>) {",
+    "    if (values) {",
+    "      Object.assign(this, values);",
+    "      checkModel(this);",
+    "    }",
     "  }",
     "}",
     "",
     "@Controller('tasks')",
     "export class TasksController {",
-    "  constructor(private readonly tasks: TasksAppComponent) {}",
-    "",
-    "  @Get(':id')",
+    "  constructor(private readonly tasks: TasksAppComponent) {}"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.37ca2b",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
+   "summary": "@Get(':id') async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> { return await this.tasks.task(id); } @Patch(':id') async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await this.tasks.complete(id,…",
+   "body": [
+    "@Get(':id')",
     "  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {",
     "    return await this.tasks.task(id);",
-    "  }"
+    "  }",
+    "",
+    "  @Patch(':id')",
+    "  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
+    "    return await this.tasks.complete(id, changes);",
+    "  }",
+    "",
+    "  @Get()",
+    "  search(@Query('text') text?: string): string {",
+    "    return text ?? '';",
+    "  }",
+    "}",
+    "```"
    ],
    "platforms": [
     "backend"
@@ -2841,35 +2913,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.03956a",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
-   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's (backend.md §2.8).",
-   "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = \"a:9092,b:9092\", group = \"app\")` (kafkajs); chat models `Ollama(model = \"qwen3.5:4b\", baseUrl = ...)`, `OpenAI(model = \"gpt-4o-mini\")` (LangChain `initChatModel`); `Embeddings(model = \"ollama:nomic-embed-text\")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
-    "(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,",
-    "`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env",
-    "<environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.a1e7ca",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.d6cad7",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
    "summary": "variable the process already has (production gives its secrets in the real environment).",
    "body": [
+    "<environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a",
     "variable the process already has (production gives its secrets in the real environment). `env(\"VAR\")` without a",
     "default is required: `nuclear run` does not start without it.",
     "",
@@ -2898,6 +2947,29 @@
     "",
     "```nuclear",
     "// config.nuc: plugins(sqlite = true, events = true, websocket = true)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.da1715",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
+   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's (backend.md §2.8).",
+   "body": [
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development: the runtime makes them as the first migration would, before Sequelize's `sync` looks); `Redis(url = ...)` (ioredis), `Kafka(servers = \"a:9092,b:9092\", group = \"app\")` (kafkajs); chat models `Ollama(model = \"qwen3.5:4b\", baseUrl = ...)`, `OpenAI(model = \"gpt-4o-mini\")` (LangChain `initChatModel`); `Embeddings(model = \"ollama:nomic-embed-text\")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env(\"VAR\", \"default\")` reads the environment. The value is read at run time from the process",
+    "(spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,",
+    "`.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env"
    ],
    "platforms": [
     "backend"
@@ -3094,11 +3166,17 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.d93c67",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.12dc74",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — Migrations",
-   "summary": "export async function down(queryInterface, Sequelize) { await queryInterface.renameColumn(\"orders\", \"store_id\", \"shop_id\"); await queryInterface.renameTable(\"stores\", \"shops\"); }",
+   "summary": "export async function up(queryInterface, Sequelize) { await queryInterface.renameTable(\"shops\", \"stores\"); await queryInterface.renameColumn(\"orders\", \"shop_id\", \"store_id\"); } export async function down(queryInterface, Sequelize) { await queryInterface.renameColumn(\"orders\", \"store_id\",…",
    "body": [
+    "```js",
+    "export async function up(queryInterface, Sequelize) {",
+    "  await queryInterface.renameTable(\"shops\", \"stores\");",
+    "  await queryInterface.renameColumn(\"orders\", \"shop_id\", \"store_id\");",
+    "}",
+    "",
     "export async function down(queryInterface, Sequelize) {",
     "  await queryInterface.renameColumn(\"orders\", \"store_id\", \"shop_id\");",
     "  await queryInterface.renameTable(\"stores\", \"shops\");",
@@ -3119,7 +3197,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.ffe00e",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.a79dc1",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — Migrations",
    "summary": "Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`, diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports.",
@@ -3134,13 +3212,10 @@
     "  `addColumn`, `changeColumn` (the column as the attribute says: type, `allowNull`, `defaultValue`, `unique`,",
     "  `references`), `removeColumn`, `renameColumn`, `renameTable`; data is changed with",
     "  `queryInterface.sequelize.query(sql)`.",
-    "- A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):",
-    "",
-    "```js",
-    "export async function up(queryInterface, Sequelize) {",
-    "  await queryInterface.renameTable(\"shops\", \"stores\");",
-    "  await queryInterface.renameColumn(\"orders\", \"shop_id\", \"store_id\");",
-    "}"
+    "- A `DateTime` column is `Sequelize.DataTypes.DATE({length: 6})`, and the clock of a timestamp",
+    "  `Sequelize.literal(\"(CURRENT_TIMESTAMP)\")` (the one spelling MySQL takes for a column with a fraction). A",
+    "  migration of before 0.94 wrote `DATE` and `CURRENT_TIMESTAMP`: the next `make` writes the `changeColumn` of each.",
+    "- A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):"
    ],
    "platforms": [
     "backend"
@@ -3298,10 +3373,11 @@
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/nestjs.md#2-entity-repository-models-migrations",
    "type": "guide",
    "title": "Synapsis for NestJS: a TypeScript backend with Sequelize — Migrations",
-   "summary": "`createTables = true` makes the tables at start, for development.",
+   "summary": "`createTables = true` makes the tables at start, for development: the same tables the migrations make.",
    "body": [
-    "`createTables = true` makes the tables at start, for development. Once the database keeps data, leave it out and change",
-    "the schema with migrations in the project's `migrations/` folder:",
+    "`createTables = true` makes the tables at start, for development: the same tables the migrations make. Once the",
+    "database keeps data, leave it out, bring the database under migrations (`nuclear migrate make \"first\"`, then",
+    "`nuclear migrate --fake`) and change the schema with migrations in the project's `migrations/` folder:",
     "",
     "```sh",
     "nuclear migrate make \"notes on tasks\"   # what the entities changed since the last migration",

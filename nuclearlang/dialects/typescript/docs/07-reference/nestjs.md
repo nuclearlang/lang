@@ -50,7 +50,7 @@ A kind or a name of a plugin not enabled is N0304: `tools`, `agent`, `state`, `g
 
 ### 2.1 Entity
 
-A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default.
+A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default. A `DateTime` is `DataType.DATE(6)` (the timestamps too): the column keeps the fraction of a second on every database.
 
 ```nuclear
 @entity("tasks")
@@ -85,6 +85,7 @@ export class Task extends Entity {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
   declare done: boolean;
   @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
   declare createdAt?: Date;
 }
 ```
@@ -303,7 +304,7 @@ export class CharacterRepository extends HttpRepository {
 
 ### 2.3 Model
 
-What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. `NewTask(title = "x")` builds one.
+What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. Nothing converts a value (the pipe has no implicit conversion): a text is never a number or a boolean; a `DateTime` field is `@IsDateTime()` (the runtime's: a text read as a `Date`, any other JSON type refused); an item of a list that breaks its type is named by its place (`tags.1`). `NewTask(title = "x")` builds one: the constructor that is given values checks them (`checkModel`) and throws `InvalidModel`; the body of a request is built without values and checked once, by the pipe.
 
 ```nuclear
 model NewTask
@@ -319,6 +320,7 @@ model NewTask
 
 ```typescript
 import { IsEmail, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 export class NewTask {
   @IsString()
@@ -334,8 +336,11 @@ export class NewTask {
   @IsEmail()
   owner?: string;
 
-  constructor(values: Partial<NewTask> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewTask>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 ```
@@ -368,15 +373,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { AutoIncrement, Column, DataType, PrimaryKey, Table } from 'sequelize-typescript';
-import { AppError, Entity, Err, Ok, Repository, Result } from 'synapsis-nest';
+import { AppError, Entity, Err, Ok, Repository, Result, checkModel } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
   @IsBoolean()
   done?: boolean;
 
-  constructor(values: Partial<TaskChanges> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<TaskChanges>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -502,15 +510,18 @@ controller TasksController(tasks: TasksAppComponent)
 ```typescript
 import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { AppError, IntPipe, Result } from 'synapsis-nest';
+import { AppError, IntPipe, Result, checkModel } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
   @IsBoolean()
   done?: boolean;
 
-  constructor(values: Partial<TaskChanges> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<TaskChanges>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -537,7 +548,7 @@ export class TasksController {
 
 ### 2.7 Configuration
 
-The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development); `Redis(url = ...)` (ioredis), `Kafka(servers = "a:9092,b:9092", group = "app")` (kafkajs); chat models `Ollama(model = "qwen3.5:4b", baseUrl = ...)`, `OpenAI(model = "gpt-4o-mini")` (LangChain `initChatModel`); `Embeddings(model = "ollama:nomic-embed-text")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env("VAR", "default")` reads the environment. The value is read at run time from the process
+The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's ([backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §2.8). Databases: `Postgres(url = ...)`, `MySQL(url = ...)`, `MariaDB(url = ...)`, `SQLite(file = ...)`, each with `createTables = true` to create the tables (development: the runtime makes them as the first migration would, before Sequelize's `sync` looks); `Redis(url = ...)` (ioredis), `Kafka(servers = "a:9092,b:9092", group = "app")` (kafkajs); chat models `Ollama(model = "qwen3.5:4b", baseUrl = ...)`, `OpenAI(model = "gpt-4o-mini")` (LangChain `initChatModel`); `Embeddings(model = "ollama:nomic-embed-text")` and `Chroma(collection = ..., url = ...)` (chromadb's client behind a LangChain `VectorStore`). The database goes to `SequelizeModule`; the other connections are opened at start and closed at stop; `package.json` lists only the drivers the config uses. `env("VAR", "default")` reads the environment. The value is read at run time from the process
 (spec 021): `nuclear run --env <environment>` passes the values of the environment's files (`.env`,
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a
@@ -866,6 +877,9 @@ the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backe
   `addColumn`, `changeColumn` (the column as the attribute says: type, `allowNull`, `defaultValue`, `unique`,
   `references`), `removeColumn`, `renameColumn`, `renameTable`; data is changed with
   `queryInterface.sequelize.query(sql)`.
+- A `DateTime` column is `Sequelize.DataTypes.DATE({length: 6})`, and the clock of a timestamp
+  `Sequelize.literal("(CURRENT_TIMESTAMP)")` (the one spelling MySQL takes for a column with a fraction). A
+  migration of before 0.94 wrote `DATE` and `CURRENT_TIMESTAMP`: the next `make` writes the `changeColumn` of each.
 - A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):
 
 ```js

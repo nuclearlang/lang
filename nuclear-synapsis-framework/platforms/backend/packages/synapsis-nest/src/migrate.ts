@@ -23,7 +23,7 @@ import 'reflect-metadata';
 import { existsSync, mkdirSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { DataTypes, type ModelAttributeColumnOptions, type QueryInterface } from 'sequelize';
+import { DataTypes, literal, type ModelAttributeColumnOptions, type QueryInterface } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { type AppConfig, databaseOf } from './config.js';
 
@@ -35,7 +35,7 @@ export interface ColumnSchema {
   primaryKey?: true;
   autoIncrement?: true;
   unique?: true | string;
-  /** a literal, `{ fn: 'NOW' }` for one of DataTypes' functions, or `{ literal: 'CURRENT_TIMESTAMP' }` for SQL */
+  /** a literal, `{ fn: 'NOW' }` for one of DataTypes' functions, or `{ literal: '(CURRENT_TIMESTAMP)' }` for SQL */
   defaultValue?: unknown;
   references?: { model: string; key: string };
   onDelete?: string;
@@ -54,14 +54,24 @@ export interface Change {
 }
 
 const typeName = (type: unknown): string => {
-  const name = (type as { constructor: { name: string } }).constructor.name;
-  if (!(name in DataTypes)) throw new Error(`a column of type ${name} that migrations do not know`);
+  // the class of the type, or the name it has in DataTypes when a database has its own class for it (JSON)
+  const { constructor, key } = type as { constructor: { name: string }; key?: string };
+  const name = constructor.name in DataTypes ? constructor.name : String(key);
+  if (!(name in DataTypes)) throw new Error(`a column of type ${constructor.name} that migrations do not know`);
   return name;
 };
 
+// the database's clock as the default of a column, written the one way the four databases take for a column with a
+// fraction (MySQL refuses CURRENT_TIMESTAMP without the parentheses there)
+const CLOCK = '(CURRENT_TIMESTAMP)';
+
 /** The schema of `models` (entity classes): their tables, with the join tables of their many-to-many relations. */
 export function schemaOf(models: unknown[]): Schema {
-  const s = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: models as never });
+  return schemaFrom(new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: models as never }));
+}
+
+/** The schema of the entities a database connection has: what a migration writes, whatever the database. */
+export function schemaFrom(s: Sequelize): Schema {
   const schema: Schema = {};
   for (const model of Object.values(s.models)) {
     const table = String(model.getTableName());
@@ -82,7 +92,7 @@ export function schemaOf(models: unknown[]): Schema {
         const r = a.references as { model: unknown; key?: string };
         c.references = { model: typeof r.model === 'string' ? r.model : String((r.model as { tableName?: string }).tableName ?? r.model), key: r.key ?? 'id' };
       }
-      if (stamps.includes(key)) c.defaultValue = { literal: 'CURRENT_TIMESTAMP' };
+      if (stamps.includes(key)) c.defaultValue = { literal: CLOCK };
       // a foreign key does nothing unless the relation says so: no rule is NO ACTION, and Nuclear has no word for
       // what a changed key does (Sequelize would write ON UPDATE CASCADE by itself)
       if (a.onDelete && a.onDelete.toUpperCase() !== 'NO ACTION') c.onDelete = a.onDelete.toUpperCase();
@@ -114,6 +124,30 @@ function column(c: ColumnSchema): string {
 
 const table = (name: string, columns: Record<string, ColumnSchema>): string =>
   `await queryInterface.createTable(${js(name)}, {\n${Object.entries(columns).map(([n, c]) => `  ${js(n)}: ${column(c)},`).join('\n')}\n});`;
+
+/** A column of a schema as Sequelize's attribute: what its line of a migration file gives `createTable`. */
+function attribute(c: ColumnSchema): ModelAttributeColumnOptions {
+  const types = DataTypes as unknown as Record<string, ((options?: object) => ModelAttributeColumnOptions['type']) & ModelAttributeColumnOptions['type']>;
+  const d = c.defaultValue as { fn?: string; literal?: string } | null | undefined;
+  const { options: _o, ...rest } = c;
+  return {
+    ...rest,
+    type: c.options ? types[c.type](c.options) : types[c.type],
+    ...(d && typeof d === 'object' && d.fn ? { defaultValue: types[d.fn] } : d && typeof d === 'object' && d.literal ? { defaultValue: literal(d.literal) } : {}),
+  } as ModelAttributeColumnOptions;
+}
+
+/** `createTables`: the tables of the entities the database does not have, made as the first migration makes them
+ * (the same types, defaults, foreign keys and names of constraints): a database made this way is the one the
+ * migrations make, and comes under them with `nuclear migrate --fake`. */
+export async function createTables(sequelize: Sequelize): Promise<void> {
+  const schema = schemaFrom(sequelize);
+  const q = sequelize.getQueryInterface();
+  for (const t of ordered(schema, Object.keys(schema))) {
+    if (await q.tableExists(t)) continue;
+    await migrator(q).createTable(t, Object.fromEntries(Object.entries(schema[t]).map(([n, c]) => [n, attribute(c)])));
+  }
+}
 
 /** The tables of `schema` ordered so a table comes after the ones it references. */
 function ordered(schema: Schema, names: string[]): string[] {
@@ -393,8 +427,11 @@ export function migrator(q: QueryInterface): QueryInterface {
   const sqlOf = (c: string, a: Attribute): string => {
     const { autoIncrement: _a, ...rest } = core(a);
     const sql = (q.queryGenerator as unknown as { attributesToSQL(a: Record<string, Attribute>): Record<string, string> }).attributesToSQL({ [c]: (s as unknown as { normalizeAttribute(a: Attribute): Attribute }).normalizeAttribute(rest) })[c];
-    // SQLite keeps the name a type is written with: the names the other dialects write (ADR-backend-0002)
-    return sql.replace(/^TINYINT\(1\)/, 'BOOLEAN').replace(/^DOUBLE PRECISION/, 'DOUBLE');
+    // SQLite keeps the name a type is written with: the names the other dialects write (ADR-backend-0002), and the
+    // fraction of a DateTime as MySQL and MariaDB name it (Sequelize writes none for SQLite)
+    const { key, options } = rest.type as { key?: string; options?: { length?: number } };
+    const fraction = key === 'DATE' && options?.length;
+    return sql.replace(/^TINYINT\(1\)/, 'BOOLEAN').replace(/^DOUBLE PRECISION/, 'DOUBLE').replace(/^DATETIME(?!\()/, fraction ? `DATETIME(${fraction})` : 'DATETIME');
   };
 
   const lite = dialect === 'sqlite';

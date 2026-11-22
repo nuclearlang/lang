@@ -174,11 +174,40 @@ def main() -> None:
     small = step("an order with negative numbers", "POST", "/orders", {"customerId": ana["id"], "quantity": -2147483648, "total": -0.000001, "paid": True, "status": "sent"}, 201)
     same("null kept", (small["note"], small["placedAt"]), (None, None))
     step("an order with a sum of decimals", "POST", "/orders", {"customerId": ana["id"], "total": 0.1 + 0.2}, 201)
-    # not compared: MySQL and MariaDB keep a DateTime to the second, the others to the millisecond (the roadmap)
-    precise = call("POST", "/orders", {"customerId": luis["id"], "total": 1, "placedAt": "2026-12-31T23:59:59.123Z"})[1]
-    kept = call("GET", f"/orders/{precise['id']}")[1]["placedAt"]
-    notes.append(f"the milliseconds of a DateTime: {'kept' if kept.endswith('.123Z') else 'lost'}")
-    same("the probe is gone", call("DELETE", f"/orders/{precise['id']}")[0], 200)
+    # a DateTime keeps its milliseconds on every database, written and read back
+    precise = step("an order to the millisecond", "POST", "/orders", {"customerId": luis["id"], "total": 1, "placedAt": "2026-12-31T23:59:59.123Z"}, 201)
+    same("the milliseconds written", precise["placedAt"], "2026-12-31T23:59:59.123Z")
+    same("the milliseconds read back", step("read it back", "GET", f"/orders/{precise['id']}")["placedAt"], "2026-12-31T23:59:59.123Z")
+    same("the milliseconds in the database", sql(f"SELECT COUNT(*) FROM orders WHERE id = {precise['id']} AND placed_at > '2026-12-31 23:59:59.1' AND placed_at < '2026-12-31 23:59:59.2'"), 1)
+    step("the order to the millisecond is gone", "DELETE", f"/orders/{precise['id']}")
+
+    # --- a value of another JSON type is refused: nothing converts (a number without a fraction is a whole number,
+    # a whole number is a double); the reasons are the same bytes in every dialect
+    typed = {"customerId": luis["id"], "total": 1.5}
+    for name, wrong in (
+        ("a text for a whole number", {"quantity": "3"}), ("true for a whole number", {"quantity": True}),
+        ("a number with a fraction for a whole number", {"quantity": 3.5}), ("a list for a whole number", {"quantity": [3]}),
+        ("a numeric text for a number", {"total": "1.5"}), ("true for a number", {"total": True}),
+        ("a text for a boolean", {"paid": "true"}), ("a number for a boolean", {"paid": 1}),
+        ("a number for a text", {"status": 5}), ("true for an optional text", {"note": True}),
+        ("a number for a DateTime", {"placedAt": 5}), ("a text that is no date for a DateTime", {"placedAt": "soon"}),
+        ("null for a required whole number", {"quantity": None}),
+    ):
+        step(name, "POST", "/orders", {**typed, **wrong}, 400)
+    whole = step("a number without a fraction is a whole number, a whole number is a number", "POST", "/orders", {"customerId": luis["id"], "quantity": 3.0, "total": 5}, 201)
+    same("3.0 and 5", (whole["quantity"], whole["total"]), (3, 5))
+    step("a number in a list of texts", "PUT", f"/orders/{whole['id']}/tags", {"labels": ["gift", 7, None]}, 400)
+    step("a text for a list", "PUT", f"/orders/{whole['id']}/tags", {"labels": "gift"}, 400)
+    step("that order is gone", "DELETE", f"/orders/{whole['id']}")
+    same("nothing refused was kept", sql(f"SELECT COUNT(*) FROM orders WHERE customer_id = {luis['id']}"), 0)
+    # a parameter of the path or the query has no JSON type: it still converts from its text
+    step("a number in the query converts", "GET", "/customers/vips?credit=100000")
+    step("a text in the query that is no number", "GET", "/customers/vips?credit=much", expect=400)
+
+    # --- a model built in code is checked as a body is: a use case that lets its error go answers 500
+    step("a model built in code that breaks its rule", "GET", "/customers/draft?email=nope", expect=500)
+    drafted = call("GET", "/customers/draft?email=draft@example.com")
+    same("a model built in code that keeps its rules", (drafted[0], drafted[1]["email"], drafted[1]["name"]), (200, "draft@example.com", "draft"))
     step("an order of a missing customer", "POST", "/orders", {"customerId": 999999, "total": 1}, 404)
     step("an order without a total", "POST", "/orders", {"customerId": ana["id"]}, 400)
     step("read the order", "GET", f"/orders/{first['id']}")

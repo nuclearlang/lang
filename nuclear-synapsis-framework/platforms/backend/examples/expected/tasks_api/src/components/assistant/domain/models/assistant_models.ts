@@ -1,4 +1,5 @@
 import { IsArray, IsInt, IsString, MinLength } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 /** A message for the assistant; `thread` keeps one conversation. */
 export class ChatRequest {
@@ -8,8 +9,11 @@ export class ChatRequest {
   @IsString()
   thread: string = 'default';
 
-  constructor(values: Partial<ChatRequest> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<ChatRequest>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -17,8 +21,11 @@ export class ChatReply {
   @IsString()
   answer!: string;
 
-  constructor(values: Partial<ChatReply> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<ChatReply>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -28,8 +35,11 @@ export class PlanRequest {
   @MinLength(1)
   goal!: string;
 
-  constructor(values: Partial<PlanRequest> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<PlanRequest>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }
 
@@ -43,7 +53,10 @@ export class PlanReply {
   @IsArray()
   failed!: string[];
 
-  constructor(values: Partial<PlanReply> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<PlanReply>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

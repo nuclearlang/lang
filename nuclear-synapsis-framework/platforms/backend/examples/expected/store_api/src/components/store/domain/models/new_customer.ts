@@ -1,4 +1,5 @@
 import { IsBoolean, IsEmail, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 /** What it takes to add or change a customer. */
 export class NewCustomer {
@@ -19,7 +20,10 @@ export class NewCustomer {
   @Min(0)
   credit: number = 0.0;
 
-  constructor(values: Partial<NewCustomer> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<NewCustomer>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

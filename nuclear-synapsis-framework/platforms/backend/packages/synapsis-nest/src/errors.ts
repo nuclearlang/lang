@@ -116,6 +116,15 @@ const CONSTRAINTS: Record<string, [string, string?]> = {
   isUrl: ['url'],
 };
 
+// a list checked item by item (`{ each: true }`): what an item of each type is, so the reason names the item
+const ITEM: Record<string, (v: unknown) => boolean> = {
+  isString: (v) => typeof v === 'string',
+  isInt: (v) => Number.isInteger(v),
+  isNumber: (v) => typeof v === 'number' && Number.isFinite(v),
+  isBoolean: (v) => typeof v === 'boolean',
+  isDate: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
+};
+
 /** What the validator reports for one property (class-validator's `ValidationError`). */
 export interface Invalidity {
   property: string;
@@ -141,6 +150,17 @@ export function reasonsOf(errors: readonly Invalidity[], prefix = ''): Reason[] 
         continue;
       }
       const [rule, type] = CONSTRAINTS[name] ?? ['invalid'];
+      // the validator names the list, not the item that broke the type: each one is named here (`labels.0`)
+      // (a list given where one value goes has no item to name: the field itself is the reason)
+      if (Array.isArray(e.value) && ITEM[name]) {
+        const items = e.value.flatMap((v: unknown, i) =>
+          v === undefined || v === null ? [reason(`${field}.${i}`, 'required')] : ITEM[name](v) ? [] : [reason(`${field}.${i}`, rule, type)],
+        );
+        if (items.length) {
+          out.push(...items);
+          continue;
+        }
+      }
       // the limit of a rule is the number its message names (`must be longer than or equal to 3 characters`)
       const limit = /-?\d+(\.\d+)?/.exec(said)?.[0];
       out.push(reason(field, rule, type ?? limit));

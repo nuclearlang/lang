@@ -33,6 +33,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
+from sqlalchemy import DateTime
+
+from .orm import FRACTION, Entity, UtcDateTime
+
 __all__ = ["make", "up", "down", "status", "MigrateError", "run_env"]
 
 HISTORY = "migrations"
@@ -50,6 +54,7 @@ as a drop and an add: change it to a rename to keep the data).
 """
 from alembic import op
 import sqlalchemy as sa
+from synapsis.orm import UtcDateTime
 
 
 def upgrade() -> None:
@@ -107,14 +112,26 @@ def _find(files: list[Path], to: str, folder: str | Path) -> int:
 NAMES = {"uq": "uq_%(table_name)s_%(column_0_N_name)s", "fk": "fk_%(table_name)s_%(column_0_N_name)s"}
 
 
+def _precise(bind: Any, table: str, column: str) -> bool:
+    """SQLite: whether the column is a `DateTime` with its fraction (`DATETIME(6)`), by the words it was made with."""
+    declared = bind.exec_driver_sql("SELECT type FROM pragma_table_info(?) WHERE name = ?", (table, column)).scalar()
+    return str(declared).upper() == f"DATETIME({FRACTION})"
+
+
 def _reflected(inspector: Any, table: Any, column: dict[str, Any]) -> None:
-    """SQLite: Alembic makes a table again from what it reads in the database. Two things are not read there and are
-    said here: AUTOINCREMENT (a key is never given twice, as on the other databases), and the name of a unique or a
-    foreign key that was made without one (so it can be dropped, and has its name from then on)."""
-    del column
+    """SQLite: Alembic makes a table again from what it reads in the database. Three things are not read there and are
+    said here: AUTOINCREMENT (a key is never given twice, as on the other databases), the name of a unique or a
+    foreign key that was made without one (so it can be dropped, and has its name from then on), and the fraction of a
+    `DateTime` column (SQLAlchemy reads `DATETIME(6)` as `DATETIME`)."""
     bind = inspector.bind
     if bind.dialect.name != "sqlite":
         return
+    if _precise(bind, table.name, column["name"]):
+        column["type"] = UtcDateTime()
+    elif isinstance(column["type"], DateTime):
+        # made without its fraction (before 0.94): the type that migration wrote, which every database has (a
+        # migration that names SQLite's own DATETIME would not run on PostgreSQL)
+        column["type"] = DateTime(timezone=True)
     if not table.metadata.naming_convention.get("uq"):
         table.metadata.naming_convention = {**table.metadata.naming_convention, **NAMES}
     if not table.dialect_options["sqlite"]["autoincrement"]:
@@ -146,11 +163,18 @@ def _drop_constraint(operations: Any, operation: Any) -> None:
 
 
 def _render(kind: str, item: Any, autogen: Any) -> str | Literal[False]:
-    # the runtime's own column type is written as SQLAlchemy's: a migration imports nothing of the app
-    from .orm import UtcDateTime
-
+    # a `DateTime` column is the runtime's type (FILE imports it): each database names it with its fraction
     del autogen
-    return "sa.DateTime(timezone=True)" if kind == "type" and isinstance(item, UtcDateTime) else False
+    return "UtcDateTime()" if kind == "type" and isinstance(item, UtcDateTime) else False
+
+
+def _compare_type(context: Any, inspected: Any, column: Any, inspected_type: Any, type_: Any) -> bool | None:
+    """Whether a column's type changed, where Alembic cannot tell: a `DateTime` made without its fraction (a migration
+    of before 0.94). `make` compares on SQLite, which keeps the words of the type."""
+    del inspected_type
+    if isinstance(type_, UtcDateTime) and context.dialect.name == "sqlite":
+        return not _precise(context.bind, column.table.name, inspected.name)
+    return None
 
 
 def _context(connection: Any) -> Any:
@@ -158,14 +182,12 @@ def _context(connection: Any) -> Any:
     from alembic.operations import Operations, ops
     from sqlalchemy import Table, event
 
-    from .orm import Entity
-
     if not event.contains(Table, "column_reflect", _reflected):
         event.listen(Table, "column_reflect", _reflected)
         Operations.implementation_for(ops.DropConstraintOp, replace=True)(_drop_constraint)
     options = {
         "target_metadata": Entity.metadata, "render_as_batch": True, "render_item": _render,
-        "compare_type": True, "compare_server_default": True,
+        "compare_type": _compare_type, "compare_server_default": True,
     }
     return MigrationContext.configure(connection, opts=options)
 
@@ -221,6 +243,26 @@ def _prepare(ops: list[Any], table: str = "") -> Iterator[str]:
             yield from _prepare(op.ops, getattr(op, "table_name", table))
 
 
+def create_tables(connection: Any) -> None:
+    """`createTables`: the tables of the entities the database does not have, made by the operations a migration runs
+    (the same types, defaults, foreign keys and names of constraints): a database made this way is the one the
+    migrations make, and comes under them with `nuclear migrate --fake`."""
+    from alembic.operations import Operations
+    from alembic.operations import ops as o
+    from sqlalchemy import inspect
+
+    reader = inspect(connection)
+    new = [t for t in Entity.metadata.sorted_tables if not reader.has_table(t.name)]
+    made: list[Any] = []
+    for table in new:
+        made.append(o.CreateTableOp.from_table(table))
+        made += [o.CreateIndexOp.from_index(i) for i in sorted(table.indexes, key=lambda i: str(i.name))]
+    list(_prepare(made))
+    operations = Operations(_context(connection))
+    for op in made:
+        operations.invoke(op)
+
+
 def _slug(message: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", message.lower()).strip("_")[:60] or "migration"
 
@@ -230,8 +272,6 @@ def make(folder: str | Path, message: str, app: str = "app.main", now: datetime 
     from alembic.autogenerate import produce_migrations, render_python_code
     from sqlalchemy import create_engine, inspect
     from sqlalchemy.orm import configure_mappers
-
-    from .orm import Entity
 
     importlib.import_module(app)
     configure_mappers()

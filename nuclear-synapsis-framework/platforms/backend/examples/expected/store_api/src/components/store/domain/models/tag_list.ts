@@ -1,4 +1,5 @@
 import { IsArray, IsString } from 'class-validator';
+import { checkModel } from 'synapsis-nest';
 
 /** The labels an order is tagged with. */
 export class TagList {
@@ -6,7 +7,10 @@ export class TagList {
   @IsArray()
   labels!: string[];
 
-  constructor(values: Partial<TagList> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<TagList>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

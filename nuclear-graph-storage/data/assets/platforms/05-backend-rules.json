@@ -113,6 +113,46 @@
    ]
   },
   {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.06dd88",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.1 Entity",
+   "summary": "A table.",
+   "body": [
+    "A table. `@entity(\"name\")` names it (default: the class name in snake_case, plural not added). Fields are",
+    "columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a",
+    "uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,",
+    "`@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the",
+    "column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it",
+    "comes back as the same instant on every database, with its milliseconds, and its JSON is what `toIso()` writes",
+    "(`2026-03-04T03:06:07.000Z`). The column keeps the fraction of a second on every database (six digits on MySQL,",
+    "MariaDB and SQLite, `DATETIME(6)`; PostgreSQL's own).",
+    "",
+    "```nuclear",
+    "@entity(\"tasks\")",
+    "Task()",
+    "  @primary(generated = true)",
+    "  id: int",
+    "  @column(length = 200)",
+    "  title: string",
+    "  done: boolean = false",
+    "  // 1 high, 2 normal, 3 low",
+    "  priority: int = 2",
+    "  @created()",
+    "  createdAt?: DateTime",
+    "```",
+    "",
+    "#### Relations (ADR-backend-0001)",
+    "",
+    "Decorators on the relation field; the related entity is the field's type, never repeated:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.95fa2d",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.1 Entity",
@@ -165,45 +205,6 @@
     "  @joinTable()",
     "  tags?: Tag[]",
     "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.b65b4c",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.1 Entity",
-   "summary": "A table.",
-   "body": [
-    "A table. `@entity(\"name\")` names it (default: the class name in snake_case, plural not added). Fields are",
-    "columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a",
-    "uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,",
-    "`@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the",
-    "column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it",
-    "comes back as the same instant on every database, and its JSON is what `toIso()` writes",
-    "(`2026-03-04T03:06:07.000Z`).",
-    "",
-    "```nuclear",
-    "@entity(\"tasks\")",
-    "Task()",
-    "  @primary(generated = true)",
-    "  id: int",
-    "  @column(length = 200)",
-    "  title: string",
-    "  done: boolean = false",
-    "  // 1 high, 2 normal, 3 low",
-    "  priority: int = 2",
-    "  @created()",
-    "  createdAt?: DateTime",
-    "```",
-    "",
-    "#### Relations (ADR-backend-0001)",
-    "",
-    "Decorators on the relation field; the related entity is the field's type, never repeated:"
    ],
    "platforms": [
     "backend"
@@ -481,11 +482,13 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.b1a580",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.1f59aa",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.2 Repository",
    "summary": "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods without a body that carry `@get`, `@post`, `@put`, `@patch` or `@delete` (`path = \":id\"`).",
    "body": [
+    "#### An HTTP repository (ADR-codegen-0001)",
+    "",
     "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods",
     "without a body that carry `@get`, `@post`, `@put`, `@patch` or `@delete` (`path = \":id\"`). They call the `Http(baseUrl)`",
     "connection (§2.8; `connection = \"name\"` picks another): `:name` in a path takes the parameter of that name, the",
@@ -511,7 +514,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.ee7697",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.71926f",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.2 Repository",
    "summary": "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`).",
@@ -524,6 +527,10 @@
     "`items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,",
     "`update({...})`, `delete()`. The caller awaits it:",
     "`~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ \"title\": t }).exists()`.",
+    "",
+    "`like` follows the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not (for",
+    "ASCII letters). `ilike` ignores the case on every database: it is the one to use for a search that must find the",
+    "same rows everywhere.",
     "",
     "```nuclear",
     "repository TaskRepository",
@@ -539,9 +546,7 @@
     "  page(page: int, size: int = 20) Page<Task>",
     "    orderBy(\"id\")",
     "    paginate(page, size)",
-    "```",
-    "",
-    "#### An HTTP repository (ADR-codegen-0001)"
+    "```"
    ],
    "platforms": [
     "backend"
@@ -551,15 +556,13 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.4058ff",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "What the API reads and answers, in `domain/models/`.",
+   "summary": "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).",
    "body": [
-    "What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:",
-    "`@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An",
-    "invalid body answers **400** with the reasons (below). `NewTask(title = \"x\")` builds one; optional fields (`T?`) may be",
-    "left out.",
+    "**A model built in code is checked like a body.** `NewTask(title = \"\")` breaks `@minLength(1)` and throws; a use",
+    "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).",
     "",
     "```nuclear",
     "NewTask",
@@ -575,6 +578,39 @@
     "  title?: string",
     "  done?: boolean",
     "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.c2a1e8",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.3 Model",
+   "summary": "What the API reads and answers, in `domain/models/`.",
+   "body": [
+    "What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:",
+    "`@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An",
+    "invalid body answers **400** with the reasons (below). `NewTask(title = \"x\")` builds one; optional fields (`T?`) may be",
+    "left out.",
+    "",
+    "**A value's JSON type is its field's: nothing is converted.** In a body each field takes only the JSON type of its",
+    "Nuclear type, and any other is refused with the rule `type`:",
+    "",
+    "| Field | JSON it takes | Refused |",
+    "|---|---|---|",
+    "| `string` | a text | a number, `true` / `false` |",
+    "| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number) | a text (`\"30\"`), `true` / `false`, a number with a fraction |",
+    "| `double` | a number (`1.5`, `30`) | a text (`\"1.5\"`), `true` / `false` |",
+    "| `boolean` | `true` / `false` | a text (`\"true\"`), a number (`1`) |",
+    "| `DateTime` | a text that is a date and time (`\"2026-03-04T05:06:07Z\"`) | a number, a text that is no date |",
+    "| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |",
+    "",
+    "`null` is only for an optional field (`T?`); for a required one the rule is `required`. A parameter of the path or of",
+    "the query has no JSON type: it is a text, converted to its type (`?page=2` is the `int` 2)."
    ],
    "platforms": [
     "backend"
@@ -733,76 +769,23 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.31820c",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.2a3de2",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "out of the history without running.",
+   "summary": "nuclear migrate make \"notes on tasks\" # one migration: what the entities changed since the migrations of the folder nuclear migrate # applies the pending ones to the default database (also: nuclear migrate up) nuclear migrate --to <migration> # applies the pending ones up to that one nuclear…",
    "body": [
-    "out of the history without running.",
-    "- `down` runs the way back the migration holds; what `up` dropped comes back empty.",
-    "- A migration edited after it was applied is not applied again.",
-    "- With nothing to do a command says so and ends with exit code 0 (`the database is up to date`, `no migration is",
-    "  applied`, `nothing to revert`).",
+    "```sh",
+    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the migrations of the folder",
+    "nuclear migrate                         # applies the pending ones to the default database (also: nuclear migrate up)",
+    "nuclear migrate --to <migration>        # applies the pending ones up to that one",
+    "nuclear migrate down                    # reverts the last one applied",
+    "nuclear migrate down --to <migration>   # reverts every one applied after that one (it stays applied)",
+    "nuclear migrate status                  # every migration of the folder: applied or pending",
+    "```",
     "",
-    "| Command | Prints, one line each |",
-    "|---|---|",
-    "| `make` | `wrote <file>`, and a `warning: ...` per risk |",
-    "| `migrate`, `migrate up` | `applied <migration>` (`applied <migration> (fake)`) |",
-    "| `migrate down` | `reverted <migration>` (`reverted <migration> (fake)`) |",
-    "| `migrate status` | `applied  <migration>` or `pending  <migration>` |",
-    "| a refused command | `error: ...`, exit code 1 |",
-    "",
-    "- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11). The",
-    "  schema they leave is the same in every dialect.",
-    "- A project with migrations leaves `createTables` out of its connection."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.4d36d9",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "`up` and `down` take `--fake` (the history changes and nothing runs) and `--transaction all|each|none`.",
-   "body": [
     "`up` and `down` take `--fake` (the history changes and nothing runs) and `--transaction all|each|none`.",
     "",
     "Making a migration:"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.6722a6",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "nothing (`no changes: the entities match the last migration`).",
-   "body": [
-    "- `make` compares the entities with the migrations of the folder, never with a database; with no change it writes",
-    "  nothing (`no changes: the entities match the last migration`).",
-    "- A migration's name is `<year month day hour minute second>_<message in snake_case>` (local time); `--to` takes the",
-    "  name or its timestamp.",
-    "- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or",
-    "  column shows as a drop and an add, so edit it into a rename to keep the data.",
-    "- `make` warns of what loses data or what a table with rows refuses: a dropped table or column, a required column",
-    "  added without a default, a column that becomes required.",
-    "- A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows",
-    "  works. A `@created` or `@updated` column is required and has the database's clock as its default.",
-    "- Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`. A foreign key does what",
-    "  `onDelete` says and nothing else.",
-    "- `make` refuses a changed key (`the key of <table> changed`): a migration does not change the key of a table.",
-    "- Two migrations made at the same time (two people, each without the other's) both count: the next `make` compares",
-    "  with both.",
-    "",
-    "Applying and reverting:"
    ],
    "platforms": [
     "backend"
@@ -880,7 +863,57 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.a42e3f",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.9d0d76",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "with both.",
+   "body": [
+    "- Two migrations made at the same time (two people, each without the other's) both count: the next `make` compares",
+    "  with both.",
+    "",
+    "Applying and reverting:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.a28eb4",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "out of the history without running.",
+   "body": [
+    "out of the history without running. The tables `createTables` made are the ones the first migration makes, so",
+    "  after `--fake` the next `make` has nothing to write.",
+    "- `down` runs the way back the migration holds; what `up` dropped comes back empty.",
+    "- A migration edited after it was applied is not applied again.",
+    "- With nothing to do a command says so and ends with exit code 0 (`the database is up to date`, `no migration is",
+    "  applied`, `nothing to revert`).",
+    "",
+    "| Command | Prints, one line each |",
+    "|---|---|",
+    "| `make` | `wrote <file>`, and a `warning: ...` per risk |",
+    "| `migrate`, `migrate up` | `applied <migration>` (`applied <migration> (fake)`) |",
+    "| `migrate down` | `reverted <migration>` (`reverted <migration> (fake)`) |",
+    "| `migrate status` | `applied  <migration>` or `pending  <migration>` |",
+    "| a refused command | `error: ...`, exit code 1 |",
+    "",
+    "- The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11). The",
+    "  schema they leave is the same in every dialect.",
+    "- A project with migrations leaves `createTables` out of its connection."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.a4b583",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
    "summary": "`origins: string[]` in the `appConfig` lists the web origins whose browsers may call the API (a web app of the platform served on another port or host): their requests answer with `Access-Control-Allow-Origin`, any method and header; any other origin's browser is blocked.",
@@ -897,17 +930,10 @@
     "",
     "#### Migrations of the database (ADR-backend-0001, ADR-backend-0002)",
     "",
-    "`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the",
-    "project's `migrations/` folder (with the sources, not in `build/`):",
-    "",
-    "```sh",
-    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the migrations of the folder",
-    "nuclear migrate                         # applies the pending ones to the default database (also: nuclear migrate up)",
-    "nuclear migrate --to <migration>        # applies the pending ones up to that one",
-    "nuclear migrate down                    # reverts the last one applied",
-    "nuclear migrate down --to <migration>   # reverts every one applied after that one (it stays applied)",
-    "nuclear migrate status                  # every migration of the folder: applied or pending",
-    "```"
+    "`createTables` is for development and tests: when the app starts it makes the tables of the entities the database",
+    "does not have, and never changes one that is there. It makes them as the migrations make them: the same types,",
+    "defaults, keys, foreign keys (those of a join table too) and names of constraints. A database that keeps its data",
+    "changes by migrations, kept in the project's `migrations/` folder (with the sources, not in `build/`):"
    ],
    "platforms": [
     "backend"
@@ -977,6 +1003,35 @@
     "| `Http(baseUrl, headers, timeout)` | — | another API, for the HTTP repositories (§2.2): `baseUrl` (`\"https://rickandmortyapi.com/api\"`), `headers` (an API key), `timeout` (seconds) |",
     "| `Chroma(collection, embeddings, url)` | `chroma` | a vector store on a Chroma server (`url`, default `http://localhost:8000`); `embeddings` names the `Embeddings` connection |",
     "| `WebSocketServer(path)` | `websocket` | the app also answers over a WebSocket at `/<path>` (§2.9): the same controllers, and the events it publishes |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.f4800c",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "nothing (`no changes: the entities match the last migration`).",
+   "body": [
+    "- `make` compares the entities with the migrations of the folder, never with a database; with no change it writes",
+    "  nothing (`no changes: the entities match the last migration`).",
+    "- A migration's name is `<year month day hour minute second>_<message in snake_case>` (local time); `--to` takes the",
+    "  name or its timestamp.",
+    "- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or",
+    "  column shows as a drop and an add, so edit it into a rename to keep the data.",
+    "- `make` warns of what loses data or what a table with rows refuses: a dropped table or column, a required column",
+    "  added without a default, a column that becomes required.",
+    "- A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows",
+    "  works. A `@created` or `@updated` column is required and has the database's clock as its default.",
+    "- A `DateTime` column is made with the fraction of a second (§2.1). A project whose migrations made it without one",
+    "  (before 0.94: whole seconds on MySQL and MariaDB) gets the change from its next `nuclear migrate make`.",
+    "- Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`. A foreign key does what",
+    "  `onDelete` says and nothing else.",
+    "- `make` refuses a changed key (`the key of <table> changed`): a migration does not change the key of a table."
    ],
    "platforms": [
     "backend"
@@ -1179,28 +1234,6 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.5ba5cc",
-   "type": "spec",
-   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "body": [
-    "| Where | Kind | What it is |",
-    "|---|---|---|",
-    "| `data/entities/` | entity | a table: `@entity(\"t\")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`) |",
-    "| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})`, `orderBy`, `limit`, `relations(\"tasks\")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |",
-    "| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")` |",
-    "| `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |",
-    "| `domain/services/` | `service Name(deps)` | rules several use cases share |",
-    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
-   ]
-  },
-  {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.84fcc0",
    "type": "spec",
    "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
@@ -1210,6 +1243,28 @@
     "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
     "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
     "from stdin); `nuclear run|build|test|check --env <name>`. A required one without a value: `nuclear run` refuses, `check --env` says N0312."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.f52a04",
+   "type": "spec",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "body": [
+    "| Where | Kind | What it is |",
+    "|---|---|---|",
+    "| `data/entities/` | entity | a table: `@entity(\"t\")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`) |",
+    "| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})`, `orderBy`, `limit`, `relations(\"tasks\")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |",
+    "| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`; a value of another JSON type is refused (`\"30\"` is not an `int`); built in code (`NewTask(title = \"\")`) it is checked too and throws |",
+    "| `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |",
+    "| `domain/services/` | `service Name(deps)` | rules several use cases share |",
+    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |"
    ],
    "platforms": [
     "backend"

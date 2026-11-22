@@ -532,6 +532,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.8feed6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Five decisions on the backend, the same in every dialect and on SQLite, PostgreSQL, MySQL and MariaDB**: a value of another JSON type is refused in a body (a text is never a number or a boolean; `30.0` is a whole number; **a `fastapi` app converted them until now**); a `DateTime` column keeps the fraction of a second everywhere (`DATETIME(6)` on MySQL and MariaDB, from the next `nuclear migrate make` of an existing project); a model built in code is checked in `nestjs` as in `fastapi`; `createTables` makes the schema the migrations make, so `nuclear migrate --fake` over it leaves nothing unseen; the reference says `like` follows the database's case rule and `ilike` is the same everywhere. The database check compares each one between the dialects.",
+    "- The language server knows the helpers of the language (`chunk`, `uniqBy`, `Pair`...): completion offers them with their signature and doc comment, hover and signature help explain a call of one, like a function of the project (signature help now also answers for a function of another file of the project). A name the file, its project or the dialect has is never the helper. No go to definition: a helper has no file on an installed machine."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.a0dea1",
    "type": "changelog",
    "title": "Changelog — Unreleased",

@@ -67,23 +67,7 @@ def schema(step: str = "") -> dict[str, Any]:
     return s
 
 
-def same(now: dict[str, Any], before: dict[str, Any], what: str) -> None:
-    """The schema is exactly the one read before: every table, column, type, length, null, default, key, unique, foreign key."""
-    if now == before:
-        return
-    lines: list[str] = []
-    for table in sorted({*now, *before}):
-        a, b = before.get(table), now.get(table)
-        if a is None or b is None:
-            lines.append(f"table {table}: {'missing' if b is None else 'not expected'}")
-            continue
-        for column in sorted({*a["columns"], *b["columns"]}):
-            if a["columns"].get(column) != b["columns"].get(column):
-                lines.append(f"{table}.{column}: {b['columns'].get(column)}, was {a['columns'].get(column)}")
-        for part in ("key", "unique", "foreign"):
-            if a[part] != b[part]:
-                lines.append(f"{table} {part}: {b[part]}, was {a[part]}")
-    fail(f"{what}: the schema is not the one before:\n  " + "\n  ".join(lines))
+same = db.same
 
 
 def rows() -> tuple[int, ...]:

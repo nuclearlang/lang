@@ -17,7 +17,7 @@ are) are in [testing a platform](../../../docs/05-standards/testing.md). Here: w
 | The runtimes' tests | `packages/synapsis-py/tests/` (pytest), `packages/synapsis-nest/test/` (`node:test`) | the two checks |
 | The fastapi check | `rick_api` built; pyright `--strict` and the project's own tests on the generated code; a live run; then the conformance example | `checks/fastapi-check/check.sh` |
 | The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |
-| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, every kind of migration with `nuclear migrate` against the real database, one HTTP scenario, the project's tests; the answers compared between dialects and databases, the schemas' differences listed; a project made with `nuclear new` migrated | `checks/database-check/check.sh` |
+| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, every kind of migration with `nuclear migrate` against the real database, one HTTP scenario, the project's tests, the tables `createTables` makes against the first migration's; the answers compared between dialects and databases, the schemas' differences listed; a project made with `nuclear new` migrated | `checks/database-check/check.sh` |
 | The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |
 
 ## Set up, once
@@ -70,7 +70,7 @@ The first two scripts find the tree from their own place (`NUCLEAR_ROOT` overrid
    must answer "no changes".
 6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).
 
-**`database-check/check.sh`** (needs Docker running, besides the set-up above; about fourteen minutes). It proves that
+**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twenty minutes). It proves that
 one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those
 dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one
 `ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed.
@@ -114,21 +114,34 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
      pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an
-     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the relations loaded and
+     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds of a
+     `DateTime` written and read back, a value of another JSON type refused for each type (and `30.0` taken as a
+     whole number, a number of the query converted), a model built in code that breaks its rule (500), the relations loaded and
      not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write
      (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique
      value (one row), the cascade of a delete.
    - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).
-3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step
+   - **tables** (`tables.py`): the same project built with `createTables = true` on an empty database of its own
+     (`made_<dialect>`); the app is started once, so it makes the tables. Their schema, with the names of the
+     uniques and foreign keys, is written as step 0 for the comparison between the dialects. Then, with
+     `nuclear migrate`: `make`, `up` refused (the tables are there), `up --fake`, nothing left to make, `down`
+     (the tables go), `up`: the schema must be the one `createTables` made, names included. Last, the first
+     migration is written as 0.93 wrote it (a `DateTime` without its fraction; the lines in the dialect's
+     migration language) and applied, and rows are written by SQL; the next `make` must write the change, and
+     `up` must give the schema `createTables` made with the rows kept and a fraction written by SQL kept too;
+     `down` and `up` again.
+3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step,
+   and the one `createTables` left (step 0, with the names of the constraints)
    (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and
    `ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.
 4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,
-   `createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are
+   `createdAt` / `updatedAt` their shape, `401.0` is `401`; the body of an error whole, with its reasons) and the files are
    compared byte by byte: the same in every dialect on every database.
 
-What the scenario leaves out of the comparison because it differs by database, and says in its line: the
-milliseconds of a `DateTime` (lost on MySQL and MariaDB), and how many of the losers of the race for a unique value
-answer 409 or 500 ([roadmap](../01-product/roadmap.md)).
+What the scenario leaves out of the comparison because it differs by run, and says in its line: how many of the
+losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product/roadmap.md)). And one answer it
+only reads: a model built in code that keeps its rules, whose optional field left empty is `null` in one dialect
+and absent in the other (the roadmap).
 
 ## Conventions
 

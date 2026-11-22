@@ -2,7 +2,10 @@
   {{body}}{{#body}}
 
 {{/body}}
-  constructor(values: Partial<{{name}}> = {}) {
-    Object.assign(this, values);
+  constructor(values?: Partial<{{name}}>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
   }
 }

@@ -53,7 +53,8 @@ same; and the JSON and the OpenAPI are made from Nuclear, not from the dialects.
   whole body of an error, not only its status.
 - Negative: a client of an existing service that read `detail` or `statusCode` must read `message` and `status`;
   the documentation page of a `fastapi` app shows the contract's document, without the framework's extras.
-- Left: a text given for a number in a body is accepted by one validator and refused by the other (the roadmap).
+- Decided after (the user, 2026-11-22): a value of another JSON type is refused in every dialect, with the rule
+  `type`; nothing converts (the backend's reference, §2.3).
 
 ## References
 - `platforms/backend/packages/synapsis-py/src/synapsis/errors.py`, `app.py`;
