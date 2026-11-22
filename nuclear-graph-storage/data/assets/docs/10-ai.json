@@ -21195,13 +21195,13 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.407411",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.498625",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
    "body": [
-    "| `project_migrate(project, action, message, to, confirm)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration). `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with its data. Answers `{ok, action, output}` |",
-    "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |"
+    "| `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |",
+    "| `project_migrate(project, action, message, to, confirm)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration). `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with its data. Answers `{ok, action, output}` |"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
@@ -21230,6 +21230,21 @@
     "| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |",
     "| `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |"
    ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.bae693",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — The compiler and the command line",
+   "summary": "The compiler and the command line",
+   "body": "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |",
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
    ],

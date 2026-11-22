@@ -137,6 +137,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `block(src: string, name: string) string`
     - `put(found: <string, Wrong[]>, base: string, wrong: Wrong) void`
     - `library(ctx: Context) <string, any>[]`
+    - `helpers(ctx: Context) <string, any>[]` — The helpers of the language (ADR-lang-0013): one row per function of `nuclear-synapsis-framework/lodash/src`, with its signature, what its comment says and the cases its tests state (each `check(name, got, want)`).
 - `extract_platforms.nuc`
   - `platformOfDialect(dialect: string) string` — The platform a dialect builds ("" for a language dialect).
   - `PlatformFiles(contract: <string, any>, docs: <string, any>, dialect: <string, any>, base: string, words: string)` — The files that say what a platform is: its contract, and the words and the manifest of its default dialect.

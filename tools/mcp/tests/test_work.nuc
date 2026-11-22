@@ -97,6 +97,42 @@ testMigrationsAreReadFreelyAndChangeTheDatabaseOnlyOnTheUsersYes(tmpPath: Path) 
     expect(said(asyncio.run(wrong))["error"] != null)
   expect(runner.calls.length == 4)
 
+// A runner of `nuclear test` (its exit code and output) and of `nuclear explain` (its JSON), with every call kept.
+FakeTests(code: int, out: string, explained: string = "{}")
+  calls: any[][] = []
+
+  run(args: string[], cwd: string? = null, stdin: string = "") Ran
+    ~asyncio.sleep(0)
+    calls.add([args, cwd, stdin])
+    args[1] == "explain" ? Ran(0, explained) : Ran(code, out)
+
+// The tests of a project: the same answer whatever the dialect's runner prints.
+testTheTestsOfAProjectAnswerTheSameInEveryDialect(tmpPath: Path) void
+  project = tmpPath.joinpath("shop_api")
+  project.joinpath("test").mkdir(parents = true)
+  project.joinpath("config.nuc").writeText("synapsis(platform = \"backend\", dialect = \"fastapi\")\n")
+  root = "${project.resolve()}"
+  green = FakeTests(0, "...\n3 passed in 0.03s")
+  ok = said(asyncio.run(WorkTools(green.run).projectTest("${project}/test")))
+  expect(ok["ok"] == true and ok["passed"] == 3 and ok["failed"] == 0 and ok["failures"] == [])
+  expect(green.calls.length == 1 and green.calls[0][0] == ["nuclear", "test"] and green.calls[0][1] == root)
+  // a failure: where it is in the .nuc and what it means, from `nuclear explain` given the runner's output
+  frames = "{\"frames\": [{\"line\": 15, \"name\": \"missing\", \"source\": \"${root}/test/notes_test.nuc\"}], \"hint\": \"A test's expect failed\"}"
+  red = FakeTests(1, "FAILED tests/notes_test.py::test_missing\n1 failed, 2 passed in 0.05s", frames)
+  bad = said(asyncio.run(WorkTools(red.run).projectTest(root)))
+  expect(bad["ok"] == false and bad["passed"] == 2 and bad["failed"] == 1 and bad["hint"] == "A test's expect failed")
+  expect(bad["failures"] == [{ "file": "${root}/test/notes_test.nuc", "line": 15, "name": "missing" }])
+  expect(red.calls[1][0] == ["nuclear", "explain", "--json"] and "1 failed" in "${red.calls[1][2]}")
+  expect(said(asyncio.run(WorkTools(green.run).projectTest("${tmpPath}")))["error"] != null)
+  // each runner's own words
+  expect(countsOfTests("1 failed, 2 passed in 0.05s") == [2, 1])
+  expect(countsOfTests("ℹ tests 16\nℹ pass 15\nℹ fail 1") == [15, 1])
+  expect(countsOfTests("00:02 +7: All tests passed!") == [7, 0])
+  expect(countsOfTests("00:02 +5 -2: Some tests failed.") == [5, 2])
+  expect(countsOfTests(" Tests  1 failed | 8 passed (9)") == [8, 1])
+  expect(countsOfTests("2 passed, 1 error in 0.1s") == [2, 1])
+  expect(countsOfTests("nothing ran") == [0, 0])
+
 // The yes or no a real client's user gives (the MCP library's client, over the initialize handshake of stdio).
 Answering(yes: boolean)
   asked: string[] = []

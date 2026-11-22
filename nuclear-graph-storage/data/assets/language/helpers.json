@@ -1,0 +1,4456 @@
+{
+ "shelf": "language",
+ "origin": "generated",
+ "generator": "helpers",
+ "about": "The helpers of the language, called with no use (the functions of lodash that serve Nuclear): each signature, meaning and tested cases.",
+ "rows": [
+  {
+   "id": "lib:helper-after",
+   "type": "library",
+   "title": "`after` — a helper of the language (functions)",
+   "summary": "A function that calls `f` only from its `n`th call on; before, it gives null.",
+   "body": [
+    "```nuclear",
+    "after<T>(n: int, f: () => T)() => T?",
+    "```",
+    "",
+    "A function that calls `f` only from its `n`th call on; before, it gives null.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "after",
+    "lodash after",
+    "helper after"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "after",
+    "area": "functions",
+    "signature": "after<T>(n: int, f: () => T)() => T?",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-attempt",
+   "type": "library",
+   "title": "`attempt` — a helper of the language (functions)",
+   "summary": "What `f` gives, or `fallback` when it throws.",
+   "body": [
+    "```nuclear",
+    "attempt<T>(f: () => T, fallback: T) T",
+    "```",
+    "",
+    "What `f` gives, or `fallback` when it throws.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- attempt: `\"${attempt(() => parse(\"12\") + 1, -1)} ${attempt(() => parse(\"x\") + 1, -1)}\"` gives `13 -1`"
+   ],
+   "keys": [
+    "attempt",
+    "lodash attempt",
+    "helper attempt"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "attempt",
+    "area": "functions",
+    "signature": "attempt<T>(f: () => T, fallback: T) T",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-before",
+   "type": "library",
+   "title": "`before` — a helper of the language (functions)",
+   "summary": "A function that calls `f` while it has been called fewer than `n` times; then it gives the last result.",
+   "body": [
+    "```nuclear",
+    "before<T>(n: int, f: () => T)() => T?",
+    "```",
+    "",
+    "A function that calls `f` while it has been called fewer than `n` times; then it gives the last result.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "before",
+    "lodash before",
+    "helper before"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "before",
+    "area": "functions",
+    "signature": "before<T>(n: int, f: () => T)() => T?",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-camelCase",
+   "type": "library",
+   "title": "`camelCase` — a helper of the language (texts)",
+   "summary": "`fooBar`: the words joined, each but the first capitalized.",
+   "body": [
+    "```nuclear",
+    "camelCase(text: string) string",
+    "```",
+    "",
+    "`fooBar`: the words joined, each but the first capitalized.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- camelCase ${text}: `camelCase(text)` gives `fooBar`",
+    "- camelCase of nothing: `\"[${camelCase(\"\")}]\"` gives `[]`"
+   ],
+   "keys": [
+    "camelcase",
+    "lodash camelcase",
+    "helper camelcase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "camelCase",
+    "area": "texts",
+    "signature": "camelCase(text: string) string",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-capitalize",
+   "type": "library",
+   "title": "`capitalize` — a helper of the language (texts)",
+   "summary": "The first character in upper case and the rest in lower case.",
+   "body": [
+    "```nuclear",
+    "capitalize(text: string) string",
+    "```",
+    "",
+    "The first character in upper case and the rest in lower case.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- capitalize: `\"${capitalize(\"FRED\")} ${capitalize(\"fred\")} [${capitalize(\"\")}]\"` gives `Fred Fred []`"
+   ],
+   "keys": [
+    "capitalize",
+    "lodash capitalize",
+    "helper capitalize"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "capitalize",
+    "area": "texts",
+    "signature": "capitalize(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-ceilTo",
+   "type": "library",
+   "title": "`ceilTo` — a helper of the language (numbers)",
+   "summary": "`n` rounded up to `precision` decimals.",
+   "body": [
+    "```nuclear",
+    "ceilTo(n: double, precision: int = 0) double",
+    "```",
+    "",
+    "`n` rounded up to `precision` decimals.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- ceilTo: `\"${ceilTo(4.006)} ${ceilTo(6.004, 2)} ${ceilTo(6040, -2)}\"` gives `5.0 6.01 6100.0`"
+   ],
+   "keys": [
+    "ceilto",
+    "lodash ceilto",
+    "helper ceilto"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "ceilTo",
+    "area": "numbers",
+    "signature": "ceilTo(n: double, precision: int = 0) double",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-chunk",
+   "type": "library",
+   "title": "`chunk` — a helper of the language (lists)",
+   "summary": "The list split into groups of `size`; the last group holds what is left.",
+   "body": [
+    "```nuclear",
+    "chunk<T>(xs: T[], size: int) T[][]",
+    "```",
+    "",
+    "The list split into groups of `size`; the last group holds what is left.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- chunk even: `groups(chunk([1, 2, 3, 4], 2))` gives `[1,2][3,4]`",
+    "- chunk remainder: `groups(chunk([0, 1, 2, 3, 4, 5], 4))` gives `[0,1,2,3][4,5]`",
+    "- chunk larger than the list: `groups(chunk([1, 2], 5))` gives `[1,2]`",
+    "- chunk of nothing: `\"${chunk<int>([], 3).length}\"` gives `0`",
+    "- chunk size below one: `\"${chunk([1, 2], 0).length}\"` gives `0`"
+   ],
+   "keys": [
+    "chunk",
+    "lodash chunk",
+    "helper chunk"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "chunk",
+    "area": "lists",
+    "signature": "chunk<T>(xs: T[], size: int) T[][]",
+    "cases": 5
+   }
+  },
+  {
+   "id": "lib:helper-cloneDeep",
+   "type": "library",
+   "title": "`cloneDeep` — a helper of the language (maps and data)",
+   "summary": "A copy of maps and lists and of everything inside them.",
+   "body": [
+    "```nuclear",
+    "cloneDeep(value: any) any",
+    "```",
+    "",
+    "A copy of maps and lists and of everything inside them.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- cloneDeep of a value: `\"${cloneDeep(7)} ${cloneDeep(\"x\")} ${cloneDeep(null)}\"` gives `7 x null`"
+   ],
+   "keys": [
+    "clonedeep",
+    "lodash clonedeep",
+    "helper clonedeep"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "cloneDeep",
+    "area": "maps and data",
+    "signature": "cloneDeep(value: any) any",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-compact",
+   "type": "library",
+   "title": "`compact` — a helper of the language (lists)",
+   "summary": "The values that are not null.",
+   "body": [
+    "```nuclear",
+    "compact<T>(xs: T?[]) T[]",
+    "```",
+    "",
+    "The values that are not null.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- compact: `ints(compact(some))` gives `0,1,2`"
+   ],
+   "keys": [
+    "compact",
+    "lodash compact",
+    "helper compact"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "compact",
+    "area": "lists",
+    "signature": "compact<T>(xs: T?[]) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-constant",
+   "type": "library",
+   "title": "`constant` — a helper of the language (functions)",
+   "summary": "A function that always gives `value`.",
+   "body": [
+    "```nuclear",
+    "constant<T>(value: T)() => T",
+    "```",
+    "",
+    "A function that always gives `value`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "constant",
+    "lodash constant",
+    "helper constant"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "constant",
+    "area": "functions",
+    "signature": "constant<T>(value: T)() => T",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-countBy",
+   "type": "library",
+   "title": "`countBy` — a helper of the language (collections)",
+   "summary": "How many values each key has.",
+   "body": [
+    "```nuclear",
+    "countBy<T>(xs: T[], key: (x: T) => string) <string, int>",
+    "```",
+    "",
+    "How many values each key has.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "countby",
+    "lodash countby",
+    "helper countby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "countBy",
+    "area": "collections",
+    "signature": "countBy<T>(xs: T[], key: (x: T) => string) <string, int>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-curry",
+   "type": "library",
+   "title": "`curry` — a helper of the language (functions)",
+   "summary": "`f` of two parameters as two functions of one.",
+   "body": [
+    "```nuclear",
+    "curry<A, B, R>(f: (a: A, b: B) => R)(a: A) => (b: B) => R",
+    "```",
+    "",
+    "`f` of two parameters as two functions of one.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- curry: `\"${curry(minus)(10)(4)}\"` gives `6`"
+   ],
+   "keys": [
+    "curry",
+    "lodash curry",
+    "helper curry"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "curry",
+    "area": "functions",
+    "signature": "curry<A, B, R>(f: (a: A, b: B) => R)(a: A) => (b: B) => R",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-defaults",
+   "type": "library",
+   "title": "`defaults` — a helper of the language (maps and data)",
+   "summary": "The entries of `m`, and those of `fallback` whose key `m` does not have.",
+   "body": [
+    "```nuclear",
+    "defaults<V>(m: <string, V>, fallback: <string, V>) <string, V>",
+    "```",
+    "",
+    "The entries of `m`, and those of `fallback` whose key `m` does not have.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- defaults: `entries(defaults({ \"a\": 1 }, { \"b\": 2, \"a\": 3 }))` gives `b=2,a=1`"
+   ],
+   "keys": [
+    "defaults",
+    "lodash defaults",
+    "helper defaults"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "defaults",
+    "area": "maps and data",
+    "signature": "defaults<V>(m: <string, V>, fallback: <string, V>) <string, V>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-difference",
+   "type": "library",
+   "title": "`difference` — a helper of the language (lists)",
+   "summary": "The values of `xs` that are not in `ys`, in order.",
+   "body": [
+    "```nuclear",
+    "difference<T>(xs: T[], ys: T[]) T[]",
+    "```",
+    "",
+    "The values of `xs` that are not in `ys`, in order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- difference: `ints(difference([2, 1], [2, 3]))` gives `1`",
+    "- difference keeps order and repeats: `ints(difference([1, 2, 1, 3, 1], [2]))` gives `1,1,3,1`",
+    "- difference of nothing: `ints(difference([1, 2], []))` gives `1,2`"
+   ],
+   "keys": [
+    "difference",
+    "lodash difference",
+    "helper difference"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "difference",
+    "area": "lists",
+    "signature": "difference<T>(xs: T[], ys: T[]) T[]",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-differenceBy",
+   "type": "library",
+   "title": "`differenceBy` — a helper of the language (lists)",
+   "summary": "`difference` comparing what `key` gives for each value.",
+   "body": [
+    "```nuclear",
+    "differenceBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "```",
+    "",
+    "`difference` comparing what `key` gives for each value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- differenceBy: `names(differenceBy(items, [Item(9, \"b\")], (i) => i.name))` gives `a,c`"
+   ],
+   "keys": [
+    "differenceby",
+    "lodash differenceby",
+    "helper differenceby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "differenceBy",
+    "area": "lists",
+    "signature": "differenceBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-differenceWith",
+   "type": "library",
+   "title": "`differenceWith` — a helper of the language (lists)",
+   "summary": "`difference` with `same` deciding whether two values are equal.",
+   "body": [
+    "```nuclear",
+    "differenceWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "```",
+    "",
+    "`difference` with `same` deciding whether two values are equal.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- differenceWith: `names(differenceWith(items, [Item(2, \"x\")], (a, b) => a.id == b.id))` gives `a,c`"
+   ],
+   "keys": [
+    "differencewith",
+    "lodash differencewith",
+    "helper differencewith"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "differenceWith",
+    "area": "lists",
+    "signature": "differenceWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-dropRight",
+   "type": "library",
+   "title": "`dropRight` — a helper of the language (lists)",
+   "summary": "The list without its last `n` values.",
+   "body": [
+    "```nuclear",
+    "dropRight<T>(xs: T[], n: int = 1) T[]",
+    "```",
+    "",
+    "The list without its last `n` values.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- dropRight: `ints(dropRight([1, 2, 3]))` gives `1,2`",
+    "- dropRight two: `ints(dropRight([1, 2, 3], 2))` gives `1`",
+    "- dropRight more than the list: `ints(dropRight([1, 2, 3], 5))` gives ``",
+    "- dropRight none: `ints(dropRight([1, 2, 3], 0))` gives `1,2,3`"
+   ],
+   "keys": [
+    "dropright",
+    "lodash dropright",
+    "helper dropright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "dropRight",
+    "area": "lists",
+    "signature": "dropRight<T>(xs: T[], n: int = 1) T[]",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-dropRightWhile",
+   "type": "library",
+   "title": "`dropRightWhile` — a helper of the language (lists)",
+   "summary": "The list without the last values for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "dropRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "The list without the last values for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- dropRightWhile: `ints(dropRightWhile([1, 2, 3, 4], (x) => x > 2))` gives `1,2`"
+   ],
+   "keys": [
+    "droprightwhile",
+    "lodash droprightwhile",
+    "helper droprightwhile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "dropRightWhile",
+    "area": "lists",
+    "signature": "dropRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-dropWhile",
+   "type": "library",
+   "title": "`dropWhile` — a helper of the language (lists)",
+   "summary": "The list without the first values for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "dropWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "The list without the first values for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- dropWhile: `ints(dropWhile([1, 2, 3, 1], (x) => x < 3))` gives `3,1`"
+   ],
+   "keys": [
+    "dropwhile",
+    "lodash dropwhile",
+    "helper dropwhile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "dropWhile",
+    "area": "lists",
+    "signature": "dropWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-escape",
+   "type": "library",
+   "title": "`escape` — a helper of the language (texts)",
+   "summary": "The text with `&`, `<`, `>`, `\"` and `'` written as HTML entities.",
+   "body": [
+    "```nuclear",
+    "escape(text: string) string",
+    "```",
+    "",
+    "The text with `&`, `<`, `>`, `\"` and `'` written as HTML entities.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- escape: `escape(\"fred, barney, & pebbles\")` gives `fred, barney, &amp; pebbles`",
+    "- escape every character: `escape(\"<a href=\\\"x\\\">it's</a>\")` gives `&lt;a href=&quot;x&quot;&gt;it&#39;s&lt;/a&gt;`",
+    "- escape an escaped text: `escape(\"&amp;\")` gives `&amp;amp;`",
+    "- unescape is the opposite of escape: `unescape(escape(\"<b>'&\\\"</b>\"))` gives `<b>'&\\\"</b>`"
+   ],
+   "keys": [
+    "escape",
+    "lodash escape",
+    "helper escape"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "escape",
+    "area": "texts",
+    "signature": "escape(text: string) string",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-escapeRegExp",
+   "type": "library",
+   "title": "`escapeRegExp` — a helper of the language (texts)",
+   "summary": "The text with the characters a regular expression gives a meaning to escaped.",
+   "body": [
+    "```nuclear",
+    "escapeRegExp(text: string) string",
+    "```",
+    "",
+    "The text with the characters a regular expression gives a meaning to escaped.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- escapeRegExp: `escapeRegExp(\"[lodash](https://lodash.com/)\")` gives `\\\\[lodash\\\\]\\\\(https://lodash\\\\.com/\\\\)`",
+    "- escapeRegExp every character: `escapeRegExp(\"^\\$.*+?()[]{}|\\\\\")` gives `\\\\^\\\\\\$\\\\.\\\\*\\\\+\\\\?\\\\(\\\\)\\\\[\\\\]\\\\{\\\\}\\\\|\\\\\\\\`",
+    "- an escaped text matches itself: `\"${Regex(escapeRegExp(\"a.b*c\")).test(\"a.b*c\")} ${Regex(escapeRegExp(\"a.b*c\")).test(\"aXbbc\")}\"` gives `true false`"
+   ],
+   "keys": [
+    "escaperegexp",
+    "lodash escaperegexp",
+    "helper escaperegexp"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "escapeRegExp",
+    "area": "texts",
+    "signature": "escapeRegExp(text: string) string",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-fill",
+   "type": "library",
+   "title": "`fill` — a helper of the language (lists)",
+   "summary": "Sets `value` from `start` up to `end` (not included), in place.",
+   "body": [
+    "```nuclear",
+    "fill<T>(xs: T[], value: T, start: int = 0, end?: int) T[]",
+    "```",
+    "",
+    "Sets `value` from `start` up to `end` (not included), in place.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- fill all: `ints(fill([1, 2, 3], 9))` gives `9,9,9`",
+    "- fill a range: `ints(fill([4, 6, 8, 10], 0, 1, 3))` gives `4,0,0,10`"
+   ],
+   "keys": [
+    "fill",
+    "lodash fill",
+    "helper fill"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "fill",
+    "area": "lists",
+    "signature": "fill<T>(xs: T[], value: T, start: int = 0, end?: int) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-findKey",
+   "type": "library",
+   "title": "`findKey` — a helper of the language (maps and data)",
+   "summary": "The first key for whose value `test` is true.",
+   "body": [
+    "```nuclear",
+    "findKey<V>(m: <string, V>, test: (value: V) => boolean) string?",
+    "```",
+    "",
+    "The first key for whose value `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- findKey: `\"${findKey(abc, (v) => v > 1)} ${findKey(abc, (v) => v > 9)}\"` gives `b null`"
+   ],
+   "keys": [
+    "findkey",
+    "lodash findkey",
+    "helper findkey"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "findKey",
+    "area": "maps and data",
+    "signature": "findKey<V>(m: <string, V>, test: (value: V) => boolean) string?",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-findLast",
+   "type": "library",
+   "title": "`findLast` — a helper of the language (lists)",
+   "summary": "The last value for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "findLast<T>(xs: T[], test: (x: T) => boolean) T?",
+    "```",
+    "",
+    "The last value for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- findLast: `\"${findLast([1, 2, 3, 4], (x) => x % 2 == 1)}\"` gives `3`",
+    "- findLast none: `\"${findLast([1, 2], (x) => x > 5)}\"` gives `null`"
+   ],
+   "keys": [
+    "findlast",
+    "lodash findlast",
+    "helper findlast"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "findLast",
+    "area": "lists",
+    "signature": "findLast<T>(xs: T[], test: (x: T) => boolean) T?",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-findLastIndex",
+   "type": "library",
+   "title": "`findLastIndex` — a helper of the language (lists)",
+   "summary": "The index of the last value for which `test` is true, or -1.",
+   "body": [
+    "```nuclear",
+    "findLastIndex<T>(xs: T[], test: (x: T) => boolean) int",
+    "```",
+    "",
+    "The index of the last value for which `test` is true, or -1.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- findLastIndex: `\"${findLastIndex([1, 2, 3, 4], (x) => x % 2 == 1)}\"` gives `2`",
+    "- findLastIndex none: `\"${findLastIndex([1, 2], (x) => x > 5)}\"` gives `-1`"
+   ],
+   "keys": [
+    "findlastindex",
+    "lodash findlastindex",
+    "helper findlastindex"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "findLastIndex",
+    "area": "lists",
+    "signature": "findLastIndex<T>(xs: T[], test: (x: T) => boolean) int",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-findLastKey",
+   "type": "library",
+   "title": "`findLastKey` — a helper of the language (maps and data)",
+   "summary": "The last key for whose value `test` is true.",
+   "body": [
+    "```nuclear",
+    "findLastKey<V>(m: <string, V>, test: (value: V) => boolean) string?",
+    "```",
+    "",
+    "The last key for whose value `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- findLastKey: `\"${findLastKey(abc, (v) => v > 1)} ${findLastKey(abc, (v) => v > 9)}\"` gives `c null`"
+   ],
+   "keys": [
+    "findlastkey",
+    "lodash findlastkey",
+    "helper findlastkey"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "findLastKey",
+    "area": "maps and data",
+    "signature": "findLastKey<V>(m: <string, V>, test: (value: V) => boolean) string?",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-flatMap",
+   "type": "library",
+   "title": "`flatMap` — a helper of the language (collections)",
+   "summary": "What `f` gives for each value, as one list.",
+   "body": [
+    "```nuclear",
+    "flatMap<T, R>(xs: T[], f: (x: T) => R[]) R[]",
+    "```",
+    "",
+    "What `f` gives for each value, as one list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- flatMap: `ints(flatMap([1, 2], (n) => [n, n]))` gives `1,1,2,2`",
+    "- flatMap of nothing: `ints(flatMap([1, 2], (n) => n > 5 ? [n] : []))` gives ``"
+   ],
+   "keys": [
+    "flatmap",
+    "lodash flatmap",
+    "helper flatmap"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "flatMap",
+    "area": "collections",
+    "signature": "flatMap<T, R>(xs: T[], f: (x: T) => R[]) R[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-flip",
+   "type": "library",
+   "title": "`flip` — a helper of the language (functions)",
+   "summary": "`f` with its two parameters swapped.",
+   "body": [
+    "```nuclear",
+    "flip<A, B, R>(f: (a: A, b: B) => R)(b: B, a: A) => R",
+    "```",
+    "",
+    "`f` with its two parameters swapped.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- flip: `\"${flip(minus)(1, 10)}\"` gives `9`"
+   ],
+   "keys": [
+    "flip",
+    "lodash flip",
+    "helper flip"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "flip",
+    "area": "functions",
+    "signature": "flip<A, B, R>(f: (a: A, b: B) => R)(b: B, a: A) => R",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-floorTo",
+   "type": "library",
+   "title": "`floorTo` — a helper of the language (numbers)",
+   "summary": "`n` rounded down to `precision` decimals.",
+   "body": [
+    "```nuclear",
+    "floorTo(n: double, precision: int = 0) double",
+    "```",
+    "",
+    "`n` rounded down to `precision` decimals.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- floorTo: `\"${floorTo(4.006)} ${floorTo(0.046, 2)} ${floorTo(4060, -2)}\"` gives `4.0 0.04 4000.0`"
+   ],
+   "keys": [
+    "floorto",
+    "lodash floorto",
+    "helper floorto"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "floorTo",
+    "area": "numbers",
+    "signature": "floorTo(n: double, precision: int = 0) double",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-flow",
+   "type": "library",
+   "title": "`flow` — a helper of the language (functions)",
+   "summary": "The functions applied one after another, the first one first.",
+   "body": [
+    "```nuclear",
+    "flow<T>(fs: ((x: T) => T)[])(x: T) => T",
+    "```",
+    "",
+    "The functions applied one after another, the first one first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- flow: `\"${flow([addOne, double])(3)}\"` gives `8`",
+    "- flow of nothing: `\"${flow<int>([])(3)}\"` gives `3`"
+   ],
+   "keys": [
+    "flow",
+    "lodash flow",
+    "helper flow"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "flow",
+    "area": "functions",
+    "signature": "flow<T>(fs: ((x: T) => T)[])(x: T) => T",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-flowRight",
+   "type": "library",
+   "title": "`flowRight` — a helper of the language (functions)",
+   "summary": "The functions applied one after another, the last one first.",
+   "body": [
+    "```nuclear",
+    "flowRight<T>(fs: ((x: T) => T)[])(x: T) => T",
+    "```",
+    "",
+    "The functions applied one after another, the last one first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- flowRight: `\"${flowRight([addOne, double])(3)}\"` gives `7`"
+   ],
+   "keys": [
+    "flowright",
+    "lodash flowright",
+    "helper flowright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "flowRight",
+    "area": "functions",
+    "signature": "flowRight<T>(fs: ((x: T) => T)[])(x: T) => T",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-forEachIndexed",
+   "type": "library",
+   "title": "`forEachIndexed` — a helper of the language (collections)",
+   "summary": "Calls `f` with each value and its index.",
+   "body": [
+    "```nuclear",
+    "forEachIndexed<T>(xs: T[], f: (x: T, index: int) => void) void",
+    "```",
+    "",
+    "Calls `f` with each value and its index.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "foreachindexed",
+    "lodash foreachindexed",
+    "helper foreachindexed"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "forEachIndexed",
+    "area": "collections",
+    "signature": "forEachIndexed<T>(xs: T[], f: (x: T, index: int) => void) void",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-forEachRight",
+   "type": "library",
+   "title": "`forEachRight` — a helper of the language (collections)",
+   "summary": "Calls `f` with each value, from the last to the first.",
+   "body": [
+    "```nuclear",
+    "forEachRight<T>(xs: T[], f: (x: T) => void) void",
+    "```",
+    "",
+    "Calls `f` with each value, from the last to the first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "foreachright",
+    "lodash foreachright",
+    "helper foreachright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "forEachRight",
+    "area": "collections",
+    "signature": "forEachRight<T>(xs: T[], f: (x: T) => void) void",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-fromPairs",
+   "type": "library",
+   "title": "`fromPairs` — a helper of the language (maps and data)",
+   "summary": "A map of the pairs.",
+   "body": [
+    "```nuclear",
+    "fromPairs<V>(pairs: Pair<string, V>[]) <string, V>",
+    "```",
+    "",
+    "A map of the pairs.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- fromPairs: `entries(fromPairs(pairs.reversed()))` gives `c=3,b=2,a=1`"
+   ],
+   "keys": [
+    "frompairs",
+    "lodash frompairs",
+    "helper frompairs"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "fromPairs",
+    "area": "maps and data",
+    "signature": "fromPairs<V>(pairs: Pair<string, V>[]) <string, V>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-get",
+   "type": "library",
+   "title": "`get` — a helper of the language (maps and data)",
+   "summary": "The value at `path` (`\"a.b[0].c\"`) inside maps and lists; `fallback` when the path leads nowhere.",
+   "body": [
+    "```nuclear",
+    "get(data: any, path: string, fallback: any = null) any",
+    "```",
+    "",
+    "The value at `path` (`\"a.b[0].c\"`) inside maps and lists; `fallback` when the path leads nowhere.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- get: `\"${get(data, \"a[0].b.c\")}\"` gives `3`",
+    "- get with dots only: `\"${get(data, \"a.0.b.c\")}\"` gives `3`",
+    "- get a missing path: `\"${get(data, \"a.b.c\", \"default\")}\"` gives `default`",
+    "- get past the list: `\"${get(data, \"a[5].b\", \"none\")} ${get(data, \"a[-1]\", \"none\")}\"` gives `none none`",
+    "- get through a value: `\"${get(data, \"zero.x\", \"none\")}\"` gives `none`",
+    "- get a null: `\"${get(data, \"n\", \"was null\")} ${get(data, \"n\")}\"` gives `was null null`",
+    "- get a falsy value: `\"${get(data, \"zero\", 9)} [${get(data, \"text\", \"x\")}]\"` gives `0 []`",
+    "- set returns the map: `\"${get(set(made, \"k\", 1), \"k\")}\"` gives `1`"
+   ],
+   "keys": [
+    "get",
+    "lodash get",
+    "helper get"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "get",
+    "area": "maps and data",
+    "signature": "get(data: any, path: string, fallback: any = null) any",
+    "cases": 8
+   }
+  },
+  {
+   "id": "lib:helper-has",
+   "type": "library",
+   "title": "`has` — a helper of the language (maps and data)",
+   "summary": "Whether `path` leads to a value inside maps and lists.",
+   "body": [
+    "```nuclear",
+    "has(data: any, path: string) boolean",
+    "```",
+    "",
+    "Whether `path` leads to a value inside maps and lists.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- has: `\"${has(data, \"a[0].b.c\")} ${has(data, \"a[0].b.z\")} ${has(data, \"n\")} ${has(data, \"a[1]\")} ${has(data, \"zero.x\")}\"` gives `true false true false false`"
+   ],
+   "keys": [
+    "has",
+    "lodash has",
+    "helper has"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "has",
+    "area": "maps and data",
+    "signature": "has(data: any, path: string) boolean",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-identity",
+   "type": "library",
+   "title": "`identity` — a helper of the language (functions)",
+   "summary": "The value it is given.",
+   "body": [
+    "```nuclear",
+    "identity<T>(value: T) T",
+    "```",
+    "",
+    "The value it is given.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- identity: `\"${identity(5)} ${identity(\"a\")}\"` gives `5 a`"
+   ],
+   "keys": [
+    "identity",
+    "lodash identity",
+    "helper identity"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "identity",
+    "area": "functions",
+    "signature": "identity<T>(value: T) T",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-inRange",
+   "type": "library",
+   "title": "`inRange` — a helper of the language (numbers)",
+   "summary": "Whether `n` is from `start` up to `end` (not included); the bounds may come in any order.",
+   "body": [
+    "```nuclear",
+    "inRange(n: double, start: double, end: double) boolean",
+    "```",
+    "",
+    "Whether `n` is from `start` up to `end` (not included); the bounds may come in any order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- inRange: `\"${inRange(3, 2, 4)} ${inRange(4, 0, 8)} ${inRange(4, 0, 2)} ${inRange(2, 0, 2)} ${inRange(1.2, 0, 2)}\"` gives `true true false false true`",
+    "- inRange with swapped bounds: `\"${inRange(-3, -2, -6)} ${inRange(5.2, 4, 0)}\"` gives `true false`"
+   ],
+   "keys": [
+    "inrange",
+    "lodash inrange",
+    "helper inrange"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "inRange",
+    "area": "numbers",
+    "signature": "inRange(n: double, start: double, end: double) boolean",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-initial",
+   "type": "library",
+   "title": "`initial` — a helper of the language (lists)",
+   "summary": "Every value but the last.",
+   "body": [
+    "```nuclear",
+    "initial<T>(xs: T[]) T[]",
+    "```",
+    "",
+    "Every value but the last.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- initial: `ints(initial([1, 2, 3]))` gives `1,2`",
+    "- initial of nothing: `ints(initial([]))` gives ``"
+   ],
+   "keys": [
+    "initial",
+    "lodash initial",
+    "helper initial"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "initial",
+    "area": "lists",
+    "signature": "initial<T>(xs: T[]) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-intersection",
+   "type": "library",
+   "title": "`intersection` — a helper of the language (lists)",
+   "summary": "The values that are in both lists, once each, in the order of `xs`.",
+   "body": [
+    "```nuclear",
+    "intersection<T>(xs: T[], ys: T[]) T[]",
+    "```",
+    "",
+    "The values that are in both lists, once each, in the order of `xs`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- intersection: `ints(intersection([2, 1], [2, 3]))` gives `2`",
+    "- intersection once each: `ints(intersection([1, 1, 2, 3], [3, 1, 1]))` gives `1,3`"
+   ],
+   "keys": [
+    "intersection",
+    "lodash intersection",
+    "helper intersection"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "intersection",
+    "area": "lists",
+    "signature": "intersection<T>(xs: T[], ys: T[]) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-intersectionBy",
+   "type": "library",
+   "title": "`intersectionBy` — a helper of the language (lists)",
+   "summary": "`intersection` comparing what `key` gives for each value.",
+   "body": [
+    "```nuclear",
+    "intersectionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "```",
+    "",
+    "`intersection` comparing what `key` gives for each value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- intersectionBy: `names(intersectionBy(items, [Item(7, \"c\"), Item(8, \"a\")], (i) => i.name))` gives `a,c`"
+   ],
+   "keys": [
+    "intersectionby",
+    "lodash intersectionby",
+    "helper intersectionby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "intersectionBy",
+    "area": "lists",
+    "signature": "intersectionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-intersectionWith",
+   "type": "library",
+   "title": "`intersectionWith` — a helper of the language (lists)",
+   "summary": "`intersection` with `same` deciding whether two values are equal.",
+   "body": [
+    "```nuclear",
+    "intersectionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "```",
+    "",
+    "`intersection` with `same` deciding whether two values are equal.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- intersectionWith: `names(intersectionWith(items, [Item(3, \"z\")], (a, b) => a.id == b.id))` gives `c`"
+   ],
+   "keys": [
+    "intersectionwith",
+    "lodash intersectionwith",
+    "helper intersectionwith"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "intersectionWith",
+    "area": "lists",
+    "signature": "intersectionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-invert",
+   "type": "library",
+   "title": "`invert` — a helper of the language (maps and data)",
+   "summary": "Each value as the key of its key; a repeated value keeps its last key.",
+   "body": [
+    "```nuclear",
+    "invert(m: <string, string>) <string, string>",
+    "```",
+    "",
+    "Each value as the key of its key; a repeated value keeps its last key.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "invert",
+    "lodash invert",
+    "helper invert"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "invert",
+    "area": "maps and data",
+    "signature": "invert(m: <string, string>) <string, string>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-invertBy",
+   "type": "library",
+   "title": "`invertBy` — a helper of the language (maps and data)",
+   "summary": "Each value as the key of the keys that had it.",
+   "body": [
+    "```nuclear",
+    "invertBy(m: <string, string>) <string, string[]>",
+    "```",
+    "",
+    "Each value as the key of the keys that had it.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "invertby",
+    "lodash invertby",
+    "helper invertby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "invertBy",
+    "area": "maps and data",
+    "signature": "invertBy(m: <string, string>) <string, string[]>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-kebabCase",
+   "type": "library",
+   "title": "`kebabCase` — a helper of the language (texts)",
+   "summary": "`foo-bar`: the words in lower case joined by dashes.",
+   "body": [
+    "```nuclear",
+    "kebabCase(text: string) string",
+    "```",
+    "",
+    "`foo-bar`: the words in lower case joined by dashes.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- kebabCase ${text}: `kebabCase(text)` gives `foo-bar`"
+   ],
+   "keys": [
+    "kebabcase",
+    "lodash kebabcase",
+    "helper kebabcase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "kebabCase",
+    "area": "texts",
+    "signature": "kebabCase(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-keyBy",
+   "type": "library",
+   "title": "`keyBy` — a helper of the language (collections)",
+   "summary": "The last value of each key.",
+   "body": [
+    "```nuclear",
+    "keyBy<T>(xs: T[], key: (x: T) => string) <string, T>",
+    "```",
+    "",
+    "The last value of each key.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "keyby",
+    "lodash keyby",
+    "helper keyby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "keyBy",
+    "area": "collections",
+    "signature": "keyBy<T>(xs: T[], key: (x: T) => string) <string, T>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-lowerCase",
+   "type": "library",
+   "title": "`lowerCase` — a helper of the language (texts)",
+   "summary": "`foo bar`: the words in lower case joined by spaces.",
+   "body": [
+    "```nuclear",
+    "lowerCase(text: string) string",
+    "```",
+    "",
+    "`foo bar`: the words in lower case joined by spaces.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- lowerCase ${text}: `lowerCase(text)` gives `foo bar`"
+   ],
+   "keys": [
+    "lowercase",
+    "lodash lowercase",
+    "helper lowercase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "lowerCase",
+    "area": "texts",
+    "signature": "lowerCase(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-lowerFirst",
+   "type": "library",
+   "title": "`lowerFirst` — a helper of the language (texts)",
+   "summary": "The first character in lower case; the rest as it is.",
+   "body": [
+    "```nuclear",
+    "lowerFirst(text: string) string",
+    "```",
+    "",
+    "The first character in lower case; the rest as it is.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- lowerFirst: `\"${lowerFirst(\"Fred\")} ${lowerFirst(\"FRED\")} [${lowerFirst(\"\")}]\"` gives `fred fRED []`"
+   ],
+   "keys": [
+    "lowerfirst",
+    "lodash lowerfirst",
+    "helper lowerfirst"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "lowerFirst",
+    "area": "texts",
+    "signature": "lowerFirst(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-mapKeys",
+   "type": "library",
+   "title": "`mapKeys` — a helper of the language (maps and data)",
+   "summary": "The same values under the key `f` gives for each.",
+   "body": [
+    "```nuclear",
+    "mapKeys<V>(m: <string, V>, f: (value: V, key: string) => string) <string, V>",
+    "```",
+    "",
+    "The same values under the key `f` gives for each.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- mapKeys: `entries(mapKeys(abc, (v, k) => \"${k}${v}\"))` gives `a1=1,b2=2,c3=3`"
+   ],
+   "keys": [
+    "mapkeys",
+    "lodash mapkeys",
+    "helper mapkeys"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "mapKeys",
+    "area": "maps and data",
+    "signature": "mapKeys<V>(m: <string, V>, f: (value: V, key: string) => string) <string, V>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-mapValues",
+   "type": "library",
+   "title": "`mapValues` — a helper of the language (maps and data)",
+   "summary": "The same keys with what `f` gives for each value.",
+   "body": [
+    "```nuclear",
+    "mapValues<V, R>(m: <string, V>, f: (value: V, key: string) => R) <string, R>",
+    "```",
+    "",
+    "The same keys with what `f` gives for each value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- mapValues: `entries(mapValues(abc, (v, k) => v * 10))` gives `a=10,b=20,c=30`"
+   ],
+   "keys": [
+    "mapvalues",
+    "lodash mapvalues",
+    "helper mapvalues"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "mapValues",
+    "area": "maps and data",
+    "signature": "mapValues<V, R>(m: <string, V>, f: (value: V, key: string) => R) <string, R>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-maxBy",
+   "type": "library",
+   "title": "`maxBy` — a helper of the language (numbers)",
+   "summary": "The first value for which `f` gives the most; null for an empty list.",
+   "body": [
+    "```nuclear",
+    "maxBy<T>(xs: T[], f: (x: T) => double) T?",
+    "```",
+    "",
+    "The first value for which `f` gives the most; null for an empty list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- maxBy: `\"${maxBy(users, (u) => u.age.toDouble())?.name}\"` gives `fred`",
+    "- maxBy takes the first of equals: `\"${maxBy(users, (u) => u.age == 36 ? 1.0 : 0.0)?.name}\"` gives `barney`",
+    "- maxBy of nothing: `\"${maxBy(empty, (n) => n.toDouble())} ${minBy(empty, (n) => n.toDouble())}\"` gives `null null`",
+    "- maxBy of negatives: `\"${maxBy([-3, -1, -2], (n) => n.toDouble())}\"` gives `-1`"
+   ],
+   "keys": [
+    "maxby",
+    "lodash maxby",
+    "helper maxby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "maxBy",
+    "area": "numbers",
+    "signature": "maxBy<T>(xs: T[], f: (x: T) => double) T?",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-mean",
+   "type": "library",
+   "title": "`mean` — a helper of the language (numbers)",
+   "summary": "The average; null for an empty list.",
+   "body": [
+    "```nuclear",
+    "mean(xs: double[]) double?",
+    "```",
+    "",
+    "The average; null for an empty list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- mean: `\"${mean([4, 2, 8, 6])}\"` gives `5.0`",
+    "- mean of nothing: `\"${mean([])}\"` gives `null`"
+   ],
+   "keys": [
+    "mean",
+    "lodash mean",
+    "helper mean"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "mean",
+    "area": "numbers",
+    "signature": "mean(xs: double[]) double?",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-meanBy",
+   "type": "library",
+   "title": "`meanBy` — a helper of the language (numbers)",
+   "summary": "The average of what `f` gives; null for an empty list.",
+   "body": [
+    "```nuclear",
+    "meanBy<T>(xs: T[], f: (x: T) => double) double?",
+    "```",
+    "",
+    "The average of what `f` gives; null for an empty list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- meanBy: `\"${meanBy(users, (u) => u.age.toDouble())}\"` gives `28.25`"
+   ],
+   "keys": [
+    "meanby",
+    "lodash meanby",
+    "helper meanby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "meanBy",
+    "area": "numbers",
+    "signature": "meanBy<T>(xs: T[], f: (x: T) => double) double?",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-memoize",
+   "type": "library",
+   "title": "`memoize` — a helper of the language (functions)",
+   "summary": "A function that remembers what `f` gave for each key (`key` names an argument: by default its text).",
+   "body": [
+    "```nuclear",
+    "memoize<A, R>(f: (x: A) => R, key?: (x: A) => string)(x: A) => R",
+    "```",
+    "",
+    "A function that remembers what `f` gave for each key (`key` names an argument: by default its text).",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "memoize",
+    "lodash memoize",
+    "helper memoize"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "memoize",
+    "area": "functions",
+    "signature": "memoize<A, R>(f: (x: A) => R, key?: (x: A) => string)(x: A) => R",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-merge",
+   "type": "library",
+   "title": "`merge` — a helper of the language (maps and data)",
+   "summary": "`source` merged into `target`, in place: a map inside both is merged, anything else of `source` replaces.",
+   "body": [
+    "```nuclear",
+    "merge(target: <string, any>, source: <string, any>) <string, any>",
+    "```",
+    "",
+    "`source` merged into `target`, in place: a map inside both is merged, anything else of `source` replaces.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "merge",
+    "lodash merge",
+    "helper merge"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "merge",
+    "area": "maps and data",
+    "signature": "merge(target: <string, any>, source: <string, any>) <string, any>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-minBy",
+   "type": "library",
+   "title": "`minBy` — a helper of the language (numbers)",
+   "summary": "The first value for which `f` gives the least; null for an empty list.",
+   "body": [
+    "```nuclear",
+    "minBy<T>(xs: T[], f: (x: T) => double) T?",
+    "```",
+    "",
+    "The first value for which `f` gives the least; null for an empty list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- minBy: `\"${minBy(users, (u) => u.age.toDouble())?.name}\"` gives `pebbles`",
+    "- maxBy of nothing: `\"${maxBy(empty, (n) => n.toDouble())} ${minBy(empty, (n) => n.toDouble())}\"` gives `null null`"
+   ],
+   "keys": [
+    "minby",
+    "lodash minby",
+    "helper minby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "minBy",
+    "area": "numbers",
+    "signature": "minBy<T>(xs: T[], f: (x: T) => double) T?",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-negate",
+   "type": "library",
+   "title": "`negate` — a helper of the language (functions)",
+   "summary": "A function that gives the opposite of `test`.",
+   "body": [
+    "```nuclear",
+    "negate<T>(test: (x: T) => boolean)(x: T) => boolean",
+    "```",
+    "",
+    "A function that gives the opposite of `test`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- negate: `ints([1, 2, 3, 4, 5, 6].filter(negate(isEven)))` gives `1,3,5`"
+   ],
+   "keys": [
+    "negate",
+    "lodash negate",
+    "helper negate"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "negate",
+    "area": "functions",
+    "signature": "negate<T>(test: (x: T) => boolean)(x: T) => boolean",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-nth",
+   "type": "library",
+   "title": "`nth` — a helper of the language (lists)",
+   "summary": "The value at `n`; a negative `n` counts from the end. Null when out of the list.",
+   "body": [
+    "```nuclear",
+    "nth<T>(xs: T[], n: int) T?",
+    "```",
+    "",
+    "The value at `n`; a negative `n` counts from the end. Null when out of the list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- nth: `\"${nth([10, 20, 30], 1)}\"` gives `20`",
+    "- nth from the end: `\"${nth([10, 20, 30], -2)}\"` gives `20`",
+    "- nth out of the list: `\"${nth([10, 20, 30], 3)} ${nth([10, 20, 30], -4)}\"` gives `null null`"
+   ],
+   "keys": [
+    "nth",
+    "lodash nth",
+    "helper nth"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "nth",
+    "area": "lists",
+    "signature": "nth<T>(xs: T[], n: int) T?",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-omit",
+   "type": "library",
+   "title": "`omit` — a helper of the language (maps and data)",
+   "summary": "The entries whose key is not in `keys`.",
+   "body": [
+    "```nuclear",
+    "omit<V>(m: <string, V>, keys: string[]) <string, V>",
+    "```",
+    "",
+    "The entries whose key is not in `keys`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- omit: `entries(omit(abc, [\"a\", \"c\"]))` gives `b=2`",
+    "- omit nothing: `entries(omit(abc, []))` gives `a=1,b=2,c=3`"
+   ],
+   "keys": [
+    "omit",
+    "lodash omit",
+    "helper omit"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "omit",
+    "area": "maps and data",
+    "signature": "omit<V>(m: <string, V>, keys: string[]) <string, V>",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-omitBy",
+   "type": "library",
+   "title": "`omitBy` — a helper of the language (maps and data)",
+   "summary": "The entries for which `test` is not true.",
+   "body": [
+    "```nuclear",
+    "omitBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>",
+    "```",
+    "",
+    "The entries for which `test` is not true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- omitBy: `entries(omitBy(abc, (v, k) => v > 1))` gives `a=1`"
+   ],
+   "keys": [
+    "omitby",
+    "lodash omitby",
+    "helper omitby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "omitBy",
+    "area": "maps and data",
+    "signature": "omitBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-once",
+   "type": "library",
+   "title": "`once` — a helper of the language (functions)",
+   "summary": "A function that calls `f` once and gives that first result ever after.",
+   "body": [
+    "```nuclear",
+    "once<T>(f: () => T)() => T",
+    "```",
+    "",
+    "A function that calls `f` once and gives that first result ever after.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "once",
+    "lodash once",
+    "helper once"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "once",
+    "area": "functions",
+    "signature": "once<T>(f: () => T)() => T",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-orderBy",
+   "type": "library",
+   "title": "`orderBy` — a helper of the language (collections)",
+   "summary": "The list sorted by several keys, each ascending or descending (`descending[i]` is for `keys[i]`); values with the same keys keep their order.",
+   "body": [
+    "```nuclear",
+    "orderBy<T>(xs: T[], keys: ((x: T) => double)[], descending: boolean[] = []) T[]",
+    "```",
+    "",
+    "The list sorted by several keys, each ascending or descending (`descending[i]` is for `keys[i]`); values with the same keys keep their order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- orderBy: `people(orderBy(users, [(u) => u.age.toDouble()]))` gives `pebbles,barney,wilma,fred`",
+    "- orderBy descending: `people(orderBy(users, [(u) => u.age.toDouble()], [true]))` gives `fred,barney,wilma,pebbles`"
+   ],
+   "keys": [
+    "orderby",
+    "lodash orderby",
+    "helper orderby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "orderBy",
+    "area": "collections",
+    "signature": "orderBy<T>(xs: T[], keys: ((x: T) => double)[], descending: boolean[] = []) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-pad",
+   "type": "library",
+   "title": "`pad` — a helper of the language (texts)",
+   "summary": "The text with `fill` on both sides up to `length` characters; the extra character goes to the right.",
+   "body": [
+    "```nuclear",
+    "pad(text: string, length: int, fill: string = \" \") string",
+    "```",
+    "",
+    "The text with `fill` on both sides up to `length` characters; the extra character goes to the right.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- pad: `\"[${pad(\"abc\", 8)}]\"` gives `[  abc   ]`",
+    "- pad with a fill: `pad(\"abc\", 8, \"_-\")` gives `_-abc_-_`",
+    "- pad a long text: `pad(\"abc\", 3)` gives `abc`",
+    "- pad with nothing: `pad(\"abc\", 6, \"\")` gives `abc`"
+   ],
+   "keys": [
+    "pad",
+    "lodash pad",
+    "helper pad"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "pad",
+    "area": "texts",
+    "signature": "pad(text: string, length: int, fill: string = \" \") string",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-partial",
+   "type": "library",
+   "title": "`partial` — a helper of the language (functions)",
+   "summary": "`f` with its first parameter given.",
+   "body": [
+    "```nuclear",
+    "partial<A, B, R>(f: (a: A, b: B) => R, first: A)(b: B) => R",
+    "```",
+    "",
+    "`f` with its first parameter given.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- partial: `\"${partial(minus, 10)(3)}\"` gives `7`"
+   ],
+   "keys": [
+    "partial",
+    "lodash partial",
+    "helper partial"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "partial",
+    "area": "functions",
+    "signature": "partial<A, B, R>(f: (a: A, b: B) => R, first: A)(b: B) => R",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-partialRight",
+   "type": "library",
+   "title": "`partialRight` — a helper of the language (functions)",
+   "summary": "`f` with its last parameter given.",
+   "body": [
+    "```nuclear",
+    "partialRight<A, B, R>(f: (a: A, b: B) => R, last: B)(a: A) => R",
+    "```",
+    "",
+    "`f` with its last parameter given.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- partialRight: `\"${partialRight(minus, 10)(3)}\"` gives `-7`"
+   ],
+   "keys": [
+    "partialright",
+    "lodash partialright",
+    "helper partialright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "partialRight",
+    "area": "functions",
+    "signature": "partialRight<A, B, R>(f: (a: A, b: B) => R, last: B)(a: A) => R",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-partition",
+   "type": "library",
+   "title": "`partition` — a helper of the language (collections)",
+   "summary": "The values for which `test` is true, then those for which it is not.",
+   "body": [
+    "```nuclear",
+    "partition<T>(xs: T[], test: (x: T) => boolean) Pair<T[], T[]>",
+    "```",
+    "",
+    "The values for which `test` is true, then those for which it is not.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "partition",
+    "lodash partition",
+    "helper partition"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "partition",
+    "area": "collections",
+    "signature": "partition<T>(xs: T[], test: (x: T) => boolean) Pair<T[], T[]>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-pick",
+   "type": "library",
+   "title": "`pick` — a helper of the language (maps and data)",
+   "summary": "The entries whose key is in `keys`.",
+   "body": [
+    "```nuclear",
+    "pick<V>(m: <string, V>, keys: string[]) <string, V>",
+    "```",
+    "",
+    "The entries whose key is in `keys`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- pick: `entries(pick(abc, [\"a\", \"c\"]))` gives `a=1,c=3`",
+    "- pick a missing key: `entries(pick(abc, [\"z\", \"b\"]))` gives `b=2`",
+    "- pick keeps the order asked: `entries(pick(abc, [\"c\", \"a\"]))` gives `c=3,a=1`"
+   ],
+   "keys": [
+    "pick",
+    "lodash pick",
+    "helper pick"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "pick",
+    "area": "maps and data",
+    "signature": "pick<V>(m: <string, V>, keys: string[]) <string, V>",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-pickBy",
+   "type": "library",
+   "title": "`pickBy` — a helper of the language (maps and data)",
+   "summary": "The entries for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "pickBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>",
+    "```",
+    "",
+    "The entries for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- pickBy: `entries(pickBy(abc, (v, k) => v > 1))` gives `b=2,c=3`",
+    "- pickBy the key: `entries(pickBy(abc, (v, k) => k != \"b\"))` gives `a=1,c=3`"
+   ],
+   "keys": [
+    "pickby",
+    "lodash pickby",
+    "helper pickby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "pickBy",
+    "area": "maps and data",
+    "signature": "pickBy<V>(m: <string, V>, test: (value: V, key: string) => boolean) <string, V>",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-pull",
+   "type": "library",
+   "title": "`pull` — a helper of the language (lists)",
+   "summary": "Removes the given values from the list, in place.",
+   "body": [
+    "```nuclear",
+    "pull<T>(xs: T[], values: T[]) T[]",
+    "```",
+    "",
+    "Removes the given values from the list, in place.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- pull returns the list: `ints(pull(pulled, [2, 3]))` gives `1,1`"
+   ],
+   "keys": [
+    "pull",
+    "lodash pull",
+    "helper pull"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "pull",
+    "area": "lists",
+    "signature": "pull<T>(xs: T[], values: T[]) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-pullAt",
+   "type": "library",
+   "title": "`pullAt` — a helper of the language (lists)",
+   "summary": "Removes the values at `indexes` from the list, in place, and gives them in the order asked.",
+   "body": [
+    "```nuclear",
+    "pullAt<T>(xs: T[], indexes: int[]) T[]",
+    "```",
+    "",
+    "Removes the values at `indexes` from the list, in place, and gives them in the order asked.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- pullAt: `ints(pullAt(at, [1, 3]))` gives `10,20`",
+    "- pullAt keeps the order asked: `ints(pullAt(order, [3, 0]))` gives `20,5`",
+    "- pullAt out of the list: `ints(pullAt([1, 2], [5, -1]))` gives ``"
+   ],
+   "keys": [
+    "pullat",
+    "lodash pullat",
+    "helper pullat"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "pullAt",
+    "area": "lists",
+    "signature": "pullAt<T>(xs: T[], indexes: int[]) T[]",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-randomInt",
+   "type": "library",
+   "title": "`randomInt` — a helper of the language (numbers)",
+   "summary": "A whole number from `lower` to `upper`, both included, chosen by `random` (a number in [0, 1)).",
+   "body": [
+    "```nuclear",
+    "randomInt(lower: int, upper: int, random: () => double) int",
+    "```",
+    "",
+    "A whole number from `lower` to `upper`, both included, chosen by `random` (a number in [0, 1)).",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- randomInt: `\"${randomInt(1, 6, Dice([0.0]).roll)} ${randomInt(1, 6, Dice([0.999]).roll)} ${randomInt(6, 1, Dice([0.5]).roll)}\"` gives `1 6 4`"
+   ],
+   "keys": [
+    "randomint",
+    "lodash randomint",
+    "helper randomint"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "randomInt",
+    "area": "numbers",
+    "signature": "randomInt(lower: int, upper: int, random: () => double) int",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-range",
+   "type": "library",
+   "title": "`range` — a helper of the language (numbers)",
+   "summary": "The numbers from `start` up to `end` (not included) by `step`; a negative step counts down.",
+   "body": [
+    "```nuclear",
+    "range(start: int, end: int, step: int = 1) int[]",
+    "```",
+    "",
+    "The numbers from `start` up to `end` (not included) by `step`; a negative step counts down.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- range: `ints(range(0, 4))` gives `0,1,2,3`",
+    "- range by a step: `ints(range(0, 20, 5))` gives `0,5,10,15`",
+    "- range down: `ints(range(0, -4, -1))` gives `0,-1,-2,-3`",
+    "- range of nothing: `\"${range(0, 0).length} ${range(1, 4, 0).length} ${range(4, 0).length}\"` gives `0 0 0`"
+   ],
+   "keys": [
+    "range",
+    "lodash range",
+    "helper range"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "range",
+    "area": "numbers",
+    "signature": "range(start: int, end: int, step: int = 1) int[]",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-rangeRight",
+   "type": "library",
+   "title": "`rangeRight` — a helper of the language (numbers)",
+   "summary": "`range` from its last number to its first.",
+   "body": [
+    "```nuclear",
+    "rangeRight(start: int, end: int, step: int = 1) int[]",
+    "```",
+    "",
+    "`range` from its last number to its first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- rangeRight: `ints(rangeRight(0, 4))` gives `3,2,1,0`"
+   ],
+   "keys": [
+    "rangeright",
+    "lodash rangeright",
+    "helper rangeright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "rangeRight",
+    "area": "numbers",
+    "signature": "rangeRight(start: int, end: int, step: int = 1) int[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-reduceRight",
+   "type": "library",
+   "title": "`reduceRight` — a helper of the language (collections)",
+   "summary": "`reduce` from the last value to the first.",
+   "body": [
+    "```nuclear",
+    "reduceRight<T, R>(xs: T[], initial: R, f: (acc: R, x: T) => R) R",
+    "```",
+    "",
+    "`reduce` from the last value to the first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- reduceRight: `reduceRight([[0, 1], [2, 3], [4, 5]], \"\", (acc, x) => acc + x.join(\"\"))` gives `452301`",
+    "- reduceRight of nothing: `\"${reduceRight(empty, 7, (acc, x) => acc + x)}\"` gives `7`"
+   ],
+   "keys": [
+    "reduceright",
+    "lodash reduceright",
+    "helper reduceright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "reduceRight",
+    "area": "collections",
+    "signature": "reduceRight<T, R>(xs: T[], initial: R, f: (acc: R, x: T) => R) R",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-reject",
+   "type": "library",
+   "title": "`reject` — a helper of the language (collections)",
+   "summary": "The values for which `test` is not true.",
+   "body": [
+    "```nuclear",
+    "reject<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "The values for which `test` is not true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- reject: `people(reject(users, (u) => u.active))` gives `barney,pebbles`"
+   ],
+   "keys": [
+    "reject",
+    "lodash reject",
+    "helper reject"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "reject",
+    "area": "collections",
+    "signature": "reject<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-remove",
+   "type": "library",
+   "title": "`remove` — a helper of the language (lists)",
+   "summary": "Removes the values for which `test` is true from the list, in place, and gives them.",
+   "body": [
+    "```nuclear",
+    "remove<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "Removes the values for which `test` is true from the list, in place, and gives them.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- remove: `ints(remove(evens, (x) => x % 2 == 0))` gives `2,4`"
+   ],
+   "keys": [
+    "remove",
+    "lodash remove",
+    "helper remove"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "remove",
+    "area": "lists",
+    "signature": "remove<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-roundTo",
+   "type": "library",
+   "title": "`roundTo` — a helper of the language (numbers)",
+   "summary": "`n` rounded to `precision` decimals; a negative precision rounds to tens, hundreds...",
+   "body": [
+    "```nuclear",
+    "roundTo(n: double, precision: int = 0) double",
+    "```",
+    "",
+    "`n` rounded to `precision` decimals; a negative precision rounds to tens, hundreds...",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- roundTo: `\"${roundTo(4.006)} ${roundTo(4.006, 2)} ${roundTo(4060, -2)}\"` gives `4.0 4.01 4100.0`"
+   ],
+   "keys": [
+    "roundto",
+    "lodash roundto",
+    "helper roundto"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "roundTo",
+    "area": "numbers",
+    "signature": "roundTo(n: double, precision: int = 0) double",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sample",
+   "type": "library",
+   "title": "`sample` — a helper of the language (collections)",
+   "summary": "One value of the list, chosen by `random` (a number in [0, 1)); null for an empty list.",
+   "body": [
+    "```nuclear",
+    "sample<T>(xs: T[], random: () => double) T?",
+    "```",
+    "",
+    "One value of the list, chosen by `random` (a number in [0, 1)); null for an empty list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sample: `\"${sample([10, 20, 30, 40], dice.roll)} ${sample([10, 20, 30, 40], dice.roll)} ${sample([10, 20, 30, 40], dice.roll)}\"` gives `10 30 40`",
+    "- sample of nothing: `\"${sample(empty, dice.roll)}\"` gives `null`"
+   ],
+   "keys": [
+    "sample",
+    "lodash sample",
+    "helper sample"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sample",
+    "area": "collections",
+    "signature": "sample<T>(xs: T[], random: () => double) T?",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-sampleSize",
+   "type": "library",
+   "title": "`sampleSize` — a helper of the language (collections)",
+   "summary": "`n` different values of the list in a random order.",
+   "body": [
+    "```nuclear",
+    "sampleSize<T>(xs: T[], n: int, random: () => double) T[]",
+    "```",
+    "",
+    "`n` different values of the list in a random order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sampleSize: `\"${sampleSize([1, 2, 3], 2, dice.roll).length} ${sampleSize([1, 2, 3], 9, dice.roll).length} ${sampleSize([1, 2, 3], 0, dice.roll).length}\"` gives `2 3 0`"
+   ],
+   "keys": [
+    "samplesize",
+    "lodash samplesize",
+    "helper samplesize"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sampleSize",
+    "area": "collections",
+    "signature": "sampleSize<T>(xs: T[], n: int, random: () => double) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-set",
+   "type": "library",
+   "title": "`set` — a helper of the language (maps and data)",
+   "summary": "Sets the value at `path` inside a map, making the maps the path needs, in place.",
+   "body": [
+    "```nuclear",
+    "set(data: <string, any>, path: string, value: any) <string, any>",
+    "```",
+    "",
+    "Sets the value at `path` inside a map, making the maps the path needs, in place.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- set returns the map: `\"${get(set(made, \"k\", 1), \"k\")}\"` gives `1`"
+   ],
+   "keys": [
+    "set",
+    "lodash set",
+    "helper set"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "set",
+    "area": "maps and data",
+    "signature": "set(data: <string, any>, path: string, value: any) <string, any>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-shuffle",
+   "type": "library",
+   "title": "`shuffle` — a helper of the language (collections)",
+   "summary": "The list in a random order (Fisher-Yates), each choice made by `random`.",
+   "body": [
+    "```nuclear",
+    "shuffle<T>(xs: T[], random: () => double) T[]",
+    "```",
+    "",
+    "The list in a random order (Fisher-Yates), each choice made by `random`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "shuffle",
+    "lodash shuffle",
+    "helper shuffle"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/collection.nuc",
+    "nuclear-synapsis-framework/lodash/test/collection_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "shuffle",
+    "area": "collections",
+    "signature": "shuffle<T>(xs: T[], random: () => double) T[]",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-snakeCase",
+   "type": "library",
+   "title": "`snakeCase` — a helper of the language (texts)",
+   "summary": "`foo_bar`: the words in lower case joined by underscores.",
+   "body": [
+    "```nuclear",
+    "snakeCase(text: string) string",
+    "```",
+    "",
+    "`foo_bar`: the words in lower case joined by underscores.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- snakeCase ${text}: `snakeCase(text)` gives `foo_bar`"
+   ],
+   "keys": [
+    "snakecase",
+    "lodash snakecase",
+    "helper snakecase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "snakeCase",
+    "area": "texts",
+    "signature": "snakeCase(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sortedIndex",
+   "type": "library",
+   "title": "`sortedIndex` — a helper of the language (lists)",
+   "summary": "The lowest index at which `value` keeps a sorted list of numbers sorted.",
+   "body": [
+    "```nuclear",
+    "sortedIndex(xs: double[], value: double) int",
+    "```",
+    "",
+    "The lowest index at which `value` keeps a sorted list of numbers sorted.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sortedIndex: `\"${sortedIndex([30, 50], 40)}\"` gives `1`",
+    "- sortedIndex of an equal value: `\"${sortedIndex([4, 5, 5, 5, 6], 5)}\"` gives `1`",
+    "- sortedIndex past the end: `\"${sortedIndex([1, 2], 9)} ${sortedIndex([], 9)}\"` gives `2 0`"
+   ],
+   "keys": [
+    "sortedindex",
+    "lodash sortedindex",
+    "helper sortedindex"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sortedIndex",
+    "area": "lists",
+    "signature": "sortedIndex(xs: double[], value: double) int",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-sortedIndexBy",
+   "type": "library",
+   "title": "`sortedIndexBy` — a helper of the language (lists)",
+   "summary": "`sortedIndex` for a list sorted by what `key` gives.",
+   "body": [
+    "```nuclear",
+    "sortedIndexBy<T>(xs: T[], value: T, key: (x: T) => double) int",
+    "```",
+    "",
+    "`sortedIndex` for a list sorted by what `key` gives.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sortedIndexBy: `\"${sortedIndexBy([Item(4, \"a\"), Item(8, \"b\")], Item(5, \"x\"), (i) => i.id.toDouble())}\"` gives `1`"
+   ],
+   "keys": [
+    "sortedindexby",
+    "lodash sortedindexby",
+    "helper sortedindexby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sortedIndexBy",
+    "area": "lists",
+    "signature": "sortedIndexBy<T>(xs: T[], value: T, key: (x: T) => double) int",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sortedIndexOf",
+   "type": "library",
+   "title": "`sortedIndexOf` — a helper of the language (lists)",
+   "summary": "The index of `value` in a sorted list of numbers, by binary search, or -1.",
+   "body": [
+    "```nuclear",
+    "sortedIndexOf(xs: double[], value: double) int",
+    "```",
+    "",
+    "The index of `value` in a sorted list of numbers, by binary search, or -1.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sortedIndexOf: `\"${sortedIndexOf([4, 5, 5, 5, 6], 5)} ${sortedIndexOf([4, 6], 5)}\"` gives `1 -1`"
+   ],
+   "keys": [
+    "sortedindexof",
+    "lodash sortedindexof",
+    "helper sortedindexof"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sortedIndexOf",
+    "area": "lists",
+    "signature": "sortedIndexOf(xs: double[], value: double) int",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sortedLastIndex",
+   "type": "library",
+   "title": "`sortedLastIndex` — a helper of the language (lists)",
+   "summary": "The highest index at which `value` keeps a sorted list of numbers sorted.",
+   "body": [
+    "```nuclear",
+    "sortedLastIndex(xs: double[], value: double) int",
+    "```",
+    "",
+    "The highest index at which `value` keeps a sorted list of numbers sorted.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sortedLastIndex: `\"${sortedLastIndex([4, 5, 5, 5, 6], 5)}\"` gives `4`"
+   ],
+   "keys": [
+    "sortedlastindex",
+    "lodash sortedlastindex",
+    "helper sortedlastindex"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sortedLastIndex",
+    "area": "lists",
+    "signature": "sortedLastIndex(xs: double[], value: double) int",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sortedUniq",
+   "type": "library",
+   "title": "`sortedUniq` — a helper of the language (lists)",
+   "summary": "A sorted list without its repeated values.",
+   "body": [
+    "```nuclear",
+    "sortedUniq<T>(xs: T[]) T[]",
+    "```",
+    "",
+    "A sorted list without its repeated values.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sortedUniq: `ints(sortedUniq([1, 1, 2, 2, 2, 3]))` gives `1,2,3`"
+   ],
+   "keys": [
+    "sorteduniq",
+    "lodash sorteduniq",
+    "helper sorteduniq"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sortedUniq",
+    "area": "lists",
+    "signature": "sortedUniq<T>(xs: T[]) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-startCase",
+   "type": "library",
+   "title": "`startCase` — a helper of the language (texts)",
+   "summary": "`Foo Bar`: the words joined by spaces, each with its first character in upper case.",
+   "body": [
+    "```nuclear",
+    "startCase(text: string) string",
+    "```",
+    "",
+    "`Foo Bar`: the words joined by spaces, each with its first character in upper case.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- startCase: `\"${startCase(\"--foo-bar--\")}|${startCase(\"fooBar\")}|${startCase(\"__FOO_BAR__\")}\"` gives `Foo Bar|Foo Bar|FOO BAR`"
+   ],
+   "keys": [
+    "startcase",
+    "lodash startcase",
+    "helper startcase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "startCase",
+    "area": "texts",
+    "signature": "startCase(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-sumBy",
+   "type": "library",
+   "title": "`sumBy` — a helper of the language (numbers)",
+   "summary": "The total of what `f` gives.",
+   "body": [
+    "```nuclear",
+    "sumBy<T>(xs: T[], f: (x: T) => double) double",
+    "```",
+    "",
+    "The total of what `f` gives.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- sumBy: `\"${sumBy(users, (u) => u.age.toDouble())}\"` gives `113.0`",
+    "- sumBy of nothing: `\"${sumBy(empty, (n) => n.toDouble())}\"` gives `0.0`"
+   ],
+   "keys": [
+    "sumby",
+    "lodash sumby",
+    "helper sumby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/math.nuc",
+    "nuclear-synapsis-framework/lodash/test/math_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "sumBy",
+    "area": "numbers",
+    "signature": "sumBy<T>(xs: T[], f: (x: T) => double) double",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-tail",
+   "type": "library",
+   "title": "`tail` — a helper of the language (lists)",
+   "summary": "Every value but the first.",
+   "body": [
+    "```nuclear",
+    "tail<T>(xs: T[]) T[]",
+    "```",
+    "",
+    "Every value but the first.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- tail: `ints(tail([1, 2, 3]))` gives `2,3`",
+    "- tail of nothing: `ints(tail([]))` gives ``"
+   ],
+   "keys": [
+    "tail",
+    "lodash tail",
+    "helper tail"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "tail",
+    "area": "lists",
+    "signature": "tail<T>(xs: T[]) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-takeRight",
+   "type": "library",
+   "title": "`takeRight` — a helper of the language (lists)",
+   "summary": "The last `n` values.",
+   "body": [
+    "```nuclear",
+    "takeRight<T>(xs: T[], n: int = 1) T[]",
+    "```",
+    "",
+    "The last `n` values.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- takeRight: `ints(takeRight([1, 2, 3]))` gives `3`",
+    "- takeRight two: `ints(takeRight([1, 2, 3], 2))` gives `2,3`",
+    "- takeRight more than the list: `ints(takeRight([1, 2, 3], 5))` gives `1,2,3`",
+    "- takeRight none: `ints(takeRight([1, 2, 3], 0))` gives ``"
+   ],
+   "keys": [
+    "takeright",
+    "lodash takeright",
+    "helper takeright"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "takeRight",
+    "area": "lists",
+    "signature": "takeRight<T>(xs: T[], n: int = 1) T[]",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-takeRightWhile",
+   "type": "library",
+   "title": "`takeRightWhile` — a helper of the language (lists)",
+   "summary": "The last values for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "takeRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "The last values for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- takeRightWhile: `ints(takeRightWhile([1, 2, 3, 4], (x) => x > 2))` gives `3,4`"
+   ],
+   "keys": [
+    "takerightwhile",
+    "lodash takerightwhile",
+    "helper takerightwhile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "takeRightWhile",
+    "area": "lists",
+    "signature": "takeRightWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-takeWhile",
+   "type": "library",
+   "title": "`takeWhile` — a helper of the language (lists)",
+   "summary": "The first values for which `test` is true.",
+   "body": [
+    "```nuclear",
+    "takeWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "```",
+    "",
+    "The first values for which `test` is true.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- takeWhile: `ints(takeWhile([1, 2, 3, 1], (x) => x < 3))` gives `1,2`"
+   ],
+   "keys": [
+    "takewhile",
+    "lodash takewhile",
+    "helper takewhile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "takeWhile",
+    "area": "lists",
+    "signature": "takeWhile<T>(xs: T[], test: (x: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-times",
+   "type": "library",
+   "title": "`times` — a helper of the language (functions)",
+   "summary": "What `f` gives for each number from 0 up to `n` (not included).",
+   "body": [
+    "```nuclear",
+    "times<T>(n: int, f: (index: int) => T) T[]",
+    "```",
+    "",
+    "What `f` gives for each number from 0 up to `n` (not included).",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- times: `ints(times(4, (i) => i * i))` gives `0,1,4,9`",
+    "- times of nothing: `\"${times(0, (i) => i).length}\"` gives `0`"
+   ],
+   "keys": [
+    "times",
+    "lodash times",
+    "helper times"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "times",
+    "area": "functions",
+    "signature": "times<T>(n: int, f: (index: int) => T) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-toPairs",
+   "type": "library",
+   "title": "`toPairs` — a helper of the language (maps and data)",
+   "summary": "The entries as pairs of key and value.",
+   "body": [
+    "```nuclear",
+    "toPairs<V>(m: <string, V>) Pair<string, V>[]",
+    "```",
+    "",
+    "The entries as pairs of key and value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "topairs",
+    "lodash topairs",
+    "helper topairs"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "toPairs",
+    "area": "maps and data",
+    "signature": "toPairs<V>(m: <string, V>) Pair<string, V>[]",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-trimChars",
+   "type": "library",
+   "title": "`trimChars` — a helper of the language (texts)",
+   "summary": "The text without the characters of `chars` at its start and its end.",
+   "body": [
+    "```nuclear",
+    "trimChars(text: string, chars: string) string",
+    "```",
+    "",
+    "The text without the characters of `chars` at its start and its end.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- trimChars: `trimChars(\"-_-abc-_-\", \"_-\")` gives `abc`",
+    "- trimChars of only those characters: `\"[${trimChars(\"----\", \"-\")}]\"` gives `[]`"
+   ],
+   "keys": [
+    "trimchars",
+    "lodash trimchars",
+    "helper trimchars"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "trimChars",
+    "area": "texts",
+    "signature": "trimChars(text: string, chars: string) string",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-trimCharsEnd",
+   "type": "library",
+   "title": "`trimCharsEnd` — a helper of the language (texts)",
+   "summary": "The text without the characters of `chars` at its end.",
+   "body": [
+    "```nuclear",
+    "trimCharsEnd(text: string, chars: string) string",
+    "```",
+    "",
+    "The text without the characters of `chars` at its end.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- trimCharsEnd: `trimCharsEnd(\"-_-abc-_-\", \"_-\")` gives `-_-abc`"
+   ],
+   "keys": [
+    "trimcharsend",
+    "lodash trimcharsend",
+    "helper trimcharsend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "trimCharsEnd",
+    "area": "texts",
+    "signature": "trimCharsEnd(text: string, chars: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-trimCharsStart",
+   "type": "library",
+   "title": "`trimCharsStart` — a helper of the language (texts)",
+   "summary": "The text without the characters of `chars` at its start.",
+   "body": [
+    "```nuclear",
+    "trimCharsStart(text: string, chars: string) string",
+    "```",
+    "",
+    "The text without the characters of `chars` at its start.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- trimCharsStart: `trimCharsStart(\"-_-abc-_-\", \"_-\")` gives `abc-_-`"
+   ],
+   "keys": [
+    "trimcharsstart",
+    "lodash trimcharsstart",
+    "helper trimcharsstart"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "trimCharsStart",
+    "area": "texts",
+    "signature": "trimCharsStart(text: string, chars: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-truncate",
+   "type": "library",
+   "title": "`truncate` — a helper of the language (texts)",
+   "summary": "The text cut to `length` characters, its end replaced by `omission` when it was longer.",
+   "body": [
+    "```nuclear",
+    "truncate(text: string, length: int = 30, omission: string = \"...\") string",
+    "```",
+    "",
+    "The text cut to `length` characters, its end replaced by `omission` when it was longer.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- truncate: `truncate(long)` gives `hi-diddly-ho there, neighbo...`",
+    "- truncate to a length: `truncate(long, 24)` gives `hi-diddly-ho there, n...`",
+    "- truncate with an omission: `truncate(long, 24, \" [...]\")` gives `hi-diddly-ho there [...]`",
+    "- truncate a short text: `truncate(\"short\")` gives `short`",
+    "- truncate to the text's length: `truncate(\"12345\", 5)` gives `12345`",
+    "- truncate shorter than the omission: `truncate(\"abcdef\", 2)` gives `...`"
+   ],
+   "keys": [
+    "truncate",
+    "lodash truncate",
+    "helper truncate"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "truncate",
+    "area": "texts",
+    "signature": "truncate(text: string, length: int = 30, omission: string = \"...\") string",
+    "cases": 6
+   }
+  },
+  {
+   "id": "lib:helper-unescape",
+   "type": "library",
+   "title": "`unescape` — a helper of the language (texts)",
+   "summary": "The opposite of `escape`.",
+   "body": [
+    "```nuclear",
+    "unescape(text: string) string",
+    "```",
+    "",
+    "The opposite of `escape`.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- unescape: `unescape(\"fred, barney, &amp; pebbles\")` gives `fred, barney, & pebbles`",
+    "- unescape is the opposite of escape: `unescape(escape(\"<b>'&\\\"</b>\"))` gives `<b>'&\\\"</b>`",
+    "- unescape once: `unescape(\"&amp;lt;\")` gives `&lt;`"
+   ],
+   "keys": [
+    "unescape",
+    "lodash unescape",
+    "helper unescape"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "unescape",
+    "area": "texts",
+    "signature": "unescape(text: string) string",
+    "cases": 3
+   }
+  },
+  {
+   "id": "lib:helper-union",
+   "type": "library",
+   "title": "`union` — a helper of the language (lists)",
+   "summary": "The values of both lists, once each, in order.",
+   "body": [
+    "```nuclear",
+    "union<T>(xs: T[], ys: T[]) T[]",
+    "```",
+    "",
+    "The values of both lists, once each, in order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- union: `ints(union([2], [1, 2]))` gives `2,1`",
+    "- union once each: `ints(union([1, 1, 2], [2, 3, 3]))` gives `1,2,3`"
+   ],
+   "keys": [
+    "union",
+    "lodash union",
+    "helper union"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "union",
+    "area": "lists",
+    "signature": "union<T>(xs: T[], ys: T[]) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-unionBy",
+   "type": "library",
+   "title": "`unionBy` — a helper of the language (lists)",
+   "summary": "`union` comparing what `key` gives for each value.",
+   "body": [
+    "```nuclear",
+    "unionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "```",
+    "",
+    "`union` comparing what `key` gives for each value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- unionBy: `names(unionBy(items, [Item(5, \"a\"), Item(6, \"d\")], (i) => i.name))` gives `a,b,c,d`"
+   ],
+   "keys": [
+    "unionby",
+    "lodash unionby",
+    "helper unionby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "unionBy",
+    "area": "lists",
+    "signature": "unionBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-unionWith",
+   "type": "library",
+   "title": "`unionWith` — a helper of the language (lists)",
+   "summary": "`union` with `same` deciding whether two values are equal.",
+   "body": [
+    "```nuclear",
+    "unionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "```",
+    "",
+    "`union` with `same` deciding whether two values are equal.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- unionWith: `names(unionWith(items, [Item(1, \"q\"), Item(4, \"d\")], (a, b) => a.id == b.id))` gives `a,b,c,d`"
+   ],
+   "keys": [
+    "unionwith",
+    "lodash unionwith",
+    "helper unionwith"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "unionWith",
+    "area": "lists",
+    "signature": "unionWith<T>(xs: T[], ys: T[], same: (a: T, b: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-uniqBy",
+   "type": "library",
+   "title": "`uniqBy` — a helper of the language (lists)",
+   "summary": "The first value of each key, in order.",
+   "body": [
+    "```nuclear",
+    "uniqBy<T>(xs: T[], key: (x: T) => string) T[]",
+    "```",
+    "",
+    "The first value of each key, in order.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- uniqBy: `names(uniqBy([Item(1, \"a\"), Item(2, \"a\"), Item(3, \"b\")], (i) => i.name))` gives `a,b`",
+    "- uniqBy keeps the first: `\"${uniqBy([Item(1, \"a\"), Item(2, \"a\")], (i) => i.name)[0].id}\"` gives `1`"
+   ],
+   "keys": [
+    "uniqby",
+    "lodash uniqby",
+    "helper uniqby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "uniqBy",
+    "area": "lists",
+    "signature": "uniqBy<T>(xs: T[], key: (x: T) => string) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-uniqWith",
+   "type": "library",
+   "title": "`uniqWith` — a helper of the language (lists)",
+   "summary": "The values without those `same` says were seen before.",
+   "body": [
+    "```nuclear",
+    "uniqWith<T>(xs: T[], same: (a: T, b: T) => boolean) T[]",
+    "```",
+    "",
+    "The values without those `same` says were seen before.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- uniqWith: `ints(uniqWith([1, 2, 11, 3, 12], (a, b) => a % 10 == b % 10))` gives `1,2,3`"
+   ],
+   "keys": [
+    "uniqwith",
+    "lodash uniqwith",
+    "helper uniqwith"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "uniqWith",
+    "area": "lists",
+    "signature": "uniqWith<T>(xs: T[], same: (a: T, b: T) => boolean) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-uniqueIds",
+   "type": "library",
+   "title": "`uniqueIds` — a helper of the language (functions)",
+   "summary": "A maker of identifiers: each call gives the prefix and the next number, from 1.",
+   "body": [
+    "```nuclear",
+    "uniqueIds(prefix: string = \"\")() => string",
+    "```",
+    "",
+    "A maker of identifiers: each call gives the prefix and the next number, from 1.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "uniqueids",
+    "lodash uniqueids",
+    "helper uniqueids"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/function.nuc",
+    "nuclear-synapsis-framework/lodash/test/function_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "uniqueIds",
+    "area": "functions",
+    "signature": "uniqueIds(prefix: string = \"\")() => string",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-unset",
+   "type": "library",
+   "title": "`unset` — a helper of the language (maps and data)",
+   "summary": "Removes the value at `path` inside a map, in place; whether it was there.",
+   "body": [
+    "```nuclear",
+    "unset(data: <string, any>, path: string) boolean",
+    "```",
+    "",
+    "Removes the value at `path` inside a map, in place; whether it was there.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- unset: `\"${unset(made, \"a.b.c\")} ${unset(made, \"a.b.c\")} ${unset(made, \"no.path\")} ${Json.encode(made)}\"` gives `true false false {\\\"a\\\":{\\\"x\\\":{\\\"y\\\":2},\\\"b\\\":{}},\\\"top\\\":\\\"t\\\",\\\"k\\\":1}`"
+   ],
+   "keys": [
+    "unset",
+    "lodash unset",
+    "helper unset"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/object.nuc",
+    "nuclear-synapsis-framework/lodash/test/object_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "unset",
+    "area": "maps and data",
+    "signature": "unset(data: <string, any>, path: string) boolean",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-unzip",
+   "type": "library",
+   "title": "`unzip` — a helper of the language (lists)",
+   "summary": "The two lists a list of pairs came from.",
+   "body": [
+    "```nuclear",
+    "unzip<A, B>(pairs: Pair<A, B>[]) Pair<A[], B[]>",
+    "```",
+    "",
+    "The two lists a list of pairs came from.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "unzip",
+    "lodash unzip",
+    "helper unzip"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "unzip",
+    "area": "lists",
+    "signature": "unzip<A, B>(pairs: Pair<A, B>[]) Pair<A[], B[]>",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-upperCase",
+   "type": "library",
+   "title": "`upperCase` — a helper of the language (texts)",
+   "summary": "`FOO BAR`: the words in upper case joined by spaces.",
+   "body": [
+    "```nuclear",
+    "upperCase(text: string) string",
+    "```",
+    "",
+    "`FOO BAR`: the words in upper case joined by spaces.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- upperCase ${text}: `upperCase(text)` gives `FOO BAR`"
+   ],
+   "keys": [
+    "uppercase",
+    "lodash uppercase",
+    "helper uppercase"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "upperCase",
+    "area": "texts",
+    "signature": "upperCase(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-upperFirst",
+   "type": "library",
+   "title": "`upperFirst` — a helper of the language (texts)",
+   "summary": "The first character in upper case; the rest as it is.",
+   "body": [
+    "```nuclear",
+    "upperFirst(text: string) string",
+    "```",
+    "",
+    "The first character in upper case; the rest as it is.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- upperFirst: `\"${upperFirst(\"fred\")} ${upperFirst(\"FRED\")} [${upperFirst(\"\")}]\"` gives `Fred FRED []`"
+   ],
+   "keys": [
+    "upperfirst",
+    "lodash upperfirst",
+    "helper upperfirst"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "upperFirst",
+    "area": "texts",
+    "signature": "upperFirst(text: string) string",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-without",
+   "type": "library",
+   "title": "`without` — a helper of the language (lists)",
+   "summary": "The list without the given values.",
+   "body": [
+    "```nuclear",
+    "without<T>(xs: T[], values: T[]) T[]",
+    "```",
+    "",
+    "The list without the given values.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- without: `ints(without([2, 1, 2, 3], [1, 2]))` gives `3`"
+   ],
+   "keys": [
+    "without",
+    "lodash without",
+    "helper without"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "without",
+    "area": "lists",
+    "signature": "without<T>(xs: T[], values: T[]) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-words",
+   "type": "library",
+   "title": "`words` — a helper of the language (texts)",
+   "summary": "The words of a text: runs of letters and digits, split also where a lower-case letter meets an upper-case one.",
+   "body": [
+    "```nuclear",
+    "words(text: string) string[]",
+    "```",
+    "",
+    "The words of a text: runs of letters and digits, split also where a lower-case letter meets an upper-case one.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- words: `words(\"fred, barney, & pebbles\").join(\"|\")` gives `fred|barney|pebbles`",
+    "- words of a camel case text: `words(\"fooBarBaz\").join(\"|\")` gives `foo|Bar|Baz`",
+    "- words of nothing: `\"${words(\"\").length} ${words(\"  --  \").length}\"` gives `0 0`",
+    "- words keep digits: `words(\"item 42 x9\").join(\"|\")` gives `item|42|x9`"
+   ],
+   "keys": [
+    "words",
+    "lodash words",
+    "helper words"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/string.nuc",
+    "nuclear-synapsis-framework/lodash/test/string_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "words",
+    "area": "texts",
+    "signature": "words(text: string) string[]",
+    "cases": 4
+   }
+  },
+  {
+   "id": "lib:helper-xor",
+   "type": "library",
+   "title": "`xor` — a helper of the language (lists)",
+   "summary": "The values that are in only one of the lists, once each.",
+   "body": [
+    "```nuclear",
+    "xor<T>(xs: T[], ys: T[]) T[]",
+    "```",
+    "",
+    "The values that are in only one of the lists, once each.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- xor: `ints(xor([2, 1], [2, 3]))` gives `1,3`",
+    "- xor once each: `ints(xor([1, 1, 2], [2, 3, 3]))` gives `1,3`"
+   ],
+   "keys": [
+    "xor",
+    "lodash xor",
+    "helper xor"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "xor",
+    "area": "lists",
+    "signature": "xor<T>(xs: T[], ys: T[]) T[]",
+    "cases": 2
+   }
+  },
+  {
+   "id": "lib:helper-xorBy",
+   "type": "library",
+   "title": "`xorBy` — a helper of the language (lists)",
+   "summary": "`xor` comparing what `key` gives for each value.",
+   "body": [
+    "```nuclear",
+    "xorBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "```",
+    "",
+    "`xor` comparing what `key` gives for each value.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- xorBy: `names(xorBy(items, [Item(9, \"a\"), Item(8, \"z\")], (i) => i.name))` gives `b,c,z`"
+   ],
+   "keys": [
+    "xorby",
+    "lodash xorby",
+    "helper xorby"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "xorBy",
+    "area": "lists",
+    "signature": "xorBy<T>(xs: T[], ys: T[], key: (x: T) => string) T[]",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-zip",
+   "type": "library",
+   "title": "`zip` — a helper of the language (lists)",
+   "summary": "Pairs of the values at the same index; as long as the shorter list.",
+   "body": [
+    "```nuclear",
+    "zip<A, B>(xs: A[], ys: B[]) Pair<A, B>[]",
+    "```",
+    "",
+    "Pairs of the values at the same index; as long as the shorter list.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."
+   ],
+   "keys": [
+    "zip",
+    "lodash zip",
+    "helper zip"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "zip",
+    "area": "lists",
+    "signature": "zip<A, B>(xs: A[], ys: B[]) Pair<A, B>[]",
+    "cases": 0
+   }
+  },
+  {
+   "id": "lib:helper-zipObject",
+   "type": "library",
+   "title": "`zipObject` — a helper of the language (lists)",
+   "summary": "A map of each key to the value at its index.",
+   "body": [
+    "```nuclear",
+    "zipObject<V>(keys: string[], values: V[]) <string, V>",
+    "```",
+    "",
+    "A map of each key to the value at its index.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- zipObject of fewer values: `\"${zipObject([\"a\", \"b\"], [1]).keys.join(\",\")}\"` gives `a`"
+   ],
+   "keys": [
+    "zipobject",
+    "lodash zipobject",
+    "helper zipobject"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "zipObject",
+    "area": "lists",
+    "signature": "zipObject<V>(keys: string[], values: V[]) <string, V>",
+    "cases": 1
+   }
+  },
+  {
+   "id": "lib:helper-zipWith",
+   "type": "library",
+   "title": "`zipWith` — a helper of the language (lists)",
+   "summary": "What `f` gives for the values at the same index.",
+   "body": [
+    "```nuclear",
+    "zipWith<A, B, R>(xs: A[], ys: B[], f: (a: A, b: B) => R) R[]",
+    "```",
+    "",
+    "What `f` gives for the values at the same index.",
+    "",
+    "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls.",
+    "",
+    "Cases its tests state, the same in TypeScript, Dart and Python:",
+    "",
+    "- zipWith: `ints(zipWith([1, 2], [10, 20], (a, b) => a + b))` gives `11,22`"
+   ],
+   "keys": [
+    "zipwith",
+    "lodash zipwith",
+    "helper zipwith"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/src/array.nuc",
+    "nuclear-synapsis-framework/lodash/test/array_test.nuc",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "helpers"
+   },
+   "data": {
+    "name": "zipWith",
+    "area": "lists",
+    "signature": "zipWith<A, B, R>(xs: A[], ys: B[], f: (a: A, b: B) => R) R[]",
+    "cases": 1
+   }
+  }
+ ]
+}

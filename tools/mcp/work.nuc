@@ -164,6 +164,39 @@ WorkTools(runner: any = runCommand)
     // the command's own text (no JSON): what it applied, reverted or refused, as the user would read it
     Json.encode({ "ok": ran.code == 0, "action": action, "output": ran.out.trim() })
 
+  // The tests of a Synapsis project, written in Nuclear (`test/*_test.nuc`): builds the project and runs them with
+  // its dialect's runner (`nuclear test`). The answer is the same whatever the dialect: {ok, passed, failed,
+  // failures: [{file, line, name}] (where each failure is in the `.nuc`), hint (what a failed `expect` or an error
+  // means), output (the runner's last lines)}. project: the project's folder or one inside it. Run it after every
+  // change, and before saying a task is done; it changes nothing but the project's build/ (a backend's tests use
+  // an in-memory database, empty in each test). A project not installed yet answers what to run (nuclear_project
+  // with install).
+  projectTest(project: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    ran: Ran = ~runner(["nuclear", "test"], "${root}", "")
+    counts = countsOfTests(ran.out)
+    failures: any[] = []
+    hint = ""
+    if ran.code != 0
+      // where the runner's failure is in the Nuclear, and what it means
+      explained: Ran = ~runner(["nuclear", "explain", "--json"], "${root}", ran.out)
+      found = jsonOf(explained.out)
+      if found != null
+        frames: any[] = found!["frames"] ?? []
+        failures = frames.map((f) => { "file": "${f["source"]}", "line": f["line"], "name": "${f["name"]}" })
+        hint = "${found!["hint"] ?? ""}"
+    out = ran.out.trim()
+    Json.encode({
+      "ok": ran.code == 0,
+      "passed": counts[0],
+      "failed": counts[1],
+      "failures": failures,
+      "hint": hint,
+      "output": out.substring(Math.max(0, out.length - 4000)),
+    })
+
   // ---------- workspaces and apps ----------
 
   // Create a workspace: a folder that organizes one business project and the apps that form it, recognized by its
@@ -972,7 +1005,7 @@ WorkTools(runner: any = runCommand)
   all() any[]
     [
       workspaceCreate, workspaceShow, workspaceEdit, workspaceDelete, appAdd, appRename, appRemove,
-      projectMigrate,
+      projectMigrate, projectTest,
       specCreate, specList, specShow, specEdit,
       teamList, teamShow, teamCreate, teamEdit, teamDelete, memberAdd, memberEdit, memberRemove, skillsSet,
       specMove, specMigrate, specDelete, specAccept, specDiscard,
@@ -984,6 +1017,21 @@ WorkTools(runner: any = runCommand)
     ]
 
 LOCAL_STANDBY = "no member of the local kind: the local models are on standby (ADR-platform-0013); a member is worked by an agent (kind agent) or an API provider (kind api)"
+
+// How many tests passed and failed, read from what a target's runner prints: [passed, failed]. Each runner says it
+// its own way (`3 passed, 1 failed` in pytest and vitest, `ℹ pass 3` / `ℹ fail 1` in node:test, `+3 -1:` in
+// flutter test); a count it does not say is 0.
+countsOfTests(output: string) int[]
+  last = (pattern: string) int
+    found = Regex(pattern).findAll(output)
+    found.isEmpty ? 0 : ("${found.last[1]}".toInt() ?? 0)
+  node = [last(r"ℹ pass (\d+)"), last(r"ℹ fail (\d+)")]
+  if node[0] + node[1] > 0
+    return node
+  words = [last(r"(\d+) passed"), last(r"(\d+) failed") + last(r"(\d+) errors?\b")]
+  if words[0] + words[1] > 0
+    return words
+  [last(r"\+(\d+)(?: ~\d+)?(?: -\d+)?: "), last(r"\+\d+(?: ~\d+)? -(\d+): ")]
 
 // A JSON object of a command's answer, or null.
 jsonOf(text: string) <string, any>?

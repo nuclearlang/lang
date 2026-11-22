@@ -78,19 +78,34 @@ ExtractExamples
           "body": "`${rel}` of `${project}`:\n\n```nuclear\n${shown}\n```", "platforms": plat in PLATFORMS ? [plat] : [],
           "sources": [path.relativeTo(ctx.tree).asPosix()], "meta": { "kind": kind, "name": name, "project": project },
         })
-    programs: Path[] = list(ctx.tree.joinpath("nuclearlang/examples/stdlib").glob("*.nuc"))
-    for path in programs.sorted()
-      program: string = path.readText()
-      program = program.trim()
-      doc = linesOf(program).take(6).filter((line) => line.startsWith("//")).map((line) => line.replaceAll(Regex(r"^[/ ]+"), "").trim()).join(" ")
-      stem: string = path.stem
-      brief: string = clip(doc, 400)
-      rows.add({
-        "id": "example:stdlib/${stem}", "type": "file", "title": "The standard library at work: ${stem} (a program that runs in every dialect)",
-        "summary": brief.length > 0 ? brief : "A runnable example of the standard library: ${stem}.",
-        "body": "`nuclearlang/examples/stdlib/${path.name}`:\n\n```nuclear\n${program.substring(0, Math.min(5000, program.length))}\n```", "keys": ["${stem} example"],
-        "sources": ["nuclearlang/examples/stdlib/${path.name}"], "meta": { "kind": "program", "name": stem, "project": "stdlib" },
-      })
+    // the programs that run in every dialect and print the same: [folder, the id's group, what the title says, and
+    // what each one is]
+    suites = [
+      ["nuclearlang/examples/stdlib", "stdlib", "The standard library at work", "A runnable example of the standard library"],
+      ["nuclearlang/examples/conformance", "conformance", "A conformance test of the language", "One program of the language's conformance suite: every case prints a labelled line, the same in TypeScript, Dart and Python"],
+      ["nuclearlang/examples/semantics", "semantics", "A rule a target could break", "A program that guards one rule a target once broke"],
+      ["nuclear-synapsis-framework/eval/thesis/bench", "bench", "A benchmark of the generated code", "A benchmark: the code generated from it is measured against an expert's in each target"],
+    ]
+    for suite in suites
+      programs: Path[] = list(ctx.tree.joinpath(suite[0]).glob("*.nuc"))
+      for path in programs.sorted()
+        program: string = path.readText()
+        program = program.trim()
+        doc = linesOf(program).take(6).filter((line) => line.startsWith("//")).map((line) => line.replaceAll(Regex(r"^[/ ]+"), "").trim()).join(" ")
+        stem: string = path.stem
+        brief: string = clip(doc, 400)
+        body = "`${suite[0]}/${path.name}`:\n\n```nuclear\n${program.substring(0, Math.min(5000, program.length))}\n```"
+        // what it must print, in every dialect
+        expected = path.withSuffix(".out")
+        if expected.isFile()
+          printed: string = expected.readText()
+          body = "${body}\n\nWhat it prints, the same in TypeScript, Dart and Python:\n\n```\n${printed.trim().substring(0, Math.min(3000, printed.trim().length))}\n```"
+        rows.add({
+          "id": "example:${suite[1]}/${stem}", "type": "file", "title": "${suite[2]}: ${stem} (a program that runs in every dialect)",
+          "summary": brief.length > 0 ? brief : "${suite[3]}: ${stem}.",
+          "body": body, "keys": ["${stem} example", "${suite[1]} ${stem}"],
+          "sources": ["${suite[0]}/${path.name}"], "meta": { "kind": "program", "name": stem, "project": suite[1] },
+        })
     rows
 
   static solvedRow(rid: string, task: string, path: string, kind: string, code: string, plat: string) <string, any>

@@ -161,3 +161,51 @@ ExtractLibrary
         "data": { "members": mine.map((x) => { "name": x.name, "property": x.property, "gives": x.gives }), "wrong": bad.map((x) => { "name": x.name, "fix": x.fix }) },
       })
     rows
+
+  // The helpers of the language (ADR-lang-0013): one row per function of `nuclear-synapsis-framework/lodash/src`, with
+  // its signature, what its comment says and the cases its tests state (each `check(name, got, want)`).
+  static helpers(ctx: Context) <string, any>[]
+    root = "nuclear-synapsis-framework/lodash"
+    areas: <string, string> = { "array": "lists", "collection": "collections", "math": "numbers", "string": "texts", "object": "maps and data", "function": "functions" }
+    // what the helpers use among themselves: a program does not call them
+    internal = ["child", "mapAt", "fillText", "pathKeys"]
+    cases: string[] = []
+    for area in areas.keys
+      for line in linesOf(ctx.read("${root}/test/${area}_test.nuc"))
+        if line.trim().startsWith("check(")
+          cases.add(line.trim())
+    declared = Regex(r"^([a-z][A-Za-z]*)(<[^>]*>)?\(")
+    stated = Regex(r'^check\("((?:[^"\\]|\\.)*)", (.*), "((?:[^"\\]|\\.)*)"\)$')
+    rows: <string, any>[] = []
+    for area, title in areas
+      lines = linesOf(ctx.read("${root}/src/${area}.nuc"))
+      for i in 0..lines.length
+        found = declared.find(lines[i])
+        if found == null
+          continue
+        name: string = found![1] ?? ""
+        if name in internal
+          continue
+        doc: string[] = []
+        at = i - 1
+        while at >= 0 and lines[at].startsWith("//")
+          doc.insert(0, lines[at].replaceAll(Regex(r"^[/ ]+"), "").trim())
+          at -= 1
+        said = doc.join(" ")
+        uses = Regex("\\b${name}[(<]")
+        mine: string[] = []
+        for c in cases
+          m = stated.find(c)
+          if m != null and uses.test(m![2] ?? "") and mine.length < 8
+            mine.add("- ${m![1]}: `${m![2]}` gives `${m![3]}`")
+        body = ["```nuclear", lines[i], "```", "", said, "", "A helper of the language (the functions of lodash that serve Nuclear): it is called with no `use`, in every dialect, and the transpiler writes only the helpers a program calls."]
+        if mine.length > 0
+          body.addAll(["", "Cases its tests state, the same in TypeScript, Dart and Python:", "", ...mine])
+        rows.add({
+          "id": "lib:helper-${name}", "type": "library", "title": "`${name}` — a helper of the language (${title})",
+          "summary": clip(said.length > 0 ? said : "The helper `${name}`.", 400), "body": body.join("\n"),
+          "keys": [name.lower(), "lodash ${name.lower()}", "helper ${name.lower()}"],
+          "sources": ["${root}/src/${area}.nuc", "${root}/test/${area}_test.nuc", "nuclearlang/docs/07-reference/library.md"],
+          "meta": { "base": "helpers" }, "data": { "name": name, "area": title, "signature": lines[i], "cases": mine.length },
+        })
+    rows

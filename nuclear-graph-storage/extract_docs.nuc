@@ -190,6 +190,7 @@ generateAssets(ctx: Context) <string, any[]>
     "errors/diagnostics": ["Every diagnostic of the compiler: the codes of nuclear-diag and their documentation in diagnostics.md of the language reference.", ExtractErrors.diagnostics(ctx)],
     "errors/habits": ["What someone who knows another language writes by reflex, and the Nuclear form (the base brief's table).", ExtractErrors.habits(ctx)],
     "language/library": ["The members of the standard library and the names of other languages they replace (library.rs of nuclear-dialect).", ExtractLibrary.library(ctx)],
+    "language/helpers": ["The helpers of the language, called with no use (the functions of lodash that serve Nuclear): each signature, meaning and tested cases.", ExtractLibrary.helpers(ctx)],
     "tools/cli": ["The commands of nuclear, synapsis, nuclear-builder and nuclear-graph, as their help prints them.", ExtractTools.cli(ctx)],
     "tools/mcp": ["The tools and the instructions of the Nuclear MCP server.", ExtractTools.mcp(ctx)],
     "tools/http": ["The HTTP routes of the Smart Graph and of the Nuclear Developer.", ExtractTools.http(ctx)],
@@ -198,7 +199,7 @@ generateAssets(ctx: Context) <string, any[]>
     "tools/agents": ["The local agents of the Nuclear Developer, from their sources.", ExtractTools.agents(ctx)],
     "tools/editor": ["The commands, shortcuts and settings of the VS Code extension (its package.json).", ExtractTools.editor(ctx)],
     "tools/components": ["Each component of the ecosystem and its version.", ExtractTools.components(ctx)],
-    "examples/projects": ["Every .nuc file of the example projects, by kind and platform, and the standard library's programs.", ExtractExamples.projects(ctx)],
+    "examples/projects": ["Every .nuc file of the example projects, by kind and platform, and the programs that run the same in every dialect: the standard library's, the conformance suite's, the semantics' and the benchmarks'.", ExtractExamples.projects(ctx)],
     "examples/solved": ["The validated answers of a frontier model to the evaluation's train tasks.", ExtractExamples.solved(ctx)],
   }
   for p in PLATFORMS
