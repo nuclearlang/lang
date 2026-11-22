@@ -36,8 +36,8 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 
 - `server.nuc`: the server, its instructions (`FIRST`) and every tool (`McpTools`, `mcpServer`, `mcpTools`,
   `remoteOnly`); `nuclearStart` and `nuclearDoc` teach Nuclear.
-- `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `spec_*`, `team_*`, `member_*`,
-  `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every
+- `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `project_migrate`, `spec_*`,
+  `team_*`, `member_*`, `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every
   change goes through (`confirmed`); `projectOf`.
 - `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.
 - `tests/`: `test_server.nuc`, `test_work.nuc` (the work's tools with a fake command runner and a fake client) and
@@ -57,7 +57,8 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
    the knowledge base is rebuilt (the graph keeps a row per tool, `mcp:<tool>`, read with `nuclear-mcp tools`).
 3. **A generator tool is a `nuclear gen` command**, never its own code: the options and the refusals are the
    [code generator's](../code_generator/AGENTS.md).
-4. **The `nuclear_project` tool runs only the commands of its list** (`PROJECT_COMMANDS`).
+4. **The `nuclear_project` tool runs only the commands of its list** (`PROJECT_COMMANDS`). A command that changes
+   a database is not in it: `nuclear migrate` is `project_migrate`, which asks the user first (rule 7).
 5. **The graph is reached with the token of the client `mcp`**: the user decides whether MCP clients may read it.
    Never weaken that to make a tool easier.
 6. **No `developer_*` tool while `LOCAL_MODELS` is false**, and a machine set up for remote agents only gets none

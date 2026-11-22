@@ -54,6 +54,49 @@ testAChangeAskedByElicitationIsDoneOnlyOnTheUsersYes(tmpPath: Path) void
     out = said(asyncio.run(tools.workspaceCreate("${tmpPath}/shop", "shop", "", "", ctx)))
     expect(out["declined"] != null and runner.calls.length == 1)
 
+// The migrations of a backend project: reading them asks nothing; writing one and changing the database ask first.
+testMigrationsAreReadFreelyAndChangeTheDatabaseOnlyOnTheUsersYes(tmpPath: Path) void
+  project = tmpPath.joinpath("shop_api")
+  project.joinpath("components").mkdir(parents = true)
+  project.joinpath("config.nuc").writeText("synapsis(platform = \"backend\", dialect = \"fastapi\")\n")
+  root = "${project.resolve()}"
+  runner = Runner("applied 20261122100000_notes")
+  tools = WorkTools(runner.run)
+  // status: no question, from a folder inside the project
+  status = said(asyncio.run(tools.projectMigrate("${project}/components")))
+  expect(status["ok"] == true and status["output"] == "applied 20261122100000_notes")
+  expect(runner.calls.length == 1 and runner.calls[0][0] == ["nuclear", "migrate", "status"] and runner.calls[0][1] == root)
+  // without a client that can ask: a preview that says what changes, nothing run
+  preview = said(asyncio.run(tools.projectMigrate(root, "up")))
+  expect(preview["confirm"] != null and "Apply the pending migrations" in "${preview["preview"]}" and runner.calls.length == 1)
+  // the token is for that exact change: another action does not use it
+  other = said(asyncio.run(tools.projectMigrate(root, "down", "", "", "${preview["confirm"]}")))
+  expect(other["error"] != null and runner.calls.length == 1)
+  again = said(asyncio.run(tools.projectMigrate(root, "up")))
+  done = said(asyncio.run(tools.projectMigrate(root, "up", "", "", "${again["confirm"]}")))
+  expect(done["ok"] == true and runner.calls[1][0] == ["nuclear", "migrate", "up"])
+  // a client that asks: the user reads what is dropped before a down
+  yes = asking("accept")
+  asyncio.run(tools.projectMigrate(root, "down", "", "20261122100000_notes", "", yes))
+  expect(runner.calls[2][0] == ["nuclear", "migrate", "down", "--to", "20261122100000_notes"])
+  expect("dropped, with its data" in yes.session.asked[0])
+  made = asking("accept")
+  asyncio.run(tools.projectMigrate(root, "make", "notes on tasks", "", "", made))
+  expect(runner.calls[3][0] == ["nuclear", "migrate", "make", "notes on tasks"] and "The database is not changed" in made.session.asked[0])
+  no = said(asyncio.run(tools.projectMigrate(root, "up", "", "", "", asking("decline"))))
+  expect(no["declined"] != null and runner.calls.length == 4)
+  // what is refused before anything runs
+  for wrong in [
+    tools.projectMigrate("${tmpPath}", "status"),
+    tools.projectMigrate(root, "sideways"),
+    tools.projectMigrate(root, "make"),
+    tools.projectMigrate(root, "up", "a message"),
+    tools.projectMigrate(root, "status", "", "20261122100000_notes"),
+    tools.projectMigrate(root, "up", "", "--force"),
+  ]
+    expect(said(asyncio.run(wrong))["error"] != null)
+  expect(runner.calls.length == 4)
+
 // The yes or no a real client's user gives (the MCP library's client, over the initialize handshake of stdio).
 Answering(yes: boolean)
   asked: string[] = []

@@ -48,7 +48,8 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   5. The app stopping with the destination down (today the exporter retries for about ten seconds).
 - Other versions of the database servers: the database check runs `postgres:16-alpine`, `mysql:8.0` and
   `mariadb:11` only (on a developer's machine and in `.github/workflows/platform-backend.yml`).
-- `nuclear migrate` after a real `nuclear install` on a clean machine: the database check gives the project's
+- `nuclear migrate` after a real `nuclear install` with `nestjs` (with `fastapi` it ran on a project made by
+  `nuclear new`, through the MCP server's `project_migrate`, 2026-11-22): the database check gives the project's
   `build/` the shared tools of the checks (`.venv`, `node_modules`) in place of `nuclear install`.
 - Two `nuclear migrate` at the same time on one database (two instances of an app deployed at once): nothing locks
   the history.

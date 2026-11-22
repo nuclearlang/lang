@@ -15,7 +15,7 @@ LOCAL_MODELS = false
 // The local developer: the environment's address, else the port the set-up chose (ai.env), else 7879.
 DEVELOPER_PORT = Paths.machine()["NUCLEAR_DEVELOPER_PORT"] ?? "7879"
 DEVELOPER_URL = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? "http://127.0.0.1:${DEVELOPER_PORT}"
-PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", "make", "g", "gen", "migrate", "add", "remove", "explain"]
+PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", "make", "g", "gen", "add", "remove", "explain"]
 
 // What the server tells every client: only where to begin. The rules and the work cycle are nuclear_start's answer
 // (spec 016: an agent with no context learns Nuclear from this server alone).
@@ -216,10 +216,13 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     ran = ~runTool(["nuclear", "defs", "show", name, "--dialect", dialect], cwd = project)
     ran.out
 
-  // A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), migrate, add,
-  // remove, explain. Example: command="make", args=["component", "orders"]. A library the project lacks (npm, PyPI,
+  // A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), add,
+  // remove, explain (the migrations of a database are project_migrate). Example: command="make", args=["component", "orders"]. A library the project lacks (npm, PyPI,
   // pub.dev): command="add", args=["lodash"] installs it and generates its type definitions.
   nuclearProject(project: string, command: string, args: string[]? = null) string
+    // a migration changes a database: it has its own tool, which asks the user first
+    if command == "migrate"
+      return "migrations are project_migrate(project, action): status, make, up, down"
     if not (command in PROJECT_COMMANDS)
       return "'${command}' is not allowed here (allowed: ${PROJECT_COMMANDS.sorted().join(", ")})"
     given: string[] = args ?? []

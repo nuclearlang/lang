@@ -122,6 +122,48 @@ WorkTools(runner: any = runCommand)
     ran: Ran = ~runner(["nuclear-builder", ...args], folder, stdin)
     answerOf(ran)
 
+  // ---------- the database of a backend project ----------
+
+  // The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and
+  // database). action: status (every migration, applied or pending: read it first), make (message: what changed;
+  // writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every
+  // drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that
+  // migration), down (reverts the last one applied; to: back to that migration). project: the project's folder or
+  // one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot
+  // ask): up and down change the database of the project's active environment, and down drops what the migration
+  // made, with its data. Build the project first (nuclear_build): the migration reads the built entities.
+  projectMigrate(project: string, action: string = "status", message: string = "", to: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if not (action in ["status", "make", "up", "down"])
+      return refused("'${action}' is not an action of project_migrate (status, make, up, down)")
+    bad = optionLike([message, to])
+    if bad != null
+      return refused("'${bad}' is not a message or a migration (it starts with -)")
+    if action == "make" and message.trim().isEmpty
+      return refused("make needs message: what changed in the entities (\"notes on tasks\")")
+    if action != "make" and not message.isEmpty
+      return refused("message is for make only")
+    if not to.isEmpty and not (action in ["up", "down"])
+      return refused("to is for up and down only")
+    args = ["nuclear", "migrate", action]
+    if action == "make"
+      args = [...args, message]
+    if not to.isEmpty
+      args = [...args, "--to", to]
+    if action != "status"
+      change = match action
+        "make" -> "Write one migration of ${root} for \"${message}\" into its migrations/ folder (the entities minus the last migration). The database is not changed."
+        "up" -> "Apply the pending migrations of ${root} to the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}."
+        _ -> "Revert ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} in the database of ${root}'s active environment: what they made is dropped, with its data."
+      no = ~confirmed(ctx, "project_migrate", { "project": "${root}", "action": action, "message": message, "to": to }, change, confirm)
+      if no != null
+        return no!
+    ran: Ran = ~runner(args, "${root}", "")
+    // the command's own text (no JSON): what it applied, reverted or refused, as the user would read it
+    Json.encode({ "ok": ran.code == 0, "action": action, "output": ran.out.trim() })
+
   // ---------- workspaces and apps ----------
 
   // Create a workspace: a folder that organizes one business project and the apps that form it, recognized by its
@@ -930,6 +972,7 @@ WorkTools(runner: any = runCommand)
   all() any[]
     [
       workspaceCreate, workspaceShow, workspaceEdit, workspaceDelete, appAdd, appRename, appRemove,
+      projectMigrate,
       specCreate, specList, specShow, specEdit,
       teamList, teamShow, teamCreate, teamEdit, teamDelete, memberAdd, memberEdit, memberRemove, skillsSet,
       specMove, specMigrate, specDelete, specAccept, specDiscard,
