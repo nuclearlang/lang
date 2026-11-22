@@ -91,17 +91,16 @@ def normal(value: Any) -> Any:
 
 
 def error_of(status: int, body: Any) -> Any:
-    """The body of an error is each framework's own shape. The message of a `Result`'s error is the app's, the same
-    everywhere; the reasons of an invalid request (400) are each validator's own words."""
-    if status == 400 or not isinstance(body, dict):
-        return None
-    message = str(body.get("message", body.get("detail")))
+    """The body of an error is Nuclear's, the same in every dialect (ADR-synapsis-0013): its status, its message and
+    the reasons of an invalid request. Only the ids a message names are made the scenario's own."""
+    if not isinstance(body, dict):
+        return body
 
     def row(m: re.Match[str]) -> str:
         known = ids[m.group(1).lower()].get(int(m.group(2)))
         return f"{m.group(1)} #{known}" if known else m.group(0)
 
-    return {"message": re.sub(r"\b(customer|order|tag) (\d+)\b", row, message, flags=re.IGNORECASE)}
+    return {**body, "message": re.sub(r"\b(customer|order|tag) (\d+)\b", row, str(body.get("message")), flags=re.IGNORECASE)}
 
 
 def step(name: str, method: str, path: str, body: Any = None, expect: int = 200) -> Any:

@@ -7,6 +7,7 @@ query, the same way for PostgreSQL, MySQL, MariaDB and SQLite. It takes the plat
     seed <url>                     one customer and one order, with only the columns that have no default
     points <url> present|absent    the column customers.points added by the second migration, and its default
     scalar <url> <sql>             the first value of a query
+    compare <folder>               the schemas migrations.py wrote there: what differs between the dialects
 """
 
 from __future__ import annotations
@@ -68,6 +69,25 @@ def wait(url: str, seconds: float = 60) -> None:
             time.sleep(0.5)
 
 
+def default_of(default: Any) -> str | None:
+    """A column's default by its meaning: each database (and each way of writing it) spells the same value in its own
+    way (`(false)`, `'0'`, `0`; `0.0`, `'0'`; `'pending'::character varying`; `CURRENT_TIMESTAMP`, `now()`)."""
+    if default is None:
+        return None
+    d = str(default).strip()
+    while d.startswith("(") and d.endswith(")"):
+        d = d[1:-1].strip()
+    d = d.split("::")[0].strip("'").lower()
+    if d in ("true", "false"):
+        return str(int(d == "true"))
+    if d in ("current_timestamp", "current_timestamp()", "now()"):
+        return "now"
+    try:
+        return f"{float(d):g}"
+    except ValueError:
+        return d
+
+
 def read_schema(url: str) -> dict[str, Any]:
     """Every table of the app as the database has it: columns (type family, nullable, default), key, unique columns,
     foreign keys."""
@@ -118,7 +138,7 @@ def read_schema(url: str) -> dict[str, Any]:
                         "length": getattr(c["type"], "length", None),
                         # SQLite says a key may be null (it never is)
                         "nullable": bool(c["nullable"]) and c["name"] not in key,
-                        "default": None if c.get("default") is None else str(c["default"]),
+                        "default": default_of(c.get("default")),
                     }
                     for c in i.get_columns(table)
                 },
@@ -218,8 +238,40 @@ def points(url: str, state: str) -> None:
         raise SystemExit(f"the row that was there before the migration has points = {got!r}, expected the default 7")
 
 
+def compare(folder: str) -> None:
+    """One line per difference between the schemas two dialects left on the same database (schema-<dialect>-<database>-
+    <step>.json), each difference once with the steps it shows in."""
+    from pathlib import Path
+
+    def flat(schema: dict[str, Any]) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        for table, t in schema.items():
+            for part in ("key", "unique", "foreign"):
+                out[f"{table} {part}"] = t[part]
+            for column, c in t["columns"].items():
+                for k, v in c.items():
+                    out[f"{table}.{column} {k}"] = v
+        return out
+
+    found: dict[tuple[str, str, str, str], list[str]] = {}
+    files = sorted(Path(folder).glob("schema-fastapi-*.json"), key=lambda f: (f.name.split("-")[2], int(f.name.split("-")[3])))
+    for file in files:
+        _, _, database, step = file.stem.split("-", 3)
+        other = file.with_name(file.name.replace("schema-fastapi-", "schema-nestjs-"))
+        if not other.exists():
+            continue
+        a, b = flat(json.loads(file.read_text())), flat(json.loads(other.read_text()))
+        for key in sorted({*a, *b}):
+            if a.get(key) != b.get(key):
+                found.setdefault((database, key, repr(a.get(key)), repr(b.get(key))), []).append(step.split("-")[0])
+    for (database, key, a, b), steps in found.items():
+        print(f"{database:<8} {key}: fastapi {a}, nestjs {b} (steps {', '.join(steps)})")
+
+
 def main(argv: list[str]) -> None:
     command, url, *rest = argv
+    if command == "compare":
+        return compare(url)
     if command == "wait":
         wait(url)
     elif command == "schema":

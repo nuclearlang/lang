@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-21
+updated: 2026-11-22
 related: [../04-specs/004-backend-parity/plan.md, ../03-adr/0001-backend-data.md]
 ---
 # Roadmap
@@ -46,10 +46,15 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   4. `Grafana(url, instanceId, token)` against a Grafana Cloud stack's OTLP gateway: traces in Tempo, metrics in
      Mimir.
   5. The app stopping with the destination down (today the exporter retries for about ten seconds).
-- The database check is not in the CI (`.github/workflows/platform-backend.yml`): it ran on a developer's machine
-  only (Docker 29; `postgres:16-alpine`, `mysql:8.0`, `mariadb:11`). Other versions of the servers never ran.
-- `nuclear migrate` itself against PostgreSQL, MySQL and MariaDB: the database check calls the dialects' migration
-  tools as the other checks do, not the command.
+- Other versions of the database servers: the database check runs `postgres:16-alpine`, `mysql:8.0` and
+  `mariadb:11` only (on a developer's machine and in `.github/workflows/platform-backend.yml`).
+- `nuclear migrate` after a real `nuclear install` on a clean machine: the database check gives the project's
+  `build/` the shared tools of the checks (`.venv`, `node_modules`) in place of `nuclear install`.
+- Two `nuclear migrate` at the same time on one database (two instances of an app deployed at once): nothing locks
+  the history.
+- A migration that changes the key of a table: `make` writes nothing for it in one dialect and a change that does
+  nothing in the other.
+- A migration on a table with millions of rows (SQLite rebuilds the table; the other databases alter it in place).
 - Two requests that change the same row at once inside `@transactional` (two checkouts of one customer): the
   platform has no word to lock a row, and no check says what each database does.
 - `nuclear migrate` on Windows (`cmd /C` quoting).
@@ -62,16 +67,40 @@ expect; each needs a rule before it is changed.
 - **A unique column the use case did not check answers 500.** Of 16 requests at once for one email, one makes the
   row, those the use case saw answer 409 and the rest reach the database's unique error: a 500 in both dialects.
   Wanted: a rule (409?) for a unique violation.
-- **The body of an error is each framework's.** `{"detail": "..."}` in one dialect, `{"statusCode": 409, "message":
-  "..."}` in the other; the reasons of a 400 are each validator's words and count. Only the status and the message
-  of a `Result`'s error are the same. A client generated from the contract reads the status.
+- **A text given for a number in a body** (`"age": "30"`) is accepted by one dialect's validator and refused by
+  the other's (not run: known from each validator; the error bodies themselves are one, ADR-synapsis-0013).
 - **A `DateTime` keeps its milliseconds on PostgreSQL and SQLite and loses them on MySQL and MariaDB** (both
   dialects write a `DATETIME` without fraction).
 - **No text column longer than `@column(length = n)`.** A `string` field without a length is 255 characters in both
   dialects; there is no word for a text of any length.
 - **`@created` / `@updated` are written by the database in one dialect** (a nullable column with the default
   `CURRENT_TIMESTAMP`) **and by the app in the other** (a `NOT NULL` column without a default): the same answers
-  through the app, but a row inserted by SQL needs them in the second.
+  through the app, but a row inserted by SQL needs them in the second. It is the one difference of meaning the
+  database check lists between the schemas the two dialects' migrations leave (`~` lines); the others are spelling
+  (below).
+- **The schemas of the two dialects are not the same bytes.** Besides the timestamps: a foreign key has
+  `ON UPDATE CASCADE` in one dialect and no rule in the other (a key never changes through the app); on SQLite a
+  `boolean` is `BOOLEAN` in one and `TINYINT(1)` in the other, a `double` is `DOUBLE` and `DOUBLE PRECISION`, and a
+  table made by its first migration and never rebuilt has unnamed constraints in one. Wanted: one schema, column by
+  column, with a check that compares the databases' own DDL.
+- **What the migrations do not do, and the tools they follow do** (each needs a rule first):
+  - *A database made before its migrations* (`createTables`, then the first `nuclear migrate`): it is refused
+    (`table ... already exists`). Flyway has `baseline`, Alembic `stamp`: a command that marks the migrations as
+    applied without running them.
+  - *A migration edited after it was applied* is not noticed. Flyway and Liquibase keep a checksum of each file in
+    the history and refuse; Alembic, Sequelize, TypeORM and Rails do not.
+  - *The SQL of a migration without running it* (`--sql`, a dry run): Flyway, Alembic (offline mode) and Rails
+    print it.
+  - *A lock against two runs at once*: Flyway and Liquibase lock the history table, Rails takes an advisory lock;
+    Alembic, Sequelize and TypeORM do not.
+  - *A rename found by `make`*: every tool writes a drop and an add, and none guesses; Django and Prisma ask the
+    user at `make` time. Today the file is edited by hand, in the dialect's migration language: the same Nuclear
+    project needs two different edits. A word in Nuclear for it (a rename said in the entity) would be a change of
+    the language.
+  - *Data that goes with the schema* (seeds; Flyway's repeatable migrations, Sequelize's seeders) and *one
+    migration from many* (squash: Django, Rails' schema file).
+  - *A history of applied migrations with their date* in one table of the same shape in every dialect: today each
+    dialect keeps its tool's table (one holds the last migration, the other the list).
 - **A model built in code is validated in one dialect only** (`NewCustomer(email = "nope")` throws in fastapi; in
   nestjs only a request's body is validated).
 - **`like` follows the database's case rule** (PostgreSQL tells the case apart; MySQL, MariaDB and SQLite do not for
@@ -81,6 +110,12 @@ expect; each needs a rule before it is changed.
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).
 
 ## Pending
+
+- **A unique or a foreign key made by a migration of before 0.91 has no name** (the database chose one). Dropping it:
+  one dialect finds it by its column; the other writes `drop_constraint(None)` and `make` warns to write the name by
+  hand. Wanted: found by its column in both.
+- **A pending migration before an applied one** (a file added in the middle of the line) is refused in one dialect
+  and not seen in the other, whose history holds only the last migration applied.
 
 - **Found writing the skills library (2026-11-18)**: no users with password hashing or JWT auth; no multipart upload; no background jobs; no documented way to read a raw request body or headers (webhook signatures); no `graph` make-kind. `@status` is in the reference but undocumented for fastapi, and the reference says 400 for an invalid body where fastapi answers 422.
 - **The listeners of one test receive the events of the next** (synapsis-py): `testing.running` resets the injector

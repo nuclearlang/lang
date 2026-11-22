@@ -60,7 +60,8 @@ installer/install.sh                         # the user runs the installed copy:
 - `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the
   guards and the WebSocket of `tasks_api`; `smoke.mjs`).
 - `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the
-  seed, SQL) and `scenario.py` (the one HTTP scenario whose answers are compared).
+  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`) and `scenario.py` (the one HTTP
+  scenario whose answers are compared).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
 Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,

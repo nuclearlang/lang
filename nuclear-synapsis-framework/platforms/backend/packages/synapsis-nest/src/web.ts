@@ -1,11 +1,16 @@
 // HTTP: a controller that returns Result<E, T> answers T, or the error's status (AppError) with its message.
 import {
+  ArgumentMetadata,
+  ArgumentsHost,
   CallHandler,
+  Catch,
+  ExceptionFilter,
   ExecutionContext,
   HttpException,
   INestApplication,
   Injectable,
   NestInterceptor,
+  PipeTransform,
   ValidationPipe,
 } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
@@ -14,7 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Observable, map } from 'rxjs';
 import { AppConfig } from './config.js';
-import { AppError } from './errors.js';
+import { AppError, InvalidInput, Invalidity, errorBody, reason, reasonsOf } from './errors.js';
 import { Guard, GuardsOf, Headers, refusal } from './guards.js';
 import { Result } from './result.js';
 
@@ -27,9 +32,74 @@ export class ResultInterceptor implements NestInterceptor {
         const r = value as Result<unknown, unknown>;
         if (r.isOk) return r.value;
         const e = r.error;
-        throw new HttpException(e instanceof AppError ? e.message : String(e), e instanceof AppError ? e.status : 500);
+        throw e instanceof AppError ? e : new AppError(String(e), 500);
       }),
     );
+  }
+}
+
+/** Every error answers Nuclear's body, whatever the framework would write (ADR-synapsis-0013): a Result's error, a
+ * guard's refusal, an invalid body or parameter with its reasons, a route that does not exist, and what nothing
+ * handled (a 500 that never says why: the reason may hold what the app must not show). */
+@Catch()
+export class ErrorFilter implements ExceptionFilter {
+  catch(e: unknown, host: ArgumentsHost): void {
+    const res = host.switchToHttp().getResponse<{ status(n: number): { json(v: unknown): void } }>();
+    if (e instanceof InvalidInput) {
+      res.status(400).json(errorBody(400, 'invalid', e.errors));
+    } else if (e instanceof AppError) {
+      res.status(e.status).json(errorBody(e.status, e.message));
+    } else if (e instanceof HttpException) {
+      const status = e.getStatus();
+      const said = e.getResponse();
+      const text = typeof said === 'string' ? said : String((said as { message?: unknown }).message ?? '');
+      // a body that is not JSON is refused by the framework before any validation
+      if (status === 400 && /JSON/i.test(text)) return res.status(400).json(errorBody(400, 'invalid', [reason('', 'json')]));
+      const known: Record<number, string> = { 404: 'not found', 405: 'method not allowed' };
+      const own = text && !/^Cannot [A-Z]+ /.test(text) ? text : '';
+      res.status(status).json(errorBody(status, own || known[status] || 'error'));
+    } else {
+      res.status(500).json(errorBody(500, 'error'));
+    }
+  }
+}
+
+/** A route or query parameter that is a number or a boolean: its value, or the reason it is refused. A parameter
+ * that is not given passes (a required one is the route's). */
+abstract class ParamPipe<T> implements PipeTransform<unknown, T | undefined> {
+  protected abstract readonly type: string;
+  protected abstract parse(text: string): T | undefined;
+
+  transform(value: unknown, at: ArgumentMetadata): T | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = this.parse(String(value));
+    if (parsed === undefined) throw new InvalidInput([reason(at.data ?? '', 'type', this.type)]);
+    return parsed;
+  }
+}
+
+@Injectable()
+export class IntPipe extends ParamPipe<number> {
+  protected readonly type = 'a whole number';
+  protected parse(text: string): number | undefined {
+    return /^[+-]?\d+$/.test(text.trim()) ? Number.parseInt(text, 10) : undefined;
+  }
+}
+
+@Injectable()
+export class DoublePipe extends ParamPipe<number> {
+  protected readonly type = 'a number';
+  protected parse(text: string): number | undefined {
+    const n = Number(text);
+    return text.trim() !== '' && Number.isFinite(n) ? n : undefined;
+  }
+}
+
+@Injectable()
+export class BoolPipe extends ParamPipe<boolean> {
+  protected readonly type = 'true or false';
+  protected parse(text: string): boolean | undefined {
+    return text === 'true' ? true : text === 'false' ? false : undefined;
   }
 }
 
@@ -40,8 +110,11 @@ export function configureApp(app: INestApplication): INestApplication {
   const guards = config?.guards ?? [];
   if (guards.length) app.useGlobalGuards(new GuardsOf(guards));
   if (config?.origins?.length) app.enableCors({ origin: [...config.origins] });
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({ transform: true, whitelist: true, exceptionFactory: (errors) => new InvalidInput(reasonsOf(errors as Invalidity[])) }),
+  );
   app.useGlobalInterceptors(new ResultInterceptor());
+  app.useGlobalFilters(new ErrorFilter());
   fixedRoutesFirst(app);
   serveContract(app, guards);
   for (const c of config?.connections ?? []) c.instrument(app);
@@ -84,12 +157,15 @@ function fixedRoutesFirst(app: INestApplication): void {
 function serveContract(app: INestApplication, guards: readonly Guard[]): void {
   const server = app.getHttpAdapter().getInstance() as { get?: (path: string, handler: (req: { headers: Headers }, res: { json(v: unknown): void; status(n: number): { json(v: unknown): void } }) => void) => void };
   if (typeof server.get !== 'function') return;
-  for (const name of ['contract', 'openapi']) {
+  // `/openapi.json` is the same document: the API is described once, from the Nuclear, in every dialect
+  // (ADR-synapsis-0013); a guarded app does not serve it there, as it serves no documentation page
+  const routes = [['contract', '/.nuclear/contract.json'], ['openapi', '/.nuclear/openapi.json'], ...(guards.length ? [] : [['openapi', '/openapi.json']])];
+  for (const [name, path] of routes) {
     const file = join('.nuclear', `${name}.json`);
     if (!existsSync(file)) continue;
-    server.get(`/.nuclear/${name}.json`, (req, res) => {
+    server.get(path!, (req, res) => {
       const e = refusal(guards, req.headers);
-      if (e) return res.status(e.status).json({ statusCode: e.status, message: e.message });
+      if (e) return res.status(e.status).json(errorBody(e.status, e.message));
       res.json(JSON.parse(readFileSync(file, 'utf8')));
     });
   }

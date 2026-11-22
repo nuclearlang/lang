@@ -29,7 +29,15 @@ try {
   assert.equal((await call('POST', '/tasks', { title: 'Buy milk' }))[0], 409);
   const [bad, why] = await call('POST', '/tasks', { title: '', priority: 7 });
   assert.equal(bad, 400);
-  assert.equal(why.message.length, 2);
+  // Nuclear's body of an error (ADR-synapsis-0013): one reason per field, in the order of the fields' names
+  assert.deepEqual(why, {
+    status: 400,
+    message: 'invalid',
+    errors: [
+      { field: 'priority', rule: 'max', message: 'priority must be at most 3' },
+      { field: 'title', rule: 'minLength', message: 'title must have at least 1 characters' },
+    ],
+  });
   [status, task] = await call('PATCH', `/tasks/${task.id}`, { done: true });
   assert.equal(status, 200);
   assert.equal(task.done, true);

@@ -500,9 +500,9 @@ controller TasksController(tasks: TasksAppComponent)
 ```
 
 ```typescript
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { AppError, Result } from 'synapsis-nest';
+import { AppError, IntPipe, Result } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
@@ -519,12 +519,12 @@ export class TasksController {
   constructor(private readonly tasks: TasksAppComponent) {}
 
   @Get(':id')
-  async one(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Task>> {
+  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {
     return await this.tasks.task(id);
   }
 
   @Patch(':id')
-  async complete(@Param('id', ParseIntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {
+  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {
     return await this.tasks.complete(id, changes);
   }
 
@@ -857,8 +857,29 @@ describe('Api', () => {
 ### Migrations
 
 Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`,
-diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports; `SequelizeMeta`. The
-commands and the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8.
+diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports. The commands and
+the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:
+
+- A migration exports `up(queryInterface, Sequelize)`, `down(queryInterface, Sequelize)`, `parent` (the name of the
+  migration it was made after, `null` for the first) and `schema` (the tables once it is applied). `SequelizeMeta`
+  lists the files applied.
+- `queryInterface` is Sequelize's, made right for every database by the runtime: `createTable`, `dropTable`,
+  `addColumn`, `changeColumn` (the column as the attribute says: type, `allowNull`, `defaultValue`, `unique`,
+  `references`), `removeColumn`, `renameColumn`, `renameTable`; data is changed with
+  `queryInterface.sequelize.query(sql)`.
+- A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):
+
+```js
+export async function up(queryInterface, Sequelize) {
+  await queryInterface.renameTable("shops", "stores");
+  await queryInterface.renameColumn("orders", "shop_id", "store_id");
+}
+
+export async function down(queryInterface, Sequelize) {
+  await queryInterface.renameColumn("orders", "store_id", "shop_id");
+  await queryInterface.renameTable("stores", "shops");
+}
+```
 
 ## 3. What is not there yet
 

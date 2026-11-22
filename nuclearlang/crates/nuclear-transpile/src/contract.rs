@@ -616,10 +616,32 @@ pub fn openapi(contract: &Value) -> Value {
     for (name, m) in contract["models"].as_object().into_iter().flatten() {
         schemas.insert(name.clone(), schema_of_model(m));
     }
+    // what every error answers, in every dialect (ADR-synapsis-0013): the runtimes write this body whatever their
+    // framework would
     schemas.insert("Error".into(), json!({
         "type": "object",
-        "properties": { "message": { "type": "string" }, "status": { "type": "integer" } },
-        "required": ["message"],
+        "properties": {
+            "status": { "type": "integer", "description": "the HTTP status" },
+            "message": { "type": "string" },
+            "errors": {
+                "type": "array",
+                "description": "an invalid body or parameter: one reason per field, in the order of the fields' names",
+                "items": { "$ref": "#/components/schemas/ErrorReason" },
+            },
+        },
+        "required": ["status", "message"],
+    }));
+    schemas.insert("ErrorReason".into(), json!({
+        "type": "object",
+        "properties": {
+            "field": { "type": "string", "description": "the field's path (items.0.name); empty for the body itself" },
+            "rule": {
+                "type": "string",
+                "enum": ["required", "type", "minLength", "maxLength", "min", "max", "pattern", "email", "url", "json", "invalid"],
+            },
+            "message": { "type": "string" },
+        },
+        "required": ["field", "rule", "message"],
     }));
     for (cname, c) in contract["controllers"].as_object().into_iter().flatten() {
         let tag = c["component"].as_str().filter(|s| !s.is_empty()).unwrap_or(cname);

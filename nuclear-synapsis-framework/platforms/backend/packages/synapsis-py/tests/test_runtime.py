@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TypedDict
+
+import pytest
 
 from synapsis import (
     AppConfig, AppError, Entity, Mapped, Ok, Repository, Result, SQLite, column, controller, create_app,
@@ -79,7 +82,9 @@ class ItemController:
         return f"{type_}:{list_}:{from_}"
 
 
-async def test_a_renamed_parameter_keeps_its_public_name() -> None:
+async def test_a_renamed_parameter_keeps_its_public_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # away from a built project: there `app.openapi()` is the document the transpiler wrote (ADR-synapsis-0013)
+    monkeypatch.chdir(tmp_path)
     app = create_app(Config(), controllers=[ItemController])
     async with client(app, Config(), memory_database()) as http:
         answer = await http.get("/items/book", params={"list": 3, "from": "shelf"})

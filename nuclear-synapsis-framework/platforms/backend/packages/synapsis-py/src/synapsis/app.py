@@ -10,11 +10,12 @@ from pathlib import Path
 from typing import Any, cast
 
 from fastapi import FastAPI, Request
-from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import AppConfig, ComponentConfig, Connection
+from .errors import error_body, reasons_of
 from .inject import inject
 from .web import guarded, router_of
 
@@ -79,10 +80,24 @@ def create_app(
     app.state.synapsis_config = config
     app.state.synapsis_components = components
 
+    # every error answers Nuclear's body, whatever the framework would write (ADR-synapsis-0013)
     @app.exception_handler(RequestValidationError)
     async def invalid(_: Request, e: RequestValidationError) -> JSONResponse:
-        # the platform's answer to an invalid body or parameter: 400 with the reasons (FastAPI's default is 422)
-        return JSONResponse(status_code=400, content={"detail": jsonable_encoder(e.errors())})
+        # an invalid body or parameter: 400 with one reason per field (FastAPI's default is 422)
+        return JSONResponse(status_code=400, content=error_body(400, "invalid", reasons_of(e.errors())))
+
+    @app.exception_handler(StarletteHTTPException)
+    async def refused(_: Request, e: StarletteHTTPException) -> JSONResponse:
+        # a Result's error, a guard's refusal, a route that does not exist
+        known = {404: "not found", 405: "method not allowed"}
+        said = e.detail if isinstance(e.detail, str) else ""
+        message = known.get(e.status_code, said) if said in ("Not Found", "Method Not Allowed", "") else said
+        return JSONResponse(status_code=e.status_code, content=error_body(e.status_code, message or "error"), headers=e.headers)
+
+    @app.exception_handler(Exception)
+    async def failed(_: Request, e: Exception) -> JSONResponse:
+        # what nothing handled: never the reason, which may hold what the app must not show
+        return JSONResponse(status_code=500, content=error_body(500, "error"))
 
     routers = [router_of(inject(cast(type[Any], c))) for c in controllers]
     for r in routers:
@@ -92,6 +107,7 @@ def create_app(
     for c in [*config.connections, *(c for comp in components for c in comp.connections)]:
         c.instrument(app)
     _serve_contract(app, every)
+    _own_openapi(app)
     return app
 
 
@@ -107,6 +123,15 @@ def _serve_contract(app: FastAPI, guards: Any = None) -> None:
             return JSONResponse(content=json.loads(p.read_text()))
 
         app.add_api_route(f"/.nuclear/{name}.json", read, methods=["GET"], include_in_schema=False, dependencies=guards)
+
+
+def _own_openapi(app: FastAPI) -> None:
+    """`/openapi.json` and the documentation pages show the document the transpiler wrote from the Nuclear
+    (`.nuclear/openapi.json`), never the one the framework would work out from the generated code: the API is
+    described once, the same in every dialect (ADR-synapsis-0013)."""
+    path = Path(".nuclear") / "openapi.json"
+    if path.is_file():
+        app.openapi = lambda: json.loads(path.read_text())  # type: ignore[method-assign]
 
 
 async def start(config: AppConfig, components: Sequence[type[ComponentConfig]] = ()) -> None:

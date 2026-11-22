@@ -105,7 +105,9 @@ ones to the default database; `nuclear migrate down` reverts the last. They are 
 `migrate_make`, `migrate`, `migrate_down` (placeholders `{{message}}`, `{{migrations}}`), so the command names no
 tool. `SQLite(createTables = true)` stays for tests and development. A field default (`done: boolean = false`) is
 also the column's SQL default, so a non-null column can be added to a table with rows. A rename shows as a drop
-and an add; `make` warns of every drop; the file is the project's to edit.
+and an add; `make` warns of every drop; the file is the project's to edit. Since 0.91 the two tools keep the same
+rules, written in [the reference](../07-reference/backend.md) §2.8: `nuclear migrate status`, `--to`, a history of
+one line, a transaction per migration, a name for every unique and foreign key.
 
 **How each dialect implements it.**
 

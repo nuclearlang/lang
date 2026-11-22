@@ -1176,7 +1176,25 @@
    "body": [
     "Migrations of the database schema (ADR-backend-0001): Alembic over `migrations/` (`env.py`, `versions/`), made by",
     "`nuclear migrate make` against an empty SQLite at the last migration, in batch mode. The commands and the rules:",
-    "`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8."
+    "`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:",
+    "",
+    "- A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`; its `revision`",
+    "  is its timestamp and `down_revision` the migration it was made after. `alembic_version` holds the last one applied.",
+    "- They run through `nuclear migrate` only (the folder has no `alembic.ini`).",
+    "- A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's",
+    "  `existing_type`):",
+    "",
+    "```python",
+    "def upgrade() -> None:",
+    "    op.rename_table('shops', 'stores')",
+    "    with op.batch_alter_table('orders', schema=None) as batch_op:",
+    "        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)",
+    "",
+    "def downgrade() -> None:",
+    "    with op.batch_alter_table('orders', schema=None) as batch_op:",
+    "        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)",
+    "    op.rename_table('stores', 'shops')",
+    "```"
    ],
    "platforms": [
     "backend"
@@ -1390,10 +1408,11 @@
     "nuclear migrate make \"notes on tasks\"   # what the entities changed since the last migration",
     "nuclear migrate                         # applies the pending ones",
     "nuclear migrate down                    # reverts the last one",
+    "nuclear migrate status                  # every migration: applied or pending",
     "```",
     "",
     "They are Alembic migrations (`migrations/versions/*.py`, `alembic_version` in the database), written in batch mode so",
-    "SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data."
+    "SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`batch_op.alter_column(..., new_column_name=...)`, `op.rename_table`). `--to <migration>` after `migrate` or `migrate down` stops at that one."
    ],
    "platforms": [
     "backend"
@@ -1501,7 +1520,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api",
+   "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api.7ffd51",
    "type": "guide",
    "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 4. Use cases, models and the API",
    "summary": "Models of `domain/models/` are pydantic models with validation decorators (`@minLength`, `@max`, `@email`...).",
@@ -1539,9 +1558,31 @@
     "    async def one(self, id: int) -> Result[AppError, Character]:",
     "        return await self.characters.character(id)",
     "    # ...",
-    "```",
-    "",
-    "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller."
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/08-guides/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api.96599b",
+   "type": "guide",
+   "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 4. Use cases, models and the API",
+   "summary": "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.",
+   "body": [
+    "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.",
+    "Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written",
+    "by the runtime from what FastAPI and pydantic report; `/openapi.json` and `/docs` show the document the transpiler",
+    "wrote from the contract, not one worked out from the generated Python (ADR-synapsis-0013)."
    ],
    "platforms": [
     "backend"
@@ -2704,13 +2745,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.2d31fa",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.d1d096",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
-   "summary": "@Patch(':id') async complete(@Param('id', ParseIntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await this.tasks.complete(id, changes); } @Get() search(@Query('text') text?: string): string { return text ??",
+   "summary": "@Patch(':id') async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await this.tasks.complete(id, changes); } @Get() search(@Query('text') text?: string): string { return text ??",
    "body": [
     "@Patch(':id')",
-    "  async complete(@Param('id', ParseIntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
+    "  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
     "    return await this.tasks.complete(id, changes);",
     "  }",
     "",
@@ -2735,7 +2776,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.3d84b4",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.f2dfac",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
    "summary": "REST routes, like NestJS: `@controller(\"tasks\")` and `@get`, `@post` (201), `@put`, `@patch`, `@delete` with Nest's route (`\":id\"`), and `@status(204)`.",
@@ -2762,9 +2803,9 @@
     "```",
     "",
     "```typescript",
-    "import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query } from '@nestjs/common';",
+    "import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';",
     "import { IsBoolean, IsOptional } from 'class-validator';",
-    "import { AppError, Result } from 'synapsis-nest';",
+    "import { AppError, IntPipe, Result } from 'synapsis-nest';",
     "",
     "export class TaskChanges {",
     "  @IsOptional()",
@@ -2781,7 +2822,7 @@
     "  constructor(private readonly tasks: TasksAppComponent) {}",
     "",
     "  @Get(':id')",
-    "  async one(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Task>> {",
+    "  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {",
     "    return await this.tasks.task(id);",
     "  }"
    ],
@@ -3052,14 +3093,54 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.d93c67",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — Migrations",
-   "summary": "Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`, diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports; `SequelizeMeta`.",
+   "summary": "export async function down(queryInterface, Sequelize) { await queryInterface.renameColumn(\"orders\", \"store_id\", \"shop_id\"); await queryInterface.renameTable(\"stores\", \"shops\"); }",
+   "body": [
+    "export async function down(queryInterface, Sequelize) {",
+    "  await queryInterface.renameColumn(\"orders\", \"store_id\", \"shop_id\");",
+    "  await queryInterface.renameTable(\"stores\", \"shops\");",
+    "}",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-migrations.f5e59b",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — Migrations",
+   "summary": "Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`, diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports.",
    "body": [
     "Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`,",
-    "diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports; `SequelizeMeta`. The",
-    "commands and the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8."
+    "diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports. The commands and",
+    "the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:",
+    "",
+    "- A migration exports `up(queryInterface, Sequelize)`, `down(queryInterface, Sequelize)`, `parent` (the name of the",
+    "  migration it was made after, `null` for the first) and `schema` (the tables once it is applied). `SequelizeMeta`",
+    "  lists the files applied.",
+    "- `queryInterface` is Sequelize's, made right for every database by the runtime: `createTable`, `dropTable`,",
+    "  `addColumn`, `changeColumn` (the column as the attribute says: type, `allowNull`, `defaultValue`, `unique`,",
+    "  `references`), `removeColumn`, `renameColumn`, `renameTable`; data is changed with",
+    "  `queryInterface.sequelize.query(sql)`.",
+    "- A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):",
+    "",
+    "```js",
+    "export async function up(queryInterface, Sequelize) {",
+    "  await queryInterface.renameTable(\"shops\", \"stores\");",
+    "  await queryInterface.renameColumn(\"orders\", \"shop_id\", \"store_id\");",
+    "}"
    ],
    "platforms": [
     "backend"
@@ -3226,10 +3307,11 @@
     "nuclear migrate make \"notes on tasks\"   # what the entities changed since the last migration",
     "nuclear migrate                         # applies the pending ones",
     "nuclear migrate down                    # reverts the last one",
+    "nuclear migrate status                  # every migration: applied or pending",
     "```",
     "",
     "They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`, `SequelizeMeta` in the database);",
-    "each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data."
+    "each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one."
    ],
    "platforms": [
     "backend"
@@ -3411,7 +3493,7 @@
     "  }",
     "",
     "  @Get(':id')",
-    "  async one(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Task>> {",
+    "  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {",
     "    return await this.tasks.task(id);",
     "  }",
     "  // ...",
@@ -3419,7 +3501,10 @@
     "```",
     "",
     "Path parameters, query parameters and the body are found from the route and the types; the pipes come out by",
-    "themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400."
+    "themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. Every error answers Nuclear's body",
+    "(`status`, `message`, and the reasons of an invalid body in `errors`), written by the runtime's `ErrorFilter`",
+    "whatever Nest would write; a number or a boolean of the route or the query is read by the runtime's `IntPipe`,",
+    "`DoublePipe` and `BoolPipe`, which name the parameter in the reason (ADR-synapsis-0013)."
    ],
    "platforms": [
     "backend"

@@ -94,7 +94,10 @@ and where each goes: `path`, `query` or `body`, the answer and error types, the 
 `repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,
 `json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets
 `.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the
-runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`.
+runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`. The OpenAPI document is
+also what `GET /openapi.json` answers in every dialect, and its `Error` schema (`status`, `message`, and `errors`
+with a `field`, a `rule` and a `message` for an invalid body or parameter) is the body every error answers
+(ADR-synapsis-0013).
 
 A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):
 

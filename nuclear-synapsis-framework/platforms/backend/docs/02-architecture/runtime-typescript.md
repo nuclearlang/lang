@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-22
 related: [overview.md, runtime-python.md, dependencies.md, ../06-runbooks/change-a-runtime.md]
 ---
 # The TypeScript runtime: `synapsis-nest`
@@ -68,23 +68,47 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 ## Migrations
 
 Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run
-by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`):
+by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`,
+`migrate_status`):
 
 ```sh
 npx synapsis-nest-migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
-npx synapsis-nest-migrate up --dir <migrations>                         # applies the pending ones
-npx synapsis-nest-migrate down --dir <migrations>                       # reverts the last one
+npx synapsis-nest-migrate up [--to <name>] --dir <migrations>           # applies the pending ones
+npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>
+npx synapsis-nest-migrate status --dir <migrations>                     # every migration: applied or pending
 ```
+
+The rules a user sees are the reference's (§2.8), the same words and exit codes as the Python runtime. How this one
+keeps them:
 
 - It reads the `entities` and the `config` the app module exports.
 - `schemaOf` reads the entities' attributes, `diff` compares them with the `schema` the last migration exports (so
-  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`.
-- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table). umzug was not needed.
+  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`:
+  the migration it was made after.
+- `chain` orders the files by `parent` and refuses two files with the same parent and a parent that is missing. A
+  file written before `parent` existed follows the file before it by name.
+- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table: the file's name). `status` refuses a name
+  that is not in the folder and a pending migration before an applied one. umzug was not needed.
+- `run` applies or reverts one migration in a transaction of its own, with its line of `SequelizeMeta`. The
+  migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so `START TRANSACTION` holds everything
+  the migration runs. On SQLite the foreign keys are off while it runs and `PRAGMA foreign_key_check` must be empty
+  before it is kept.
+- A migration gets `migrator(queryInterface)`: Sequelize's queryInterface with what it gets wrong made right.
+  - `createTable` refuses a table that exists (Sequelize writes `CREATE TABLE IF NOT EXISTS`); on PostgreSQL, MySQL
+    and MariaDB it adds each unique and foreign key by name after the table.
+  - `addColumn` and `changeColumn` leave the column as the attribute says, with its unique and its foreign key: a
+    constraint that goes is found by its column in the database's catalog, whatever name it has.
+  - `removeColumn` drops the column's constraints first; `renameColumn` is `ALTER TABLE ... RENAME COLUMN` on every
+    database.
+  - SQLite cannot alter a column: `rebuild` reads the table from the database (`pragma_table_info`, `index_list`,
+    `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild
+    loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point
+    to the table (their `ON DELETE CASCADE` runs when it is dropped).
 
 ## Tests and type definitions
 
 - `test/runtime.test.ts`, `data.test.ts` (the same cases as the Python runtime's `test_data.py`),
-  `migrate.test.ts`; `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
+  `migrate.test.ts` (the same cases as `test_migrate.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
   them ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,

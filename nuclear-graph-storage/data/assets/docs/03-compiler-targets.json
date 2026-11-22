@@ -4204,7 +4204,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/02-architecture/fastapi.md#toolchain.7e3b5c",
+   "id": "doc:nuclearlang/dialects/python/docs/02-architecture/fastapi.md#toolchain.23ccb0",
    "type": "context",
    "title": "The `fastapi` dialect: the backend platform written in Python — Toolchain",
    "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with `.venv\\Scripts\\`):",
@@ -4220,7 +4220,7 @@
     "| `run` | `.venv/bin/uvicorn app.main:app --reload --port {{port}}` (`url = \"http://localhost:8000\"`, `ready = \"Uvicorn running\"`, `installed = \".venv\"`) |",
     "| `test` | `.venv/bin/python -m pytest -q` |",
     "| `package_add`, `package_remove`, `package_version`, `package_defs` | pip, the version it resolved, and `tools/defs/python/gen.py --distribution` for the package's type definitions, written into the project's `defs/`. A bare version (`4.17.0`) is exact (`==`); a constraint is `>=` |",
-    "| `migrate_make`, `migrate`, `migrate_down` | `python -m synapsis.migrate make\\|up\\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |"
+    "| `migrate_make`, `migrate`, `migrate_down`, `migrate_status` | `python -m synapsis.migrate make\\|up\\|down\\|status --dir {{migrations}}` (Alembic over the project's `migrations/`) |"
    ],
    "platforms": [
     "backend"
@@ -6560,30 +6560,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.eee212",
-   "type": "context",
-   "title": "The `nestjs` dialect: the backend platform written in TypeScript — Toolchain",
-   "summary": "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc` through `.nuclear/lines.json`.",
-   "body": [
-    "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after",
-    "the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`",
-    "through `.nuclear/lines.json`."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.f6797c",
+   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.7b3009",
    "type": "context",
    "title": "The `nestjs` dialect: the backend platform written in TypeScript — Toolchain",
    "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`):",
@@ -6599,7 +6576,30 @@
     "| `run` | `npm run dev` (`url = \"http://localhost:3000\"`, `ready = \"Nest application successfully started\"`) |",
     "| `test` | `npm test` |",
     "| `package_add`, `package_remove`, `package_version`, `package_companion`, `package_defs` | npm, the version it resolved, the `@types/<name>` package of one that ships no types, and `tools/defs/typescript/gen.js --package` for its type definitions, written into the project's `defs/`. A constraint is `^<version>` |",
-    "| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx synapsis-nest-migrate make\\|up\\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |"
+    "| `migrate_make`, `migrate`, `migrate_down`, `migrate_status` | `npx tsc`, then `npx synapsis-nest-migrate make\\|up\\|down\\|status --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.eee212",
+   "type": "context",
+   "title": "The `nestjs` dialect: the backend platform written in TypeScript — Toolchain",
+   "summary": "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc` through `.nuclear/lines.json`.",
+   "body": [
+    "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after",
+    "the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`",
+    "through `.nuclear/lines.json`."
    ],
    "platforms": [
     "backend"

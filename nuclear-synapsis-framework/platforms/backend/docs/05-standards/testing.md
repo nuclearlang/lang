@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-21
+updated: 2026-11-22
 related: [../06-runbooks/change-a-runtime.md, ../02-architecture/overview.md, ../../../docs/05-standards/testing.md]
 ---
 # Testing
@@ -17,7 +17,7 @@ are) are in [testing a platform](../../../docs/05-standards/testing.md). Here: w
 | The runtimes' tests | `packages/synapsis-py/tests/` (pytest), `packages/synapsis-nest/test/` (`node:test`) | the two checks |
 | The fastapi check | `rick_api` built; pyright `--strict` and the project's own tests on the generated code; a live run; then the conformance example | `checks/fastapi-check/check.sh` |
 | The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |
-| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, the migrations against the real database, one HTTP scenario, the project's tests; the answers compared between dialects and databases | `checks/database-check/check.sh` |
+| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, every kind of migration with `nuclear migrate` against the real database, one HTTP scenario, the project's tests; the answers compared between dialects and databases, the schemas' differences listed; a project made with `nuclear new` migrated | `checks/database-check/check.sh` |
 | The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |
 
 ## Set up, once
@@ -70,7 +70,7 @@ The first two scripts find the tree from their own place (`NUCLEAR_ROOT` overrid
    must answer "no changes".
 6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).
 
-**`database-check/check.sh`** (needs Docker running, besides the set-up above; about two minutes). It proves that
+**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twelve minutes). It proves that
 one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those
 dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one
 `ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed.
@@ -83,11 +83,28 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
    env("DATABASE_URL"))`..., without `createTables`), in an empty database of its own (`store_<dialect>`). Then, the
    stages:
    - **build**, **checker**: `nuclear build`, then pyright or `tsc --strict`.
-   - **migrations**: `make "first"`, `up`, `make "again"` answers "no changes"; `db.py schema` reads the real schema
-     back (tables, columns, nullability, types, the key, the unique columns, the foreign keys and their
-     `ON DELETE`); `db.py seed` inserts rows by SQL leaving the columns with a default out; a field with a default
-     is added to an entity (`points: int = 7`), `make`, `up` (the rows that were there get the default), `down` (the
-     column goes, the rows stay), `up` again.
+   - **new** (SQLite only, once per dialect): a project made with `nuclear new` and `nuclear gen resource`, then
+     `nuclear migrate status`, `make`, `up`, `make` (no changes), `status`, `down`, `status`.
+   - **migrations** (`migrations.py`): every step runs the real command, `nuclear migrate`, of the tree's build
+     (`target/debug` is first on `PATH`; the project's `build/` gets the shared tools as `.venv` or
+     `node_modules`, in place of `nuclear install`). After each step `db.py` reads the real schema back (tables,
+     columns, type, length, null, the default by its meaning, the key, the unique columns, the foreign keys and
+     their `ON DELETE`) and the rows. A `down` must leave exactly the schema read before its `up`. One line per
+     scenario is printed under the stage (`+`):
+     1. `make`, `up`, nothing left to make, `status`, `down` to an empty database, `down` with nothing applied.
+     2. The tables are there and the history is empty: `up` is refused whole.
+     3. A column with a default added to a table with rows (`points: int = 7`).
+     4. A column's type, null, default and length changed, a unique added.
+     5. A table, a foreign key on a table with rows (`@manyToOne`) and a join table (`@manyToMany`).
+     6. A table and a column renamed: `make` writes a drop and an add and warns; the file is edited into a rename
+        in the dialect's migration language; the rows and the foreign key follow.
+     7. A column, a unique and a foreign key dropped (its column stays).
+     8. A migration that fails half way (a statement added to it): exit 1, still pending; PostgreSQL and SQLite
+        keep nothing of it, MySQL and MariaDB keep the column it made and the message says so; fixed, it applies.
+     9. A migration applied and missing from the folder; two migrations made after the same one: refused.
+     10. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`.
+     11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs
+         on that schema.
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
      pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an
@@ -96,7 +113,10 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique
      value (one row), the cascade of a delete.
    - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).
-3. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,
+3. **schemas**: `db.py compare` lists every difference between the schemas the two dialects left on the same
+   database after each step (`~` lines). It is not a failure: what differs is in the
+   [roadmap](../01-product/roadmap.md).
+4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,
    `createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are
    compared byte by byte: the same in every dialect on every database.
 
@@ -108,7 +128,8 @@ answer 409 or 500 ([roadmap](../01-product/roadmap.md)).
 
 - **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each
   dialect runs with its own runner; a behaviour of the runtimes has the same test in both
-  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).
+  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations:
+  `tests/test_migrate.py`, `test/migrate.test.ts`).
 - **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An
   expected file the build no longer produces is a failure too.
 - **No network, no real service** in the fastapi and nestjs checks: SQLite (in memory or a temporary file) and fake

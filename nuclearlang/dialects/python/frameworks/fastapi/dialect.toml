@@ -225,11 +225,12 @@ package_defs = ".venv/bin/python {{tools}}/defs/python/gen.py {{defs_name}} {{ve
 package_requirement = "{{name}}{{version}}"
 package_exact = "=="
 package_constraint = ">={{version}}"
-# `nuclear migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): Alembic over the project's
+# `nuclear migrate make "<message>"` / `migrate` / `migrate down` / `migrate status` (ADR-backend-0001): Alembic over the project's
 # migrations/ folder
 migrate_make = ".venv/bin/python -m synapsis.migrate make {{message}} --dir {{migrations}}"
 migrate = ".venv/bin/python -m synapsis.migrate up --dir {{migrations}}"
 migrate_down = ".venv/bin/python -m synapsis.migrate down --dir {{migrations}}"
+migrate_status = ".venv/bin/python -m synapsis.migrate status --dir {{migrations}}"
 
 [toolchain.windows]
 install = "python -m venv .venv && .venv\\Scripts\\pip install -q {{packages}}/synapsis-py && .venv\\Scripts\\pip install -q -e .[test]"
@@ -242,6 +243,7 @@ package_defs = ".venv\\Scripts\\python {{tools}}/defs/python/gen.py {{defs_name}
 migrate_make = ".venv\\Scripts\\python -m synapsis.migrate make {{message}} --dir {{migrations}}"
 migrate = ".venv\\Scripts\\python -m synapsis.migrate up --dir {{migrations}}"
 migrate_down = ".venv\\Scripts\\python -m synapsis.migrate down --dir {{migrations}}"
+migrate_status = ".venv\\Scripts\\python -m synapsis.migrate status --dir {{migrations}}"
 
 # the editor's debug launch: the server under debugpy with the app's virtual environment (no --reload: the debugger
 # owns the process)

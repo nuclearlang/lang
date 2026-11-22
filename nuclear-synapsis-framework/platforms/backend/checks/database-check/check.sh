@@ -1,9 +1,11 @@
 #!/bin/sh
 # The same Nuclear project (examples/examples-backend/store_api) on real databases, with every backend dialect:
 # for each dialect (fastapi, nestjs) and each database (sqlite, postgres, mysql, mariadb) it builds the project with
-# that connection, runs the target's strict checker, the migrations (made, applied, the real schema read back, a
-# column added to a table with rows, reverted, applied again), the app over HTTP with one scenario (scenario.py) and
-# the project's tests; then it compares the answers: the same bytes in every dialect on every database.
+# that connection, runs the target's strict checker, the migrations (migrations.py: every kind of schema change made,
+# applied and reverted with the real command, `nuclear migrate`, the real schema and the rows read back after each;
+# a failing migration; the rules of the history), the app over HTTP with one scenario (scenario.py) and the project's
+# tests; then it compares the answers (the same bytes in every dialect on every database) and says where the schemas
+# of the dialects differ. On SQLite it also makes a project with `nuclear new` and migrates it.
 #
 #   check.sh                     everything
 #   check.sh fastapi postgres    only those dialects and databases (any of each)
@@ -87,14 +89,11 @@ checker() {
   if [ "$dialect" = fastapi ]; then "$V/pyright" --pythonpath "$py"
   else node "$nm/typescript/bin/tsc" -p tsconfig.json && echo "tsc --strict: 0 errors"; fi
 }
-migrate() {
-  if [ "$dialect" = fastapi ]; then "$py" -m synapsis.migrate "$@" --dir "$project/migrations"
-  else node node_modules/synapsis-nest/dist/migrate.js "$@" --dir "$project/migrations"; fi
-}
 build() { # the project → build/, compiled when the dialect compiles
   (cd "$root" && cargo run -q -p nuclear-cli -- build "$project") || return 1
-  [ "$dialect" = fastapi ] && return 0
-  ln -sfn "$nm" "$project/build/node_modules"
+  # what the dialect's [toolchain] runs in build/: the shared tools of the checks, in place of `nuclear install`
+  if [ "$dialect" = fastapi ]; then ln -sfn "$root/nuclearlang/tools/python/.venv" "$project/build/.venv"
+  else ln -sfn "$nm" "$project/build/node_modules"; fi
 }
 unit_tests() {
   if [ "$dialect" = fastapi ]; then "$py" -m pytest -q -p no:warnings
@@ -103,22 +102,26 @@ unit_tests() {
     echo "$out" | grep -E '^ℹ (tests|pass|fail)' | tr '\n' ' '
   fi
 }
-migrations() {
-  made=$(migrate make "first") || { echo "$made"; return 1; }
-  migrate up || return 1
-  migrate make "again" | grep -q "no changes" || { echo 'a second `make` with nothing changed wrote a migration'; return 1; }
-  "$py" "$self/db.py" schema "$url" >"$work/schema-$dialect-$database.json" || { cat "$work/schema-$dialect-$database.json"; return 1; }
-  "$py" "$self/db.py" seed "$url" || return 1
-  # a field with a default added to an entity whose table has rows
-  sed -i 's/^  credit: double = 0.0$/&\n  points: int = 7/' "$project/components/store/data/entities/customer.nuc"
-  grep -q 'points: int = 7' "$project/components/store/data/entities/customer.nuc" || { echo "the entity was not edited"; return 1; }
-  build && checker >/dev/null || { echo "the project with the new field does not build"; return 1; }
-  migrate make "points of a customer" || return 1
-  migrate up && "$py" "$self/db.py" points "$url" present || return 1
-  migrate down && "$py" "$self/db.py" points "$url" absent || return 1
-  migrate up && "$py" "$self/db.py" points "$url" present || return 1
-  "$py" "$self/db.py" schema "$url" --points >/dev/null || return 1
-  echo "made, applied, nothing left to make, the schema read back, a column added to a table with rows, reverted, applied again"
+migrations() { # every scenario of migrations.py, with the real command: `nuclear migrate` of the tree's build
+  rm -f "$work/migrations-$dialect-$database.log"
+  "$py" "$self/migrations.py" "$dialect" "$database" "$url" "$project" "$work"
+}
+fresh() { # a project made now, with `nuclear new` and `nuclear gen`: its migrations with the real command
+  rm -rf "$work/new-$dialect" && mkdir "$work/new-$dialect" && cd "$work/new-$dialect" || return 1
+  nuclear new shop_api -p backend -d "$dialect" >/dev/null 2>&1 || { echo "nuclear new failed"; return 1; }
+  project="$work/new-$dialect/shop_api"
+  cd "$project" && nuclear gen resource shop Product --fields "id:int name:string price:double" --source db >/dev/null 2>&1 || { echo "nuclear gen failed"; return 1; }
+  build >/dev/null 2>&1 || { echo "the new project does not build"; return 1; }
+  url="$work/new-$dialect/shop.sqlite"; DATABASE="$url"; export DATABASE
+  nuclear migrate status 2>&1 | grep -q "^no migrations in " || { echo "status of a project without migrations"; return 1; }
+  nuclear migrate make "the products" 2>&1 | grep -q "^wrote .*_the_products\." || { echo "make wrote no migration"; return 1; }
+  nuclear migrate 2>&1 | grep -q "^applied [0-9]*_the_products$" || { echo "up did not apply it"; return 1; }
+  nuclear migrate make "again" 2>&1 | grep -q "^no changes" || { echo "a second make wrote a migration"; return 1; }
+  [ "$("$py" "$self/db.py" scalar "$url" "SELECT COUNT(*) FROM products")" = 0 ] || { echo "no table products"; return 1; }
+  nuclear migrate status 2>&1 | grep -q "^applied  [0-9]*_the_products$" || { echo "status does not say applied"; return 1; }
+  nuclear migrate down 2>&1 | grep -q "^reverted [0-9]*_the_products$" || { echo "down did not revert it"; return 1; }
+  nuclear migrate status 2>&1 | grep -q "^pending  [0-9]*_the_products$" || { echo "status does not say pending"; return 1; }
+  echo "nuclear new, gen resource, migrate status / make / up / make (no changes) / status / down / status"
 }
 integration() {
   http=$(free_port)
@@ -145,6 +148,8 @@ case " $dialects " in *" nestjs "*)
   (cd "$root/nuclearlang/tools/node" && npm install --no-save --no-audit --no-fund --install-links "$here/packages/synapsis-nest" >/dev/null 2>&1) || exit 1 ;;
 esac
 (cd "$root" && cargo build -q -p nuclear-cli) || exit 1
+# `nuclear migrate` runs `nuclear build .`: the tree's build is the `nuclear` of this script
+PATH="$root/target/debug:$PATH"; export PATH
 
 for database in $databases; do
   dialect="-"
@@ -159,6 +164,7 @@ for database in $databases; do
     report ok - "$database" database "$(docker inspect -f '{{.Config.Image}}' "$prefix-$database") on port $database_port"
   fi
   for dialect in $dialects; do
+    [ "$database" = sqlite ] && { stage new fresh; cd "$work" || exit 1; unset DATABASE; }
     project="$work/$dialect-$database"
     mkdir -p "$project" && cp -r "$here/examples/examples-backend/store_api/." "$project" && rm -rf "$project/build" "$project/migrations"
     # the dialect, the plugin and the connection: the only lines that change (a project with migrations has no createTables)
@@ -180,6 +186,7 @@ for database in $databases; do
     cd "$project/build" || exit 1
     stage checker checker || continue
     stage migrations migrations
+    [ -f "$work/migrations-$dialect-$database.log" ] && sed 's/^/     + /' "$work/migrations-$dialect-$database.log"
     stage integration integration
     stage tests unit_tests
     cd "$work" || exit 1
@@ -202,5 +209,8 @@ for f in "$work"/answers-*.json; do
     failed=1
   fi
 done
+# --- the schemas the migrations left: every difference between the dialects, said (not a failure: docs/01-product/roadmap.md)
+differences=$("$py" "$self/db.py" compare "$work")
+[ -n "$differences" ] && { echo "the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; }
 [ "$failed" -eq 0 ] && echo "database-check: every dialect on every database ok" || echo "database-check: FAILED"
 exit "$failed"

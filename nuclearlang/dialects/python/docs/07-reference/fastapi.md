@@ -733,7 +733,26 @@ class FindOrder:
 
 Migrations of the database schema (ADR-backend-0001): Alembic over `migrations/` (`env.py`, `versions/`), made by
 `nuclear migrate make` against an empty SQLite at the last migration, in batch mode. The commands and the rules:
-`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8.
+`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8. What is this dialect's:
+
+- A migration is `versions/<time>_<name>.py` with `upgrade()` and `downgrade()` over Alembic's `op`; its `revision`
+  is its timestamp and `down_revision` the migration it was made after. `alembic_version` holds the last one applied.
+- They run through `nuclear migrate` only (the folder has no `alembic.ini`).
+- A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's
+  `existing_type`):
+
+```python
+def upgrade() -> None:
+    op.rename_table('shops', 'stores')
+    with op.batch_alter_table('orders', schema=None) as batch_op:
+        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)
+
+
+def downgrade() -> None:
+    with op.batch_alter_table('orders', schema=None) as batch_op:
+        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)
+    op.rename_table('stores', 'shops')
+```
 
 ## 3. What is not there yet
 

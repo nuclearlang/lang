@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-22
 related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/change-a-runtime.md]
 ---
 # The Python runtime: `synapsis-py`
@@ -73,27 +73,42 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 
 ## Migrations
 
-`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`,
-`migrate`, `migrate_down`):
+`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,
+`migrate_down`, `migrate_status`):
 
 ```sh
 python -m synapsis.migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
-python -m synapsis.migrate up --dir <migrations>                         # applies the pending ones
-python -m synapsis.migrate down --dir <migrations>                       # reverts the last one
+python -m synapsis.migrate up [--to <name>] --dir <migrations>           # applies the pending ones
+python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>
+python -m synapsis.migrate status --dir <migrations>                     # every migration: applied or pending
 ```
 
+The rules a user sees are the reference's (§2.8), the same words and exit codes as the TypeScript runtime. How this
+one keeps them:
+
 - `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's
-  autogenerate write the difference.
-- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written the first time.
-- `up` and `down` use the default database of the app's configuration, which `create_app` keeps in `app.state`;
-  `alembic_version` lists what is applied.
-- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the
-  same file.
+  autogenerate write the difference. `_prepare` then names every unique and foreign key the migration makes
+  (`uq_<table>_<column>`, `fk_<table>_<column>`: Alembic cannot drop a constraint without a name) and collects the
+  warnings. The entities themselves carry no constraint names, so the migrations of before still compare equal.
+- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written by the first `make`.
+  A migration's revision is its timestamp; its file is `<timestamp>_<slug>.py`, the same slug as the other runtime.
+- `_chain` reads the files one by one and orders them by `down_revision`; it refuses two files with the same parent
+  and a parent that is missing (Alembic's own map would call them branches and heads).
+- `up`, `down` and `status` open one connection to the default database of the app's configuration (`create_app`
+  keeps it in `app.state`) and hand it to `env.py`; `alembic_version` holds the last migration applied, and the
+  ones before it in the line are the applied ones.
+- `_run` applies or reverts one migration in a transaction of its own (`connection.begin()` before Alembic, so
+  Alembic opens none). SQLite's driver is opened with `autocommit=False`, or a schema change would run outside the
+  transaction; after a migration `PRAGMA foreign_key_check` must be empty.
+- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the same
+  file. Alembic rebuilds a table of SQLite from what it reads in the database, where `AUTOINCREMENT` is not read:
+  `_keep_generated_keys` (a `column_reflect` listener) says it, so a rebuilt table still never gives a key twice.
+- `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback.
 
 ## Tests and type definitions
 
 - `tests/test_runtime.py`, `test_data.py` (the same cases as the TypeScript runtime's `data.test.ts`),
-  `test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = "auto"`. The fastapi check runs them
+  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`); pytest with `asyncio_mode = "auto"`. The fastapi check runs them
   ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,

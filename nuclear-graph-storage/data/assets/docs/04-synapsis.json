@@ -2851,7 +2851,8 @@
     "| Read | When |",
     "|---|---|",
     "| [docs/07-reference/functions.md](docs/07-reference/functions.md) | You need what the library has, the lodash name of each, and what is left out and why |",
-    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is pending: how a project takes the library, the functions left |",
+    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is pending: the functions left, the editors |",
+    "| [`nuclearlang/docs/03-adr/0013-helpers-are-part-of-the-language.md`](../../nuclearlang/docs/03-adr/0013-helpers-are-part-of-the-language.md) | You need why and how the helpers reach a program |",
     "| [`nuclearlang/docs/05-standards/testing.md`](../../nuclearlang/docs/05-standards/testing.md) | You change the compiler: this library is one of the suites every change runs |"
    ],
    "sources": [
@@ -2873,7 +2874,8 @@
     "  of lodash. Every function has its doc comment.",
     "- `test/<category>_test.nuc`: a `main()` that prints one line per case (`ok <name>`, or what it got and what was",
     "  wanted); `test/<category>.out` is that text. `test/support.nuc`: `check` and what the tests share.",
-    "- `check.sh`: copies the project per dialect, builds it, runs `tsc --strict`, `dart analyze --fatal-warnings` and",
+    "- `check.sh`: twice (`library`: `src/` and `test/` built together; `native`: `test/` alone, every helper brought by",
+    "  the compiler), copies the project per dialect, builds it, runs `tsc --strict`, `dart analyze --fatal-warnings` and",
     "  pyright over the whole library, runs each test in the three targets and compares it with its `.out`.",
     "- `docs/`: the documents below."
    ],
@@ -2899,7 +2901,31 @@
     "",
     "Paths in these documents are relative to this folder (`nuclear-synapsis-framework/lodash/`); a path that starts",
     "with `nuclearlang/` or `.github/` starts at the root of the tree. The rules of the whole tree are in",
-    "[the root `AGENTS.md`](../../AGENTS.md)."
+    "[the root `AGENTS.md`](../../AGENTS.md).",
+    "",
+    "**They are the language's own** (ADR-lang-0013): the compiler embeds `src/*.nuc` and brings into a program only the",
+    "helpers it calls, with no `use`. A change here changes what every Nuclear program can call."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/lodash/AGENTS.md#rules.985be3",
+   "type": "readme",
+   "title": "Nuclear's helpers of lodash — Rules",
+   "summary": "6. No target code, no dialect named in `src/` (root rules 3 and 13).",
+   "body": [
+    "6. No target code, no dialect named in `src/` (root rules 3 and 13).",
+    "7. **A new helper is a new name of the language**: it is listed in `nuclearlang/docs/07-reference/library.md` §13",
+    "   and in `docs/07-reference/functions.md` in the same change; a function only the helpers use is added to",
+    "   `INTERNAL` of `nuclearlang/crates/nuclear-transpile/src/helpers.rs`.",
+    "8. Done = `check.sh` (both passes) and the language's checks green, these documents and the roadmap current."
    ],
    "sources": [
     "nuclear-synapsis-framework/lodash/AGENTS.md"
@@ -2941,24 +2967,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/lodash/AGENTS.md#rules.efb0e0",
-   "type": "readme",
-   "title": "Nuclear's helpers of lodash — Rules",
-   "summary": "6. No target code, no dialect named in `src/` (root rules 3 and 13).",
-   "body": [
-    "6. No target code, no dialect named in `src/` (root rules 3 and 13).",
-    "7. Done = `check.sh` and the language's checks green, these documents and the roadmap current."
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/lodash/AGENTS.md"
-   ],
-   "meta": {
-    "section": "04-synapsis",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/lodash/AGENTS.md#stack",
    "type": "readme",
    "title": "Nuclear's helpers of lodash — Stack",
@@ -2979,16 +2987,17 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.4c1e92",
+   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.5f3563",
    "type": "readme",
    "title": "Nuclear's helpers of lodash",
-   "summary": "![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml) (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written once in Nuclear and transpiled to TypeScript, Dart and Python.",
+   "summary": "![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml) (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written once in Nuclear.",
    "body": [
     "[![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/language.yml)",
     "",
-    "**What it is.** 121 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions",
+    "**What it is.** 117 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions",
     "(`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written",
-    "once in Nuclear and transpiled to TypeScript, Dart and Python.",
+    "once in Nuclear. They are part of the language: a program calls them with no `use`, and the transpiler writes only",
+    "the ones it calls, in every dialect.",
     "",
     "**Why it exists.** Two reasons. A Nuclear program gets the helpers every program ends up writing, the same in every",
     "dialect. And the compiler gets a real library to prove itself on: writing it found more than a dozen places where the same Nuclear",
@@ -3390,8 +3399,12 @@
    "id": "doc:nuclear-synapsis-framework/lodash/docs/07-reference/functions.md#the-functions",
    "type": "spec",
    "title": "The functions",
-   "summary": "Every helper of the library, by category, with its signature.",
-   "body": "Every helper of the library, by category, with its signature. A name is lodash's unless the text says otherwise.",
+   "summary": "The helpers every Nuclear file has without a `use` (ADR-lang-0013), by category, with their signatures.",
+   "body": [
+    "The helpers every Nuclear file has without a `use` (ADR-lang-0013), by category, with their signatures. A name is",
+    "lodash's unless the text says otherwise. `pathKeys`, `child`, `mapAt` and `fillText` are what the helpers use among",
+    "themselves: a program does not call them."
+   ],
    "sources": [
     "nuclear-synapsis-framework/lodash/docs/07-reference/functions.md"
    ],

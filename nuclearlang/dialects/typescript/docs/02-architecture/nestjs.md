@@ -115,7 +115,7 @@ What the `nuclear` command runs in `build/` (`[toolchain]`):
 | `run` | `npm run dev` (`url = "http://localhost:3000"`, `ready = "Nest application successfully started"`) |
 | `test` | `npm test` |
 | `package_add`, `package_remove`, `package_version`, `package_companion`, `package_defs` | npm, the version it resolved, the `@types/<name>` package of one that ships no types, and `tools/defs/typescript/gen.js --package` for its type definitions, written into the project's `defs/`. A constraint is `^<version>` |
-| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx synapsis-nest-migrate make\|up\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |
+| `migrate_make`, `migrate`, `migrate_down`, `migrate_status` | `npx tsc`, then `npx synapsis-nest-migrate make\|up\|down\|status --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |
 
 The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after
 the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`

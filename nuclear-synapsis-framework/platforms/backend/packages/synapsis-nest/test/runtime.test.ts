@@ -87,7 +87,8 @@ describe('synapsis-nest', () => {
   it('answers a Result: its value, or the error status', async () => {
     const run = (value: unknown) => lastValueFrom(new ResultInterceptor().intercept({} as never, { handle: () => of(value) }));
     assert.equal(await run(Ok(3)), 3);
-    await assert.rejects(run(Err(new NotFound('nope'))), (e: { getStatus(): number }) => e.getStatus() === 404);
+    // the error itself: the app's filter writes Nuclear's body from it (errors.test.ts)
+    await assert.rejects(run(Err(new NotFound('nope'))), (e: NotFound) => e.status === 404 && e.message === 'nope');
     assert.equal(await run('plain'), 'plain');
   });
 });

@@ -131,10 +131,11 @@ the schema with migrations in the project's `migrations/` folder:
 nuclear migrate make "notes on tasks"   # what the entities changed since the last migration
 nuclear migrate                         # applies the pending ones
 nuclear migrate down                    # reverts the last one
+nuclear migrate status                  # every migration: applied or pending
 ```
 
 They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`, `SequelizeMeta` in the database);
-each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data.
+each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one.
 
 ## 3. Use cases and events
 
@@ -190,7 +191,7 @@ export class TasksController {
   }
 
   @Get(':id')
-  async one(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Task>> {
+  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {
     return await this.tasks.task(id);
   }
   // ...
@@ -198,7 +199,10 @@ export class TasksController {
 ```
 
 Path parameters, query parameters and the body are found from the route and the types; the pipes come out by
-themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400.
+themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. Every error answers Nuclear's body
+(`status`, `message`, and the reasons of an invalid body in `errors`), written by the runtime's `ErrorFilter`
+whatever Nest would write; a number or a boolean of the route or the query is read by the runtime's `IntPipe`,
+`DoublePipe` and `BoolPipe`, which name the parameter in the reason (ADR-synapsis-0013).
 
 ## 5. The assistant (plugin `ai`)
 

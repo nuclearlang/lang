@@ -104,7 +104,7 @@ What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]
 | `run` | `.venv/bin/uvicorn app.main:app --reload --port {{port}}` (`url = "http://localhost:8000"`, `ready = "Uvicorn running"`, `installed = ".venv"`) |
 | `test` | `.venv/bin/python -m pytest -q` |
 | `package_add`, `package_remove`, `package_version`, `package_defs` | pip, the version it resolved, and `tools/defs/python/gen.py --distribution` for the package's type definitions, written into the project's `defs/`. A bare version (`4.17.0`) is exact (`==`); a constraint is `>=` |
-| `migrate_make`, `migrate`, `migrate_down` | `python -m synapsis.migrate make\|up\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |
+| `migrate_make`, `migrate`, `migrate_down`, `migrate_status` | `python -m synapsis.migrate make\|up\|down\|status --dir {{migrations}}` (Alembic over the project's `migrations/`) |
 
 There is no `analyze` key ([roadmap](../01-product/roadmap.md)). The editor's debug launch (`[[toolchain.launch]]`)
 runs `uvicorn` under debugpy with the app's virtual environment, without `--reload` (the debugger owns the

@@ -141,10 +141,11 @@ the schema with migrations in the project's `migrations/` folder:
 nuclear migrate make "notes on tasks"   # what the entities changed since the last migration
 nuclear migrate                         # applies the pending ones
 nuclear migrate down                    # reverts the last one
+nuclear migrate status                  # every migration: applied or pending
 ```
 
 They are Alembic migrations (`migrations/versions/*.py`, `alembic_version` in the database), written in batch mode so
-SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data.
+SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`batch_op.alter_column(..., new_column_name=...)`, `op.rename_table`). `--to <migration>` after `migrate` or `migrate down` stops at that one.
 
 ## 4. Use cases, models and the API
 
@@ -184,6 +185,9 @@ class CharactersController:
 ```
 
 An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.
+Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written
+by the runtime from what FastAPI and pydantic report; `/openapi.json` and `/docs` show the document the transpiler
+wrote from the contract, not one worked out from the generated Python (ADR-synapsis-0013).
 
 ## 5. AI: tools, agents and graphs (plugin `ai`)
 

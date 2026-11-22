@@ -301,13 +301,13 @@ fn nest_kinds_inject_and_route() {
         "service UsersService\n  all() string[]\n    []\ncontroller UsersController(users: UsersService)\n  @get(\":id\")\n  one(id: int) string[]\n    users.all()\n",
         "nestjs",
     );
-    has(&code, "import { Controller, Get, Injectable, Param, ParseIntPipe } from '@nestjs/common';");
+    has(&code, "import { Controller, Get, Injectable, Param } from '@nestjs/common';");
     has(&code, "@Injectable()\nexport class UsersService {");
     has(
         &code,
         "@Controller('users')\nexport class UsersController {\n  constructor(private readonly users: UsersService) {}",
     );
-    has(&code, "@Get(':id')\n  one(@Param('id', ParseIntPipe) id: number): string[] {");
+    has(&code, "@Get(':id')\n  one(@Param('id', IntPipe) id: number): string[] {");
 }
 
 #[test]

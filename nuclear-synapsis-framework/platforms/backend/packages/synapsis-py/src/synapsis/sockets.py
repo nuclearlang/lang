@@ -18,6 +18,7 @@ from typing import Any, cast
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from .config import Connection
+from .errors import error_body
 from .events import sinks
 from .guards import Guard, refusal
 
@@ -103,7 +104,7 @@ async def _serve(socket: WebSocket, app: FastAPI, guards: list[Guard]) -> None:
                 await client.send({"id": frame.get("id"), "status": r.status_code, "body": out})
             except Exception as e:  # the socket closed, or the app failed: the request answers 500
                 try:
-                    await client.send({"id": frame.get("id"), "status": 500, "body": {"detail": str(e)}})
+                    await client.send({"id": frame.get("id"), "status": 500, "body": error_body(500, "error")})
                 except Exception:
                     pass
 

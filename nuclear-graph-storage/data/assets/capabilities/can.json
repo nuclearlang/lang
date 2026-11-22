@@ -72,10 +72,10 @@
     "- Relations: `@manyToOne` (with its column `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn`; loaded with `relations(\"tasks\")`.",
     "- `repository`: `find`, `findAll`, `save`, `remove` come with it; a method's lines build one query: `where({...})` with `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`; `orderBy`, `limit`, `offset`; then `getOne()`, `getMany()`, `paginate(page, size)`, `count()`, `exists()`, `update({...})`, `delete()`.",
     "- `@transactional` on a use case's `exec`: one transaction; an `Err` rolls it back.",
-    "- Migrations: `nuclear migrate make \"<message>\"`, `nuclear migrate`, `nuclear migrate down`.",
+    "- Migrations: `nuclear migrate make \"<message>\"`, `nuclear migrate [--to <migration>]`, `nuclear migrate down [--to <migration>]`, `nuclear migrate status`; one transaction per migration.",
     "- Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`. Tests run on an in-memory database.",
     "",
-    "Checked on SQLite; the other databases were not run against a real server yet."
+    "Both dialects are checked on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11 in Docker (`platforms/backend/checks/database-check`): the same answers, byte for byte."
    ],
    "keys": [
     "database",

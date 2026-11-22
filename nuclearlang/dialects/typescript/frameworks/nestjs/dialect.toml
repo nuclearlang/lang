@@ -46,7 +46,7 @@ DateTime = "Date"
 written = ["Result", "Ok", "Err", "AppError", "Injectable", "Controller", "Model", "Entity", "Table", "Column", "DataType",
   "BelongsTo", "HasMany", "HasOne", "BelongsToMany", "joinTable", "Related", "Page",
   "PrimaryKey", "AutoIncrement", "CreatedAt", "UpdatedAt", "InjectModel", "Repository", "Param", "Body", "Query",
-  "ParseIntPipe", "ParseBoolPipe", "ParseFloatPipe", "Get", "Post", "Put", "Patch", "Delete", "HttpCode",
+  "IntPipe", "BoolPipe", "DoublePipe", "Get", "Post", "Put", "Patch", "Delete", "HttpCode",
   "IsString", "IsInt", "IsNumber", "IsBoolean", "IsOptional", "IsNotEmpty", "IsEmail", "IsUrl", "MinLength",
   "MaxLength", "Min", "Max", "Matches", "IsArray", "ValidateNested", "Type", "Expose", "IsDate", "AppConfig", "ComponentConfig",
   "startTestApp", "stopTestApp", "INestApplication", "describe", "it", "beforeEach", "afterEach",
@@ -234,11 +234,12 @@ package_version = '''node -p "JSON.parse(require('fs').readFileSync('node_module
 # the package that carries the types of one that ships none (`lodash` → `@types/lodash`): nothing when it has its own
 package_companion = '''node -e "const n = process.argv[1], fs = require('fs'), dir = 'node_modules/' + n, p = JSON.parse(fs.readFileSync(dir + '/package.json', 'utf8')); const own = p.types || p.typings || fs.existsSync(dir + '/index.d.ts') || JSON.stringify(p.exports || '').includes('.d.'); if (!own) console.log('@types/' + n.replace(/^@/, '').replace('/', '__'))" {{name}}'''
 package_defs = "node {{tools}}/defs/typescript/gen.js {{defs_name}} {{version}} {{defs}} {{modules}} --package {{name}} --from . --depends {{depends}}"
-# `nuclear migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): the project's migrations/ folder,
+# `nuclear migrate make "<message>"` / `migrate` / `migrate down` / `migrate status` (ADR-backend-0001): the project's migrations/ folder,
 # compared with the compiled entities
 migrate_make = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate make {{message}} --dir {{migrations}}"
 migrate = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate up --dir {{migrations}}"
 migrate_down = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate down --dir {{migrations}}"
+migrate_status = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate status --dir {{migrations}}"
 
 # the editor's debug launch: the compiled server with its source maps (a breakpoint in the generated .ts binds
 # through dist/*.js.map; one in a .nuc through .nuclear/lines.json)
@@ -388,7 +389,7 @@ config = "@nestjs/config"
 [auto_imports]
 # the definitions give every other name; these choose the module when two packages export the same name
 "class-transformer" = ["Transform", "Type", "Expose"]
-"synapsis-nest" = ["Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
+"synapsis-nest" = ["IntPipe", "DoublePipe", "BoolPipe", "Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
 # the optional parts of the runtime: only a project that enables their plugin imports them
 "synapsis-nest/events" = ["publish", "Redis", "Kafka", "Listener", "consumer", "cacheGet", "cacheSet"]
 "synapsis-nest/sockets" = ["WebSocketServer"]

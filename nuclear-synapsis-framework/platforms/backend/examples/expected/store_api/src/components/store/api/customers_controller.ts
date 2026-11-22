@@ -1,8 +1,8 @@
 import { Customer } from '../data/entities/customer.js';
 import { NewCustomer } from '../domain/models/new_customer.js';
 import { StoreAppComponent } from '../store_appcomponent.js';
-import { Body, Controller, Delete, Get, Param, ParseFloatPipe, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
-import { AppError, Page, Result } from 'synapsis-nest';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { AppError, DoublePipe, IntPipe, Page, Result } from 'synapsis-nest';
 
 /** The routes of customers. */
 @Controller('customers')
@@ -10,12 +10,12 @@ export class CustomersController {
   constructor(private readonly app: StoreAppComponent) {}
 
   @Get()
-  async list(@Query('page', new ParseIntPipe({ optional: true })) page: number): Promise<Result<AppError, Customer[]>> {
+  async list(@Query('page', IntPipe) page: number): Promise<Result<AppError, Customer[]>> {
     return await this.app.listCustomers(page);
   }
 
   @Get(':id')
-  async one(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Customer>> {
+  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Customer>> {
     return await this.app.getCustomer(id);
   }
 
@@ -25,32 +25,32 @@ export class CustomersController {
   }
 
   @Put(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() input: NewCustomer): Promise<Result<AppError, Customer>> {
+  async update(@Param('id', IntPipe) id: number, @Body() input: NewCustomer): Promise<Result<AppError, Customer>> {
     return await this.app.updateCustomer(id, input);
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, boolean>> {
+  async remove(@Param('id', IntPipe) id: number): Promise<Result<AppError, boolean>> {
     return await this.app.deleteCustomer(id);
   }
 
   @Get('page')
-  async pageCustomers(@Query('page', new ParseIntPipe({ optional: true })) page: number, @Query('size', new ParseIntPipe({ optional: true })) size: number): Promise<Result<AppError, Page<Customer>>> {
+  async pageCustomers(@Query('page', IntPipe) page: number, @Query('size', IntPipe) size: number): Promise<Result<AppError, Page<Customer>>> {
     return await this.app.pageCustomers(page, size);
   }
 
   @Get('search')
-  async searchCustomers(@Query('text') text: string, @Query('page', new ParseIntPipe({ optional: true })) page: number, @Query('size', new ParseIntPipe({ optional: true })) size: number): Promise<Result<AppError, Page<Customer>>> {
+  async searchCustomers(@Query('text') text: string, @Query('page', IntPipe) page: number, @Query('size', IntPipe) size: number): Promise<Result<AppError, Page<Customer>>> {
     return await this.app.searchCustomers(text, page, size);
   }
 
   @Get('vips')
-  async vipCustomers(@Query('credit', new ParseFloatPipe({ optional: true })) credit: number): Promise<Result<AppError, Customer[]>> {
+  async vipCustomers(@Query('credit', DoublePipe) credit: number): Promise<Result<AppError, Customer[]>> {
     return await this.app.vipCustomers(credit);
   }
 
   @Get(':id/orders')
-  async customerOrders(@Param('id', ParseIntPipe) id: number): Promise<Result<AppError, Customer>> {
+  async customerOrders(@Param('id', IntPipe) id: number): Promise<Result<AppError, Customer>> {
     return await this.app.customerOrders(id);
   }
 }

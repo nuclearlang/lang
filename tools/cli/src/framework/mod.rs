@@ -60,6 +60,8 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   test [-- <args>]                           the tests written in Nuclear (pytest, node:test)
   migrate make <message>                     one migration of the database: the entities minus the last one
   migrate [up] | migrate down                applies the pending migrations, or reverts the last one
+                                             (--to <migration>: up to that one, or back to it)
+  migrate status                             every migration: applied or pending
   add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project
   agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents
   clean                                      flutter clean in the app
@@ -946,10 +948,15 @@ fn shell_tee(log: &runlog::RunLog, dir: &Path, command: &str) -> Result<(), Stri
 /// A toolchain command with its placeholders filled: the runtimes of the install (`{{packages}}`), its tools
 /// (`{{tools}}`), the dialect's address and its port, and `vars`, each one word of the system's shell.
 fn fill_command(dialect: &Dialect, command: &str, vars: &[(&str, String)]) -> Result<String, String> {
-    let install = nuclear_dialect::install_dir().ok_or("no install directory: run installer/install.sh")?;
+    // only a command that names the installation's folders needs one (`migrate`, `run` and `test` run from the tree's build too)
+    let mut command = command.to_string();
+    if command.contains("{{packages}}") || command.contains("{{tools}}") {
+        let install = nuclear_dialect::install_dir().ok_or("no install directory: run installer/install.sh")?;
+        command = command
+            .replace("{{packages}}", &install.join("packages").display().to_string())
+            .replace("{{tools}}", &install.join("tools").display().to_string());
+    }
     let command = command
-        .replace("{{packages}}", &install.join("packages").display().to_string())
-        .replace("{{tools}}", &install.join("tools").display().to_string())
         .replace("{{url}}", dialect.tool("url").unwrap_or_default())
         .replace("{{port}}", &vscode::url_port(dialect).unwrap_or_default())
         .replace("{{host}}", "localhost");
@@ -1014,23 +1021,41 @@ fn cmd_quote(value: &str) -> String {
     })
 }
 
-/// `nuclear migrate [make "<message>" | up | down]` (ADR-backend-0001): the dialect's `migrate_make` / `migrate` /
-/// `migrate_down` in the generated project, over the project's `migrations/` folder (kept with the sources).
+/// `nuclear migrate [make "<message>" | up | down | status]` (ADR-backend-0001): the dialect's `migrate_make` /
+/// `migrate` / `migrate_down` / `migrate_status` in the generated project, over the project's `migrations/` folder
+/// (kept with the sources). `--to <name>` (up, down) reaches the dialect's tool as it is.
 fn migrate_command(root: &Path, rest: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" | nuclear migrate [up] | nuclear migrate down";
     let m = non_mobile_manifest(root)?.ok_or("migrations are of a backend project's database")?;
-    let words: Vec<&String> = rest.iter().take_while(|a| *a != "--").collect();
-    let (key, message) = match words.first().map(|w| w.as_str()) {
-        Some("make") => ("migrate_make", Some(words.get(1).ok_or(USAGE)?.to_string())),
-        None | Some("up") => ("migrate", None),
-        Some("down") => ("migrate_down", None),
-        Some(_) => return Err(USAGE.into()),
-    };
+    let (key, message, to) = migrate_args(rest)?;
     let mut vars = vec![("migrations", root.join("migrations").display().to_string())];
     if let Some(message) = message {
         vars.push(("message", message));
     }
-    backend_command(root, key, &m, &[], &vars)
+    let extra: Vec<String> = to.map(|to| vec!["--".into(), "--to".into(), to]).unwrap_or_default();
+    backend_command(root, key, &m, &extra, &vars)
+}
+
+/// The words of `nuclear migrate`: the `[toolchain]` key, the message of `make`, the migration of `--to`.
+fn migrate_args(rest: &[String]) -> Result<(&'static str, Option<String>, Option<String>), String> {
+    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" | nuclear migrate [up] [--to <migration>] | \
+                         nuclear migrate down [--to <migration>] | nuclear migrate status";
+    let mut words: Vec<&str> = rest.iter().take_while(|a| *a != "--").map(String::as_str).collect();
+    let to = match words.iter().position(|w| *w == "--to") {
+        Some(i) if i + 1 < words.len() => {
+            let to = words.remove(i + 1).to_string();
+            words.remove(i);
+            Some(to)
+        }
+        Some(_) => return Err(USAGE.into()),
+        None => None,
+    };
+    match (words.as_slice(), to) {
+        (["make", message], None) => Ok(("migrate_make", Some(message.to_string()), None)),
+        ([] | ["up"], to) => Ok(("migrate", None, to)),
+        (["down"], to) => Ok(("migrate_down", None, to)),
+        (["status"], None) => Ok(("migrate_status", None, None)),
+        _ => Err(USAGE.into()),
+    }
 }
 
 /// A toolchain command in the system's shell: `sh -c` (Linux, macOS), `cmd /C` (Windows).
@@ -2191,6 +2216,19 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn migrate_reads_its_words() {
+        let args = |words: &[&str]| migrate_args(&words.iter().map(|w| w.to_string()).collect::<Vec<_>>());
+        assert_eq!(args(&[]), Ok(("migrate", None, None)));
+        assert_eq!(args(&["up", "--to", "20261110100000"]), Ok(("migrate", None, Some("20261110100000".into()))));
+        assert_eq!(args(&["--to", "first", "down"]), Ok(("migrate_down", None, Some("first".into()))));
+        assert_eq!(args(&["make", "notes on tasks"]), Ok(("migrate_make", Some("notes on tasks".into()), None)));
+        assert_eq!(args(&["status"]), Ok(("migrate_status", None, None)));
+        for wrong in [&["make"][..], &["status", "--to", "x"], &["up", "--to"], &["sideways"], &["make", "a", "--to", "x"]] {
+            assert!(args(wrong).unwrap_err().starts_with("usage: nuclear migrate"), "{wrong:?}");
+        }
+    }
 
     /// `nuclear make` writes every kind of the backend and web platforms at its layout place, and the project
     /// compiles (a kind of a plugin the project does not enable is N0304, which says the line to add).

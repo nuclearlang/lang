@@ -182,7 +182,7 @@ repository CharacterRepository
 
 What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:
 `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An
-invalid body answers **400** with the reasons. `NewTask(title = "x")` builds one; optional fields (`T?`) may be
+invalid body answers **400** with the reasons (below). `NewTask(title = "x")` builds one; optional fields (`T?`) may be
 left out.
 
 ```nuclear
@@ -205,6 +205,21 @@ TaskChanges
 One business operation: `exec` returns `Result<E, T>`. `Error` is the platform's error, with an HTTP status:
 `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403), `Conflict` (409). `x = ~repo.find(id)`
 unwraps the `Ok` and returns the `Err` by itself ([nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) §3.2).
+
+**The body of an error** is the same in every dialect: its status and its message, and for an invalid body or
+parameter one reason per field, in the order of the fields' names.
+
+```json
+{ "status": 404, "message": "no task 9" }
+{ "status": 400, "message": "invalid", "errors": [
+  { "field": "priority", "rule": "max", "message": "priority must be at most 3" } ] }
+```
+
+`field` is a path (`items.0.name`; empty for the body itself); `rule` is the validation's name: `required`, `type`,
+`minLength`, `maxLength`, `min`, `max`, `pattern`, `email`, `url`, `json` (the body is not JSON), `invalid`. A field
+that breaks several rules names the first of that list. A route that does not exist answers `not found`; what
+nothing handled answers 500 with the message `error`. `GET /openapi.json` answers the API's OpenAPI document,
+written from the project, with this body as its `Error`.
 
 ```nuclear
 usecase CreateTask(tasks: TaskRepository)
@@ -370,15 +385,51 @@ project's `migrations/` folder (with the sources, not in `build/`):
 
 ```sh
 nuclear migrate make "notes on tasks"   # one migration: what the entities changed since the last migration
-nuclear migrate                         # applies the pending ones to the default database
+nuclear migrate                         # applies the pending ones to the default database (also: nuclear migrate up)
+nuclear migrate --to <migration>        # applies the pending ones up to that one
 nuclear migrate down                    # reverts the last one applied
+nuclear migrate down --to <migration>   # reverts every one made after that one (it stays applied)
+nuclear migrate status                  # every migration in order: applied or pending
 ```
 
-- `make` compares the entities with the last migration, never with a database; with no change it writes nothing.
+Making a migration:
+
+- `make` compares the entities with the last migration, never with a database; with no change it writes nothing
+  (`no changes: the entities match the last migration`).
+- A migration's name is `<year month day hour minute second>_<message in snake_case>` (local time); `--to` takes the
+  name or its timestamp.
 - A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or
-  column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.
+  column shows as a drop and an add, so edit it into a rename to keep the data.
+- `make` warns of what loses data or what a table with rows refuses: a dropped table or column, a required column
+  added without a default, a column that becomes required.
 - A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows
   works.
+- Every unique and foreign key has a name, `uq_<table>_<column>` and `fk_<table>_<column>`.
+- The key of a table is not changed by a migration.
+
+Applying and reverting:
+
+- The history is one line: each migration follows one migration. Two migrations made after the same one (two
+  people at once) are refused by every command: delete one, apply the other and make the deleted one again.
+- A migration the database has applied and the folder does not hold is refused by every command.
+- Each migration runs in a transaction of its own. When one fails the command stops with exit code 1, the
+  migrations before it stay applied and the failed one stays pending. PostgreSQL and SQLite undo everything the
+  failed migration did; MySQL and MariaDB keep the schema changes it made before failing (they cannot undo them):
+  the message says so, and they are undone by hand before it is applied again.
+- A table that is already in the database is never taken as made by a migration: applying a migration that creates
+  it fails.
+- `down` runs the way back the migration holds; what `up` dropped comes back empty.
+- With nothing to do a command says so and ends with exit code 0 (`the database is up to date`, `no migration is
+  applied`, `nothing to revert`).
+
+| Command | Prints, one line each |
+|---|---|
+| `make` | `wrote <file>`, and a `warning: ...` per risk |
+| `migrate`, `migrate up` | `applied <migration>` |
+| `migrate down` | `reverted <migration>` |
+| `migrate status` | `applied  <migration>` or `pending  <migration>` |
+| a refused command | `error: ...`, exit code 1 |
+
 - The migrations belong to the dialect they were made with, like code that uses type definitions (rule 11).
 - A project with migrations leaves `createTables` out of its connection.
 

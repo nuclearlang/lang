@@ -35,3 +35,117 @@ export class Conflict extends AppError {
     super(message, 409);
   }
 }
+
+// ---------- the body of an error: Nuclear's, the same in every dialect (ADR-synapsis-0013) ----------
+
+/** Why a field of a body or a parameter is refused: `field` (a path: `items.0.name`; empty for the body itself),
+ * `rule` (the name of the validation in Nuclear) and `message`. */
+export interface Reason {
+  field: string;
+  rule: string;
+  message: string;
+}
+
+/** What an error answers: its status, its message and, for an invalid body or parameter, one reason per field. */
+export interface ErrorBody {
+  status: number;
+  message: string;
+  errors?: Reason[];
+}
+
+// one reason per field: the first of these rules it breaks
+const RULES = ['required', 'type', 'minLength', 'maxLength', 'min', 'max', 'pattern', 'email', 'url', 'json', 'invalid'];
+
+/** A reason with its message, written here so every dialect says the same. */
+export function reason(field: string, rule: string, value?: unknown): Reason {
+  const name = field || 'the body';
+  const texts: Record<string, string> = {
+    required: `${name} is required`,
+    type: `${name} must be ${String(value)}`,
+    minLength: `${name} must have at least ${String(value)} characters`,
+    maxLength: `${name} must have at most ${String(value)} characters`,
+    min: `${name} must be at least ${String(value)}`,
+    max: `${name} must be at most ${String(value)}`,
+    pattern: `${name} does not match its pattern`,
+    email: `${name} must be an e-mail address`,
+    url: `${name} must be a URL`,
+    json: 'the body is not valid JSON',
+  };
+  return { field, rule: RULES.includes(rule) ? rule : 'invalid', message: texts[rule] ?? `${name} is not valid` };
+}
+
+/** The body of an error; `errors` keeps one reason per field, in the order of the fields' names. */
+export function errorBody(status: number, message: string, errors?: readonly Reason[]): ErrorBody {
+  if (!errors) return { status, message };
+  const first = new Map<string, Reason>();
+  for (const e of errors) {
+    const kept = first.get(e.field);
+    if (!kept || RULES.indexOf(e.rule) < RULES.indexOf(kept.rule)) first.set(e.field, e);
+  }
+  const fields = [...first.keys()].sort();
+  return { status, message, errors: fields.map((f) => first.get(f)!) };
+}
+
+/** An invalid body or parameter: a 400 that carries its reasons. */
+export class InvalidInput extends Invalid {
+  constructor(readonly errors: readonly Reason[]) {
+    super('invalid');
+  }
+}
+
+// the validator's own names (class-validator's constraints) → Nuclear's rule, with the type it asks for
+const CONSTRAINTS: Record<string, [string, string?]> = {
+  isDefined: ['required'],
+  isNotEmpty: ['required'],
+  isString: ['type', 'a text'],
+  isInt: ['type', 'a whole number'],
+  isNumber: ['type', 'a number'],
+  isBoolean: ['type', 'true or false'],
+  isArray: ['type', 'a list'],
+  isObject: ['type', 'an object'],
+  nestedValidation: ['type', 'an object'],
+  isDate: ['type', 'a date and time'],
+  isDateString: ['type', 'a date and time'],
+  isIso8601: ['type', 'a date and time'],
+  minLength: ['minLength'],
+  maxLength: ['maxLength'],
+  min: ['min'],
+  max: ['max'],
+  matches: ['pattern'],
+  isEmail: ['email'],
+  isUrl: ['url'],
+};
+
+/** What the validator reports for one property (class-validator's `ValidationError`). */
+export interface Invalidity {
+  property: string;
+  value?: unknown;
+  constraints?: Record<string, string>;
+  children?: Invalidity[];
+}
+
+/** The reasons of the validator's errors, in Nuclear's words. */
+export function reasonsOf(errors: readonly Invalidity[], prefix = ''): Reason[] {
+  const out: Reason[] = [];
+  for (const e of errors) {
+    const field = prefix ? `${prefix}.${e.property}` : e.property;
+    for (const [name, said] of Object.entries(e.constraints ?? {})) {
+      // a value that is not there breaks every rule of its field: the reason is that it is required
+      if (e.value === undefined || e.value === null) {
+        out.push(reason(field, 'required'));
+        continue;
+      }
+      // an empty text given for a required one: the rule a text of one character or more has in every dialect
+      if (name === 'isNotEmpty') {
+        out.push(reason(field, 'minLength', 1));
+        continue;
+      }
+      const [rule, type] = CONSTRAINTS[name] ?? ['invalid'];
+      // the limit of a rule is the number its message names (`must be longer than or equal to 3 characters`)
+      const limit = /-?\d+(\.\d+)?/.exec(said)?.[0];
+      out.push(reason(field, rule, type ?? limit));
+    }
+    if (e.children?.length) out.push(...reasonsOf(e.children, field));
+  }
+  return out;
+}

@@ -161,13 +161,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.ac8117",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.bdd405",
    "type": "readme",
    "title": "The backend platform — Folders",
-   "summary": "seed, SQL) and `scenario.py` (the one HTTP scenario whose answers are compared).",
+   "summary": "seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`) and `scenario.py` (the one HTTP scenario whose answers are compared).",
    "body": [
     "- `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the",
-    "  seed, SQL) and `scenario.py` (the one HTTP scenario whose answers are compared).",
+    "  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`) and `scenario.py` (the one HTTP",
+    "  scenario whose answers are compared).",
     "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
     "",
     "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
@@ -319,24 +320,24 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.02ea4c",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.545991",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "(`socket(path, headers)`: `Err` with 401/403 when refused; `request`, `subscribe`, `next(seconds)`, `close`); `testEnv(NAME = \"value\")` in `config.nuc` is the tests' environment (a test token).",
+   "summary": "`{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`, `message`), written by each runtime from what its framework reports (`synapsis.errors`, `synapsis-nest`'s `ErrorFilter`); `GET /openapi.json` answers the document the transpiler writes…",
    "body": [
-    "(`socket(path, headers)`: `Err` with 401/403 when refused; `request`, `subscribe`, `next(seconds)`, `close`);",
-    "  `testEnv(NAME = \"value\")` in `config.nuc` is the tests' environment (a test token). fastapi's `app/main.py` gains",
-    "  `create()`; nestjs gets `src/test_env.ts` and `npm test` imports it first.",
-    "- Guards (ADR-synapsis-0007), fastapi and nestjs: `guards: Guard[] = [NoOrigin(), Token(value = env(\"T\"), header =",
-    "  \"X-Token\")]` in the `appConfig` checks every route, the contract's routes and the WebSocket's upgrade;",
-    "  `@controller(\"x\", guards = [...])` adds a controller's own. Headers only (never a token in the query); an empty",
-    "  token refuses everything; a guarded app serves no documentation pages.",
-    "- The app's WebSocket (ADR-synapsis-0008), fastapi and nestjs: `plugins(websocket = true)` and",
-    "  `WebSocketServer(path = \"ws\")` in `connections` serve the same controllers over one socket (JSON frames: requests",
-    "  and their answers, `subscribe`/`unsubscribe`), and `~publish(topic, value)` pushes to the subscribed clients.",
-    "- The contract (`.nuclear/contract.json`) says `webSocket`, each controller's `transports` and `guards`, the app's",
-    "  `guards` and the `events` it publishes (topic, component, payload).",
-    "- Telemetry (spec 012), fastapi: `plugins(telemetry = true)` and one of `Datadog(...)`, `NewRelic(...)`, `Grafana(...)`,"
+    "- **One body for every error and one OpenAPI document, in every dialect** (ADR-synapsis-0013): an error answers",
+    "  `{ \"status\", \"message\" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`,",
+    "  `message`), written by each runtime from what its framework reports (`synapsis.errors`, `synapsis-nest`'s",
+    "  `ErrorFilter`); `GET /openapi.json` answers the document the transpiler writes from the project. Before:",
+    "  `{\"detail\"}` in `fastapi`, `{\"statusCode\", \"message\"}` in `nestjs`, each validator's own words, and an OpenAPI",
+    "  document worked out by one framework only. `nestjs` reads a number or a boolean of the route or the query with",
+    "  the runtime's `IntPipe`, `DoublePipe`, `BoolPipe`.",
+    "- The database check (`checks/database-check/check.sh`, needs Docker): the new example `store_api` (customers,",
+    "  orders, tags) built with `fastapi` and `nestjs` on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11: the migrations",
+    "  against the real database (made, applied, the schema read back, a column added to a table with rows, reverted),",
+    "  one HTTP scenario and the project's tests; the answers are the same bytes in both dialects on the four databases.",
+    "  What it found and fixed, each with the same test in both runtimes:",
+    "  - fastapi: a `DateTime` column is an instant on every database (written in UTC, read back in UTC; SQLite, MySQL"
    ],
    "platforms": [
     "backend"
@@ -351,89 +352,56 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.4ee6a1",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.5efba8",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "orders, tags) built with `fastapi` and `nestjs` on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11: the migrations against the real database (made, applied, the schema read back, a column added to a table with rows, reverted), one HTTP scenario and the project's tests; the answers are the same…",
+   "summary": "the same lines printed, the same exit codes, the same rules.",
    "body": [
-    "- The database check (`checks/database-check/check.sh`, needs Docker): the new example `store_api` (customers,",
-    "  orders, tags) built with `fastapi` and `nestjs` on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11: the migrations",
-    "  against the real database (made, applied, the schema read back, a column added to a table with rows, reverted),",
-    "  one HTTP scenario and the project's tests; the answers are the same bytes in both dialects on the four databases.",
-    "  What it found and fixed, each with the same test in both runtimes:",
-    "  - fastapi: a `DateTime` column is an instant on every database (written in UTC, read back in UTC; SQLite, MySQL",
-    "    and MariaDB dropped the time zone, so `05:06+02:00` came back as `05:06` UTC), and a `DateTime` in a JSON answer",
+    "- **Migrations that hold on every database** (`nuclear migrate`, reference §2.8), the same in `fastapi` and `nestjs`:",
+    "  the same lines printed, the same exit codes, the same rules. New: `nuclear migrate status` (every migration:",
+    "  applied or pending), `nuclear migrate --to <migration>` and `nuclear migrate down --to <migration>`. The rules:",
+    "  - the history is one line: two migrations made after the same one, or one the database has and the folder does",
+    "    not, are refused by every command;",
+    "  - each migration runs in a transaction of its own: a failed one stays pending, and PostgreSQL and SQLite keep",
+    "    nothing of it (MySQL and MariaDB cannot undo a schema change: the message says what is left);",
+    "  - every unique and foreign key has a name (`uq_<table>_<column>`, `fk_<table>_<column>`), so it can be dropped;",
+    "  - `make` also warns of a required column added without a default and of a column that becomes required; two",
+    "    migrations made in the same second get different names;",
+    "  - migrations made before this version still run."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.7692b7",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "and MariaDB dropped the time zone, so `05:06+02:00` came back as `05:06` UTC), and a `DateTime` in a JSON answer is written as `toIso()` writes it (`2026-03-04T03:06:07.000Z`), as nestjs does.",
+   "body": [
+    "and MariaDB dropped the time zone, so `05:06+02:00` came back as `05:06` UTC), and a `DateTime` in a JSON answer",
     "    is written as `toIso()` writes it (`2026-03-04T03:06:07.000Z`), as nestjs does.",
     "  - fastapi: changing a row with an `@updated` column answered 500 (`DetachedInstanceError`): what the database",
     "    writes is read back with the write, on every database.",
     "  - fastapi: a route's parameter of several words is read by its Nuclear name (`{customerId}` in the path,",
     "    `?minTotal=` in the query); it answered 400 asking for `customer_id` and `min_total`.",
     "  - fastapi: a related row inside an answer (`order.customer`) had Python's names (`created_at`) and dates without a",
-    "    time zone; it has Nuclear's now, like the row itself."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.7e0cd3",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "`Otlp(url)` in `connections` send traces and metrics over OTLP; every request and use case is a span by itself, `Metric.count` / `Metric.record` write metrics, `@untraced` leaves out a use case, a route or a controller, `sample` keeps a share of the traces.",
-   "body": [
-    "`Otlp(url)` in `connections` send traces and metrics over OTLP; every request and use case is a span by itself,",
-    "  `Metric.count` / `Metric.record` write metrics, `@untraced` leaves out a use case, a route or a controller,",
-    "  `sample` keeps a share of the traces. nestjs accepts `@untraced` and does not bring the plugin yet.",
-    "- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):",
-    "  `nuclear add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
-    "  `koa` are added with a word on what the platform already gives.",
-    "- First public version.",
-    "- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `nuclear gen` (ADR-codegen-0001).",
-    "- `[[generators.usecase]]`: `nuclear gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).",
-    "- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`synapsis-py` `router_of`, `synapsis-nest` `configureApp`; `spec/backend.md` §2.7)."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.9b0754",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "(`lazy='raise'`); `save` replaces its rows of the join table, as nestjs does.",
-   "body": [
-    "- fastapi: a `@manyToMany` list set on a found row (`order.tags = tags`, then `save`) failed",
+    "    time zone; it has Nuclear's now, like the row itself.",
+    "  - fastapi: a `@manyToMany` list set on a found row (`order.tags = tags`, then `save`) failed",
     "    (`lazy='raise'`); `save` replaces its rows of the join table, as nestjs does.",
     "  - fastapi: `MariaDB(url)` could not be imported (`synapsis` did not export it): a project with a MariaDB",
     "    connection did not start.",
     "  - fastapi: a `string` column without `@column(length)` is 255 characters, as in nestjs (MySQL and MariaDB refused",
     "    the table); on SQLite a generated key is never given again after its row is removed, as in nestjs.",
-    "  - nestjs: `ilike` works on every database (it was PostgreSQL's `ILIKE`: a syntax error on SQLite, MySQL and",
-    "    MariaDB).",
-    "  - nestjs: the row `save` answers has `null` in a column that was left out (the key was missing from the JSON",
-    "    answer of a `POST`, and present in the one of a `GET`).",
-    "  - nestjs: the rows of a loaded `@manyToMany` come without their row of the join table (each tag carried an",
-    "    `orders_tags` object).",
-    "  - nestjs: a model's list of texts, numbers or booleans (`labels: string[]`) is validated item by item; every body",
-    "    with one answered 400 (\"labels must be a string\").",
-    "- Environments (spec 021): synapsis-py (`synapsis.config.load_env_file`) and synapsis-nest (`loadEnvFile` of",
-    "  `config.ts`) load the app's `.env` (written by `nuclear build --env <name>`) at start, never replacing a variable"
+    "  - nestjs: `ilike` works on every database (it was PostgreSQL's `ILIKE`: a syntax error on SQLite, MySQL and"
    ],
    "platforms": [
     "backend"
@@ -448,11 +416,80 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.f1a1a1",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.9c2e1d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "token refuses everything; a guarded app serves no documentation pages.",
+   "body": [
+    "token refuses everything; a guarded app serves no documentation pages.",
+    "- The app's WebSocket (ADR-synapsis-0008), fastapi and nestjs: `plugins(websocket = true)` and",
+    "  `WebSocketServer(path = \"ws\")` in `connections` serve the same controllers over one socket (JSON frames: requests",
+    "  and their answers, `subscribe`/`unsubscribe`), and `~publish(topic, value)` pushes to the subscribed clients.",
+    "- The contract (`.nuclear/contract.json`) says `webSocket`, each controller's `transports` and `guards`, the app's",
+    "  `guards` and the `events` it publishes (topic, component, payload).",
+    "- Telemetry (spec 012), fastapi: `plugins(telemetry = true)` and one of `Datadog(...)`, `NewRelic(...)`, `Grafana(...)`,",
+    "  `Otlp(url)` in `connections` send traces and metrics over OTLP; every request and use case is a span by itself,",
+    "  `Metric.count` / `Metric.record` write metrics, `@untraced` leaves out a use case, a route or a controller,",
+    "  `sample` keeps a share of the traces. nestjs accepts `@untraced` and does not bring the plugin yet.",
+    "- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):",
+    "  `nuclear add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
+    "  `koa` are added with a word on what the platform already gives.",
+    "- First public version."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.aae2ef",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "reason with it) instead of leaving it out; an appcomponent's alias propagates its `Result` like the use case it names.",
+   "body": [
+    "reason with it) instead of leaving it out; an appcomponent's alias propagates its `Result` like the use case it",
+    "  names.",
+    "- One JSON per model in every dialect (ADR-synapsis-0012): a `fastapi` model extends `synapsis.Model` and its JSON",
+    "  has Nuclear's names (`lastRead`, not `last_read`), as `nestjs` and the contract; an entity's answer too.",
+    "- A client generated from the contract sends a route's model parameter as the body itself (`@body input: NewTask`),",
+    "  and keeps a list's and a map's default (`members: string[] = []`).",
+    "- Tests that call the app (ADR-synapsis-0010), fastapi and nestjs: `appClient()` sends requests over HTTP",
+    "  (`get`/`post`/`put`/`patch`/`delete`/`request`: `HttpAnswer` with `status`, `body`) and opens the app's WebSocket",
+    "  (`socket(path, headers)`: `Err` with 401/403 when refused; `request`, `subscribe`, `next(seconds)`, `close`);",
+    "  `testEnv(NAME = \"value\")` in `config.nuc` is the tests' environment (a test token). fastapi's `app/main.py` gains",
+    "  `create()`; nestjs gets `src/test_env.ts` and `npm test` imports it first.",
+    "- Guards (ADR-synapsis-0007), fastapi and nestjs: `guards: Guard[] = [NoOrigin(), Token(value = env(\"T\"), header =",
+    "  \"X-Token\")]` in the `appConfig` checks every route, the contract's routes and the WebSocket's upgrade;",
+    "  `@controller(\"x\", guards = [...])` adds a controller's own. Headers only (never a token in the query); an empty"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.bb7027",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `nuclear gen` (ADR-codegen-0001).",
+    "- `[[generators.usecase]]`: `nuclear gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).",
+    "- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`synapsis-py` `router_of`, `synapsis-nest` `configureApp`; `spec/backend.md` §2.7).",
     "- `[[generators.resource]]`: the repository and the controller are merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001).",
     "- nestjs: `npm test` (what `nuclear test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project."
    ],
@@ -469,24 +506,58 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.fcd25a",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.e17855",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "the process has.",
+   "summary": "MariaDB).",
    "body": [
-    "the process has. The reference says `env()`, the files, `--env` and `nuclear env` (§2.8).",
+    "MariaDB).",
+    "  - nestjs: the row `save` answers has `null` in a column that was left out (the key was missing from the JSON",
+    "    answer of a `POST`, and present in the one of a `GET`).",
+    "  - nestjs: the rows of a loaded `@manyToMany` come without their row of the join table (each tag carried an",
+    "    `orders_tags` object).",
+    "  - nestjs: a model's list of texts, numbers or booleans (`labels: string[]`) is validated item by item; every body",
+    "    with one answered 400 (\"labels must be a string\").",
+    "- Environments (spec 021): synapsis-py (`synapsis.config.load_env_file`) and synapsis-nest (`loadEnvFile` of",
+    "  `config.ts`) load the app's `.env` (written by `nuclear build --env <name>`) at start, never replacing a variable",
+    "  the process has. The reference says `env()`, the files, `--env` and `nuclear env` (§2.8).",
     "- fastapi: a parameter named like a function of Python (`type`, `list`, `max`...) is written `type_` so it no",
     "  longer hides that function in the body; outside it keeps its own name (`@_public_names`: a route's `?max=`, an MCP",
     "  tool's `type`, a keyword call), and synapsis-py reads a renamed reserved word (`from_`) by its own name too. `rick_api`'s `alive(max)` is written `alive(max_)`.",
-    "- The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the",
-    "  reason with it) instead of leaving it out; an appcomponent's alias propagates its `Result` like the use case it",
-    "  names.",
-    "- One JSON per model in every dialect (ADR-synapsis-0012): a `fastapi` model extends `synapsis.Model` and its JSON",
-    "  has Nuclear's names (`lastRead`, not `last_read`), as `nestjs` and the contract; an entity's answer too.",
-    "- A client generated from the contract sends a route's model parameter as the body itself (`@body input: NewTask`),",
-    "  and keeps a list's and a map's default (`members: string[] = []`).",
-    "- Tests that call the app (ADR-synapsis-0010), fastapi and nestjs: `appClient()` sends requests over HTTP",
-    "  (`get`/`post`/`put`/`patch`/`delete`/`request`: `HttpAnswer` with `status`, `body`) and opens the app's WebSocket"
+    "- The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.ea00ee",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "What was wrong, found by running every kind of schema change on SQLite, PostgreSQL, MySQL and MariaDB with the real command (the database check: `checks/database-check/migrations.py`): table was made again with the foreign keys on, and their `ON DELETE CASCADE` ran), and the table lost…",
+   "body": [
+    "What was wrong, found by running every kind of schema change on SQLite, PostgreSQL, MySQL and MariaDB with the",
+    "  real command (the database check: `checks/database-check/migrations.py`):",
+    "  - nestjs, SQLite: changing or dropping a column **deleted the rows of the tables that point to the table** (the",
+    "    table was made again with the foreign keys on, and their `ON DELETE CASCADE` ran), and the table lost",
+    "    `AUTOINCREMENT` and kept a default that was removed. The runtime rebuilds the table itself now.",
+    "  - nestjs: a unique or a foreign key removed from a column stayed in the database (PostgreSQL, MySQL, MariaDB);",
+    "    a migration ran outside any transaction, so a failure left half of it on every database; a table that already",
+    "    existed passed as created by the migration (`CREATE TABLE IF NOT EXISTS`); a migration applied and missing from",
+    "    the folder was ignored by `up`.",
+    "  - fastapi: adding or dropping a unique on a table failed (`Constraint must have a name`), and so did dropping a",
+    "    foreign key; on SQLite a schema change ran outside the transaction, and a rebuilt table lost `AUTOINCREMENT`;",
+    "    `up` with nothing pending printed nothing, `down` with nothing applied was an error with a traceback.",
+    "  - `nuclear migrate` (and every `[toolchain]` command that does not name the installation's folders) asked for",
+    "    an install directory: it runs from the tree's own build now."
    ],
    "platforms": [
     "backend"
@@ -1253,27 +1324,79 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.083f3f",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Migrations",
-   "summary": "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): python -m synapsis.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the last one python -m synapsis.migrate up --dir…",
+   "summary": "transaction; after a migration `PRAGMA foreign_key_check` must be empty.",
    "body": [
-    "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`,",
-    "`migrate`, `migrate_down`):",
+    "transaction; after a migration `PRAGMA foreign_key_check` must be empty.",
+    "- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the same",
+    "  file. Alembic rebuilds a table of SQLite from what it reads in the database, where `AUTOINCREMENT` is not read:",
+    "  `_keep_generated_keys` (a `column_reflect` listener) says it, so a rebuilt table still never gives a key twice.",
+    "- `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.40ffed",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Migrations",
+   "summary": "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`, `migrate_status`): python -m synapsis.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the last one python -m synapsis.migrate…",
+   "body": [
+    "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,",
+    "`migrate_down`, `migrate_status`):",
     "",
     "```sh",
     "python -m synapsis.migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
-    "python -m synapsis.migrate up --dir <migrations>                         # applies the pending ones",
-    "python -m synapsis.migrate down --dir <migrations>                       # reverts the last one",
+    "python -m synapsis.migrate up [--to <name>] --dir <migrations>           # applies the pending ones",
+    "python -m synapsis.migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>",
+    "python -m synapsis.migrate status --dir <migrations>                     # every migration: applied or pending",
     "```",
     "",
+    "The rules a user sees are the reference's (§2.8), the same words and exit codes as the TypeScript runtime. How this",
+    "one keeps them:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.511d35",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Migrations",
+   "summary": "autogenerate write the difference.",
+   "body": [
     "- `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's",
-    "  autogenerate write the difference.",
-    "- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written the first time.",
-    "- `up` and `down` use the default database of the app's configuration, which `create_app` keeps in `app.state`;",
-    "  `alembic_version` lists what is applied.",
-    "- Migrations are written in batch mode, so SQLite (which cannot alter a column) and the other databases run the",
-    "  same file."
+    "  autogenerate write the difference. `_prepare` then names every unique and foreign key the migration makes",
+    "  (`uq_<table>_<column>`, `fk_<table>_<column>`: Alembic cannot drop a constraint without a name) and collects the",
+    "  warnings. The entities themselves carry no constraint names, so the migrations of before still compare equal.",
+    "- The folder is an Alembic script folder (`env.py`, `script.py.mako`, `versions/`), written by the first `make`.",
+    "  A migration's revision is its timestamp; its file is `<timestamp>_<slug>.py`, the same slug as the other runtime.",
+    "- `_chain` reads the files one by one and orders them by `down_revision`; it refuses two files with the same parent",
+    "  and a parent that is missing (Alembic's own map would call them branches and heads).",
+    "- `up`, `down` and `status` open one connection to the default database of the app's configuration (`create_app`",
+    "  keeps it in `app.state`) and hand it to `env.py`; `alembic_version` holds the last migration applied, and the",
+    "  ones before it in the line are the applied ones.",
+    "- `_run` applies or reverts one migration in a transaction of its own (`connection.begin()` before Alembic, so",
+    "  Alembic opens none). SQLite's driver is opened with `autocommit=False`, or a schema change would run outside the"
    ],
    "platforms": [
     "backend"
@@ -1380,10 +1503,10 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#tests-and-type-definitions",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Tests and type definitions",
-   "summary": "`test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = \"auto\"`.",
+   "summary": "`test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`); pytest with `asyncio_mode = \"auto\"`.",
    "body": [
     "- `tests/test_runtime.py`, `test_data.py` (the same cases as the TypeScript runtime's `data.test.ts`),",
-    "  `test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = \"auto\"`. The fastapi check runs them",
+    "  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`); pytest with `asyncio_mode = \"auto\"`. The fastapi check runs them",
     "  ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
     "  `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,",
@@ -1547,24 +1670,85 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.2a158d",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
-   "summary": "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations> #…",
+   "summary": "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`, `migrate_status`): npx synapsis-nest-migrate make \"add done to tasks\"…",
    "body": [
     "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run",
-    "by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`):",
+    "by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`,",
+    "`migrate_status`):",
     "",
     "```sh",
     "npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
-    "npx synapsis-nest-migrate up --dir <migrations>                         # applies the pending ones",
-    "npx synapsis-nest-migrate down --dir <migrations>                       # reverts the last one",
+    "npx synapsis-nest-migrate up [--to <name>] --dir <migrations>           # applies the pending ones",
+    "npx synapsis-nest-migrate down [--to <name>] --dir <migrations>         # reverts the last one, or every one after <name>",
+    "npx synapsis-nest-migrate status --dir <migrations>                     # every migration: applied or pending",
     "```",
     "",
+    "The rules a user sees are the reference's (§2.8), the same words and exit codes as the Python runtime. How this one",
+    "keeps them:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.8fbd69",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
+   "summary": "`make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`: the migration it was made after.",
+   "body": [
     "- It reads the `entities` and the `config` the app module exports.",
     "- `schemaOf` reads the entities' attributes, `diff` compares them with the `schema` the last migration exports (so",
-    "  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`.",
-    "- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table). umzug was not needed."
+    "  `make` never reads the database), `render` writes `up` / `down` over `queryInterface`, the `schema` and `parent`:",
+    "  the migration it was made after.",
+    "- `chain` orders the files by `parent` and refuses two files with the same parent and a parent that is missing. A",
+    "  file written before `parent` existed follows the file before it by name.",
+    "- Applied migrations are listed in `SequelizeMeta` (sequelize-cli's table: the file's name). `status` refuses a name",
+    "  that is not in the folder and a pending migration before an applied one. umzug was not needed.",
+    "- `run` applies or reverts one migration in a transaction of its own, with its line of `SequelizeMeta`. The",
+    "  migration's database has one connection (`databaseOfApp`: `pool.max = 1`), so `START TRANSACTION` holds everything",
+    "  the migration runs. On SQLite the foreign keys are off while it runs and `PRAGMA foreign_key_check` must be empty",
+    "  before it is kept.",
+    "- A migration gets `migrator(queryInterface)`: Sequelize's queryInterface with what it gets wrong made right.",
+    "  - `createTable` refuses a table that exists (Sequelize writes `CREATE TABLE IF NOT EXISTS`); on PostgreSQL, MySQL"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations.b2d326",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
+   "summary": "and MariaDB it adds each unique and foreign key by name after the table.",
+   "body": [
+    "and MariaDB it adds each unique and foreign key by name after the table.",
+    "  - `addColumn` and `changeColumn` leave the column as the attribute says, with its unique and its foreign key: a",
+    "    constraint that goes is found by its column in the database's catalog, whatever name it has.",
+    "  - `removeColumn` drops the column's constraints first; `renameColumn` is `ALTER TABLE ... RENAME COLUMN` on every",
+    "    database.",
+    "  - SQLite cannot alter a column: `rebuild` reads the table from the database (`pragma_table_info`, `index_list`,",
+    "    `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild",
+    "    loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point",
+    "    to the table (their `ON DELETE CASCADE` runs when it is dropped)."
    ],
    "platforms": [
     "backend"
@@ -1582,10 +1766,10 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#tests-and-type-definitions",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Tests and type definitions",
-   "summary": "`migrate.test.ts`; `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`.",
+   "summary": "`migrate.test.ts` (the same cases as `test_migrate.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`.",
    "body": [
     "- `test/runtime.test.ts`, `data.test.ts` (the same cases as the Python runtime's `test_data.py`),",
-    "  `migrate.test.ts`; `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs",
+    "  `migrate.test.ts` (the same cases as `test_migrate.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs",
     "  them ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
     "  `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,",
@@ -1652,11 +1836,12 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#conventions",
    "type": "context",
    "title": "Testing — Conventions",
-   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
+   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations: `tests/test_migrate.py`, `test/migrate.test.ts`).",
    "body": [
     "- **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each",
     "  dialect runs with its own runner; a behaviour of the runtimes has the same test in both",
-    "  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
+    "  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations:",
+    "  `tests/test_migrate.py`, `test/migrate.test.ts`).",
     "- **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An",
     "  expected file the build no longer produces is a failure too.",
     "- **No network, no real service** in the fastapi and nestjs checks: SQLite (in memory or a temporary file) and fake",
@@ -1681,25 +1866,58 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.019baa",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.01affc",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "1. Starts `postgres:16-alpine`, `mysql:8.0` and `mariadb:11` one at a time, each in a throwaway container (`nuclear-dbcheck-<pid>-<database>`, a free port of `127.0.0.1`, its data in memory), waits for its health check, and removes it when done; a `trap` removes them all however the script ends.",
+   "summary": "11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs on that schema.",
    "body": [
-    "1. Starts `postgres:16-alpine`, `mysql:8.0` and `mariadb:11` one at a time, each in a throwaway container",
-    "   (`nuclear-dbcheck-<pid>-<database>`, a free port of `127.0.0.1`, its data in memory), waits for its health check,",
-    "   and removes it when done; a `trap` removes them all however the script ends. SQLite is a file.",
-    "2. For each dialect and database: copies `examples/examples-backend/store_api` to a temporary folder (`TMPDIR`;",
-    "   `KEEP=1` keeps it) and changes only the dialect, the plugin and the connection (`Postgres(url =",
-    "   env(\"DATABASE_URL\"))`..., without `createTables`), in an empty database of its own (`store_<dialect>`). Then, the",
-    "   stages:",
-    "   - **build**, **checker**: `nuclear build`, then pyright or `tsc --strict`.",
-    "   - **migrations**: `make \"first\"`, `up`, `make \"again\"` answers \"no changes\"; `db.py schema` reads the real schema",
-    "     back (tables, columns, nullability, types, the key, the unique columns, the foreign keys and their",
-    "     `ON DELETE`); `db.py seed` inserts rows by SQL leaving the columns with a default out; a field with a default",
-    "     is added to an entity (`points: int = 7`), `make`, `up` (the rows that were there get the default), `down` (the",
-    "     column goes, the rows stay), `up` again.",
-    "   - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for"
+    "11. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs",
+    "         on that schema.",
+    "   - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for",
+    "     every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),",
+    "     pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
+    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the relations loaded and",
+    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
+    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
+    "     value (one row), the cascade of a delete.",
+    "   - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).",
+    "3. **schemas**: `db.py compare` lists every difference between the schemas the two dialects left on the same",
+    "   database after each step (`~` lines). It is not a failure: what differs is in the",
+    "   [roadmap](../01-product/roadmap.md).",
+    "4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.06b743",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "their `ON DELETE`) and the rows.",
+   "body": [
+    "their `ON DELETE`) and the rows. A `down` must leave exactly the schema read before its `up`. One line per",
+    "     scenario is printed under the stage (`+`):",
+    "     1. `make`, `up`, nothing left to make, `status`, `down` to an empty database, `down` with nothing applied.",
+    "     2. The tables are there and the history is empty: `up` is refused whole.",
+    "     3. A column with a default added to a table with rows (`points: int = 7`).",
+    "     4. A column's type, null, default and length changed, a unique added.",
+    "     5. A table, a foreign key on a table with rows (`@manyToOne`) and a join table (`@manyToMany`).",
+    "     6. A table and a column renamed: `make` writes a drop and an add and warns; the file is edited into a rename",
+    "        in the dialect's migration language; the rows and the foreign key follow.",
+    "     7. A column, a unique and a foreign key dropped (its column stays).",
+    "     8. A migration that fails half way (a statement added to it): exit 1, still pending; PostgreSQL and SQLite",
+    "        keep nothing of it, MySQL and MariaDB keep the column it made and the message says so; fixed, it applies.",
+    "     9. A migration applied and missing from the folder; two migrations made after the same one: refused.",
+    "     10. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`."
    ],
    "platforms": [
     "backend"
@@ -1756,7 +1974,40 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.92921d",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.d6e8f5",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "1. Starts `postgres:16-alpine`, `mysql:8.0` and `mariadb:11` one at a time, each in a throwaway container (`nuclear-dbcheck-<pid>-<database>`, a free port of `127.0.0.1`, its data in memory), waits for its health check, and removes it when done; a `trap` removes them all however the script ends.",
+   "body": [
+    "1. Starts `postgres:16-alpine`, `mysql:8.0` and `mariadb:11` one at a time, each in a throwaway container",
+    "   (`nuclear-dbcheck-<pid>-<database>`, a free port of `127.0.0.1`, its data in memory), waits for its health check,",
+    "   and removes it when done; a `trap` removes them all however the script ends. SQLite is a file.",
+    "2. For each dialect and database: copies `examples/examples-backend/store_api` to a temporary folder (`TMPDIR`;",
+    "   `KEEP=1` keeps it) and changes only the dialect, the plugin and the connection (`Postgres(url =",
+    "   env(\"DATABASE_URL\"))`..., without `createTables`), in an empty database of its own (`store_<dialect>`). Then, the",
+    "   stages:",
+    "   - **build**, **checker**: `nuclear build`, then pyright or `tsc --strict`.",
+    "   - **new** (SQLite only, once per dialect): a project made with `nuclear new` and `nuclear gen resource`, then",
+    "     `nuclear migrate status`, `make`, `up`, `make` (no changes), `status`, `down`, `status`.",
+    "   - **migrations** (`migrations.py`): every step runs the real command, `nuclear migrate`, of the tree's build",
+    "     (`target/debug` is first on `PATH`; the project's `build/` gets the shared tools as `.venv` or",
+    "     `node_modules`, in place of `nuclear install`). After each step `db.py` reads the real schema back (tables,",
+    "     columns, type, length, null, the default by its meaning, the key, the unique columns, the foreign keys and"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.f3d0b4",
    "type": "context",
    "title": "Testing — Running the checks",
    "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
@@ -1773,7 +2024,7 @@
     "   must answer \"no changes\".",
     "6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).",
     "",
-    "**`database-check/check.sh`** (needs Docker running, besides the set-up above; about two minutes). It proves that",
+    "**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twelve minutes). It proves that",
     "one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those",
     "dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one",
     "`ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed."
@@ -1791,20 +2042,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.b7d4e8",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.f5672f",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404), pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an `int`, decimals, booleans, null against an empty text, timestamps with a time…",
+   "summary": "`createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are compared byte by byte: the same in every dialect on every database.",
    "body": [
-    "every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),",
-    "     pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
-    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the relations loaded and",
-    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
-    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
-    "     value (one row), the cascade of a delete.",
-    "   - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).",
-    "3. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,",
-    "   `createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are",
+    "`createdAt` / `updatedAt` their shape, `401.0` is `401`, the reasons of a 400 are left out) and the files are",
     "   compared byte by byte: the same in every dialect on every database.",
     "",
     "What the scenario leaves out of the comparison because it differs by database, and says in its line: the",
@@ -1873,11 +2116,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#what-is-tested-at-each-level.2e7f62",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#what-is-tested-at-each-level.4c7feb",
    "type": "context",
    "title": "Testing — What is tested at each level",
    "summary": "What is tested at each level",
-   "body": "| The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |",
+   "body": [
+    "| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, every kind of migration with `nuclear migrate` against the real database, one HTTP scenario, the project's tests; the answers compared between dialects and databases, the schemas' differences listed; a project made with `nuclear new` migrated | `checks/database-check/check.sh` |",
+    "| The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |"
+   ],
    "platforms": [
     "backend"
    ],
@@ -1891,7 +2137,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#what-is-tested-at-each-level.ef65fd",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#what-is-tested-at-each-level.8eda72",
    "type": "context",
    "title": "Testing — What is tested at each level",
    "summary": "What is tested at each level",
@@ -1901,8 +2147,7 @@
     "| The compiler's tests | Every example built and compared with its golden: `examples/expected/rick_api/`, `examples/expected/tasks_api/`, `examples/expected/store_api/` (`nuclearlang/crates/nuclear-transpile/tests/projects.rs`), `examples/examples-nestjs/users.ts` (`golden.rs`); conformance: `tasks_api` built with `nestjs` and `fastapi` (`backend_example_builds_with_every_backend_dialect`); `tasks_api` also as the backend of the mobile `tasks_app` | `cargo test` at the root of the tree |",
     "| The runtimes' tests | `packages/synapsis-py/tests/` (pytest), `packages/synapsis-nest/test/` (`node:test`) | the two checks |",
     "| The fastapi check | `rick_api` built; pyright `--strict` and the project's own tests on the generated code; a live run; then the conformance example | `checks/fastapi-check/check.sh` |",
-    "| The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |",
-    "| The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, the migrations against the real database, one HTTP scenario, the project's tests; the answers compared between dialects and databases | `checks/database-check/check.sh` |"
+    "| The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |"
    ],
    "platforms": [
     "backend"

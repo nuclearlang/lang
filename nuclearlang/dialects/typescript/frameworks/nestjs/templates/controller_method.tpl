@@ -16,6 +16,6 @@
 {{#decor.status}}
 @HttpCode({{decor.status.arg}})
 {{/decor.status}}
-{{decorators}}{{#async}}async {{/async}}{{name}}({{#params_list}}{{#route}}@Param('{{name}}'{{#tinfo.is.int}}, ParseIntPipe{{/tinfo.is.int}}{{#tinfo.is.double}}, ParseFloatPipe{{/tinfo.is.double}}{{#tinfo.is.boolean}}, ParseBoolPipe{{/tinfo.is.boolean}}) {{/route}}{{^route}}{{#tinfo.model}}@Body() {{/tinfo.model}}{{^tinfo.model}}@Query('{{name}}'{{#tinfo.is.int}}, new ParseIntPipe({ optional: true }){{/tinfo.is.int}}{{#tinfo.is.double}}, new ParseFloatPipe({ optional: true }){{/tinfo.is.double}}{{#tinfo.is.boolean}}, new ParseBoolPipe({ optional: true }){{/tinfo.is.boolean}}) {{/tinfo.model}}{{/route}}{{name}}{{#optional}}?{{/optional}}: {{type}}{{^@last}}, {{/@last}}{{/params_list}}){{#ret}}: {{ret}}{{/ret}} {
+{{decorators}}{{#async}}async {{/async}}{{name}}({{#params_list}}{{#route}}@Param('{{name}}'{{#tinfo.is.int}}, IntPipe{{/tinfo.is.int}}{{#tinfo.is.double}}, DoublePipe{{/tinfo.is.double}}{{#tinfo.is.boolean}}, BoolPipe{{/tinfo.is.boolean}}) {{/route}}{{^route}}{{#tinfo.model}}@Body() {{/tinfo.model}}{{^tinfo.model}}@Query('{{name}}'{{#tinfo.is.int}}, IntPipe{{/tinfo.is.int}}{{#tinfo.is.double}}, DoublePipe{{/tinfo.is.double}}{{#tinfo.is.boolean}}, BoolPipe{{/tinfo.is.boolean}}) {{/tinfo.model}}{{/route}}{{name}}{{#optional}}?{{/optional}}: {{type}}{{^@last}}, {{/@last}}{{/params_list}}){{#ret}}: {{ret}}{{/ret}} {
   {{body}}
 }

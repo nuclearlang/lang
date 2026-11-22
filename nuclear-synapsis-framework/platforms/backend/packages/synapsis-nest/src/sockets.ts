@@ -14,6 +14,7 @@ import type { AddressInfo, Socket } from 'node:net';
 // ws is loaded when the app starts: a project without the websocket plugin does not need it
 import type { WebSocket as Client, WebSocketServer as Wss } from 'ws';
 import { AppConfig, Connection } from './config.js';
+import { errorBody } from './errors.js';
 import { sinks } from './events.js';
 import { Headers, refusal } from './guards.js';
 
@@ -105,8 +106,8 @@ export class WebSocketServer extends Connection {
       });
       const text = await r.text();
       reply = { id: frame.id, status: r.status, body: parse(text) };
-    } catch (e) {
-      reply = { id: frame.id, status: 500, body: { message: (e as Error).message } };
+    } catch {
+      reply = { id: frame.id, status: 500, body: errorBody(500, 'error') };
     }
     if (ws.readyState === 1) ws.send(JSON.stringify(reply));
   }

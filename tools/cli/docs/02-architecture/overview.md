@@ -87,8 +87,11 @@ mobile app. For it (ADR-cli-0001):
 - `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package
   manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions
   ([packages.md](packages.md)).
-- `nuclear migrate [make "<message>" | up | down]` runs `migrate_make` / `migrate` / `migrate_down` with
-  `{{message}}` and `{{migrations}}` = `<project>/migrations` (`migrate_command`; `ADR-backend-0001` §5).
+- `nuclear migrate [make "<message>" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /
+  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--to <migration>` (up, down)
+  goes to the dialect's tool as it is (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5).
+- A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:
+  `fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.
 - `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).
 - `nuclear make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its
   `[layout]` path ([the code generator](../../../code_generator/docs/02-architecture/overview.md)).

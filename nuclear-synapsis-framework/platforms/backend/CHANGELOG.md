@@ -4,6 +4,39 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **Migrations that hold on every database** (`nuclear migrate`, reference §2.8), the same in `fastapi` and `nestjs`:
+  the same lines printed, the same exit codes, the same rules. New: `nuclear migrate status` (every migration:
+  applied or pending), `nuclear migrate --to <migration>` and `nuclear migrate down --to <migration>`. The rules:
+  - the history is one line: two migrations made after the same one, or one the database has and the folder does
+    not, are refused by every command;
+  - each migration runs in a transaction of its own: a failed one stays pending, and PostgreSQL and SQLite keep
+    nothing of it (MySQL and MariaDB cannot undo a schema change: the message says what is left);
+  - every unique and foreign key has a name (`uq_<table>_<column>`, `fk_<table>_<column>`), so it can be dropped;
+  - `make` also warns of a required column added without a default and of a column that becomes required; two
+    migrations made in the same second get different names;
+  - migrations made before this version still run.
+
+  What was wrong, found by running every kind of schema change on SQLite, PostgreSQL, MySQL and MariaDB with the
+  real command (the database check: `checks/database-check/migrations.py`):
+  - nestjs, SQLite: changing or dropping a column **deleted the rows of the tables that point to the table** (the
+    table was made again with the foreign keys on, and their `ON DELETE CASCADE` ran), and the table lost
+    `AUTOINCREMENT` and kept a default that was removed. The runtime rebuilds the table itself now.
+  - nestjs: a unique or a foreign key removed from a column stayed in the database (PostgreSQL, MySQL, MariaDB);
+    a migration ran outside any transaction, so a failure left half of it on every database; a table that already
+    existed passed as created by the migration (`CREATE TABLE IF NOT EXISTS`); a migration applied and missing from
+    the folder was ignored by `up`.
+  - fastapi: adding or dropping a unique on a table failed (`Constraint must have a name`), and so did dropping a
+    foreign key; on SQLite a schema change ran outside the transaction, and a rebuilt table lost `AUTOINCREMENT`;
+    `up` with nothing pending printed nothing, `down` with nothing applied was an error with a traceback.
+  - `nuclear migrate` (and every `[toolchain]` command that does not name the installation's folders) asked for
+    an install directory: it runs from the tree's own build now.
+- **One body for every error and one OpenAPI document, in every dialect** (ADR-synapsis-0013): an error answers
+  `{ "status", "message" }`, and an invalid body or parameter adds `errors`, one reason per field (`field`, `rule`,
+  `message`), written by each runtime from what its framework reports (`synapsis.errors`, `synapsis-nest`'s
+  `ErrorFilter`); `GET /openapi.json` answers the document the transpiler writes from the project. Before:
+  `{"detail"}` in `fastapi`, `{"statusCode", "message"}` in `nestjs`, each validator's own words, and an OpenAPI
+  document worked out by one framework only. `nestjs` reads a number or a boolean of the route or the query with
+  the runtime's `IntPipe`, `DoublePipe`, `BoolPipe`.
 - The database check (`checks/database-check/check.sh`, needs Docker): the new example `store_api` (customers,
   orders, tags) built with `fastapi` and `nestjs` on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11: the migrations
   against the real database (made, applied, the schema read back, a column added to a table with rows, reverted),

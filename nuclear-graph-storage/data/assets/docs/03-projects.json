@@ -559,6 +559,73 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.012f12",
+   "type": "context",
+   "title": "Testing — The conformance programs",
+   "summary": "Rules:",
+   "body": [
+    "| `lib_helpers` | the helpers of the language (ADR-lang-0013) called with no `use`: only the ones used are written, a name the file declares stays its own, a helper another helper calls gives way to it |",
+    "| `str_escapes` | a text is data, never code: quotes, back-ticks, braces, `$`, `%`, `\\` and `#` in plain, interpolated, multi-line and raw texts, as map keys, in JSON, and as the replacement of `replace` / `replaceAll` (no `$&` of JavaScript, no `\\1` of Python) |",
+    "",
+    "Rules:"
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.3f318a",
+   "type": "context",
+   "title": "Testing — The conformance programs",
+   "summary": "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and `base/docs.toml`; the lexer test and the loader test name those files in their messages.",
+   "body": [
+    "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and",
+    "`base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a",
+    "folder of the tree fails; none skips itself."
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.766409",
+   "type": "context",
+   "title": "Testing — The conformance programs",
+   "summary": "before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`, `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (the helpers of the language, twice: as a project's own files, and brought by the compiler with no source…",
+   "body": [
+    "- **Every change to the transpiler, a dialect or the library runs the three folders and the library of helpers**",
+    "  before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`,",
+    "  `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (the helpers of",
+    "  the language, twice: as a project's own files, and brought by the compiler with no source of them in the project),",
+    "  every line `ok`.",
+    "- A case reads its values at run time (a function's result, a parameter), never a constant the target's checker",
+    "  folds: `true and false` written as literals is dead code for Dart and an error for TypeScript, and proves nothing.",
+    "- A new feature of the language adds its cases to the program of its area, or a new program; a bug found in a",
+    "  target adds the case that shows it (to `examples/semantics/` when it is one rule a target broke).",
+    "- The CI runs the three folders on every change of the language (`.github/workflows/language.yml`).",
+    "- A case that cannot print the same in every target is not written here: it is recorded in the",
+    "  [roadmap](../01-product/roadmap.md) with what each target does."
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.912f89",
    "type": "context",
    "title": "Testing — The conformance programs",
@@ -591,57 +658,6 @@
     "| `err_try`, `err_results` | `try`/`catch`/`finally` and their order, nesting, custom errors, `Result` propagation, kept results, `match` on `Ok`/`Err`, callbacks |",
     "| `async_basics`, `gen_basics` | `~`, `awaitAll`, errors through an await, asynchronous methods, lambdas and loops, generators and `yield ...` |",
     "| `str_basics`, `coll_lists`, `coll_maps`, `scope_vars` | texts and their members, lists, maps and sets with their edge cases (empty, missing, nested, a stable sort by key), block scope, values and references |"
-   ],
-   "sources": [
-    "nuclearlang/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.c8fee3",
-   "type": "context",
-   "title": "Testing — The conformance programs",
-   "summary": "before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`, `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (a real library of several files: generics, lambdas given to functions, `any` data, imports between…",
-   "body": [
-    "- **Every change to the transpiler, a dialect or the library runs the three folders and the library of helpers**",
-    "  before it is done: `tools/stdlib-check.sh`, `DIR=examples/semantics tools/stdlib-check.sh`,",
-    "  `DIR=examples/conformance tools/stdlib-check.sh` and `../nuclear-synapsis-framework/lodash/check.sh` (a real",
-    "  library of several files: generics, lambdas given to functions, `any` data, imports between files), every line",
-    "  `ok`.",
-    "- A case reads its values at run time (a function's result, a parameter), never a constant the target's checker",
-    "  folds: `true and false` written as literals is dead code for Dart and an error for TypeScript, and proves nothing.",
-    "- A new feature of the language adds its cases to the program of its area, or a new program; a bug found in a",
-    "  target adds the case that shows it (to `examples/semantics/` when it is one rule a target broke).",
-    "- The CI runs the three folders on every change of the language (`.github/workflows/language.yml`).",
-    "- A case that cannot print the same in every target is not written here: it is recorded in the",
-    "  [roadmap](../01-product/roadmap.md) with what each target does.",
-    "",
-    "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and",
-    "`base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a",
-    "folder of the tree fails; none skips itself."
-   ],
-   "sources": [
-    "nuclearlang/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#the-conformance-programs.ca79e2",
-   "type": "context",
-   "title": "Testing — The conformance programs",
-   "summary": "Rules:",
-   "body": [
-    "| `str_escapes` | a text is data, never code: quotes, back-ticks, braces, `$`, `%`, `\\` and `#` in plain, interpolated, multi-line and raw texts, as map keys, in JSON, and as the replacement of `replace` / `replaceAll` (no `$&` of JavaScript, no `\\1` of Python) |",
-    "",
-    "Rules:"
    ],
    "sources": [
     "nuclearlang/docs/05-standards/testing.md"
@@ -788,6 +804,34 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.232d37",
+   "type": "spec",
+   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
+   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
+   "body": [
+    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
+    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
+    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
+    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
+    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
+    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
+    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`. The OpenAPI document is",
+    "also what `GET /openapi.json` answers in every dialect, and its `Error` schema (`status`, `message`, and `errors`",
+    "with a `field`, a `rule` and a `message` for an invalid body or parameter) is the body every error answers",
+    "(ADR-synapsis-0013).",
+    "",
+    "A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.382cbd",
    "type": "spec",
    "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
@@ -871,31 +915,6 @@
     "  { \"name\": \"TASKS_TOKEN\", \"required\": true, \"client\": false, \"uses\": [{ \"file\": \"config/project_config.nuc\", \"line\": 6 }] }",
     "]",
     "```"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.d69732",
-   "type": "spec",
-   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
-   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
-   "body": [
-    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
-    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
-    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
-    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
-    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
-    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
-    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`.",
-    "",
-    "A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"

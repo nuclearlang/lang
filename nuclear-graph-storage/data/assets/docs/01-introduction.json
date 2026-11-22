@@ -563,6 +563,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.df205a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.e462e7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
