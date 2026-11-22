@@ -134,6 +134,104 @@
     }
   },
   "dialect": "fastapi",
+  "env": [
+    {
+      "client": false,
+      "default": "gemma4:e2b",
+      "name": "ASSISTANT_MODEL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "4096",
+      "name": "CHAT_CONTEXT_TOKENS",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "3m",
+      "name": "CHAT_KEEP_ALIVE",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "qwen3.5:2b",
+      "name": "CHAT_MODEL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "qwen2.5-coder:3b",
+      "name": "CODER_MODEL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "8192",
+      "name": "CONTEXT_TOKENS",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 11
+        },
+        {
+          "file": "config/project_config.nuc",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "http://localhost:11434",
+      "name": "OLLAMA_URL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 11
+        },
+        {
+          "file": "config/project_config.nuc",
+          "line": 12
+        },
+        {
+          "file": "config/project_config.nuc",
+          "line": 13
+        }
+      ]
+    }
+  ],
   "events": {},
   "guards": [
     {
@@ -449,6 +547,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.80.0",
+  "version": "0.90.0",
   "webSocket": null
 }
