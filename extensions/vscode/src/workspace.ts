@@ -15,6 +15,7 @@ import { Launch, logFile, logSize, reason, RUN_STALL_MS, RunFollower, RunStep } 
 import { isInstalled } from './card';
 import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
+import { MonitorPanel } from '../../tools/nuclear-monitor/src/panel';
 import { chatCsp, chatGifKey, chatScript, disposeChat, openChatTab, wireChat } from './chatView';
 import { followChatNotices, Notice, notices } from './notifications';
 import { chatWhere } from './notify';
@@ -109,7 +110,7 @@ export function tools(): Tool[] {
       label: 'Nuclear Monitor',
       short: 'MONITOR',
       key: 'Ctrl+Alt+F',
-      about: l10n.t("Each Nuclear function's time, calls, connections and memory while the app runs, as an accordion of bars (.nuclear/monitor/report.json)."),
+      about: l10n.t('What your app is doing while it runs: every request, error and message live, and which parts are slow.'),
       planned: [],
       command: 'nuclear.monitor.open',
     },
@@ -220,6 +221,11 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   const ws = new Workspace(context, http);
   // Nuclear Atlas with no project yet (a new workspace, the welcome): its chat on the workspace's folder
   AtlasPanel.fallback = () => ws.chatFolder();
+  // Nuclear Monitor follows the workspace's selected app, switches it, and runs a mobile one on a device
+  MonitorPanel.projects = () => ws.projects().map((p) => ({ root: p.root, name: p.name, platform: p.platform }));
+  MonitorPanel.selected = () => ws.active()?.root;
+  MonitorPanel.select = (root) => void context.workspaceState.update(LAST_PROJECT, root).then(() => ws.refresh());
+  MonitorPanel.runMobile = (root) => context.workspaceState.update(LAST_PROJECT, root).then(() => ws.action('run'));
   AtlasPanel.workspace = () => { const w = ws.workspace(); return w && !ws.gone() ? { root: w.root, name: w.name } : undefined; };
   // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
   activateScripts(context, () => ws.projects(), ws.onDidChange.event);
@@ -760,6 +766,7 @@ class Workspace implements vscode.WebviewViewProvider {
       // in a workspace the chat stays where the user left it (the workspace's own, first): choosing an app to run does not
       // move the conversation; without one it follows the last project, as before
       else if (tool.id === 'atlas') AtlasPanel.setSplit(!!this.view?.visible), AtlasPanel.show(this.context, () => this.projects(), this.workspace() ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'monitor') await vscode.commands.executeCommand(tool.command!, this.active()?.root);
       else if (tool.id === 'environments') await vscode.commands.executeCommand(tool.command!, this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);

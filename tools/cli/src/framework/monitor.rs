@@ -12,16 +12,22 @@ const MANY_CONNECTIONS: f64 = 10.0;
 /// Own memory per call (bytes) that makes a node `memory`.
 const MUCH_MEMORY: f64 = 10.0 * 1024.0 * 1024.0;
 
-/// The report of the project at `start` or above.
-fn find(start: &Path) -> Result<PathBuf, String> {
-    let start = start.canonicalize().unwrap_or_else(|_| start.to_path_buf());
-    start.ancestors().map(|d| d.join(crate::MONITOR_REPORT)).find(|p| p.is_file()).ok_or_else(|| {
-        format!(
-            "no {} in {} or above: run the app with `nuclear run --monitor` (or `nuclear build --monitor`) first",
-            crate::MONITOR_REPORT,
-            start.display()
-        )
-    })
+/// The project at `start` or above: the folder of `main.nuc`, `config.nuc` or `nuclear.toml`.
+fn project_of(start: &Path) -> Option<PathBuf> {
+    start
+        .ancestors()
+        .find(|d| ["main.nuc", "config.nuc", "nuclear.toml"].iter().any(|f| d.join(f).is_file()))
+        .map(Path::to_path_buf)
+}
+
+/// The report of the project at `start` or above (a report above the project too: an app built elsewhere).
+fn find(start: &Path) -> Option<PathBuf> {
+    start.ancestors().map(|d| d.join(crate::MONITOR_REPORT)).find(|p| p.is_file())
+}
+
+/// The flag that keeps a project measured (`nuclear monitor --on`), honoured by build, watch and run.
+pub fn flag(root: &Path) -> PathBuf {
+    root.join(".nuclear").join("monitor").join("on")
 }
 
 fn num(n: &Value, key: &str) -> f64 {
@@ -161,15 +167,65 @@ pub fn render(report: &Value, file: &Path, json: bool) -> String {
     out
 }
 
-/// `nuclear monitor [--json]` in the project at `start`.
-pub fn command(start: &Path, json: bool) -> Result<(), String> {
-    let file = find(start)?;
-    let text = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
-    let report: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", file.display()))?;
-    print!("{}", render(&report, &file, json));
-    if !json {
-        println!();
+/// `nuclear monitor [--json] [--on|--off]` in the project at `start`: the report of its last measured run (if any)
+/// and its console, the last run of its run log (`console.rs`). `--on` / `--off`: the project measured from its next
+/// build on, or no longer.
+pub fn command(start: &Path, rest: &[String]) -> Result<(), String> {
+    let start = start.canonicalize().unwrap_or_else(|_| start.to_path_buf());
+    let report_file = find(&start);
+    let root = project_of(&start)
+        .or_else(|| report_file.as_deref().and_then(|r| r.ancestors().nth(3)).map(Path::to_path_buf))
+        .ok_or_else(|| {
+            format!(
+                "{} is not a Nuclear project (no main.nuc, config.nuc or nuclear.toml here or above)",
+                start.display()
+            )
+        })?;
+    let has = |a: &str| rest.iter().any(|r| r == a);
+    if has("--on") || has("--off") {
+        let on = flag(&root);
+        let done = if has("--on") {
+            std::fs::create_dir_all(on.parent().unwrap_or(&root)).and_then(|_| std::fs::write(&on, ""))
+        } else {
+            std::fs::remove_file(&on)
+                .or_else(|e| if e.kind() == std::io::ErrorKind::NotFound { Ok(()) } else { Err(e) })
+        };
+        done.map_err(|e| format!("{}: {e}", on.display()))?;
+        println!("{}: measured from its next build {}", root.display(), if has("--on") { "on" } else { "off" });
+        return Ok(());
     }
+    let report: Option<Value> = match &report_file {
+        Some(f) => {
+            let text = std::fs::read_to_string(f).map_err(|e| format!("{}: {e}", f.display()))?;
+            Some(serde_json::from_str(&text).map_err(|e| format!("{}: {e}", f.display()))?)
+        }
+        None => None,
+    };
+    let console = super::console::read(&root, std::time::SystemTime::now(), &super::console::listening);
+    let measuring = flag(&root).is_file();
+    if has("--json") {
+        let mut all: Value = match (&report, &report_file) {
+            (Some(r), Some(f)) => serde_json::from_str(&render(r, f, true)).unwrap_or_default(),
+            // no report yet: the same keys, empty (an editor of before 0.97 draws an empty tree, not an error)
+            _ => {
+                json!({ "report": "", "app": "", "runtime": "", "updated": "", "notes": [], "hot_spots": [], "roots": [] })
+            }
+        };
+        all["project"] = json!(root.display().to_string());
+        all["measuring"] = json!(measuring);
+        all["console"] = console;
+        println!("{}", serde_json::to_string_pretty(&all).unwrap_or_default());
+        return Ok(());
+    }
+    match (&report, &report_file) {
+        (Some(r), Some(f)) => print!("{}", render(r, f, false)),
+        _ => println!(
+            "Nuclear Monitor · {}\nno measured run yet: run the app with `nuclear run --monitor` (or `nuclear monitor --on`, then run it) and use it",
+            root.display()
+        ),
+    }
+    println!("measuring: {}\n", if measuring { "on" } else { "off" });
+    print!("{}", super::console::render(&console));
     Ok(())
 }
 
@@ -197,5 +253,21 @@ mod tests {
         let both = node("both", 120.0, 0.0, 1, true, vec![node("getUser", 600.0, 600.0, 5, true, vec![])]);
         let spots = hot_spots(&[both]);
         assert!(spots.iter().all(|s| !s["flags"].as_array().unwrap().contains(&json!("loop"))));
+    }
+
+    #[test]
+    fn on_and_off_keep_the_flag_of_the_project_and_a_workspace_is_not_one() {
+        let ws = std::env::temp_dir().join(format!("nuclear-monitor-flag-{}", std::process::id()));
+        let api = ws.join("api");
+        std::fs::create_dir_all(api.join("components")).unwrap();
+        std::fs::write(api.join("config.nuc"), "").unwrap();
+        command(&api.join("components"), &["--on".into()]).unwrap();
+        assert!(flag(&api).is_file());
+        command(&api, &["--json".into()]).unwrap();
+        command(&api, &["--off".into()]).unwrap();
+        assert!(!flag(&api).exists());
+        command(&api, &["--off".into()]).unwrap();
+        assert!(command(&ws, &[]).unwrap_err().contains("is not a Nuclear project"));
+        let _ = std::fs::remove_dir_all(&ws);
     }
 }

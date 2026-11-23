@@ -1,0 +1,125 @@
+{
+ "report": "/home/user/ghibli/api/.nuclear/monitor/report.json",
+ "app": "api",
+ "runtime": "python",
+ "updated": "2026-11-23T21:14:04.503125+00:00",
+ "notes": [
+  "memory measured with tracemalloc: the times include its cost"
+ ],
+ "hot_spots": [
+  {
+   "calls": 2,
+   "calls_per_parent_call": 1.0,
+   "connections": 1,
+   "flags": [
+    "slow"
+   ],
+   "label": "SearchFilms.exec",
+   "line": 3,
+   "memory_bytes": 1347889,
+   "path": "components/films/domain/usecases/search_films.nuc",
+   "self_ms": 388.396,
+   "total_ms": 388.396,
+   "via": "FilmsController.search \u203a FilmsAppComponent.searchFilms"
+  },
+  {
+   "calls": 1,
+   "calls_per_parent_call": 1.0,
+   "connections": 0,
+   "flags": [
+    "slow"
+   ],
+   "label": "ListFilms.exec",
+   "line": 3,
+   "memory_bytes": 110158,
+   "path": "components/films/domain/usecases/list_films.nuc",
+   "self_ms": 105.075,
+   "total_ms": 105.075,
+   "via": "FilmsController.list \u203a FilmsAppComponent.listFilms"
+  }
+ ],
+ "roots": [
+  {
+   "async": true,
+   "calls": 2,
+   "children": [
+    {
+     "async": true,
+     "calls": 2,
+     "children": [
+      {
+       "async": true,
+       "calls": 2,
+       "children": [],
+       "connections": 1,
+       "label": "SearchFilms.exec",
+       "line": 3,
+       "max_ms": 284.539,
+       "memory_bytes": 1347889,
+       "path": "components/films/domain/usecases/search_films.nuc",
+       "self_ms": 388.396,
+       "total_ms": 388.396
+      }
+     ],
+     "connections": 1,
+     "label": "FilmsAppComponent.searchFilms",
+     "line": 5,
+     "max_ms": 284.888,
+     "memory_bytes": 1351158,
+     "path": "components/films/films_appcomponent.nuc",
+     "self_ms": 0.373,
+     "total_ms": 388.769
+    }
+   ],
+   "connections": 1,
+   "label": "FilmsController.search",
+   "line": 8,
+   "max_ms": 284.913,
+   "memory_bytes": 1352169,
+   "path": "components/films/api/films_controller.nuc",
+   "self_ms": 0.045,
+   "total_ms": 388.814
+  },
+  {
+   "async": true,
+   "calls": 1,
+   "children": [
+    {
+     "async": true,
+     "calls": 1,
+     "children": [
+      {
+       "async": true,
+       "calls": 1,
+       "children": [],
+       "connections": 0,
+       "label": "ListFilms.exec",
+       "line": 3,
+       "max_ms": 105.075,
+       "memory_bytes": 110158,
+       "path": "components/films/domain/usecases/list_films.nuc",
+       "self_ms": 105.075,
+       "total_ms": 105.075
+      }
+     ],
+     "connections": 0,
+     "label": "FilmsAppComponent.listFilms",
+     "line": 3,
+     "max_ms": 105.477,
+     "memory_bytes": 111671,
+     "path": "components/films/films_appcomponent.nuc",
+     "self_ms": 0.402,
+     "total_ms": 105.477
+    }
+   ],
+   "connections": 0,
+   "label": "FilmsController.list",
+   "line": 4,
+   "max_ms": 105.505,
+   "memory_bytes": 111943,
+   "path": "components/films/api/films_controller.nuc",
+   "self_ms": 0.028,
+   "total_ms": 105.505
+  }
+ ]
+}

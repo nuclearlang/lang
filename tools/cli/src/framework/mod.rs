@@ -10,6 +10,7 @@ use nuclear_codegen::{generate, scaffold};
 use nuclear_devices as device;
 
 mod assets;
+mod console;
 mod dependencies;
 mod doctor;
 mod explain;
@@ -73,8 +74,10 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
                                              from scratch, then flutter clean + everything again, until
                                              flutter analyze finds no errors (exit 2: the .nuc have errors)
   explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained
-  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
-                                             calls in a loop, connections, memory) and each function's time
+  monitor [--json]                           what the app is doing: its last run (state, requests, errors with their
+                                             stack, output) and, measured, its hot spots (slow, async calls in a
+                                             loop, connections, memory) and each function's time
+  monitor --on | --off                       measure the project from its next build (build, watch, run) or stop
 
 workspace (spec 022: a folder whose .workspace/workspace.nuc names the business project and its apps;
 nuclear help workspace)
@@ -337,6 +340,7 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             flutter(&app, &[&["test", target, "--no-pub"][..], &passthrough(&rest)].concat())
         }),
         "run" => with_root(project_dir, |root| {
+            crate::report_to(root);
             let log = runlog::RunLog::start(root, "nuclear run");
             let result = match non_mobile_manifest(root) {
                 Ok(Some(m)) => run_backend(root, &m, &rest, &log),
@@ -373,7 +377,7 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
         "explain" => with_root(project_dir, |root| explain_command(root, rest.iter().any(|a| a == "--json"))),
         "monitor" => {
             let start = project_dir.map(PathBuf::from).unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            monitor::command(&start, rest.iter().any(|a| a == "--json"))
+            monitor::command(&start, &rest)
         }
         "add" => match rest.first() {
             // a folder is a kind package (ADR-synapsis-0004); a name is a package of the target (ADR-lang-0008)

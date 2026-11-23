@@ -1,0 +1,387 @@
+{
+ "app": "api",
+ "console": {
+  "errors": 2,
+  "lines": [
+   {
+    "at": "2026-11-23T21:13:24.364Z",
+    "kind": "step",
+    "text": "build"
+   },
+   {
+    "at": "2026-11-23T21:13:24.600Z",
+    "kind": "output",
+    "text": "api: 21 files \u2192 ./build"
+   },
+   {
+    "at": "2026-11-23T21:13:24.679Z",
+    "kind": "step",
+    "text": "install"
+   },
+   {
+    "at": "2026-11-23T21:13:31.346Z",
+    "kind": "output",
+    "text": "[notice] A new release of pip is available: 26.2.2 -> 26.3"
+   },
+   {
+    "at": "2026-11-23T21:13:31.346Z",
+    "kind": "output",
+    "text": "[notice] To update, run: /home/user/ghibli/api/build/.venv/bin/python3 -m pip install --upgrade pip"
+   },
+   {
+    "at": "2026-11-23T21:13:34.233Z",
+    "kind": "output",
+    "text": "[notice] A new release of pip is available: 26.2.2 -> 26.3"
+   },
+   {
+    "at": "2026-11-23T21:13:34.233Z",
+    "kind": "output",
+    "text": "[notice] To update, run: /home/user/ghibli/api/build/.venv/bin/python3 -m pip install --upgrade pip"
+   },
+   {
+    "at": "2026-11-23T21:13:34.317Z",
+    "kind": "step",
+    "text": "serve"
+   },
+   {
+    "at": "2026-11-23T21:13:34.678Z",
+    "kind": "output",
+    "text": "INFO:     Will watch for changes in these directories: ['/home/user/ghibli/api/build']"
+   },
+   {
+    "at": "2026-11-23T21:13:34.678Z",
+    "kind": "output",
+    "text": "INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)"
+   },
+   {
+    "at": "2026-11-23T21:13:34.678Z",
+    "kind": "output",
+    "text": "INFO:     Started reloader process [3452797] using StatReload"
+   },
+   {
+    "at": "2026-11-23T21:13:35.079Z",
+    "kind": "output",
+    "text": "INFO:     Started server process [3452805]"
+   },
+   {
+    "at": "2026-11-23T21:13:35.079Z",
+    "kind": "output",
+    "text": "INFO:     Waiting for application startup."
+   },
+   {
+    "at": "2026-11-23T21:13:35.310Z",
+    "kind": "output",
+    "text": "INFO:     Application startup complete."
+   },
+   {
+    "at": "2026-11-23T21:13:35.441Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 1.0,
+    "path": "/openapi.json",
+    "status": 200
+   },
+   {
+    "at": "2026-11-23T21:13:44.998Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 306.0,
+    "path": "/films",
+    "status": 200
+   },
+   {
+    "at": "2026-11-23T21:13:45.127Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 115.0,
+    "path": "/films/search",
+    "status": 200
+   },
+   {
+    "at": "2026-11-23T21:13:45.258Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 116.0,
+    "path": "/people",
+    "status": 200
+   },
+   {
+    "at": "2026-11-23T21:13:45.371Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 98.0,
+    "path": "/films/2baf70d1-42bb-4437-b551-e5fed5a87abe",
+    "status": 200
+   },
+   {
+    "at": "2026-11-23T21:13:45.387Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 1.0,
+    "path": "/nothing",
+    "status": 404
+   },
+   {
+    "at": "2026-11-23T21:13:45.515Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 114.0,
+    "path": "/films/not-an-id",
+    "status": 404
+   },
+   {
+    "at": "2026-11-23T21:13:45.631Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 102.0,
+    "path": "/people/zzz",
+    "status": 404
+   },
+   {
+    "at": "2026-11-23T21:13:55.035Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 1.0,
+    "path": "/health",
+    "status": 404
+   },
+   {
+    "at": "2026-11-23T21:14:00.069Z",
+    "kind": "reload",
+    "text": "WARNING:  StatReload detected changes in 'tests/conftest.py'. Reloading..."
+   },
+   {
+    "at": "2026-11-23T21:14:00.102Z",
+    "kind": "output",
+    "text": "INFO:     Shutting down"
+   },
+   {
+    "at": "2026-11-23T21:14:00.203Z",
+    "kind": "output",
+    "text": "INFO:     Waiting for application shutdown."
+   },
+   {
+    "at": "2026-11-23T21:14:00.206Z",
+    "kind": "output",
+    "text": "INFO:     Application shutdown complete."
+   },
+   {
+    "at": "2026-11-23T21:14:00.206Z",
+    "kind": "output",
+    "text": "INFO:     Finished server process [3452805]"
+   },
+   {
+    "at": "2026-11-23T21:14:00.551Z",
+    "kind": "output",
+    "text": "INFO:     Started server process [3453116]"
+   },
+   {
+    "at": "2026-11-23T21:14:00.551Z",
+    "kind": "output",
+    "text": "INFO:     Waiting for application startup."
+   },
+   {
+    "at": "2026-11-23T21:14:00.756Z",
+    "kind": "output",
+    "text": "INFO:     Application startup complete."
+   },
+   {
+    "at": "2026-11-23T21:14:03.357Z",
+    "kind": "error",
+    "method": "GET",
+    "path": "/films/search",
+    "stack": [
+     "  File \"/home/user/ghibli/api/build/.venv/lib/python3.14/site-packages/synapsis/web.py\", line 291, in call",
+     "    value = await value",
+     "            ^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/api/films_controller.py\", line 28, in search",
+     "    return await self.app.search_films(name)",
+     "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/films_appcomponent.py\", line 31, in search_films",
+     "    return await inject(SearchFilms).exec(name)",
+     "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/domain/usecases/search_films.py\", line 24, in exec",
+     "    return Ok([all_[9999]])",
+     "               ~~~~^^^^^^"
+    ],
+    "text": "IndexError: list index out of range"
+   },
+   {
+    "at": "2026-11-23T21:14:03.357Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 308.0,
+    "path": "/films/search",
+    "status": 500
+   },
+   {
+    "at": "2026-11-23T21:14:03.471Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 109.0,
+    "path": "/films/search",
+    "status": 500
+   },
+   {
+    "at": "2026-11-23T21:14:03.471Z",
+    "kind": "error",
+    "method": "GET",
+    "path": "/films/search",
+    "stack": [
+     "  File \"/home/user/ghibli/api/build/.venv/lib/python3.14/site-packages/synapsis/web.py\", line 291, in call",
+     "    value = await value",
+     "            ^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/api/films_controller.py\", line 28, in search",
+     "    return await self.app.search_films(name)",
+     "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/films_appcomponent.py\", line 31, in search_films",
+     "    return await inject(SearchFilms).exec(name)",
+     "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "  File \"/home/user/ghibli/api/build/app/components/films/domain/usecases/search_films.py\", line 24, in exec",
+     "    return Ok([all_[9999]])",
+     "               ~~~~^^^^^^"
+    ],
+    "text": "IndexError: list index out of range"
+   },
+   {
+    "at": "2026-11-23T21:14:03.586Z",
+    "kind": "request",
+    "method": "GET",
+    "ms": 108.0,
+    "path": "/films",
+    "status": 200
+   }
+  ],
+  "requests": 12,
+  "started": "2026-11-23T21:13:24.364Z",
+  "state": "running",
+  "step": "serve",
+  "updated": "2026-11-23T21:14:03.586Z",
+  "url": "http://localhost:8000",
+  "why": null
+ },
+ "hot_spots": [
+  {
+   "calls": 2,
+   "calls_per_parent_call": 1.0,
+   "connections": 1,
+   "flags": [
+    "slow"
+   ],
+   "label": "SearchFilms.exec",
+   "line": 3,
+   "memory_bytes": 1347889,
+   "path": "components/films/domain/usecases/search_films.nuc",
+   "self_ms": 388.396,
+   "total_ms": 388.396,
+   "via": "FilmsController.search \u203a FilmsAppComponent.searchFilms"
+  },
+  {
+   "calls": 1,
+   "calls_per_parent_call": 1.0,
+   "connections": 0,
+   "flags": [
+    "slow"
+   ],
+   "label": "ListFilms.exec",
+   "line": 3,
+   "memory_bytes": 110158,
+   "path": "components/films/domain/usecases/list_films.nuc",
+   "self_ms": 105.075,
+   "total_ms": 105.075,
+   "via": "FilmsController.list \u203a FilmsAppComponent.listFilms"
+  }
+ ],
+ "measuring": true,
+ "notes": [
+  "memory measured with tracemalloc: the times include its cost"
+ ],
+ "project": "/home/user/ghibli/api",
+ "report": "/home/user/ghibli/api/.nuclear/monitor/report.json",
+ "roots": [
+  {
+   "async": true,
+   "calls": 2,
+   "children": [
+    {
+     "async": true,
+     "calls": 2,
+     "children": [
+      {
+       "async": true,
+       "calls": 2,
+       "children": [],
+       "connections": 1,
+       "label": "SearchFilms.exec",
+       "line": 3,
+       "max_ms": 284.539,
+       "memory_bytes": 1347889,
+       "path": "components/films/domain/usecases/search_films.nuc",
+       "self_ms": 388.396,
+       "total_ms": 388.396
+      }
+     ],
+     "connections": 1,
+     "label": "FilmsAppComponent.searchFilms",
+     "line": 5,
+     "max_ms": 284.888,
+     "memory_bytes": 1351158,
+     "path": "components/films/films_appcomponent.nuc",
+     "self_ms": 0.373,
+     "total_ms": 388.769
+    }
+   ],
+   "connections": 1,
+   "label": "FilmsController.search",
+   "line": 8,
+   "max_ms": 284.913,
+   "memory_bytes": 1352169,
+   "path": "components/films/api/films_controller.nuc",
+   "self_ms": 0.045,
+   "total_ms": 388.814
+  },
+  {
+   "async": true,
+   "calls": 1,
+   "children": [
+    {
+     "async": true,
+     "calls": 1,
+     "children": [
+      {
+       "async": true,
+       "calls": 1,
+       "children": [],
+       "connections": 0,
+       "label": "ListFilms.exec",
+       "line": 3,
+       "max_ms": 105.075,
+       "memory_bytes": 110158,
+       "path": "components/films/domain/usecases/list_films.nuc",
+       "self_ms": 105.075,
+       "total_ms": 105.075
+      }
+     ],
+     "connections": 0,
+     "label": "FilmsAppComponent.listFilms",
+     "line": 3,
+     "max_ms": 105.477,
+     "memory_bytes": 111671,
+     "path": "components/films/films_appcomponent.nuc",
+     "self_ms": 0.402,
+     "total_ms": 105.477
+    }
+   ],
+   "connections": 0,
+   "label": "FilmsController.list",
+   "line": 4,
+   "max_ms": 105.505,
+   "memory_bytes": 111943,
+   "path": "components/films/api/films_controller.nuc",
+   "self_ms": 0.028,
+   "total_ms": 105.505
+  }
+ ],
+ "runtime": "python",
+ "updated": "2026-11-23T21:14:04.503125+00:00"
+}

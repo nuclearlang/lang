@@ -2697,7 +2697,8 @@ nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc li
 nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)
 nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)
 nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring
-nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory
+nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory
+nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop
 nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions
 nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)
 nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)

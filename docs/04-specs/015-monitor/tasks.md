@@ -1,7 +1,7 @@
 ---
 status: in-progress
 owner: Julian Molina
-updated: 2026-11-19
+updated: 2026-11-23
 related: [requirements.md, design.md]
 ---
 # Spec 015: Nuclear Monitor — Tasks
@@ -18,10 +18,7 @@ counted); `nestjs-check`, `fastapi-check` and `react-check` green with the monit
 
 Left:
 
-- [ ] A save in the editor (`buildOnSave`, `nuclear watch`) builds without the monitor: the measured app loses its
-      wrappers at the next reload. The project should remember it (`.nuclear/monitor/on`) until `nuclear monitor
-      --off`.
-- [ ] The Monitor never yet opened in a live VS Code; not yet a tool of the workspace's strip.
+- [ ] The Monitor never yet clicked in a live VS Code (proven on a copy of a real workspace in a headless browser).
 - [ ] The installed `nuclear` and the extension: the next release (`installer/install.sh`).
 - [ ] The dialects' references (`docs/07-reference/<dialect>.md`) show no `--monitor` equivalence yet.
 
@@ -31,9 +28,13 @@ Left:
       dev server); the Dart runtime without `dart:io` on the web.
 - [ ] The Monitor in Android Studio / IntelliJ.
 
-## Phase 3: the automatic Monitor (the user, 2026-11-19; not started)
+## Phase 3: the automatic Monitor (the user, 2026-11-19 and 2026-11-23)
 
-- [ ] The page uses the workspace's project, starts the measured run itself (terminal or device, always visible),
-      receives a browser's report through a collector of the extension, keeps the monitor on with
-      `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).
-      The full list: `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md` ("The automatic Monitor").
+Done: the console of a project's last run (`nuclear monitor --json` reads the run log: state, requests, errors with
+their stack, output), the page on the workspace's selected project with designed states for an end user, *Run and
+watch* (the terminal `<project> · monitor`, a device for a mobile app; once by itself), `nuclear monitor --on|--off`
+(`.nuclear/monitor/on`, honoured by build, watch and run; `nuclear run` always gives the app the project's report
+file), the MCP tool `project_monitor` with the console.
+
+- [ ] The report of a phone's or a browser's app through a collector of the extension (phase 2):
+      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`.

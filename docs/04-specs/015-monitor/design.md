@@ -20,9 +20,10 @@ per call and runs with the app at full speed. The debugger keeps its job (ADR-00
 | What a template knows | the compiler, generic | `monitor` (flag) and `site` (`label`, `path`, `line`, `component`, `kind`) in the `function` and `method` templates |
 | The runtime | the dialect's `monitor_runtime` template | written once to `nuclear/monitor.<ext>` of a project (like the `Result` runtime), inline in a file built alone; imported as `NuclearMonitor` by each file that measures |
 | The wrapper | the dialect's `function` / `method` templates | `{{#monitor}}...{{/monitor}}`: TypeScript and Dart wrap the body in `try/finally`, Python writes the decorator `@NuclearMonitor.wrap(...)` |
-| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run --monitor`), else `.nuclear/monitor/report.json` of the working folder |
+| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else `.nuclear/monitor/report.json` of the working folder |
+| The switch kept | `.nuclear/monitor/on` | `nuclear monitor --on` / `--off`: every build, watch and run of the project measured until it is removed |
 | The tree as text | `nuclear monitor` | reads the report, prints the tree and the hot spots |
-| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel |
+| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel: the console of the last run (`console` of `nuclear monitor --json`, read from the run log) and the measurements |
 
 Generators (a body with `yield`) and abstract methods get no wrapper.
 
@@ -72,10 +73,13 @@ Sorted by own time; a node is flagged:
 
 A webview opened by `Nuclear: Open Monitor` (and the workspace's tool strip): rows of the tree with a disclosure
 triangle, the label, a horizontal bar of `total_ms` relative to the root (own time darker), calls, connections and
-memory; the hot spots marked; a click on a row opens its `.nuc` at its line. It watches the report file.
+memory; the hot spots marked; a click on a row opens its `.nuc` at its line. Beside it, the console of the project's
+last run (requests, errors with their stack, output), which needs no measuring. It watches the report and the run
+log (`extensions/tools/nuclear-monitor/docs/02-architecture/overview.md`).
 
 ## 7. The agents
 
-`nuclear monitor --json` gives the hot spots and the tree; the MCP tool `nuclear_monitor` calls it; `nuclear monitor
+`nuclear monitor --json` gives the hot spots, the tree and the console of the last run; the MCP tool
+`project_monitor` calls it; `nuclear monitor
 --remember` stores the hot spots as a card of the project in the Smart Graph (`graph_remember`), so the next agent
 knows where the app was slow and on which `.nuc` lines.

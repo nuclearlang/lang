@@ -31,7 +31,7 @@ In this order: the AI factory, the tools of a running project, the ones not buil
 | `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |
 | `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
 | `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
-| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |
+| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` with the selected project (`showTool`); the page's hooks `MonitorPanel.projects/selected/select/runMobile` are set in `activateWorkspace` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |
 | `environments` | Environments | ENV | `Ctrl+Alt+Y` | built: `command` `nuclear.environments.open`, given the last project | [`nuclear-environments`](../../../tools/nuclear-environments/AGENTS.md) (spec 021) |
 | `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
 | `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |

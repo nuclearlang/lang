@@ -339,10 +339,12 @@ More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.
   explains it. From the terminal: `nuclear explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10
   advances one Nuclear line (not a Dart one), the mouse over a name shows its value and the *Nuclear Call Stack*
   view gives the stack in Nuclear.
-- **Where it is slow:** `nuclear run --monitor` runs the app with each Nuclear function and method measured; then
-  `nuclear monitor` prints the hot spots (a slow call, async calls one after another in a loop, many connections,
-  much memory) and the time of each function as a tree. In VS Code, *Nuclear: Open Monitor* draws that tree as an
-  accordion of bars; a click on a name opens its `.nuc` at the line. Without `--monitor` nothing is measured.
+- **What it is doing and where it is slow:** `nuclear monitor` prints the last run: running or not, its requests,
+  its errors with their stack. `nuclear run --monitor` (or `nuclear monitor --on`, kept until `--off`) measures
+  each Nuclear function and method; then `nuclear monitor` adds the hot spots (a slow call, async calls one after
+  another in a loop, many connections, much memory) and the time of each function as a tree. In VS Code the
+  workspace's *Monitor* (`Ctrl+Alt+F`) runs the app if it is not running and shows its console live (a click on an
+  error opens its `.nuc` line) and that tree as an accordion of bars.
 - **If something fails without errors in the `.nuc` files** (packages, stale generated code, a broken build),
   the extensions run `nuclear repair` by themselves and relaunch the app; you can also run it by hand:
   `nuclear repair`.
@@ -375,7 +377,7 @@ tour, with a button to open each.
 | Nuclear Builder (`Ctrl+Alt+P`) and *Your software company* (`Ctrl+Alt+E`) | a spec taken by your team of agents through analysis, design, tests, code, quality and delivery | write a spec (or ask the chat), run it, answer its questions; the company screen makes the teams |
 | Nuclear Atlas (`Ctrl+Alt+A`) and Nuclear Chat | the chat with your agent and your team's members | ask about the code, give an order with `/task`, or have the agent do the work through the MCP server |
 | The devices (`Ctrl+Alt+V`) | phones and browsers beside the code | ▭ Device or ▷ Run on one; several at once, each with its session |
-| Nuclear Monitor (`Ctrl+Alt+F`) | where a running app is slow | run with `--monitor`, then open it: each function's time, calls and memory |
+| Nuclear Monitor (`Ctrl+Alt+F`) | what a running app is doing and where it is slow | open it: it runs the app, shows every request, error and message live, and each function's time, calls and memory |
 | Reports (`Ctrl+Alt+K`) | what the teams did and what it cost | pick a period, a team or a member |
 | Settings and integrations (`Ctrl+Alt+S`) | every setting in one page | the providers, the spending, each tool's options, the AI services' set-up |
 

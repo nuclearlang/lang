@@ -228,19 +228,25 @@ fn loader(args: &Args) -> Loader {
 /// The monitor's report of a project built with `--monitor` (spec 015).
 pub(crate) const MONITOR_REPORT: &str = ".nuclear/monitor/report.json";
 
-/// `manifest` built with the monitor when `--monitor` was given (here or to the `nuclear` that runs this one): the
-/// app it builds writes its report to the project's `MONITOR_REPORT`, through `NUCLEAR_MONITOR_FILE`, which the
-/// commands this one starts inherit.
+/// `manifest` built with the monitor when `--monitor` was given (here or to the `nuclear` that runs this one) or the
+/// project keeps the flag of `nuclear monitor --on` (`.nuclear/monitor/on`): the app it builds writes its report to
+/// the project's `MONITOR_REPORT`, through `NUCLEAR_MONITOR_FILE`, which the commands this one starts inherit.
 pub(crate) fn monitored(root: &std::path::Path, mut manifest: nuclear_transpile::project::Manifest) -> nuclear_transpile::project::Manifest {
-    if std::env::var_os("NUCLEAR_MONITOR").is_some() {
+    if std::env::var_os("NUCLEAR_MONITOR").is_some() || root.join(".nuclear/monitor/on").is_file() {
         manifest.monitor = true;
-        if std::env::var_os("NUCLEAR_MONITOR_FILE").is_none() {
-            let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
-            // SAFETY: set before this process starts any thread or command
-            unsafe { std::env::set_var("NUCLEAR_MONITOR_FILE", root.join(MONITOR_REPORT)) };
-        }
+        report_to(root);
     }
     manifest
+}
+
+/// `NUCLEAR_MONITOR_FILE` set to the project's report, unless given: the app `nuclear run` starts writes it there
+/// (not in its own working folder), also when the monitor is turned on while it runs.
+pub(crate) fn report_to(root: &std::path::Path) {
+    if std::env::var_os("NUCLEAR_MONITOR_FILE").is_none() {
+        let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+        // SAFETY: set before this process starts any thread or command
+        unsafe { std::env::set_var("NUCLEAR_MONITOR_FILE", root.join(MONITOR_REPORT)) };
+    }
 }
 
 fn main() -> ExitCode {
