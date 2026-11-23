@@ -461,4 +461,12 @@ function render(el: HTMLElement, props: FlowProps): void {
   root!.render(<ReactFlowProvider><Diagram {...props} /></ReactFlowProvider>);
 }
 
-(window as unknown as { NuclearFlow: { render: typeof render } }).NuclearFlow = { render };
+/** Takes the diagram out of `el` (the page draws the simple progress there instead). */
+function unmount(el: HTMLElement): void {
+  if (host !== el) return;
+  root?.unmount();
+  root = null;
+  host = null;
+}
+
+(window as unknown as { NuclearFlow: { render: typeof render; unmount: typeof unmount } }).NuclearFlow = { render, unmount };

@@ -6,6 +6,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 - Fix: the welcome no longer closes when an app is added from it (adding a third app, web, closed it): the app opens and the welcome stays for the next one.
 - Fix: in a workspace's own channel, a message is answered by the tech lead of the team assigned to it (nobody answered: the channel did not name its team).
+- **Nuclear Builder shows a run as its progress**: the stations in a line with who works each, what is being done now (or what waits for your answer, with *Answer*), and the spec it works on with its criteria; *Technical diagram* shows the detailed one. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice says so, and opening the Builder shows the run being worked on.
+- Fix: a spec and its run asked in a workspace's channel go to the app they are for (the tech lead says which); they went to the workspace's folder, where the Builder never showed them and the code would not have been written in the app.
 - Nuclear Atlas opens again on the conversation you were in last, in each folder (also after a restart).
 - **Nuclear Atlas's channels and direct messages are in the workspace's column**, as Nuclear Chat draws them: a click opens that conversation in the page, which now shows only the open conversation (the whole chat again when the column is hidden).
 - Fix: the welcome adds an app with the name it offers when the field is left empty (it asked for one again), and the offered name follows the platform (shop_api, shop_web, shop_app); the new-team wizard creates no team without a member.

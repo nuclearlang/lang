@@ -338,13 +338,17 @@ const watchedRunDirs = new Set<string>();
  * followed by its own process (`driveRun`). */
 export function followDetachedRuns(roots: string[]): void {
   for (const root of roots) {
-    const pick = (id: string) => {
+    // `fresh`: a run that appeared now (an agent started it): the open page shows it, and a notice says so
+    const pick = (id: string, fresh = false) => {
       const key = `${root}\0${id}`;
       if (lines.has(id) || followedFiles.has(key)) return;
       const r = loadRun(root, id);
-      if (!r || (r.status !== 'running' && r.status !== 'waiting')) return;
+      if (!r || (r.status !== 'running' && r.status !== 'waiting' && r.status !== 'pending')) return;
       followedFiles.add(key);
       followRun(root, id, new FileRun(root, id, () => followedFiles.delete(key)));
+      if (!fresh) return;
+      notices.add({ tool: 'builder', kind: 'info', title: l10n.t('The team started "{0}"', r.spec.title), text: l10n.t('Open it to follow its progress'), level: 'info', root, ref: id });
+      BuilderPanel.follow(root, id);
     };
     for (const r of listRuns(root)) pick(r.id);
     const dir = path.dirname(runFile(root, 'x'));
@@ -354,7 +358,7 @@ export function followDetachedRuns(roots: string[]): void {
       fs.mkdirSync(dir, { recursive: true });
       fs.watch(dir, (_e, name) => {
         const n = name ? String(name) : '';
-        if (n.endsWith('.json')) setTimeout(() => pick(n.slice(0, -5)), 300);
+        if (n.endsWith('.json')) setTimeout(() => pick(n.slice(0, -5), true), 300);
       });
     } catch {
       // a folder that cannot be watched: its runs are told when the editor drives them
@@ -538,13 +542,30 @@ export class BuilderPanel {
 
   /** The Builder page, created or revealed, on the active project (or the first one). */
   static show(context: vscode.ExtensionContext, projects: () => BuilderProject[], active?: string, run?: string): void {
+    const fresh = !BuilderPanel.current;
     const p = BuilderPanel.current ?? (BuilderPanel.current = new BuilderPanel(context, projects));
     for (const x of projects()) knownRoots.add(x.root);
+    // a page opened with nothing asked shows the run the team is working on now (the newest one alive, of any app)
+    if (fresh && !run) {
+      const alive = projects().flatMap((x) => listRuns(x.root).filter((r) => r.status === 'running' || r.status === 'waiting').map((r) => ({ root: x.root, r }))).sort((a, b) => b.r.created - a.r.created)[0];
+      if (alive) ((active = alive.root), (run = alive.r.id));
+    }
     if (active && projects().some((x) => x.root === active)) p.root = active;
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('builder', true);
     p.state();
     const r = run ? loadRun(p.root, run) : undefined;
+    if (r) p.post({ type: 'run', run: r, select: true });
+  }
+
+  /** A run an agent started: the open page moves to its project and shows it (nothing when the page is closed: the
+   * notice opens it). */
+  static follow(root: string, id: string): void {
+    const p = BuilderPanel.current;
+    if (!p || p.disposed || !p.projects().some((x) => x.root === root)) return;
+    p.root = root;
+    p.state();
+    const r = loadRun(root, id);
     if (r) p.post({ type: 'run', run: r, select: true });
   }
 
@@ -991,6 +1012,26 @@ main.run { overflow: hidden; display: flex; flex-direction: column; }
 .accept.warn { border-left-color: var(--run); } .accept.bad { border-left-color: var(--bad); }
 .pill { padding: 2px 9px; border-radius: 10px; font-size: 11.5px; border: 1px solid var(--line); white-space: nowrap; }
 .graph { flex: 1; position: relative; overflow: hidden; min-width: 0; min-height: 0; border-top: 1px solid var(--line); }
+.prog { height: 100%; overflow: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; }
+.pipe { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; }
+.pst { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 92px; text-align: center; opacity: .55; }
+.pst.st-passed, .pst.st-running, .pst.st-waiting, .pst.st-failed { opacity: 1; }
+.pst .av { width: 34px; height: 34px; }
+.pst small { opacity: .7; font-size: 11px; }
+.pdot { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; border: 2px solid var(--line); }
+.st-passed .pdot { background: var(--ok); border-color: transparent; color: #fff; }
+.st-running .pdot { border-color: var(--accent); color: var(--accent); animation: ppulse 1.4s ease-in-out infinite; }
+.st-waiting .pdot { border-color: var(--run); color: var(--run); }
+.st-failed .pdot { background: var(--bad); border-color: transparent; color: #fff; }
+.pline { flex: 1; min-width: 18px; height: 2px; margin-top: 10px; background: var(--line); }
+.pline.on { background: var(--accent); }
+@keyframes ppulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .st-running .pdot { animation: none; } }
+.pnow { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px; padding: 10px 14px; }
+.pnow.wait { border-left-color: var(--run); } .pnow.ok { border-left-color: var(--ok); } .pnow.bad { border-left-color: var(--bad); }
+.pnow p { margin: 4px 0 8px; }
+.pspec { border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
+.pspec h3 { margin: 2px 0 6px; font-size: 15px; } .pspec ol { margin: 4px 0 10px; padding-left: 20px; } .pspec li { margin: 2px 0; }
 .drawer h2 { font-size: 15px; margin: 0; overflow-wrap: anywhere; }
 .drawer h3 { font-size: 12px; letter-spacing: .01em; color: var(--muted); margin: 18px 0 8px; }
 .dhead { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
@@ -1210,6 +1251,8 @@ const checksOf = {};
 let selectNext = null;
 // auto: nothing was chosen, so the drawer follows the run (the step running, else the one that failed)
 let view = { mode: 'home', run: null, spec: null, stage: null, step: null, trace: null, tab: 'trace', auto: true, open: null, level: null };
+/** A run is drawn as its simple progress (the stations, what is done now, the spec) unless the technical diagram is asked for. */
+let detailed = false;
 let form = blank();
 function blank() { return { useCase: 'feature', title: '', description: TEMPLATES.feature, criteria: [''], context: [], source: { kind: 'local' }, team: '', pieces: [], suggestions: [], srcTab: 'write', mine: [], component: '', layer: '' }; }
 
@@ -1388,6 +1431,8 @@ function drawRun() {
   $('#runTop').innerHTML = head(r);
   const ctx = teamCtx[r.id];
   const again = () => { drawRun(); report(); };
+  if (!detailed) { const html = progress(r); if (g._p !== html) { if (window.NuclearFlow && g._flow) window.NuclearFlow.unmount?.(g); g.innerHTML = html; g._p = html; g._flow = false; } drawRight(); return; }
+  g._p = null; g._flow = true;
   if (!window.NuclearFlow) g.innerHTML = '<div class="empty">' + esc(t('noDiagram')) + '</div>';
   else window.NuclearFlow.render(g, { run: r, level: levelOf(), open: view.open, step: view.inStep ?? null, picked: { stage: view.stage, step: view.step, trace: view.trace }, avatar: av, role: roleOf, name: nameOf, who: whoFor, t,
     context: ctx ? { team: ctx.team, roles: ctx.roles.map((x) => ({ role: x.role, name: x.name, provider: x.provider, model: x.model, kind: x.kind, employee: x.employee })) } : null,
@@ -1546,6 +1591,30 @@ function drawFoot(r) {
   const el = $('#teamFoot');
   if (el._h !== html) { el.innerHTML = html; el._h = html; }
 }
+/** The run as the user follows it: the six stations in a line (done, working now, waiting for you, failed, next), each
+ * with who works it; what is being done now, in one sentence; and the spec it works on (its description and criteria). */
+function progress(r) {
+  const icon = { passed: '✓', running: '●', waiting: '❗', failed: '✕', pending: '', skipped: '–' };
+  const stations = r.stages.map((st, i) => {
+    const a = st.role ?? st.actors?.[0] ?? 'analyst';
+    return (i ? '<div class="pline ' + (st.status === 'pending' ? '' : 'on') + '"></div>' : '') + '<div class="pst st-' + st.status + '" data-stage="' + esc(st.id) + '"><div class="pdot">' + (icon[st.status] ?? '') + '</div>' + av(a) + '<b>' + esc(T['station.' + st.id] ?? st.title) + '</b><small>' + esc(nameOf(a)) + '</small></div>';
+  }).join('');
+  const now = r.stages.find((s) => s.status === 'running' || s.status === 'waiting') ?? null;
+  const step = now ? [...now.steps].reverse().find((x) => x.status === 'running') ?? [...now.steps].reverse().find((x) => x.status !== 'pending') : null;
+  const bad = failedStep(r);
+  const next = r.stages.find((s) => s.status === 'pending');
+  let doing;
+  if (r.waiting) doing = '<div class="pnow wait"><b>❗ ' + esc(t('prog.waits')) + '</b><p>' + esc(r.waiting.question ?? '') + '</p><button class="primary" data-act="showAsk">' + esc(t('prog.answer')) + '</button></div>';
+  else if (r.status === 'passed') doing = '<div class="pnow ok"><b>✓ ' + esc(t('prog.done')) + '</b></div>';
+  else if (bad) doing = '<div class="pnow bad"><b>✕ ' + esc(t('prog.failed')) + ' · ' + esc(T['station.' + bad.st.id] ?? bad.st.title) + '</b><p>' + esc(bad.x.summary || W.stepTitle(bad.x, T)) + '</p></div>';
+  else if (now && step) doing = '<div class="pnow"><b>' + esc(t('prog.now')) + ' · ' + esc(nameOf(step.actor)) + '</b><p>' + esc(W.stepTitle(step, T)) + (step.summary ? ' — ' + esc(step.summary) : '') + '</p></div>';
+  else doing = '<div class="pnow"><b>' + esc(live(r) ? t('prog.next', next ? T['station.' + next.id] ?? next.title : '') : t('prog.stopped')) + '</b></div>';
+  const sp = r.spec ?? {};
+  const crit = (sp.criteria ?? []).length ? '<ol>' + sp.criteria.map((c) => '<li>' + esc(c) + '</li>').join('') + '</ol>' : '<p class="muted">' + esc(t('prog.noCriteria')) + '</p>';
+  const spec = '<div class="pspec"><div class="muted">' + esc(t('prog.spec')) + '</div><h3>' + esc(sp.title ?? r.id) + '</h3>' + (sp.description ? '<p>' + esc(sp.description) + '</p>' : '') + '<div class="muted">' + esc(t('prog.criteria')) + '</div>' + crit
+    + '<button data-open="' + esc((r.specPath ?? 'specs/' + r.id) + '/spec.md') + '">' + esc(t('openSpec')) + '</button></div>';
+  return '<div class="prog"><div class="pipe">' + stations + '</div>' + doing + spec + '</div>';
+}
 function head(r) {
   const bad = failedStep(r);
   const idle = !live(r);
@@ -1557,11 +1626,12 @@ function head(r) {
     + (idle && station && factory(r) && r.status === 'failed' ? '<button id="retry" class="primary" data-station="' + esc(station.id) + '" title="' + esc(t('retryHint')) + '">↻ ' + esc(t('retry', station.title)) + '</button>' : '')
     + (idle && r.status === 'waiting' && !r.waiting ? '<button id="resume" class="primary" title="' + esc(t('resumeHint')) + '">▶ ' + esc(t('resume')) + '</button>' : '')
     + (idle ? '<button id="scratch" title="' + esc(t('scratchHint')) + '">⟲ ' + esc(t('scratch')) + '</button>' : '')
+    + '<button data-act="detail">' + esc(detailed ? t('prog.simple') : t('prog.detail')) + '</button>'
     + '<button data-open="' + esc((r.specPath ?? 'specs/' + r.id) + '/spec.md') + '">' + esc(t('openSpec')) + '</button></div>'
     + (r.waiting ? '<div class="acts" style="margin:6px 0 0"><button class="primary" data-act="showAsk">❗ ' + esc(t('waitsForYouSee')) + '</button></div>' : '')
     + (factory(r) ? '' : '<div class="muted">⚠ ' + esc(t('olderEngine')) + '</div>')
     + ((r.interrupted ?? []).slice(-1).map((i) => '<div class="muted">⚠ ' + esc(t('interrupted', i.stage + (i.step ? ' · ' + i.step : ''), new Date(i.at).toLocaleString(LANG), i.undone.join(', ') || t('nothing'))) + '</div>').join(''))
-    + '<div class="muted hint">' + esc(t('clickHint')) + ((r.previous ?? []).length ? ' <a data-over="1">' + esc(r.previous.length === 1 ? t('earlierOne') : t('earlierMany', r.previous.length)) + '</a>' : '') + '</div></div>';
+    + (!detailed ? '' : '<div class="muted hint">' + esc(t('clickHint')) + ((r.previous ?? []).length ? ' <a data-over="1">' + esc(r.previous.length === 1 ? t('earlierOne') : t('earlierMany', r.previous.length)) + '</a>' : '') + '</div>') + '</div>';
 }
 // ---------- what a station asks: answered here, sent to the run's process (or to its resume, when it ended waiting) ----------
 function gate(r) {
@@ -1678,6 +1748,7 @@ document.addEventListener('click', (e) => {
   if (d.teamchat) return vscode.postMessage({ type: 'atlas', channel: d.teamchat });
   if (d.act === 'buildTeam') return vscode.postMessage({ type: 'teams', wizard: true });
   if (d.polish) return vscode.postMessage({ type: 'polish', id: d.polish });
+  if (d.act === 'detail') { detailed = !detailed; drawRun(); return report(); }
   if (d.act === 'showAsk') { fold('right', false); Object.assign(view, { stage: null, step: null, auto: false }); drawRun(); return $('#node').scrollTo({ top: 0, behavior: 'smooth' }); }
   if (d.uc) { readForm(); if (!form.description.trim() || Object.values(TEMPLATES).includes(form.description)) form.description = TEMPLATES[d.uc]; form.useCase = d.uc; return drawForm(); }
   if (d.src) { readForm(); form.srcTab = d.src; return drawForm(); }

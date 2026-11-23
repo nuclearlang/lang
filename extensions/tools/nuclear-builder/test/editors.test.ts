@@ -8,6 +8,7 @@ import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import * as vm from 'node:vm';
 import { test } from 'node:test';
 import * as vscode from 'vscode';
 import { asksFor, confirmSpending, mustConfirm, projectForcesConfirm } from '../../../vscode/src/spending';
@@ -1089,4 +1090,24 @@ test('Nuclear Atlas opens again on the conversation it was on in each folder, ne
   saved = withoutChannel(saved, '/w/pokemon', 'general');
   assert.equal(lastChannel(saved, '/w/pokemon', 'dm-atlas'), 'dm-atlas');
   assert.equal(lastChannel(saved, '/w/shop', 'dm-atlas'), 'dm-shop-arch');
+});
+
+test('a run is drawn as its simple progress: the stations in a line, what waits for the user, and the spec it works on', async () => {
+  const { html } = await import('../src/panel');
+  // the extension's own folder: its page files are there (a missing one would be fetched from the release)
+  const page = html({ cspSource: 'vscode-resource:', asWebviewUri: (u: { fsPath: string }) => u.fsPath } as never, { fsPath: path.join(__dirname, '..', '..') } as never);
+  const scripts = [...page.matchAll(/<script nonce="[^"]*">([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  for (const code of scripts) assert.doesNotThrow(() => new vm.Script(code), 'the page script parses');
+  const all = scripts.join('\n');
+  const body = all.slice(all.indexOf('function progress(r) {'), all.indexOf('\nfunction head(r) {'));
+  const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const T: Record<string, string> = { 'station.analysis': 'Análisis', 'station.design': 'Diseño' };
+  const t = (k: string, ...a: string[]) => k + (a.length ? ':' + a.join(',') : '');
+  const progress = new Function('esc', 'av', 'nameOf', 'T', 't', 'W', 'failedStep', 'live', body + '; return progress;')(esc, () => '<i></i>', (a: string) => 'name-' + a, T, t, { stepTitle: (x: { title: string }) => x.title }, () => null, () => false) as (r: unknown) => string;
+  const run = { id: 'r', status: 'waiting', specPath: 'specs/_global/r', spec: { title: 'PokeAPI', description: 'Calls PokeAPI', criteria: ['200 on each route', '404 when missing'] }, waiting: { question: 'Approve the Analysis?' },
+    stages: [{ id: 'analysis', title: 'Analysis', role: 'analyst', status: 'waiting', steps: [{ title: 'Analyst: Analysis', status: 'passed', actor: 'analyst', summary: 'analysis.md' }] }, { id: 'design', title: 'Design', role: 'architect', status: 'pending', steps: [] }] };
+  const out = progress(run);
+  assert.ok(out.includes('class="pst st-waiting"') && out.includes('Análisis') && out.includes('name-analyst') && out.includes('class="pst st-pending"'), out);
+  assert.ok(out.includes('Approve the Analysis?') && out.includes('data-act="showAsk"'), 'what waits for the user, with its button');
+  assert.ok(out.includes('PokeAPI') && out.includes('<li>200 on each route</li>') && out.includes('specs/_global/r/spec.md'), 'the spec it works on');
 });

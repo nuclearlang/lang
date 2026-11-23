@@ -22,11 +22,16 @@ command of this page).
 
 Merging a pull request is never a tool, nor a command.
 
+**In a workspace** (the tools of a workspace's own channel, `.workspace/workspace.nuc`) the specs and runs are its
+apps': `spec_new` takes `app` (refused without one, with the apps), every tool of a spec or a run by its id works in
+the app that holds it (`homeOf`), `spec_list` and `runs` say each one's `app`, and a spec at the workspace's root is
+never run there (a workspace is no project).
+
 ## The specs
 
 | Action (page) | Command | Tool | Who |
 |---|---|---|---|
-| New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them) | anyone |
+| New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them; in a workspace `app` too, the app the spec is for) | anyone |
 | The specs' tree | `spec list --json` | `spec_list` | anyone |
 | Open a spec | `spec show <id> --json` | `spec_show` | anyone |
 | Replace a spec's text (its whole markdown; the Nuclear MCP server's `spec_edit`, the user's yes asked there) | `spec update <id> --stdin` | `spec_update` | user |

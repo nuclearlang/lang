@@ -132,6 +132,31 @@ testARunStartsApartAndWhatSpendsOrActsInTheUsersNameWaitsForTheUser(tmpPath: Pat
   expect(out(tools.teamDeleteTool("${paid["id"]}"))["needsUser"] != null and loadTeam("${paid["id"]}")["id"] == paid["id"])
   expect(userDecision(tools.runRestartTool("lend-a-book")) != null and userDecision(tools.specListTool()) == null)
 
+// In a workspace the specs and runs are its apps': a spec says its app (none, or one not there, is refused with the
+// apps), its run starts in that app, the actions by id find it there, the lists say each one's app, and a spec left at
+// the workspace's root is never run there (a workspace is no project).
+testInAWorkspaceASpecAndItsRunAreTheAppsNeverTheWorkspaces(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
+  app = Path(toolsProject(tmpPath, monkeypatch))
+  ws = tmpPath
+  ws.joinpath(".workspace").mkdir()
+  ws.joinpath(".workspace", "workspace.nuc").writeText("workspace(name = \"shop\")\napp(folder = \"app\", platform = \"backend\")\napp(folder = \"gone\", platform = \"web\")\n")
+  ws.joinpath(".nuclear").mkdir()
+  ws.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "specLanguage": "en" }))
+  monkeypatch.chdir(ws)
+  tools = BuilderTools("${ws}")
+  refused = out(tools.specNewTool("Lend a book", "books", ["a lent book is not free"]))
+  expect(refused["apps"] == ["app"] and "workspace" in "${refused["error"]}", json.dumps(refused))
+  expect("error" in out(tools.specNewTool("Lend a book", "books", ["a lent book is not free"], "", "feature", "", "", "gone")))
+  made = out(tools.specNewTool("Lend a book", "books", ["a lent book is not free"], "", "feature", "", "", "app"))
+  expect(made["app"] == "app" and app.joinpath("${made["path"]}", "spec.md").isFile() and not ws.joinpath("specs").exists(), json.dumps(made))
+  started = out(tools.runStartTool("lend-a-book"))
+  expect(started["run"] == "lend-a-book" and loadRun("${app}", "lend-a-book") != null and loadRun("${ws}", "lend-a-book") == null, json.dumps(started))
+  expect(out(tools.runFileTool("lend-a-book"))["id"] == "lend-a-book")
+  expect((out(tools.runsTool()) as any)[0]["app"] == "app" and (out(tools.specListTool()) as any)[0]["app"] == "app")
+  specNew("${ws}", "Old one", "_global", "", "feature", "", ["it works"])
+  expect("workspace" in "${out(tools.runStartTool("old-one"))["error"]}")
+
 // The command refuses to answer the spending too: only the user confirms it, where they answer.
 answerAndRefuse(root: string) boolean
   try

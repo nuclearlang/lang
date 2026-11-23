@@ -13,6 +13,12 @@ by component and layer, and the runs as an accordion: open several at once (a ru
 its stations and, for the one working, waiting or failed, its steps live. A click there opens it on the page: a spec,
 a run, or a station or step picked in the diagram and the node.
 
+A run opens as **its progress**: the six stations in a line (done ✓, working now, ❗ waiting for you, ✕ failed, next),
+each with who works it; what is being done now in one sentence (or what waits for your answer, with *Answer*); and
+**the spec it works on**, its description and acceptance criteria. *Technical diagram* in the run's header shows the
+diagram below instead. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice
+says so, and opening the Builder shows the run being worked on.
+
 On the page, the diagram; on the right, above, **the node**; below, **the log**, with the logo of the team doing the
 work. The right column folds (`»`) and resizes (drag its edge); the page remembers it. The page has no chat: click
 the team at the foot of the log, or a member of the team in the spec form, and Nuclear Atlas opens on its channel or

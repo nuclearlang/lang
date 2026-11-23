@@ -93,6 +93,23 @@ tooBigOf(members: any) <string, any>?
 needsUser(tool: string, input: <string, any>, question: string, command: string) string
   toolSaid({ "needsUser": { "tool": tool, "input": input, "question": question, "command": command }, "note": "this is the user's decision: tell the user, who confirms it in the chat or in the Builder; never ask again by yourself" })
 
+// The apps of a workspace (its marker's `app(folder = …)` whose folder is there); none: the folder is not a workspace.
+workspaceApps(root: string) string[]
+  marker = Path(root, ".workspace", "workspace.nuc")
+  if root.isEmpty or not marker.isFile()
+    return []
+  found: string[] = re.findall(r'app\(\s*folder\s*=\s*"([^"]+)"', marker.readText())
+  found.filter((f: string) => Path(root, f).isDir())
+
+// Where a spec or a run lives: in a workspace, the app that holds it (its spec's folder, or its run file); else the
+// folder itself. A workspace is no project: its specs and runs are its apps'.
+homeOf(root: string, id: string) string
+  for app in workspaceApps(root)
+    at = "${Path(root, app)}"
+    if findSpec(at, id) != null or findSpec(at, runSlug(id)) != null or loadRun(at, id) != null
+      return at
+  root
+
 // The spec file of an id, a title (its id is the title's slug) or a path of the project.
 specFileOf(root: string, spec: string) Path
   found = findSpec(root, spec) ?? findSpec(root, runSlug(spec))
@@ -124,31 +141,43 @@ BuilderTools(root: string)
   // refactor, bug, test, security, docs or diagram) and its description. Answers its id and folder.
   // `language`: the language the project's specs are written in (en, es...), asked of the user once (the editor's
   // language offered as the default) and kept for the project; empty: the one kept.
-  specNewTool(title: string, component: string, criteria: string[], layer: string = "", useCase: string = "feature", description: string = "", language: string = "") string
+  // In a workspace, `app` is the folder of the app the spec is for (a backend's feature in the backend app; a feature of
+  // several apps is one spec in each): the spec, its run and the code it makes are that app's.
+  specNewTool(title: string, component: string, criteria: string[], layer: string = "", useCase: string = "feature", description: string = "", language: string = "", app: string = "") string
     body = () =>
       kept = criteria.map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
       if kept.isEmpty
         return toolSaid({ "error": "a spec needs its acceptance criteria (each one checkable): ask the user for them" })
-      toolSaid(specNew(root, title, component, layer, useCase, description, kept, null, language))
+      apps = workspaceApps(root)
+      if not apps.isEmpty and not (app in apps)
+        return toolSaid({ "error": "this folder is a workspace, not a project: say the app the spec is for (app = ${apps.join(", ")}); a feature of several apps is one spec in each", "apps": apps })
+      at = apps.isEmpty ? root : "${Path(root, app)}"
+      made = specNew(at, title, component, layer, useCase, description, kept, null, language)
+      if not apps.isEmpty
+        made["app"] = app
+      toolSaid(made)
     attempt(body)
 
   // The specs of the project by component and layer, with their runs.
   specListTool() string
     body = () =>
-      toolSaid(specList(root))
+      apps = workspaceApps(root)
+      if apps.isEmpty
+        return toolSaid(specList(root))
+      toolSaid(apps.map((a: string) => { "app": a, "specs": specList("${Path(root, a)}") }))
     attempt(body)
 
   // One spec: its markdown, what it says (title, criteria, pieces...), its draft when it has one, its run's status.
   specShowTool(id: string) string
     body = () =>
-      toolSaid(specShow(root, id))
+      toolSaid(specShow(homeOf(root, id), id))
     attempt(body)
 
   // Propose a new text of a spec (its whole markdown, from its `# title`) as its draft beside it (spec.draft.md): the
   // user sees the difference and accepts it or not; the spec itself is never written by you.
   specDraftTool(id: string, text: string) string
     body = () =>
-      toolSaid(specDraft(root, id, text))
+      toolSaid(specDraft(homeOf(root, id), id, text))
     attempt(body)
 
   // Ask the user to replace a spec's text with a new one (its whole markdown, from its `# title`): the user's decision.
@@ -173,7 +202,7 @@ BuilderTools(root: string)
   // Move a spec's folder to another business component or layer (its run follows).
   specMoveTool(id: string, component: string, layer: string = "") string
     body = () =>
-      toolSaid(specMove(root, id, component, layer))
+      toolSaid(specMove(homeOf(root, id), id, component, layer))
     attempt(body)
 
   // Move the specs of the old flat layout (specs/<id>/) to their component.
@@ -200,19 +229,28 @@ BuilderTools(root: string)
       names: string[] = specs ?? (spec.isEmpty ? ([] as string[]) : [spec])
       if names.isEmpty
         return toolSaid({ "error": "say which spec (spec) or specs (specs, worked in order in one run)" })
+      // in a workspace the run is the app's that holds the specs (one app per run)
+      at = homeOf(root, names[0])
       files: string[] = []
       for name in names
-        file = specFileOf(root, name)
+        if homeOf(root, name) != at
+          return toolSaid({ "error": "the specs of one run belong to one app: `${name}` is another's (start one run per app)" })
+        file = specFileOf(at, name)
         if not file.isFile()
           return toolSaid({ "error": "no spec `${name}` (spec_list lists them)" })
         files.add("${file}")
-      toolSaid(startDetached(root, files, team.isEmpty ? null : team, assign.isEmpty ? null : assign))
+      if at == root and not workspaceApps(root).isEmpty
+        return toolSaid({ "error": "this folder is a workspace, not a project: a run works in an app (spec_new with app writes its spec there)" })
+      toolSaid(startDetached(at, files, team.isEmpty ? null : team, assign.isEmpty ? null : assign))
     attempt(body)
 
   // The runs of the project: id, title, status, cost, each station's status.
   runsTool() string
     body = () =>
-      toolSaid(listRuns(root).map((r) => runSummary(r)))
+      apps = workspaceApps(root)
+      if apps.isEmpty
+        return toolSaid(listRuns(root).map((r) => runSummary(r)))
+      toolSaid(apps.map((a: string) => listRuns("${Path(root, a)}").map((r) => { ...runSummary(r), "app": a })).flatten())
     attempt(body)
 
   // The factory's reports from its ledger, every project of this machine (spec 017): the bill (tokens in and out
@@ -230,13 +268,13 @@ BuilderTools(root: string)
   // question it waits on.
   runFileTool(id: string) string
     body = () =>
-      toolSaid(runShown(root, id))
+      toolSaid(runShown(homeOf(root, id), id))
     attempt(body)
 
   // A run's journal (markdown): everything the roles did, station by station.
   runJournalTool(id: string) string
     body = () =>
-      run = loadRun(root, id)
+      run = loadRun(homeOf(root, id), id)
       if run == null
         return toolSaid({ "error": "no run `${id}` (runs lists them)" })
       journalMarkdown(run!)
@@ -247,16 +285,16 @@ BuilderTools(root: string)
   // request in the user's name) are the user's.
   runAnswerTool(id: string, answer: string, text: string = "") string
     body = () =>
-      run = loadRun(root, id)
+      run = loadRun(homeOf(root, id), id)
       q: <string, any>? = run == null ? null : run!["waiting"]
       if q != null and q!["kind"] == "spending"
-        return toolSaid(spendingOf(root, id) ?? { "waiting": "spending", "run": id })
+        return toolSaid(spendingOf(homeOf(root, id), id) ?? { "waiting": "spending", "run": id })
       if q != null and q!["id"] == "deliver"
         return needsUser("run_answer", { "id": id, "answer": answer, "text": text }, "${q!["question"]} (answer: ${answer})", "nuclear-builder run answer ${id} --answer ${answer}")
-      done = answerRun(root, id, answer, text)
+      done = answerRun(homeOf(root, id), id, answer, text)
       if done["resume"] != true
         return toolSaid(done)
-      detached = detachRun(root, id, ["run", "answer", id, "--answer", answer, ...(text.trim().isEmpty ? [] as string[] : ["--text", text])])
+      detached = detachRun(homeOf(root, id), id, ["run", "answer", id, "--answer", answer, ...(text.trim().isEmpty ? [] as string[] : ["--text", text])])
       toolSaid({ "answered": id, "ask": done["ask"], "answer": answer, "detached": detached["detached"], "log": detached["log"] })
     attempt(body)
 
@@ -264,26 +302,26 @@ BuilderTools(root: string)
   // answered with run_answer.
   runResumeTool(id: string) string
     body = () =>
-      run = loadRun(root, id)
+      run = loadRun(homeOf(root, id), id)
       if run == null
         return toolSaid({ "error": "no run `${id}` (runs lists them)" })
       q: <string, any>? = run!["waiting"]
       if q != null and q!["kind"] == "spending"
-        return toolSaid(spendingOf(root, id) ?? { "waiting": "spending", "run": id })
+        return toolSaid(spendingOf(homeOf(root, id), id) ?? { "waiting": "spending", "run": id })
       if q != null
         return toolSaid({ "error": "the run ${id} waits on a question: ${q!["question"]} (answer it with run_answer)" })
-      toolSaid(detachRun(root, id, ["run", "--resume", id]))
+      toolSaid(detachRun(homeOf(root, id), id, ["run", "--resume", id]))
     attempt(body)
 
   // Run a run again from the station that failed (or from `station`, or from one `step` and every step after it),
   // optionally by another team: what those stations wrote is undone first.
   runRetryTool(id: string, station: string = "", step: string = "", team: string = "") string
     body = () =>
-      if loadRun(root, id) == null
+      if loadRun(homeOf(root, id), id) == null
         return toolSaid({ "error": "no run `${id}` (runs lists them)" })
       args = ["retry", id, ...(station.isEmpty ? [] as string[] : ["--from", station]), ...(step.isEmpty ? [] as string[] : ["--step", step]), ...(team.isEmpty ? [] as string[] : ["--team", team])]
-      started = detachRun(root, id, args)
-      hint = spendingOf(root, id, team)
+      started = detachRun(homeOf(root, id), id, args)
+      hint = spendingOf(homeOf(root, id), id, team)
       if hint != null
         for k, v in hint!
           started[k] = v
@@ -300,7 +338,7 @@ BuilderTools(root: string)
   // undone).
   runStopTool(id: string) string
     body = () =>
-      toolSaid(stopRun(root, id))
+      toolSaid(stopRun(homeOf(root, id), id))
     attempt(body)
 
   // ---------- the checks of a run (QA's plan) ----------
@@ -308,26 +346,26 @@ BuilderTools(root: string)
   // The checks of a run: QA's plan and the user's, each with its station, who runs it and its state.
   checksTool(id: string) string
     body = () =>
-      toolSaid(loadChecks(root, id))
+      toolSaid(loadChecks(homeOf(root, id), id))
     attempt(body)
 
   // Switch a check of a run on or off.
   checkSwitchTool(id: string, check: string, on: boolean) string
     body = () =>
-      toolSaid(switchCheck(root, id, check, on))
+      toolSaid(switchCheck(homeOf(root, id), id, check, on))
     attempt(body)
 
   // Add a check to a run's plan: its title, its station, who runs it (user, or role: the station's role with the
   // prompt).
   checkAddTool(id: string, title: string, station: string = "quality", by: string = "user", prompt: string = "") string
     body = () =>
-      toolSaid(addCheck(root, id, title, station, by, prompt.isEmpty ? null : prompt))
+      toolSaid(addCheck(homeOf(root, id), id, title, station, by, prompt.isEmpty ? null : prompt))
     attempt(body)
 
   // Mark a check of a run: passed, failed or skipped, with a note.
   checkMarkTool(id: string, check: string, state: string, note: string = "") string
     body = () =>
-      toolSaid(markCheck(root, id, check, state, note))
+      toolSaid(markCheck(homeOf(root, id), id, check, state, note))
     attempt(body)
 
   // ---------- the teams ----------
@@ -637,8 +675,10 @@ USER_ACTIONS = ["skills_delete", "spec_update", "spec_accept", "spec_discard", "
 
 // The user's yes to what a tool asked of them, applied (the host calls it only after the user said yes): the action
 // of a `needsUser`, or `run_spending` (the spending confirmed twice: kept in the run, which goes on).
-applyForUser(root: string, tool: string, input: <string, any>) <string, any>
+applyForUser(folder: string, tool: string, input: <string, any>) <string, any>
   id = "${input["id"] ?? ""}"
+  // a spec's or a run's action, in the app of a workspace that holds it
+  root = tool.startsWith("spec_") or tool.startsWith("run_") ? homeOf(folder, id) : folder
   if not (tool in USER_ACTIONS)
     throw ValueError("no action `${tool}` for the user")
   match tool
