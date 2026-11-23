@@ -2,7 +2,7 @@
 // repeat folds, the badges, and which chat events call the user. node:test, no editor.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { add, badges, chatCall, chatKey, chatWhere, Notice, pops, seen } from '../src/notify';
+import { add, badges, chatCall, chatKey, chatWhere, Notice, pops, seen, settle, toggle } from '../src/notify';
 
 const notice = (o: Partial<Notice>): Notice => ({ id: 1, tool: 'builder', kind: 'info', title: 't', text: '', level: 'info', at: 0, read: false, ...o });
 
@@ -62,4 +62,18 @@ test('the automatic update: the cache folder of the command, versions compared b
   assert.equal(cacheDir({ XDG_CACHE_HOME: '/c' }, 'linux', '/h'), '/c/nuclearlang');
   assert.equal(cacheDir({}, 'linux', '/h'), '/h/.cache/nuclearlang');
   assert.ok(later('0.89.0', '0.88.4') && later('v1.0.0', '0.99.9') && !later('0.88.4', '0.88.4') && !later('x', '0.1.0'));
+});
+
+test('a notice is done when its run no longer waits, or when the user marks it', () => {
+  const list = [notice({ id: 1, key: 'run:a:waits', kind: 'gate' }), notice({ id: 2, key: 'run:b:waits', kind: 'gate' }), notice({ id: 3 })];
+  assert.equal(list.some((n) => n.done), false);
+  const settled = settle(list, 'run:a:waits');
+  assert.deepEqual(settled?.map((n) => !!n.done), [true, false, false]);
+  assert.equal(settle(settled ?? [], 'run:a:waits'), null, 'nothing changes twice');
+  const marked = toggle(settled ?? [], 3);
+  assert.deepEqual(marked.map((n) => !!n.done), [true, false, true]);
+  assert.equal(toggle(marked, 3)[2]?.done, false);
+  // the run waits again: its new notice is not done, even folded into the one before
+  const again = add(settled ?? [], notice({ id: 9, key: 'run:a:waits', kind: 'gate', at: 1 }));
+  assert.equal(again.list[0]?.done, false);
 });

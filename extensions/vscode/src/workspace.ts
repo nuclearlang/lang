@@ -1126,6 +1126,9 @@ class Workspace implements vscode.WebviewViewProvider {
           if (n) void this.openNotice(n);
           break;
         }
+        case 'noticeDone':
+          if (typeof m.notice === 'number') notices.toggle(m.notice);
+          break;
         case 'action':
           void this.action(m.id);
           break;
@@ -1344,7 +1347,12 @@ export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): strin
   .tab { position: relative; width: 32px; height: 32px; margin: 5px auto 0; border-radius: 5px; display: grid; place-items: center; font-size: 10px; font-weight: 600; cursor: pointer; opacity: .7; user-select: none; letter-spacing: .02em; }
   .tab:hover { opacity: 1; background: var(--vscode-list-hoverBackground); }
   .section { margin: 14px 8px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .7; }
-  .notice { margin: 2px 6px; padding: 5px 8px; border-radius: 4px; cursor: pointer; border-left: 3px solid transparent; display: flex; flex-direction: column; gap: 1px; }
+  .notice { margin: 2px 6px; padding: 5px 8px; border-radius: 4px; cursor: pointer; border-left: 3px solid transparent; display: flex; gap: 8px; align-items: flex-start; }
+  .notice .nbody { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; outline-offset: 2px; }
+  .notice .ncheck { flex: none; width: 16px; height: 16px; margin-top: 2px; padding: 0; border-radius: 3px; border: 1px solid var(--vscode-checkbox-border, var(--vscode-foreground)); background: var(--vscode-checkbox-background, transparent); color: var(--vscode-checkbox-foreground, var(--vscode-foreground)); font-size: 11px; line-height: 14px; text-align: center; cursor: pointer; opacity: .75; }
+  .notice .ncheck:hover, .notice .ncheck:focus-visible { opacity: 1; }
+  .notice.done .ncheck { background: var(--vscode-button-background); border-color: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
+  .notice.done .nbody { opacity: .55; } .notice.done b { text-decoration: line-through; font-weight: 600; }
   .notice:hover { background: var(--vscode-list-hoverBackground); } .notice small { opacity: .7; }
   .notice.unread { border-left-color: var(--vscode-activityBarBadge-background); } .notice.error b { color: var(--vscode-errorForeground); }
   .tab .badge { position: absolute; top: -3px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px; box-sizing: border-box; border-radius: 7px; font-size: 9px; line-height: 14px; text-align: center; color: var(--vscode-activityBarBadge-foreground); background: var(--vscode-activityBarBadge-background); opacity: 1; }
@@ -1923,13 +1931,21 @@ export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): strin
     // what the agents did while you were elsewhere, from every tool: newest first, a click goes there
     box.appendChild(el('div', 'section', t('notifications')));
     for (const n of list) {
-      const row = el('div', 'notice t-' + n.tool + (n.read ? '' : ' unread') + ' ' + n.level);
-      row.tabIndex = 0; row.setAttribute('role', 'button');
-      row.appendChild(el('b', '', n.title));
-      row.appendChild(el('small', '', (n.text ? n.text + ' · ' : '') + new Date(n.at).toLocaleTimeString()));
+      const row = el('div', 'notice t-' + n.tool + (n.read ? '' : ' unread') + (n.done ? ' done' : '') + ' ' + n.level);
+      // the check before it: whether what it asked is done (a run's wait answered marks it by itself)
+      const check = el('button', 'ncheck', n.done ? '✓' : '');
+      check.setAttribute('role', 'checkbox'); check.setAttribute('aria-checked', n.done ? 'true' : 'false');
+      check.title = n.done ? t('noticeUndo') : t('noticeDone');
+      check.addEventListener('click', (e) => { e.stopPropagation(); vscode.postMessage({ type: 'noticeDone', notice: n.id }); });
+      check.addEventListener('keydown', (e) => e.stopPropagation());
+      const body = el('div', 'nbody');
+      body.tabIndex = 0; body.setAttribute('role', 'button');
+      body.appendChild(el('b', '', n.title));
+      body.appendChild(el('small', '', (n.text ? n.text + ' · ' : '') + new Date(n.at).toLocaleTimeString()));
       const go = () => vscode.postMessage({ type: 'notice', notice: n.id });
-      row.addEventListener('click', go);
-      row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      body.addEventListener('click', go);
+      body.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      row.appendChild(check); row.appendChild(body);
       box.appendChild(row);
     }
   }

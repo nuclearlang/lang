@@ -241,7 +241,10 @@ Every notice of the one system ([ai-services.md](ai-services.md)) reaches the co
   Chat; `builder`: runs that wait for the user (a gate, the QA plan) or ended; `settings`: connections. Opening the
   tool reads them (the badge clears).
 - The list at the bottom of the column (`#notes`, under every pane, at most 38 % of its height): every tool's
-  notices, newest first, the unread with a bar in their tool's colour; a click, Enter or Space posts `notice` →
+  notices, newest first, the unread with a bar in their tool's colour. Before each, a check: whether what it asked is
+  done (`done` in `notify.ts`). A run's notice is done by itself once the run no longer waits (`settle`, from
+  `BuilderPanel.refreshRun`); the user marks any notice done or pending again with it (`noticeDone` → `toggle`), and a
+  done one is dimmed and struck through. A click, Enter or Space on the rest posts `notice` →
   `openNotice`, the same place as the pop-up's *Open*. A Nuclear Chat notice keeps its message id (`chatWhere` in
   `notify.ts`): it opens the chat at `/<workspace>/<channel>?message=&thread=`, the message highlighted and its thread
   open.

@@ -17,6 +17,8 @@ export interface Notice {
   level: 'info' | 'warning' | 'error';
   at: number;
   read: boolean;
+  /** Whether what it asked is done: a run's wait answered settles it by itself, anything else the user marks. */
+  done?: boolean;
   /** Where a click goes: the project, a run (`ref`) and its node (`stage`, `step`), or a chat channel. */
   root?: string;
   ref?: string;
@@ -50,7 +52,18 @@ export const FOLD_MS = 120_000;
 export function add(list: readonly Notice[], n: Notice): { list: Notice[]; folded: boolean } {
   const was = n.key ? list.find((x) => x.key === n.key && !x.read && n.at - x.at < FOLD_MS) : undefined;
   const rest = was ? list.filter((x) => x !== was) : list;
-  return { list: [{ ...n, id: was?.id ?? n.id, text: n.text || (was?.text ?? ''), message: n.message ?? was?.message, thread: n.thread ?? was?.thread }, ...rest].slice(0, 50), folded: !!was };
+  return { list: [{ ...n, done: false, id: was?.id ?? n.id, text: n.text || (was?.text ?? ''), message: n.message ?? was?.message, thread: n.thread ?? was?.thread }, ...rest].slice(0, 50), folded: !!was };
+}
+
+/** The notices of a key marked done (a run that no longer waits); `null` when none changed. */
+export function settle(list: readonly Notice[], key: string): Notice[] | null {
+  if (!list.some((n) => n.key === key && !n.done)) return null;
+  return list.map((n) => (n.key === key && !n.done ? { ...n, done: true } : n));
+}
+
+/** A notice marked done, or not done again, by the user. */
+export function toggle(list: readonly Notice[], id: number): Notice[] {
+  return list.map((n) => (n.id === id ? { ...n, done: !n.done } : n));
 }
 
 /** The unread count of each tool: its badge on the strip. */

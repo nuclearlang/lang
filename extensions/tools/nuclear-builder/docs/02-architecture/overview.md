@@ -113,7 +113,9 @@ when a step of its own or a local agent's ran).
   `nuclear.builder.teams`; *Budget* the Spending section of *Settings and integrations*), with an optional preview of
   the plan by the local planner. *Save the spec* writes it; *Start the run* writes it and runs `nuclear-builder run
   <its folder>/spec.md --team <id> --events`.
-- **What a station asks** (the run file's `waiting`, set by the engine before it asks): a gate shows the question, the
+- **What a station asks** (the run file's `waiting`, set by the engine before it asks; its question reaches the page in
+  the user's language, `askText`, as its notification and the chat say it): drawn apart from the node below it, so a
+  time that moves in the node never draws the card again (its buttons stay still and a click is never lost). A gate shows the question, the
   documents to read and *Approve* / *Ask for a change* (with its text) / *Later*; QA's plan opens the checks and *Go on*
   waits until every check of the user's that is on is marked; the spending is answered by the editor's two modal
   questions (`vscode/src/spending.ts`, the second with the amount and the providers). The answer goes to the run's

@@ -6,7 +6,7 @@
 // are `notify.ts` (no `vscode`, tested).
 import * as vscode from 'vscode';
 import { l10n } from './i18n';
-import { add, badges, chatCall, chatKey, Notice, NoticeTool, NotifySetting, pops, seen } from './notify';
+import { add, badges, settle, toggle, chatCall, chatKey, Notice, NoticeTool, NotifySetting, pops, seen } from './notify';
 import { chat } from './chatView';
 
 export type { Notice, NoticeTool } from './notify';
@@ -56,6 +56,20 @@ class Notices {
     let changed = false;
     for (const n of this.list) if (n.tool === tool && !n.read) changed = n.read = true;
     if (changed) this.onDidChange.fire();
+  }
+
+  /** What a key asked is done (a run answered and goes on): its notices show their check. */
+  settle(key: string): void {
+    const list = settle(this.list, key);
+    if (!list) return;
+    this.list = list;
+    this.onDidChange.fire();
+  }
+
+  /** The user marks a notice done, or not done again. */
+  toggle(id: number): void {
+    this.list = toggle(this.list, id);
+    this.onDidChange.fire();
   }
 
   add(n: Omit<Notice, 'id' | 'at' | 'read' | 'kind'> & { kind?: Notice['kind'] }): void {

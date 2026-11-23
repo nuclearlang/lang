@@ -588,12 +588,18 @@ export class BuilderPanel {
 
   /** Draws a run that changed on the open page (nothing when it is closed). */
   static refreshRun(run: Run): void {
+    // a run that no longer waits was answered: its notice is done
+    if (run.status !== 'waiting') notices.settle(`run:${run.id}:waits`);
     BuilderPanel.current?.post({ type: 'run', run, running: lines.has(run.id) });
     if (run.root === sidebar.root || sidebar.runs.some((x) => x.id === run.id)) setSidebar({ runs: [lite(run), ...sidebar.runs.filter((x) => x.id !== run.id)], running: [...lines.keys()] });
     if (run.status !== 'running') BuilderPanel.current?.state();
   }
 
   private post(m: unknown): void {
+    // a run's question goes in the user's language, as its notification and the chat say it (the engine writes English)
+    const msg = m as { type?: string; run?: Run };
+    const w = msg.type === 'run' ? msg.run?.waiting : undefined;
+    if (w?.key) m = { ...msg, run: { ...msg.run, waiting: { ...w, question: askText(w, chatTexts()) } } };
     if (!this.disposed) void this.panel.webview.postMessage(m);
   }
 
@@ -1453,8 +1459,14 @@ function drawRight() {
     const vals = [...d.querySelectorAll('input[id]:not([type=checkbox]),textarea[id],select[id]')].map((x) => [x.id, x.value]);
     const top = d.dataset.k === key ? d.scrollTop : 0;
     const focus = d.contains(document.activeElement) ? document.activeElement.dataset.tk : null;
-    const html = r ? gate(r) + nodeOf(r) : view.mode === 'spec' ? specInfo() : stationsInfo();
-    if (d._h !== html || d.dataset.k !== key) { d.innerHTML = html; d._h = html; }
+    // the question and the node are drawn apart: a time that moves in the node never draws the question again, so
+    // its buttons never flicker and a click on them is never lost to a redraw
+    const ask = r ? gate(r) : '', body = r ? nodeOf(r) : view.mode === 'spec' ? specInfo() : stationsInfo();
+    if (d._h === '' || d.dataset.k !== key || d.children.length !== 2) { d.innerHTML = '<div></div><div></div>'; }
+    const [askBox, bodyBox] = d.children;
+    if (askBox._h !== ask) { askBox.innerHTML = ask; askBox._h = ask; }
+    if (bodyBox._h !== body) { bodyBox.innerHTML = body; bodyBox._h = body; }
+    d._h = 'drawn';
     for (const [id, v] of vals) { const x = document.getElementById(id); if (x && d.contains(x)) x.value = v; }
     d.scrollTop = top;
     d.dataset.k = key;

@@ -4,6 +4,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.
+- Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English).
 - Fix: the welcome no longer closes when an app is added from it (adding a third app, web, closed it): the app opens and the welcome stays for the next one.
 - Fix: in a workspace's own channel, a message is answered by the tech lead of the team assigned to it (nobody answered: the channel did not name its team).
 - **Nuclear Builder shows a run as its progress**: the stations in a line with who works each, what is being done now (or what waits for your answer, with *Answer*), and the spec it works on with its criteria; *Technical diagram* shows the detailed one. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice says so, and opening the Builder shows the run being worked on.
