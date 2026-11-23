@@ -38,7 +38,9 @@ In this order: the AI factory, the tools of a running project, the ones not buil
 | `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |
 
 A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool
-with a `command` opens its own page with that command when its tab is entered (`switchTabs`).
+with a `command` opens its own page with that command when its tab is entered (`switchTabs`). Nuclear Atlas's
+column (`pane.kind: 'chat'`) is Nuclear Chat's own list of channels (`?part=sidebar`, `#chatcol`, `syncSide`),
+mounted once and kept across the column's redraws.
 
 Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a
 24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people
@@ -170,7 +172,7 @@ page again (`showTool`), which no switch would do:
 
 1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,
    active); leaving the HTTP Connections tool keeps the keys of its open component panels (`model.reopen`);
-2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`) and
+2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`), the welcome (`nuclear.welcome`: an app added from it opens while the user goes on there) and
    the unsaved editors, which stay open until saved;
 3. the devices are parked (`nuclear.parkDevices`), always before anything is reopened;
 4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for HTTP Connections,

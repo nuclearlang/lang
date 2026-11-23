@@ -164,7 +164,7 @@ testTheHostFileGivesTheProjectsTeamAsMembersAndChannels(tmpPath: Path, monkeypat
   expect(members[1]["name"] == "Ana" and members[1]["avatar"] == "night-shift-analyst" and (members[1]["responder"] as <string, any>)["paid"] == true and members[1]["personality"] == { "gifs": "sometimes", "on": ["failure"], "note": "" } and members[1]["face"] == null and members[1]["temperament"] == null)
   expect(members[1]["brain"] == { "agent": "Claude Code", "kind": "agent", "provider": "claude-code", "model": "haiku", "paid": true })
   expect(host["assigned"] == "night-shift")
-  expect(host["channels"] == [{ "id": "home", "name": "app", "topic": "app", "members": ["night-shift-developer"] }, { "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer"] }], json.dumps(host["channels"]))
+  expect(host["channels"] == [{ "id": "home", "name": "app", "topic": "app", "members": ["night-shift-developer"], "team": "night-shift" }, { "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer"] }], json.dumps(host["channels"]))
   expect(chatHostLine(["--json", "--root", root]) == 0 and json.loads(capsys.readouterr().out)["lang"] == "en")
 
 // Every member of the team is in the chat, any number per role (`<team>-<member id>`, answered by `--member`).
@@ -202,7 +202,7 @@ testWithNoSavedTeamTheChatHasNoTeamAndItsChannelWaitsForOne(tmpPath: Path, monke
   host = chatHost(root, "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
   expect((host["members"] as <string, any>[]).map((m) => m["id"]) == ["atlas"] and host["teams"] == [] and host["assigned"] == null, json.dumps(host["members"]))
   channels: <string, any>[] = host["channels"]!
-  expect(channels.map((c) => c["id"]) == ["home", "general"] and channels[0]["members"] == [], json.dumps(channels))
+  expect(channels.map((c) => c["id"]) == ["home", "general"] and channels[0]["members"] == [] and channels[0]["team"] == "", json.dumps(channels))
 
 // A team assigned to a workspace (`line set team=` in its folder) works each of its apps, and the workspace's chat
 // names its channel after the workspace; an app's own assignment wins.
@@ -219,7 +219,7 @@ testATeamAssignedToAWorkspaceWorksItsApps(tmpPath: Path, monkeypatch: any) void
   expect(assignedTeamId("${app}") == "night-shift" and runTeam("${app}")!["id"] == "night-shift")
   host = chatHost("${ws}", "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
   home: <string, any> = (host["channels"] as <string, any>[])[0]
-  expect(home["name"] == "rick-workspace" and home["members"] == ["night-shift-developer"] and host["assigned"] == "night-shift", json.dumps(home))
+  expect(home["name"] == "rick-workspace" and home["members"] == ["night-shift-developer"] and home["team"] == "night-shift" and host["assigned"] == "night-shift", json.dumps(home))
   app.joinpath(".nuclear").mkdir()
   app.joinpath(".nuclear", "builder.json").writeText(json.dumps({ "team": "day-shift" }))
   expect(assignedTeamId("${app}") == "day-shift")

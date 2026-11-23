@@ -3,7 +3,7 @@
 // what was missed read back). node:test, no editor.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askPost, buttonOf, ChatHost, DETAILS_MAX, Frame, HOST, HostFile, lineDiff, memberChange, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket, stationDetails } from '../src/chatHost';
+import { askPost, buttonOf, ChatHost, DETAILS_MAX, Frame, HOST, HostFile, lineDiff, memberChange, readChannelOf, registration, Relay, RUN_TEXTS, RunLike, runPosts, Socket, stationDetails } from '../src/chatHost';
 import type { SocketEvents } from '../../tools/nuclear-http-connections/src/socket';
 
 const guard = { header: 'X-Chat-Token', token: 'secret' };
@@ -214,4 +214,12 @@ test('a page\'s request when the service cannot be reached is answered 503 with 
   await assert.rejects(host.workspace('/p'), /nuclear-builder setup/);
   assert.equal(HOST, '#host');
   host.dispose();
+});
+
+test('a page\'s frame that marks a channel read names it: the column and the page of Nuclear Atlas follow each other', () => {
+  assert.equal(readChannelOf({ id: 1, method: 'POST', path: '/channels/w1/dm-atlas/read' }), 'dm-atlas');
+  assert.equal(readChannelOf({ id: 2, method: 'POST', path: '/api/channels/w1/home/read?x=1' }), 'home');
+  assert.equal(readChannelOf({ id: 3, method: 'GET', path: '/channels/w1/home/read' }), undefined);
+  assert.equal(readChannelOf({ id: 4, method: 'POST', path: '/messages/w1/home' }), undefined);
+  assert.equal(readChannelOf({ subscribe: 'chat.w1' }), undefined);
 });

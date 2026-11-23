@@ -9,7 +9,7 @@ related: [README.md, run-and-debug.md, ../02-architecture/workspace.md, ../../..
 The Nuclear icon of the activity bar (`Ctrl+Alt+N`) opens one view, **Workspace**: a vertical strip of tabs and a
 pane beside it. Each tab is a workspace of its own, either a project or a tool. Switching tabs swaps the editor
 area: the editors of the tab you leave are saved and closed, and those of the tab you enter are opened again. An
-unsaved editor stays open (you never get a save prompt), and the devices stay beside the code.
+unsaved editor stays open (you never get a save prompt), the devices stay beside the code, and the welcome page stays open (an app added from it opens, and you go on with the next one).
 
 ## Your workspace and its apps
 

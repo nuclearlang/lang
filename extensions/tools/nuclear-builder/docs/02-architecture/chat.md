@@ -20,7 +20,8 @@ run in the team's channel, and does what its buttons ask.
   host: `team member update`), and `listed`: true only for each team's tech lead (the one it names, else its Architect,
   else its first member) and `atlas`; the teams with their tech lead, who answers a message to the team; `@<role>`
   reaches the role's first member as listed; the channels `home` (the folder's own, named after the workspace or the
-  project: its member is the tech lead of the team assigned to the folder or to its workspace), `general` (its
+  project: its member is the tech lead of the team assigned to the folder or to its workspace, and its `team` that
+  team's id, by which Nuclear Chat's routing finds who answers there; empty when none is), `general` (its
   members: the listed ones but Atlas) and each team's (its members: its tech lead); `assigned`: the team assigned
   here, null when none is. With nobody in `home` (no team assigned: the host file the editor registers keeps the channels, not `assigned`) the
   editor (`panel.ts` `offerTeams`, listening from the extension's start: `followChat` is called at activation, so the

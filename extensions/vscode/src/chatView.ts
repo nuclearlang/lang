@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { builder } from './aiMachine';
-import { AgentProvider, CHAT_FIX, chatCommand, ChatEvent, ChatHost, fmt, Frame, HostFile, memberChange, readConnect, registration } from './chatHost';
+import { AgentProvider, CHAT_FIX, chatCommand, ChatEvent, ChatHost, fmt, Frame, HostFile, memberChange, readChannelOf, readConnect, registration } from './chatHost';
 import { lang, l10n, onDidChangeLang } from './i18n';
 import { faceData, factoryDir, updateMember } from '../../tools/nuclear-builder/src/teams/cli';
 import { lineJson } from '../../tools/nuclear-builder/src/runs';
@@ -137,20 +137,25 @@ export function chatScript(webview: vscode.Webview, extension: vscode.Uri): stri
 }
 
 /** Wires a page's chat: its frames to the window's connection and back; `where(ws)` is the channel it opens. The
- * page asks with `{type: 'chatOpen'}` and is told `{type: 'chatPath', path}` or `{type: 'chatError', text}`. Gives
- * the handler of the page's messages (true: it was the chat's) and the function that ends it. */
-export function wireChat(webview: vscode.Webview, page: string, root: () => string, where: (root: string) => string): { receive(m: { type?: string; frame?: Frame }): boolean; dispose(): void } {
+ * page asks with `{type: 'chatOpen'}` and is told `{type: 'chatPath', path}` or `{type: 'chatError', text}`. `part`
+ * mounts one part of the chat (`sidebar`: the channels alone; `channel`: all but them); `onRead` is told each channel
+ * the page opens. Gives the handler of the page's messages (true: it was the chat's) and the function that ends it. */
+export function wireChat(webview: vscode.Webview, page: string, root: () => string, where: (root: string) => string, o: { part?: () => 'sidebar' | 'channel' | undefined; onRead?: (channel: string) => void } = {}): { receive(m: { type?: string; frame?: Frame }): boolean; dispose(): void } {
   const c = chat();
   c.attach(page, (frame) => void webview.postMessage({ type: 'chatFrame', frame }));
   return {
     receive(m) {
-      if (m.type === 'chatFrame' && m.frame) return void c.fromPage(page, m.frame), true;
+      if (m.type === 'chatFrame' && m.frame) {
+        const read = o.onRead && readChannelOf(m.frame);
+        if (read) o.onRead!(decodeURIComponent(read));
+        return void c.fromPage(page, m.frame), true;
+      }
       if (m.type !== 'chatOpen') return false;
       const r = root();
       if (!r) return void webview.postMessage({ type: 'chatError', text: l10n.t('Open a Nuclear project to talk to its team.') }), true;
       roots.add(r);
       c.workspace(r).then(
-        (ws) => webview.postMessage({ type: 'chatPath', path: `/${ws}/${where(r)}` }),
+        (ws) => webview.postMessage({ type: 'chatPath', path: `/${ws}/${where(r)}${o.part?.() ? `?part=${o.part()}` : ''}` }),
         (e: Error) => webview.postMessage({ type: 'chatError', text: e.message }),
       );
       return true;

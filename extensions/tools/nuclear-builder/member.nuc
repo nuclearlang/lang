@@ -392,7 +392,8 @@ chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <st
   assigned = assignedTeamId(root)
   team: <string, any>? = assigned == null ? null : teams.find((t) => t["id"] == assigned)
   homeLead = team == null ? "" : "${team!["lead"]}"
-  home: <string, any> = { "id": HOME_CHANNEL, "name": channelName(project), "topic": project, "members": homeLead.isEmpty ? ([] as string[]) : [homeLead] }
+  // `team` names who answers there: Nuclear Chat's routing finds a channel's team by it, not by its members
+  home: <string, any> = { "id": HOME_CHANNEL, "name": channelName(project), "topic": project, "members": homeLead.isEmpty ? ([] as string[]) : [homeLead], "team": team == null ? "" : "${assigned}" }
   { "host": "builder", "members": members, "channels": [home, { "id": "general", "name": "general", "topic": "The project ${project}", "members": listed }, ...channels], "teams": teams, "assigned": team == null ? null : assigned, "lang": lang }
 
 // The folder's name in the chat: a workspace's (its marker's `workspace(name = …)`), else the project's, else the

@@ -66,13 +66,22 @@ export class AtlasPanel {
     this.panel = vscode.window.createWebviewPanel('nuclear.atlas', 'Nuclear Atlas', vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
     this.panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
     const localized = localize(this.panel.webview, () => html(this.panel.webview, context.extensionUri));
-    this.wire = wireChat(this.panel.webview, 'atlas', () => this.root, () => this.channel);
+    // beside the workspace's column the page shows the open channel only: the column lists them (`AtlasPanel.split`)
+    this.wire = wireChat(this.panel.webview, 'atlas', () => this.root, () => this.channel, {
+      part: () => (AtlasPanel.split ? 'channel' : undefined),
+      onRead: (channel) => {
+        if (channel === this.channel) return;
+        this.channel = channel;
+        AtlasPanel.moved.fire();
+      },
+    });
     followChat();
     this.panel.onDidDispose(() => {
       this.disposed = true;
       localized.dispose();
       this.wire.dispose();
       AtlasPanel.current = undefined;
+      AtlasPanel.moved.fire();
       notices.watch('atlas', false);
     });
     this.panel.onDidChangeViewState((e) => notices.watch('atlas', e.webviewPanel.visible && e.webviewPanel.active));
@@ -114,13 +123,31 @@ export class AtlasPanel {
     if (active && (projects().some((x) => x.root === active) || AtlasPanel.workspace?.()?.root === active)) p.root = active;
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('atlas', true);
+    const moved = !!channel && channel !== p.channel;
+    if (moved) p.channel = channel!;
     p.state();
-    if (channel && channel !== p.channel) {
-      p.channel = channel;
-      // a page already open mounts the chat again on that channel; a new one asks for it when it is ready
-      if (!fresh) p.wire.receive({ type: 'chatOpen' });
-    }
+    // a page already open mounts the chat again on that channel; a new one asks for it when it is ready
+    if (moved && !fresh) p.wire.receive({ type: 'chatOpen' });
   }
+
+  /** The workspace's column lists the channels (true while it shows Atlas): the page then mounts only the open one. */
+  static split = false;
+
+  static setSplit(on: boolean): void {
+    if (AtlasPanel.split === on) return;
+    AtlasPanel.split = on;
+    const p = AtlasPanel.current;
+    if (p?.ready && p.root) p.wire.receive({ type: 'chatOpen' });
+  }
+
+  /** The folder and the channel the page is on (the column lists that folder's, that channel marked). */
+  static target(): { root: string; channel: string } | undefined {
+    const p = AtlasPanel.current;
+    return p?.root ? { root: p.root, channel: p.channel } : undefined;
+  }
+
+  /** The page's folder or channel changed. */
+  static readonly moved = new vscode.EventEmitter<void>();
 
   /** Where the chat opens when there is no project (the editor's: the open workspace, else the welcome's folder). */
   static fallback: (() => { root: string; name: string } | undefined) | undefined;
@@ -136,6 +163,7 @@ export class AtlasPanel {
     const own = this.projects();
     const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root, AtlasPanel.workspace?.(), fs.existsSync);
     this.root = root;
+    AtlasPanel.moved.fire();
     // the prompts to start from are a project's (its map, its components): none on a workspace's or the welcome's folder
     const isProject = own.some((p) => p.root === root);
     const card = this.root ? readCard(this.root) : undefined;

@@ -15,7 +15,7 @@ import { Launch, logFile, logSize, reason, RUN_STALL_MS, RunFollower, RunStep } 
 import { isInstalled } from './card';
 import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
-import { chatGifKey, disposeChat, openChatTab } from './chatView';
+import { chatCsp, chatGifKey, chatScript, disposeChat, openChatTab, wireChat } from './chatView';
 import { followChatNotices, Notice, notices } from './notifications';
 import { chatWhere } from './notify';
 import { SettingsPanel } from './settingsPanel';
@@ -324,6 +324,9 @@ interface SavedTab {
 
 class Workspace implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined;
+  /** Nuclear Atlas's channels in the column (the chat's `sidebar` part), and the folder and channel it was mounted on. */
+  private sideChat: ReturnType<typeof wireChat> | undefined;
+  private sideKey = '';
   private filesWatcher: vscode.Disposable | undefined;
   private readonly icons: Icons;
   readonly onDidChange = new vscode.EventEmitter<void>();
@@ -714,7 +717,9 @@ class Workspace implements vscode.WebviewViewProvider {
   /** Each tab has its own editors: leaving remembers and closes them, entering reopens its own. The devices stay. */
   private async switchTabs(from: string, to: string): Promise<boolean> {
     const isDevice = (t: vscode.Tab) => t.input instanceof vscode.TabInputWebview && t.input.viewType.endsWith('synapsisDevice');
-    const open = vscode.window.tabGroups.all.flatMap((g) => g.tabs).filter((t) => !isDevice(t));
+    // the welcome stays: adding an app from it opens that app, and the user goes on adding the next one there
+    const isWelcome = (t: vscode.Tab) => t.input instanceof vscode.TabInputWebview && t.input.viewType.endsWith('nuclear.welcome');
+    const open = vscode.window.tabGroups.all.flatMap((g) => g.tabs).filter((t) => !isDevice(t) && !isWelcome(t));
     const saved = this.context.workspaceState.get<Record<string, SavedTab[]>>(TABS, {});
     if (from) {
       saved[from] = open
@@ -753,7 +758,7 @@ class Workspace implements vscode.WebviewViewProvider {
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       // in a workspace the chat stays where the user left it (the workspace's own, first): choosing an app to run does not
       // move the conversation; without one it follows the last project, as before
-      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.workspace() ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'atlas') AtlasPanel.setSplit(!!this.view?.visible), AtlasPanel.show(this.context, () => this.projects(), this.workspace() ? undefined : this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'environments') await vscode.commands.executeCommand(tool.command!, this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
@@ -961,7 +966,9 @@ class Workspace implements vscode.WebviewViewProvider {
           ? { kind: 'devices', devices: devices(), project: this.active()?.name }
           : tool.id === 'builder'
             ? { kind: 'builder', sidebar: builderSidebar() }
-            : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key, soon: tool.planned.length > 0 } };
+            : tool.id === 'atlas' && AtlasPanel.target()
+              ? { kind: 'chat' }
+              : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key, soon: tool.planned.length > 0 } };
     const w = this.current;
     const apps = new Set(w?.apps.map((a) => path.join(w.root, a.folder)));
     void webview.postMessage({
@@ -987,6 +994,24 @@ class Workspace implements vscode.WebviewViewProvider {
       // every tool's notices, newest first: the list at the bottom of the column
       notices: notices.all().map((n) => ({ id: n.id, tool: n.tool, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })),
     });
+    this.syncSide();
+  }
+
+  /** Atlas's channels in the column while Atlas is the open tool and the column is seen: mounted on the page's folder
+   * and channel, again only when the page moved elsewhere than the column itself opened; the page then shows only
+   * the open channel. */
+  private syncSide(): void {
+    const t = this.view?.visible && this.activeKey() === TOOL_PREFIX + 'atlas' ? AtlasPanel.target() : undefined;
+    AtlasPanel.setSplit(!!t);
+    if (!t) {
+      if (this.sideKey) void this.view?.webview.postMessage({ type: 'chatOff' });
+      this.sideKey = '';
+      return;
+    }
+    const key = `${t.root}\n${t.channel}`;
+    if (key === this.sideKey) return;
+    this.sideKey = key;
+    this.sideChat?.receive({ type: 'chatOpen' });
   }
 
   /** The Builder's specs or runs changed: the column draws them again while the Builder is the open tool. */
@@ -1025,15 +1050,34 @@ class Workspace implements vscode.WebviewViewProvider {
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
-    view.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'icons'), vscode.Uri.joinPath(this.context.extensionUri, 'icon-themes')] };
-    const localized = localize(view.webview, () => stripHtml(view.webview), () => this.refresh());
+    view.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'icons'), vscode.Uri.joinPath(this.context.extensionUri, 'icon-themes'), vscode.Uri.joinPath(this.context.extensionUri, 'out')] };
+    const localized = localize(view.webview, () => stripHtml(view.webview, this.context.extensionUri), () => ((this.sideKey = ''), this.refresh()));
+    // a channel opened in the column opens in Atlas's page
+    const side = wireChat(view.webview, 'atlas-side', () => AtlasPanel.target()?.root ?? '', () => AtlasPanel.target()?.channel ?? 'general', {
+      part: () => 'sidebar',
+      onRead: (channel) => {
+        const t = AtlasPanel.target();
+        if (!t || this.activeKey() !== TOOL_PREFIX + 'atlas') return;
+        this.sideKey = `${t.root}\n${channel}`;
+        if (channel !== t.channel) AtlasPanel.show(this.context, () => this.projects(), undefined, channel);
+      },
+    });
+    this.sideChat = side;
+    this.sideKey = '';
+    const moved = AtlasPanel.moved.event(() => this.syncSide());
+    // hidden, the column's page is gone: shown again, the chat is mounted anew
+    view.onDidChangeVisibility(() => ((this.sideKey = ''), this.refresh()));
     view.onDidDispose(() => {
       this.view = undefined;
+      side.dispose();
+      moved.dispose();
+      if (this.sideChat === side) this.sideChat = undefined;
       localized.dispose();
       this.watchFiles(undefined);
     });
     this.context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((e) => this.reveal(e?.document.uri)));
-    view.webview.onDidReceiveMessage((m: { type: string; op?: string; stage?: string; step?: string; dir?: string; path?: string; root?: string; id?: string; endpoint?: unknown; action?: NodeAction; preset?: string; notice?: number }) => {
+    view.webview.onDidReceiveMessage((m: { type: string; frame?: Record<string, unknown>; op?: string; stage?: string; step?: string; dir?: string; path?: string; root?: string; id?: string; endpoint?: unknown; action?: NodeAction; preset?: string; notice?: number }) => {
+      if (side.receive(m)) return;
       switch (m.type) {
         case 'list':
           if (m.dir) {
@@ -1283,13 +1327,14 @@ const TOOL_ICONS: Record<string, string> = {
   settings: '<path d="M18.8 9.34L21.32 10.15L21.32 13.85L18.8 14.66L18.69 14.93L19.9 17.28L17.28 19.9L14.93 18.69L14.66 18.8L13.85 21.32L10.15 21.32L9.34 18.8L9.07 18.69L6.72 19.9L4.1 17.28L5.31 14.93L5.2 14.66L2.68 13.85L2.68 10.15L5.2 9.34L5.31 9.07L4.1 6.72L6.72 4.1L9.07 5.31L9.34 5.2L10.15 2.68L13.85 2.68L14.66 5.2L14.93 5.31L17.28 4.1L19.9 6.72L18.69 9.07Z"/><circle cx="12" cy="12" r="3.2"/>',
 };
 
-export function stripHtml(webview: vscode.Webview): string {
+export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): string {
   const nonce = Math.random().toString(36).slice(2);
+  const csp = chatCsp(webview);
   return /* html */ `<!DOCTYPE html>
 <html lang="${lang()}">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src ${webview.cspSource} ${csp.img}; script-src 'nonce-${nonce}' ${csp.script};">
 <style>
   html, body { height: 100%; margin: 0; }
   .strip .nuc-lang { margin: 0 auto 6px; padding: 3px 0; width: 32px; flex-direction: column; gap: 1px; font-size: 9px; border: none; opacity: .7; } .strip .nuc-lang:hover { opacity: 1; }
@@ -1357,6 +1402,8 @@ export function stripHtml(webview: vscode.Webview): string {
   .nows a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .pane { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .chatcol { flex: 1; min-width: 0; min-height: 0; } .chatcol .err { padding: 12px; color: var(--vscode-errorForeground); white-space: pre-wrap; }
+  .pane[hidden], .chatcol[hidden] { display: none; }
   .notes { flex: none; max-height: 38%; overflow: auto; border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, #8884)); padding-bottom: 4px; } .notes .section { margin-top: 8px; }
   .notice.unread { border-left-color: var(--tc, var(--vscode-activityBarBadge-background)); }
   .head { padding: 6px 10px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
@@ -1429,7 +1476,7 @@ export function stripHtml(webview: vscode.Webview): string {
 </head>
 <body>
   <div class="strip"><div id="projects"></div><div class="tools" id="tools"></div>${langButton()}</div>
-  <div class="col"><div class="pane" id="pane"></div><div class="notes" id="notes" role="log" hidden></div></div>
+  <div class="col"><div class="chatcol" id="chatcol" hidden></div><div class="pane" id="pane"></div><div class="notes" id="notes" role="log" hidden></div></div>
   <div class="toast" id="toast"></div>
   <div class="tip" id="tip" role="tooltip"></div>
 <script nonce="${nonce}">
@@ -1438,6 +1485,8 @@ export function stripHtml(webview: vscode.Webview): string {
   const GLYPHS = ${JSON.stringify(GLYPHS)};
   const TOOL_ICONS = ${JSON.stringify(TOOL_ICONS)};
   const $ = (id) => document.getElementById(id);
+  ${chatScript(webview, extension)}
+  const side = nuclearChat((m) => vscode.postMessage(m));
   let state = { projects: [], active: '', tools: [], pane: { kind: 'files' } };
   const loaded = {};          // dir -> entries
   const expanded = new Set(); // absolute paths of open folders
@@ -1553,11 +1602,14 @@ export function stripHtml(webview: vscode.Webview): string {
     const pane = $('pane');
     pane.innerHTML = '';
     const p = state.pane;
+    // Nuclear Atlas's channels: the chat's own list, mounted by the host (chatPath), kept across redraws
+    pane.hidden = p.kind === 'chat';
+    $('chatcol').hidden = p.kind !== 'chat';
     if (p.kind === 'files') renderFiles(pane, p);
     else if (p.kind === 'tree') renderHttp(pane, p);
     else if (p.kind === 'devices') renderDevices(pane, p);
     else if (p.kind === 'builder') renderBuilder(pane, p);
-    else renderTemplate(pane, p);
+    else if (p.kind !== 'chat') renderTemplate(pane, p);
     noticesOf($('notes'), state.notices);
   }
   function head(pane, name, rest) {
@@ -1898,7 +1950,12 @@ export function stripHtml(webview: vscode.Webview): string {
     if (m.type === 'refreshDirs') { let any = false; for (const d of m.dirs) if (d in loaded) { delete loaded[d]; any = true; } if (any) renderTree(); }
     if (m.type === 'reveal') reveal(m.parts);
     if (m.type === 'builderSidebar' && state.pane.kind === 'builder') { state.pane.sidebar = m.sidebar; drawBuilder(m.sidebar); }
+    if (m.type === 'chatFrame') side.frame(m.frame);
+    if (m.type === 'chatPath') side.mount($('chatcol'), m.path).catch((x) => chatErr(String(x)));
+    if (m.type === 'chatError') chatErr(m.text);
+    if (m.type === 'chatOff') { side.unmount(); $('chatcol').replaceChildren(); }
   });
+  function chatErr(text) { side.unmount(); const d = el('div', 'err'); d.textContent = text; $('chatcol').replaceChildren(d); }
   document.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('#btree .row')) { e.preventDefault(); e.target.click(); }
     if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.closest?.('#btree .row')) { e.preventDefault(); const all = [...document.querySelectorAll('#btree .row')], i = all.indexOf(e.target); all[i + (e.key === 'ArrowDown' ? 1 : -1)]?.focus(); }

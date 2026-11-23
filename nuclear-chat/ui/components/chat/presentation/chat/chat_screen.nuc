@@ -4,8 +4,10 @@
 // `?message=<id>` (and `&thread=<id>` when it is a reply) opens the channel at that message, lit: a notification
 // opens the exact message. Ctrl+K (⌘K) opens the quick switcher. A member's name or picture opens their profile where
 // the thread goes; the page's theme (auto, light, dark) is the workspace's, chosen at the sidebar's foot.
+// `?part=sidebar` draws only the channels and direct messages (a host's side column), `?part=channel` everything but
+// them (the host's page beside that column): the host opens in the page the channel the column read.
 @screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager, ProfileManager])
-stateful ChatScreen(workspace: string, channel: string, message: string = "", thread: string = "")
+stateful ChatScreen(workspace: string, channel: string, message: string = "", thread: string = "", part: string = "")
   open: string = "general"
   // the message a search or a notification opened
   focus: string = ""
@@ -24,7 +26,8 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
     WorkspaceManager.start(workspace)
     ChannelsManager.start(workspace, open)
     MessagesManager.start(workspace)
-    MessagesManager.open(open)
+    if part != "sidebar"
+      MessagesManager.open(open)
     ThreadManager.start(workspace)
     ActivityManager.start(workspace)
     QuestionsManager.start(workspace)
@@ -48,12 +51,15 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
 
   layout(ws: Workspace, channels: Channel[], texts: Texts) Element
     current = channels.find((c) => c.id == open)
+    side = Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id), onFind = (people) => find(people ? "people" : "switch"), onNewChannel = () => making(true))
+    if part == "sidebar"
+      return div(className = "chat part-sidebar theme-${ws.theme}", onKeyDown = (e) => shortcut(e), children = [side, finder != "" ? Finder(ws = ws, channels = channels, texts = texts, people = finder == "people", onOpen = (id) => found(id), onClose = () => find("")) : null, newChannel ? NewChannelDialog(ws = ws, texts = texts, onMade = (id) => made(id), onClose = () => making(false)) : null])
     div(
-      className = "chat theme-${ws.theme} ${sidebar ? "sidebar-open" : ""}",
+      className = "chat theme-${ws.theme} ${sidebar ? "sidebar-open" : ""} ${part == "channel" ? "part-channel" : ""}",
       onKeyDown = (e) => shortcut(e),
       children = [
-        Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id), onFind = (people) => find(people ? "people" : "switch"), onNewChannel = () => making(true)),
-        div(className = "scrim", onClick = () => toggle()),
+        part == "channel" ? null : side,
+        part == "channel" ? null : div(className = "scrim", onClick = () => toggle()),
         section(
           className = "channel",
           children = [
@@ -123,7 +129,8 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
       picker = false
     )
     ThreadManager.hide()
-    MessagesManager.open(id)
+    if part != "sidebar"
+      MessagesManager.open(id)
     ChannelsManager.read(id)
 
   openThread(m: Message)

@@ -85,6 +85,9 @@ The header's *Search* opens the search where the thread goes: every message as t
 `in:#channel`, each result with its conversation, *in a thread*, author, day and time and its words marked; a click
 opens its channel at the message (and its thread for a reply), lit and scrolled to once. The route's query does the
 same for a host: `/<workspace>/<channel>?message=<id>&thread=<id>` (a notification opens the exact message).
+`?part=sidebar` draws only the channels and direct messages (with *Jump to…*, the members and a new channel), filling
+the host's side column; `?part=channel` draws all but them, with no menu to show them: a host shows the two side by
+side (Nuclear Atlas in the editor's workspace column) and opens in the second the channel the first marks read.
 
 **Who answers is in sight**: a direct message with a member shows under their name the brain that answers as them
 (`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's

@@ -28,6 +28,12 @@ on the direct message with the general agent, `dm-atlas`.
 - Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`
   to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down
   is said on the page with how to fix it.
+- The channels in the workspace's column: while Atlas is the open tool and the column is seen (`AtlasPanel.split`),
+  the column mounts the chat's `?part=sidebar` on the page's folder and channel (`AtlasPanel.target`) and the page
+  only `?part=channel`. Each side tells the host the channel it marks read (`readChannelOf` of a frame,
+  `wireChat`'s `onRead`): one opened in the column opens in the page (`AtlasPanel.show`), one the page moves to
+  (a link, Ctrl+K, a notification) remounts the column on it (`AtlasPanel.moved`). The column hidden, the page
+  shows the whole chat again.
 
 ## A question
 

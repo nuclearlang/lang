@@ -48,6 +48,11 @@ export async function readConnect(run = capture): Promise<ChatInfo> {
   return c;
 }
 
+/** The channel a frame of a page marks read (`POST …/channels/<ws>/<channel>/read`: the user opened it), or undefined. */
+export function readChannelOf(f: Frame): string | undefined {
+  return f.method === 'POST' && typeof f.path === 'string' ? /\/channels\/[^/]+\/([^/?]+)\/read(?:\?|$)/.exec(f.path)?.[1] : undefined;
+}
+
 // ---------- the relay ----------
 
 /** The frames of the pages over one socket: each page's request ids mapped to the socket's own, the token header
