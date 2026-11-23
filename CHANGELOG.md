@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The workflows run their actions on Node.js 24 (GitHub warned that Node.js 20 is deprecated): `actions/checkout` v7, `actions/setup-node` v7, `actions/setup-python` v7, `actions/upload-artifact` v7, `actions/download-artifact` v8, `astral-sh/setup-uv` v10.4.0 and `softprops/action-gh-release` v3.
 - Fix: `nuclear build` of a nestjs project installed by an earlier release installs its packages again before compiling (it compiled against the old runtime: `no exported member 'RequiredPipe'`); found by the new upgrade check of the delivery gate.
 - The delivery gate runs the projects the previous release made after the update (`installer/tests/run.sh PRJ1`): a `fastapi` and a `nestjs` backend and a `react` app, made, generated, installed and tested by the previous release in a fake `HOME`, then checked, built, tested and run by this tree's `nuclear` until a route answers 200. It fails on the bug 0.96.1 fixed (`No module named synapsis.server`).
 - The repository is `nuclearlang/nuclearlang` (it was `nuclearlang/lang`): every reference of the tree names it — `nuclear update`, the installers, the release scripts, the Builder's CI files, the extensions' `repository` and `bugs`, the READMEs and the docs (GitHub's redirect from the old name kept them working until now).

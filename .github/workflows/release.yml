@@ -17,7 +17,7 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: One version for every project
         run: installer/release/version.sh --check "${{ github.ref_type == 'tag' && github.ref_name || '' }}"
 
@@ -38,8 +38,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
       - name: The JavaScript runtimes (their dist/)
@@ -51,7 +51,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - name: Archive
         run: installer/release/package.sh ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: archive-${{ matrix.target }}
           path: |
@@ -63,8 +63,8 @@ jobs:
     needs: snapshot
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
       - uses: dtolnay/rust-toolchain@stable
@@ -80,7 +80,7 @@ jobs:
           mkdir -p ../../dist && cp nuclearlang-*.vsix "../../dist/nuclearlang-$version.vsix"
           # its checksum: the extension checks a copy it downloads from the release against it (spec 023)
           cd ../../dist && sha256sum "nuclearlang-$version.vsix" > "nuclearlang-$version.vsix.sha256"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vscode
           path: |
@@ -101,17 +101,17 @@ jobs:
       contents: read
       id-token: write  # Trusted Publishing (OIDC)
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: vscode
           path: dist
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
       - name: Visual Studio Marketplace
         run: npx --yes @vscode/vsce@4.1.1 publish --oidc --packagePath dist/*.vsix --skip-duplicate
       # the namespace `nuclearlang` is verified (EclipseFdn/open-vsx.org#16010): Trusted Publishing (OIDC) once its
-      # trusted publisher (nuclearlang/lang, release.yml) is registered on open-vsx.org; the token OVSX_PAT only while
+      # trusted publisher (nuclearlang/nuclearlang, release.yml) is registered on open-vsx.org; the token OVSX_PAT only while
       # the secret still exists
       - name: Open VSX
         if: ${{ !cancelled() }}
@@ -139,11 +139,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      # setup-uv publishes no major tag since v8: an exact release
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           version: '0.13.8'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
       - name: The JavaScript runtimes (stage.sh copies their dist/)
@@ -156,7 +157,7 @@ jobs:
           echo "NUCLEAR=$RUNNER_TEMP/nuclearlang/bin/nuclear$exe" >> "$GITHUB_ENV"
       - name: The AI archive, built and tried
         run: installer/release/ai-runtime.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ai-${{ matrix.runner }}
           path: |
@@ -171,8 +172,8 @@ jobs:
     needs: snapshot
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           version: '0.13.8'
       - name: nuclear, to build the graph from its .nuc
@@ -196,7 +197,7 @@ jobs:
             .venv/bin/python -c 'import sys; from nuclear_graph.cli import main; main(sys.argv[1:])' embeddings "../installer/dist/nuclearlang-embeddings-$v.npz" \
             --reuse "$(ls "$RUNNER_TEMP"/previous/*.npz 2>/dev/null | head -n 1)"
           cd ../installer/dist && sha256sum "nuclearlang-embeddings-$v.npz" > "nuclearlang-embeddings-$v.npz.sha256"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: embeddings
           path: installer/dist/nuclearlang-embeddings-*
@@ -205,14 +206,14 @@ jobs:
     needs: [archive, ai, vscode, embeddings]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
       - name: The installers, also as assets of the release
         run: cp installer/release/install.sh installer/release/install.ps1 dist/
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: dist/*
           generate_release_notes: true

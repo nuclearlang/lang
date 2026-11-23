@@ -2,7 +2,7 @@
 # 5.1 on arm64, each with the required Smart Graph and MCP server (profile `remote`: the graph's own model, no
 # Ollama); then a second run (kept), -Reinstall while the services run, and the uninstall, which must leave nothing. It runs after every release (`workflow_run`: a release made by
 # the release workflow's token triggers no `release` event) and by hand:
-#   gh workflow run installer-windows -R nuclearlang/lang [-f version=0.1.5]
+#   gh workflow run installer-windows -R nuclearlang/nuclearlang [-f version=0.1.5]
 name: installer-windows
 
 on:
@@ -38,7 +38,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # the installer itself runs in the PowerShell of the case: Windows PowerShell 5.1 (`powershell`) or 7 (`pwsh`)
       - name: Install
         run: |
