@@ -15,12 +15,14 @@ import { notices } from '../../../vscode/src/notifications';
 import { chat, chatCsp, chatScript, wireChat } from '../../../vscode/src/chatView';
 import { AGENT, ChatEvent } from '../../../vscode/src/chatHost';
 import { ATLAS } from './l10n';
-import { chatRoots, noTaskText, templatesOf } from './chat';
+import { chatRoots, LastChannels, lastChannel, noTaskText, templatesOf, withLast, withoutChannel } from './chat';
 import { BuilderProject } from '../../nuclear-builder/src/panel';
 import { agentsHere } from '../../nuclear-builder/src/teams/cli';
 import { SettingsPanel } from '../../../vscode/src/settingsPanel';
 
 const DM = `dm-${AGENT}`;
+/** The window's state: the conversation the page was on in each folder (`LastChannels`). */
+const LAST = 'nuclear.atlas.channels';
 
 function mapOf(root: string): string {
   try {
@@ -33,10 +35,12 @@ function mapOf(root: string): string {
 let following = false;
 /** Atlas runs no task (spec 023): a `/task` said in its direct message, which the chat answers not (it starts with
  * `/`), is answered here, in its thread, with the tech leads to ask, each a link to their conversation. */
-function followChat(): void {
+function followChat(context: vscode.ExtensionContext): void {
   if (following) return;
   following = true;
   chat().onEvent((root: string, e: ChatEvent) => {
+    // a conversation deleted is not opened again
+    if (e.type === 'channels' && typeof e.data.deleted === 'string') void context.workspaceState.update(LAST, withoutChannel(context.workspaceState.get<LastChannels>(LAST, {}), root, e.data.deleted));
     const m = e.data.message as { id?: string; author?: string; text?: string; thread?: string | null } | undefined;
     if (e.type !== 'message' || e.data.said !== true || e.channel !== DM || m?.author !== 'you' || !/^\/task\b/.test(m.text ?? '')) return;
     const reg = chat().registered(root);
@@ -52,6 +56,8 @@ export class AtlasPanel {
   private root = '';
   /** The channel the chat opens on: Atlas's direct message, or the one a notification names. */
   private channel = DM;
+  /** The folder's last conversation is opened once its folder is known (a new page, another folder chosen). */
+  private restore = true;
   private disposed = false;
   /** A folder that is not one of the projects the chat is opened on (a workspace, the onboarding's folder). */
   private extra: { root: string; name: string } | undefined;
@@ -70,12 +76,13 @@ export class AtlasPanel {
     this.wire = wireChat(this.panel.webview, 'atlas', () => this.root, () => this.channel, {
       part: () => (AtlasPanel.split ? 'channel' : undefined),
       onRead: (channel) => {
+        if (this.root) void context.workspaceState.update(LAST, withLast(context.workspaceState.get<LastChannels>(LAST, {}), this.root, channel));
         if (channel === this.channel) return;
         this.channel = channel;
         AtlasPanel.moved.fire();
       },
     });
-    followChat();
+    followChat(context);
     this.panel.onDidDispose(() => {
       this.disposed = true;
       localized.dispose();
@@ -94,7 +101,7 @@ export class AtlasPanel {
         this.draft = '';
       }
       if (m.type === 'settings') SettingsPanel.show(this.context, 'builder');
-      if (m.type === 'project' && m.root) ((this.root = m.root), (this.channel = DM), this.state());
+      if (m.type === 'project' && m.root) ((this.root = m.root), (this.restore = true), this.state());
     });
   }
 
@@ -106,6 +113,7 @@ export class AtlasPanel {
     p.extra = projects().some((x) => x.root === where.root) ? undefined : where;
     p.root = where.root;
     p.channel = DM;
+    p.restore = false;
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('atlas', true);
     p.state();
@@ -124,6 +132,7 @@ export class AtlasPanel {
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('atlas', true);
     const moved = !!channel && channel !== p.channel;
+    if (channel) p.restore = false;
     if (moved) p.channel = channel!;
     p.state();
     // a page already open mounts the chat again on that channel; a new one asks for it when it is ready
@@ -163,6 +172,10 @@ export class AtlasPanel {
     const own = this.projects();
     const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root, AtlasPanel.workspace?.(), fs.existsSync);
     this.root = root;
+    if (this.restore && root) {
+      this.restore = false;
+      this.channel = lastChannel(this.context.workspaceState.get<LastChannels>(LAST, {}), root, DM);
+    }
     AtlasPanel.moved.fire();
     // the prompts to start from are a project's (its map, its components): none on a workspace's or the welcome's folder
     const isProject = own.some((p) => p.root === root);

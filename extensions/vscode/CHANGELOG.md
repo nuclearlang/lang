@@ -6,6 +6,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 - Fix: the welcome no longer closes when an app is added from it (adding a third app, web, closed it): the app opens and the welcome stays for the next one.
 - Fix: in a workspace's own channel, a message is answered by the tech lead of the team assigned to it (nobody answered: the channel did not name its team).
+- Nuclear Atlas opens again on the conversation you were in last, in each folder (also after a restart).
 - **Nuclear Atlas's channels and direct messages are in the workspace's column**, as Nuclear Chat draws them: a click opens that conversation in the page, which now shows only the open conversation (the whole chat again when the column is hidden).
 - Fix: the welcome adds an app with the name it offers when the field is left empty (it asked for one again), and the offered name follows the platform (shop_api, shop_web, shop_app); the new-team wizard creates no team without a member.
 - A newer release of NuclearLang installs itself when you stop working (30 minutes without a use) or within 12 hours; VS Code counts as a use and says when it updated, with *Reload*. Setting `nuclear.update.auto` (on by default).

@@ -34,6 +34,10 @@ on the direct message with the general agent, `dm-atlas`.
   `wireChat`'s `onRead`): one opened in the column opens in the page (`AtlasPanel.show`), one the page moves to
   (a link, Ctrl+K, a notification) remounts the column on it (`AtlasPanel.moved`). The column hidden, the page
   shows the whole chat again.
+- The last conversation of each folder: every channel the page opens is kept in the window's state
+  (`nuclear.atlas.channels`, `withLast` of `src/chat.ts`); a new page, or another folder chosen, opens there
+  (`lastChannel`, else `dm-atlas`), unless it was opened on a channel (a notification, the Builder, the welcome's
+  chat). A conversation deleted is forgotten (`withoutChannel`, on its `channels` event).
 
 ## A question
 

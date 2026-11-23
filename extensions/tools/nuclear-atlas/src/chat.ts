@@ -75,3 +75,17 @@ export function chatRoots(projects: ChatRoot[], extra: ChatRoot | undefined, fal
   if (!roots.length && fallback) roots.push(fallback);
   return { roots, root: roots.some((r) => r.root === current) ? current : roots[0]?.root ?? '' };
 }
+
+/** The conversation Atlas was on in each folder (`nuclear.atlas.channels` of the window's state): the page opens there
+ * again; a conversation deleted is forgotten. */
+export type LastChannels = Record<string, string>;
+
+export const lastChannel = (saved: LastChannels, root: string, fallback: string): string => saved[root] || fallback;
+
+export const withLast = (saved: LastChannels, root: string, channel: string): LastChannels => ({ ...saved, [root]: channel });
+
+export function withoutChannel(saved: LastChannels, root: string, channel: string): LastChannels {
+  if (saved[root] !== channel) return saved;
+  const { [root]: _gone, ...rest } = saved;
+  return rest;
+}

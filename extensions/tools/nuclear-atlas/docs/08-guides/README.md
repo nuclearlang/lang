@@ -27,7 +27,8 @@ Builder to pick one. The local models are on standby (ADR-platform-0013).
 Atlas informs: it explains Nuclear and your project from the knowledge base. For work (code, specs, a project) it
 sends you to a team's tech lead, says which teams are free, and helps you make one when there is none; the page's
 hint says so. Nuclear Chat lists Atlas and each team's tech lead. Its channels and direct messages are in the
-workspace's column, beside the page: a click opens that conversation in the page.
+workspace's column, beside the page: a click opens that conversation in the page. Atlas reopens on the conversation
+you were in last in that folder, also after VS Code restarts.
 
 Write in the chat and press Enter (Shift+Enter is a new line). Atlas answers there. It is the same conversation as
 *Atlas* in the Builder's chat, and it stays in the project (`.nuclear/chat/`).

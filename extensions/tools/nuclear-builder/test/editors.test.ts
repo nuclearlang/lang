@@ -28,7 +28,7 @@ import { filterOf } from '../src/reports/host';
 import { REPORTS_SCRIPT } from '../src/reports/page';
 import { chatProvider } from '../src/settings';
 import { backoff, checkConnections, DEFAULT_RETRY, retryAfter, toolEnv, transientStatus } from '../src/support';
-import { noTaskText, templatesOf } from '../../nuclear-atlas/src/chat';
+import { lastChannel, noTaskText, templatesOf, withLast, withoutChannel } from '../../nuclear-atlas/src/chat';
 import * as http from 'node:http';
 import { webviewFaceUrl } from '../src/teams/faceUrl';
 import { chatChannel } from '../src/teams/cli';
@@ -1076,4 +1076,17 @@ test('the diagram\'s first level tells the run as five business steps with what 
   assert.equal(beatOf('coder'), 'build');
   assert.equal(isToolCall({ kind: 'tool' }), true);
   assert.equal(isToolCall({}), false);
+});
+
+test('Nuclear Atlas opens again on the conversation it was on in each folder, never on one deleted', () => {
+  let saved = withLast({}, '/w/pokemon', 'home');
+  saved = withLast(saved, '/w/shop', 'dm-shop-arch');
+  assert.equal(lastChannel(saved, '/w/pokemon', 'dm-atlas'), 'home');
+  assert.equal(lastChannel(saved, '/w/new', 'dm-atlas'), 'dm-atlas', 'a folder never opened: Atlas');
+  saved = withLast(saved, '/w/pokemon', 'general');
+  assert.equal(lastChannel(saved, '/w/pokemon', 'dm-atlas'), 'general', 'the last one wins');
+  assert.equal(withoutChannel(saved, '/w/pokemon', 'home'), saved, 'another conversation deleted: kept');
+  saved = withoutChannel(saved, '/w/pokemon', 'general');
+  assert.equal(lastChannel(saved, '/w/pokemon', 'dm-atlas'), 'dm-atlas');
+  assert.equal(lastChannel(saved, '/w/shop', 'dm-atlas'), 'dm-shop-arch');
 });
