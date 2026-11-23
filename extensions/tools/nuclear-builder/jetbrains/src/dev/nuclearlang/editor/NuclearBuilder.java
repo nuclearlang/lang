@@ -352,7 +352,7 @@ public final class NuclearBuilder {
             start(item.project(), List.of("run", "--resume", item.run()));
         }
 
-        /** A failed run from its failed step (every step before it kept), or a station and every one after it, or from
+        /** A failed run (or one that waits for its retry) from its failed step, in place (every step before it and every file kept), or a station and every one after it, or from
          * scratch: what those take back of the agents' work is asked first (Cancel is the default) and set aside. */
         void retry() {
             Item item = selected();
@@ -360,7 +360,7 @@ public final class NuclearBuilder {
                 Messages.showInfoMessage(project, "Select a run first.", "Nuclear Builder");
                 return;
             }
-            String[] stations = {"the failed step", "analysis", "design", "tests", "code", "quality", "delivery", "from scratch (start over)"};
+            String[] stations = {"the failed step, in place (its files kept)", "analysis", "design", "tests", "code", "quality", "delivery", "from scratch (start over)"};
             int i = Messages.showChooseDialog(project, "Run again from", "Run Again", null, stations, stations[0]);
             if (i < 0) return;
             if (i > 0) {
@@ -490,6 +490,7 @@ public final class NuclearBuilder {
                     JsonObject answer = switch (str(m, "kind")) {
                         case "spending" -> spending(m);
                         case "checks" -> checks(p, m);
+                        case "retry" -> retryAsk(m);
                         default -> gate(p, m);
                     };
                     if (answer == null) {
@@ -517,6 +518,15 @@ public final class NuclearBuilder {
             o.addProperty("answer", a);
             if (text != null) o.addProperty("text", text);
             return o;
+        }
+
+        /** A station that failed after every level of retries: retry its failed step in place (its files stay), end
+         * the run as failed, or later (the run waits). */
+        private JsonObject retryAsk(JsonObject m) {
+            int i = Messages.showDialog(project, str(m, "question"), "Nuclear Builder", new String[]{"Retry", "End as Failed", "Later"}, 0, Messages.getWarningIcon());
+            if (i == 0) return answer("yes", null);
+            if (i == 1) return answer("no", null);
+            return null;
         }
 
         /** A gate: approve, ask for a change (the station works again with it), or later (the run waits). */
