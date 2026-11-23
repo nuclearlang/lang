@@ -2115,11 +2115,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.385a2d",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.39a5d5",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear flutter add <package>[:version]... [--dev] # the same, as Flutter writes it (--dev: devDependencies) nuclear flutter remove <package>... nuclear pub get|upgrade|outdated # pub add|remove = flutter add|remove nuclear update # the latest release (in a terminal every command asks when one is…",
+   "summary": "nuclear remove <package>... # out of config.nuc and the app (the definitions stay in the cache) nuclear flutter add <package>[:version]... [--dev] # the same, as Flutter writes it (--dev: devDependencies) nuclear flutter remove <package>... nuclear pub get|upgrade|outdated # pub add|remove =…",
    "body": [
+    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
     "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
     "nuclear flutter remove <package>...",
     "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove",
@@ -2134,39 +2135,6 @@
     "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
     "",
     "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3dc72d",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
-   "body": [
-    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
-    "nuclear device list                        # the open devices and the devices it can be",
-    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
-    "nuclear test [--integration] [-- <flutter test arguments>]",
-    "nuclear analyze | check [--json] | clean",
-    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
-    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
-    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
-    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
-    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
-    "nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory",
-    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
-    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)"
    ],
    "platforms": [
     "mobile"
@@ -2202,6 +2170,39 @@
     "- `repair` is for when something fails without the `.nuc` files having errors. It runs in steps and stops at",
     "  the first that leaves a valid app (`flutter analyze` without errors; warnings and notes do not count):",
     "  1. `build` and `analyze`;"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.6a988c",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
+   "body": [
+    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
+    "nuclear device list                        # the open devices and the devices it can be",
+    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
+    "nuclear test [--integration] [-- <flutter test arguments>]",
+    "nuclear analyze | check [--json] | clean",
+    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
+    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
+    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
+    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
+    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
+    "nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory",
+    "nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop",
+    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions"
    ],
    "platforms": [
     "mobile"
@@ -2994,17 +2995,16 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#5-widget-kinds-5-2-stateful",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#5-widget-kinds-5-2-stateful.88370b",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 5.2 `stateful`",
-   "summary": "stateful Counter(start: int = 0) with SingleTickerProviderStateMixin count: int = 0 initState() void super.initState() count = start build(context: BuildContext) Widget TextButton( onPressed = () setState() count += 1 child = Text('${count}'), ) `widget.<name>`: `count = start` → `count =…",
+   "summary": "stateful Counter(start: int = 0) with SingleTickerProviderStateMixin count: int = 0 initState() void count = start build(context: BuildContext) Widget TextButton( onPressed = () setState() count += 1 child = Text('${count}'), )",
    "body": [
     "```nuclear",
     "stateful Counter(start: int = 0) with SingleTickerProviderStateMixin",
     "  count: int = 0",
     "",
     "  initState() void",
-    "    super.initState()",
     "    count = start",
     "",
     "  build(context: BuildContext) Widget",
@@ -3014,8 +3014,27 @@
     "          count += 1",
     "      child = Text('${count}'),",
     "    )",
-    "```",
-    "",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#5-widget-kinds-5-2-stateful.cfb6e9",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 5.2 `stateful`",
+   "summary": "`widget.<name>`: `count = start` → `count = widget.start`.",
+   "body": [
     "- Generates the `StatefulWidget` with the parameters (as `stateless`) and its `State` class.",
     "- The block's fields and methods go to the `State`. A header parameter used inside the `State` is read as",
     "  `widget.<name>`: `count = start` → `count = widget.start`.",
@@ -3023,6 +3042,11 @@
     "- The members of `State` (`setState`, `context`, `widget`, `mounted`...) are available without declaring",
     "  them, and a method named like one of them (`build`, `initState`, `dispose`, `didUpdateWidget`...) carries",
     "  `@override`.",
+    "- An override of a method whose type definitions require the call to it (`must_call_super`: `initState`,",
+    "  `didUpdateWidget`, `dispose`...) gets that call from the kind, with the method's own arguments: last for the",
+    "  teardown methods (`dispose`, `deactivate`, `close`, `unmount`, `detach`: `super.dispose()` after the method's own",
+    "  statements), first for every other one (`super.initState()`, `super.didUpdateWidget(oldWidget)`). A call the",
+    "  method already makes is not written again.",
     "- `setState()` + block → `setState(() { ... })`.",
     "- `build` is required."
    ],

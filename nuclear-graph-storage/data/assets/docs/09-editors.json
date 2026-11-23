@@ -4407,7 +4407,7 @@
    "body": [
     "| You need… | Read |",
     "|---|---|",
-    "| How the report reaches the page | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
+    "| How the run log and the report reach the page | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
     "| What a user reads | [docs/08-guides/README.md](docs/08-guides/README.md) |",
     "| The pending work | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
     "| The measurement, the report's format, the hot spots | [the spec](../../../docs/04-specs/015-monitor/design.md) |"
@@ -4425,16 +4425,21 @@
    "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#nuclear-monitor",
    "type": "readme",
    "title": "nuclear-monitor",
-   "summary": "built with `--monitor` writes (`.nuclear/monitor/report.json`), drawn as an accordion of bars: each Nuclear function and method with its time, own time, calls, connections and memory, the hot spots marked; a click opens the `.nuc` at the line.",
+   "summary": "selected project is doing while it runs.",
    "body": [
-    "**Nuclear Monitor** in the editors (spec 015 of the platform, `docs/04-specs/015-monitor/`): the report an app",
-    "built with `--monitor` writes (`.nuclear/monitor/report.json`), drawn as an accordion of bars: each Nuclear function",
-    "and method with its time, own time, calls, connections and memory, the hot spots marked; a click opens the `.nuc` at",
-    "the line. VS Code only (command `nuclear.monitor.open`, *Nuclear: Open Monitor*).",
+    "**Nuclear Monitor** in the editors (spec 015 of the platform, `docs/04-specs/015-monitor/`): what the workspace's",
+    "selected project is doing while it runs. A **console** of its last run (every request with its method, path,",
+    "status and time; every error with its cause and its stack, a click opening the `.nuc` line; the app's own output;",
+    "start, reload, stop), filterable (all, requests, errors), and, when the project is measured, the **measurements**:",
+    "each Nuclear function and method with its time, own time, calls, connections and memory as an accordion of bars,",
+    "the hot spots marked. Not running, the page runs it itself, visibly (the terminal `<project> · monitor`, or a device",
+    "for a mobile app). VS Code only: the workspace strip's tool (`Ctrl+Alt+F`) and the command `nuclear.monitor.open",
+    "[root]` (*Nuclear: Open Monitor*).",
     "",
-    "What measures is not here: the transpiler writes the wrapper (`nuclearlang/`, `Emitter::monitored`), each dialect",
-    "its runtime (`templates/monitor.tpl`), and `nuclear monitor --json` (`tools/cli/src/framework/monitor.rs`) reads the",
-    "report and finds the hot spots. This tool only draws what that command prints."
+    "What it reads is not here: the run log `nuclear run` and the editor's devices write (`<project>/.nuclear/logs/run.log`),",
+    "read by `nuclear monitor --json` (`tools/cli/src/framework/console.rs`: the state of the run and its lines by kind)",
+    "with the report an app built with the monitor writes (`.nuclear/monitor/report.json`: the transpiler's wrapper, each",
+    "dialect's `templates/monitor.tpl`, the hot spots of `monitor.rs`). This tool only draws what that command prints."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
@@ -4449,12 +4454,19 @@
    "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#rules",
    "type": "readme",
    "title": "nuclear-monitor — Rules",
-   "summary": "terminal see the same ones.",
+   "summary": "the agents (MCP `project_monitor`) and the terminal see the same ones.",
    "body": [
     "- `monitor.ts` has no `vscode` import.",
-    "- The hot spots are the CLI's (`nuclear monitor`), never computed again here: the editor, the agents and the",
-    "  terminal see the same ones.",
-    "- The page never runs the app nor builds it: the user runs `nuclear run --monitor`."
+    "- The hot spots and the console's lines are the CLI's (`nuclear monitor`), never computed again here: the editor,",
+    "  the agents (MCP `project_monitor`) and the terminal see the same ones.",
+    "- The page follows the workspace's selected project (`MonitorPanel.selected`, the strip passes it), never a",
+    "  workspace's own folder nor the first folder of VS Code.",
+    "- The page runs the app itself when it is not running (the user, 2026-11-23, overruling \"the page never runs the",
+    "  app\"), always visibly: once on its own per project and window, after that only by *Run and watch* / *Try again*;",
+    "  a running one is only shown. Measuring is turned on with it (`nuclear monitor --on`) where the platform can be",
+    "  measured (not a phone's or a browser's app yet).",
+    "- The page's own words never hold a path, a command, a backtick or a file name: those are only in *Details*. The",
+    "  console shows the app's output as it is."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
@@ -4493,9 +4505,10 @@
     "",
     "| File | What it is |",
     "|---|---|",
-    "| `src/monitor.ts` | `readMonitor` (runs `nuclear monitor --json`), the texts in English and Spanish, the page's HTML (`page`, `rows`); no `vscode` import |",
-    "| `src/panel.ts` | the page (`MonitorPanel`), the command and the watcher of `**/.nuclear/monitor/report.json` (`activateMonitor`) |",
-    "| `test/monitor.test.ts` | the rows, the flags, the escaping, the page without a report (node:test) |"
+    "| `src/monitor.ts` | `readMonitor` (runs `nuclear monitor --json`), `explainPlace` (an error's `.nuc` line: the one it names, else `nuclear explain --json`), `projectAt`, the texts in English and Spanish, the page's states (`stateOf`) and HTML (`page`, `parts`, `consoleLine`, `rows`); no `vscode` import |",
+    "| `src/panel.ts` | the page (`MonitorPanel`: the project followed, the redraws, *Run and watch*, the toggle), the command and the watchers of the run logs and reports (`activateMonitor`) |",
+    "| `test/monitor.test.ts` | each state of the page in both languages (no path or command in its words), the console of a real run, the measurements, an old report (node:test) |",
+    "| `test/fixtures/` | `running-backend.json` (`nuclear monitor --json` of a real backend run: requests, 404s, a 500 with its stack, a measured report), `report-0.96.json` (what 0.96 printed: no console) |"
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
@@ -4588,29 +4601,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-report-reaches-the-page",
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.3af90d",
    "type": "context",
-   "title": "How the report reaches the page",
-   "summary": "nuclear run --monitor ──► the build: each function's body in the dialect's monitor_body, nuclear/monitor written │ (NUCLEAR_MONITOR_FILE = <project>/.nuclear/monitor/report.json, inherited by the app) ▼ the app runs ──► NuclearMonitor writes the report every 2 s while something changed, and at…",
+   "title": "How the run log and the report reach the page",
+   "summary": "(`nuclear.workspace.lastProject`, as for the Builder), the command without one takes the active `.nuc`'s project (`projectAt`: the folder of `main.nuc`, `config.nuc` or `nuclear.toml`), then the workspace's selected one.",
    "body": [
-    "```",
-    "nuclear run --monitor ──► the build: each function's body in the dialect's monitor_body, nuclear/monitor written",
-    "        │                 (NUCLEAR_MONITOR_FILE = <project>/.nuclear/monitor/report.json, inherited by the app)",
-    "        ▼",
-    "the app runs ──► NuclearMonitor writes the report every 2 s while something changed, and at exit",
-    "        ▼",
-    "FileSystemWatcher **/.nuclear/monitor/report.json ──► MonitorPanel.refresh ──► nuclear monitor --json ──► page()",
-    "```",
-    "",
-    "- `readMonitor` runs `nuclear monitor --json --project <folder>` from the active `.nuc`'s folder (or the first",
-    "  folder of the workspace); the command finds the report there or above. Without a report the page shows the",
-    "  command's message and how to get one.",
-    "- The tree: one `<details>` per node, open for the first two levels and for every flagged node; the bar's length is",
-    "  the node's time against the longest root, its darker part the own time. Concurrent children can add up past",
-    "  their parent (their own time is then zero).",
-    "- A click on a name posts `{ type: 'open', path, line }`; the panel opens `<project>/<path>` at the line (the",
-    "  project is the folder above `.nuclear/`).",
-    "- Redraws are debounced (300 ms): the app writes at most every two seconds."
+    "- **The project**: `MonitorPanel.show(root)`; the workspace's strip passes its selected project",
+    "  (`nuclear.workspace.lastProject`, as for the Builder), the command without one takes the active `.nuc`'s project",
+    "  (`projectAt`: the folder of `main.nuc`, `config.nuc` or `nuclear.toml`), then the workspace's selected one. The",
+    "  header's pick switches among the workspace's apps and selects that app in the workspace too.",
+    "- **What the CLI gives** (`nuclear monitor --json`): the report's keys as before (empty without a report),",
+    "  `project`, `measuring` (the flag) and `console`: `state` (`none`, `starting`, `running`, `stopped`, `failed`),",
+    "  `step`, `url`, `why`, the counts and `lines` (the last run, from its last `--- ` line, the newest 1000), each",
+    "  `request` (method, path, status, ms), `error` (text, the request's method and path when it is one, `stack`),",
+    "  `step`, `reload`, `end`, `failed` or `output`. A run with an address is `running` only while the address answers.",
+    "- **The page's states** (`stateOf`): no project; the command failed; not running (`none`, `stopped`: *Run and",
+    "  watch*, the last run's lines under it); starting (the steps done and the current one); running without a request",
+    "  yet (a backend or web app: \"Use the app\"); data; could not start (a title by the step it stopped in, *Try again*,"
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
@@ -4622,29 +4629,129 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor",
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.478b4e",
+   "type": "context",
+   "title": "How the run log and the report reach the page",
+   "summary": "bottom are kept.",
+   "body": [
+    "*Show details*). The parts are redrawn by a message: the open errors, the filter, the tab and the scroll at the",
+    "  bottom are kept.",
+    "- **Run and watch**: a running or starting project is only shown. Otherwise a backend or web app runs in the",
+    "  terminal `<project> · monitor` (`nuclear monitor --on && nuclear run`; `nuclear run` installs the packages itself);",
+    "  a mobile app goes to the workspace's ▷ Run (the pick of a device; outside a workspace, `nuclear.run`). The page",
+    "  does it once by itself per project and window when it opens on a project that is not running (not for a mobile",
+    "  app: the device is a choice).",
+    "- **The toggle** runs `nuclear monitor --on|--off`; a running backend is built again so its reload is measured (or no",
+    "  longer). Disabled for a mobile or web app: a phone's or a browser's app cannot write the report yet.",
+    "- **A click** on an error's *Open in the code* opens the `.nuc` line the error names (`--> components/a.nuc:11:9` of",
+    "  a build error), else the innermost frame of `nuclear explain --json` (the build's line map); a click on a name of",
+    "  the measurements opens `<project>/<path>` at its line.",
+    "- The measurements tree: one `<details>` per node, open for the first two levels and for every flagged node; the",
+    "  bar's length is the node's time against the longest root, its darker part the own time."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.82dac2",
+   "type": "context",
+   "title": "How the run log and the report reach the page",
+   "summary": "nuclear run (terminal) ─┐ each step, the build's errors, the server's output (a line per request, the cause and the editor's devices ─┴► stack of each 500), exited:/failed: ──► <project>/.nuclear/logs/run.log nuclear run --monitor, or nuclear monitor --on (.nuclear/monitor/on, honoured by build,…",
+   "body": [
+    "```",
+    "nuclear run (terminal)  ─┐  each step, the build's errors, the server's output (a line per request, the cause and",
+    "the editor's devices    ─┴► stack of each 500), exited:/failed:  ──►  <project>/.nuclear/logs/run.log",
+    "nuclear run --monitor, or nuclear monitor --on (.nuclear/monitor/on, honoured by build, watch and run)",
+    "        └► the app measured ──► NuclearMonitor writes <project>/.nuclear/monitor/report.json every 2 s and at exit",
+    "",
+    "FileSystemWatcher **/.nuclear/logs/run.log, **/.nuclear/monitor/report.json (debounced 300 ms) + every 2 s while",
+    "visible ──► MonitorPanel.refresh ──► nuclear monitor --json --project <project> ──► page() once, then parts()",
+    "```"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.3c5921",
    "type": "readme",
    "title": "Nuclear Monitor",
-   "summary": "1. Run your app with the monitor: `nuclear run --monitor` (a backend), or `nuclear build --monitor` and run it your usual way (a program of Node.js, Python or Dart).",
+   "summary": "1. In the Nuclear workspace choose the app, then the strip's Monitor (`Ctrl+Alt+F`).",
    "body": [
-    "1. Run your app with the monitor: `nuclear run --monitor` (a backend), or `nuclear build --monitor` and run it your",
-    "   usual way (a program of Node.js, Python or Dart). Use it: open the screens, call the routes that are slow.",
-    "2. In VS Code run *Nuclear: Open Monitor* (with a `.nuc` of the project open). In a terminal: `nuclear monitor`.",
-    "3. Read the **hot spots** first:",
+    "1. In the Nuclear workspace choose the app, then the strip's **Monitor** (`Ctrl+Alt+F`). From the command palette:",
+    "   *Nuclear: Open Monitor* (the app of the open `.nuc`, else the workspace's app). With several apps, the header's",
+    "   *Project* switches between them.",
+    "2. If the app is not running, the Monitor starts it in a terminal named `<app> · monitor` (a phone app: you pick",
+    "   the device). It never starts one twice: a running app is only shown. *Run and watch* starts it again later.",
+    "3. **Console**: the lines of the run, newest at the bottom. A request shows its method, path, status (green, amber",
+    "   for 4xx, red for 5xx) and time; an error is red, with its cause; open it to read its stack (your code's lines",
+    "   stand out), and *Open in the code* goes to the `.nuc` line. *All*, *Requests* and *Errors* filter the lines.",
+    "4. **Measurements**: with *Measure the app* on (the Monitor turns it on when it runs the app; in a terminal",
+    "   `nuclear monitor --on`, or `nuclear run --monitor`), use the app, then read the **hot spots** first:",
     "   - `slow`: its own time is a fifth or more of the whole call;",
     "   - `async calls in a loop`: an async call made five or more times, one after another, inside one call of its",
     "     parent: start them together (`~awaitAll([...])`);",
-    "   - `many connections`: ten or more new connections per call (a client or a pool made per call);",
-    "   - `much memory`: 10 MB or more grown per call.",
-    "4. Open the tree under a hot spot: each row is a function with its time (the bar; its own time darker), calls,",
-    "   connections and memory. Click a name to open its `.nuc` at the line.",
+    "   - `many connections`: ten or more new connections per call (a client or a pool made per call);"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.55f7d7",
+   "type": "readme",
+   "title": "Nuclear Monitor",
+   "summary": "Nuclear Monitor shows what your app is doing while it runs: every request, every error with the line of your code it came from, every message the app prints, and which parts are slow.",
+   "body": [
+    "Nuclear Monitor shows what your app is doing while it runs: every request, every error with the line of your code",
+    "it came from, every message the app prints, and which parts are slow."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.fae2f8",
+   "type": "readme",
+   "title": "Nuclear Monitor",
+   "summary": "Under them, each row is a function with its time (the bar; its own time darker), calls, connections and memory.",
+   "body": [
+    "- `much memory`: 10 MB or more grown per call.",
+    "   Under them, each row is a function with its time (the bar; its own time darker), calls, connections and memory.",
+    "   Click a name to open its `.nuc` at the line. Measuring stays on through saves and reloads until you turn it off.",
+    "5. If the app could not start, the Monitor says where (the build, the packages, the server, the device): fix it and",
+    "   *Try again*. *Details* has the folders, the files and the raw reason.",
     "",
-    "A save in the editor builds the project again without the monitor: measure, then edit.",
+    "In a terminal, `nuclear monitor` prints the same: the state of the run, the requests and errors, and the",
+    "measurements.",
     "",
-    "Build again without `--monitor` before you ship: the monitor is for finding the problem, not for production.",
+    "Turn measuring off before you ship (`nuclear monitor --off`): the monitor is for finding the problem, not for",
+    "production.",
     "",
-    "What it cannot do yet: a phone or a browser tab cannot write the report to your project's folder (the",
-    "[roadmap](../01-product/roadmap.md))."
+    "What it cannot do yet: measure an app on a phone or in a browser (its console works); show the lines of a phone app",
+    "started with `nuclear run` in a terminal (Flutter keeps that terminal: run it from the workspace instead). See the",
+    "[roadmap](../01-product/roadmap.md)."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
@@ -5421,6 +5528,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5323f6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw.",
+    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.53f8c9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5871,6 +5996,21 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d28cf4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5915,24 +6055,6 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f207c6",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it.",
-    "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -7956,37 +8078,12 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.34660f",
-   "type": "context",
-   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The tools of the strip",
-   "summary": "The tools of the strip",
-   "body": [
-    "| id | Label | Word | Key | State | Project |",
-    "|---|---|---|---|---|---|",
-    "| `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
-    "| `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |",
-    "| `reports` | Reports | REPORTS | `Ctrl+Alt+K` | built: `command` `nuclear.builder.reports` | [`nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/reports.md) (the Reports page, spec 017) |",
-    "| `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |",
-    "| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |",
-    "| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
-    "| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |",
-    "| `environments` | Environments | ENV | `Ctrl+Alt+Y` | built: `command` `nuclear.environments.open`, given the last project | [`nuclear-environments`](../../../tools/nuclear-environments/AGENTS.md) (spec 021) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/workspace.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.99a23c",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.40696a",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The tools of the strip",
    "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
    "body": [
+    "| `environments` | Environments | ENV | `Ctrl+Alt+Y` | built: `command` `nuclear.environments.open`, given the last project | [`nuclear-environments`](../../../tools/nuclear-environments/AGENTS.md) (spec 021) |",
     "| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |",
     "| `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |",
     "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |",
@@ -8035,6 +8132,31 @@
     "glowing bar on its left and its word in its colour. Hovering or focusing a tool shows its card beside the strip",
     "(`#tip`: its name, its key, *not built yet*, its notices); the tools are buttons of the keyboard (Tab, Enter, Space)",
     "with an `aria-label` of the name and the key."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.f159eb",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The tools of the strip",
+   "summary": "The tools of the strip",
+   "body": [
+    "| id | Label | Word | Key | State | Project |",
+    "|---|---|---|---|---|---|",
+    "| `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
+    "| `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |",
+    "| `reports` | Reports | REPORTS | `Ctrl+Alt+K` | built: `command` `nuclear.builder.reports` | [`nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/reports.md) (the Reports page, spec 017) |",
+    "| `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |",
+    "| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |",
+    "| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
+    "| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` with the selected project (`showTool`); the page's hooks `MonitorPanel.projects/selected/select/runMobile` are set in `activateWorkspace` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"

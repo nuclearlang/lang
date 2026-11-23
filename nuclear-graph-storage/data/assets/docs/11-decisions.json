@@ -6035,10 +6035,26 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2",
+   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.89bdba",
    "type": "spec",
    "title": "Spec 015: Nuclear Monitor — Design — 2. Who does what (root rule 2)",
    "summary": "Generators (a body with `yield`) and abstract methods get no wrapper.",
+   "body": "Generators (a body with `yield`) and abstract methods get no wrapper.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/015-monitor/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.dfbb9d",
+   "type": "spec",
+   "title": "Spec 015: Nuclear Monitor — Design — 2. Who does what (root rule 2)",
+   "summary": "2. Who does what (root rule 2)",
    "body": [
     "| Part | Where | What |",
     "|---|---|---|",
@@ -6046,11 +6062,10 @@
     "| What a template knows | the compiler, generic | `monitor` (flag) and `site` (`label`, `path`, `line`, `component`, `kind`) in the `function` and `method` templates |",
     "| The runtime | the dialect's `monitor_runtime` template | written once to `nuclear/monitor.<ext>` of a project (like the `Result` runtime), inline in a file built alone; imported as `NuclearMonitor` by each file that measures |",
     "| The wrapper | the dialect's `function` / `method` templates | `{{#monitor}}...{{/monitor}}`: TypeScript and Dart wrap the body in `try/finally`, Python writes the decorator `@NuclearMonitor.wrap(...)` |",
-    "| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run --monitor`), else `.nuclear/monitor/report.json` of the working folder |",
+    "| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else `.nuclear/monitor/report.json` of the working folder |",
+    "| The switch kept | `.nuclear/monitor/on` | `nuclear monitor --on` / `--off`: every build, watch and run of the project measured until it is removed |",
     "| The tree as text | `nuclear monitor` | reads the report, prints the tree and the hot spots |",
-    "| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel |",
-    "",
-    "Generators (a body with `yield`) and abstract methods get no wrapper."
+    "| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel: the console of the last run (`console` of `nuclear monitor --json`, read from the run log) and the measurements |"
    ],
    "agents": false,
    "sources": [
@@ -6154,7 +6169,9 @@
    "body": [
     "A webview opened by `Nuclear: Open Monitor` (and the workspace's tool strip): rows of the tree with a disclosure",
     "triangle, the label, a horizontal bar of `total_ms` relative to the root (own time darker), calls, connections and",
-    "memory; the hot spots marked; a click on a row opens its `.nuc` at its line. It watches the report file."
+    "memory; the hot spots marked; a click on a row opens its `.nuc` at its line. Beside it, the console of the project's",
+    "last run (requests, errors with their stack, output), which needs no measuring. It watches the report and the run",
+    "log (`extensions/tools/nuclear-monitor/docs/02-architecture/overview.md`)."
    ],
    "agents": false,
    "sources": [
@@ -6170,9 +6187,10 @@
    "id": "doc:docs/04-specs/015-monitor/design.md#7-the-agents",
    "type": "spec",
    "title": "Spec 015: Nuclear Monitor — Design — 7. The agents",
-   "summary": "`nuclear monitor --json` gives the hot spots and the tree; the MCP tool `nuclear_monitor` calls it; `nuclear monitor knows where the app was slow and on which `.nuc` lines.",
+   "summary": "`nuclear monitor --json` gives the hot spots, the tree and the console of the last run; the MCP tool `project_monitor` calls it; `nuclear monitor knows where the app was slow and on which `.nuc` lines.",
    "body": [
-    "`nuclear monitor --json` gives the hot spots and the tree; the MCP tool `nuclear_monitor` calls it; `nuclear monitor",
+    "`nuclear monitor --json` gives the hot spots, the tree and the console of the last run; the MCP tool",
+    "`project_monitor` calls it; `nuclear monitor",
     "--remember` stores the hot spots as a card of the project in the Smart Graph (`graph_remember`), so the next agent",
     "knows where the app was slow and on which `.nuc` lines."
    ],
@@ -6329,10 +6347,7 @@
     "",
     "Left:",
     "",
-    "- [ ] A save in the editor (`buildOnSave`, `nuclear watch`) builds without the monitor: the measured app loses its",
-    "      wrappers at the next reload. The project should remember it (`.nuclear/monitor/on`) until `nuclear monitor",
-    "      --off`.",
-    "- [ ] The Monitor never yet opened in a live VS Code; not yet a tool of the workspace's strip.",
+    "- [ ] The Monitor never yet clicked in a live VS Code (proven on a copy of a real workspace in a headless browser).",
     "- [ ] The installed `nuclear` and the extension: the next release (`installer/install.sh`).",
     "- [ ] The dialects' references (`docs/07-reference/<dialect>.md`) show no `--monitor` equivalence yet."
    ],
@@ -6367,15 +6382,19 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-3-the-automatic-monitor-the-user-2026-11-19-not-started",
+   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-3-the-automatic-monitor-the-user-2026-11-19-and-2026-11-23",
    "type": "spec",
-   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 3: the automatic Monitor (the user, 2026-11-19; not started)",
-   "summary": "receives a browser's report through a collector of the extension, keeps the monitor on with `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).",
+   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 3: the automatic Monitor (the user, 2026-11-19 and 2026-11-23)",
+   "summary": "Done: the console of a project's last run (`nuclear monitor --json` reads the run log: state, requests, errors with their stack, output), the page on the workspace's selected project with designed states for an end user, *Run and watch* (the terminal `<project> · monitor`, a device for a mobile…",
    "body": [
-    "- [ ] The page uses the workspace's project, starts the measured run itself (terminal or device, always visible),",
-    "      receives a browser's report through a collector of the extension, keeps the monitor on with",
-    "      `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).",
-    "      The full list: `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md` (\"The automatic Monitor\")."
+    "Done: the console of a project's last run (`nuclear monitor --json` reads the run log: state, requests, errors with",
+    "their stack, output), the page on the workspace's selected project with designed states for an end user, *Run and",
+    "watch* (the terminal `<project> · monitor`, a device for a mobile app; once by itself), `nuclear monitor --on|--off`",
+    "(`.nuclear/monitor/on`, honoured by build, watch and run; `nuclear run` always gives the app the project's report",
+    "file), the MCP tool `project_monitor` with the console.",
+    "",
+    "- [ ] The report of a phone's or a browser's app through a collector of the extension (phase 2):",
+    "      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`."
    ],
    "agents": false,
    "sources": [
@@ -20856,6 +20875,119 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md#consequences",
+   "type": "adr",
+   "title": "ADR-lang-0014: The transpiler writes the call to an overridden method the definitions require — Consequences",
+   "summary": "`must_call_super` warning; it comes from the definitions, so it covers every marked method of every package.",
+   "body": [
+    "- Positive: the same `.nuc` for every dialect of the platform, with no target line in it; the generated code has no",
+    "  `must_call_super` warning; it comes from the definitions, so it covers every marked method of every package.",
+    "- Negative: a teardown method outside the dialect's list gets the call first unless its documentation says it ends",
+    "  with it; the list is extended when one is found."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-lang-0014: The transpiler writes the call to an overridden method the definitions require — Context and problem",
+   "summary": "Some classes of a target require every override of a method to call the method it overrides: Flutter's `State.initState` and `State.dispose` are annotated `@mustCallSuper`, and an override that does not call them is a warning of the Dart analyzer (`must_call_super`).",
+   "body": [
+    "Some classes of a target require every override of a method to call the method it overrides: Flutter's",
+    "`State.initState` and `State.dispose` are annotated `@mustCallSuper`, and an override that does not call them is a",
+    "warning of the Dart analyzer (`must_call_super`). A `stateful` of Nuclear declares `initState() void` and its body;",
+    "the reference asked the user to write `super.initState()` first. A user forgot it in a real app",
+    "(2026-11-23): `nuclear check` said nothing and the generated code had a warning of its target, against two promises",
+    "of Nuclear (diagnostics before the target's checker; generated code with no warning)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md#decision",
+   "type": "adr",
+   "title": "ADR-lang-0014: The transpiler writes the call to an overridden method the definitions require — Decision",
+   "summary": "not write what its target requires).",
+   "body": [
+    "**The kind writes the call, not the user** (the user's decision, 2026-11-23: a `stateful` exists so that the user does",
+    "not write what its target requires). The type definitions record, per method, that an override must call it and",
+    "where (`must_call_super`: `first` or `last`, generated from the target's own annotation and documentation). When a",
+    "method of a declaration overrides one so marked in its chain (its bases, its mixins, the classes its kind inherits),",
+    "the emitter adds `super.<name>(<its parameters>)`. **The position is data of the dialect**: after the method's",
+    "statements for the teardown methods its `[options] super_call_last` names (the dart language: `dispose`,",
+    "`deactivate`, `close`, `unmount`, `detach`; teardown frees the subclass's resources, then the parent's; in a method",
+    "that returns a value, that call is the value returned: `return super.close()`), before them for every other one. The",
+    "definitions' own position, read from the documentation's wording, is only a fallback for a method the list does not",
+    "name. A body that already calls it is left as written. No diagnostic: omitting it is the way",
+    "to write it."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md#options-considered",
+   "type": "adr",
+   "title": "ADR-lang-0014: The transpiler writes the call to an overridden method the definitions require — Options considered",
+   "summary": "1. The transpiler writes the call from the definitions (chosen).",
+   "body": [
+    "1. The transpiler writes the call from the definitions (chosen).",
+    "2. A diagnostic with a fix that inserts the call (proposed the same day): the user would keep writing a line only the",
+    "   target needs, in every `stateful`.",
+    "3. The kind's template always writes `super.initState()`: a case of one target and one method in a template, and a",
+    "   second call when the user wrote one."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md#references",
+   "type": "adr",
+   "title": "ADR-lang-0014: The transpiler writes the call to an overridden method the definitions require — References",
+   "summary": "`docs/02-architecture/type-definitions.md`; the reference: `dialects/dart/docs/07-reference/flutter.md` §5.2.",
+   "body": [
+    "- The format: `docs/07-reference/definitions.md` §3.2 and §4; the generator: `tools/defs/README.md`; the code:",
+    "  `docs/02-architecture/type-definitions.md`; the reference: `dialects/dart/docs/07-reference/flutter.md` §5.2."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0014-the-kind-writes-the-super-call.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.2b2e31",
    "type": "adr",
    "title": "Architecture Decision Records — the language",
@@ -20882,11 +21014,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.5118b3",
+   "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.45e1bb",
    "type": "adr",
    "title": "Architecture Decision Records — the language",
    "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
    "body": [
+    "| [0014](0014-the-kind-writes-the-super-call.md) | An override of a method the type definitions mark `must_call_super` gets the call to the overridden method from the transpiler; the user does not write it | accepted | 2026-11-23 |",
+    "",
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
    ],

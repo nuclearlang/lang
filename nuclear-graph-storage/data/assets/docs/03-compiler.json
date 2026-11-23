@@ -1401,7 +1401,9 @@
     "- A method named like a member of a base in the file → `override` (extended bases; TS `override`, Dart",
     "  `@override`) or `override_interface` (interfaces; Dart only). `inherited_members(_known)` walks the bases in",
     "  the file and the dialect's type definitions (`Dialect.defs`). A base found in neither leaves the module",
-    "  `open` (no N0106). `options.implicit_base` (Dart: `Object`) makes `toString()` an override. A base with",
+    "  `open` (no N0106). `options.implicit_base` (Dart: `Object`) makes `toString()` an override. An override of a method the definitions mark",
+    "  `must_call_super` gets `super.<name>(...)` (`with_super_call`): last when `options.super_call_last` names it, first",
+    "  otherwise (ADR-lang-0014). A base with",
     "  `kind = \"interface\"` in the defs goes to `implements`. Kinds use `inherits = [\"State\"]`; a kind's `inherits`",
     "  count as bases.",
     "- Constructors of inheriting modules: `super(...)` first in the body; its arguments see the parameters as",
@@ -2368,6 +2370,13 @@
     "- `ClassDef.params` (the unnamed constructor): N0219 and N0220 without reading `api.json`",
     "  (`tools/defs/index_params.py` adds them to packages generated before).",
     "- `ClassDef.results`: methods that return a `Result`.",
+    "- `ClassDef.must_call_super` (method → `SuperCall::First | Last`): `Emitter::must_call_super` walks the class's",
+    "  bases, mixins and kind `inherits`, and `with_super_call` (`emit.rs`) adds `super.<name>(<params>)` to the body",
+    "  of an override that does not call it (ADR-lang-0014): last when the dialect's `options.super_call_last` names the",
+    "  method (the dart language's: `dispose`, `deactivate`, `close`, `unmount`, `detach`), else the definitions'",
+    "  position. Only the Dart generator sets it (`@mustCallSuper`; `last` when the method's documentation says the",
+    "  override ends with the call, `first` otherwise: a fallback, the dialect's list wins): Python and TypeScript have no",
+    "  such annotation.",
     "- A class in neither the file nor the definitions leaves the module open: no `@override`, no N0106",
     "  ([limits.md](limits.md))."
    ],
@@ -2785,7 +2794,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/definitions.md#3-format-3-2-index-json.d6b5ed",
+   "id": "doc:nuclearlang/docs/07-reference/definitions.md#3-format-3-2-index-json.857321",
    "type": "spec",
    "title": "Type definitions — 3.2 `index.json`",
    "summary": "called like the library: `import { nanoid } from 'nanoid'`, `from tqdm import tqdm`.",
@@ -2799,11 +2808,7 @@
     "  (`lodash.chunk(...)`).",
     "- `classes`: each class (also the private bases inheritance goes through) with its direct supertypes and",
     "  the names of its own instance members. `kind` appears only on classes that cannot be extended:",
-    "  `\"interface\"` (goes to `implements`) or `\"mixin\"` (goes to `with`).",
-    "",
-    "Each entry of `classes` may also have `params` (the parameter names of the unnamed constructor; a named argument that",
-    "is not one is N0219) and `results` (method → its `Result<E, T>` return type, so the transpiler unwraps",
-    "`x = ~repo.find(id)` without reading `api.json`)."
+    "  `\"interface\"` (goes to `implements`) or `\"mixin\"` (goes to `with`)."
    ],
    "agents": false,
    "sources": [
@@ -2816,25 +2821,16 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/definitions.md#3-format-3-3-api-json.1c60e6",
+   "id": "doc:nuclearlang/docs/07-reference/definitions.md#3-format-3-2-index-json.e7efa2",
    "type": "spec",
-   "title": "Type definitions — 3.3 `api.json`",
-   "summary": "3.3 `api.json`",
+   "title": "Type definitions — 3.2 `index.json`",
+   "summary": "Each entry of `classes` may also have `params` (the parameter names of the unnamed constructor; a named argument that is not one is N0219), `results` (method → its `Result<E, T>` return type, so the transpiler unwraps `x = ~repo.find(id)` without reading `api.json`) and `must_call_super` (method →…",
    "body": [
-    "| Field | Content |",
-    "|---|---|",
-    "| `name`, `library` | Name and the library that provides it (no `library`: a private base) |",
-    "| `kind` | `class`, `mixin`, `enum`, `extension_type`, `extension`, `function`, `variable`, `typedef` |",
-    "| `modifiers` | Class modifiers of the target: `abstract`, `sealed`, `interface`, `base`, `final`, `mixin` |",
-    "| `type_params` | `[\"T\"]`, `[\"T: Comparable<T>\"]` |",
-    "| `extends`, `with`, `implements`, `on` | Supertypes; `on` is a mixin's constraint or an extension's type |",
-    "| `constructors` | `name` (`\"\"` = unnamed, `\"rich\"` = `Text.rich`), `const`, `factory`, `params` |",
-    "| `members` | `name`, `kind` (`property`, `method`, `operator`), `static`, `type` (property), `readonly`, `type_params`, `params`, `returns` |",
-    "| `params` | `name`, `type`, `named` (goes between `{ }`), `optional`, `default` (written in the target) |",
-    "| `values` | Values of an enum |",
-    "| `type` | Type of a variable or the aliased type (`typedef`) |",
-    "| `returns`, `params` | Signature of a function; `returns` types the value of a call (`env(\"PORT\")` is a `string`, so `env(\"PORT\").toInt()` is the library's `toInt`) |",
-    "| `doc`, `deprecated` | First paragraph of the documentation; the declaration is deprecated |"
+    "Each entry of `classes` may also have `params` (the parameter names of the unnamed constructor; a named argument that",
+    "is not one is N0219), `results` (method → its `Result<E, T>` return type, so the transpiler unwraps",
+    "`x = ~repo.find(id)` without reading `api.json`) and `must_call_super` (method → `\"first\"` or `\"last\"`: an override",
+    "must call the method it overrides; the position is what the target's documentation says, and a dialect's",
+    "`super_call_last` wins over it; §4)."
    ],
    "agents": false,
    "sources": [
@@ -2871,6 +2867,37 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/07-reference/definitions.md#3-format-3-3-api-json.75f27d",
+   "type": "spec",
+   "title": "Type definitions — 3.3 `api.json`",
+   "summary": "3.3 `api.json`",
+   "body": [
+    "| Field | Content |",
+    "|---|---|",
+    "| `name`, `library` | Name and the library that provides it (no `library`: a private base) |",
+    "| `kind` | `class`, `mixin`, `enum`, `extension_type`, `extension`, `function`, `variable`, `typedef` |",
+    "| `modifiers` | Class modifiers of the target: `abstract`, `sealed`, `interface`, `base`, `final`, `mixin` |",
+    "| `type_params` | `[\"T\"]`, `[\"T: Comparable<T>\"]` |",
+    "| `extends`, `with`, `implements`, `on` | Supertypes; `on` is a mixin's constraint or an extension's type |",
+    "| `constructors` | `name` (`\"\"` = unnamed, `\"rich\"` = `Text.rich`), `const`, `factory`, `params` |",
+    "| `members` | `name`, `kind` (`property`, `method`, `operator`), `static`, `type` (property), `readonly`, `type_params`, `params`, `returns`, `must_call_super` (`first` or `last`, as in `index.json`) |",
+    "| `params` | `name`, `type`, `named` (goes between `{ }`), `optional`, `default` (written in the target) |",
+    "| `values` | Values of an enum |",
+    "| `type` | Type of a variable or the aliased type (`typedef`) |",
+    "| `returns`, `params` | Signature of a function; `returns` types the value of a call (`env(\"PORT\")` is a `string`, so `env(\"PORT\").toInt()` is the library's `toInt`) |",
+    "| `doc`, `deprecated` | First paragraph of the documentation; the declaration is deprecated |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/definitions.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/07-reference/definitions.md#4-what-the-transpiler-does-with-them",
    "type": "spec",
    "title": "Type definitions — 4. What the transpiler does with them",
@@ -2887,6 +2914,11 @@
     "- a base with `kind = \"interface\"` goes to `implements`;",
     "- `[kinds.<k>] inherits = [\"State\"]` takes from the definitions the members and overrides of the class",
     "  the kind generates.",
+    "- an override of a method marked `must_call_super` in a class of its chain (its bases, its mixins, the classes its",
+    "  kind inherits) gets the call to the overridden method written for it, with the method's own arguments: after",
+    "  its statements when the dialect's `[options] super_call_last` names the method (teardown: `dispose`, `close`; in",
+    "  a method that returns a value, that call is the value returned), otherwise as the definitions say (`last`), or",
+    "  else before its statements. A body that already calls it anywhere gets nothing (ADR-lang-0014).",
     "",
     "`api.json` is read only when a tool asks for the full API, once per process."
    ],
@@ -5054,6 +5086,12 @@
     "  libraries count for `reexports`.",
     "- `--implicit`: libraries that are always visible (`dart:core`).",
     "",
+    "`defs.dart` also writes `must_call_super` for a method annotated `@mustCallSuper` (in `api.json`'s member and in",
+    "`index.json`'s class): `last` when its documentation says an override ends with the call to it (`dispose`,",
+    "`deactivate`), `first` otherwise. The emitter writes that call in an override that lacks it, last for the methods",
+    "the dialect's `[options] super_call_last` names (teardown: `dispose`, `close`...), which wins over this position",
+    "(ADR-lang-0014).",
+    "",
     "`flutter_project/` is an empty project that only resolves the packages; it is also where",
     "the mobile platform's `analyze-flutter.sh` writes the generated code (`lib/generated/`)."
    ],
@@ -5084,7 +5122,9 @@
     "`gen.js` also writes `defaults`: a package's default export (`export default`, `export =`), one more symbol called as",
     "the package declares it or, when that is no name to write, like the module. With no module named, `gen.py",
     "--distribution <package>` describes the modules that package installs and `gen.js --package <package>` the package's",
-    "own module."
+    "own module.",
+    "Neither writes `must_call_super`: Python and TypeScript have no annotation that asks an override to call the method",
+    "it overrides."
    ],
    "agents": false,
    "sources": [

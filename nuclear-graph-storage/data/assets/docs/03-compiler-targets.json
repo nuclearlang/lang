@@ -1186,12 +1186,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/overview.md#options-and-what-each-is-for.b66573",
+   "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/overview.md#options-and-what-each-is-for.ab4360",
    "type": "context",
    "title": "The `dart` dialect: how the base language is written in Dart — Options and what each is for",
    "summary": "Options and what each is for",
    "body": [
     "| `implicit_base = \"Object\"` | every class extends `Object`: `toString()` gets `@override` |",
+    "| `super_call_last = [\"dispose\", \"deactivate\", \"close\", \"unmount\", \"detach\"]` | the teardown methods: an override of a `must_call_super` method calls `super` last (`print(x); super.dispose();`, `return super.close();`); every other one first (ADR-lang-0014) |",
     "| `catch_var = \"error\"` | the variable of a `catch` without a name |"
    ],
    "agents": false,

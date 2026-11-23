@@ -1367,6 +1367,63 @@
     "area": "backend",
     "status": "done"
    }
+  },
+  {
+   "id": "can:watch-the-app",
+   "type": "can",
+   "title": "Can: watch what the app is doing, live (Nuclear Monitor)",
+   "summary": "The editor's Monitor follows the workspace's selected app and shows its run as a console: every request with its status and time, every error with its cause, its stack and its .nuc line, reloads; it starts the app when it is not running, and with measuring on it shows each Nuclear function's time, calls and memory.",
+   "body": [
+    "- VS Code: the strip's *Monitor* (or *Nuclear: Open Monitor*) opens on the selected app of the workspace; *Run and watch* starts it in the terminal `<app> · monitor` when it is not running.",
+    "- The console reads the app's last run (`.nuclear/logs/run.log`, written by `nuclear run`): filters All / Requests / Errors, counts, a 500 with its stack and *Open in the code* (the `.nuc` line, through `nuclear explain`).",
+    "- Measuring: `nuclear monitor --on` (or the page's *Measure the app*) keeps the app measured on every build, watch and run; the *Measurements* tab shows the hot spots and each function's time, own time, calls, connections and memory. `nuclear monitor --off` stops it.",
+    "- In a terminal or for an agent: `nuclear monitor [--json]` gives the app's state (running, starting, stopped, failed), its console and the report; the MCP's `project_monitor` returns the same.",
+    "- Limits: a mobile app's console comes from a run on a device from the workspace (a `nuclear run` in a terminal logs only its steps); a web app's console has the dev server's lines, not the browser's `console.log`; mobile and web apps cannot be measured yet."
+   ],
+   "keys": [
+    "monitor",
+    "nuclear monitor",
+    "console",
+    "logs",
+    "requests",
+    "errors",
+    "what is my app doing",
+    "profiling",
+    "performance",
+    "hot spots",
+    "measure"
+   ],
+   "asks": [
+    "how do I see what my app is doing",
+    "where are the logs of my app",
+    "how do I see the errors of my backend",
+    "how do I measure which function is slow",
+    "the monitor says no report.json"
+   ],
+   "platforms": [
+    "backend",
+    "web",
+    "mobile"
+   ],
+   "links": [
+    {
+     "rel": "tool",
+     "to": "tool:nuclear.monitor"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:project_monitor"
+    }
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/08-guides/README.md",
+    "tools/cli/src/framework/console.rs",
+    "docs/04-specs/015-monitor/design.md"
+   ],
+   "meta": {
+    "area": "editors",
+    "status": "done"
+   }
   }
  ]
 }

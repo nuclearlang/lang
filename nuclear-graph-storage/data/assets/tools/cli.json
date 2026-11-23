@@ -2558,12 +2558,14 @@
   {
    "id": "tool:nuclear.monitor",
    "type": "cli",
-   "title": "`nuclear monitor` — The report of the last run with --monitor: its hot spots (slow, async calls in a loop,…",
-   "summary": "The report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time",
+   "title": "`nuclear monitor` — What the app is doing: its last run (state, requests, errors with their stack, output) and,…",
+   "summary": "What the app is doing: its last run (state, requests, errors with their stack, output) and, measured, its hot spots (slow, async calls in a loop, connections, memory) and each function's time; Measure the project from its next build (build, watch, run) or stop",
    "body": [
     "```text",
-    "  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
-    "                                             calls in a loop, connections, memory) and each function's time",
+    "  monitor [--json]                           what the app is doing: its last run (state, requests, errors with their",
+    "                                             stack, output) and, measured, its hot spots (slow, async calls in a",
+    "                                             loop, connections, memory) and each function's time",
+    "  monitor --on | --off                       measure the project from its next build (build, watch, run) or stop",
     "```"
    ],
    "keys": [
@@ -2585,7 +2587,14 @@
       "usage": "nuclear monitor [--json]",
       "alias": "",
       "note": "",
-      "does": "The report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time"
+      "does": "What the app is doing: its last run (state, requests, errors with their stack, output) and, measured, its hot spots (slow, async calls in a loop, connections, memory) and each function's time"
+     },
+     {
+      "what": "monitor",
+      "usage": "nuclear monitor --on | --off",
+      "alias": "",
+      "note": "",
+      "does": "Measure the project from its next build (build, watch, run) or stop"
      }
     ]
    }

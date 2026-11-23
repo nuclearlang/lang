@@ -21372,7 +21372,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-generators.310210",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-generators.689860",
    "type": "guide",
    "title": "The MCP server of NuclearLang — Generators",
    "summary": "Generators",
@@ -21380,7 +21380,7 @@
     "| Tool | What it does |",
     "|---|---|",
     "| `project_inspect(project)` | the project's platform and dialect, its components with their declarations by kind, the generators of its platform |",
-    "| `project_monitor(project)` | where the app is slow (Nuclear Monitor): the hot spots and the time, calls, connections and memory of each Nuclear function and method, from the last run with `nuclear run --monitor` |",
+    "| `project_monitor(project)` | what the app is doing and where it is slow (Nuclear Monitor): its console (state, requests and errors counted, the last requests, each error with its stack) and, after a run with `nuclear run --monitor` (or `nuclear monitor --on`), the hot spots and the time, calls, connections and memory of each Nuclear function and method |",
     "| `project_run_log(project, lines)` | why the app failed or what it did: the last `lines` (default 200, at most 2000) of the project's `.nuclear/logs/run.log`, which `nuclear run` and the editor's devices write (each step, the build's errors, the server's output, `failed:` and `exited:`); only that file |",
     "| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for later sessions |",
     "| `generate_component(project, component)` | a new component with its facade |",

@@ -427,6 +427,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.3e8de8",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The delivery gate and the checks after a tag remove their work folder on a signal too, and clear the ones earlier killed runs left (1.3 GB each): five of them had filled the shared /tmp and stopped a delivery.",
+    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.48ac00",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -736,6 +754,24 @@
     "- Fix: the installer's update test follows GitHub's redirects: since the repository became `nuclearlang/nuclearlang` (it was `nuclearlang/lang`), it took the API's redirect for no network and the delivery gate refused the release. The tree still names the old repository in about 90 files, served by the redirect (the installer's roadmap).",
     "- Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.",
     "- Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.cd51cc",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **`nuclear monitor` says what the app is doing**: the state of its last run (running, starting, stopped, could not start) and its requests and errors with their stack, read from the run log, with the measurements when there are any (it failed without a report); `--json` adds `console`, `project` and `measuring` (the report's keys stay, empty without one). New `nuclear monitor --on` / `--off`: the project measured by every build, watch and run until turned off (`.nuclear/monitor/on`; a save no longer drops the measuring). Fix: the app `nuclear run --monitor` starts writes its report to the project (`NUCLEAR_MONITOR_FILE`), not to its build folder. The MCP tool `project_monitor` returns the console too.",
+    "- **A `stateful` no longer needs `super.initState()`**: an override of a method the type definitions mark `must_call_super` (`initState`, `didUpdateWidget`, `dispose`, a mixin's `build`...) gets the call to the method it overrides from the transpiler, with its own arguments, last for teardown (`dispose`, `deactivate`, `close`, `unmount`, `detach`: the dialect's `super_call_last`) and first otherwise; a call already written is not repeated (ADR-lang-0014). Fix: an `initState` without it built Dart with the analyzer's warning `must_call_super`. The Dart definitions record the flag (`must_call_super` in `index.json` and `api.json`)."
    ],
    "sources": [
     "CHANGELOG.md"

@@ -2706,9 +2706,9 @@
    "id": "mcp:project_monitor",
    "type": "mcp",
    "title": "`project_monitor` — a tool of the Nuclear MCP server",
-   "summary": "Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.",
+   "summary": "What the app is doing and where it is slow (Nuclear Monitor): its console (running, starting, stopped or failed; the count of requests and errors; the last requests and each error with its stack) and, after a run with `nuclear run --monitor` (or `nuclear monitor --on`), the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method.",
    "body": [
-    "Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.",
+    "What the app is doing and where it is slow (Nuclear Monitor): its console (running, starting, stopped or failed; the count of requests and errors; the last requests and each error with its stack) and, after a run with `nuclear run --monitor` (or `nuclear monitor --on`), the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method.",
     "",
     "Parameters:",
     "",
