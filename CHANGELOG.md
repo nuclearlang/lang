@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).
 - Fix: the workspace's file tree shows what an agent or a Builder run writes while it works (a new component did not appear): the column, drawn again many times a second during a run, made a new files watcher each time and dropped the folders it had not sent yet; the watcher now lives as long as its project, and the project's folders are read again whenever watching starts.
 - Fix: the installer's update test follows GitHub's redirects: since the repository became `nuclearlang/nuclearlang` (it was `nuclearlang/lang`), it took the API's redirect for no network and the delivery gate refused the release. The tree still names the old repository in about 90 files, served by the redirect (the installer's roadmap).
 - Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.

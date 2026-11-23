@@ -30,7 +30,10 @@ and reports `(Wrote::Created | Kept, path)`; the command (`tools/cli/src/framewo
    - `--from-spec <spec.md>` → its example answer (`spec_json`), else its `Key | Type | Description` table
      (`from_spec`); a table with objects it does not detail reads the API's answer from the spec's `GET <url>` line
      (`spec_url`).
-2. **The checks, before anything is written**: every type a field names is basic (`BASIC`), a model of the same
+2. **The checks, before anything is written**: every name given to `make` or `gen` (a component, a screen, a
+   resource, a use case) is snake_case, starts with a letter, has no `_` at either end nor two together, and is no
+   reserved word of Nuclear or of the project's target (`generated_name` in the CLI: `_global`, `users_`, `if`, and
+   `global` with `fastapi`, are refused with what to write instead, never made into a folder); every type a field names is basic (`BASIC`), a model of the same
    answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns
    of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a
    decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = "rest"` / `"db"`:

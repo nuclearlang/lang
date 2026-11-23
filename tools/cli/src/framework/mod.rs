@@ -1168,6 +1168,27 @@ fn new_name(name: &str) -> Result<String, String> {
     Ok(snake)
 }
 
+/// The name `make` or `gen` is given (a component, a screen, a resource...), in snake_case: letters, digits and `_`,
+/// starting with a letter, no `_` at either end nor two together, and no word the language or the project's target
+/// reserves (`global` in Python, `class`). A name like `_global` or `if` is refused, never written as a folder.
+fn generated_name(raw: &str, d: Option<&nuclear_dialect::Dialect>) -> Result<String, String> {
+    let snake = scaffold::snake(raw);
+    let shape = snake.chars().next().is_some_and(|c| c.is_ascii_lowercase())
+        && snake.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+        && !snake.ends_with('_')
+        && !snake.contains("__");
+    if !shape {
+        return Err(format!("'{raw}' is not a name for a generator: letters and digits in snake_case, starting with a letter (user_profile)"));
+    }
+    let keyword = nuclear_syntax::lex(&snake).tokens.first().is_some_and(|t| matches!(t.kind, nuclear_syntax::token::TokenKind::Keyword(_)));
+    let target = d.filter(|d| d.is_reserved(&snake) || d.is_reserved(&scaffold::pascal(&snake)));
+    if keyword || target.is_some() {
+        let whose = if keyword { "Nuclear".to_string() } else { target.map_or_else(String::new, |d| format!("the {} dialect", d.name)) };
+        return Err(format!("'{raw}' is a reserved word of {whose}: choose another name (for example app_{snake})"));
+    }
+    Ok(snake)
+}
+
 /// Why a stray word of `nuclear new` is there: most often a platform or a dialect without its option.
 fn hint_for(word: &str) -> String {
     if ["mobile", "backend", "web"].contains(&word) {
@@ -1718,7 +1739,8 @@ fn make(root: &Path, rest: Vec<String>) -> Result<(), String> {
         )
     };
     let Some(what) = rest.first().and_then(|w| generator(w)) else { return Err(usage()) };
-    let names: Vec<String> = rest[1..].iter().map(|w| scaffold::snake(w)).collect();
+    let flutter = loader().load("flutter").0;
+    let names: Vec<String> = rest[1..].iter().map(|w| generated_name(w, flutter.as_ref())).collect::<Result<_, _>>()?;
     let files = match (what, names.as_slice()) {
         ("component", [c]) => scaffold::component(c),
         ("config", [c]) => scaffold::config(c),
@@ -1787,8 +1809,8 @@ fn make_from_layout(root: &Path, m: &Manifest, rest: Vec<String>) -> Result<(), 
     // a skeleton may go where another kind does (`[skeletons] screen = { place = "stateless", ... }`)
     let placed = d.skeleton_places.get(&kind).unwrap_or(&kind);
     let (Some(skeleton), Some(place)) = (d.skeletons.get(&kind), d.layout.get(placed)) else { return Err(usage()) };
-    let name = scaffold::pascal(&scaffold::snake(name));
-    let component = scaffold::snake(component);
+    let name = scaffold::pascal(&generated_name(name, Some(&d))?);
+    let component = generated_name(component, Some(&d))?;
     let base = ["Manager", "Screen", "Guard", "Component"].iter().find_map(|s| name.strip_suffix(s).filter(|b| !b.is_empty())).unwrap_or(&name).to_string();
     // a screen's folder is its own name, unless given
     let screen = if (kind == "screen" || kind == "statemanager") && !explicit_screen { scaffold::snake(&base) } else { screen };
@@ -1917,7 +1939,7 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
         }
         "component" => {
             let c = rest.get(1).ok_or(GEN_USAGE)?;
-            let c = scaffold::snake(c);
+            let c = generated_name(c, Some(&d))?;
             nuclear_dialect::template::Value::Map(std::collections::BTreeMap::from([
                 ("component".into(), nuclear_dialect::template::Value::Str(c.clone())),
                 ("Component".into(), nuclear_dialect::template::Value::Str(scaffold::pascal(&c))),
@@ -1933,8 +1955,8 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
             let screen = take_option(&mut rest, "--screen");
             let plural = take_option(&mut rest, "--plural");
             let [_, component, name] = rest.as_slice() else { return Err(GEN_USAGE.into()) };
-            let name = scaffold::pascal(&scaffold::snake(name));
-            let component = scaffold::snake(component);
+            let name = scaffold::pascal(&generated_name(name, Some(&d))?);
+            let component = generated_name(component, Some(&d))?;
             let (models, page) = match (&from_json, &fields, &from_spec) {
                 (Some(src), _, _) => {
                     let text = fetch_text(src)?;
@@ -2037,8 +2059,8 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
             let calls = take_option(&mut rest, "--calls");
             let route = take_option(&mut rest, "--route");
             let [_, component, name] = rest.as_slice() else { return Err(GEN_USAGE.into()) };
-            let name = scaffold::pascal(&scaffold::snake(name));
-            let component = scaffold::snake(component);
+            let name = scaffold::pascal(&generated_name(name, Some(&d))?);
+            let component = generated_name(component, Some(&d))?;
             let shape = |n: &str| nuclear_transpile::map::shape(root, &m, &d, n);
             let platform = m.platform.as_deref().unwrap_or("?");
             let has = |when: &str| d.generators.get("usecase").is_some_and(|ps| ps.iter().any(|p| p.when.as_deref() == Some(when)));
@@ -2142,6 +2164,22 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+
+    /// A generator never writes a folder with an ugly or a reserved name: `_global`, `users_`, `if`, `global` (Python).
+    #[test]
+    fn a_generated_name_is_snake_case_and_never_reserved() {
+        let l = loader();
+        let fastapi = l.load("fastapi").0;
+        let d = fastapi.as_ref();
+        assert_eq!(generated_name("UserProfile", d).as_deref(), Ok("user_profile"));
+        assert_eq!(generated_name("orders", d).as_deref(), Ok("orders"));
+        for bad in ["_global", "users_", "user__x", "9lives", "a-b!", ""] {
+            assert!(generated_name(bad, d).unwrap_err().contains("not a name"), "{bad}");
+        }
+        assert!(generated_name("if", d).unwrap_err().contains("of Nuclear"));
+        assert!(generated_name("global", d).unwrap_err().contains("fastapi"));
+        assert!(generated_name("global", None).is_ok(), "without a dialect only Nuclear's words are reserved");
+    }
 
     /// ADR-codegen-0001: what `nuclear gen` writes compiles with every dialect of every platform (a REST resource with a
     /// nested model and a screen; a database resource in the backend). No network: the fields come from --fields.
