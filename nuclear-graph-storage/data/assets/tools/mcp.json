@@ -2613,7 +2613,7 @@
    "title": "`project_migrate` — a tool of the Nuclear MCP server",
    "summary": "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database).",
    "body": [
-    "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database). action: status (every migration, applied or pending: read it first), make (message: what changed; writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that migration), down (reverts the last one applied; to: back to that migration). fake (up, down): only the history changes and nothing runs (a database that already has its tables is brought under the migrations with up and fake). transaction (up, down): all (the default: the whole run in one transaction), each (one per migration) or none. project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot ask): up and down change the database of the project's active environment, and down drops what the migration made, with its data. Build the project first (nuclear_build): the migration reads the built entities.",
+    "The migrations of a backend project's database (`nuclear migrate`: the same in every backend dialect and database). action: status (every migration, applied or pending: read it first), make (message: what changed; writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that migration), down (reverts the last one applied; to: back to that migration). rename (make): the tables and columns that were renamed, each \"<table>=<new table>\" or \"<table>.<column>=<new column>\" in the database's names ([\"shops=stores\", \"orders.shop_id=store_id\"]): make writes a rename that keeps the rows, where it would write a drop and an add; rename the field or the entity in the .nuc first. fake (up, down): only the history changes and nothing runs (a database that already has its tables is brought under the migrations with up and fake). transaction (up, down): all (the default: the whole run in one transaction), each (one per migration) or none. project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot ask): up and down change the database of the project's active environment, and down drops what the migration made, with its data. Build the project first (nuclear_build): the migration reads the built entities.",
     "",
     "Parameters:",
     "",
@@ -2623,7 +2623,8 @@
     "- `to`: string = `\"\"`",
     "- `confirm`: string = `\"\"`",
     "- `fake`: boolean = `false`",
-    "- `transaction`: string = `\"\"`"
+    "- `transaction`: string = `\"\"`",
+    "- `rename`: any = `null`"
    ],
    "keys": [
     "project_migrate",
@@ -2691,6 +2692,12 @@
       "type": "string",
       "required": false,
       "default": "\"\""
+     },
+     {
+      "name": "rename",
+      "type": "any",
+      "required": false,
+      "default": "null"
      }
     ]
    }

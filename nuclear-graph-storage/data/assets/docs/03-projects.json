@@ -804,34 +804,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.232d37",
-   "type": "spec",
-   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
-   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
-   "body": [
-    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
-    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
-    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
-    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
-    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
-    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
-    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`. The OpenAPI document is",
-    "also what `GET /openapi.json` answers in every dialect, and its `Error` schema (`status`, `message`, and `errors`",
-    "with a `field`, a `rule` and a `message` for an invalid body or parameter) is the body every error answers",
-    "(ADR-synapsis-0013).",
-    "",
-    "A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.382cbd",
    "type": "spec",
    "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
@@ -849,6 +821,35 @@
     "contracts(tasks_api = \"../tasks_api\")              // a backend built next to this project (its .nuclear/contract.json)",
     "contracts(tasks_api = \"https://api.example.com\")   // or the running API: nuclear contracts update fetches it",
     "```"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.78db00",
+   "type": "spec",
+   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
+   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
+   "body": [
+    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
+    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
+    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
+    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
+    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
+    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
+    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`. The OpenAPI document is",
+    "also what `GET /openapi.json` answers in every dialect, and its `Error` schema (`status`, `message`, and `errors`",
+    "with a `field`, a `rule` and a `message` for an invalid body or parameter) is the body every error answers",
+    "(ADR-synapsis-0013). Every route lists that body as its `default` answer: the use case's error, 400 for an invalid body or",
+    "parameter, 409 for what the database refuses for integrity, 500 for what nothing handled.",
+    "",
+    "A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"

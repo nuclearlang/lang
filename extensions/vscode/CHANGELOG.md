@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- Fix: the workspace's file tree shows what an agent or a Builder run writes while it works (a new component did not appear): the column, drawn again many times a second during a run, made a new files watcher each time and dropped the folders it had not sent yet; the watcher now lives as long as its project, and the project's folders are read again whenever watching starts.
 - Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.
 - Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English).
 - Fix: the welcome no longer closes when an app is added from it (adding a third app, web, closed it): the app opens and the welcome stays for the next one.

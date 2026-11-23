@@ -5172,16 +5172,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.15abce",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.24d708",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- **Every step of a run in the team's channel** (spec 024): each station started, passed, failed or repaired, and each approval, is a message of the member who did it in the run's thread, its log folded (click to open); a failed station says why. Runs started outside the editor (the MCP server, a terminal) are followed there too.",
-    "- **The pipeline told as C4** (spec 024): the diagram's first level is the story for a product owner (*Understand the request*, *Design the solution*, *Build it*, *Check it*, *Deliver it*), each in plain words with what it produced; a click zooms into the stations, a station's steps, and only on demand the tool calls.",
-    "- A gate's card lists what only you can decide; a station that cannot fix something alone asks you with its diagnosis. The specs' language is asked once per project, the editor's offered.",
-    "- Fix: Nuclear Chat's channel header no longer spills over a thread open beside it.",
-    "- Nuclear Atlas no longer runs `/task`: Atlas informs (spec 023). A `/task` said to it is answered with the tech leads to ask, each a link to their conversation (or, with no team, an offer to make one); a tech lead plans the work and runs it through the Builder."
+    "- HTTP Connections, a new request page: JSON responses as a collapsible tree (copy value or path, save as variable), Raw and a sandboxed HTML Preview; JSON, HTML and XML colored with the theme (8 new `nuclearHttpConnections.*` colors); the request body checked (line and column) and formatted; headers as a table filled from the code (guard headers, Content-Type, the environment) with a badge of where each comes from, editable and deletable; variables by environment, project and component, edited in a drawer without opening `http.json`; an Auth tab (Bearer, Basic, API key, OAuth 2.0 client credentials and password); a token in a response saved to its variable by itself (with Undo) and rules that take a value of every response; icons for every section; Ctrl/Cmd+Enter sends. Earlier `http.json` files and saved tabs load unchanged.",
+    "- A newer NuclearLang release is offered on every NuclearLang page: a floating *Update to <version>* button (and the status bar) that runs `nuclear update` in a terminal, then offers to reload; checked at most every 12 hours, `NUCLEAR_NO_UPDATE_CHECK=1` turns it off.",
+    "- The wizard of a new team says the installation has no roster (run the installer again) instead of \"Nobody matches the filters\" when the AI services came without one."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5193,14 +5191,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.24d708",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.28020f",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- HTTP Connections, a new request page: JSON responses as a collapsible tree (copy value or path, save as variable), Raw and a sandboxed HTML Preview; JSON, HTML and XML colored with the theme (8 new `nuclearHttpConnections.*` colors); the request body checked (line and column) and formatted; headers as a table filled from the code (guard headers, Content-Type, the environment) with a badge of where each comes from, editable and deletable; variables by environment, project and component, edited in a drawer without opening `http.json`; an Auth tab (Bearer, Basic, API key, OAuth 2.0 client credentials and password); a token in a response saved to its variable by itself (with Undo) and rules that take a value of every response; icons for every section; Ctrl/Cmd+Enter sends. Earlier `http.json` files and saved tabs load unchanged.",
-    "- A newer NuclearLang release is offered on every NuclearLang page: a floating *Update to <version>* button (and the status bar) that runs `nuclear update` in a terminal, then offers to reload; checked at most every 12 hours, `NUCLEAR_NO_UPDATE_CHECK=1` turns it off.",
-    "- The wizard of a new team says the installation has no roster (run the installer again) instead of \"Nobody matches the filters\" when the AI services came without one."
+    "- **The pipeline told as C4** (spec 024): the diagram's first level is the story for a product owner (*Understand the request*, *Design the solution*, *Build it*, *Check it*, *Deliver it*), each in plain words with what it produced; a click zooms into the stations, a station's steps, and only on demand the tool calls.",
+    "- A gate's card lists what only you can decide; a station that cannot fix something alone asks you with its diagnosis. The specs' language is asked once per project, the editor's offered.",
+    "- Fix: Nuclear Chat's channel header no longer spills over a thread open beside it.",
+    "- Nuclear Atlas no longer runs `/task`: Atlas informs (spec 023). A `/task` said to it is answered with the tech leads to ask, each a link to their conversation (or, with no team, an offer to make one); a tech lead plans the work and runs it through the Builder."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5382,6 +5381,26 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.61eb8d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Sala de control**: *Your software company*, the reports and Nuclear Builder are calmer: slate panels, one desaturated teal for the action and what is picked, gold for money and waiting, a soft red for failures, no all-caps (the monospace face only for data), corner brackets only on what you look at (drawn in, never with reduced motion), and the team's rare actions in *More ⋯*. Plain words: members, not operatives.",
+    "- A workspace or an app deleted from the disk is shown faded and crossed out (✕) on the strip, never as if it were there; the panel says so and offers the other workspaces, and Nuclear Atlas no longer fails on its folder (\"No such file or directory\").",
+    "- The welcome's team step says it edits your team, by name, when you have one (each change is saved in it at once); its settings step keeps only the notices and the chat's colors, everything else in Settings and integrations.",
+    "- **Every step of a run in the team's channel** (spec 024): each station started, passed, failed or repaired, and each approval, is a message of the member who did it in the run's thread, its log folded (click to open); a failed station says why. Runs started outside the editor (the MCP server, a terminal) are followed there too."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.643206",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5402,6 +5421,27 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- **Teams that work like human teams** (spec 023, the editor's part): Nuclear Chat lists Atlas and each team's tech lead, not every member (a member's old conversations stay in the project); *Talk* on a member who does not lead is *Ask the tech lead*, and a member's face on the company screen or the Builder opens the lead's conversation; a run's stations are told by the tech lead. The team's page has **How the team works**: the *Model for the whole team* (none, an agent or an API, its provider and model, chosen once; each member says *Team's model* or *Own model*, and a member's Brain has *Team's model* to give its own up), the *Method* (Scrum by default, or your own) and the *Instructions* every member follows; the new-team wizard has them too. Spending is asked only for an API paid by use: an agent's subscription (Claude Code, Codex, Cursor…) is never asked, in a run or in the chat; `nuclear.spending.forceConfirm` still asks for everything. Nuclear Atlas informs: its hint says it explains and sends work to a tech lead, and its templates no longer order work (*Add a feature*, *Tests of…*, *Fix a bug* became *Who can do a task?* and *Why work with a team?*).",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.67ede6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Nuclear Builder shows a run as its progress**: the stations in a line with who works each, what is being done now (or what waits for your answer, with *Answer*), and the spec it works on with its criteria; *Technical diagram* shows the detailed one. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice says so, and opening the Builder shows the run being worked on.",
+    "- Fix: a spec and its run asked in a workspace's channel go to the app they are for (the tech lead says which); they went to the workspace's folder, where the Builder never showed them and the code would not have been written in the app.",
+    "- Nuclear Atlas opens again on the conversation you were in last, in each folder (also after a restart).",
+    "- **Nuclear Atlas's channels and direct messages are in the workspace's column**, as Nuclear Chat draws them: a click opens that conversation in the page, which now shows only the open conversation (the whole chat again when the column is hidden).",
+    "- Fix: the welcome adds an app with the name it offers when the field is left empty (it asked for one again), and the offered name follows the platform (shop_api, shop_web, shop_app); the new-team wizard creates no team without a member."
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -5435,26 +5475,6 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- The Delivery station's role is **DevOps** (spec 011): besides the definition of done, the documents, the user stories and the pull request after your approval (never a merge), it owns the infrastructure: the CI exported from the line, the deployments and their environments, the containers, the monitoring (the backend's telemetry) and the secrets, with new skills, a deployment template and checks. Its 40 employees keep their faces and ids with DevOps profiles (uptime and pipelines among their stats); the station keeps its name, *Delivery*. A team, a run or a command of before that says `delivery` for the role is read as `devops` (a team written once, its old file kept as `.bak`; a member keeps its id, so its chat stays), and `--role delivery` is still taken for this release.",
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.7174b9",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Fix: the welcome adds an app with the name it offers when the field is left empty (it asked for one again), and the offered name follows the platform (shop_api, shop_web, shop_app); the new-team wizard creates no team without a member.",
-    "- A newer release of NuclearLang installs itself when you stop working (30 minutes without a use) or within 12 hours; VS Code counts as a use and says when it updated, with *Reload*. Setting `nuclear.update.auto` (on by default).",
-    "- The Nuclear workspace follows VS Code's folder as VS Code does: a window shows the workspace of its folder and only it (never the last one opened elsewhere), and only the projects it opened by hand, kept with its folder; the projects of other windows and the deleted ones no longer appear. A project opened by hand in 0.84 to 0.88.3 is opened again with *Open a Project as a Tab* in the window that wants it.",
-    "- Nuclear Chat and Atlas show an agent's Markdown as it is meant: tables (a header row, their own sideways scroll), headings, rules, numbered lists, task lists and nested lists, besides the code, quotes, links and marks they already had."
-   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -5843,13 +5863,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ef1fa3",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.dbbf81",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
-    "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+    "- Fix: the workspace's file tree shows what an agent or a Builder run writes while it works (a new component did not appear): the column, drawn again many times a second during a run, made a new files watcher each time and dropped the folders it had not sent yet; the watcher now lives as long as its project, and the project's folders are read again whenever watching starts.",
+    "- Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.",
+    "- Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English).",
+    "- Fix: the welcome no longer closes when an app is added from it (adding a third app, web, closed it): the app opens and the welcome stays for the next one.",
+    "- Fix: in a workspace's own channel, a message is answered by the tech lead of the team assigned to it (nobody answered: the channel did not name its team)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5861,15 +5884,13 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f96990",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ef1fa3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder.",
-    "- **Sala de control**: *Your software company*, the reports and Nuclear Builder are calmer: slate panels, one desaturated teal for the action and what is picked, gold for money and waiting, a soft red for failures, no all-caps (the monospace face only for data), corner brackets only on what you look at (drawn in, never with reduced motion), and the team's rare actions in *More ⋯*. Plain words: members, not operatives.",
-    "- A workspace or an app deleted from the disk is shown faded and crossed out (✕) on the strip, never as if it were there; the panel says so and offers the other workspaces, and Nuclear Atlas no longer fails on its folder (\"No such file or directory\").",
-    "- The welcome's team step says it edits your team, by name, when you have one (each change is saved in it at once); its settings step keeps only the notices and the chat's colors, everything else in Settings and integrations."
+    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
+    "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5903,6 +5924,26 @@
    "body": [
     "- 0.54.0: Nuclear Builder shows a run as a team at work: an avatar, a role and a model per member (Tech lead, Developer, QA, Security…), the one working animated with the step it is on, and a line when the work changes hands. When Claude leads, the spec form sets Claude's model (`haiku` too) and budget per run and adds the Nuclear MCP server to Claude Code. Fixed: typing in the spec form no longer loses the focus nor sends the caret to the start when suggestions, a run or the settings arrive.",
     "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ffe964",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- A newer release of NuclearLang installs itself when you stop working (30 minutes without a use) or within 12 hours; VS Code counts as a use and says when it updated, with *Reload*. Setting `nuclear.update.auto` (on by default).",
+    "- The Nuclear workspace follows VS Code's folder as VS Code does: a window shows the workspace of its folder and only it (never the last one opened elsewhere), and only the projects it opened by hand, kept with its folder; the projects of other windows and the deleted ones no longer appear. A project opened by hand in 0.84 to 0.88.3 is opened again with *Open a Project as a Tab* in the window that wants it.",
+    "- Nuclear Chat and Atlas show an agent's Markdown as it is meant: tables (a header row, their own sideways scroll), headings, rules, numbered lists, task lists and nested lists, besides the code, quotes, links and marks they already had.",
+    "- Fix: with the open workspace deleted from the disk, the extension keeps working: the welcome starts again from creating or opening a workspace (it no longer offers to add apps to the deleted one, which made its folder again), *Create* and *Open* work and take the window without asking to keep a folder that is not there, and no command runs in the deleted folder."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -7417,13 +7458,11 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#badges-and-notifications",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#badges-and-notifications.217cca",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Badges and notifications",
-   "summary": "Every notice of the one system (ai-services.md) reaches the column three ways: the tool's colour (`--tc`, the HUD's line), which pings twice when it appears (not with reduced motion); the tool's `aria-label` and its card add the count (`newCount`).",
+   "summary": "the tool's colour (`--tc`, the HUD's line), which pings twice when it appears (not with reduced motion); the tool's `aria-label` and its card add the count (`newCount`).",
    "body": [
-    "Every notice of the one system ([ai-services.md](ai-services.md)) reaches the column three ways:",
-    "",
     "- `WebviewView.badge`: the unread count on the Nuclear icon of the activity bar.",
     "- A badge on the tool's icon of the strip: its unread count (`9+` above nine) in a small square framed and lit in",
     "  the tool's colour (`--tc`, the HUD's line), which pings twice when it appears (not with reduced motion); the",
@@ -7431,11 +7470,29 @@
     "  Chat; `builder`: runs that wait for the user (a gate, the QA plan) or ended; `settings`: connections. Opening the",
     "  tool reads them (the badge clears).",
     "- The list at the bottom of the column (`#notes`, under every pane, at most 38 % of its height): every tool's",
-    "  notices, newest first, the unread with a bar in their tool's colour; a click, Enter or Space posts `notice` →",
+    "  notices, newest first, the unread with a bar in their tool's colour. Before each, a check: whether what it asked is",
+    "  done (`done` in `notify.ts`). A run's notice is done by itself once the run no longer waits (`settle`, from",
+    "  `BuilderPanel.refreshRun`); the user marks any notice done or pending again with it (`noticeDone` → `toggle`), and a",
+    "  done one is dimmed and struck through. A click, Enter or Space on the rest posts `notice` →",
     "  `openNotice`, the same place as the pop-up's *Open*. A Nuclear Chat notice keeps its message id (`chatWhere` in",
     "  `notify.ts`): it opens the chat at `/<workspace>/<channel>?message=&thread=`, the message highlighted and its thread",
     "  open."
    ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#badges-and-notifications.f5b24f",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — Badges and notifications",
+   "summary": "Every notice of the one system (ai-services.md) reaches the column three ways:",
+   "body": "Every notice of the one system ([ai-services.md](ai-services.md)) reaches the column three ways:",
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
    ],
@@ -7765,22 +7822,24 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.806c0e",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.07473f",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The pane of each tab",
-   "summary": "`nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`, the others (`addSocket`, and `open` of a node's protocol badge, `WS`) → `HttpModel.runAction`.",
+   "summary": "`files.exclude`, folders first.",
    "body": [
-    "`nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`, the others (`addSocket`, and",
-    "  `open` of a node's protocol badge, `WS`) → `HttpModel.runAction`.",
-    "- **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)",
-    "  and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).",
-    "- **`tool:builder`**: *+ New spec*, the Builder's specs by component and layer and its runs as an accordion",
-    "  (`builderSidebar()` of `tools/nuclear-builder/src/panel.ts`, drawn with `workbench.ts`'s `specTree` and `runOutline`",
-    "  inlined; `sidebarChanged` sends `builderSidebar` messages, the tree redrawn in place). A click is a",
-    "  `builder` message (`op`: `spec`, `run`, `node`, `new`) → `BuilderPanel.drive`, which opens the page and does it.",
-    "- **The other tools**: a line about the tool.",
-    "",
-    "Under every pane, the list of every tool's notices (below, *Badges and notifications*)."
+    "- **A project**: its file tree. `list` → `entries`, lazily; `Icons.entriesOf` skips `.git` and the plain names of",
+    "  `files.exclude`, folders first. Each entry wears its icon of the Chernobyl icon theme",
+    "  (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest",
+    "  `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris",
+    "  (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts",
+    "  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). The watcher lives as",
+    "  long as its project (the column is drawn again many times a second while a run works, and a new watcher would miss",
+    "  what is written while it starts); when watching starts, the page reads every loaded folder again (`all`). It looks and moves",
+    "  like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the",
+    "  list's hover, selection (active when the tree has the focus, inactive otherwise) and focus outline; the keyboard",
+    "  walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open). The active editor's file is",
+    "  revealed (`reveal`: its folders opened, the file selected). The indent is the explorer's default (8 px), not the",
+    "  user's `workbench.tree.indent`."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7792,24 +7851,24 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.e06130",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.f34476",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The pane of each tab",
-   "summary": "`files.exclude`, folders first.",
+   "summary": "`GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview).",
    "body": [
-    "- **A project**: its file tree. `list` → `entries`, lazily; `Icons.entriesOf` skips `.git` and the plain names of",
-    "  `files.exclude`, folders first. Each entry wears its icon of the Chernobyl icon theme",
-    "  (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest",
-    "  `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris",
-    "  (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts",
-    "  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). It looks and moves",
-    "  like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the",
-    "  list's hover, selection (active when the tree has the focus, inactive otherwise) and focus outline; the keyboard",
-    "  walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open). The active editor's file is",
-    "  revealed (`reveal`: its folders opened, the file selected). The indent is the explorer's default (8 px), not the",
-    "  user's `workbench.tree.indent`.",
     "- **`tool:http-connections`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline",
-    "  `GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview). An endpoint →"
+    "  `GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview). An endpoint →",
+    "  `nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`, the others (`addSocket`, and",
+    "  `open` of a node's protocol badge, `WS`) → `HttpModel.runAction`.",
+    "- **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)",
+    "  and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).",
+    "- **`tool:builder`**: *+ New spec*, the Builder's specs by component and layer and its runs as an accordion",
+    "  (`builderSidebar()` of `tools/nuclear-builder/src/panel.ts`, drawn with `workbench.ts`'s `specTree` and `runOutline`",
+    "  inlined; `sidebarChanged` sends `builderSidebar` messages, the tree redrawn in place). A click is a",
+    "  `builder` message (`op`: `spec`, `run`, `node`, `new`) → `BuilderPanel.drive`, which opens the page and does it.",
+    "- **The other tools**: a line about the tool.",
+    "",
+    "Under every pane, the list of every tool's notices (below, *Badges and notifications*)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7855,7 +7914,7 @@
     "",
     "1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,",
     "   active); leaving the HTTP Connections tool keeps the keys of its open component panels (`model.reopen`);",
-    "2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`) and",
+    "2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`), the welcome (`nuclear.welcome`: an app added from it opens while the user goes on there) and",
     "   the unsaved editors, which stay open until saved;",
     "3. the devices are parked (`nuclear.parkDevices`), always before anything is reopened;",
     "4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for HTTP Connections,",
@@ -7900,7 +7959,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.8a87ee",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.99a23c",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The tools of the strip",
    "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
@@ -7910,7 +7969,9 @@
     "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |",
     "",
     "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool",
-    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`)."
+    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`). Nuclear Atlas's",
+    "column (`pane.kind: 'chat'`) is Nuclear Chat's own list of channels (`?part=sidebar`, `#chatcol`, `syncSide`),",
+    "mounted once and kept across the column's redraws."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -8817,7 +8878,7 @@
     "The Nuclear icon of the activity bar (`Ctrl+Alt+N`) opens one view, **Workspace**: a vertical strip of tabs and a",
     "pane beside it. Each tab is a workspace of its own, either a project or a tool. Switching tabs swaps the editor",
     "area: the editors of the tab you leave are saved and closed, and those of the tab you enter are opened again. An",
-    "unsaved editor stays open (you never get a save prompt), and the devices stay beside the code."
+    "unsaved editor stays open (you never get a save prompt), the devices stay beside the code, and the welcome page stays open (an app added from it opens, and you go on with the next one)."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/workspace.md"

@@ -1550,12 +1550,47 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.6265c3",
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.374fbc",
    "type": "adr",
    "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Decision",
-   "summary": "to the default external choice, the old file kept as `.bak`, and the user is told.",
+   "summary": "that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
    "body": [
-    "to the default external choice, the old file kept as `.bak`, and the user is told.",
+    "- **One switch, off**: `localModels: false` in Nuclear Builder's `setup.json` (shipped in its package). Every part",
+    "  that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through",
+    "  the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
+    "  The MCP server mirrors it in one constant, held to `setup.json` by a test.",
+    "- With the switch off nothing local is offered, installed, started or listed: the set-up has only the profile",
+    "  `remote` (the Smart Graph and the MCP server); the installers never install Ollama, a local model or the Developer;",
+    "  Nuclear Builder offers no Nuclear Developer; the MCP server registers no `developer_*` tool; the editors show no",
+    "  profile, Ollama step or Developer status.",
+    "- **Local AI is OpenCode on the user's Ollama** (decided 2026-11-23, while the Nuclear Developer improves): Nuclear",
+    "  Builder's kind `local` has one provider offered, `opencode-local`, OpenCode on the models Ollama has installed",
+    "  (`ollama/<tag>`, OpenCode finds them by itself), free, chosen in the pickers as a paid provider is. Choosing",
+    "  *Local* lists only them; OpenCode as an agent lists none of them. Nothing installs Ollama or pulls a model: both are",
+    "  the user's.",
+    "- **Nuclear Atlas** is answered by an external provider or agent the user picks, over the Smart Graph, as Nuclear"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.f89bae",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Decision",
+   "summary": "Chat's members are.",
+   "body": [
+    "Chat's members are.",
+    "- **Existing installations**: an update takes away everything local NuclearLang put there: the Developer's service,",
+    "  the models NuclearLang downloaded, and Ollama when NuclearLang installed it (what was on the machine before stays,",
+    "  ADR-installer-0005). A team member or a setting that named the local kind or a local model is converted on read",
+    "  to the default external choice, the old file kept as `.bak`, and the user is told.",
     "- **The Smart Graph is not touched**: it runs its own embeddings model (no Ollama, ADR-graph-0003), in the profile",
     "  `remote` as before.",
     "- The Nuclear code stays behind the switch (Nuclear Builder's set-up, engine and chat, the MCP server's",
@@ -1575,24 +1610,20 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.c6393e",
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.2d11b0",
    "type": "adr",
-   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Decision",
-   "summary": "that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — The contract (what the commands…",
+   "summary": "agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else none, and the command says a provider must be chosen (a converted…",
    "body": [
-    "- **One switch, off**: `localModels: false` in Nuclear Builder's `setup.json` (shipped in its package). Every part",
-    "  that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through",
-    "  the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
-    "  The MCP server mirrors it in one constant, held to `setup.json` by a test.",
-    "- With the switch off nothing local is offered, installed, started or listed: the set-up has only the profile",
-    "  `remote` (the Smart Graph and the MCP server); the installers never install Ollama, a local model or the Developer;",
-    "  Nuclear Builder has no `local` kind and no Ollama models in its pickers; the MCP server registers no `developer_*`",
-    "  tool; the editors show no local model, profile, Ollama step or Developer status.",
-    "- **Nuclear Atlas** is answered by an external provider or agent the user picks, over the Smart Graph, as Nuclear",
-    "  Chat's members are.",
-    "- **Existing installations**: an update takes away everything local NuclearLang put there: the Developer's service,",
-    "  the models NuclearLang downloaded, and Ollama when NuclearLang installed it (what was on the machine before stays,",
-    "  ADR-installer-0005). A team member or a setting that named the local kind or a local model is converted on read"
+    "agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else",
+    "  the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else",
+    "  none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that",
+    "  warning). A team's converted members are told as `warnings` (a list of texts): in the team of `team show`,",
+    "  in each entry of `team list`, in each shown team of `team screen` and at its top (every team's, as",
+    "  `<team name>: <warning>`); the team file is rewritten once, its old version kept as `<id>.json.bak`. `team create`",
+    "  and `team member add|update` refuse the provider `nuclear-developer`.",
+    "- `chat-host --json`: Atlas's `responder.choice` is the default external choice (`\"\"` with `responder.why` when there",
+    "  is none); its `choices` hold no local agent."
    ],
    "agents": false,
    "sources": [
@@ -1605,7 +1636,7 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.5be2fe",
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.494f07",
    "type": "adr",
    "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — The contract (what the commands…",
    "summary": "`remote` in `profiles`; `requirements.local` is the same list as `requirements.remote` (no Ollama).",
@@ -1619,35 +1650,9 @@
     "  writes `ai.env` as `remote`, and says the GB freed.",
     "- `setup --profile lite|medium|hard` (also `--events`) is refused: exit 2, \"on standby (ADR-platform-0013)\". The",
     "  installers ask nothing and always run `setup --profile remote --yes`.",
-    "- `agents --json`, `models --json` and `team screen` list no `local` kind and no Ollama model (`team screen` carries",
-    "  `\"localModels\": false`). `models --provider nuclear-developer` answers no models and a `why`.",
-    "- The default external choice (a member with no who-works, a converted one, the chat's general agent): the first",
-    "  agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else"
-   ],
-   "agents": false,
-   "sources": [
-    "docs/03-adr/0013-local-models-on-standby.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.af4b5e",
-   "type": "adr",
-   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — The contract (what the commands…",
-   "summary": "the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that warning).",
-   "body": [
-    "the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else",
-    "  none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that",
-    "  warning). A team's converted members are told as `warnings` (a list of texts): in the team of `team show`,",
-    "  in each entry of `team list`, in each shown team of `team screen` and at its top (every team's, as",
-    "  `<team name>: <warning>`); the team file is rewritten once, its old version kept as `<id>.json.bak`. `team create`",
-    "  and `team member add|update` refuse the kind `local`.",
-    "- `chat-host --json`: Atlas's `responder.choice` is the default external choice (`\"\"` with `responder.why` when there",
-    "  is none); its `choices` hold no local agent."
+    "- `agents --json`, `models --json` and `team screen` list no Nuclear Developer; the kind `local` is `opencode-local`",
+    "  only, its models Ollama's installed ones (`team screen` carries `\"localModels\": false`). `models --provider nuclear-developer` answers no models and a `why`.",
+    "- The default external choice (a member with no who-works, a converted one, the chat's general agent): the first"
    ],
    "agents": false,
    "sources": [
@@ -15217,7 +15222,13 @@
     "- Negative: a client of an existing service that read `detail` or `statusCode` must read `message` and `status`;",
     "  the documentation page of a `fastapi` app shows the contract's document, without the framework's extras.",
     "- Decided after (the user, 2026-11-22): a value of another JSON type is refused in every dialect, with the rule",
-    "  `type`; nothing converts (the backend's reference, §2.3)."
+    "  `type`; nothing converts (the backend's reference, §2.3).",
+    "- Decided after (the user, 2026-11-23: \"copia lo que haría springboot\"): what the database refuses for integrity",
+    "  is not \"what nothing handled\". It answers what Spring Data REST's `RepositoryRestExceptionHandler` answers for",
+    "  Spring's `DataIntegrityViolationException`, 409 Conflict, with this body and the fixed message `conflict`",
+    "  (Spring's body carries the database's message; ours never does): a repeated unique value, a foreign key that",
+    "  points at nothing, a row others point to, a null in a required column, a text longer than its column. Plain",
+    "  Spring Boot has no handler for that exception and answers 500 (the backend's reference, §2.4)."
    ],
    "agents": false,
    "sources": [
@@ -16269,11 +16280,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.01d72b",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.0ec9eb",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
-   "summary": "Decision",
-   "body": "**Where we knowingly differ from TypeORM:**",
+   "summary": "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept (`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was.",
+   "body": [
+    "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept",
+    "(`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was."
+   ],
    "platforms": [
     "backend"
    ],
@@ -16344,21 +16358,26 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.6cbf7e",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.5f0438",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
-   "summary": "files, a lock against two runs at once, a rename found by `make`, seeds, one migration made from many, a baseline other than `--fake`.",
+   "summary": "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
    "body": [
-    "| The list | `migration:show`: every migration of the source, `[X]` or `[ ]` | `nuclear migrate status` (the command keeps Nuclear's name and words): every migration of the folder, `applied` or `pending` |",
-    "| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT (CURRENT_TIMESTAMP)`; the app still writes them |",
-    "| The fraction of a date column on MySQL and MariaDB | `datetime(6)` for the date columns it gives a fraction (`createDatePrecision`, `updateDatePrecision`: 6 in `MysqlDriver`); a plain date column has none (`datetime`, precision 0) | `DATETIME(6)` for every `DateTime` column, the timestamps too (the user, 2026-11-22: a `DateTime` keeps its fraction); SQLite names it the same |",
-    "| A foreign key without a rule | `ON DELETE NO ACTION ON UPDATE NO ACTION` | the same; `onDelete` of the relation is the only rule written |",
-    "| The names of the types on SQLite | `boolean`, `double` | `BOOLEAN`, `DOUBLE` |",
-    "| A constraint that goes | by the name it has in the database, which TypeORM reads there | found in the database by its column when its name is not the expected one |",
+    "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a",
+    "   `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
+    "   On SQLite and MySQL that clock gives whole seconds.",
+    "6. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the",
+    "   database's error.",
     "",
-    "**What we do not have because TypeORM does not**, as a decision and not as pending work: a checksum of the applied",
-    "files, a lock against two runs at once, a rename found by `make`, seeds, one migration made from many, a baseline",
-    "other than `--fake`."
+    "7. *A rename is an option of `make`* (the user, 2026-11-23): `nuclear migrate make \"<message>\" --rename",
+    "   <table>=<new table>` and `--rename <table>.<column>=<new column>` write a rename that keeps the rows, with its",
+    "   way back. TypeORM's `migration:generate` writes a drop and an add, and its user edits the file; here that edit",
+    "   would be made in the migration language of each dialect, so the same Nuclear project would be edited in two",
+    "   target languages. `make` finds no rename by itself (as TypeORM): without the option it writes the drop and the",
+    "   add, and warns with the option to use. It refuses a rename whose old name the migrations do not have or the",
+    "   entities still have, and one whose new name the entities do not have or the migrations already have. The unique",
+    "   and the foreign key of a renamed column keep the name they had (a constraint is found by its column when it",
+    "   goes: the table above)."
    ],
    "platforms": [
     "backend"
@@ -16407,19 +16426,42 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.bbb691",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.a825b4",
    "type": "adr",
    "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
-   "summary": "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
+   "summary": "files, a lock against two runs at once, a rename found by `make` (it is told one: difference 7), seeds, one migration made from many, a baseline other than `--fake`.",
    "body": [
-    "`CURRENT_TIMESTAMP(6)` is not SQLite's, and MySQL refuses a plain `CURRENT_TIMESTAMP` as the default of a",
-    "   `DATETIME(6)`; in parentheses the four databases take it, so the migration file stays the same for all of them.",
-    "   On SQLite and MySQL that clock gives whole seconds.",
-    "6. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the",
-    "   database's error.",
+    "**What we do not have because TypeORM does not**, as a decision and not as pending work: a checksum of the applied",
+    "files, a lock against two runs at once, a rename found by `make` (it is told one: difference 7), seeds, one",
+    "migration made from many, a baseline other than `--fake`.",
     "",
-    "A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept",
-    "(`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was."
+    "**Where we knowingly differ from TypeORM:**"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0002-typeorm-is-the-rule-of-migrations.md#decision.b0395f",
+   "type": "adr",
+   "title": "ADR-0002: TypeORM is the rule of behaviour for migrations — Decision",
+   "summary": "Decision",
+   "body": [
+    "| The list | `migration:show`: every migration of the source, `[X]` or `[ ]` | `nuclear migrate status` (the command keeps Nuclear's name and words): every migration of the folder, `applied` or `pending` |",
+    "| `@created`, `@updated` | `NOT NULL` with the database's clock as default | the same: `NOT NULL DEFAULT (CURRENT_TIMESTAMP)`; the app still writes them |",
+    "| The fraction of a date column on MySQL and MariaDB | `datetime(6)` for the date columns it gives a fraction (`createDatePrecision`, `updateDatePrecision`: 6 in `MysqlDriver`); a plain date column has none (`datetime`, precision 0) | `DATETIME(6)` for every `DateTime` column, the timestamps too (the user, 2026-11-22: a `DateTime` keeps its fraction); SQLite names it the same |",
+    "| A foreign key without a rule | `ON DELETE NO ACTION ON UPDATE NO ACTION` | the same; `onDelete` of the relation is the only rule written |",
+    "| The names of the types on SQLite | `boolean`, `double` | `BOOLEAN`, `DOUBLE` |",
+    "| A constraint that goes | by the name it has in the database, which TypeORM reads there | found in the database by its column when its name is not the expected one |"
    ],
    "platforms": [
     "backend"
@@ -16653,10 +16695,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md#2-features-f2-migrations",
    "type": "spec",
    "title": "004 — Backend parity: what a real API needs that the backend platform lacks — F2 — Migrations",
-   "summary": "DONE 2026-11-10: the delivered form is ADR-backend-0001, migrations (`migrations/` kept with the sources, not `build/`; nestjs without umzug).",
+   "summary": "DONE 2026-11-10: the delivered form is ADR-backend-0001, migrations (`migrations/` kept with the sources, not `build/`; nestjs without umzug); its behaviour is TypeORM's since 0.93 (ADR-backend-0002); a rename is an option of `make` since 2026-11-23 (§4b).",
    "body": [
     "DONE 2026-11-10: the delivered form is ADR-backend-0001, migrations (`migrations/` kept with the sources, not `build/`; nestjs",
-    "without umzug). The example below is the first idea.",
+    "without umzug); its behaviour is TypeORM's since 0.93 (ADR-backend-0002); a rename is an option of `make` since",
+    "2026-11-23 (§4b). The example below is the first idea.",
     "",
     "Today `createTables = true` creates tables at start (development only). A real database changes by migrations:",
     "",
@@ -16988,6 +17031,81 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md#4b-decided-by-the-user-2026-11-23.150ed2",
+   "type": "spec",
+   "title": "004 — Backend parity: what a real API needs that the backend platform lacks — 4b. Decided by the user (2026-11-23)",
+   "summary": "4b.",
+   "body": [
+    "| Decision | Delivered | Proven by |",
+    "|---|---|---|",
+    "| **What the database refuses for integrity answers as Spring does** (\"copia lo que haría springboot\"): Spring Data REST's `RepositoryRestExceptionHandler` answers `DataIntegrityViolationException` with 409 Conflict (plain Spring Boot has no handler for it: 500) | 409 with the one error body and the fixed message `conflict`, for a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column and a text longer than its column; `@transactional` rolls back (reference §2.4) | `test_data.py`, `data.test.ts` (the same cases); `scenario.py`: the coupons of `store_api`, and 16 requests at once for one email (one 201, fifteen 409) |",
+    "| **A long text is `@column(length = n)`: no new word**; other options may be added inside `@column` when needed | one rule of the column's type per database (`VARCHAR(n)`, then `MEDIUMTEXT` / `LONGTEXT` / `TEXT`), written once in each runtime (`text_type`, `textType`); a text longer than `n` characters is refused before the write, 409 (reference §2.1); a changed length is a migration | `test_migrate.py`, `migrate.test.ts` (the rule as a table, the migration both ways); `migrations.py` step 13, `tables.py` |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md#4b-decided-by-the-user-2026-11-23.4a174f",
+   "type": "spec",
+   "title": "004 — Backend parity: what a real API needs that the backend platform lacks — 4b. Decided by the user (2026-11-23)",
+   "summary": "Three questions the database check left open (the roadmap's \"To decide with the user\"), each delivered in both dialects on SQLite, PostgreSQL, MySQL and MariaDB:",
+   "body": [
+    "Three questions the database check left open (the roadmap's \"To decide with the user\"), each delivered in both",
+    "dialects on SQLite, PostgreSQL, MySQL and MariaDB:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md#4b-decided-by-the-user-2026-11-23.e2bd24",
+   "type": "spec",
+   "title": "004 — Backend parity: what a real API needs that the backend platform lacks — 4b. Decided by the user (2026-11-23)",
+   "summary": "Tasks:",
+   "body": [
+    "| **A rename in a migration is an option of the command** | `nuclear migrate make \"<message>\" --rename <table>=<new table>` / `--rename <table>.<column>=<new column>`, the MCP tool `project_migrate` (`rename`); refused with the same words when a name is not there (reference §2.8; ADR-backend-0002, difference 7) | `test_migrate.py`, `migrate.test.ts`, the CLI's `migrate_reads_its_words`, `test_work.nuc`; `migrations.py` step 6 |",
+    "",
+    "Tasks:",
+    "",
+    "- [x] Spring's facts read from its sources (spring-data-rest 4.4.0, spring-framework 6.2.0, spring-boot 3.4.0).",
+    "- [x] Both runtimes, their tests with the same cases, the CLI, the MCP tool.",
+    "- [x] `store_api` gets coupons (use cases that check nothing) so the database check reaches each refusal over HTTP.",
+    "- [x] The reference, the brief, each dialect's reference and guide, the testing standard, ADR-backend-0002.",
+    "- [ ] What is left is in the [roadmap](../../01-product/roadmap.md) (Pending: the limits of a long text and of a rename)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/004-backend-parity/plan.md#5-decisions-still-pending-for-the-user",
    "type": "spec",
    "title": "004 — Backend parity: what a real API needs that the backend platform lacks — 5. Decisions still pending for the user",
@@ -17022,7 +17140,7 @@
     "",
     "| Spec | What | Status |",
     "|---|---|---|",
-    "| [004-backend-parity](004-backend-parity/plan.md) | What a real API needs that the platform lacked: relations, migrations, transactions, pagination, authentication and guards, scheduled work, uploads, deploy and operations, the command at parity with mobile | in-progress: F1–F4 done ([ADR-backend-0001](../03-adr/0001-backend-data.md)); F5–F9 left (F9 belongs to the command line tools); one decision open for the user (§5) |"
+    "| [004-backend-parity](004-backend-parity/plan.md) | What a real API needs that the platform lacked: relations, migrations, transactions, pagination, authentication and guards, scheduled work, uploads, deploy and operations, the command at parity with mobile | in-progress: F1–F4 done ([ADR-backend-0001](../03-adr/0001-backend-data.md)); the three decisions of 2026-11-23 delivered (§4b: the 409 of the database, a long text, `migrate make --rename`); F5–F9 left (F9 belongs to the command line tools); one decision open for the user (§5) |"
    ],
    "platforms": [
     "backend"

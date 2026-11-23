@@ -316,6 +316,36 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-atlas/docs/02-architecture/overview.md#the-page-src-panel-ts.575226",
+   "type": "context",
+   "title": "Architecture of Nuclear Atlas — The page (`src/panel.ts`)",
+   "summary": "and no project it opens on `AtlasPanel.fallback` (the welcome's folder); the prompts to start from are shown only on a project.",
+   "body": [
+    "and no project it opens on `AtlasPanel.fallback` (the welcome's folder); the prompts to start from are shown only on",
+    "  a project.",
+    "- Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`",
+    "  to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down",
+    "  is said on the page with how to fix it.",
+    "- The channels in the workspace's column: while Atlas is the open tool and the column is seen (`AtlasPanel.split`),",
+    "  the column mounts the chat's `?part=sidebar` on the page's folder and channel (`AtlasPanel.target`) and the page",
+    "  only `?part=channel`. Each side tells the host the channel it marks read (`readChannelOf` of a frame,",
+    "  `wireChat`'s `onRead`): one opened in the column opens in the page (`AtlasPanel.show`), one the page moves to",
+    "  (a link, Ctrl+K, a notification) remounts the column on it (`AtlasPanel.moved`). The column hidden, the page",
+    "  shows the whole chat again.",
+    "- The last conversation of each folder: every channel the page opens is kept in the window's state",
+    "  (`nuclear.atlas.channels`, `withLast` of `src/chat.ts`); a new page, or another folder chosen, opens there",
+    "  (`lastChannel`, else `dm-atlas`), unless it was opened on a channel (a notification, the Builder, the welcome's"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-atlas/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-atlas/docs/02-architecture/overview.md#the-page-src-panel-ts.60b1c0",
    "type": "context",
    "title": "Architecture of Nuclear Atlas — The page (`src/panel.ts`)",
@@ -344,17 +374,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-atlas/docs/02-architecture/overview.md#the-page-src-panel-ts.e201f0",
+   "id": "doc:extensions/tools/nuclear-atlas/docs/02-architecture/overview.md#the-page-src-panel-ts.af31c5",
    "type": "context",
    "title": "Architecture of Nuclear Atlas — The page (`src/panel.ts`)",
-   "summary": "and no project it opens on `AtlasPanel.fallback` (the welcome's folder); the prompts to start from are shown only on a project.",
-   "body": [
-    "and no project it opens on `AtlasPanel.fallback` (the welcome's folder); the prompts to start from are shown only on",
-    "  a project.",
-    "- Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`",
-    "  to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down",
-    "  is said on the page with how to fix it."
-   ],
+   "summary": "chat).",
+   "body": "chat). A conversation deleted is forgotten (`withoutChannel`, on its `channels` event).",
    "sources": [
     "extensions/tools/nuclear-atlas/docs/02-architecture/overview.md"
    ],
@@ -372,7 +396,9 @@
    "body": [
     "Atlas informs: it explains Nuclear and your project from the knowledge base. For work (code, specs, a project) it",
     "sends you to a team's tech lead, says which teams are free, and helps you make one when there is none; the page's",
-    "hint says so. Nuclear Chat lists Atlas and each team's tech lead.",
+    "hint says so. Nuclear Chat lists Atlas and each team's tech lead. Its channels and direct messages are in the",
+    "workspace's column, beside the page: a click opens that conversation in the page. Atlas reopens on the conversation",
+    "you were in last in that folder, also after VS Code restarts.",
     "",
     "Write in the chat and press Enter (Shift+Enter is a new line). Atlas answers there. It is the same conversation as",
     "*Atlas* in the Builder's chat, and it stays in the project (`.nuclear/chat/`)."
@@ -566,9 +592,10 @@
     "provider and model, the shell, you). It is a tool of the Nuclear workspace in VS Code",
     "(`Ctrl+Alt+P`), a tool window in Android Studio / IntelliJ (`Alt+Shift+P`) and the `nuclear-builder` command in a",
     "terminal or a CI job. It needs the Smart Graph and Nuclear Chat running. The local models (the Nuclear Developer,",
-    "Ollama, the profiles lite, medium and hard, the `local` kind) are on standby (ADR-platform-0013): the switch",
+    "Ollama's set-up, the profiles lite, medium and hard) are on standby (ADR-platform-0013): the switch",
     "`\"localModels\": false` of `setup.json` (`localModels()`), read everywhere one is run or offered; their code stays,",
-    "dormant, and turning it on again needs its own tests."
+    "dormant, and turning it on again needs its own tests. The `local` kind is OpenCode on Ollama's models",
+    "(`opencode-local`, providers.md)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -1345,6 +1372,26 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-actions-every-button-is-a-command-and-a-tool.06c72b",
+   "type": "context",
+   "title": "The actions: every button is a command and a tool",
+   "summary": "apps': `spec_new` takes `app` (refused without one, with the apps), every tool of a spec or a run by its id works in the app that holds it (`homeOf`), `spec_list` and `runs` say each one's `app`, and a spec at the workspace's root is never run there (a workspace is no project).",
+   "body": [
+    "**In a workspace** (the tools of a workspace's own channel, `.workspace/workspace.nuc`) the specs and runs are its",
+    "apps': `spec_new` takes `app` (refused without one, with the apps), every tool of a spec or a run by its id works in",
+    "the app that holds it (`homeOf`), `spec_list` and `runs` say each one's `app`, and a spec at the workspace's root is",
+    "never run there (a workspace is no project)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/actions.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-actions-every-button-is-a-command-and-a-tool.b11ede",
    "type": "context",
    "title": "The actions: every button is a command and a tool",
@@ -1562,7 +1609,7 @@
    "body": [
     "| Action (page) | Command | Tool | Who |",
     "|---|---|---|---|",
-    "| New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them) | anyone |",
+    "| New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them; in a workspace `app` too, the app the spec is for) | anyone |",
     "| The specs' tree | `spec list --json` | `spec_list` | anyone |",
     "| Open a spec | `spec show <id> --json` | `spec_show` | anyone |",
     "| Replace a spec's text (its whole markdown; the Nuclear MCP server's `spec_edit`, the user's yes asked there) | `spec update <id> --stdin` | `spec_update` | user |",
@@ -1785,6 +1832,34 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.681d8f",
+   "type": "context",
+   "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
+   "summary": "saved team, the one assigned to the folder first, engine.md \"The team\"; none when none is saved: the local team a run takes is never a member of the chat, nobody could change it): every member, any number per role, as `<team>-<member id>` with their face, temperament, personality, responder and…",
+   "body": [
+    "- `nuclear-builder chat-host --json [--root] [--lang]`: the host file of a project or a workspace (spec 023: every",
+    "  saved team, the one assigned to the folder first, [engine.md](engine.md) \"The team\"; none when none is saved: the",
+    "  local team a run takes is never a member of the chat, nobody could change it): every member, any number per role, as",
+    "  `<team>-<member id>` with their face, temperament, personality, responder and brain, who works them: `{agent, kind,",
+    "  provider, model, paid}`, their profile's `card` (`memberCard`: `{editable, temperament, temperaments: [{id, name}],",
+    "  skills (titles), instructions}`, editable for a saved team's member; the chat's profile changes them through the",
+    "  host: `team member update`), and `listed`: true only for each team's tech lead (the one it names, else its Architect,",
+    "  else its first member) and `atlas`; the teams with their tech lead, who answers a message to the team; `@<role>`",
+    "  reaches the role's first member as listed; the channels `home` (the folder's own, named after the workspace or the",
+    "  project: its member is the tech lead of the team assigned to the folder or to its workspace, and its `team` that",
+    "  team's id, by which Nuclear Chat's routing finds who answers there; empty when none is), `general` (its",
+    "  members: the listed ones but Atlas) and each team's (its members: its tech lead); `assigned`: the team assigned"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.772e91",
    "type": "context",
    "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
@@ -1927,33 +2002,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.fcf3eb",
-   "type": "context",
-   "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
-   "summary": "saved team, the one assigned to the folder first, engine.md \"The team\"; none when none is saved: the local team a run takes is never a member of the chat, nobody could change it): every member, any number per role, as `<team>-<member id>` with their face, temperament, personality, responder and…",
-   "body": [
-    "- `nuclear-builder chat-host --json [--root] [--lang]`: the host file of a project or a workspace (spec 023: every",
-    "  saved team, the one assigned to the folder first, [engine.md](engine.md) \"The team\"; none when none is saved: the",
-    "  local team a run takes is never a member of the chat, nobody could change it): every member, any number per role, as",
-    "  `<team>-<member id>` with their face, temperament, personality, responder and brain, who works them: `{agent, kind,",
-    "  provider, model, paid}`, their profile's `card` (`memberCard`: `{editable, temperament, temperaments: [{id, name}],",
-    "  skills (titles), instructions}`, editable for a saved team's member; the chat's profile changes them through the",
-    "  host: `team member update`), and `listed`: true only for each team's tech lead (the one it names, else its Architect,",
-    "  else its first member) and `atlas`; the teams with their tech lead, who answers a message to the team; `@<role>`",
-    "  reaches the role's first member as listed; the channels `home` (the folder's own, named after the workspace or the",
-    "  project: its member is the tech lead of the team assigned to the folder or to its workspace), `general` (its",
-    "  members: the listed ones but Atlas) and each team's (its members: its tech lead); `assigned`: the team assigned"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-extension-does-vscode-src-chathost-ts-chatview-ts-src-panel-ts.27db27",
    "type": "context",
    "title": "The Builder in Nuclear Chat — What the extension does (`vscode/src/chatHost.ts`, `chatView.ts`; `src/panel.ts`)",
@@ -1979,7 +2027,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-extension-does-vscode-src-chathost-ts-chatview-ts-src-panel-ts.6fb847",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-extension-does-vscode-src-chathost-ts-chatview-ts-src-panel-ts.40e8e0",
    "type": "context",
    "title": "The Builder in Nuclear Chat — What the extension does (`vscode/src/chatHost.ts`, `chatView.ts`; `src/panel.ts`)",
    "summary": "tab stays the command *Nuclear Chat: Open the Chat*.",
@@ -1988,7 +2036,8 @@
     "- **A run is a thread** of its team's channel (`followRun`, from `driveRun`; a run another process drives, `run",
     "  --detach` from an agent's `run_start`, the chat's tech lead or a terminal, is followed by its file: `FileRun`,",
     "  `followDetachedRuns` over the workspace's projects at the start, each new run file of `.nuclear/builder/runs/`",
-    "  picked up as it appears; two windows open on one project both tell it): the tech lead starts it (`run:<id>`,",
+    "  picked up as it appears, then shown by the open page, `BuilderPanel.follow`, with a notice; two windows open on one",
+    "  project both tell it): the tech lead starts it (`run:<id>`,",
     "  found again by the chat's search when the run goes on), each station that starts, passes or fails is posted by the",
     "  member of its role in one line, a passed or failed one with its log folded (`details`, `stationDetails`: each",
     "  step's line with the files it wrote, then the failed step's log; its last 4,000 characters), a failure with",
@@ -2836,35 +2885,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.07a831",
-   "type": "context",
-   "title": "Architecture of Nuclear Builder — The page (`panel.ts`): the workbench",
-   "summary": "the project's `\"team\"` / `nuclear.builder.team` / the default chosen first; its members with their funny names, avatars and who does each one's work, paid providers in amber; *Team…* opens the company screen, command `nuclear.builder.teams`; *Budget* the Spending section of *Settings and…",
-   "body": [
-    "the project's `\"team\"` / `nuclear.builder.team` / the default chosen first; its members with their funny names, avatars",
-    "  and who does each one's work, paid providers in amber; *Team…* opens the company screen, command",
-    "  `nuclear.builder.teams`; *Budget* the Spending section of *Settings and integrations*), with an optional preview of",
-    "  the plan by the local planner. *Save the spec* writes it; *Start the run* writes it and runs `nuclear-builder run",
-    "  <its folder>/spec.md --team <id> --events`.",
-    "- **What a station asks** (the run file's `waiting`, set by the engine before it asks): a gate shows the question, the",
-    "  documents to read and *Approve* / *Ask for a change* (with its text) / *Later*; QA's plan opens the checks and *Go on*",
-    "  waits until every check of the user's that is on is marked; the spending is answered by the editor's two modal",
-    "  questions (`vscode/src/spending.ts`, the second with the amount and the providers). The answer goes to the run's",
-    "  process; a run that ended waiting (exit 3: *Later*, an editor closed) is resumed with `run --resume <id>` and the same",
-    "  answer is given when it asks again (`answerRun`).",
-    "- **The checks' console** (the drawer of the run): every check of the run, the user's waiting to be marked first, each",
-    "  with its station, who runs it (the employee, or you), its state and its note; a switch per check"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.258912",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The page (`panel.ts`): the workbench",
@@ -2922,12 +2942,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.7c73a8",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.9690f8",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The page (`panel.ts`): the workbench",
-   "summary": "(`checks <id> on|off`), *Done* / *Failed* on the user's (`checks <id> mark`), and *Add a check* with a title, a station and a prompt (`checks <id> add --by user`).",
+   "summary": "with its station, who runs it (the employee, or you), its state and its note; a switch per check (`checks <id> on|off`), *Done* / *Failed* on the user's (`checks <id> mark`), and *Add a check* with a title, a station and a prompt (`checks <id> add --by user`).",
    "body": [
-    "(`checks <id> on|off`), *Done* / *Failed* on the user's (`checks <id> mark`), and *Add a check* with a title, a",
+    "- **The checks' console** (the drawer of the run): every check of the run, the user's waiting to be marked first, each",
+    "  with its station, who runs it (the employee, or you), its state and its note; a switch per check",
+    "  (`checks <id> on|off`), *Done* / *Failed* on the user's (`checks <id> mark`), and *Add a check* with a title, a",
     "  station and a prompt (`checks <id> add --by user`).",
     "- **The money**: `spendingFlags` gives the engine `--confirm-spending` when `nuclear.spending.confirm` is off (and",
     "  nothing forces it) and `--force-confirm` when `nuclear.spending.forceConfirm` is on; the project's `\"forceConfirm\"`",
@@ -2938,9 +2960,7 @@
     "  questions buttons that answer it, a spec's thread (*Polish in Nuclear Atlas* on a spec) shows a member's draft as a",
     "  difference to accept. A click on a member, on the team or on *Ask Nuclear Atlas* opens Nuclear Atlas on that",
     "  conversation (`atlas` → `nuclear.atlas.open`).",
-    "- The messages of the webview: `start`, `saveSpec`, `runSpec`, `specs`, `atlas`, `polish`, `answer`, `resume`, `retry`",
-    "  (`station`, `scratch`), `stop`, `context` (who works each role: the run's stations, its steps' employees, its team,",
-    "  the roster), `checks`, `check`, `team`, `teams`; to the page, `specs` and `selectSpec` besides the run's."
+    "- The messages of the webview: `start`, `saveSpec`, `runSpec`, `specs`, `atlas`, `polish`, `answer`, `resume`, `retry`"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -2965,6 +2985,53 @@
     "and the member's name (the team file's `name`, else the roster's employee); what the role does only as a tooltip.",
     "The Smart Graph and the shell appear only in a step they took part in (the diagram's context draws the graph only",
     "when a step of its own or a local agent's ran)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.d0392b",
+   "type": "context",
+   "title": "Architecture of Nuclear Builder — The page (`panel.ts`): the workbench",
+   "summary": "(`station`, `scratch`), `stop`, `context` (who works each role: the run's stations, its steps' employees, its team, the roster), `checks`, `check`, `team`, `teams`; to the page, `specs` and `selectSpec` besides the run's.",
+   "body": [
+    "(`station`, `scratch`), `stop`, `context` (who works each role: the run's stations, its steps' employees, its team,",
+    "  the roster), `checks`, `check`, `team`, `teams`; to the page, `specs` and `selectSpec` besides the run's."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-page-panel-ts-the-workbench.ec5574",
+   "type": "context",
+   "title": "Architecture of Nuclear Builder — The page (`panel.ts`): the workbench",
+   "summary": "the project's `\"team\"` / `nuclear.builder.team` / the default chosen first; its members with their funny names, avatars and who does each one's work, paid providers in amber; *Team…* opens the company screen, command `nuclear.builder.teams`; *Budget* the Spending section of *Settings and…",
+   "body": [
+    "the project's `\"team\"` / `nuclear.builder.team` / the default chosen first; its members with their funny names, avatars",
+    "  and who does each one's work, paid providers in amber; *Team…* opens the company screen, command",
+    "  `nuclear.builder.teams`; *Budget* the Spending section of *Settings and integrations*), with an optional preview of",
+    "  the plan by the local planner. *Save the spec* writes it; *Start the run* writes it and runs `nuclear-builder run",
+    "  <its folder>/spec.md --team <id> --events`.",
+    "- **What a station asks** (the run file's `waiting`, set by the engine before it asks; its question reaches the page in",
+    "  the user's language, `askText`, as its notification and the chat say it): drawn apart from the node below it, so a",
+    "  time that moves in the node never draws the card again (its buttons stay still and a click is never lost). A gate shows the question, the",
+    "  documents to read and *Approve* / *Ask for a change* (with its text) / *Later*; QA's plan opens the checks and *Go on*",
+    "  waits until every check of the user's that is on is marked; the spending is answered by the editor's two modal",
+    "  questions (`vscode/src/spending.ts`, the second with the amount and the providers). The answer goes to the run's",
+    "  process; a run that ended waiting (exit 3: *Later*, an editor closed) is resumed with `run --resume <id>` and the same",
+    "  answer is given when it asks again (`answerRun`)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -3148,16 +3215,17 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.1b1235",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.0df5fa",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
    "summary": "Who does a role",
    "body": [
-    "| Kind | Provider | File | How | The role becomes | The cost |",
-    "|---|---|---|---|---|---|",
-    "| `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |",
-    "| `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |",
-    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`) | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |"
+    "| `agent` | `cursor` | `adapter_cursor.nuc` | `agent -p --output-format stream-json --force --approve-mcps --trust --workspace <root> --plugin-dir <plugin> [--model] <prompt>` (`cursor-agent` when `agent` is not Cursor's), the MCP servers in the plugin's `mcp.json` | the role's text at the head of the prompt (shell denied by the plugin's hook) | 0 (tokens not reported) |",
+    "| `agent` | `grok` | `adapter_grok.nuc` | `grok --no-auto-update -p <prompt> --output-format streaming-json --always-approve --cwd <root> --rules <role> [-m]`, `GROK_HOME` in the temporary folder | `--rules`, added to the system prompt (shell denied in the run's `config.toml`) | 0 (tokens not reported) |",
+    "| `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |",
+    "| `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |",
+    "| `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |",
+    "| `api` | `openrouter` | `api_openrouter.nuc` | Chat Completions at OpenRouter with `usage.include` | as OpenAI | what OpenRouter reports |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3186,26 +3254,6 @@
     "  5.5, `qwen2.5-coder:3b` → qwen2.5-coder 3b, `gemini-2.5-pro` → gemini 2.5 pro), `alias` for an alias, whose",
     "  version is `latest`. Claude Code lists each alias followed by every version of its family it accepts, the newest",
     "  first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.2441f3",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "Who does a role",
-   "body": [
-    "| `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |",
-    "| `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |",
-    "| `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |",
-    "| `api` | `openrouter` | `api_openrouter.nuc` | Chat Completions at OpenRouter with `usage.include` | as OpenAI | what OpenRouter reports |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3349,13 +3397,16 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.94f5e6",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.666a1e",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "The kind `local` is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers it, and a member of it is converted on read (teams-and-vault.md); its adapter stays, dormant.",
+   "summary": "Who does a role",
    "body": [
-    "The kind `local` is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers it,",
-    "and a member of it is converted on read (teams-and-vault.md); its adapter stays, dormant."
+    "| Kind | Provider | File | How | The role becomes | The cost |",
+    "|---|---|---|---|---|---|",
+    "| `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |",
+    "| `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |",
+    "| `local` | `opencode-local` | `adapter_opencode.nuc` (`localOpenCodeAdapter`) | OpenCode's, below, with `--model ollama/<tag>` | as OpenCode's | 0 |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3367,15 +3418,37 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.d49056",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.923305",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory (`openCodeLocalModels`); OpenCode as an agent never lists them.",
+   "body": [
+    "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as",
+    "OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory",
+    "(`openCodeLocalModels`); OpenCode as an agent never lists them. A member with no model takes the first Ollama has,",
+    "never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. The local Nuclear Developer",
+    "(`nuclear-developer`) is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers",
+    "it, a member of it is converted on read (teams-and-vault.md), and its adapter stays, dormant; what the factory does",
+    "only for it (its routes, the lead after it, no repair, no check by prompt) asks `onDeveloper`, never the kind."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.e4cb85",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
    "summary": "Who does a role",
    "body": [
+    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`) | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |",
     "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
-    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |",
-    "| `agent` | `cursor` | `adapter_cursor.nuc` | `agent -p --output-format stream-json --force --approve-mcps --trust --workspace <root> --plugin-dir <plugin> [--model] <prompt>` (`cursor-agent` when `agent` is not Cursor's), the MCP servers in the plugin's `mcp.json` | the role's text at the head of the prompt (shell denied by the plugin's hook) | 0 (tokens not reported) |",
-    "| `agent` | `grok` | `adapter_grok.nuc` | `grok --no-auto-update -p <prompt> --output-format streaming-json --always-approve --cwd <root> --rules <role> [-m]`, `GROK_HOME` in the temporary folder | `--rules`, added to the system prompt (shell denied in the run's `config.toml`) | 0 (tokens not reported) |"
+    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3719,26 +3792,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.221825",
-   "type": "context",
-   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
-   "summary": "`.nuclear/builder.json` `\"team\"`, else the default team, else the only saved team; null with no saved team; a `TeamChoice` with several and none chosen (engine.md \"The team\").",
-   "body": [
-    "- The default team: `factory/settings.json` `{ \"defaultTeam\": \"<id>\" }`; the first team saved becomes it.",
-    "- `runTeam(root, asked)`: the team asked for (the editor's `nuclear.builder.team`), else the project's",
-    "  `.nuclear/builder.json` `\"team\"`, else the default team, else the only saved team; null with no saved team; a",
-    "  `TeamChoice` with several and none chosen (engine.md \"The team\"). Who works each station of a run: engine.md."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.3972db",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
@@ -3756,6 +3809,35 @@
     "  (`validMember`): a known `role`; a `kind` of `local | agent | api` and a provider of that kind (`PROVIDERS`); texts",
     "  for `id`, `model`, `employee`, `instructions`, `name`; an employee that is in the role's roster when there is one;",
     "  `skills` texts (its role's switched on and library ids), `ownSkills`, `agent` (a library agent: `libraryAgent`),"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.55ff43",
+   "type": "context",
+   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
+   "summary": "`team member add|update` refuse the provider `nuclear-developer` (`whyKey` `standby`); the local kind's `opencode-local` is never converted.",
+   "body": [
+    "`team member add|update` refuse the provider `nuclear-developer` (`whyKey` `standby`); the local kind's",
+    "  `opencode-local` is never converted.",
+    "- Who works a member is an agent this machine has (`workableHere`, `chat_agents.nuc`, the rules of `agents --json`:",
+    "  `whyNotHere`; an agent that cannot gives `why` in English and `whyKey`, `whyArgs` (`notOnPath`, `noKey`, `noPrice`,",
+    "  `noAnswer`), which the screens say in their language): an agent's command on the tools' PATH, an API provider whose key the vault notes and that has a",
+    "  priced model; the local Nuclear Developer only while the local models are on. `team create`, `team member add` and `team member update` (a",
+    "  new kind or provider), and their tools, refuse one that is not, with why; a plain save does not check it, so a team",
+    "  made on another machine still opens.",
+    "- `localTeam()`: a run's team when there is none at all: one member per role worked by `defaultWorker` (id the role, the first employee",
+    "  of its roster), id `local-team`, never saved; a retried run of it gets it again.",
+    "- The logo (`setLogo`): `team logo <id> <image>` checks the image by its extension (`.png`, `.svg`, `.jpg` or",
+    "  `.jpeg`), its size (1 MB at most, `LOGO_MAX_BYTES`) and its first bytes (PNG's and JPEG's signatures; an SVG holds",
+    "  `<svg`), copies it atomically beside the team as `<id>.logo.<kind>`, names it in the team and removes a logo of"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -3825,23 +3907,43 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.69e26d",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.702666",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
-   "summary": "`whyNotHere`; an agent that cannot gives `why` in English and `whyKey`, `whyArgs` (`notOnPath`, `noKey`, `noPrice`, `noAnswer`), which the screens say in their language): an agent's command on the tools' PATH, an API provider whose key the vault notes and that has a priced model; the local Nuclear…",
+   "summary": "while the local models are on standby (ADR-platform-0013), the default external choice (`externalWorker`: the first agent whose command is on the PATH, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API provider whose key the vault notes and that has a priced model,…",
    "body": [
-    "- Who works a member is an agent this machine has (`workableHere`, `chat_agents.nuc`, the rules of `agents --json`:",
-    "  `whyNotHere`; an agent that cannot gives `why` in English and `whyKey`, `whyArgs` (`notOnPath`, `noKey`, `noPrice`,",
-    "  `noAnswer`), which the screens say in their language): an agent's command on the tools' PATH, an API provider whose key the vault notes and that has a",
-    "  priced model; the local Nuclear Developer only while the local models are on. `team create`, `team member add` and `team member update` (a",
-    "  new kind or provider), and their tools, refuse one that is not, with why; a plain save does not check it, so a team",
-    "  made on another machine still opens.",
-    "- `localTeam()`: a run's team when there is none at all: one member per role worked by `defaultWorker` (id the role, the first employee",
-    "  of its roster), id `local-team`, never saved; a retried run of it gets it again.",
-    "- The logo (`setLogo`): `team logo <id> <image>` checks the image by its extension (`.png`, `.svg`, `.jpg` or",
-    "  `.jpeg`), its size (1 MB at most, `LOGO_MAX_BYTES`) and its first bytes (PNG's and JPEG's signatures; an SVG holds",
-    "  `<svg`), copies it atomically beside the team as `<id>.logo.<kind>`, names it in the team and removes a logo of",
-    "  another kind; `--clear` removes it. `team import` drops the logo (the image is not in the file)."
+    "while the local models are on standby (ADR-platform-0013), the default external choice (`externalWorker`: the first",
+    "  agent whose command is on the PATH, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API",
+    "  provider whose key the vault notes and that has a priced model, with its default model; else Claude Code, the user",
+    "  to choose); with them on, the local Nuclear Developer with the profile's `CODER_MODEL` for a developer and",
+    "  `ASSISTANT_MODEL` for the rest (`localWorker`); every skill of its role on; a free id.",
+    "- **A local member on standby** (ADR-platform-0013): a member of the local Nuclear Developer (`onDeveloper`: kind",
+    "  `local` with no other provider, or none, which meant it) or of the provider `nuclear-developer`, the tech lead too, is worked by the default external choice when the team is read",
+    "  (`healTeam`), each told in the team's `warnings` (`<member>: the local models are on standby (ADR-platform-0013);",
+    "  Codex works it now`, or that a provider must be chosen); the file is written once, the one of before kept as",
+    "  `<id>.json.bak`. The warnings come in `team show`, in each entry of `team list` and in `team screen` (each shown",
+    "  team's, and every team's at the top as `<team name>: <warning>`), until the user saves the team. `team create`,"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.752dd0",
+   "type": "context",
+   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
+   "summary": "another kind; `--clear` removes it.",
+   "body": [
+    "another kind; `--clear` removes it. `team import` drops the logo (the image is not in the file).",
+    "- The default team: `factory/settings.json` `{ \"defaultTeam\": \"<id>\" }`; the first team saved becomes it.",
+    "- `runTeam(root, asked)`: the team asked for (the editor's `nuclear.builder.team`), else the project's",
+    "  `.nuclear/builder.json` `\"team\"`, else the default team, else the only saved team; null with no saved team; a",
+    "  `TeamChoice` with several and none chosen (engine.md \"The team\"). Who works each station of a run: engine.md."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -3899,34 +4001,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.d26114",
-   "type": "context",
-   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
-   "summary": "while the local models are on standby (ADR-platform-0013), the default external choice (`externalWorker`: the first agent whose command is on the PATH, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API provider whose key the vault notes and that has a priced model,…",
-   "body": [
-    "while the local models are on standby (ADR-platform-0013), the default external choice (`externalWorker`: the first",
-    "  agent whose command is on the PATH, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API",
-    "  provider whose key the vault notes and that has a priced model, with its default model; else Claude Code, the user",
-    "  to choose); with them on, the local Nuclear Developer with the profile's `CODER_MODEL` for a developer and",
-    "  `ASSISTANT_MODEL` for the rest (`localWorker`); every skill of its role on; a free id.",
-    "- **A local member on standby** (ADR-platform-0013): a member of kind `local` (or none, which meant local) or of the",
-    "  provider `nuclear-developer`, the tech lead too, is worked by the default external choice when the team is read",
-    "  (`healTeam`), each told in the team's `warnings` (`<member>: the local models are on standby (ADR-platform-0013);",
-    "  Codex works it now`, or that a provider must be chosen); the file is written once, the one of before kept as",
-    "  `<id>.json.bak`. The warnings come in `team show`, in each entry of `team list` and in `team screen` (each shown",
-    "  team's, and every team's at the top as `<team name>: <warning>`), until the user saves the team. `team create`,",
-    "  `team member add|update` refuse the kind `local` (`whyKey` `standby`)."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#a-team-teams-nuc.eddf98",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — A team (`teams.nuc`)",
@@ -3963,6 +4037,34 @@
    "body": [
     "The software factory's teams and API keys, in Nuclear (`python` dialect). The editors run each command as a",
     "process, one call per action: JSON on stdout, an error as `{\"error\": \"…\"}` with exit code 1."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.0f5099",
+   "type": "context",
+   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
+   "summary": "Editing a team (*Members…*) reuses steps 4 and 5: on *Save the members* the page sends, in order, `team member remove` for each who leaves (listed on step 5, the user's choice already), `team member add` for the new ones and `team member update` for each whose worker or differences changed; the…",
+   "body": [
+    "Editing a team (*Members…*) reuses steps 4 and 5: on *Save the members* the page sends, in order, `team member",
+    "  remove` for each who leaves (listed on step 5, the user's choice already), `team member add` for the new ones and",
+    "  `team member update` for each whose worker or differences changed; the host runs a page's messages one after the other, so two",
+    "  writes of a team never overlap. The onboarding opens the wizard when there is no team yet.",
+    "- `page.ts` draws the company (above), then the team: the bar (back to the company, the logo, a click picks another",
+    "  image, ✕ removes it with `team logo <id> --clear`; the teams, default ★, *New team* (the wizard), rename, duplicate,",
+    "  export, import, delete, *Members…*), the description (written in place), the **Team skills** strip (the team's",
+    "  library skills and own skills as chips, each opening the preview drawer; *Add from the library*: the library's",
+    "  chips in the drawer, each switched on or off with `team skills set`; *New skill*: the skills editor, saved with",
+    "  `skills create`), and three parts:",
+    "  - the **operations roster**: the members grouped by role in station order (Analyst · Analysis, Architect · Design,",
+    "    Developer · Tests first · Code, QA · Quality, DevOps · Delivery), each group with how many and *+ Add* (the pool of that role), a role with none flagged; each"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -4085,15 +4187,24 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.7d5f42",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.682740",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
-   "summary": "A portrait is the roster's `face` as the page's URL of the file (a `data:` URL where a page has no `faceUrl`, as the Builder's page for its members), any image type, cropped square (`object-fit: cover`); without one, the initials in the frame.",
+   "summary": "by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field where the provider takes any model); the kinds are agent, local (OpenCode on Ollama's models, free, no `$`) and API, a new member gets the first agent this machine has (Claude Code when…",
    "body": [
-    "A portrait is the roster's `face` as the page's URL of the file (a `data:` URL where a page has no `faceUrl`, as the Builder's page for its members), any image type, cropped square (`object-fit: cover`); without",
-    "  one, the initials in the frame. Its texts are `l10n.ts` (`sq.*`); the scanline sweep, the bars' growth and the",
-    "  running LEDs' blink are off with `prefers-reduced-motion`; every slot, tile and panel takes the keyboard (Enter,",
-    "  Space) and shows its focus."
+    "by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field",
+    "     where the provider takes any model); the kinds are agent, local (OpenCode on Ollama's models, free, no `$`) and",
+    "     API, a new member gets the first agent this machine has (Claude Code when the list has not come), and the local",
+    "     Nuclear Developer is never offered (ADR-platform-0013: its entries in `agents --json` and `models --json` are",
+    "     dropped by `cli.ts`); an agent this machine",
+    "     lacks is shown disabled with its why (as the chat's agent picker) and is never chosen. *The same for* sets one",
+    "     agent and model for everyone, or for all the members of a role, in one click: a member",
+    "     is their profile, not their model. Each row folds out *Make them different*: the temperament (the employee's",
+    "     own by default, or one of `temperaments.json`), their characteristics (the personality's note), instructions,",
+    "     the role's skills switched on or off and skills of their own. A PAID badge on each paid member, the count of",
+    "     paid members and the warning that Claude Code, OpenCode, Codex… cost money per run (each run asks twice before",
+    "     spending; the run's budget), the tech lead; *Create team* → `team create`, every field of the members in the",
+    "     draft."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -4105,12 +4216,13 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.7f4aef",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.72fded",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
-   "summary": "kind, provider and model (the agent is never asked apart).",
+   "summary": "is; choosing one is `team member update` with its kind, provider and model (the agent is never asked apart).",
    "body": [
-    "kind, provider and model (the agent is never asked apart). Then the tabs: **Overview** (the brain with *Change*,",
+    "is; choosing one is `team member update` with its",
+    "    kind, provider and model (the agent is never asked apart). Then the tabs: **Overview** (the brain with *Change*,",
     "    the API key's state for an API, the cost: free or paid with the team's budget, the teams this employee is in,",
     "    tech lead or not, the temperament, the skills on of the role's and their own, the last activity: `memberActivity`",
     "    from the host), **Person** (the member's name, empty for the employee's own, the tech lead, the temperament (its",
@@ -4132,24 +4244,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.8d7a07",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.7d5f42",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
-   "summary": "temperament, provider · model with a PAID tag on a paid one, a LED (green: local; amber: a provider) and the `LEAD` tag; it stays in view while the page scrolls; LinkedIn profile below, with *Add as another …*, *Hire, replacing …*, *Back to …*).",
+   "summary": "A portrait is the roster's `face` as the page's URL of the file (a `data:` URL where a page has no `faceUrl`, as the Builder's page for its members), any image type, cropped square (`object-fit: cover`); without one, the initials in the frame.",
    "body": [
-    "temperament, provider · model with a PAID tag on a paid one, a LED (green: local; amber: a provider) and the",
-    "    `LEAD` tag; it stays in view while the page scrolls;",
-    "  - the **member panel**, to work with a member (a candidate opened from the pool or a recommendation gets the whole",
-    "    LinkedIn profile below, with *Add as another …*, *Hire, replacing …*, *Back to …*). A compact header: the",
-    "    portrait, the name, the tech lead and PAID tags, the role and its stations, the headline in one line, the status",
-    "    (*On duty*, *Working* while a step of theirs runs), *Make tech lead* (`techLead`) and *Let go* (`team member",
-    "    remove`, asked in a dialog); under it the **Brain**: one list of agent · model pairs (*Claude Code · opus*, *OpenCode",
-    "    · …*, *Anthropic API · …*), grouped by agent, the",
-    "    paid ones marked `$`, the ones this machine lacks disabled with their why (`agents --json`, asked once per page, the",
-    "    wizard's rules), every model of each provider (`models --json`; *Other model…* where any is taken), a member an older file left",
-    "    `local` said *converted to the default external agent* (the command's `warnings` of `team screen` and of the team",
-    "    shown are drawn as a warning line at the top of the screen), a model the machine does not list kept as it",
-    "    is; choosing one is `team member update` with its"
+    "A portrait is the roster's `face` as the page's URL of the file (a `data:` URL where a page has no `faceUrl`, as the Builder's page for its members), any image type, cropped square (`object-fit: cover`); without",
+    "  one, the initials in the frame. Its texts are `l10n.ts` (`sq.*`); the scanline sweep, the bars' growth and the",
+    "  running LEDs' blink are off with `prefers-reduced-motion`; every slot, tile and panel takes the keyboard (Enter,",
+    "  Space) and shows its focus."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -4187,52 +4290,24 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.b6eb9d",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.fcc05e",
    "type": "context",
    "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
-   "summary": "by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field where the provider takes any model); the kinds are agent and API only, a new member gets the first agent this machine has (Claude Code when the list has not come), and the local kind is…",
+   "summary": "member the portrait, the member's name, role and stations, the temperament, provider · model with a PAID tag on a paid one, a LED (green: local; amber: a provider) and the `LEAD` tag; it stays in view while the page scrolls; LinkedIn profile below, with *Add as another …*, *Hire, replacing …*,…",
    "body": [
-    "by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field",
-    "     where the provider takes any model); the kinds are agent and API only, a new member gets the first agent this",
-    "     machine has (Claude Code when the list has not come), and the local kind is never offered (ADR-platform-0013:",
-    "     `agents --json` and `models --json` entries of kind `local` from an older command are dropped by `cli.ts`); an agent this machine",
-    "     lacks is shown disabled with its why (as the chat's agent picker) and is never chosen. *The same for* sets one",
-    "     agent and model for everyone, or for all the members of a role, in one click: a member",
-    "     is their profile, not their model. Each row folds out *Make them different*: the temperament (the employee's",
-    "     own by default, or one of `temperaments.json`), their characteristics (the personality's note), instructions,",
-    "     the role's skills switched on or off and skills of their own. A PAID badge on each paid member, the count of",
-    "     paid members and the warning that Claude Code, OpenCode, Codex… cost money per run (each run asks twice before",
-    "     spending; the run's budget), the tech lead; *Create team* → `team create`, every field of the members in the",
-    "     draft.",
-    "  Editing a team (*Members…*) reuses steps 4 and 5: on *Save the members* the page sends, in order, `team member"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md#the-company-screen-vs-code-src-teams.ea9756",
-   "type": "context",
-   "title": "Teams and the vault (`teams.nuc`, `vault.nuc`, `roles.nuc`) — The company screen (VS Code, `src/teams/`)",
-   "summary": "remove` for each who leaves (listed on step 5, the user's choice already), `team member add` for the new ones and `team member update` for each whose worker or differences changed; the host runs a page's messages one after the other, so two writes of a team never overlap.",
-   "body": [
-    "remove` for each who leaves (listed on step 5, the user's choice already), `team member add` for the new ones and",
-    "  `team member update` for each whose worker or differences changed; the host runs a page's messages one after the other, so two",
-    "  writes of a team never overlap. The onboarding opens the wizard when there is no team yet.",
-    "- `page.ts` draws the company (above), then the team: the bar (back to the company, the logo, a click picks another",
-    "  image, ✕ removes it with `team logo <id> --clear`; the teams, default ★, *New team* (the wizard), rename, duplicate,",
-    "  export, import, delete, *Members…*), the description (written in place), the **Team skills** strip (the team's",
-    "  library skills and own skills as chips, each opening the preview drawer; *Add from the library*: the library's",
-    "  chips in the drawer, each switched on or off with `team skills set`; *New skill*: the skills editor, saved with",
-    "  `skills create`), and three parts:",
-    "  - the **operations roster**: the members grouped by role in station order (Analyst · Analysis, Architect · Design,",
-    "    Developer · Tests first · Code, QA · Quality, DevOps · Delivery), each group with how many and *+ Add* (the pool of that role), a role with none flagged; each",
-    "    member the portrait, the member's name, role and stations, the"
+    "member the portrait, the member's name, role and stations, the",
+    "    temperament, provider · model with a PAID tag on a paid one, a LED (green: local; amber: a provider) and the",
+    "    `LEAD` tag; it stays in view while the page scrolls;",
+    "  - the **member panel**, to work with a member (a candidate opened from the pool or a recommendation gets the whole",
+    "    LinkedIn profile below, with *Add as another …*, *Hire, replacing …*, *Back to …*). A compact header: the",
+    "    portrait, the name, the tech lead and PAID tags, the role and its stations, the headline in one line, the status",
+    "    (*On duty*, *Working* while a step of theirs runs), *Make tech lead* (`techLead`) and *Let go* (`team member",
+    "    remove`, asked in a dialog); under it the **Brain**: one list of agent · model pairs (*Claude Code · opus*, *OpenCode",
+    "    · …*, *Anthropic API · …*), grouped by agent, the",
+    "    paid ones marked `$`, the ones this machine lacks disabled with their why (`agents --json`, asked once per page, the",
+    "    wizard's rules), every model of each provider (`models --json`; *Other model…* where any is taken), a member an older file left",
+    "    `local` said *converted to the default external agent* (the command's `warnings` of `team screen` and of the team",
+    "    shown are drawn as a warning line at the top of the screen), a model the machine does not list kept as it"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
@@ -5009,7 +5084,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#where-things-are.4d2931",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#where-things-are.9e3c13",
    "type": "guide",
    "title": "Follow a run — Where things are",
    "summary": "While the Builder is the open tool, the Nuclear Workspace's column (beside the strip) holds *+ New spec*, your specs by component and layer, and the runs as an accordion: open several at once (a running one opens by itself), each with its stations and, for the one working, waiting or failed, its…",
@@ -5019,15 +5094,16 @@
     "its stations and, for the one working, waiting or failed, its steps live. A click there opens it on the page: a spec,",
     "a run, or a station or step picked in the diagram and the node.",
     "",
+    "A run opens as **its progress**: the six stations in a line (done ✓, working now, ❗ waiting for you, ✕ failed, next),",
+    "each with who works it; what is being done now in one sentence (or what waits for your answer, with *Answer*); and",
+    "**the spec it works on**, its description and acceptance criteria. *Technical diagram* in the run's header shows the",
+    "diagram below instead. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice",
+    "says so, and opening the Builder shows the run being worked on.",
+    "",
     "On the page, the diagram; on the right, above, **the node**; below, **the log**, with the logo of the team doing the",
     "work. The right column folds (`»`) and resizes (drag its edge); the page remembers it. The page has no chat: click",
     "the team at the foot of the log, or a member of the team in the spec form, and Nuclear Atlas opens on its channel or",
-    "on your direct message with that member.",
-    "",
-    "In Nuclear Atlas, each run is a thread of its team's channel: the tech lead starts it, each member says when their",
-    "station passed or failed (a failure may come with the member's GIF), and a gate or QA's plan is the member's",
-    "question with buttons: **Approve**, **Ask for a change** (the editor asks what), **Later**, **Go on**. A click answers",
-    "the run as the page does. Money is never answered in the chat: the editor asks its two questions."
+    "on your direct message with that member."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
@@ -5039,41 +5115,22 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#where-things-are.c74e01",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#where-things-are.c2292e",
    "type": "guide",
    "title": "Follow a run — Where things are",
-   "summary": "Everywhere, *who* is one label: the member, the role, the provider and the model (*Neo · Developer · Claude Code · haiku*; a local one *… · Nuclear Developer · qwen2.5-coder:3b*).",
+   "summary": "In Nuclear Atlas, each run is a thread of its team's channel: the tech lead starts it, each member says when their station passed or failed (a failure may come with the member's GIF), and a gate or QA's plan is the member's question with buttons: Approve, Ask for a change (the editor asks what),…",
    "body": [
+    "In Nuclear Atlas, each run is a thread of its team's channel: the tech lead starts it, each member says when their",
+    "station passed or failed (a failure may come with the member's GIF), and a gate or QA's plan is the member's",
+    "question with buttons: **Approve**, **Ask for a change** (the editor asks what), **Later**, **Go on**. A click answers",
+    "the run as the page does. Money is never answered in the chat: the editor asks its two questions.",
+    "",
     "Everywhere, *who* is one label: the member, the role, the provider and the model (*Neo · Developer · Claude Code ·",
     "haiku*; a local one *… · Nuclear Developer · qwen2.5-coder:3b*). The Smart Graph and the shell appear only where",
     "they took part."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.18abcf",
-   "type": "guide",
-   "title": "Make a team",
-   "summary": "role's skills they use and skills of their own.",
-   "body": [
-    "role's skills they use and skills of their own. A paid member wears a **PAID** badge; the step counts them and says",
-    "   it plainly: Claude Code, OpenCode, Codex… cost money per run; a run asks you twice before spending only for an API",
-    "   paid by use (an agent's subscription is not asked, unless `nuclear.spending.forceConfirm`), and the team's budget",
-    "   per run caps it. **Model for the whole team** (above *The same for*) gives the team one agent or API and its model,",
-    "   chosen once: every member says *Team's model*, and **Own model…** on a row gives that member its own, which wins;",
-    "   *None* leaves each member its own. Step 2 also holds the team's **Method** (Scrum by default, or *Our own method*",
-    "   written by you) and its **Instructions**, which the tech lead and every member follow. Choose the tech lead, then",
-    "   **Create team**."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
    ],
    "meta": {
     "section": "10-ai",
@@ -5101,34 +5158,6 @@
     "",
     "In a terminal or for an agent, the same steps are commands (`team name-suggest`, `team suggest`, `team create`,",
     "`team member add|remove|update`, `team runnable`, `skills list|show|clone|create|update|delete`, `team skills set`: [teams-and-vault.md](../02-architecture/teams-and-vault.md))."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.4d9e2c",
-   "type": "guide",
-   "title": "Make a team",
-   "summary": "skill, the headline or the experience that matched).",
-   "body": [
-    "skill, the headline or the experience that matched). Add the ones you like, skip the rest.",
-    "4. **The roster**: everyone, filtered by role, temperament, gender, skill and words. Choose several at once, any",
-    "   number per role. The list of the chosen counts each role and flags a role the stations need that has nobody: a",
-    "   team runs when each of them has a member.",
-    "5. **Who works each member**: an agent (the first this machine has, Claude Code by default) or an API, the provider",
-    "   and the model: an agent that is not installed, or an API without a key, shows why and cannot be chosen. The model",
-    "   list is the provider's own: Claude Code's models, OpenCode's, an API's; **Other model…** lets you type one where",
-    "   the provider takes any. There is no local kind: the local models are on standby (ADR-platform-0013); a member an",
-    "   older team file left local is converted to the default agent, and the page says so in a warning line.",
-    "   **The same for** gives everyone (or all the developers, all the QA…) one agent and model in one click: a member is",
-    "   their profile, not their model. Under each row, **Make them different** holds what makes that member themselves:",
-    "   their temperament (the employee's own unless you choose another), their characteristics, their instructions, the"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
@@ -5198,6 +5227,31 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.cc66f9",
+   "type": "guide",
+   "title": "Make a team",
+   "summary": "their temperament (the employee's own unless you choose another), their characteristics, their instructions, the role's skills they use and skills of their own.",
+   "body": [
+    "their temperament (the employee's own unless you choose another), their characteristics, their instructions, the",
+    "   role's skills they use and skills of their own. A paid member wears a **PAID** badge; the step counts them and says",
+    "   it plainly: Claude Code, OpenCode, Codex… cost money per run; a run asks you twice before spending only for an API",
+    "   paid by use (an agent's subscription is not asked, unless `nuclear.spending.forceConfirm`), and the team's budget",
+    "   per run caps it. **Model for the whole team** (above *The same for*) gives the team one agent or API and its model,",
+    "   chosen once: every member says *Team's model*, and **Own model…** on a row gives that member its own, which wins;",
+    "   *None* leaves each member its own. Step 2 also holds the team's **Method** (Scrum by default, or *Our own method*",
+    "   written by you) and its **Instructions**, which the tech lead and every member follow. Choose the tech lead, then",
+    "   **Create team**."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.d4bc07",
    "type": "guide",
    "title": "Make a team",
@@ -5228,6 +5282,35 @@
     "closes them). Nuclear Chat lists each team's tech lead, not every member: **Talk** on the tech lead opens its",
     "conversation in Nuclear Atlas; on another member it is **Ask the tech lead**, the lead's conversation (the lead assigns",
     "the work), and so is a member's face on the company screen; a team's **Channel** opens the team's channel."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.fb8821",
+   "type": "guide",
+   "title": "Make a team",
+   "summary": "skill, the headline or the experience that matched).",
+   "body": [
+    "skill, the headline or the experience that matched). Add the ones you like, skip the rest.",
+    "4. **The roster**: everyone, filtered by role, temperament, gender, skill and words. Choose several at once, any",
+    "   number per role. The list of the chosen counts each role and flags a role the stations need that has nobody: a",
+    "   team runs when each of them has a member.",
+    "5. **Who works each member**: an agent (the first this machine has, Claude Code by default), local or an API, the provider",
+    "   and the model: an agent that is not installed, or an API without a key, shows why and cannot be chosen. The model",
+    "   list is the provider's own: Claude Code's models, OpenCode's, an API's; **Other model…** lets you type one where",
+    "   the provider takes any. **Local** is OpenCode on the models Ollama has on this machine, free: install OpenCode and",
+    "   Ollama, pull a model (`ollama pull qwen2.5-coder:7b`), and it is listed with the memory it needs. A member an older",
+    "   team file left to the Nuclear Developer (on standby, ADR-platform-0013) is converted to the default agent, and the",
+    "   page says so in a warning line.",
+    "   **The same for** gives everyone (or all the developers, all the QA…) one agent and model in one click: a member is",
+    "   their profile, not their model. Under each row, **Make them different** holds what makes that member themselves:"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md"
@@ -13897,10 +13980,11 @@
    "id": "doc:nuclear-agents/skills/sql-databases/SKILL.md#pitfalls",
    "type": "doc",
    "title": "SQL databases — Pitfalls",
-   "summary": "into a rename or the data is lost.",
+   "summary": "warns of every drop): `nuclear migrate make \"<message>\" --rename shops=stores --rename orders.shop_id=store_id` (the database's names; `project_migrate` takes them as `rename`).",
    "body": [
-    "- A renamed table or column shows in a migration as a drop and an add: `make` warns of every drop; edit the file",
-    "  into a rename or the data is lost.",
+    "- A renamed table or column is told to `make`, or the migration is a drop and an add and the data is lost (`make`",
+    "  warns of every drop): `nuclear migrate make \"<message>\" --rename shops=stores --rename orders.shop_id=store_id`",
+    "  (the database's names; `project_migrate` takes them as `rename`).",
     "- `make` compares the entities with the last migration, never with a live database: a database changed by hand",
     "  drifts silently.",
     "- Migrations belong to the dialect they were made with; switching `fastapi` ↔ `nestjs` needs new ones.",
@@ -16462,33 +16546,6 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.3dd665",
-   "type": "context",
-   "title": "The UI (`ui/`) — The screen",
-   "summary": "`.nuclear/chat/deleted/`).",
-   "body": [
-    "`.nuclear/chat/deleted/`). On a message's toolbar: *Edit* on the user's own (in place: Enter saves, Escape cancels)",
-    "and *Delete* on any, confirmed in the row; a deleted message says *This message was deleted.* and keeps its thread.",
-    "The header's *Search* opens the search where the thread goes: every message as the user types, `from:@member` and",
-    "`in:#channel`, each result with its conversation, *in a thread*, author, day and time and its words marked; a click",
-    "opens its channel at the message (and its thread for a reply), lit and scrolled to once. The route's query does the",
-    "same for a host: `/<workspace>/<channel>?message=<id>&thread=<id>` (a notification opens the exact message).",
-    "",
-    "**Who answers is in sight**: a direct message with a member shows under their name the brain that answers as them",
-    "(`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's",
-    "channel is titled with the team's name. While a local member answers, the typing line says it is the local model and",
-    "that the first answer takes longer while it loads (`typing.local`)."
-   ],
-   "sources": [
-    "nuclear-chat/docs/02-architecture/ui.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.5dcc32",
    "type": "context",
    "title": "The UI (`ui/`) — The screen",
@@ -16528,6 +16585,26 @@
     "the member comes back changed when the host registers the workspace again. A member whose host gives no card, or a",
     "card that is not `editable` (a team not saved), is read only, with what to do (*create a team*; Atlas: its direct",
     "message's header)."
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/ui.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.981bfd",
+   "type": "context",
+   "title": "The UI (`ui/`) — The screen",
+   "summary": "(`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's channel is titled with the team's name.",
+   "body": [
+    "**Who answers is in sight**: a direct message with a member shows under their name the brain that answers as them",
+    "(`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's",
+    "channel is titled with the team's name. While a local member answers, the typing line says it is the local model and",
+    "that the first answer takes longer while it loads (`typing.local`)."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"
@@ -16583,6 +16660,31 @@
     "posted answer replaces it with its cost. The composer completes `@` (members by name or role, teams), `#` (channels), `/` (`/poc`,",
     "`/gif`), Enter sends and Shift+Enter breaks the line; a text that was not sent stays with why. Empty, loading and",
     "error states for the workspace, a channel and a thread."
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/ui.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.c61923",
+   "type": "context",
+   "title": "The UI (`ui/`) — The screen",
+   "summary": "`.nuclear/chat/deleted/`).",
+   "body": [
+    "`.nuclear/chat/deleted/`). On a message's toolbar: *Edit* on the user's own (in place: Enter saves, Escape cancels)",
+    "and *Delete* on any, confirmed in the row; a deleted message says *This message was deleted.* and keeps its thread.",
+    "The header's *Search* opens the search where the thread goes: every message as the user types, `from:@member` and",
+    "`in:#channel`, each result with its conversation, *in a thread*, author, day and time and its words marked; a click",
+    "opens its channel at the message (and its thread for a reply), lit and scrolled to once. The route's query does the",
+    "same for a host: `/<workspace>/<channel>?message=<id>&thread=<id>` (a notification opens the exact message).",
+    "`?part=sidebar` draws only the channels and direct messages (with *Jump to…*, the members and a new channel), filling",
+    "the host's side column; `?part=channel` draws all but them, with no menu to show them: a host shows the two side by",
+    "side (Nuclear Atlas in the editor's workspace column) and opens in the second the channel the first marks read."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"
@@ -21229,6 +21331,24 @@
    }
   },
   {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.3c2c27",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — The compiler and the command line",
+   "summary": "s data.",
+   "body": [
+    "s data. Answers `{ok, action, output}` |",
+    "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.7342a6",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
@@ -21256,28 +21376,13 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.bae693",
-   "type": "guide",
-   "title": "The MCP server of NuclearLang — The compiler and the command line",
-   "summary": "The compiler and the command line",
-   "body": "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |",
-   "sources": [
-    "tools/mcp/docs/08-guides/mcp.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.c5e8d8",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.efcd68",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
    "body": [
     "| `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |",
-    "| `project_migrate(project, action, message, to, confirm, fake, transaction)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration); `fake` (`up`, `down`): only the history changes and nothing runs (a database that already has its tables is brought under the migrations); `transaction` (`up`, `down`): `all` (the default), `each` or `none`. `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with its data. Answers `{ok, action, output}` |"
+    "| `project_migrate(project, action, message, to, confirm, fake, transaction, rename)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop; `rename`: the tables and columns that were renamed, each `<table>=<new table>` or `<table>.<column>=<new column>` in the database's names, written as a rename that keeps the rows), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration); `fake` (`up`, `down`): only the history changes and nothing runs (a database that already has its tables is brought under the migrations); `transaction` (`up`, `down`): `all` (the default), `each` or `none`. `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with it"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"

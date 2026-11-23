@@ -2048,11 +2048,70 @@
    }
   },
   {
-   "id": "doc:website/docs/02-architecture/content.md#site-toml.4dd913",
+   "id": "doc:website/docs/02-architecture/content.md#site-toml.601667",
    "type": "context",
    "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
-   "summary": "`logos` and `shots` (optional), `highlights`, `demo` (commands), `project` (its folder), `pages` (its documents: each must be a page, or the build fails).",
+   "summary": "name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
    "body": [
+    "- `[site]`: title, lead, tagline, `url` (`SITE_URL` overrides it), `org`, `branch`, footer.",
+    "- `[[top]]`: the links of the top bar (a path in the tree is a page; another, a screen: `/tools`, `/platforms/mobile`).",
+    "- `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a",
+    "  name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
+    "  The language's section lists the helpers of the language (`nuclear-synapsis-framework/lodash/docs/07-reference/functions`)",
+    "  right after the library: they are part of the language, so a reader finds them there and not under the framework.",
+    "- The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`",
+    "  (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),",
+    "  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`title`, `text`, `systems`: a tab each with",
+    "  its `logos` and its `command`, `{{site}}` replaced by the url; `next`: the commands after it), `[home.logs]` (the",
+    "  `[[modules]]` entry the logs block shows).",
+    "- `[logos]`: name → a `simple-icons` slug, or `{ simple, name }` to rename one, `{ devicon = \"<folder>/<file>\", name }`"
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#site-toml.d4beaf",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
+   "summary": "for a brand simple-icons leaves out (VS Code, IntelliJ IDEA, Windows: copied as they are), `{ lucide, name }` for a product with no free logo (Codex).",
+   "body": [
+    "for a brand simple-icons leaves out (VS Code, IntelliJ IDEA, Windows: copied as they are), `{ lucide, name }` for a",
+    "  product with no free logo (Codex). A logo goes next to a name (chips, tabs, cards), never inside a text.",
+    "  `[home.hero] targets` and `agents`, a platform's `dialects`, a tool's `logos`, `[home.extension] editors` and a",
+    "  dialect's tab name logos of this table.",
+    "- `[home.extension]`: the editor block, `title`, `text`, `editorsTitle` and `editors` (a `logo` and its `tool` page each)",
+    "  and `modules` (ids of `[[modules]]`, most important first).",
+    "- `[[modules]]`: a part of the extension: `id`, `name`, `icon`, `title` (its slogan), `points` (at most three),",
+    "  `keys` (`key`, `label`: the real shortcuts of the extensions' guides), `logos`, `marks` (`icon`, `label`), `art`",
+    "  (`orbit`), `shots` (ids of `[[shots]]`) and `tool` (the page its \"More about\" link opens; the build fails if it is",
+    "  not a tool) or `link` (any address). The text stays short: the detail is the tool's page.",
+    "- `[[shots]]`: a screenshot of the editor: `id`, `image` (a file of `public/shots/`, kept in git), `alt`, `caption`",
+    "  and `spots` (callouts: `x` and `y` as fractions of the image from its top left corner, `label`). A screenshot is",
+    "  cropped to what it sells (its outline and what does not matter removed), lightly sharpened and saved as WebP. A"
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#site-toml.e3c546",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
+   "summary": "screenshot in another language is rendered again in English (Nuclear Atlas's).",
+   "body": [
+    "screenshot in another language is rendered again in English (Nuclear Atlas's).",
+    "- A hook, a tool and a module name an `icon`: a `lucide` name, or `brand:<mark>` for a mark of `tools/marks.mjs`.",
     "- `[[tools]]`: `key` (its address `/tools/<key>`), `name`, `group` (Build, Edit, Run or AI), `tagline`, `pitch`, `icon`,",
     "  `logos` and `shots` (optional),",
     "  `highlights`, `demo` (commands), `project` (its folder), `pages` (its documents: each must be a page, or the",
@@ -2065,63 +2124,6 @@
     "- `[[onboarding]]`: `platform`, `example` (its folder in the tree), `show` (the file of the code level), `prompts`",
     "  (what to ask an agent: apps of several kinds; the first is the agent's last step), `steps`",
     "  (`title`, `text`, and `run` to replay it or `command` to only show it)."
-   ],
-   "sources": [
-    "website/docs/02-architecture/content.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/docs/02-architecture/content.md#site-toml.9b7244",
-   "type": "context",
-   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
-   "summary": "name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
-   "body": [
-    "- `[site]`: title, lead, tagline, `url` (`SITE_URL` overrides it), `org`, `branch`, footer.",
-    "- `[[top]]`: the links of the top bar (a path in the tree is a page; another, a screen: `/tools`, `/platforms/mobile`).",
-    "- `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a",
-    "  name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
-    "- The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`",
-    "  (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),",
-    "  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`title`, `text`, `systems`: a tab each with",
-    "  its `logos` and its `command`, `{{site}}` replaced by the url; `next`: the commands after it), `[home.logs]` (the",
-    "  `[[modules]]` entry the logs block shows).",
-    "- `[logos]`: name → a `simple-icons` slug, or `{ simple, name }` to rename one, `{ devicon = \"<folder>/<file>\", name }`",
-    "  for a brand simple-icons leaves out (VS Code, IntelliJ IDEA, Windows: copied as they are), `{ lucide, name }` for a",
-    "  product with no free logo (Codex). A logo goes next to a name (chips, tabs, cards), never inside a text."
-   ],
-   "sources": [
-    "website/docs/02-architecture/content.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/docs/02-architecture/content.md#site-toml.a1fb24",
-   "type": "context",
-   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
-   "summary": "`[home.hero] targets` and `agents`, a platform's `dialects`, a tool's `logos`, `[home.extension] editors` and a dialect's tab name logos of this table.",
-   "body": [
-    "`[home.hero] targets` and `agents`, a platform's `dialects`, a tool's `logos`, `[home.extension] editors` and a",
-    "  dialect's tab name logos of this table.",
-    "- `[home.extension]`: the editor block, `title`, `text`, `editorsTitle` and `editors` (a `logo` and its `tool` page each)",
-    "  and `modules` (ids of `[[modules]]`, most important first).",
-    "- `[[modules]]`: a part of the extension: `id`, `name`, `icon`, `title` (its slogan), `points` (at most three),",
-    "  `keys` (`key`, `label`: the real shortcuts of the extensions' guides), `logos`, `marks` (`icon`, `label`), `art`",
-    "  (`orbit`), `shots` (ids of `[[shots]]`) and `tool` (the page its \"More about\" link opens; the build fails if it is",
-    "  not a tool) or `link` (any address). The text stays short: the detail is the tool's page.",
-    "- `[[shots]]`: a screenshot of the editor: `id`, `image` (a file of `public/shots/`, kept in git), `alt`, `caption`",
-    "  and `spots` (callouts: `x` and `y` as fractions of the image from its top left corner, `label`). A screenshot is",
-    "  cropped to what it sells (its outline and what does not matter removed), lightly sharpened and saved as WebP. A",
-    "  screenshot in another language is rendered again in English (Nuclear Atlas's).",
-    "- A hook, a tool and a module name an `icon`: a `lucide` name, or `brand:<mark>` for a mark of `tools/marks.mjs`."
    ],
    "sources": [
     "website/docs/02-architecture/content.md"

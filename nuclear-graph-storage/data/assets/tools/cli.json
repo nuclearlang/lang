@@ -2495,11 +2495,14 @@
   {
    "id": "tool:nuclear.migrate",
    "type": "cli",
-   "title": "`nuclear migrate` — One migration of the database: the entities minus the last one; Applies the pending migrations, or…",
-   "summary": "One migration of the database: the entities minus the last one; Applies the pending migrations, or reverts the last one (--to <migration>: up to that one, or back to it; --fake: only the history changes; --transaction all|each|none, default all); Every migration: applied or pending",
+   "title": "`nuclear migrate` — One migration of the database: the entities minus the last one (--rename <table>=<new table>,…",
+   "summary": "One migration of the database: the entities minus the last one (--rename <table>=<new table>, --rename <table>.<column>=<new column>, any number, the database's names: a rename that keeps the rows, where make would write a drop and an add); Applies the pending migrations, or reverts the last one (--to <migration>: up to that one, or back to it; --fake: only the history changes; --transaction…",
    "body": [
     "```text",
     "  migrate make <message>                     one migration of the database: the entities minus the last one",
+    "                                             (--rename <table>=<new table>, --rename <table>.<column>=<new column>,",
+    "                                             any number, the database's names: a rename that keeps the rows, where",
+    "                                             make would write a drop and an add)",
     "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
     "                                             (--to <migration>: up to that one, or back to it; --fake: only",
     "                                             the history changes; --transaction all|each|none, default all)",
@@ -2525,7 +2528,7 @@
       "usage": "nuclear migrate make <message>",
       "alias": "",
       "note": "",
-      "does": "One migration of the database: the entities minus the last one"
+      "does": "One migration of the database: the entities minus the last one (--rename <table>=<new table>, --rename <table>.<column>=<new column>, any number, the database's names: a rename that keeps the rows, where make would write a drop and an add)"
      },
      {
       "what": "migrate",

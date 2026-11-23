@@ -9,7 +9,11 @@
    "type": "decorator",
    "title": "`@column` — a decorator of the backend platform",
    "summary": "On an entity field: a column.",
-   "body": "On an entity field: a column. Arguments: `length`, `unique`, `index`, `nullable`, `default`, `name`.",
+   "body": [
+    "On an entity field: a column. Arguments: `length`, `unique`, `index`, `nullable`, `default`, `name`. `length` is the",
+    "characters a text holds (255 without it); a long text is a larger one (`@column(length = 100000)`): the column is the",
+    "database's VARCHAR, or its text type when the VARCHAR is too short. A longer text is refused when written (409)."
+   ],
    "keys": [
     "@column",
     "column"

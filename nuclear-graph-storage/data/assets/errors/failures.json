@@ -642,7 +642,7 @@
    "body": [
     "- 400: a field breaks a rule decorator of the model (`@minLength`, `@email`...), or its value is of another JSON type than the field's (`\"30\"` for an `int`: rule `type`). The answer names the field.",
     "- 404: `find(id)` or `getOne()` found no row and the use case returned `NotFound`.",
-    "- 409: the use case returned `Conflict` (a repeated unique value).",
+    "- 409: the use case returned `Conflict` (a repeated unique value), or the database refused the write for integrity (unique, foreign key, a null in a required column, a text longer than its column): `message` is `conflict`.",
     "",
     "In a test: `expect(found.error.status == 404)`."
    ],

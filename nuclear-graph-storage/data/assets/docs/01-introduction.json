@@ -473,6 +473,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.64fcbf",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Three decisions on the backend, the same in every dialect and on SQLite, PostgreSQL, MySQL and MariaDB**: what the database refuses for integrity (a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column, a text longer than its column) answers 409 `{ \"status\": 409, \"message\": \"conflict\" }`, as Spring Data REST answers Spring's `DataIntegrityViolationException` (**it answered 500**: of 16 requests at once for one email, one answers 201 and the other fifteen 409 now); a long text is `@column(length = n)`, whose column is the database's `VARCHAR(n)` or, above what it holds, its text type (`@column(length = 100000)` failed on MySQL and MariaDB), and a text longer than its column is refused before it is written on every database (**SQLite kept it**); a rename in a migration is an option of the command, `nuclear migrate make \"<message>\" --rename <table>=<new table> --rename <table>.<column>=<new column>`, which writes a rename that keeps the rows in the migration of whichever dialect (it was edited by hand in each dialect's migration language). The MCP server's `project_migrate` takes `rename`; the OpenAPI document says the statuses an error may have.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.712ec3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -650,6 +665,44 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- The generated code measured against an expert's in eight programs (`nuclear-synapsis-framework/eval/thesis/bench`: n-body, binary trees, fannkuch, a collections pipeline, texts, calls, primes, word frequencies), and what they showed fixed: Python reads a map as an expert does (`m.get(k, 0)`, `m[k]`, no helper call in a loop), `sortedBy` / `sortBy` read each key once in TypeScript and Dart and keep the order of equal keys in Dart (its sort did not promise it). Fix (texts are data): the replacement of `replace` / `replaceAll` is never a pattern (JavaScript read `$&` and `$1`, Python's regex `\\\\1`), `replace` with a `Regex` replaces the first match only in TypeScript and works in Python, and a doc comment with a `\\\\` is a valid Python docstring.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.c988c7",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: the workspace's file tree shows what an agent or a Builder run writes while it works (a new component did not appear): the column, drawn again many times a second during a run, made a new files watcher each time and dropped the folders it had not sent yet; the watcher now lives as long as its project, and the project's folders are read again whenever watching starts.",
+    "- Fix: the installer's update test follows GitHub's redirects: since the repository became `nuclearlang/nuclearlang` (it was `nuclearlang/lang`), it took the API's redirect for no network and the delivery gate refused the release. The tree still names the old repository in about 90 files, served by the redirect (the installer's roadmap).",
+    "- Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.",
+    "- Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.ce185b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fixed: a team assigned to a workspace or a project answers in its channel in Nuclear Chat (nobody answered there); the welcome stays open while apps are added from it; **Nuclear Atlas's channels are in the Nuclear workspace's column** in VS Code, beside the open conversation, and Atlas reopens on the conversation you were in last; Nuclear Builder shows a run as its simple progress with the spec it works on, follows the runs the team starts from the chat, and a spec asked in a workspace's channel goes to its app (it went to the workspace's folder).",
+    "- **Local AI in Nuclear Builder is OpenCode on your Ollama**: choose *Local* for a team member, the Brain or the chat and the picker lists only the models Ollama has installed (`ollama/<tag>`), free, each with the memory it needs; OpenCode as an agent no longer lists them. Nothing installs Ollama or pulls a model; the Nuclear Developer stays on standby (ADR-platform-0013)."
+   ],
    "sources": [
     "CHANGELOG.md"
    ],

@@ -328,6 +328,7 @@ class Workspace implements vscode.WebviewViewProvider {
   private sideChat: ReturnType<typeof wireChat> | undefined;
   private sideKey = '';
   private filesWatcher: vscode.Disposable | undefined;
+  private filesRoot: string | undefined;
   private readonly icons: Icons;
   readonly onDidChange = new vscode.EventEmitter<void>();
   /** The Nuclear workspace open in this window (`nuclear workspace show --json`), when there is one. */
@@ -1021,8 +1022,12 @@ class Workspace implements vscode.WebviewViewProvider {
 
   /** New or deleted files of the active project reach the tree. */
   private watchFiles(root: string | undefined): void {
+    // the column is drawn again many times a second while a run works: the watcher stays as long as its project does,
+    // or a new one would miss what was written while it starts and drop the folders it had not sent yet
+    if (root && root === this.filesRoot && this.filesWatcher) return;
     this.filesWatcher?.dispose();
     this.filesWatcher = undefined;
+    this.filesRoot = root;
     if (!root) return;
     const w = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '**'), false, true, false);
     // a build writes hundreds of files: the folders that changed reach the tree at most every 200 ms
@@ -1037,6 +1042,8 @@ class Workspace implements vscode.WebviewViewProvider {
       }, 200);
     };
     this.filesWatcher = vscode.Disposable.from(w, w.onDidCreate(changed), w.onDidDelete(changed), { dispose: () => clearTimeout(timer) });
+    // nothing watched the project until now (another tool was open, or another project): its folders are read again
+    void this.view?.webview.postMessage({ type: 'refreshDirs', dirs: [], all: true });
   }
 
   /** The active editor's file is selected in the tree, its folders opened, as the explorer does. */
@@ -1963,7 +1970,7 @@ export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): strin
     const m = ev.data;
     if (m.type === 'state') { state = m; renderStrip(); renderPane(); }
     if (m.type === 'entries') { loaded[m.dir] = m.entries; renderTree(); }
-    if (m.type === 'refreshDirs') { let any = false; for (const d of m.dirs) if (d in loaded) { delete loaded[d]; any = true; } if (any) renderTree(); }
+    if (m.type === 'refreshDirs') { let any = false; for (const d of m.all ? Object.keys(loaded) : m.dirs) if (d in loaded) { delete loaded[d]; any = true; } if (any) renderTree(); }
     if (m.type === 'reveal') reveal(m.parts);
     if (m.type === 'builderSidebar' && state.pane.kind === 'builder') { state.pane.sidebar = m.sidebar; drawBuilder(m.sidebar); }
     if (m.type === 'chatFrame') side.frame(m.frame);
