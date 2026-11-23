@@ -53,7 +53,9 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
    nuclearlang/lang -f version=<version>`.
 
 7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its
-   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the
+   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed (a run with a job
+   GitHub never gave a runner, cancelled with no step, as macOS runners short of capacity do, is run again once
+   first); says which store the extension did not reach (the job `marketplaces` never fails a release); checks that the
    GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the
    `.vsix` and its `.sha256` (the extension checks a copy it downloads against it), the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`
    are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs

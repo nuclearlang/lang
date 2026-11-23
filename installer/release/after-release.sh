@@ -30,6 +30,8 @@ sha=$(git -C "$REPO" rev-list -n 1 "v$V" 2>/dev/null) || fail "no tag v$V here" 
 # --- 1. the workflows ---
 echo "the workflows of v$V ($sha)"
 deadline=$(($(date +%s) + WAIT * 60))
+retried=""
+wait_runs() {
 while :; do
   runs=$(gh run list -R "$GH_REPO" --commit "$sha" --limit 50 --json name,status,conclusion,databaseId \
     -q '.[] | "\(.name)\t\(.status)\t\(.conclusion)\t\(.databaseId)"') || fail "gh run list did not answer" "gh auth status"
@@ -43,9 +45,25 @@ while :; do
   fi
   sleep 30
 done
+}
+wait_runs
+# a job GitHub never gave a runner (macOS runners short of capacity: "not acquired by Runner", cancelled with no
+# step) is not a failure of the release: its run is tried again once, then judged
+if [ -z "$retried" ]; then
+  for id in $(printf '%s\n' "$runs" | awk -F '\t' '$3 == "cancelled" || $3 == "failure" { print $4 }'); do
+    if gh run view "$id" -R "$GH_REPO" --json jobs -q '.jobs[] | select(.conclusion == "cancelled" and (.steps | length) == 0) | .name' 2>/dev/null | grep -q .; then
+      echo "  a job of run $id never got a runner: tried again"; gh run rerun "$id" -R "$GH_REPO" --failed >/dev/null && retried=1
+    fi
+  done
+  if [ -n "$retried" ]; then sleep 20; deadline=$(($(date +%s) + WAIT * 60)); wait_runs; fi
+fi
 bad=$(printf '%s\n' "$runs" | awk -F '\t' '$3 != "success" && $3 != "skipped" { print $1 " (" $3 "): gh run view " $4 " -R '"$GH_REPO"' --log-failed" }')
 [ -z "$bad" ] || fail "a workflow did not succeed:
 $bad" "fix it, then a PATCH release (a failed website means the site still serves the previous installer)"
+# the stores never stop a release (the job goes on on error): what did not reach one is said, not hidden
+rel=$(printf '%s\n' "$runs" | awk -F '\t' '$1 == "release" { print $4; exit }')
+stores=$(gh run view "$rel" -R "$GH_REPO" --json jobs -q '.jobs[] | select(.name == "marketplaces") | .steps[] | select(.conclusion == "failure") | .name' 2>/dev/null | paste -sd, -)
+[ -z "$stores" ] || echo "  ${RED}!${OFF} the extension did not reach: $stores (gh run view $rel -R $GH_REPO --log-failed)"
 ok "every workflow succeeded: $(printf '%s\n' "$runs" | cut -f 1 | sort -u | tr '\n' ' ')"
 
 # --- 2. the assets: what release.yml publishes (the archive matrix, the AI matrix, the extension, the vectors) ---
