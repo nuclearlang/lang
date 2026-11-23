@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-23
 related: [../02-architecture/overview.md, ../../../../vscode/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Atlas
@@ -15,6 +15,9 @@ external agent or provider.
 - **Nuclear Atlas as Nuclear Chat's page** (2026-11-18): rendered in headless Brave with a fake bridge answering
   from what the real service said (English and Spanish), and the direct message answered by the real local agent from
   Node; never opened in a running VS Code. A template put in the composer by a click was not tried.
+- **The channels in the workspace's column** (2026-11-23): `?part=sidebar` in the column and `?part=channel` in the
+  page, each following the channel the other opens, compiled and unit-tested (`readChannelOf`) only; never seen in a
+  running VS Code (a click in the column, a notification moving the page, the column hidden and shown again).
 
 ## Pending
 
