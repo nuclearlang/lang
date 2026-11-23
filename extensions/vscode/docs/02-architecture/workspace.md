@@ -85,7 +85,8 @@ Under every pane, the list of every tool's notices (below, *Badges and notificat
 
 `platformActions()[platform]` are the `editor/title` buttons of `package.json` and, for an editor that shows none of
 an extension's title bar buttons (Cursor), the rows of the *Actions* accordion at the bottom of the files pane, below
-the tree and collapsed by default (`renderFiles`, `.acc`; a click posts `action`; ADR-extensions-0002 rule 6): the commands `nuclear.action.<id>`,
+the tree and collapsed by default (`renderFiles`, `.acc`; each row is the action's name and, at its right, dimmed, its
+key, as a menu of VS Code shows it; a click posts `action`; ADR-extensions-0002 rule 6): the commands `nuclear.action.<id>`,
 shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.
 
 | Platform | Actions |

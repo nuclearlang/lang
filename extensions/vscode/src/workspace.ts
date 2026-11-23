@@ -1431,7 +1431,8 @@ export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): strin
   .acc-h { display: flex; align-items: center; gap: 2px; width: 100%; height: 22px; padding: 0 4px; border: none; background: var(--vscode-sideBarSectionHeader-background, transparent); color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground)); font: 700 11px var(--vscode-font-family); text-transform: uppercase; cursor: pointer; text-align: left; }
   .acc-h .c { width: 16px; height: 16px; display: flex; transition: transform .1s ease; } .acc-h .c svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.3; }
   .acc.open .acc-h .c { transform: rotate(90deg); } .acc-b { display: none; padding-bottom: 4px; } .acc.open .acc-b { display: block; }
-  .acc-b .row { padding-left: 20px; gap: 6px; } .acc-b .row .k { width: 14px; text-align: center; opacity: .8; }
+  .acc-b .row { padding-left: 20px; gap: 8px; } .acc-b .row .l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .acc-b .row .k { flex: none; margin-left: auto; font-family: inherit; font-size: 11px; opacity: .55; } .acc-b .row:hover .k, .acc-b .row:focus .k { opacity: .8; }
   .envbar { display: flex; align-items: center; gap: 6px; padding: 2px 10px 6px; font-size: 11px; opacity: .85; flex: none; }
   .envbar a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .tree { flex: 1; overflow: auto; }
@@ -1696,8 +1697,9 @@ export function stripHtml(webview: vscode.Webview, extension: vscode.Uri): strin
       for (const a of p.project.actions) {
         const r = el('div', 'row'); r.tabIndex = 0; r.setAttribute('role', 'button');
         r.title = a.title + (a.key ? ' (' + a.key + ')' : '');
-        r.appendChild(el('span', 'k', a.key || ''));
-        r.appendChild(el('span', '', a.label));
+        // the action, then its key at the right, dimmed, as a menu of VS Code shows it
+        r.appendChild(el('span', 'l', a.label));
+        if (a.key) r.appendChild(el('kbd', 'k', a.key));
         r.addEventListener('click', () => vscode.postMessage({ type: 'action', id: a.id }));
         r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); } });
         list.appendChild(r);
