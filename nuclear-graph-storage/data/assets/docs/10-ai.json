@@ -607,12 +607,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#rules.170e08",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#rules.4bf2e4",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Rules",
-   "summary": "a shell; an API key lives only in the keyring and never reaches a log, a run file or an error.",
+   "summary": "station or a passed step again, a spec deleted) asks the user first, naming the files and where they are kept.",
    "body": [
     "- A run is `.nuclear/builder/runs/<id>.json`, saved on every step: every editor and the command draw that same file.",
+    "- No work of an agent is ever deleted: an undo sets it aside first (`undoWrites`), and what takes it back (a restart, a",
+    "  station or a passed step again, a spec deleted) asks the user first, naming the files and where they are kept.",
     "- The factory's adapters render a role in a temporary folder of the run, never in the user's files; no agent gets",
     "  a shell; an API key lives only in the keyring and never reaches a log, a run file or an error.",
     "- Commands are data (`.nuclear/builder.json`): the shell runs nothing that is not there.",
@@ -684,7 +686,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.01c6b3",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.359c48",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
@@ -692,8 +694,7 @@
     "| File | What it is |",
     "|---|---|",
     "| `setup.nuc` | the set-up: the switch `localModels()` and the profiles offered (`offeredProfiles`, `onStandby`), this machine, the profiles and how each sits on it, the ports, the services at login, the steps (`standby` first on a machine that still has something local, `retireLocal`: the Developer's service and launcher, the models it pulled, Ollama when it installed it, the GB freed; the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
-    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `update`, and `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy_imports` of `nuclear.toml` puts each import in its command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |",
-    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |"
+    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `update`, and `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy_imports` of `nuclear.toml` puts each import in its command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -705,16 +706,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.183ef0",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.3e640c",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
    "body": [
-    "| `factory.nuc` | the software factory's engine: the stations, the roles' steps, the strategy, the wiring, the repairs, the lead, the acceptance, the diagnosis, the gates, the checks, the money, the delivery |",
-    "| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback, the recovery |",
-    "| `specs.nuc`, `spec_line.nuc` | the specs by component and layer (`specs/<component>/[<layer>/]<id>/`, `_global`): their folders, a run's `specPath`; `spec new`, `list`, `move`, `migrate`, a draft's `accept` and `discard` |",
-    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |",
-    "| `usage.nuc`, `metrics.nuc` | the reports (spec 017): the factory's ledger (`~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl`, one line per step, run and chat answer across projects; the lines of a write; the runs of before copied once) and `metrics … --json` (the tool `metrics`): the bill, throughput, cycle, burndown, flow, waiting, quality, people, indicators |"
+    "| `usage.nuc`, `metrics.nuc` | the reports (spec 017): the factory's ledger (`~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl`, one line per step, run and chat answer across projects; the lines of a write; the runs of before copied once) and `metrics … --json` (the tool `metrics`): the bill, throughput, cycle, burndown, flow, waiting, quality, people, indicators |",
+    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md; `--informs`: only `INFORM_TOOLS`, Nuclear Atlas's) |",
+    "| `member.nuc` | Nuclear Chat's host (spec 013): `member --team --member <id> --events` (`--role`: the role's first member), a member's one answer (the chat's turn with the member's own prompt), and `chat-host --json`, every member of every team (`<team>-<member id>`; only each team's tech lead and `atlas` `listed`), the channels and the general agent `atlas` with its choices; Atlas only informs (`ATLAS_ROLE`, its tools `--informs`), the tech lead plans, explains and assigns (spec 023) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -726,32 +725,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.54ab6c",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.58dcbc",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
    "body": [
-    "| `tests/*.nuc` | the tests (pytest): the set-up, the teams, the vault, the adapters, the agents (their commands stubbed), the APIs (HTTP stubbed), the factory (the Developer stubbed), the specs, the chat and the members (their providers stubbed), a channel's memory and a team's channel as its tech lead (`test_memory.nuc`), the reports (`test_metrics.nuc`: the usage of each agent, the ledger, a fixture ledger's views), with `tests/support.nuc`; `test_compat.nuc` loads the files of earlier versions kept in `tests/fixtures/compat/` (teams, runs, flat specs, the line, an older chat, a team of the local models of 0.82 converted while they are on standby; the release's backward-compatibility battery); `localOn(monkeypatch)` of `support.nuc` switches the local models on for the tests of their dormant code |",
-    "| `src/runs.ts` | a run for the editors: the run file's types, the spec's markdown, `LineRun` (one run's process: `nuclear-builder … --events`), `lineJson`; no `vscode` import |",
-    "| `src/support.ts` | what the editors keep in TypeScript: the tools' `PATH`, the retry policy, *Check the connections*, Jira and GitHub, the context suggested; no `vscode` import |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/AGENTS.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.6a6797",
-   "type": "readme",
-   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
-   "body": [
+    "| `checks.nuc`, `preflight.nuc`, `ci.nuc` | the run's checks (`checks.json` in the spec's folder); *Check the connections*; the line (`.nuclear/builder.json`), its CI commands and files |",
+    "| `setup.json` | the data of the set-up: the switch `localModels` (false: ADR-platform-0013), the requirements, the embeddings model, the profiles (lite, medium and hard kept, not offered) |",
     "| `roles.nuc` | the software factory's five roles, its stations, where the roles' folders are, their rosters (with each employee's face and its thumbnail), the temperaments |",
-    "| `teams.nuc` | the teams (`~/.config/nuclearlang/factory/teams/<id>.json`, ADR-platform-0010): the members (any number per role, each its id, employee, who works it, settings, personality), an old file (`roles`) converted on its first read, validation, atomic write and `.bak`, who works a role (`memberFor`), the roles a team lacks (`team runnable`), `team create` and `team member add|remove|update`, who works a member by default (`defaultWorker`: the local one while the local models are on, else `externalWorker`; `newMember`, `localTeam`), a local member converted on read while they are on standby (`healTeam`: the default external choice, a `warnings` line each, the file of before as `.bak`), the run's team, the tech lead (a member), purpose, skills, description, logo (`team logo`); the method (Scrum by default) and instructions every member follows (`teamWay`), the team's brain for every member without its own (`withBrains`, `inheritsBrain`), the spending asked only of an API (`asksSpending`, spec 023) |"
+    "| `teams.nuc` | the teams (`~/.config/nuclearlang/factory/teams/<id>.json`, ADR-platform-0010): the members (any number per role, each its id, employee, who works it, settings, personality), an old file (`roles`) converted on its first read, validation, atomic write and `.bak`, who works a role (`memberFor`), the roles a team lacks (`team runnable`), `team create` and `team member add|remove|update`, who works a member by default (`defaultWorker`: the local one while the local models are on, else `externalWorker`; `newMember`, `localTeam`), a local member converted on read while they are on standby (`healTeam`: the default external choice, a `warnings` line each, the file of before as `.bak`), the run's team, the tech lead (a member), purpose, skills, description, logo (`team logo`); the method (Scrum by default) and instructions ever"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -763,17 +745,36 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.86d3df",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.5f7157",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
+   "summary": "y member follows (`teamWay`), the team's brain for every member without its own (`withBrains`, `inheritsBrain`), the spending asked only of an API (`asksSpending`, spec 023) |",
    "body": [
+    "y member follows (`teamWay`), the team's brain for every member without its own (`withBrains`, `inheritsBrain`), the spending asked only of an API (`asksSpending`, spec 023) |",
     "| `library.nuc`, `skills.nuc` | the library of skills and agents (`nuclear-agents/skills`, `nuclear-agents/agents`, spec 011 req. 34): read, an old team's skill words as ids, a team's and a member's own skills (`ownSkills`), what a member gets (`sharedSkills`, `withSkills`: the member's own over the team's, the team's over the library's, a base agent's text); `skills list|show|clone|create|update|delete` and `team skills set` |",
     "| `suggest.nuc` | the new-team wizard's suggestions, deterministic: the roster's employees for a purpose and skills, with why (`team suggest`), and satirical names from `nuclear-agents/roles/team-names.json` (`team name-suggest`) |",
     "| `vault.nuc` | the API keys in the system's keyring (service `nuclear-factory`) |",
     "| `adapter.nuc` | the providers' interface (`Role`, `Work`, `Outcome` with its `usage`, `runAdapter`), the role composed from its folder, the documents, the files changed, a command's lines, the retries |",
-    "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc`, `adapter_cursor.nuc`, `adapter_grok.nuc` | the `local` and `agent` adapters, one per provider |",
-    "| `adapter_api.nuc`, `api_anthropic.nuc`, `api_openai.nuc`, `api_google.nuc`, `api_openrouter.nuc` | the factory's loop for the `api` providers (the MCP server as a client, the prices, the budget) and each one's wire format |"
+    "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc`, `adapter_cursor.nuc`, `adapter_grok.nuc` | the `local` and `agent` adapters, one per provider |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.770ecb",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| `memory.nuc` | every channel's memory (spec 023 requirement 8): `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (`rememberAsked`: the request and the others' messages; `ChannelMemory`: specs, runs, plans, open questions from the member's events), the prompt's *What this channel remembers* (`memorySection`: newest first, capped), and `chat memory <channel> [--thread] [--clear] --json` |",
+    "| `chat_agents.nuc` | `agents --json` (the tool `agents_list`): the agents a conversation can choose on this machine (no local one while the local models are on standby), the general agent's choices for the chat (spec 013 requirement 17), the default external choice (`externalWorker`: the first agent installed, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API provider with a key and a priced model; else none, `NO_PROVIDER`) |",
+    "| `models.nuc` | `models --json` (the tool `models_list`): each provider's models from the provider (Claude Code's, `opencode models`, an API's list, Ollama's installed and pullable ones, none while the local models are on standby), this machine's memory, a local model's memory need and fit (fits, tight, too-big), the members' memory `warnings` of `team create`/`member add|update` (spec 011 req. 35) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -844,6 +845,27 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.c0a836",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal`; what takes the agents' work back asks first (`takeBackOf`, `--yes`, `--plan`) |",
+    "| `factory.nuc` | the software factory's engine: the stations, the roles' steps, the strategy, the wiring, the repairs, the lead, the acceptance, the diagnosis, the gates, the checks, the money, the delivery |",
+    "| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback (every file it takes back set aside first, `undoWrites`: `<id>.set-aside/`), the failed step a retry starts from (`failedStepOf`), the recovery |",
+    "| `specs.nuc`, `spec_line.nuc` | the specs by component and layer (`specs/<component>/[<layer>/]<id>/`, `_global`): their folders, a run's `specPath`; `spec new`, `list`, `move`, `migrate`, a draft's `accept` and `discard` |",
+    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.db3ff3",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
@@ -865,34 +887,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.e6fcc6",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.f9ba8a",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
    "body": [
-    "| `chat_agents.nuc` | `agents --json` (the tool `agents_list`): the agents a conversation can choose on this machine (no local one while the local models are on standby), the general agent's choices for the chat (spec 013 requirement 17), the default external choice (`externalWorker`: the first agent installed, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API provider with a key and a priced model; else none, `NO_PROVIDER`) |",
-    "| `models.nuc` | `models --json` (the tool `models_list`): each provider's models from the provider (Claude Code's, `opencode models`, an API's list, Ollama's installed and pullable ones, none while the local models are on standby), this machine's memory, a local model's memory need and fit (fits, tight, too-big), the members' memory `warnings` of `team create`/`member add|update` (spec 011 req. 35) |",
-    "| `checks.nuc`, `preflight.nuc`, `ci.nuc` | the run's checks (`checks.json` in the spec's folder); *Check the connections*; the line (`.nuclear/builder.json`), its CI commands and files |",
-    "| `setup.json` | the data of the set-up: the switch `localModels` (false: ADR-platform-0013), the requirements, the embeddings model, the profiles (lite, medium and hard kept, not offered) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/AGENTS.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.f3a07a",
-   "type": "readme",
-   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
-   "body": [
-    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md; `--informs`: only `INFORM_TOOLS`, Nuclear Atlas's) |",
-    "| `member.nuc` | Nuclear Chat's host (spec 013): `member --team --member <id> --events` (`--role`: the role's first member), a member's one answer (the chat's turn with the member's own prompt), and `chat-host --json`, every member of every team (`<team>-<member id>`; only each team's tech lead and `atlas` `listed`), the channels and the general agent `atlas` with its choices; Atlas only informs (`ATLAS_ROLE`, its tools `--informs`), the tech lead plans, explains and assigns (spec 023) |",
-    "| `memory.nuc` | every channel's memory (spec 023 requirement 8): `.nuclear/builder/chat/memory/<channel>[/<thread>].jsonl`, written without a model call (`rememberAsked`: the request and the others' messages; `ChannelMemory`: specs, runs, plans, open questions from the member's events), the prompt's *What this channel remembers* (`memorySection`: newest first, capped), and `chat memory <channel> [--thread] [--clear] --json` |"
+    "| `adapter_api.nuc`, `api_anthropic.nuc`, `api_openai.nuc`, `api_google.nuc`, `api_openrouter.nuc` | the factory's loop for the `api` providers (the MCP server as a client, the prices, the budget) and each one's wire format |",
+    "| `tests/*.nuc` | the tests (pytest): the set-up, the teams, the vault, the adapters, the agents (their commands stubbed), the APIs (HTTP stubbed), the factory (the Developer stubbed), the specs, the chat and the members (their providers stubbed), a channel's memory and a team's channel as its tech lead (`test_memory.nuc`), the reports (`test_metrics.nuc`: the usage of each agent, the ledger, a fixture ledger's views), with `tests/support.nuc`; `test_compat.nuc` loads the files of earlier versions kept in `tests/fixtures/compat/` (teams, runs, flat specs, the line, an older chat, a team of the local models of 0.82 converted while they are on standby; the release's backward-compatibility battery); `localOn(monkeypatch)` of `support.nuc` switches the local models on for the tests of their dormant code |",
+    "| `src/runs.ts` | a run for the editors: the run file's types, the spec's markdown, `LineRun` (one run's process: `nuclear-builder … --events`), `lineJson`; no `vscode` import |",
+    "| `src/support.ts` | what the editors keep in TypeScript: the tools' `PATH`, the retry policy, *Check the connections*, Jira and GitHub, the context suggested; no `vscode` import |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -1508,21 +1511,37 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-runs",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-runs.5a9138",
    "type": "context",
    "title": "The actions: every button is a command and a tool — The runs",
-   "summary": "`run answer` reaches a run's process through `.nuclear/builder/runs/<id>.answer.json` when one waits on the question (the process reads it beside its stdin), else the run goes on with the answer (`--events` for the page, `--detach` for an agent).",
+   "summary": "The runs",
    "body": [
     "| Action (page) | Command | Tool | Who |",
     "|---|---|---|---|",
     "| Start a spec, or several in one run (in order, one bill), with a team (`--assign <role>=<member>`: who works a role; else its first member) | `run <spec.md> [<spec.md>…] [--team <id>] [--assign …] --events` (the page) · `--detach` (apart) | `run_start` (`spec`, or `specs`) | spending |",
     "| Resume a run that waits | `run --resume <id>` | `run_resume` | spending |",
-    "| Retry from the station that failed, from a station, from a step | `retry <id> [--from <station>] [--step <step>]` | `run_retry` | spending |",
-    "| Run from scratch (its files go back) | `restart <id>` | `run_restart` | user |",
+    "| Retry from the failed step (the page's main action on a failed run), *Retry this step* (a failed step's detail), *Run <station> again* | `retry <id> [--step <step> \\| --from <station>] [--yes]` (`--plan --json`: the files it would take back, which the page asks about in a modal before it passes `--yes`) | `run_retry` (`confirm`: refused without it when it would take back the agents' work) | spending; taking back the agents' work: user |",
+    "| Start over from the Analysis (its files go back, set aside first) | `restart <id> --yes` (the page's modal first; without `--yes` a terminal is asked, anything else refused) | `run_restart` | user |",
     "| Stop | `run stop <id>` | `run_stop` | anyone |",
     "| The runs | `runs --json` | `runs` | anyone |",
     "| A run's file | `run show <id>` | `run_file` | anyone |",
-    "| A run's journal | `run journal <id>` | `run_journal` | anyone |",
+    "| A run's journal | `run journal <id>` | `run_journal` | anyone |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/actions.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-runs.e5081b",
+   "type": "context",
+   "title": "The actions: every button is a command and a tool — The runs",
+   "summary": "`run answer` reaches a run's process through `.nuclear/builder/runs/<id>.answer.json` when one waits on the question (the process reads it beside its stdin), else the run goes on with the answer (`--events` for the page, `--detach` for an agent).",
+   "body": [
     "| Answer a gate: Approve / Ask for a change / Later; QA's plan: Go on | `run answer <id> --answer approve\\|change\\|stop\\|yes\\|no [--text …]` | `run_answer` | anyone; the delivery gate (a commit and a pull request in the user's name): user; the spending: never (above) |",
     "",
     "`run answer` reaches a run's process through `.nuclear/builder/runs/<id>.answer.json` when one waits on the",
@@ -2258,14 +2277,40 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-process-contract.45e352",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-process-contract.a30ec8",
    "type": "context",
    "title": "The engine — The process contract",
-   "summary": "The editors run the line as a process, one per run: `nuclear-builder run <spec.md> --events [--team <id>] [--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] --events`, `restart <id> --events`), in the project's folder.",
+   "summary": "The editors run the line as a process, one per run: `nuclear-builder run <spec.md> --events [--team <id>] [--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] [--yes] --events`, `restart <id> --yes --events`), in the project's…",
    "body": [
     "The editors run the line as a process, one per run: `nuclear-builder run <spec.md> --events [--team <id>]",
-    "[--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] --events`,",
-    "`restart <id> --events`), in the project's folder."
+    "[--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] [--yes] --events`,",
+    "`restart <id> --yes --events`), in the project's folder."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-run-file.0cdc99",
+   "type": "context",
+   "title": "The engine — The run file",
+   "summary": "role's id (`analyst`…), of a command `shell`, of the user's answer `you`.",
+   "body": [
+    "role's id (`analyst`…), of a command `shell`, of the user's answer `you`. The run adds `team` (`{ id, name }`, the team that works it,",
+    "written when it is made and again when it starts: a retry with another team names that one; the page shows that",
+    "team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`), `spending`, `waiting` (the question it waits for, its `key` and `args`",
+    "for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPlan`, `deliver` [run]) and the status `waiting`; and, from the agent steps,",
+    "`analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the",
+    "actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:",
+    "`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above); `setAside` (what the undos took back, kept). A run is read as the",
+    "project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript",
+    "engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps",
+    "its team and its `assign`; one of the local team that was never saved (`local-team`) gets it again."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2305,37 +2350,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-run-file.99b55f",
-   "type": "context",
-   "title": "The engine — The run file",
-   "summary": "role's id (`analyst`…), of a command `shell`, of the user's answer `you`.",
-   "body": [
-    "role's id (`analyst`…), of a command `shell`, of the user's answer `you`. The run adds `team` (`{ id, name }`, the team that works it,",
-    "written when it is made and again when it starts: a retry with another team names that one; the page shows that",
-    "team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`), `spending`, `waiting` (the question it waits for, its `key` and `args`",
-    "for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPlan`, `deliver` [run]) and the status `waiting`; and, from the agent steps,",
-    "`analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the",
-    "actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:",
-    "`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above). A run is read as the",
-    "project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript",
-    "engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps",
-    "its team and its `assign`; one of the local team that was never saved (`local-team`) gets it again."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.a83c66",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.2d5e08",
    "type": "context",
    "title": "The engine — The specs by component and layer (`specs.nuc`, `spec_line.nuc`)",
-   "summary": "(`component` is `\"\"` for a flat spec; `updated` in ms; `runs` the run ids of the spec).",
+   "summary": "`spec delete <id> [--yes]`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it; asked first: a terminal's prompt, else refused without `--yes`).",
    "body": [
+    "`spec delete <id> [--yes]`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it; asked first: a terminal's prompt, else refused without `--yes`). A draft discarded is kept as `spec.draft.md.bak` beside it.",
     "- `spec update <id> --stdin --json`: the whole markdown on stdin (from its `# title`) over `spec.md`, at once; `{id, path, spec}`; refused while its run is running.",
     "- `spec list --json`: `[{id, title, component, layer, path, updated, runs}]`, sorted by component, layer and title",
     "  (`component` is `\"\"` for a flat spec; `updated` in ms; `runs` the run ids of the spec).",
@@ -2384,7 +2404,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.d64af7",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.fc3b2e",
    "type": "context",
    "title": "The engine — The specs by component and layer (`specs.nuc`, `spec_line.nuc`)",
    "summary": "[--language <en|es|…>] [--stdin] --json`: the language of the project's specs is asked once (spec 024): with none kept in `.nuclear/builder.json` (`specLanguage`) and no `--language`, the spec is refused with what to ask (the editor's language offered first); the one given is kept, and every spec…",
@@ -2399,8 +2419,7 @@
     "  read there (from its `# title`), its id from",
     "  the title and never one in use (a spec or a run: `-2`, `-3`…); prints `{id, path, spec}` (`spec` as `parseSpec`",
     "  reads it). A component is a folder name (`[A-Za-z_][A-Za-z0-9_-]*`), a use case one of the editors' seven.",
-    "- `spec show <id> --json`: `{id, path, text, spec, draft, run}` (the draft's text or null, the run's status).",
-    "  `spec delete <id>`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it)."
+    "- `spec show <id> --json`: `{id, path, text, spec, draft, run}` (the draft's text or null, the run's status)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2547,41 +2566,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.4851e8",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.5914ac",
    "type": "context",
    "title": "The engine — Who works a station",
-   "summary": "run waits.",
+   "summary": "the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free disk.",
    "body": [
-    "run waits. `--confirm-spending` answers them in advance (CI, the editor with `nuclear.spending.confirm` off), refused",
-    "  when the project's `\"forceConfirm\"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on. The",
-    "  confirmation is kept in the run (`spending`): a resumed run does not ask again. Each paid step gets what is left",
-    "  as its budget; a step that ends over it fails the run, and no paid call starts with nothing left.",
-    "- **Safety** (`run.nuc`, today's rules): the run file is written atomically on every change; every event goes to",
-    "  `<id>.log` (JSON lines); the process beats every 10 s (`owner`), a beat older than 45 s or a dead process on this",
-    "  machine is an orphaned run; every file a step changes goes to the ledger (`writes`: the text before, the digest",
-    "  after, the lines added and removed), found by comparing the project's files before and after the step; what a failed step wrote is undone, a",
-    "  file changed since is kept and named; an orphaned run is recovered (its running steps failed, their files undone,",
-    "  `interrupted`, with the `stepId` it was in) and goes on from that step; a retry from a station moves the steps from",
-    "  there to `previous` and undoes their files; a retry from a step (`--step <id>`) keeps the steps of its station"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.5127f4",
-   "type": "context",
-   "title": "The engine — Who works a station",
-   "summary": "before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and the local…",
-   "body": [
-    "before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step",
-    "  after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and",
-    "  the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free",
+    "the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free",
     "  disk. A command is killed with its process group after `commandTimeoutMs`.",
     "- **Watching a call** (`adapter_local.nuc`): a call to the Developer runs in a thread of its own while it is watched:",
     "  cut after `callTimeoutMs`, or when for `stallSeconds` the Developer's `/docs` stops answering or Ollama's `/api/ps`",
@@ -2651,6 +2641,33 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.7ecc1f",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a failed step's, a repair's, a retry's, a restart's, a recovery's) — a copy, not git, since a project need…",
+   "body": [
+    "back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's",
+    "  `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a failed step's, a repair's, a retry's,",
+    "  a restart's, a recovery's) — a copy, not git, since a project need not be a repository and a copy never touches the",
+    "  user's branches; `retry <id>` of a failed run with neither `--from` nor `--step` goes on from its failed step",
+    "  (`failedStepOf`: in the station that failed, the first step that failed after its last step that passed), so the",
+    "  steps before it, the Developer's code among them, are kept; what a retry or a restart would take back of the agents'",
+    "  work (`takeBackOf`) is asked first: a terminal's prompt, else refused without `--yes` (exit code 2), `--plan` prints",
+    "  `{run, files, setAside}` and runs nothing, the tool `run_retry` refuses without `confirm`; an editor that went away",
+    "  (a closed stdout) no longer fails the step that told it an event; a retry from a step (`--step <id>`) keeps the steps of its station",
+    "  before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step",
+    "  after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.90d44f",
    "type": "context",
    "title": "The engine — Who works a station",
@@ -2703,6 +2720,33 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.e3112a",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "run waits.",
+   "body": [
+    "run waits. `--confirm-spending` answers them in advance (CI, the editor with `nuclear.spending.confirm` off), refused",
+    "  when the project's `\"forceConfirm\"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on. The",
+    "  confirmation is kept in the run (`spending`): a resumed run does not ask again. Each paid step gets what is left",
+    "  as its budget; a step that ends over it fails the run, and no paid call starts with nothing left.",
+    "- **Safety** (`run.nuc`, today's rules): the run file is written atomically on every change; every event goes to",
+    "  `<id>.log` (JSON lines); the process beats every 10 s (`owner`), a beat older than 45 s or a dead process on this",
+    "  machine is an orphaned run; every file a step changes goes to the ledger (`writes`: the text before, the digest",
+    "  after, the lines added and removed), found by comparing the project's files before and after the step; what a failed step wrote is undone, a",
+    "  file changed since is kept and named; an orphaned run is recovered (its running steps failed, their files undone,",
+    "  `interrupted`, with the `stepId` it was in) and goes on from that step; a retry from a station moves the steps from",
+    "  there to `previous` and undoes their files; **nothing an undo takes back is lost** (`undoWrites`): before a file goes"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#architecture-of-nuclear-builder",
    "type": "context",
    "title": "Architecture of Nuclear Builder",
@@ -2722,11 +2766,20 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.05e13f",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.3b6c02",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
-   "summary": "edge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |",
-   "body": "edge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |",
+   "summary": "The commands (`line.nuc`, `cli.nuc`)",
+   "body": [
+    "| `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` |",
+    "| `nuclear-builder export github\\|gitlab\\|bitbucket` | writes the CI file |",
+    "| `nuclear-builder runs [--json]` | the runs of this project |",
+    "| `nuclear-builder spec new\\|list\\|show\\|update\\|delete\\|move\\|migrate\\|accept\\|discard` | the specs ([engine.md](engine.md)) |",
+    "| `nuclear-builder line show\\|set KEY=<json>` | the project's line, `.nuclear/builder.json` (each key checked) |",
+    "| `nuclear-builder connections`, `read <path>` | *Check the connections*; a file of the project as text (PDF, `.pptx`, markdown) |",
+    "| `nuclear-builder mcp [--root <dir>]` | the Builder's MCP server: every command above as a tool ([actions.md](actions.md)) |",
+    "| `nuclear-builder team …`, `vault …` | the teams and the keys ([teams-and-vault.md](teams-and-vault.md)) |"
+   ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
    ],
@@ -2737,7 +2790,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.3449c1",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.c77f17",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
    "summary": "The commands (`line.nuc`, `cli.nuc`)",
@@ -2749,12 +2802,9 @@
     "| `nuclear-builder run --resume <id> [--events]` | a run that waits goes on (it asks its question again) |",
     "| `nuclear-builder run answer <id> --answer … [--text …]` | the answer to the question a run waits on: to its process (the answer file) or the run goes on with it; never the spending |",
     "| `nuclear-builder run stop\\|show\\|journal <id>` | a run's process stopped (a run that asks waits); its file; its journal |",
-    "| `nuclear-builder retry <run> [--from <station>]` | a run again from the station that did not pass, or from a station |",
-    "| `nuclear-builder restart <run>` | every station again from scratch (a run of the earlier engine too) |",
-    "| `nuclear-builder checks <run> [list \\| on \\| off \\| add \\| mark] --json` | the run's checks (the console) |",
-    "| `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` |",
-    "| `nuclear-builder export github\\|gitlab\\|bitbucket` | writes the CI file |",
-    "| `nuclear-builder runs [--json]` | the runs of this project |"
+    "| `nuclear-builder retry <run> [--from <station> \\| --step <step>] [--yes] [--plan]` | a failed run again from its failed step (every step before it kept), or from a station or a step; what it would take back of the agents' work is asked first (a terminal's prompt, else refused without `--yes`), `--plan` says it |",
+    "| `nuclear-builder restart <run> [--yes]` | every station again from scratch (a run of the earlier engine too), asked first the same way |",
+    "| `nuclear-builder checks <run> [list \\| on \\| off \\| add \\| mark] --json` | the run's checks (the console) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -2766,18 +2816,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.6b8f3c",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.e3a158",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
    "summary": "The commands (`line.nuc`, `cli.nuc`)",
-   "body": [
-    "| `nuclear-builder spec new\\|list\\|show\\|update\\|delete\\|move\\|migrate\\|accept\\|discard` | the specs ([engine.md](engine.md)) |",
-    "| `nuclear-builder line show\\|set KEY=<json>` | the project's line, `.nuclear/builder.json` (each key checked) |",
-    "| `nuclear-builder connections`, `read <path>` | *Check the connections*; a file of the project as text (PDF, `.pptx`, markdown) |",
-    "| `nuclear-builder mcp [--root <dir>]` | the Builder's MCP server: every command above as a tool ([actions.md](actions.md)) |",
-    "| `nuclear-builder team …`, `vault …` | the teams and the keys ([teams-and-vault.md](teams-and-vault.md)) |",
-    "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; each service it starts (`startService`) is waited for 90 s, started again once, then moved to a free port when another program holds its own without answering, and the other copies of it (an older version's, a source install's) are stopped (`strays`), its error carrying the service's last lines; a port written for our service that is loaded but still starting is kept (`servicePorts`, `loaded`); its step `graph-model` fetches the release's vectors of the knowl"
-   ],
+   "body": "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; each service it starts (`startService`) is waited for 90 s, started again once, then moved to a free port when another program holds its own without answering, and the other copies of it (an older version's, a source install's) are stopped (`strays`), its error carrying the service's last lines; a port written for our service that is loaded but still starting is kept (`servicePorts`, `loaded`); its step `graph-model` fetches the release's vectors of the knowledge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |",
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
    ],
@@ -4746,25 +4789,48 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#run-anything-again",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#run-anything-again.b46371",
    "type": "guide",
    "title": "Follow a run — Run anything again",
-   "summary": "before it are kept.",
+   "summary": "nuclear-builder retry <run> # from the failed step nuclear-builder retry <run> --step <step> | --from <station> [--yes] nuclear-builder retry <run> --from <station> --plan # what it would take back, and where it is kept nuclear-builder restart <run> [--yes] # asked in a terminal; elsewhere refused…",
    "body": [
-    "- *Run <station> again*, on every station and every step: it and every station after it run again; the stations",
-    "  before it are kept.",
-    "- *Run again from scratch*, on the run: every station from the Analysis.",
-    "",
-    "What the steps left out wrote is undone first. A file you changed since the run wrote it is kept, and the page says",
-    "so. The attempt left behind stays under the run with its reason. A run made by the earlier engine can only run again",
-    "from scratch.",
-    "",
     "```sh",
-    "nuclear-builder retry <run> [--from <station>]",
-    "nuclear-builder restart <run>",
+    "nuclear-builder retry <run>                          # from the failed step",
+    "nuclear-builder retry <run> --step <step> | --from <station> [--yes]",
+    "nuclear-builder retry <run> --from <station> --plan  # what it would take back, and where it is kept",
+    "nuclear-builder restart <run> [--yes]                # asked in a terminal; elsewhere refused without --yes",
     "```",
     "",
     "Over MCP: `developer_retry`."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#run-anything-again.d63320",
+   "type": "guide",
+   "title": "Follow a run — Run anything again",
+   "summary": "before it is kept, the code the Developer already wrote among them.",
+   "body": [
+    "- *Retry from the failed step*, the main action of a failed run: it goes on from the step that stopped it; every step",
+    "  before it is kept, the code the Developer already wrote among them. A test that failed after the code was written",
+    "  runs again over that code.",
+    "- *Retry this step*, in a failed step's detail: that step and every step after it.",
+    "- *Run <station> again*, on every station: it and every station after it run again; the stations before it are kept.",
+    "- *Start over…*, on the run: every station from the Analysis, after you confirm.",
+    "",
+    "**Nothing is lost.** What a run takes back (a failed step's files, a station or the whole run run again) is copied first",
+    "to `.nuclear/builder/runs/<run>.set-aside/<time>/`, at each file's own path: copy back what you want from there. The",
+    "run's *Set aside* lists each copy. Running a station again, a passed step again or the whole run asks you first,",
+    "naming how many files the agents wrote go back and where they are kept; *Cancel* is the default. A file you changed",
+    "since the run wrote it is kept where it is, and the page says so. The attempt left behind stays under the run with its",
+    "reason. A run made by the earlier engine can only start over."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
@@ -5069,8 +5135,8 @@
     "- When a station fails, the member who worked it reads the failure once (*Why it failed, and the repair*): when it",
     "  can fix it (a document to correct, a check's findings to follow), the station runs once more with that diagnosis,",
     "  by itself; when it cannot, or fails again, the run stops with the diagnosis for you. The diagnosis costs at most",
-    "  0.50 USD of the run's budget. *↻ Run <station> again* (or `nuclear-builder retry <run>`) runs it again from there,",
-    "  keeping every station that passed.",
+    "  0.50 USD of the run's budget. *↻ Retry from the failed step* (or `nuclear-builder retry <run>`) goes on from there,",
+    "  keeping every step before it.",
     "- Several specs in one run (`nuclear-builder run a.md b.md`): they go one after the other; a failure stops the run on",
     "  that spec, and a retry goes on from it."
    ],

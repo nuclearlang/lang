@@ -228,9 +228,11 @@
     "                                on with it); never the spending: that is confirmed twice where you answer",
     "nuclear-builder run stop <id> | show <id> | journal <id>",
     "                                a run's process stopped (a run that asks waits) · its file (JSON) · its journal",
-    "nuclear-builder retry <id> [--from <station>]   a run again from the station that failed (or --from that one)",
-    "nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)",
-    "nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first",
+    "nuclear-builder retry <id>                   a failed run again from the step that failed (every step before it kept)",
+    "nuclear-builder retry <id> --from <station>  a run again from a station (it and every station after it)",
+    "nuclear-builder retry <id> --step <step>     a run again from one step (it and every step after it)",
+    "nuclear-builder restart <id>                 the whole run again from the Analysis: every file it wrote goes back",
+    "                                first, its last text set aside in .nuclear/builder/runs/<id>.set-aside/",
     "nuclear-builder runs [--json]                the runs of this project",
     "nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view bill|throughput|cycle|burndown|flow|waiting|quality|people|indicators] [--json]",
     "                                the reports of the factory from its ledger (~/.config/nuclearlang/factory/ledger), every",
@@ -242,7 +244,7 @@
     "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
     "                                the base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance",
     "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
-    "nuclear-builder spec show <id> | delete <id> [--json]",
+    "nuclear-builder spec show <id> | delete <id> [--yes] [--json]",
     "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
     "nuclear-builder spec update <id> --stdin [--json]",
     "                                the spec's whole markdown (from its # title, on stdin) over its spec.md",
@@ -625,11 +627,12 @@
   {
    "id": "tool:nuclear-builder.restart",
    "type": "cli",
-   "title": "`nuclear-builder restart` — The whole run again: every file it wrote goes back first",
-   "summary": "The whole run again: every file it wrote goes back first",
+   "title": "`nuclear-builder restart` — The whole run again from the Analysis: every file it wrote goes back first, its last text set…",
+   "summary": "The whole run again from the Analysis: every file it wrote goes back first, its last text set aside in .nuclear/builder/runs/<id>.set-aside/",
    "body": [
     "```text",
-    "nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first",
+    "nuclear-builder restart <id>                 the whole run again from the Analysis: every file it wrote goes back",
+    "                                first, its last text set aside in .nuclear/builder/runs/<id>.set-aside/",
     "```"
    ],
    "keys": [
@@ -650,12 +653,13 @@
   {
    "id": "tool:nuclear-builder.retry",
    "type": "cli",
-   "title": "`nuclear-builder retry` — A run again from the station that failed (or --from that one); A run again from one step (it and…",
-   "summary": "A run again from the station that failed (or --from that one); A run again from one step (it and every step after it)",
+   "title": "`nuclear-builder retry` — A failed run again from the step that failed (every step before it kept); A run again from a…",
+   "summary": "A failed run again from the step that failed (every step before it kept); A run again from a station (it and every station after it); A run again from one step (it and every step after it)",
    "body": [
     "```text",
-    "nuclear-builder retry <id> [--from <station>]   a run again from the station that failed (or --from that one)",
-    "nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)",
+    "nuclear-builder retry <id>                   a failed run again from the step that failed (every step before it kept)",
+    "nuclear-builder retry <id> --from <station>  a run again from a station (it and every station after it)",
+    "nuclear-builder retry <id> --step <step>     a run again from one step (it and every step after it)",
     "```"
    ],
    "keys": [
@@ -826,7 +830,7 @@
     "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
     "                                the base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance",
     "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
-    "nuclear-builder spec show <id> | delete <id> [--json]",
+    "nuclear-builder spec show <id> | delete <id> [--yes] [--json]",
     "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
     "nuclear-builder spec update <id> --stdin [--json]",
     "                                the spec's whole markdown (from its # title, on stdin) over its spec.md",

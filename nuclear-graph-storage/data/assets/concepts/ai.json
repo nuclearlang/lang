@@ -445,7 +445,7 @@
     "- **Where**: VS Code (`Ctrl+Alt+P`), Android Studio (`Alt+Shift+P`), a terminal (`nuclear-builder run specs/<component>/<id>/spec.md`), or `/task <text>` in Nuclear Atlas.",
     "- **The gates**: after Analysis, Design and before Delivery by default (`.nuclear/builder.json` `gates`); `nuclear-builder run --resume <id>` goes on.",
     "- **The journal**: `.nuclear/builder/runs/<id>.md`, next to the run file `<id>.json` the editors draw.",
-    "- **When it fails**: the diagnoser says why; `nuclear-builder retry <id>` goes on from the station that failed, `--from <station>` from another, `--step <step>` from one step with every step after it; `nuclear-builder restart <id>` runs it all again. What the steps left out wrote is undone first; a file changed since is kept.",
+    "- **When it fails**: the diagnoser says why; `nuclear-builder retry <id>` goes on from the step that failed, keeping every step before it (the Developer's code too); `--from <station>` runs a station again and `--step <step>` one step with every step after it; `nuclear-builder restart <id>` runs it all again. A retry or a restart that would take files back asks first (refused without `--yes` outside a terminal; the page and the tools ask the user), and every file the engine takes back is set aside first in `.nuclear/builder/runs/<id>.set-aside/`: no agent's work is lost.",
     "- **On a server**: `nuclear-builder ci` runs the commands of `.nuclear/builder.json` and `nuclear-builder export github|gitlab|bitbucket` writes the CI file."
    ],
    "keys": [

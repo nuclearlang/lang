@@ -624,6 +624,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.a59479",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **A failed step of Nuclear Builder is retried alone, and no run loses the agents' work again**: *Retry from the failed step* is the main action of a failed run (every step before it kept, the Developer's code among them), *Retry this step* is in a failed step's detail, and *Start over…* is apart and asks first. Fix: an undo (a failed step, a repair, a retry from a station, a restart) deleted the files the agents wrote with no copy; now each is set aside first in `.nuclear/builder/runs/<run>.set-aside/`, listed under the run. Whatever takes the agents' work back asks first, naming the files and where they are kept: the page's modal (Cancel by default), the terminal (`retry`, `restart` and `spec delete` refuse without `--yes` elsewhere), the tool `run_retry` (`confirm`). Fix: a Builder window that reloads no longer fails the step a run was in (`Broken pipe`).",
+    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.a6f30f",
    "type": "changelog",
    "title": "Changelog — Unreleased",

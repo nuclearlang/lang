@@ -2742,17 +2742,16 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.27ce80",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.3c37f2",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "also `app(name)`).",
+   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
    "body": [
-    "also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
-    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
-    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace",
-    "  panel is `editor-workspace`.",
-    "",
-    "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
+    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
+    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there.",
+    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.",
+    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
+    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,"
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -2764,18 +2763,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.32ba71",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.7c10f9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
+   "summary": "platform)` per app), read by the compiler's parser as `config.nuc` is.",
    "body": [
-    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there.",
-    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.",
-    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
-    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
-    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
+    "platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
     "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
-    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:"
+    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
+    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
+    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
+    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace",
+    "  panel is `editor-workspace`.",
+    "",
+    "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -5916,6 +5917,34 @@
    }
   },
   {
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0978de",
+   "type": "context",
+   "title": "The code generator: overview — `gen`: from a resource's data to files",
+   "summary": "of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`: mobile and web read APIs, a database resource is backend only); a name another file…",
+   "body": [
+    "of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a",
+    "   decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`:",
+    "   mobile and web read APIs, a database resource is backend only); a name another file declares is refused (N0303).",
+    "3. **The context** (`context(&Resource)`, `usecase_context(&UseCase)`): the values the templates read. `Name`/`name`,",
+    "   `Names`/`names` (`plural`, or `--plural`), `component`/`Component`, `fields`, `data` (the fields without the",
+    "   key), `models`, `rest`/`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items`, `idType`,",
+    "   `actions.<action>`, `each_action`, `screen`/`Screen`, and the samples the tests use (`sample_of`, `sample`). The",
+    "   whole list is in `nuclearlang/docs/07-reference/dialects.md`.",
+    "4. **The plan** (`plan(dialect, what, ctx)`): for each `[[generators.<what>]]` piece of the platform, skipped when",
+    "   its `when` value is not true, once per item of its `each` list: the declaration's name (`name` rendered), its",
+    "   path (the `[layout]` place of its `kind` with `{component}`, `{screen}`, `{file}` = the name in snake_case), and",
+    "   its text (`template` rendered, then put in the canonical layout by `nuclear_syntax::fmt::format`)."
+   ],
+   "sources": [
+    "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0bcf83",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
@@ -5939,7 +5968,55 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.356c83",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.8c008d",
+   "type": "context",
+   "title": "The code generator: overview — `gen`: from a resource's data to files",
+   "summary": "5. The write (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its head line and its body, told by the head line), and says `added to`.",
+   "body": [
+    "5. **The write** (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a",
+    "   facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its",
+    "   head line and its body, told by the head line), and says `added to`. `--dry-run` shows the plan and writes",
+    "   nothing. A component that does not exist is created first (`generators.component`).",
+    "6. **The `Http` connection** (`ensure_http`): a REST resource whose base url no connection of the app's",
+    "   `appConfig` file has gets one written with the platform's `[gen] http` form, or `http_named` (named after the",
+    "   component) when the app already has another; the repository then names it.",
+    "",
+    "`gen usecase` (`UseCase`, `Route`, `parse_route`, `result_parts`): the signature of `exec` is read from the project",
+    "with `nuclear_transpile::map::shape`, never typed again. `--calls <Repository>.<method>` writes the use case too",
+    "(a method that answers no `Result` goes inside an `Ok`); `--route \"<VERB> <prefix>[/<path>]\"` adds its route to the",
+    "controller of the prefix, made when missing (a `{name}` of the path must be a parameter of the use case; the route",
+    "calls it with `~` only when `exec` awaits). A use case that is neither declared nor given `--calls` is refused with",
+    "the place and the form to write it."
+   ],
+   "sources": [
+    "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.91fe6e",
+   "type": "context",
+   "title": "The code generator: overview — `gen`: from a resource's data to files",
+   "summary": "`gen inspect` prints what the project has as JSON: its platform and dialect, its components with their declarations (`kind`, `name`, `file`), what is outside a component, and the generators of its platform.",
+   "body": [
+    "`gen inspect` prints what the project has as JSON: its platform and dialect, its components with their declarations",
+    "(`kind`, `name`, `file`), what is outside a component, and the generators of its platform."
+   ],
+   "sources": [
+    "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.a8e8e1",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
    "summary": "1. The fields (`gen_command` of the command, `generate.rs`): `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not the field's camelCase name gets `@key` (`json_key`).",
@@ -5953,69 +6030,11 @@
     "   - `--from-spec <spec.md>` → its example answer (`spec_json`), else its `Key | Type | Description` table",
     "     (`from_spec`); a table with objects it does not detail reads the API's answer from the spec's `GET <url>` line",
     "     (`spec_url`).",
-    "2. **The checks, before anything is written**: every type a field names is basic (`BASIC`), a model of the same",
-    "   answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns",
-    "   of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a",
-    "   decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`:",
-    "   mobile and web read APIs, a database resource is backend only); a name another file declares is refused (N0303)."
-   ],
-   "sources": [
-    "tools/code_generator/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.c83b6e",
-   "type": "context",
-   "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "3. The context (`context(&Resource)`, `usecase_context(&UseCase)`): the values the templates read.",
-   "body": [
-    "3. **The context** (`context(&Resource)`, `usecase_context(&UseCase)`): the values the templates read. `Name`/`name`,",
-    "   `Names`/`names` (`plural`, or `--plural`), `component`/`Component`, `fields`, `data` (the fields without the",
-    "   key), `models`, `rest`/`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items`, `idType`,",
-    "   `actions.<action>`, `each_action`, `screen`/`Screen`, and the samples the tests use (`sample_of`, `sample`). The",
-    "   whole list is in `nuclearlang/docs/07-reference/dialects.md`.",
-    "4. **The plan** (`plan(dialect, what, ctx)`): for each `[[generators.<what>]]` piece of the platform, skipped when",
-    "   its `when` value is not true, once per item of its `each` list: the declaration's name (`name` rendered), its",
-    "   path (the `[layout]` place of its `kind` with `{component}`, `{screen}`, `{file}` = the name in snake_case), and",
-    "   its text (`template` rendered, then put in the canonical layout by `nuclear_syntax::fmt::format`).",
-    "5. **The write** (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a",
-    "   facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its",
-    "   head line and its body, told by the head line), and says `added to`. `--dry-run` shows the plan and writes",
-    "   nothing. A component that does not exist is created first (`generators.component`)."
-   ],
-   "sources": [
-    "tools/code_generator/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.d69ed4",
-   "type": "context",
-   "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "6. The `Http` connection (`ensure_http`): a REST resource whose base url no connection of the app's `appConfig` file has gets one written with the platform's `[gen] http` form, or `http_named` (named after the component) when the app already has another; the repository then names it.",
-   "body": [
-    "6. **The `Http` connection** (`ensure_http`): a REST resource whose base url no connection of the app's",
-    "   `appConfig` file has gets one written with the platform's `[gen] http` form, or `http_named` (named after the",
-    "   component) when the app already has another; the repository then names it.",
-    "",
-    "`gen usecase` (`UseCase`, `Route`, `parse_route`, `result_parts`): the signature of `exec` is read from the project",
-    "with `nuclear_transpile::map::shape`, never typed again. `--calls <Repository>.<method>` writes the use case too",
-    "(a method that answers no `Result` goes inside an `Ok`); `--route \"<VERB> <prefix>[/<path>]\"` adds its route to the",
-    "controller of the prefix, made when missing (a `{name}` of the path must be a parameter of the use case; the route",
-    "calls it with `~` only when `exec` awaits). A use case that is neither declared nor given `--calls` is refused with",
-    "the place and the form to write it.",
-    "",
-    "`gen inspect` prints what the project has as JSON: its platform and dialect, its components with their declarations",
-    "(`kind`, `name`, `file`), what is outside a component, and the generators of its platform."
+    "2. **The checks, before anything is written**: every name given to `make` or `gen` (a component, a screen, a",
+    "   resource, a use case) is snake_case, starts with a letter, has no `_` at either end nor two together, and is no",
+    "   reserved word of Nuclear or of the project's target (`generated_name` in the CLI: `_global`, `users_`, `if`, and",
+    "   `global` with `fastapi`, are refused with what to write instead, never made into a folder); every type a field names is basic (`BASIC`), a model of the same",
+    "   answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns"
    ],
    "sources": [
     "tools/code_generator/docs/02-architecture/overview.md"
