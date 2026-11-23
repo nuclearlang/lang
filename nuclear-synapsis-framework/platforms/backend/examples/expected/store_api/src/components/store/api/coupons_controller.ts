@@ -2,7 +2,7 @@ import { Coupon } from '../data/entities/coupon.js';
 import { NewCoupons } from '../domain/models/new_coupons.js';
 import { StoreAppComponent } from '../store_appcomponent.js';
 import { Body, Controller, Param, Post, Put } from '@nestjs/common';
-import { AppError, IntPipe, Result } from 'synapsis-nest';
+import { AppError, IntPipe, RequiredPipe, Result } from 'synapsis-nest';
 
 /** The routes of coupons. */
 @Controller('coupons')
@@ -15,7 +15,7 @@ export class CouponsController {
   }
 
   @Put(':id/clear')
-  async clear(@Param('id', IntPipe) id: number): Promise<Result<AppError, number>> {
+  async clear(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, number>> {
     return await this.app.clearCoupon(id);
   }
 }

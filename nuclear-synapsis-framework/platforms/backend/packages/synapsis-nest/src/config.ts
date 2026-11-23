@@ -127,6 +127,10 @@ export abstract class AppConfig {
   readonly guards?: Guard[];
   // the web origins whose browsers may call the API (CORS), when the project config lists them
   readonly origins?: string[];
+  // the largest body or WebSocket frame the app reads, in bytes (default 1 MB)
+  readonly maxBodySize?: number;
+  // the largest page `paginate` answers, in rows (default 100)
+  readonly maxPageSize?: number;
 }
 
 /** The configuration of one component: connections only it uses. */

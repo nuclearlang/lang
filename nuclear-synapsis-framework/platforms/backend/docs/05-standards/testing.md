@@ -168,7 +168,8 @@ and on a known one that no longer happens: the fix deletes its line, so the file
 Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
 
 1. **logs** (SQLite), per dialect: `nuclear build`, the strict checker, then twice (development mode: what
-   `nuclear run` starts; production mode: the same server without the reloader or the watcher) `nuclear migrate`
+   `nuclear run` starts; production mode: the same server without the reloader or the watcher:
+   `python -m synapsis.server`, `node dist/src/main.js`) `nuclear migrate`
    `status`, `make`, `up`, `make`, `status`, `down`, `up`, the app started and driven by the database check's
    scenario, a request with a token and a body that must never be logged, a 500; then the project's tests.
    `logs.py` reads every line of every step, and of the apps of the other stages:
@@ -177,7 +178,10 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
      generated code, a dependency) and why. A stack counts as one line, its last. **A line on no pattern fails the
      check**: a new warning, a deprecation notice, an error;
    - no log holds the database's password, a guard's token or the body of the request;
-   - what a request leaves in each dialect's log is compared: a line per request, the cause of a 500.
+   - what a request leaves in each dialect's log is compared: a line per request in the one format of the
+     reference (§2.8: time, method, path without its query, status, milliseconds), the cause of a 500 (its head
+     `<time> ERROR <METHOD> <path> <type>: <message>`, read with its stack as one line), no query, no parameter of
+     SQL, no `input_value`, no terminal colour in a file.
 2. **security**: both dialects up at once (`store_api` on SQLite and on PostgreSQL, `tasks_api` on SQLite, production
    mode) and `security.py` sends each the same request. A probe is a finding when the dialects answer another
    status (for an error: another body), when an answer is not the one the probe wants, or when an error shows a
@@ -186,7 +190,8 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
      repository word a request can feed (`like`, `ilike`, `oneOf`, `between`, `orderBy`'s field and direction,
      `limit`, `offset`, `paginate`); a field that is no column; then the table is still there with the same rows in
      both dialects;
-   - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one;
+   - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one; a
+     page larger than `maxPageSize` (answered with 100 rows);
    - **errors**: the bodies of 400, 404 and 500, the server's headers, `/docs`, `/redoc`, `/openapi.json`,
      `/.nuclear/*`, `/.env`, other methods, long paths and headers;
    - **bodies**: fields the model does not list (`id`, `createdAt`, a relation, `__proto__`), 200 KB to 30 MB,
@@ -207,7 +212,7 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
    `load.mjs` three times: 32 kept-alive connections, 3000 requests, after 300 of warm-up, the machine's load read
    before each. It prints requests per second, p50, p95, p99, the errors, the app's memory, its start-up time and
    the connections it left open. **It never fails on a speed.** It fails on an error under load, on a route that
-   costs more statements than its bound (`ROUTES` in `performance.py`), on a relation that costs more statements
+   costs more statements than its bound (`ROUTES` in `performance.py`: one for a row, two for a page), on a relation that costs more statements
    with more rows (N + 1), and on a dialect more than ten times slower than the other on a route (two languages
    and two libraries, one process each, on a machine that does other work: ten times is a defect, not a
    difference). `APPCHECK_POOL=1` also exhausts the connection pool (the table locked 75 seconds, 40 requests).

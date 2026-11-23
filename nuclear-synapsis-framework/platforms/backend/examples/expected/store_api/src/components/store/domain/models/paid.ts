@@ -1,9 +1,8 @@
-import { IsInt } from 'class-validator';
-import { checkModel } from 'synapsis-nest';
+import { IsWhole, checkModel } from 'synapsis-nest';
 
 /** How many orders were paid. */
 export class Paid {
-  @IsInt()
+  @IsWhole()
   count!: number;
 
   constructor(values?: Partial<Paid>) {

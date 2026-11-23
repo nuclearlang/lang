@@ -120,13 +120,13 @@ checker() {
   else (cd "$project/build" && node "$nm/typescript/bin/tsc" -p tsconfig.json --noEmit 2>&1 && echo "tsc --strict: 0 errors"); fi
 }
 # what `nuclear run` starts (development: the dialect's [toolchain] run) and what a deployment starts (production:
-# the same server without the reloader; nestjs: `npm start`). The shared tools stand for the project's own.
+# the same server without the reloader: `python -m synapsis.server`, `npm start`). The shared tools stand for the project's own.
 start_app() { # start_app <dialect> <dev|prod> <log file> [NAME=value...]: sets $http and $app_pid
   d=$1 mode=$2 log=$3; shift 3
   http=$(free_port $port_kind)
   case $d-$mode in
-    fastapi-dev) set -- "$@" "$project/build/.venv/bin/uvicorn" app.main:app --reload --port "$http" ;;
-    fastapi-prod) set -- "$@" "$project/build/.venv/bin/uvicorn" app.main:app --port "$http" ;;
+    fastapi-dev) set -- "$@" "$project/build/.venv/bin/python" -m synapsis.server --reload --port "$http" ;;
+    fastapi-prod) set -- "$@" "$project/build/.venv/bin/python" -m synapsis.server --port "$http" ;;
     nestjs-dev) set -- "$@" PORT="$http" node --enable-source-maps --watch dist/src/main.js ;;
     nestjs-prod) set -- "$@" PORT="$http" node dist/src/main.js ;;
   esac

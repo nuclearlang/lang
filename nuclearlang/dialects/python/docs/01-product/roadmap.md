@@ -18,12 +18,6 @@ package, its commands) is in that platform's roadmap.
 
 ## Pending
 
-- **Found by the backend's app check (2026-11-23)**, in `frameworks/fastapi/`:
-  - **every `nuclear test` prints a deprecation notice** of pytest-asyncio (`asyncio_default_fixture_loop_scope`
-    is unset): `templates/pyproject.tpl` sets `asyncio_mode` only;
-  - **`[toolchain] run` is the development server** (`--reload`): no command starts the app for production, and
-    every answer has `Server: uvicorn` (`--no-server-header`).
-
 - **`fastapi` has no `[toolchain] analyze`.** `nuclear analyze` in a fastapi project answers "the fastapi dialect
   has no toolchain.analyze" (found in `nuclear-agents/nuclear_developer/`). The `AGENTS.md` that
   `nuclear agent init` writes tells every agent to run it after `nuclear check`.

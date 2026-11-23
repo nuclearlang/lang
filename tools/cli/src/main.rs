@@ -447,6 +447,12 @@ fn dialect_check(args: &Args, name: &str) -> ExitCode {
                 Diagnostic::error(nuclear_diag::codes::MISSING_TEMPLATE, Default::default(), msg),
             ));
         }
+        if let Some(w) = nuclear_dialect::missing_plugins_warning(d) {
+            if report.files.is_empty() {
+                report.files.push(SourceFile::new(&d.name, ""));
+            }
+            report.diags.push((0, w));
+        }
     }
     let errors = print_report(&report, args.json);
     if !args.json {

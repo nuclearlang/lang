@@ -26,8 +26,15 @@ file goes: `nuclear help layout --platform backend`.
 | `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next("node")` above the node it leaves |
 | `ai/states/` | state | the graph's state (`messages: Messages`) |
 | `events/` | `listener Name(deps)` | `@consumer("topic")` methods; `~publish("topic", value)` |
-| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "..."), WebSocketServer(path = "ws")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"), header = "X-Token")]` (every route: headers only); `origins: string[] = ["http://localhost:5173"]` (the web apps whose browsers may call it, CORS) |
+| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "..."), WebSocketServer(path = "ws")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"), header = "X-Token")]` (every route: headers only); `origins: string[] = ["http://localhost:5173"]` (the web apps whose browsers may call it, CORS); `maxBodySize: int` (bytes, default 1 MB), `maxPageSize: int` (rows of a page, default 100) |
 | `test/` | `tests Name` | `@test("...")` methods, `inject<X>()`, `expect(cond)` |
+
+What a request carries: a body is JSON (`application/json`, UTF-8; 415 otherwise, 413 beyond `maxBodySize`); an `int`
+is 64 bits, a `double` finite, a text without U+0000; a parameter of the path or the query is exactly its type
+(`?page=2`, `true` / `false`; not `0x1`, `1`, `NaN`), given once, and a missing one takes its default or is
+`required`; a larger `size` gives a page of `maxPageSize` rows. A path is matched as written (no redirect for a last
+`/`); another method of a path answers 405. The app listens on 127.0.0.1 (`HOST`, `PORT` change it), logs one line
+per request and the cause of a 500, never a value of the request.
 
 Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.
 Only the `appcomponent` calls use cases; only use cases, aggregates and tools call repositories.

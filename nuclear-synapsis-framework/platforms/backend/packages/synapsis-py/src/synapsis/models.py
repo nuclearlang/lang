@@ -9,6 +9,7 @@ number (`30.0`, as JSON has one kind of number) and a whole number is a `double`
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -16,6 +17,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler, SerializationInfo, SerializerFunctionWrapHandler, model_serializer
 from pydantic.alias_generators import to_camel
 from pydantic_core import PydanticCustomError, core_schema
+
+INT_MIN, INT_MAX = -(2**63), 2**63 - 1
 
 __all__ = ["Model", "WIRE", "wire_date", "wire_dates"]
 
@@ -46,6 +49,11 @@ def _only(kind: str, *allowed: type) -> Callable[[Any], Any]:
         # None goes on: the type itself says whether the field may be empty
         if value is not None and (isinstance(value, bool) or not isinstance(value, allowed)):
             raise PydanticCustomError(f"{kind}_type", "a value of another type")  # pyright: ignore[reportArgumentType]
+        # a number is finite; an `int` holds 64 bits (the reference, §2.3): beyond either, it is not of the type
+        if isinstance(value, float) and not math.isfinite(value):
+            raise PydanticCustomError(f"{kind}_type", "a number that is not finite")  # pyright: ignore[reportArgumentType]
+        if kind == "int" and isinstance(value, (int, float)) and not INT_MIN <= value <= INT_MAX:
+            raise PydanticCustomError("int_type", "a whole number beyond 64 bits")
         return value
 
     return check

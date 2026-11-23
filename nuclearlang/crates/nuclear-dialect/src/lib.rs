@@ -11,7 +11,7 @@ pub mod library;
 pub mod model;
 pub mod template;
 
-pub use model::{Dialect, Loader, Report};
+pub use model::{Dialect, Loader, Report, missing_plugins_warning};
 
 /// Editor documentation of a word of the base language (`base/docs.toml`): `section` is `keywords`,
 /// `builtins` (`Result`, `Ok`, `Err`), `types` (`int`, `string`...) or `tags` (`@param`...).

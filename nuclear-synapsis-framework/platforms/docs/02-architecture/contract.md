@@ -69,7 +69,7 @@ loaded. Every finding is the diagnostic N0305; an error means the dialect does n
 | The dialect declares a plugin that is not in `plugins` | error |
 | `[layout]` names something that is not a kind of the platform | error |
 | `[skeletons]` or a `[[generators.<what>]]` of the platform's `generators.toml` names a kind with no place in `[layout]`; a generator's `name` or `template` does not compile (`load_generators`, same file) | error |
-| The dialect does not bring a plugin of `plugins` yet | warning |
+| The dialect does not bring a plugin of `plugins` yet | warning of `nuclear dialect check` and the bundle check (a build is silent); an error in a project that enables it |
 
 The loader also copies the platform's data into the loaded dialect, so every tool reads it from one place:
 `platform_decorators`, `decorator_args`, `decorator_fields`, `replaced_decorators`, `layout` from the contract;

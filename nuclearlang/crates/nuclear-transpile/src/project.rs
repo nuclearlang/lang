@@ -464,7 +464,14 @@ pub fn check_config(source: &str, dialect: &Dialect) -> (Config, Vec<Diagnostic>
             diags.push(Diagnostic::error(codes::KIND_PACKAGE, *span, msg));
             continue;
         }
-        if dialect.project.plugin(name).is_none() {
+        if value == "true" && dialect.missing_plugins.contains(name.as_str()) {
+            let msg = format!(
+                "'{name}' is a plugin of the {} platform the {} dialect does not bring yet: build with another dialect of the platform",
+                dialect.platform.as_deref().unwrap_or_default(),
+                dialect.name
+            );
+            diags.push(Diagnostic::error(codes::PLATFORM_CONTRACT, *span, msg));
+        } else if dialect.project.plugin(name).is_none() && !dialect.missing_plugins.contains(name.as_str()) {
             let names: Vec<&str> = dialect.project.plugins.iter().map(|p| p.name.as_str()).collect();
             let msg = format!("'{name}' is not a plugin of the {} dialect (plugins: {})", dialect.name, names.join(", "));
             diags.push(Diagnostic::error(codes::PROJECT, *span, msg));

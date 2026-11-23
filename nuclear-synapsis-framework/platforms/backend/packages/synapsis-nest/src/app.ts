@@ -1,6 +1,6 @@
 // The app: NestFactory with Synapsis's configuration, the connections opened at start, and `inject` for code that
 // is not built by Nest (tests, scripts).
-import { INestApplication, Injectable, OnApplicationBootstrap, OnApplicationShutdown, Type } from '@nestjs/common';
+import { ConsoleLogger, INestApplication, Injectable, OnApplicationBootstrap, OnApplicationShutdown, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppConfig, Connection, Database } from './config.js';
 import { configureApp } from './web.js';
@@ -53,7 +53,10 @@ export class Connections implements OnApplicationBootstrap, OnApplicationShutdow
 
 /** The Nest app of `module`, configured and remembered for `inject`. */
 export async function createApp(module: Type<unknown>): Promise<INestApplication> {
-  const app = configureApp(await NestFactory.create(module, { logger: ['error', 'warn', 'log'] }));
+  // the body is read by the app's edge (JSON only, with its limit): the framework's own parsers stay off; the log has
+  // the terminal's colours only in a terminal
+  const logger = new ConsoleLogger({ logLevels: ['error', 'warn', 'log'], colors: Boolean(process.stdout.isTTY) && !process.env.NO_COLOR });
+  const app = configureApp(await NestFactory.create(module, { logger, bodyParser: false }));
   current = app;
   return app;
 }

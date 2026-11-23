@@ -11,7 +11,8 @@
 A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "fastapi")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
 `nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml`
 with the `app(...)` name, version and description). Run it with
-`uvicorn app.main:app` from `build/`; test it with `pytest`.
+`python -m synapsis.server` from `build/` (the runtime's server over uvicorn: `HOST`, default `127.0.0.1`, and `PORT`,
+default 8000; `--reload` in development; no `Server` header, the request lines the app's own); test it with `pytest`.
 
 ```
 rick_api/
@@ -466,10 +467,13 @@ class ProjectConfig(AppConfig):
 #### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)
 
 `guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app
-serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.
+serves no `/openapi.json`; no app serves `/docs` or `/redoc`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.
 `Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:
 `websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards
-on the upgrade and sends every request frame through the app with httpx's ASGI transport.
+on the upgrade (a refusal is the upgrade's HTTP answer, the WebSocket Denial Response) and sends every request frame
+through the app with httpx's ASGI transport. Every request passes the runtime's `Edge` (an ASGI middleware: the line
+of the log, the cause of a 500, the body's limit and type, CORS); a parameter of the path or the query is read by one
+dependency of the route (`synapsis.wire.parse_param`), the body by FastAPI through the runtime's JSON reader.
 
 ```nuclear
 // config.nuc: plugins(sqlite = true, events = true, websocket = true)

@@ -23,6 +23,7 @@ from typing import Any, cast, get_args, get_origin
 
 from sqlalchemy import Select, String, Table, delete as sql_delete, func, inspect, select, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic.alias_generators import to_camel
 from sqlalchemy.orm import selectinload
 
 from .errors import IntegrityViolation, NotFound
@@ -48,6 +49,10 @@ class Page[T]:
 
 # the session of the running @transactional call
 _tx: ContextVar[AsyncSession | None] = ContextVar("synapsis_transaction", default=None)
+
+
+class InvalidField(AttributeError):
+    """A field of `where` or `orderBy` that is not a column of the entity: the program's error, a 500 that says it."""
 
 
 class _Rollback(Exception):
@@ -156,11 +161,12 @@ class Repository[T: Entity]:
             if get_origin(base) is Repository and get_args(base) and isinstance(get_args(base)[0], type):
                 cls.entity = get_args(base)[0]
 
-    def session(self) -> AsyncSession:
+    def session(self, write: bool = True) -> AsyncSession:
         from .app import connection
         from .config import Database
 
-        return cast(AsyncSession, connection(Database, self.database).sessions())
+        db = connection(Database, self.database)
+        return cast(AsyncSession, (db.sessions if write or db.reads is None else db.reads)())
 
     @asynccontextmanager
     async def use(self, write: bool = False) -> AsyncIterator[AsyncSession]:
@@ -171,7 +177,7 @@ class Repository[T: Entity]:
             if write:
                 await current.flush()
             return
-        async with self.session() as s:
+        async with self.session(write) as s:
             if write:
                 async with s.begin():
                     yield s
@@ -262,14 +268,18 @@ class Query[T: Entity]:
         self.loads: list[str] = []
 
     def _col(self, field: str) -> Any:
-        # a key of `where` is the Nuclear name (`projectId`), the attribute its snake_case (`project_id`)
-        col = getattr(self.repo.entity, field, None) or getattr(self.repo.entity, _snake(field), None)
-        if col is None:
-            raise AttributeError(f"{self.repo.entity.__name__} has no column '{field}'")
-        return col
+        # a key of `where` is the Nuclear name (`projectId`), the attribute its snake_case (`project_id`); only a
+        # column of the entity: never a relation or an attribute of the class
+        # (the name is not in the message: it may be a client's text, and the log never holds one)
+        columns = inspect(self.repo.entity).column_attrs
+        name = _snake(field)
+        if name not in columns or to_camel(name) != field:
+            raise InvalidField(f"{self.repo.entity.__name__} has no column of that name")
+        return getattr(self.repo.entity, name)
 
     def where(self, conditions: Mapping[str, Any] | None = None, /, **more: Any) -> Query[T]:
-        for field, value in {**(conditions or {}), **more}.items():
+        # (a keyword is Python's name of the column: `where(project_id=1)` is `where({"projectId": 1})`)
+        for field, value in {**(conditions or {}), **{to_camel(k): v for k, v in more.items()}}.items():
             col = self._col(field)
             self.conditions.append(value.apply(col) if isinstance(value, Op) else col == value)
         return self
@@ -324,7 +334,11 @@ class Query[T: Entity]:
 
     async def paginate(self, page: int, size: int = 20) -> Page[T]:
         """One page (from 1) of `size` rows, with the total of rows and of pages."""
-        page, size = max(page, 1), max(size, 1)
+        # a page is never larger than the app's `maxPageSize` (as Spring Data's `max-page-size`): a larger size is
+        # answered with that many rows, and the page says its size
+        from .wire import LIMITS
+
+        page, size = max(page, 1), min(max(size, 1), LIMITS.page)
         total = await self.count()
         self.max, self.skip = size, (page - 1) * size
         return Page(await self.get_many(), page, size, total, math.ceil(total / size))

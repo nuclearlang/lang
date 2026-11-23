@@ -1,5 +1,5 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
-import { checkModel } from 'synapsis-nest';
+import { IsBoolean, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsWhole, checkModel } from 'synapsis-nest';
 
 /** What the API receives to create a task. */
 export class NewTask {
@@ -7,12 +7,12 @@ export class NewTask {
   @MinLength(1)
   @MaxLength(200)
   title!: string;
-  @IsInt()
+  @IsWhole()
   @Min(1)
   @Max(3)
   priority: number = 2;
   @IsOptional()
-  @IsInt()
+  @IsWhole()
   projectId?: number;
 
   constructor(values?: Partial<NewTask>) {
@@ -33,7 +33,7 @@ export class TaskChanges {
   @IsBoolean()
   done?: boolean;
   @IsOptional()
-  @IsInt()
+  @IsWhole()
   @Min(1)
   @Max(3)
   priority?: number;
@@ -48,7 +48,7 @@ export class TaskChanges {
 
 /** The answer of a delete. */
 export class Removed {
-  @IsInt()
+  @IsWhole()
   id!: number;
 
   constructor(values?: Partial<Removed>) {
@@ -76,7 +76,7 @@ export class NewProject {
 
 /** How many tasks a close moved. */
 export class Moved {
-  @IsInt()
+  @IsWhole()
   count!: number;
 
   constructor(values?: Partial<Moved>) {

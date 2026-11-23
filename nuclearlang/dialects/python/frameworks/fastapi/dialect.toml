@@ -210,7 +210,8 @@ needs = "python"
 install = "python3 -m venv .venv && .venv/bin/pip install -q {{packages}}/synapsis-py && .venv/bin/pip install -q -e '.[test]'"
 # a dependency that is a folder, installed again by `nuclear install` (its version does not change with its code)
 install_local = ".venv/bin/pip install -q --no-deps --force-reinstall {{path}}"
-run = ".venv/bin/uvicorn app.main:app --reload --port {{port}}"
+# the runtime's server (synapsis.server): HOST (default 127.0.0.1) and PORT, the request lines the app's own, no `Server` header
+run = ".venv/bin/python -m synapsis.server --reload --port {{port}}"
 test = ".venv/bin/python -m pytest -q"
 # where the server answers (the editor's debugger and HTTP tool), what exists once installed, its ready line
 url = "http://localhost:8000"
@@ -234,7 +235,7 @@ migrate_status = ".venv/bin/python -m synapsis.migrate status --dir {{migrations
 
 [toolchain.windows]
 install = "python -m venv .venv && .venv\\Scripts\\pip install -q {{packages}}/synapsis-py && .venv\\Scripts\\pip install -q -e .[test]"
-run = ".venv\\Scripts\\uvicorn app.main:app --reload --port {{port}}"
+run = ".venv\\Scripts\\python -m synapsis.server --reload --port {{port}}"
 test = ".venv\\Scripts\\python -m pytest -q"
 package_add = ".venv\\Scripts\\pip install -q {{requirement}}"
 package_remove = ".venv\\Scripts\\pip uninstall -q -y {{name}}"
@@ -251,8 +252,8 @@ migrate_status = ".venv\\Scripts\\python -m synapsis.migrate status --dir {{migr
 name = "{{name}} (debug)"
 type = "debugpy"
 request = "launch"
-module = "uvicorn"
-args = ["app.main:app", "--port", "{{port}}"]
+module = "synapsis.server"
+args = ["--port", "{{port}}"]
 cwd = "{{app}}"
 python = "{{app}}/.venv/bin/python"
 justMyCode = true

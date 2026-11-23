@@ -1,11 +1,11 @@
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
-import { IsDateTime, checkModel } from 'synapsis-nest';
+import { IsBoolean, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDateTime, IsWhole, checkModel } from 'synapsis-nest';
 
 /** What it takes to add or change an order. */
 export class NewOrder {
-  @IsInt()
+  @IsWhole()
   customerId!: number;
-  @IsInt()
+  @IsWhole()
   quantity: number = 1;
   @IsNumber()
   total!: number;

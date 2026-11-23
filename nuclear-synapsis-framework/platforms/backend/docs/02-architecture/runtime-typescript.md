@@ -18,7 +18,8 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 | | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |
 | | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |
 | | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
-| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below), `configureApp`; serves the contract (`serveContract`) |
+| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |
+| | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |
 | | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |
 | | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |
 | `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`), `sinks` |
@@ -35,6 +36,12 @@ Behaviour worth knowing:
   peers conflict with zod 4 and ioredis 6.
 - The order of a controller's routes does not matter: a fixed segment wins over a parameter (`configureApp`;
   reference §2.7).
+- Nest's body parsers are off (`bodyParser: false` in `createApp` and `startTestApp`): the edge reads the body, the
+  global `BodyPipe` parses it only for a route that takes one, and class-validator runs on the body only
+  (`BodyValidation`). A pipe never throws: it returns `Refused`, and every route method is wrapped
+  (`refusedTogether`, with its metadata) so it refuses the parameters together, before the body.
+- Express's `x-powered-by` and `etag` are off; its router is case sensitive and strict (a last `/`), set on the
+  router itself before Nest adds the routes. The logger has colours only in a terminal (`NO_COLOR` too).
 - In the tests the databases are SQLite in memory (`SYNAPSIS_DATABASE=memory`, set by `startTestApp`).
 
 ## How it is installed

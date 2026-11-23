@@ -10,7 +10,7 @@
 ## 1. Project
 
 A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "nestjs")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
-`nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`. In `build/`: `npm install`, `npm run dev` (port `PORT`, default 3000), `npm test`.
+`nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`. In `build/`: `npm install`, `npm run dev` (port `PORT`, default 3000; address `HOST`, default `127.0.0.1`), `npm test`.
 The output is ES modules (NestJS 12): relative imports name the `.js` file.
 
 ```
@@ -319,15 +319,15 @@ model NewTask
 ```
 
 ```typescript
-import { IsEmail, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
-import { checkModel } from 'synapsis-nest';
+import { IsEmail, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsWhole, checkModel } from 'synapsis-nest';
 
 export class NewTask {
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   title!: string;
-  @IsInt()
+  @IsWhole()
   @Min(1)
   @Max(3)
   priority: number = 2;
@@ -510,7 +510,7 @@ controller TasksController(tasks: TasksAppComponent)
 ```typescript
 import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { AppError, IntPipe, Result, checkModel } from 'synapsis-nest';
+import { AppError, IntPipe, RequiredPipe, Result, TextPipe, checkModel } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
@@ -530,17 +530,17 @@ export class TasksController {
   constructor(private readonly tasks: TasksAppComponent) {}
 
   @Get(':id')
-  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {
+  async one(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, Task>> {
     return await this.tasks.task(id);
   }
 
   @Patch(':id')
-  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {
+  async complete(@Param('id', RequiredPipe, IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {
     return await this.tasks.complete(id, changes);
   }
 
   @Get()
-  search(@Query('text') text?: string): string {
+  search(@Query('text', TextPipe) text?: string): string {
     return text ?? '';
   }
 }

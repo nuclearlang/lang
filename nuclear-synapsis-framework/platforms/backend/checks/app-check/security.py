@@ -185,7 +185,8 @@ def parameters(bases: dict[str, str]) -> None:
     probe("param.missing.text", bases, "GET", "/probe/named", want=400)
     probe("param.missing.int", bases, "GET", "/customers/page", want=400)
     probe("param.repeated", bases, "GET", "/probe/sorted?field=name&field=email&desc=false&max=1&skip=0", want=(200, 400))
-    probe("page.size.unbounded", bases, "GET", "/customers/page?page=1&size=1000000000", want=400)
+    # a size beyond the app's largest page (100 by default) is answered with that many rows, and says so
+    probe("page.size.unbounded", bases, "GET", "/customers/page?page=1&size=1000000000", want=lambda a: a[0] == 200 and json.loads(a[2]).get("size") == 100)
 
 
 def errors(bases: dict[str, str]) -> None:
@@ -230,7 +231,8 @@ def bodies(bases: dict[str, str]) -> None:
     probe("body.200KB", bases, "POST", "/customers", {"email": "big@example.com", "name": "n", "nickname": "x" * 200_000}, want=(400, 413))
     probe("body.2MB", bases, "POST", "/customers", {"email": "big@example.com", "name": "n", "nickname": "x" * 2_000_000}, want=(400, 413))
     probe("body.30MB", bases, "POST", "/customers", {"email": "big@example.com", "name": "n", "nickname": "x" * 30_000_000}, want=413)
-    probe("body.note.1MB", bases, "POST", "/orders", {"customerId": 1, "total": 1, "note": "x" * 1_000_000}, want=(400, 413))
+    # under the limit (1 MB), a text longer than its column: what the database refuses for integrity (409)
+    probe("body.note.1MB", bases, "POST", "/orders", {"customerId": 1, "total": 1, "note": "x" * 1_000_000}, want=409)
     probe("body.deep", bases, "POST", "/customers", b"[" * 50_000 + b"]" * 50_000, JSON, want=400)
     probe("body.deep.field", bases, "POST", "/customers", b'{"email":"d@example.com","name":' + b"[" * 50_000 + b"]" * 50_000 + b"}", JSON, want=400)
     probe("body.number.huge", bases, "POST", "/customers", b'{"email":"n1@example.com","name":"n","credit":1e999}', JSON, want=400)

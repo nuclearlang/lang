@@ -83,15 +83,13 @@ class ItemController:
 
 
 async def test_a_renamed_parameter_keeps_its_public_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    # away from a built project: there `app.openapi()` is the document the transpiler wrote (ADR-synapsis-0013)
+    # the parameters are read by their Nuclear names (the API's document is the transpiler's, ADR-synapsis-0013)
     monkeypatch.chdir(tmp_path)
     app = create_app(Config(), controllers=[ItemController])
     async with client(app, Config(), memory_database()) as http:
         answer = await http.get("/items/book", params={"list": 3, "from": "shelf"})
         assert answer.status_code == 200, answer.text
         assert answer.json() == "book:3:shelf"
-        names = {p["name"] for p in app.openapi()["paths"]["/items/{type_}"]["get"]["parameters"]}
-        assert {"list", "from"} <= names
 
 
 class WeatherTools(Tools):

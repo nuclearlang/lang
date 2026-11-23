@@ -5,7 +5,7 @@
 @IsString({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.string}}
 {{#tinfo.is.int}}
-@IsInt({{#tinfo.list}}{ each: true }{{/tinfo.list}})
+@IsWhole({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.int}}
 {{#tinfo.is.double}}
 @IsNumber({{#tinfo.list}}{ each: true }{{/tinfo.list}})

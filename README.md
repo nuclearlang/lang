@@ -33,7 +33,7 @@ Zed), the MCP server and the Smart Graph for your AI agents. `nuclear update` ke
 ```sh
 nuclear new todos_api -p backend && cd todos_api            # a backend: only .nuc files
 nuclear gen resource todos Todo --fields "id:int title:string completed:boolean"
-nuclear run                                                 # FastAPI at http://localhost:8000/docs
+nuclear run                                                 # FastAPI at http://localhost:8000/openapi.json
 ```
 
 What `nuclear gen` wrote, and what you would change, is short Nuclear (`components/todos/`):

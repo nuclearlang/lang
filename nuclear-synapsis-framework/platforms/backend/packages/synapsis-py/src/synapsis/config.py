@@ -92,6 +92,7 @@ class Database(Connection):
         self.echo = echo
         self.engine: Any = None
         self.sessions: Any = None
+        self.reads: Any = None
 
     async def open(self) -> None:
         from sqlalchemy import event
@@ -103,6 +104,10 @@ class Database(Connection):
             # SQLite checks foreign keys (and their ON DELETE) only when asked, as sequelize does for nestjs
             event.listen(self.engine.sync_engine, "connect", lambda conn, _: conn.execute("PRAGMA foreign_keys=ON"))
         self.sessions = async_sessionmaker(self.engine, expire_on_commit=False)
+        # a read outside a transaction is one statement: no BEGIN and ROLLBACK around it, where the driver turns
+        # autocommit on without a statement of its own (PostgreSQL, SQLite); a write and `@transactional` use `sessions`
+        reads = self.engine.execution_options(isolation_level="AUTOCOMMIT") if self.url.startswith(("postgresql", "sqlite")) else self.engine
+        self.reads = async_sessionmaker(reads, expire_on_commit=False)
         configure_mappers()  # the relations and their join tables exist before the tables are created
         if self.create_tables:
             from .migrate import create_tables
@@ -249,11 +254,14 @@ class Chroma(Connection):
 
 class AppConfig:
     """The project configuration (config/project_config.nuc): its connections, the guards every route passes
-    (ADR-synapsis-0007), and the web origins whose browsers may call the API (CORS)."""
+    (ADR-synapsis-0007), the web origins whose browsers may call the API (CORS), the largest body or WebSocket frame
+    the app reads (bytes) and the largest page `paginate` answers (rows)."""
 
     connections: list[Connection] = []
     guards: list[Guard] = []
     origins: list[str] = []
+    max_body_size: int = 1024 * 1024
+    max_page_size: int = 100
 
 
 class ComponentConfig:

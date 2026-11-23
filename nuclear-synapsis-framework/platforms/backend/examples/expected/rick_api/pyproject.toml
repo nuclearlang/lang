@@ -22,6 +22,7 @@ test = ["synapsis-py[test]"]
 pythonpath = ["."]
 python_files = ["*_test.py", "test_*.py"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.pyright]
 typeCheckingMode = "strict"

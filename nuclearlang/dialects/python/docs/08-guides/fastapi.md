@@ -187,8 +187,8 @@ class CharactersController:
 
 An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database.
 Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written
-by the runtime from what FastAPI and pydantic report; `/openapi.json` and `/docs` show the document the transpiler
-wrote from the contract, not one worked out from the generated Python (ADR-synapsis-0013).
+by the runtime from what FastAPI and pydantic report; `/openapi.json` is the document the transpiler
+wrote from the contract (no `/docs` page), not one worked out from the generated Python (ADR-synapsis-0013).
 
 ## 5. AI: tools, agents and graphs (plugin `ai`)
 
@@ -238,12 +238,13 @@ Kafka listeners (`listener` + `@consumer("topic")`, `~publish(topic, data)`) nee
 ```sh
 nuclear build                    # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml)
 nuclear install                  # a venv in build/ with the runtime and the app's packages
-nuclear run                      # uvicorn app.main:app --reload: http://localhost:8000/docs
+nuclear run                      # python -m synapsis.server --reload: http://localhost:8000
 nuclear test                     # pytest: the tests written in Nuclear
 ```
 
 The same by hand, from `build/`: `python -m venv .venv`, `pip install ~/.local/share/nuclearlang/packages/synapsis-py`
-(the runtime, until it is on PyPI), `pip install -e ".[test]"`, `uvicorn app.main:app --reload`, `pytest`.
+(the runtime, until it is on PyPI), `pip install -e ".[test]"`, `python -m synapsis.server --reload` (production: without `--reload`; `HOST=0.0.0.0` in a
+container), `pytest`.
 
 In VS Code: while ▷ Serve runs, saving a `.nuc` rebuilds and uvicorn reloads; ◉ Debug (or F5 with
 `build/<name>.code-workspace`) runs the server under debugpy (the Python extension) with the venv of `build/`: a

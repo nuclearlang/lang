@@ -1,5 +1,5 @@
-import { IsArray, IsInt, IsString, MinLength } from 'class-validator';
-import { checkModel } from 'synapsis-nest';
+import { IsArray, IsString, MinLength } from 'class-validator';
+import { IsWhole, checkModel } from 'synapsis-nest';
 
 /** A message for the assistant; `thread` keeps one conversation. */
 export class ChatRequest {
@@ -47,7 +47,7 @@ export class PlanReply {
   @IsString({ each: true })
   @IsArray()
   titles!: string[];
-  @IsInt()
+  @IsWhole()
   created!: number;
   @IsString({ each: true })
   @IsArray()

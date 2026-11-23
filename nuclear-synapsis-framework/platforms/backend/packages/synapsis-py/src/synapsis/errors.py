@@ -124,7 +124,9 @@ def reasons_of(errors: Iterable[Mapping[str, Any]]) -> list[dict[str, str]]:
         kind = str(e.get("type", ""))
         ctx = e.get("ctx") or {}
         base = kind.split("_")[0]
-        if kind == "missing" or (kind.endswith("_type") and e.get("input") is None):
+        if kind == "synapsis":  # a reason already in Nuclear's words (synapsis.wire)
+            out.append(dict(e["synapsis"]))
+        elif kind == "missing" or (kind.endswith("_type") and e.get("input") is None):
             out.append(reason(field, "required"))
         elif kind == "json_invalid":
             out.append(reason("", "json"))
@@ -141,6 +143,8 @@ def reasons_of(errors: Iterable[Mapping[str, Any]]) -> list[dict[str, str]]:
         elif kind == "value_error":
             said = str(e.get("msg", "")).lower()
             out.append(reason(field, "email" if "e-mail" in said else "url" if "url" in said else "invalid"))
+        elif kind == "finite_number":
+            out.append(reason(field, "type", "a number"))
         elif base in _TYPES and (kind.endswith(("_type", "_parsing", "_from_float")) or kind == "model_attributes_type"):
             out.append(reason(field, "type", _TYPES[base]))
         else:

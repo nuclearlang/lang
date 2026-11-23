@@ -20,7 +20,10 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
 | `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
 | `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |
-| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`) |
+| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |
+| `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |
+| `wire` | how a request is read, the same as the other runtime: `read_json` (UTF-8, no `NaN`, 512 levels, no U+0000), `is_json`, `parse_param` (the parameters of the path and the query), `LIMITS` (`maxBodySize`, `maxPageSize`) |
+| `server` | `python -m synapsis.server [--reload] [--port]`: uvicorn on `HOST` (default `127.0.0.1`) and `PORT`, no `Server` header, no access log of its own |
 | `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |
 | `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |
 | `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |
@@ -34,6 +37,14 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 Behaviour worth knowing:
 
 - The controller decorators add the leading slash to the platform's segments; an invalid body answers 400.
+- A route's scalar parameters are not FastAPI's: one dependency (`web._reader`) reads them all by `wire.parse_param`
+  and refuses every refused one together; the body is FastAPI's, read through `_JsonRequest.json` (`wire.read_json`).
+  A `GET` route also answers `HEAD` (a second route, out of the OpenAPI document). `redirect_slashes` is off.
+- Reads outside a transaction use `Database.reads`, a session whose engine is in autocommit on PostgreSQL and SQLite
+  (one statement, no `BEGIN` / `ROLLBACK`); writes and `@transactional` use `sessions`.
+- The Edge is inside FastAPI's `ServerErrorMiddleware`: what no handler answered is logged by it and answered 500,
+  so the server never prints a stack with the request's values; `uvicorn.access` is off and the server's WebSocket
+  lines (they hold the query) are filtered (`_Quiet`).
 - The order of a controller's routes does not matter: a fixed segment wins over a parameter (`router_of`;
   reference §2.7).
 - A parameter the dialect wrote with a trailing `_` (its name is a Python word or builtin: `type_`, `from_`) keeps

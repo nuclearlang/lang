@@ -10,7 +10,7 @@ export class TagsController {
   constructor(private readonly app: StoreAppComponent) {}
 
   @Get()
-  async list(@Query('page', IntPipe) page: number): Promise<Result<AppError, Tag[]>> {
+  async list(@Query('page', IntPipe) page: number = 1): Promise<Result<AppError, Tag[]>> {
     return await this.app.listTags(page);
   }
 

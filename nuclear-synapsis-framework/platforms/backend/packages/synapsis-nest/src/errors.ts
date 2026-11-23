@@ -119,7 +119,7 @@ const CONSTRAINTS: Record<string, [string, string?]> = {
 // a list checked item by item (`{ each: true }`): what an item of each type is, so the reason names the item
 const ITEM: Record<string, (v: unknown) => boolean> = {
   isString: (v) => typeof v === 'string',
-  isInt: (v) => Number.isInteger(v),
+  isInt: (v) => typeof v === 'number' && Number.isInteger(v) && v >= -(2 ** 63) && v < 2 ** 63,
   isNumber: (v) => typeof v === 'number' && Number.isFinite(v),
   isBoolean: (v) => typeof v === 'boolean',
   isDate: (v) => v instanceof Date && !Number.isNaN(v.getTime()),

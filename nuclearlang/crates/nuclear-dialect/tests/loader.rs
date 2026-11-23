@@ -378,19 +378,21 @@ fn docs_urls_come_from_the_dialect_chain() {
 #[test]
 fn synapsis_dialects_implement_their_platform() {
     // ADR-synapsis-0002: a framework dialect names its platform and matches its platform.toml; a platform plugin a
-    // dialect does not bring is a warning (nestjs does not bring telemetry yet: spec 012, phase 1)
+    // dialect does not bring is a warning of the dialect (nestjs does not bring telemetry yet: spec 012, phase 1)
     let loader = tree_loader(vec![]);
     for (name, platform, missing) in [("flutter", "mobile", ""), ("fastapi", "backend", ""), ("nestjs", "backend", "telemetry")] {
         let (d, report) = loader.load(name);
         let d = d.unwrap_or_else(|| panic!("{name}: {:?}", report.diags.iter().map(|(_, x)| &x.message).collect::<Vec<_>>()));
         assert_eq!(d.platform.as_deref(), Some(platform), "{name}");
+        // the load itself says nothing of it (a build of a project that does not enable the plugin is silent)
         let contract: Vec<&str> =
             report.diags.iter().filter(|(_, x)| x.code.id == "N0305").map(|(_, x)| x.message.as_str()).collect();
+        assert!(contract.is_empty(), "{name}: {contract:?}");
+        let warning = nuclear_dialect::missing_plugins_warning(&d).map(|w| w.message);
         if missing.is_empty() {
-            assert!(contract.is_empty(), "{name}: {contract:?}");
+            assert!(warning.is_none(), "{name}: {warning:?}");
         } else {
-            assert_eq!(contract.len(), 1, "{name}: {contract:?}");
-            assert!(contract[0].ends_with(&format!("yet: {missing}")), "{name}: {}", contract[0]);
+            assert!(warning.as_deref().is_some_and(|w| w.ends_with(&format!("yet: {missing}"))), "{name}: {warning:?}");
         }
     }
     for name in ["typescript", "dart", "python", "nodejs"] {

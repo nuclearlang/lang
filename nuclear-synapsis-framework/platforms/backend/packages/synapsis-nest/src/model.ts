@@ -1,7 +1,8 @@
 // The models of an app: what a field of a model checks beyond its validator's own decorators, and the check of a
 // model built in code. A value's JSON type is its field's (the platform's reference, §2.3): nothing converts.
 import { Transform } from 'class-transformer';
-import { IsDate, validateSync } from 'class-validator';
+import { IsDate, ValidateBy, ValidationOptions, validateSync } from 'class-validator';
+import { INT_MAX, INT_MIN } from './edge.js';
 import { Invalidity, Reason, errorBody, reasonsOf } from './errors.js';
 
 /** A `DateTime` field of a model: a text in JSON, read as a Date; a value of another JSON type is refused, and so is
@@ -16,6 +17,16 @@ export function IsDateTime(options: { each?: boolean } = {}): PropertyDecorator 
     })(target, key);
     IsDate(options)(target, key);
   };
+}
+
+/** A whole number within 64 bits (an `int` of the platform, the reference §2.3): beyond it, a number is not of the
+ * type. Its name is the validator's `isInt`, so its reason is the type's. */
+export function isWhole(v: unknown): boolean {
+  return typeof v === 'number' && Number.isInteger(v) && v >= INT_MIN && v < INT_MAX;
+}
+
+export function IsWhole(options: ValidationOptions = {}): PropertyDecorator {
+  return ValidateBy({ name: 'isInt', validator: { validate: (v) => isWhole(v), defaultMessage: () => 'must be a whole number' } }, options);
 }
 
 /** A model built in code that breaks its own rules: what its constructor throws. Nothing handles it by itself, so a

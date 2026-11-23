@@ -11,7 +11,8 @@
 A backend's build also writes its **contract** (`.nuclear/contract.json`: controllers, routes, models) and its
 **OpenAPI document** (`.nuclear/openapi.json`), served by the running app at `/.nuclear/contract.json` and
 `/.nuclear/openapi.json`; a mobile or web project generates its models and repositories from it
-([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1.2, ADR-synapsis-0006).
+([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1.2, ADR-synapsis-0006). The app serves no
+interactive documentation pages (`/docs`, `/redoc`): its API is that document, also at `/openapi.json`.
 
 
 ```
@@ -158,7 +159,9 @@ query, created for that call: `where({...})` (equality, or `gt`, `gte`, `lt`, `l
 `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the
 relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`:
 `items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,
-`update({...})`, `delete()`. The caller awaits it:
+`update({...})`, `delete()`. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is
+answered with that many, and the page's `size` says so. `where` and `orderBy` take only the entity's columns: another
+name (a relation, a field that is none) is an error of the program, answered 500. The caller awaits it:
 `~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ "title": t }).exists()`.
 
 `like` follows the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not (for
@@ -213,14 +216,27 @@ Nuclear type, and any other is refused with the rule `type`:
 | Field | JSON it takes | Refused |
 |---|---|---|
 | `string` | a text | a number, `true` / `false` |
-| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number) | a text (`"30"`), `true` / `false`, a number with a fraction |
-| `double` | a number (`1.5`, `30`) | a text (`"1.5"`), `true` / `false` |
+| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number), from -2^63 to 2^63 - 1 | a text (`"30"`), `true` / `false`, a number with a fraction, one beyond 64 bits |
+| `double` | a finite number (`1.5`, `30`) | a text (`"1.5"`), `true` / `false`, one too large to be finite (`1e999`) |
 | `boolean` | `true` / `false` | a text (`"true"`), a number (`1`) |
 | `DateTime` | a text that is a date and time (`"2026-03-04T05:06:07Z"`) | a number, a text that is no date |
 | `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |
 
-`null` is only for an optional field (`T?`); for a required one the rule is `required`. A parameter of the path or of
-the query has no JSON type: it is a text, converted to its type (`?page=2` is the `int` 2).
+`null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the
+character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field.
+
+**A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in
+UTF-8; another type, a form among them, answers **415** `unsupported media type`. A body larger than the app's
+`maxBodySize` (§2.8, 1 MB by default) answers **413** `content too large`. JSON that cannot be read (not JSON, not
+UTF-8, `NaN`, nested deeper than 512 levels) answers 400 with the rule `json`; an empty body, or `null`, is `required`;
+one that is not an object is `type`.
+
+**A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks
+around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`
+a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`.
+Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the
+method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when
+any is refused, the answer has the reason of each refused one, and the body is read only after they pass.
 
 **A model built in code is checked like a body.** `NewTask(title = "")` breaks `@minLength(1)` and throws; a use
 case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).
@@ -258,7 +274,7 @@ parameter one reason per field, in the order of the fields' names.
 `field` is a path (`items.0.name`; empty for the body itself); `rule` is the validation's name: `required`, `type`,
 `minLength`, `maxLength`, `min`, `max`, `pattern`, `email`, `url`, `json` (the body is not JSON), `invalid`. A field
 that breaks several rules names the first of that list. A route that does not exist answers `not found`; what
-nothing handled answers 500 with the message `error`.
+nothing handled answers 500 with the message `error`, and its cause is in the app's log (§2.8).
 
 **What the database refuses for integrity answers 409** with the message `conflict`, on every database, and never
 the database's own words (they name a constraint, a column, a value):
@@ -325,6 +341,12 @@ in the path is a path parameter; any other parameter is a query parameter (optio
 the routes does not matter: a fixed segment wins over a parameter (`page` is never taken by `{id}`).
 `@controller("x", guards = [...])` checks every route of the controller with its guards, after the app's (§2.8).
 
+A path is matched as it is written: `/Tasks` and `/tasks/` are not `/tasks` (404, never a redirect); an encoded
+letter, digit, `-`, `.`, `_` or `~` is that character (`/%74asks` is `/tasks`), and an encoded `/` or `\` matches no
+route. A path the app has with another method answers **405** `method not allowed` with the header `Allow` (its
+methods); `HEAD` answers as its `GET` without the body; `OPTIONS` answers 200 with `Allow`. Both pass the app's
+guards first. How each parameter is read is §2.3.
+
 ```nuclear
 @controller("tasks")
 controller TasksController(tasks: TasksAppComponent)
@@ -371,6 +393,37 @@ appConfig ProjectConfig
 ```
 
 
+#### Limits, the address and the log
+
+Two numbers of the `appConfig` change the platform's limits: `maxBodySize: int` (the largest body or WebSocket frame
+the app reads, in bytes; default 1 MB, 1 048 576) and `maxPageSize: int` (the largest page `paginate` answers, in
+rows; default 100).
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [SQLite(file = env("DATABASE", "app.sqlite"))]
+  maxBodySize: int = 4194304
+  maxPageSize: int = 500
+```
+
+The app listens on `127.0.0.1` (this machine only) and the port `PORT` (8000 or 3000 by the dialect, `nuclear run`
+gives its own); `HOST` changes the address (`HOST=0.0.0.0` in a container). No answer names what runs underneath
+(no `Server`, no `X-Powered-By`).
+
+The app writes one line per request to the standard output, and the cause of every 500 to the standard error, the
+same in every dialect; never a value the client sent (the query, the body, a header, a parameter of SQL):
+
+```
+2026-11-23T10:00:00.123Z GET /tasks/1 200 3ms
+2026-11-23T10:00:00.456Z ERROR GET /tasks/draft <the error's type>: <its message>
+    <the stack, one line per call>
+```
+
+A request line is the time (UTC), the method, the path without its query, the status and the duration in
+milliseconds. A cause names the error and says why without the request's values: a model built in code names its
+fields and rules, a database error its code. A request over the app's WebSocket is a line of its own, and so is the
+upgrade (`GET /ws 101`).
+
 #### Environments (spec 021, ADR-platform-0012)
 
 `env("NAME", "default")` is a variable of the project; `env("NAME")`, without a default, is required. The
@@ -403,8 +456,9 @@ first that refuses answers:
 | `Token(value, header = "Authorization")` | **401** when `header` does not carry `value` (`Authorization: Bearer <value>`; another header: the value alone). An empty `value` refuses every request |
 | `NoOrigin()` | **403** when the request has an `Origin` header (a web page): a local service is not reachable from a browser |
 
-A guard reads only headers, never the query: a token in a URL would reach the access logs. A guarded app serves no
-documentation pages. Over the WebSocket, each request carries the upgrade's headers and its own, so a controller's
+A guard reads only headers, never the query: a token in a URL would reach the access logs. A header is read without
+the blanks around it, and a header given twice is not given (`Token` refuses it: which value counts would be the
+server's choice); `NoOrigin` refuses any `Origin`, empty or repeated. A guarded app serves no OpenAPI document. Over the WebSocket, each request carries the upgrade's headers and its own, so a controller's
 guards answer as over HTTP.
 
 ```nuclear
@@ -423,7 +477,10 @@ controller ProjectsController(tasks: TasksAppComponent)
 
 `origins: string[]` in the `appConfig` lists the web origins whose browsers may call the API (a web app of the
 platform served on another port or host): their requests answer with `Access-Control-Allow-Origin`, any method and
-header; any other origin's browser is blocked. Without `origins`, no browser on another origin can call it.
+header. A browser's preflight (`OPTIONS` with `Origin` and `Access-Control-Request-Method`) from a listed origin
+answers 200 with the methods, the headers it asked for and `Access-Control-Max-Age: 1800`; from any other origin
+**403** `origin not allowed`. Without `origins`, no browser on another origin can call it; credentials are never
+allowed.
 
 ```nuclear
 appConfig ProjectConfig
@@ -545,7 +602,13 @@ With `WebSocketServer(path = "ws")` in its connections, the app answers its same
 | client → app | `{"subscribe": "tasks.created"}`, `{"unsubscribe": "tasks.created"}` |
 | app → client | `{"event": "tasks.created", "data": ...}`: an event published by the app |
 
-The upgrade passes the app's guards; a request that does not parse closes the socket. A `web` client gets this
+The upgrade passes the app's guards: a refusal answers the upgrade with the guard's status (401, 403) and the error's
+body; an upgrade on another path answers 404. A frame is a JSON object (`method` and `path` texts, `headers` an
+object of texts): any other frame (not JSON, binary, `null`, a number, a list, deeper than 512 levels) closes the
+socket with 1003, and one larger than `maxBodySize` with 1009. A request's `path` starts with one `/` and stays in the
+app (another answers 404, and nothing leaves the app); a `method` other than `GET`, `HEAD`, `POST`, `PUT`, `PATCH`,
+`DELETE` answers 405. A frame's own `headers` replace the upgrade's of the same name; `Host`, `Content-Length`,
+`Transfer-Encoding` and the other headers of a connection are never taken from a frame. A `web` client gets this
 with a `WebSocket(url)` connection and its repositories as they are (web.md §3.2). With Kafka, a socket receives what
 its own process publishes. The contract says which transports serve each controller (`transports`), the path
 (`webSocket`) and the events published (`events`: topic, component, payload; projects.md §1.2).

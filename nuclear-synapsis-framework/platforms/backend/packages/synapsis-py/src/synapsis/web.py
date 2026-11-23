@@ -15,7 +15,9 @@ import typing
 from collections.abc import Callable
 from typing import Annotated, Any, overload, get_args, get_origin
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.routing import APIRoute
 from pydantic import BaseModel, create_model
 from pydantic.alias_generators import to_camel
 
@@ -24,6 +26,7 @@ from .guards import Guard, refusal
 from .orm import Entity, schema_of, wire_of
 from .repository import Page
 from .result import Result
+from .wire import parse_param, read_json
 
 __all__ = ["controller", "get", "post", "put", "patch", "delete", "status", "router_of", "untraced", "guarded"]
 
@@ -199,27 +202,88 @@ def _route_path(path: str, fn: Callable[..., Any]) -> str:
     return re.sub(r"\{(\w+)\}", segment, path)
 
 
+class _JsonRequest(Request):
+    """A request whose JSON body is read by the platform's rules (synapsis.wire): UTF-8, no NaN, a limited depth."""
+
+    async def json(self) -> Any:
+        if not hasattr(self, "_json"):
+            self._json = read_json(await self.body())
+        return self._json
+
+
+class _JsonRoute(APIRoute):
+    def get_route_handler(self) -> Callable[[Request], Any]:
+        handler = super().get_route_handler()
+
+        async def read(request: Request) -> Any:
+            return await handler(_JsonRequest(request.scope, request.receive))
+
+        return read
+
+
+_KINDS = {int: "int", float: "float", bool: "bool", str: "str"}
+
+
+def _scalar(t: Any) -> tuple[str | None, bool]:
+    """The kind of a parameter of the path or the query (int, float, bool, str; None for another type), and
+    whether it may be None."""
+    args = [a for a in get_args(t) if a is not type(None)]
+    optional = len(args) < len(get_args(t))
+    base = args[0] if optional and len(args) == 1 else t
+    return _KINDS.get(base), optional
+
+
+def _reader(specs: list[tuple[str, str, str, str | None, bool, Any]]) -> Any:
+    """The dependency that reads the parameters of the path and the query (synapsis.wire.parse_param): when any is
+    refused, the answer is 400 with the reason of each one; the body is checked only after they pass."""
+
+    async def read(request: Request) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        refused: list[dict[str, Any]] = []
+        for local, public, where, kind, optional, default in specs:
+            values = [request.path_params[local]] if where == "path" and local in request.path_params else request.query_params.getlist(public)
+            value, why = parse_param(public, [str(v) for v in values], kind or "str")
+            if why is not None:
+                refused.append({"type": "synapsis", "loc": (where, public), "synapsis": why})
+            elif value is None:
+                if default is not inspect.Parameter.empty:
+                    value = default
+                elif not optional:
+                    refused.append({"type": "missing", "loc": (where, public)})
+            out[local] = value
+        if refused:
+            raise RequestValidationError(refused)
+        return out
+
+    return Depends(read)
+
+
 def _endpoint(fn: Callable[..., Any], path: str = "") -> Callable[..., Any]:
-    """The bound method as FastAPI sees it: real types (not strings), entities as schemas, Result unwrapped, and a
-    renamed query parameter read by its public name (`type_` from `?type=`)."""
+    """The bound method as FastAPI sees it: a body is a model (real types, entities as schemas), read by FastAPI; the
+    parameters of the path and the query are read by the platform's rules, in one dependency; Result unwrapped."""
     hints = typing.get_type_hints(fn)
     sig = inspect.signature(fn)
     in_path = set(re.findall(r"\{(\w+)\}", path))
     entities: dict[str, type[Entity]] = {}
-    params = []
+    params: list[inspect.Parameter] = []
+    specs: list[tuple[str, str, str, str | None, bool, Any]] = []
     for p in sig.parameters.values():
         t = hints.get(p.name, p.annotation)
         if _is_entity(t):
             entities[p.name] = t
             t = schema_of(t, create=True)
-        public = _public(p.name)
         body = (isinstance(t, type) and issubclass(t, BaseModel)) or get_origin(t) in (list, dict)
-        if public is not None and p.name not in in_path and not body:
-            t = Annotated[t, Query(alias=public)]
-        params.append(p.replace(annotation=t))
+        if body:
+            params.append(p.replace(annotation=t))
+            continue
+        public = _public(p.name) or p.name
+        kind, optional = _scalar(t)
+        specs.append((p.name, public, "path" if p.name in in_path else "query", kind, optional, p.default))
+    params.append(inspect.Parameter("synapsis_params", inspect.Parameter.KEYWORD_ONLY, default=_reader(specs), annotation=dict[str, Any]))
 
     @functools.wraps(fn)
     async def call(**kwargs: Any) -> Any:
+        kwargs.update(kwargs.pop("synapsis_params"))
         for name, cls in entities.items():
             kwargs[name] = cls(**kwargs[name].model_dump())
         value = fn(**kwargs)
@@ -248,6 +312,7 @@ def router_of(instance: object) -> APIRouter:
         prefix=getattr(cls, "__synapsis_prefix__", ""),
         tags=getattr(cls, "__synapsis_tags__", None),
         dependencies=[guarded(guards)] if guards else None,
+        route_class=_JsonRoute,
     )
     routes = [(name, r) for name in dir(cls) if (r := getattr(getattr(cls, name, None), "__synapsis_route__", None)) is not None]
     routes.sort(key=lambda found: [segment.startswith("{") for segment in found[1][1].split("/")])
@@ -260,4 +325,7 @@ def router_of(instance: object) -> APIRouter:
             setattr(endpoint, "__synapsis_untraced__", True)
         kw: dict[str, Any] = {"status_code": status} if status else {}
         router.add_api_route(path, endpoint, methods=[method], name=f"{cls.__name__}.{name}", **kw)
+        if method == "GET":
+            # HEAD answers as its GET without the body (the server leaves it out)
+            router.add_api_route(path, endpoint, methods=["HEAD"], name=f"{cls.__name__}.{name}.head", include_in_schema=False, **kw)
     return router

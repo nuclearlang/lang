@@ -19,15 +19,9 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 
 ## Pending
 
-- **Found by the backend's app check (2026-11-23)**, in `frameworks/nestjs/`:
-  - **the default of a controller's parameter is not written** (`templates/controller_method.tpl` writes the name
-    and the type only): `list(page: int = 1)` becomes a required `page`, so `GET /customers` of `store_api`, and the
-    list route `nuclear gen resource` writes, answer 500 where the `fastapi` app answers 200. The golden
-    `examples/expected/store_api` holds it (probe `param.default`);
-  - **the app listens on every network of the machine** (`templates/main.tpl`: `app.listen(port)`), also when
-    `nuclear run` starts it; the `fastapi` app listens on `127.0.0.1` (probe `bind.store`);
-  - **every build prints the warning N0305** (`does not bring these plugins ... telemetry`), whatever the project's
-    plugins, and each `nuclear migrate` command prints three `npm notice run` lines (`npx` in `[toolchain]`).
+- `defs/synapsis-nest/0.1.0/` was edited by hand on 2026-11-23 (`Required` became `RequiredPipe`, `TextPipe` and `IsWhole` added), against the rule that `defs/` is generated: `tools/defs/typescript/generate.sh` regenerates every package of the dialect and changes ten third-party ones (a `defaults` key appears). Wanted: the generator writes one package (`synapsis-nest`) alone, or the `defaults` churn understood and accepted; then the hand edit is replaced by a generated one.
+- **Each `nuclear migrate` command of a nestjs project prints three `npm notice run` lines** (`npx` in
+  `[toolchain]`), found by the backend's app check (2026-11-23).
 
 - **Found building Nuclear Chat's UI (spec 013, 2026-11-18)**, each worked around in `nuclear-chat/ui/` with a
   `shortcut:` comment or a different form:

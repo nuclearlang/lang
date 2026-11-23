@@ -24,7 +24,7 @@ prints it, and `nuclear help <command>` prints its lines of it; for a command of
 | `fix <folder\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |
 | `fmt <file.nuc\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |
 | `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |
-| `dialect list`, `dialect check <name\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |
+| `dialect list`, `dialect check <name\|path> [--json]` | The dialects found; a dialect's files validated, and a warning (N0305) for each plugin of its platform it does not bring yet (`missing_plugins_warning`; a build never prints it) | `dialect_check`, `print_report` |
 | `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |
 | `spec [--dialect <d>\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |
 | `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |

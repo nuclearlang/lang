@@ -1,9 +1,9 @@
-import { IsArray, IsInt, IsString } from 'class-validator';
-import { checkModel } from 'synapsis-nest';
+import { IsArray, IsString } from 'class-validator';
+import { IsWhole, checkModel } from 'synapsis-nest';
 
 /** The coupons a customer is given at once, by their codes. */
 export class NewCoupons {
-  @IsInt()
+  @IsWhole()
   customerId!: number;
   @IsString({ each: true })
   @IsArray()

@@ -159,7 +159,7 @@ class AppSocket:
             "type": "websocket", "path": self._path, "raw_path": self._path.encode(), "query_string": b"",
             "headers": [(k.lower().encode(), v.encode()) for k, v in self._headers.items()],
             "scheme": "ws", "server": ("test", 80), "client": ("127.0.0.1", 0), "subprotocols": [],
-            "asgi": {"version": "3.0"}, "root_path": "", "app": self._app,
+            "asgi": {"version": "3.0"}, "root_path": "", "app": self._app, "extensions": {"websocket.http.response": {}},
         }
         await self._in.put({"type": "websocket.connect"})
 
@@ -173,6 +173,12 @@ class AppSocket:
         first = await asyncio.wait_for(self._out.get(), 5)
         if first["type"] == "websocket.accept":
             return None
+        if first["type"] == "websocket.http.response.start":
+            # the upgrade refused with an HTTP answer: its status and the error's message
+            body = await asyncio.wait_for(self._out.get(), 5)
+            said = _parse(bytes(body.get("body", b"")).decode())
+            message = said.get("message") if isinstance(said, dict) else None
+            return AppError(str(message or "the socket was refused"), int(first["status"]))
         code = int(first.get("code", 1008))
         return AppError(str(first.get("reason") or "the socket was refused"), code - 4000 if code >= 4000 else 403)
 

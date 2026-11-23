@@ -187,12 +187,12 @@ export class TasksController {
   constructor(private readonly tasks: TasksAppComponent) {}
 
   @Get()
-  async all(@Query('done', new ParseBoolPipe({ optional: true })) done?: boolean): Promise<Result<AppError, Task[]>> {
+  async all(@Query('done', BoolPipe) done?: boolean): Promise<Result<AppError, Task[]>> {
     return await this.tasks.list(done);
   }
 
   @Get(':id')
-  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {
+  async one(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, Task>> {
     return await this.tasks.task(id);
   }
   // ...
@@ -202,8 +202,11 @@ export class TasksController {
 Path parameters, query parameters and the body are found from the route and the types; the pipes come out by
 themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database. Every error answers Nuclear's body
 (`status`, `message`, and the reasons of an invalid body in `errors`), written by the runtime's `ErrorFilter`
-whatever Nest would write; a number or a boolean of the route or the query is read by the runtime's `IntPipe`,
-`DoublePipe` and `BoolPipe`, which name the parameter in the reason (ADR-synapsis-0013).
+whatever Nest would write; a parameter of the route or the query is read by the runtime's `IntPipe`, `DoublePipe`,
+`BoolPipe` and `TextPipe` (`RequiredPipe` when it has no default), by the platform's rules (exactly its type, given
+once), and the route refuses every refused one together, before the body (ADR-synapsis-0013). The body is read by
+the runtime's own JSON reader (Nest's parsers are off: JSON only, `maxBodySize`); `main.ts` listens on `HOST`
+(default `127.0.0.1`) and `PORT`.
 
 ## 5. The assistant (plugin `ai`)
 

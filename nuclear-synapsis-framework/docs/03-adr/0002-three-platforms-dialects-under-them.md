@@ -48,7 +48,8 @@ that run them ("of what use is the state management of Flutter in an HTTP API?")
    contract: its kinds, decorators, plugins and folders. A dialect lives under the language it is written in,
    `nuclearlang/dialects/<language>/frameworks/<dialect>/`, and names its platform in `[dialect]`. The loader
    refuses a dialect that misses a kind of its platform, or that brings a kind, a consumed decorator or a plugin
-   its platform does not declare (N0305); a plugin of the platform a dialect does not bring yet is a warning. The
+   its platform does not declare (N0305); a plugin of the platform a dialect does not bring yet is a warning (of the dialect: `nuclear dialect check`; a
+   project that enables it is refused). The
    loader test guards it. Kinds a dialect does not bring come as packages on top of it, never inside it
    (ADR-synapsis-0004).
 6. **One reference per platform** (`platforms/<platform>/docs/07-reference/<platform>.md`), with the rules and the

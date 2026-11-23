@@ -34,7 +34,7 @@ en una misma versión.
 ```sh
 nuclear new todos_api -p backend && cd todos_api            # un backend: solo archivos .nuc
 nuclear gen resource todos Todo --fields "id:int title:string completed:boolean"
-nuclear run                                                 # FastAPI en http://localhost:8000/docs
+nuclear run                                                 # FastAPI en http://localhost:8000/openapi.json
 ```
 
 Lo que escribió `nuclear gen`, y lo que tú cambiarías, es Nuclear corto (`components/todos/`):

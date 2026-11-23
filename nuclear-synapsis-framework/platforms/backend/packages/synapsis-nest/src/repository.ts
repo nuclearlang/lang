@@ -12,6 +12,7 @@ import {
   where as whereOf,
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
+import { limits } from './edge.js';
 import { Conflict, NotFound } from './errors.js';
 import { Err, Ok, Result } from './result.js';
 
@@ -129,6 +130,18 @@ export const isNull = (isNullValue = true) => new Operator(isNullValue ? { [Op.i
 export const between = (low: unknown, high: unknown) => new Operator({ [Op.between]: [low, high] });
 
 type Conditions = Record<string, unknown>;
+
+/** A field of `where` or `orderBy` that is not a column of the entity: the program's error, a 500 that says it. */
+export class InvalidField extends Error {
+  override name = 'InvalidField';
+}
+
+/** `field` if it is a column of `model` (never a relation or a property of the class). */
+function column(model: ModelCtor<Model>, field: string): string {
+  // (the name is not in the message: it may be a client's text, and the log never holds one)
+  if (!Object.hasOwn(model.getAttributes(), field)) throw new InvalidField(`${model.name} has no column of that name`);
+  return field;
+}
 
 /** `conditions` as sequelize's; `aliased`: the query names its table by the model (a read), so a column is told
  * apart from a loaded relation's. */
@@ -260,13 +273,14 @@ export class Query<T extends Model> {
   constructor(readonly repo: Repository<T>) {}
 
   where(conditions: Conditions): Query<T> {
+    for (const k of Object.keys(conditions)) column(this.repo.model, k);
     this.conditions.push(conditions);
     return this;
   }
 
   orderBy(field: string, order: SortOrder = {}): Query<T> {
     const desc = typeof order === 'boolean' ? order : order.desc === true;
-    this.orders.push([field, desc ? 'DESC' : 'ASC']);
+    this.orders.push([column(this.repo.model, field), desc ? 'DESC' : 'ASC']);
     return this;
   }
 
@@ -304,7 +318,9 @@ export class Query<T extends Model> {
   /** One page (from 1) of `size` rows, with the total of rows and of pages. */
   async paginate(page: number, size = 20): Promise<Page<T>> {
     page = Math.max(page, 1);
-    size = Math.max(size, 1);
+    // a page is never larger than the app's `maxPageSize` (as Spring Data's `max-page-size`): a larger size is
+    // answered with that many rows, and the page says its size
+    size = Math.min(Math.max(size, 1), limits.page);
     const total = await this.count();
     this.max = size;
     this.skip = (page - 1) * size;

@@ -307,7 +307,7 @@ fn nest_kinds_inject_and_route() {
         &code,
         "@Controller('users')\nexport class UsersController {\n  constructor(private readonly users: UsersService) {}",
     );
-    has(&code, "@Get(':id')\n  one(@Param('id', IntPipe) id: number): string[] {");
+    has(&code, "@Get(':id')\n  one(@Param('id', RequiredPipe, IntPipe) id: number): string[] {");
 }
 
 #[test]

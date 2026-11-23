@@ -110,7 +110,7 @@
 "classes": {
   "Agent": {"supers":[],"members":["ask","graph","model","prompt","stream"],"params":[]},
   "AppClient": {"supers":[],"members":["app","delete","get","patch","post","put","request","socket"],"results":{"socket":"Result<AppError, AppSocket>"},"params":[]},
-  "AppConfig": {"supers":[],"members":["connections","guards","origins"],"params":[]},
+  "AppConfig": {"supers":[],"members":["connections","guards","max_body_size","max_page_size","origins"],"params":[]},
   "AppError": {"supers":[],"members":["message","status"],"params":["message","status"]},
   "AppSocket": {"supers":[],"members":["close","next","request","subscribe","unsubscribe"],"params":["app","path","headers"]},
   "ChatModel": {"supers":["Connection"],"members":["name","open","provider"]},

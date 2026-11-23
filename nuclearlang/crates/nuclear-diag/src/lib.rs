@@ -385,7 +385,7 @@ pub mod codes {
     pub const PLATFORM_CONTRACT: Code = Code {
         id: "N0305",
         title: "a dialect does not match its platform",
-        explanation: "A dialect in dialects/<platform>/ must implement that platform's contract (platform.toml, ADR-synapsis-0002): the same kinds, and no consumed decorator or plugin the platform does not declare, so the Nuclear of a project never changes with its dialect. A platform plugin the dialect does not bring yet is a warning.",
+        explanation: "A dialect in dialects/<platform>/ must implement that platform's contract (platform.toml, ADR-synapsis-0002): the same kinds, and no consumed decorator or plugin the platform does not declare, so the Nuclear of a project never changes with its dialect. A platform plugin the dialect does not bring yet is a warning of `nuclear dialect check` (a build is silent), and an error in a project that enables it.",
     };
     pub const PLUGIN_DISABLED: Code = Code {
         id: "N0304",

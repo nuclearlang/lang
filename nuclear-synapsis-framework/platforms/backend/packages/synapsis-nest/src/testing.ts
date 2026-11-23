@@ -12,7 +12,7 @@ export async function startTestApp(module: Type<unknown>): Promise<INestApplicat
   // read by Database.sequelize() when the app module asks for its options (forRootAsync)
   process.env.SYNAPSIS_DATABASE = 'memory';
   const ref = await Test.createTestingModule({ imports: [module] }).compile();
-  const app = configureApp(ref.createNestApplication({ logger: false }));
+  const app = configureApp(ref.createNestApplication({ logger: false, bodyParser: false }));
   await app.init();
   useApp(app);
   return app;

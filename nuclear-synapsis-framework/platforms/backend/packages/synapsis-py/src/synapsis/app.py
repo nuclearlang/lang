@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -11,14 +12,17 @@ from typing import Any, cast
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import AppConfig, ComponentConfig, Connection
+from .edge import Edge
 from .errors import IntegrityViolation, error_body, reasons_of
+from .guards import refusal
 from .inject import inject
 from .web import guarded, router_of
+from .wire import LIMITS, MAX_BODY_SIZE, MAX_PAGE_SIZE, Unreadable
 
 __all__ = ["create_app", "connection", "connections"]
 
@@ -67,16 +71,18 @@ def create_app(
                 t.cancel()
             await stop()
 
-    # the app's guards check every route (ADR-synapsis-0007); a guarded app does not serve its documentation pages
+    # the app's guards check every route (ADR-synapsis-0007); no app serves documentation pages (`/docs`): the API is
+    # its OpenAPI document, which a guarded app does not serve either
     guards = list(getattr(config, "guards", []))
-    hidden: dict[str, Any] = {"docs_url": None, "redoc_url": None, "openapi_url": None} if guards else {}
-    app = FastAPI(title=title, lifespan=lifespan, **hidden)
+    hidden: dict[str, Any] = {"openapi_url": None} if guards else {}
+    # a path is matched as it is written: `/tasks/` is not `/tasks` (404, never a redirect)
+    app = FastAPI(title=title, lifespan=lifespan, docs_url=None, redoc_url=None, redirect_slashes=False, **hidden)
     every = [guarded(guards)] if guards else None
-    origins = list(getattr(config, "origins", []))
-    if origins:
-        from fastapi.middleware.cors import CORSMiddleware
-
-        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
+    # the limits of the configuration (the reference, §2.8), read by the Edge, the WebSocket and `paginate`
+    LIMITS.body = int(getattr(config, "max_body_size", MAX_BODY_SIZE))
+    LIMITS.page = int(getattr(config, "max_page_size", MAX_PAGE_SIZE))
+    app.add_middleware(Edge, max_body_size=LIMITS.body, origins=list(getattr(config, "origins", [])))
+    _quiet_server()
     # what `python -m synapsis.migrate` reads to find the database
     app.state.synapsis_config = config
     app.state.synapsis_components = components
@@ -88,8 +94,13 @@ def create_app(
         return JSONResponse(status_code=400, content=error_body(400, "invalid", reasons_of(e.errors())))
 
     @app.exception_handler(StarletteHTTPException)
-    async def refused(_: Request, e: StarletteHTTPException) -> JSONResponse:
-        # a Result's error, a guard's refusal, a route that does not exist
+    async def refused(request: Request, e: StarletteHTTPException) -> JSONResponse | Response:
+        # a Result's error, a guard's refusal, a route that does not exist, a body that cannot be read
+        if isinstance(e.__cause__, Unreadable) or e.detail == "There was an error parsing the body":
+            reasons = e.__cause__.reasons if isinstance(e.__cause__, Unreadable) else [{"field": "", "rule": "json", "message": "the body is not valid JSON"}]
+            return JSONResponse(status_code=400, content=error_body(400, "invalid", reasons))
+        if e.status_code == 405:
+            return _not_allowed(app, request, guards)
         known = {404: "not found", 405: "method not allowed"}
         said = e.detail if isinstance(e.detail, str) else ""
         message = known.get(e.status_code, said) if said in ("Not Found", "Method Not Allowed", "") else said
@@ -104,10 +115,8 @@ def create_app(
         # name a constraint, a column, a value
         return JSONResponse(status_code=409, content=error_body(409, "conflict"))
 
-    @app.exception_handler(Exception)
-    async def failed(_: Request, e: Exception) -> JSONResponse:
-        # what nothing handled: never the reason, which may hold what the app must not show
-        return JSONResponse(status_code=500, content=error_body(500, "error"))
+    # what nothing handled is logged and answered 500 `error` by the Edge: never the reason, which may hold what the
+    # app must not show
 
     routers = [router_of(inject(cast(type[Any], c))) for c in controllers]
     for r in routers:
@@ -119,6 +128,43 @@ def create_app(
     _serve_contract(app, every)
     _own_openapi(app)
     return app
+
+
+def _not_allowed(app: FastAPI, request: Request, guards: Any) -> Response:
+    """A path the app has with another method: 405 with the methods it has (`Allow`), or, for OPTIONS, 200 with them;
+    after the app's guards, as a route would be."""
+    from starlette.routing import Match
+
+    e = refusal(guards, request.headers)
+    if e is not None:
+        return JSONResponse(status_code=e.status, content=error_body(e.status, e.message))
+    methods: set[str] = {"OPTIONS"}
+    # the controllers' routes (mounted under their routers) and the app's own
+    for route in [*getattr(app.state, "synapsis_routes", []), *app.router.routes]:
+        match, _ = route.matches({**request.scope, "method": "GET"})
+        found = getattr(route, "methods", None)
+        if match != Match.NONE and found:
+            methods |= set(found)
+    allow = ", ".join(m for m in ("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS") if m in methods)
+    if request.method == "OPTIONS":
+        return Response(status_code=200, headers={"Allow": allow})
+    return JSONResponse(status_code=405, content=error_body(405, "method not allowed"), headers={"Allow": allow})
+
+
+class _Quiet(logging.Filter):
+    # the server's own lines of a WebSocket name its path with the query: the app logs the upgrade itself; an upgrade
+    # refused with an HTTP answer (the guards' status) is no error of the app, whatever the server says of it
+    def filter(self, record: logging.LogRecord) -> bool:
+        text = str(record.msg)
+        return not (text.startswith('%s - "WebSocket') or text.startswith("connection ") or text == "ASGI callable returned without completing handshake.")
+
+
+def _quiet_server() -> None:
+    """The server's access log is the app's own line (Edge): the server's is off, whatever started it."""
+    logging.getLogger("uvicorn.access").disabled = True
+    error = logging.getLogger("uvicorn.error")
+    if not any(isinstance(f, _Quiet) for f in error.filters):
+        error.addFilter(_Quiet())
 
 
 def _serve_contract(app: FastAPI, guards: Any = None) -> None:

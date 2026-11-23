@@ -40,6 +40,9 @@ fn check_bundle() -> i32 {
         for (_, d) in &report.diags {
             eprintln!("{name}: [{}] {}", d.code.id, d.message);
         }
+        if let Some(w) = dialect.as_ref().and_then(nuclear_dialect::missing_plugins_warning) {
+            eprintln!("{name}: [{}] {}", w.code.id, w.message);
+        }
         // a dialect with type definitions must read its root object (python's is lowercase); a missing declared
         // package is already a diagnostic
         let root = if dialect.as_ref().and_then(|d| d.chain.last()).is_some_and(|l| l == "python") { "object" } else { "Object" };

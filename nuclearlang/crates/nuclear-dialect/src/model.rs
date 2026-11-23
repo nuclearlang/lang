@@ -535,6 +535,8 @@ pub struct Dialect {
     /// The decorators of the dialect's platform (`decorators` of `platform.toml`): any other one in lower case is N0309.
     /// Empty for a dialect without a platform.
     pub platform_decorators: BTreeSet<String>,
+    /// The plugins of the platform this dialect does not bring yet (N0305, a warning of the dialect).
+    pub missing_plugins: BTreeSet<String>,
     /// `[decorators.replaced]` of the platform: a removed decorator → what replaces it (`generated` →
     /// `@primary(generated = true)`), for the message of N0309.
     pub replaced_decorators: BTreeMap<String, String>,
@@ -1463,17 +1465,23 @@ fn check_platform(d: &mut Dialect, platform: &str, file: Option<&Path>, report: 
     if !extra.is_empty() {
         err(report, format!("dialect '{}' declares plugins platform '{platform}' does not: {extra}", d.name));
     }
-    let missing = join(plugins.difference(&own).collect());
-    if !missing.is_empty() {
-        report.add(
-            idx,
-            Diagnostic::warning(
-                codes::PLATFORM_CONTRACT,
-                Span::default(),
-                format!("dialect '{}' does not bring these plugins of platform '{platform}' yet: {missing}", d.name),
-            ),
-        );
+    // a plugin of the platform the dialect does not bring yet: the dialect's own report says it (`nuclear dialect
+    // check`, the bundle check), and a project that enables it is refused; a build of any other project is silent
+    d.missing_plugins = plugins.difference(&own).cloned().collect();
+}
+
+/// The warning of a dialect that does not bring every plugin of its platform yet (N0305), or None.
+pub fn missing_plugins_warning(d: &Dialect) -> Option<Diagnostic> {
+    if d.missing_plugins.is_empty() {
+        return None;
     }
+    let missing = d.missing_plugins.iter().cloned().collect::<Vec<_>>().join(", ");
+    let platform = d.platform.as_deref().unwrap_or_default();
+    Some(Diagnostic::warning(
+        codes::PLATFORM_CONTRACT,
+        Span::default(),
+        format!("dialect '{}' does not bring these plugins of platform '{platform}' yet: {missing}", d.name),
+    ))
 }
 
 fn field_rule(v: &toml::Value) -> FieldRule {

@@ -2,136 +2,11 @@
 # A fix deletes its lines; the check fails on a line that no longer happens and on a finding that is not here.
 # The fix of each is in docs/01-product/roadmap.md ("Found by the app check").
 
-# A frame over the WebSocket that is JSON and not an object
-security ws.frame.binary | a binary frame: fastapi closes abnormally with a stack, nestjs closes 1003
-security ws.frame.headers.not.object | `headers` that is a text: fastapi sends no answer (a task's exception never retrieved), nestjs answers 200
-security ws.frame.method.unknown | an unknown method: fastapi 405, nestjs 400 with no body
-security ws.frame.path.number | `path` that is a number: fastapi 404, nestjs 500
-security ws.frame.deep.body | a body 50 000 levels deep in a frame: fastapi closes the socket abnormally (RecursionError), nestjs answers 500
-security ws.frame.number | fastapi closes the socket abnormally with a stack; nestjs ignores the frame
-security ws.frame.deep | 50 000 levels: fastapi closes the socket abnormally (RecursionError); nestjs ignores the frame
-security ws.frame.null | nestjs: the frame `null` ends the process (an uncaught TypeError in the message handler); fastapi closes the socket with a stack
-
-# A request of the WebSocket that leaves the app (nestjs writes the frame's path after its own address)
-security ws.path.userinfo | the path `@host/x`: fastapi 404, nestjs 500 (its HTTP client refuses a URL with credentials: nothing left the app)
-security ws.path.absolute | an absolute URL as the path: fastapi 404, nestjs 500 (nothing left the app)
-security ws.path.port.suffix | nestjs: the path `<digit>/x` is sent to the port <app's port><digit> of this machine, with the upgrade's headers (the token), and its answer returned; fastapi 404
-
-# The WebSocket's upgrade
-security ws.upgrade.none | a refused upgrade answers 403 in fastapi (whatever the guard) and 401 in nestjs
-security ws.upgrade.wrong | a refused upgrade answers 403 in fastapi (whatever the guard) and 401 in nestjs
-security ws.upgrade.query | a refused upgrade answers 403 in fastapi (whatever the guard) and 401 in nestjs
-security ws.upgrade.other.path | an upgrade on a path that is not the socket's: fastapi refuses it (403), nestjs never answers and keeps the connection open
-security ws.upgrade.path.slash | the same for `/ws/`
-
-# The body limits differ: none in fastapi, 100 KB in nestjs
-security body.200KB | fastapi reads the whole body, nestjs answers 413 `request entity too large`
-security body.2MB | fastapi reads the whole body, nestjs answers 413 `request entity too large`
-security body.30MB | fastapi reads and parses a body of 30 MB (then refuses the field's length); nestjs answers 413 from 100 KB
-security body.note.1MB | a text of 1 MB in a field without a rule: fastapi 500 (longer than its column), nestjs 413
-security ws.frame.1MB | a frame of 1 MB: fastapi reads it (400, the field is too long), nestjs answers 413
-security ws.frame.20MB | a frame of 20 MB: fastapi closes the socket 1009 (its limit is 16 MB), nestjs reads it (its limit is 100 MB) and answers 413
-
-# nestjs takes a body that is not JSON; the reasons of a refused body differ
-security body.list | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security body.text | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security body.null | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security body.empty | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.form | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.text | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.multipart | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.xml | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.utf16 | `application/json; charset=utf-16`: fastapi 201, nestjs 400
-security content.suffix | `application/vnd.api+json`: fastapi 201, nestjs 400
-security content.none | both refuse it (400) with different reasons: fastapi `the body must be an object` or `the body is required`, nestjs each field `required` or `the body is not valid JSON`
-security content.form.body | nestjs makes the row from a form body (`application/x-www-form-urlencoded`): a page of another origin can send it without a preflight; fastapi 400
-
-# A body that cannot be read
-security body.deep | 50 000 levels: fastapi 400 `There was an error parsing the body` (not the reason `json`), nestjs 500
-security body.deep.field | 50 000 levels: fastapi 400 `There was an error parsing the body` (not the reason `json`), nestjs 500
-security body.number.digits | a number of 5000 digits: fastapi 400 `There was an error parsing the body`, nestjs 400 with the reason `type`
-security body.invalid.utf8 | invalid UTF-8: nestjs keeps it as U+FFFD (201); fastapi 400 with the message `There was an error parsing the body`, not the reason `json`
-
-# Numbers have no range
-security limit.huge@sqlite | a whole number of the query beyond the database's range answers 500 in both, not 400
-security page.huge@sqlite | a whole number of the query beyond the database's range answers 500 in both, not 400
-security int.beyond64@sqlite | an `int` of 20 digits: fastapi 500, nestjs 201 and keeps 1e20
-security limit.huge@postgres | a whole number of the query beyond the database's range answers 500 in both, not 400
-security page.huge@postgres | a whole number of the query beyond the database's range answers 500 in both, not 400
-security int.beyond32@postgres | an `int` of 2^31 in a body: 500 in both on PostgreSQL (201 on SQLite)
-security int.beyond64@postgres | an `int` of 20 digits: 500 in both
-security param.double.NaN | `NaN`, `Infinity` and `1e400` are a `double` of the query in fastapi (200), refused in nestjs (400)
-security param.double.Infinity | `NaN`, `Infinity` and `1e400` are a `double` of the query in fastapi (200), refused in nestjs (400)
-security param.double.overflow | `NaN`, `Infinity` and `1e400` are a `double` of the query in fastapi (200), refused in nestjs (400)
-security body.number.huge | `1e999` for a `double`: fastapi keeps Infinity and answers `null`, nestjs 400
-security body.number.precision | an `int` of 2^53 + 1: fastapi 500 on PostgreSQL, nestjs rounds it (`Customer 9007199254740992 not found`)
-
-# A text with a NUL character on PostgreSQL
-security text.nul@postgres | fastapi 500; nestjs 201 and keeps `a\0b` (a backslash and a zero): not what was sent
-security inject.rows@postgres | so the dialects keep different rows
-
-# A parameter of the path or the query in nestjs
-security param.int.hex | `0x1` and `1e0` are a whole number in nestjs, a blank is 0; fastapi 400
-security param.int.exponent | `0x1` and `1e0` are a whole number in nestjs, a blank is 0; fastapi 400
-security param.int.empty | `0x1` and `1e0` are a whole number in nestjs, a blank is 0; fastapi 400
-security param.double.hex | `0x10` and an empty value are a number in nestjs; fastapi 400
-security param.double.empty | `0x10` and an empty value are a number in nestjs; fastapi 400
-security param.boolean.maybe | any text that is not `true` is `false` in nestjs (`maybe`, empty); fastapi 400. (`1` and `yes` are true in fastapi, false in nestjs)
-security param.boolean.empty | any text that is not `true` is `false` in nestjs (`maybe`, empty); fastapi 400. (`1` and `yes` are true in fastapi, false in nestjs)
-security param.default | the default of a controller's parameter is lost: `list(page: int = 1)` answers 500 to `GET /customers` in nestjs, 200 in fastapi
-security param.missing.text | a required text of the query that is missing reaches the use case as nothing (200); fastapi 400 `required`
-security param.missing.int | a required number of the query that is missing: nestjs 500, fastapi 400 `required`
-security param.repeated | a parameter given twice: fastapi takes one (200), nestjs 500
-
-# A page has no largest size
-security page.size.unbounded | `paginate(page, size)` with `size=1000000000` reads the whole table in both
-
-# What an answer tells about the server
-security header.server | fastapi: `Server: uvicorn` on every answer
-security header.x-powered-by | nestjs: `X-Powered-By: Express` on every answer
-security header.others | nestjs adds an `ETag` to every answer; fastapi does not
-
-# The documentation pages
-security served./docs | fastapi serves the interactive pages `/docs` and `/redoc` (their scripts from a CDN) in production; nestjs 404. Both serve `/openapi.json` and `/.nuclear/*`
-security served./redoc | fastapi serves the interactive pages `/docs` and `/redoc` (their scripts from a CDN) in production; nestjs 404. Both serve `/openapi.json` and `/.nuclear/*`
-
-# A method the route does not have; paths
-security method.OPTIONS | OPTIONS: fastapi 405, nestjs 204
-security method.HEAD | HEAD: fastapi 405; nestjs answers it as its GET (and 500 where the GET's default parameter is lost)
-security method.TRACE | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security method.PATCH | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security method.DELETE | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security method.HEAD.one | HEAD: fastapi 405, nestjs 200
-security path.traversal | `/customers/..%2f..%2fetc%2fpasswd`: fastapi 404, nestjs 400 (no file is read in either)
-security guard.none.OPTIONS | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security guard.none.OPTIONS.one | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security guard.none.HEAD | HEAD without a token: fastapi 405, nestjs 401
-security guard.none.HEAD.one | HEAD without a token: fastapi 405, nestjs 401
-security guard.none.POST.one | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security guard.none.DELETE | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security guard.preflight | fastapi 405 `method not allowed`, nestjs 404 `not found`
-security guard.path.case | `/TASKS`: fastapi 404, nestjs serves it (its routes ignore the case)
-security guard.path.slash | `/tasks/`: fastapi redirects (307), nestjs serves it
-security guard.path.encoded | `/%74asks`: fastapi serves it, nestjs 404
-
-# The preflight of CORS
-security cors.default.preflight.http://localhost:5173.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-security cors.default.preflight.https://evil.example.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-security cors.default.preflight.null.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-security cors.listed.preflight.http://localhost:5173.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-security cors.listed.preflight.https://evil.example.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-security cors.listed.preflight.null.answer | no origin is allowed that should not be, in either; the answers differ: an origin that is not listed gets 400 in fastapi and 204 in nestjs, without `origins` 405 and 204, and the lists of methods differ
-
-# A guard's header
-security guard.spaces | a token with spaces around it: fastapi 401, nestjs 200
-security guard.repeated.right.first | the header twice, the right token first: fastapi 200 (it reads the first), nestjs 401 (it reads both joined)
-
-# The headers of a frame
-security ws.guard.frame.token.emptied | a frame that sends the app's token header empty, on a socket opened with the token: fastapi 200 (the upgrade's header is read first), nestjs 401
-security ws.guard.frame.headers.socket | a frame with `Host`, `Content-Length` and `Transfer-Encoding`: fastapi 200, nestjs 500
-
-# The address the server listens on
-security bind.store | with no host given nestjs listens on every network of the machine (also what `nuclear run` starts); fastapi only on 127.0.0.1
+# An `int` holds 64 bits in a request; its column holds what the database's INTEGER holds (32 bits on PostgreSQL,
+# MySQL and MariaDB): a larger one is refused by the database (500, both dialects) and kept by SQLite
+security int.beyond32@postgres | an `int` of 2^31 in a body: 500 in both on PostgreSQL (201 on SQLite): the column is 32 bits (the roadmap: the columns of an `int`)
+# TypeScript's numbers hold 53 bits exactly: a larger whole number is rounded before the app sees it
+security body.number.precision | an `int` of 2^53 + 1: fastapi 500 on PostgreSQL (beyond its 32-bit column), nestjs rounds it (`Customer 9007199254740992 not found`)
 
 # The advisories of the dependencies
 security advisory.python:chromadb:PYSEC-2026-311 | chromadb 1.5.9, no fixed version: an advisory of the Chroma server. The runtime only uses the client (`Chroma(url)`): affected only where that install serves Chroma
@@ -146,10 +21,3 @@ security advisory.generated:@nestjs/sequelize:through | the same advisory of uui
 security advisory.generated:sequelize:through | the same advisory of uuid, through this package
 security advisory.generated:sequelize-typescript:through | the same advisory of uuid, through this package
 security advisory.generated:uuid:GHSA-w5hq-g745-h8pq | the same in a generated project
-
-# What the app logs
-logs fastapi.500.values | the stack fastapi logs for a 500 holds values a client sent (`[parameters: (...)]` of a database error, `input_value=` of a model)
-logs fastapi.requests.query | fastapi's line of a request holds the whole query
-logs nestjs.requests.silent | nestjs logs no line for a request; fastapi one (address, method, path with its query, status; no time): the logs cannot be compared
-logs nestjs.500.silent | nestjs logs nothing for a 500: the client is told `error` and the cause is nowhere; fastapi logs the stack
-logs nestjs.colours | nestjs writes the terminal's colour codes into a log that is a file

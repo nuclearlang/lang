@@ -1,6 +1,7 @@
 // Guards (ADR-synapsis-0007): checks a request passes before its route runs, on every route of the app
 // (`AppConfig.guards`) or of one controller (`@controller('x', guards = [...])`), over HTTP and over the app's
-// WebSocket. A guard reads only the request's headers: a token in a query parameter would reach the access log.
+// WebSocket. A guard reads only the request's headers: a token in a query parameter would reach the access log. A
+// header is read without the blanks around it, and one given twice is not given.
 import { CanActivate, ExecutionContext, HttpException, UseGuards } from '@nestjs/common';
 import { timingSafeEqual } from 'node:crypto';
 import { AppError, Forbidden, Unauthorized } from './errors.js';
@@ -12,10 +13,20 @@ export abstract class Guard {
   abstract check(headers: Headers): AppError | null;
 }
 
+/** The value of the header `name`, without the blanks around it; '' when it is not there or is given more than once
+ * (as Spring Security refuses several bearer tokens: which one counts would be the server's choice). */
 function header(headers: Headers, name: string): string {
   const want = name.toLowerCase();
-  const found = Object.entries(headers).find(([k]) => k.toLowerCase() === want)?.[1];
-  return Array.isArray(found) ? (found[0] ?? '') : (found ?? '');
+  const found = Object.entries(headers).filter(([k]) => k.toLowerCase() === want).flatMap(([, v]) => (Array.isArray(v) ? v : v === undefined ? [] : [v]));
+  return found.length === 1 ? found[0]!.trim() : '';
+}
+
+/** A request's headers with every value it was given (Node joins or drops a header sent twice). */
+export function headersOf(req: { headers: Headers; rawHeaders?: string[] }): Headers {
+  if (!req.rawHeaders) return req.headers;
+  const out: Record<string, string[]> = {};
+  for (let i = 0; i + 1 < req.rawHeaders.length; i += 2) (out[req.rawHeaders[i]!.toLowerCase()] ??= []).push(req.rawHeaders[i + 1]!);
+  return out;
 }
 
 /** The request carries `value` in the header `header` (default `Authorization`, where it is `Bearer <value>`). An
@@ -46,7 +57,8 @@ export class Token extends Guard {
  * the user opened in a browser. */
 export class NoOrigin extends Guard {
   check(headers: Headers): AppError | null {
-    return header(headers, 'Origin') ? new Forbidden('requests from web pages are refused') : null;
+    // any Origin, once or more, empty or not: a page sent it
+    return Object.keys(headers).some((k) => k.toLowerCase() === 'origin') ? new Forbidden('requests from web pages are refused') : null;
   }
 }
 
@@ -64,8 +76,8 @@ export class GuardsOf implements CanActivate {
   constructor(private readonly guards: readonly Guard[]) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<{ headers: Headers }>();
-    const e = refusal(this.guards, request.headers);
+    const request = context.switchToHttp().getRequest<{ headers: Headers; rawHeaders?: string[] }>();
+    const e = refusal(this.guards, headersOf(request));
     if (e) throw new HttpException(e.message, e.status);
     return true;
   }

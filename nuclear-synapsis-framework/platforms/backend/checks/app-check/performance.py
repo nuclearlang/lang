@@ -39,8 +39,8 @@ RATIO = 10
 LOCK = 75
 # route: (method, path, body, the most SQL statements one request may cost, transaction control included)
 ROUTES: dict[str, tuple[str, str, str, int]] = {
-    "read one row": ("GET", "/customers/1", "-", 3),
-    "a page of 20": ("GET", "/customers/page?page=2&size=20", "-", 6),
+    "read one row": ("GET", "/customers/1", "-", 1),
+    "a page of 20": ("GET", "/customers/page?page=2&size=20", "-", 2),
     "a row with a relation (5 orders, 3 tags each)": ("GET", "/customers/1/orders", "-", 6),
     "a row with a relation (20 orders, 3 tags each)": ("GET", "/customers/2/orders", "-", 6),
     "a write": ("POST", "/customers", '{"email":"load{n}@example.com","name":"load {n}"}', 6),

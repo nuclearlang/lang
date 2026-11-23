@@ -4,6 +4,49 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **What the app check found (2026-11-23), fixed the same in `fastapi` and `nestjs`** (reference §1, §2.2, §2.3,
+  §2.7, §2.8, §2.9; the user's decisions of the same day):
+  - the WebSocket: a frame that is not a JSON object (`null`, a number, a list, binary, 50 000 levels, `headers`
+    that are a text) closes the socket with 1003; `null` **ended the `nestjs` process**, a frame larger than the
+    limit ended it too (an unhandled error of `ws`), and `fastapi` closed with a stack. A frame's `path` starts with
+    one `/` and stays in the app: `nestjs` **sent `7/x` to the port beside the app's with the upgrade's token**. A
+    refused upgrade answers the guard's status and the error's body (it was 403 in `fastapi` whatever the guard);
+    an upgrade on another path answers 404 (`nestjs` never answered it). A frame's own headers replace the
+    upgrade's of the same name; `Host`, `Content-Length`, `Transfer-Encoding` are never taken from a frame;
+  - one body limit: **1 MB for a body and a WebSocket frame** (`maxBodySize: int` in the `appConfig` changes it), a
+    larger body answers 413 `content too large` and a larger frame closes 1009 (`fastapi` read any size, `nestjs`
+    refused from 100 KB; frames 16 MB and 100 MB). **Breaking** for a client that sends more than 1 MB;
+  - a body is JSON in UTF-8 (`application/json` or `application/<x>+json`): **a form, a text, XML or a body without
+    a type answer 415** (`nestjs` made a row from a form, which any web page can send). **Breaking** for a client
+    that sends forms. An empty body or `null` is `required`, a body that is not an object `type`, JSON that cannot
+    be read (`NaN`, invalid UTF-8, deeper than 512 levels) `json`, a text with U+0000 `invalid`;
+  - an `int` holds 64 bits and a `double` is finite, in a body and a parameter (`1e20` was kept by `nestjs`, `NaN`,
+    `Infinity` and `1e400` were a number in `fastapi`); a parameter of the path or the query is exactly its type
+    (`0x1`, `1e0`, a blank were whole numbers in `nestjs`; `1` and `yes` were true in `fastapi`, `maybe` false in
+    `nestjs`), given once, a missing required one is `required` (it was 200 or 500 in `nestjs`); the parameters are
+    checked together, before the body;
+  - `nestjs` kept the default of a controller's parameter (`list(page: int = 1)` answered 500);
+  - **a page holds at most 100 rows** (`maxPageSize: int` changes it; a larger `size` is answered with that many, as
+    Spring Data's `max-page-size`). **Breaking** for a client that asks for more;
+  - **no app serves `/docs` or `/redoc`** (`fastapi` served them, their scripts from a CDN); `/openapi.json` and
+    `/.nuclear/*` stay. **Breaking** for whoever opened `/docs`;
+  - one line in the log per request, the same in both (`<time> <METHOD> <path> <status> <ms>ms`, never the query),
+    and the cause of every 500 with its stack (`nestjs` logged neither), never a value of the request (`fastapi`
+    logged the query, SQL parameters and `input_value`); no terminal colours in a file;
+  - **the app listens on `127.0.0.1`** (`HOST` changes it, `HOST=0.0.0.0` in a container; `nestjs` listened on every
+    network). **Breaking** for a deployment that relied on it; no `Server` nor `X-Powered-By` header, no `ETag`;
+  - a path is matched as written: `/TASKS` and `/tasks/` are 404 (`nestjs` served them, `fastapi` redirected the
+    second), an encoded letter is the letter, an encoded `/` matches nothing; another method of a path answers 405
+    with `Allow` (`nestjs`: 404), `HEAD` answers as `GET`, `OPTIONS` 200 with `Allow`, after the app's guards;
+  - CORS: a preflight from a listed origin answers 200, from another 403 `origin not allowed` (400 or 204 before);
+  - a guard reads its header without the blanks around it, and a header given twice is not given;
+  - `where` and `orderBy` take only the entity's columns (`fastapi` took any attribute of the class);
+  - `fastapi` reads a row in one SQL statement (no `BEGIN` / `ROLLBACK` around it on PostgreSQL and SQLite), a page
+    in two; it starts with `python -m synapsis.server` (`nuclear run` too), the generated `pyproject.toml` sets
+    pytest-asyncio's loop scope (a deprecation notice on every `nuclear test`); a frame whose headers are a text no
+    longer leaves "Task exception was never retrieved";
+  - a build no longer warns that `nestjs` does not bring `telemetry` (N0305): `nuclear dialect check` says it, and a
+    project that enables the plugin with that dialect is refused.
 - **Three decisions of the user (2026-11-23), the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and
   MariaDB** (reference §2.1, §2.4, §2.8; spec 004 §4b):
   - **what the database refuses for integrity answers 409** `{ "status": 409, "message": "conflict" }`, as Spring
