@@ -119,10 +119,27 @@ fn tool<'a>(d: &'a Dialect, key: &str) -> Result<&'a str, String> {
     d.tool(key).ok_or(format!("the {} dialect cannot add packages (it has no toolchain.{key})", d.name))
 }
 
+/// The file of a generated project that names the version of the platform that installed its packages.
+const INSTALLED_BY: &str = ".nuclear-installed";
+
+/// Whether the generated project must be installed: never installed, or installed by another version of the
+/// platform (its runtime package came with that version: a project installed by 0.95 lacks what 0.96's runtime
+/// brings, as `synapsis.server`). The dialect's install command upgrades in place.
+pub fn needs_install(out: &Path, d: &Dialect) -> bool {
+    let Some(i) = d.tool("installed") else { return false };
+    let by = std::fs::read_to_string(out.join(INSTALLED_BY)).unwrap_or_default();
+    !out.join(i).exists() || by.trim() != env!("CARGO_PKG_VERSION")
+}
+
+/// Records that this version of the platform installed the generated project's packages.
+pub fn mark_installed(out: &Path) {
+    let _ = std::fs::write(out.join(INSTALLED_BY), format!("{}\n", env!("CARGO_PKG_VERSION")));
+}
+
 /// The generated project with its packages installed: where the package manager works.
 fn installed(root: &Path, m: &Manifest, d: &Dialect) -> Result<PathBuf, String> {
     let out = root.join(project::output_dir(m, d));
-    if !d.tool("installed").is_some_and(|i| out.join(i).exists()) {
+    if needs_install(&out, d) {
         backend_command(root, "install", m, &[], &[])?;
     }
     Ok(out)
@@ -199,6 +216,24 @@ fn has_defs(dir: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A project installed by another version of the platform is installed again: its runtime came with that version
+    /// (0.96's `synapsis.server` was missing in projects 0.95 had installed).
+    #[test]
+    fn a_project_installed_by_another_version_is_installed_again() {
+        let d = crate::framework::loader().load("fastapi").0.expect("the fastapi dialect");
+        let out = std::env::temp_dir().join(format!("nuclear-installed-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&out);
+        std::fs::create_dir_all(&out).unwrap();
+        assert!(needs_install(&out, &d), "never installed");
+        std::fs::create_dir_all(out.join(".venv")).unwrap();
+        assert!(needs_install(&out, &d), "installed by a version that wrote no mark (before 0.96.1)");
+        std::fs::write(out.join(INSTALLED_BY), "0.95.1\n").unwrap();
+        assert!(needs_install(&out, &d), "installed by another version");
+        mark_installed(&out);
+        assert!(!needs_install(&out, &d), "installed by this version");
+        let _ = std::fs::remove_dir_all(&out);
+    }
 
     #[test]
     fn a_spec_splits_at_the_version() {

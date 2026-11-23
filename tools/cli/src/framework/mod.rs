@@ -825,7 +825,11 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
         return Ok(());
     }
     toolchain::ready(dialect.tool("needs"))?;
-    shell(&out, &toolchain_command(root, cmd, m, &dialect, rest, vars)?)
+    shell(&out, &toolchain_command(root, cmd, m, &dialect, rest, vars)?)?;
+    if cmd == "install" {
+        dependencies::mark_installed(&out);
+    }
+    Ok(())
 }
 
 /// The dialect's `toolchain.<cmd>` for the project, filled, with the arguments after `--`.
@@ -881,12 +885,11 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
     let out_rel = project::output_dir(m, &dialect).replace('\\', "/");
     vscode::write(root, m, &dialect, &out_rel, serde_json::Map::new(), serde_json::Map::new())?;
     toolchain::ready(dialect.tool("needs"))?;
-    if let Some(installed) = dialect.tool("installed")
-        && !out.join(installed).exists()
-    {
+    if dependencies::needs_install(&out, &dialect) {
         log.step("install");
         let install = toolchain_command(root, "install", m, &dialect, &[], &[])?;
         shell_tee(log, &out, &install)?;
+        dependencies::mark_installed(&out);
         dependencies::ensure_defs(root, m, &dialect)?;
     }
     // spec 021: the environment's values go to the server's process; a required one without a value stops it here

@@ -86,7 +86,10 @@ mobile app. For it (ADR-cli-0001):
   runs `[toolchain] compile` once the app is installed, so a running server restarts on the build.
 - `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package
   manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions
-  ([packages.md](packages.md)).
+  ([packages.md](packages.md)). It writes `build/.nuclear-installed` with the platform's version; `run` (and a
+  package command) installs again when that file is missing or names another version (`needs_install`): the runtime
+  package comes with the platform, so a project installed by an earlier release gets the new runtime (0.96's
+  `synapsis.server` was missing in projects 0.95 had installed).
 - `nuclear migrate [make "<message>" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /
   `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape
   checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down
