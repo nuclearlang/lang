@@ -146,13 +146,109 @@ def test_make_warns_of_what_loses_data_and_refuses_a_changed_key(tmp_path: Path)
     p.made("first")
     p.app(V4)
     text = p.migrate("make", "less and more")
-    assert "warning: the migration drops column tasks.done; if it was renamed, edit it" in text
+    assert "warning: the migration drops column tasks.done, with its values; if it was renamed, delete this migration and make it with --rename tasks.done=<new column>" in text
     assert "warning: the migration adds the required column projects.code without a default: a table with rows refuses it" in text
     # the key of a table: no migration changes it, and make says so
     p.app(V4.replace("id: Mapped[int] = primary(generated=True)\n    name", "id: Mapped[int] = column()\n    key: Mapped[int] = primary(generated=True)\n    name"))
     text = p.migrate("make", "another key", code=1)
     assert "error: the key of projects changed (id to key): a migration does not change a key" in text
     assert len(list(p.versions.glob("*.py"))) == 2
+
+
+def test_make_rename_writes_a_rename_that_keeps_the_rows_and_refuses_one_that_is_not_there(tmp_path: Path) -> None:
+    p = Project(tmp_path)
+    p.app(V2)
+    p.made("first")
+    p.migrate("up")
+    p.sql("INSERT INTO projects (id, name) VALUES (1, 'home')")
+    p.sql("INSERT INTO tasks (id, title, project_id) VALUES (1, 'paint', 1)")
+    # the projects renamed to teams, and their name to title
+    v6 = V2.replace('__tablename__ = "projects"', '__tablename__ = "teams"').replace("name: Mapped[str]", "title: Mapped[str]").replace('"projects.id"', '"teams.id"')
+    # refused, with the same words in every dialect; nothing is written
+    for app, renames, message in (
+        (v6, ["nothing=teams"], "cannot rename nothing: the migrations have no table nothing"),
+        (V2, ["projects=teams"], "cannot rename projects: the entities still have the table projects"),
+        (v6, ["projects=crews"], "cannot rename projects to crews: the entities have no table crews"),
+        (v6, ["projects=tasks"], "cannot rename projects to tasks: the migrations already have the table tasks"),
+        (v6, ["projects=teams", "projects.nope=title"], "cannot rename projects.nope: the migrations have no column projects.nope"),
+        (v6, ["projects=teams", "projects.id=title"], "cannot rename projects.id: the entities still have the column projects.id"),
+        (v6, ["projects=teams", "projects.name=label"], "cannot rename projects.name to label: the entities have no column teams.label"),
+        (v6, ["projects=teams", "projects.name=id"], "cannot rename projects.name to id: the migrations already have the column teams.id"),
+        (v6, ["projects"], "--rename takes <table>=<new table> or <table>.<column>=<new column>, not projects"),
+    ):
+        p.app(app)
+        text = p.migrate("make", "teams", *(a for r in renames for a in ("--rename", r)), code=1)
+        assert text.strip() == f"error: {message}"
+    assert len(list(p.versions.glob("*.py"))) == 1
+
+    p.app(v6)
+    text = p.migrate("make", "teams", "--rename", "projects=teams", "--rename", "projects.name=title")
+    file = Path(re.search(r"^wrote (.+)$", text, re.M).group(1))  # type: ignore[union-attr]
+    body = file.read_text()
+    assert "    op.rename_table('projects', 'teams')\n    rename_column('teams', 'name', 'title')\n" in body
+    assert "    rename_column('teams', 'title', 'name')\n    op.rename_table('teams', 'projects')\n" in body
+    assert not re.search(r"drop_table|create_table|drop_column|add_column|alter_column", body) and "warning" not in text
+    assert "no changes" in p.migrate("make", "again"), "the rename is all that changed"
+    p.migrate("up")
+    assert p.sql("SELECT id, title FROM teams") == [(1, "home")], "the rows stay"
+    assert [r[2:5] for r in p.sql("PRAGMA foreign_key_list(tasks)")] == [("teams", "project_id", "id")], "the rows that point to it follow"
+    p.migrate("down")
+    assert p.sql("SELECT id, name FROM projects") == [(1, "home")]
+    assert [r[2:5] for r in p.sql("PRAGMA foreign_key_list(tasks)")] == [("projects", "project_id", "id")]
+    assert p.sql("SELECT COUNT(*) FROM tasks") == [(1,)]
+
+
+def test_a_text_column_is_the_varchar_of_its_length_or_the_text_type_that_holds_it(tmp_path: Path) -> None:
+    from sqlalchemy import VARCHAR, String
+    from sqlalchemy.dialects import mysql, postgresql, sqlite
+    from synapsis.orm import text_type
+
+    # the one rule, the same as the nestjs dialect's runtime (test/migrate.test.ts)
+    def rule(n: int) -> list[str]:
+        return [text_type(d, n) for d in ("sqlite", "postgres", "mysql", "mariadb")]
+
+    assert rule(255) == ["VARCHAR(255)"] * 4
+    assert rule(16383) == ["VARCHAR(16383)"] * 4
+    assert rule(16384) == ["VARCHAR(16384)", "VARCHAR(16384)", "MEDIUMTEXT", "MEDIUMTEXT"]
+    assert rule(4194303) == ["VARCHAR(4194303)", "VARCHAR(4194303)", "MEDIUMTEXT", "MEDIUMTEXT"]
+    assert rule(4194304) == ["VARCHAR(4194304)", "VARCHAR(4194304)", "LONGTEXT", "LONGTEXT"]
+    assert rule(10485760) == ["VARCHAR(10485760)", "VARCHAR(10485760)", "LONGTEXT", "LONGTEXT"]
+    assert rule(10485761) == ["VARCHAR(10485761)", "TEXT", "LONGTEXT", "LONGTEXT"]
+    # what a table or a migration is made with follows it
+    for n in (255, 16384, 4194304, 10485761):
+        # `String` in an entity and a migration; `VARCHAR` in a migration's way back, read from SQLite
+        for kind in (String, VARCHAR):
+            made = [str(kind(n).compile(dialect=d.dialect())) for d in (sqlite, postgresql, mysql)]
+            assert made == rule(n)[:3], made
+
+    # a changed length is a migration, in both directions
+    essays = (
+        "from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, primary\n\n\n"
+        "class ProjectConfig(AppConfig):\n    connections = [SQLite(file=\"app.sqlite\")]\n\n\n"
+        "class Essay(Entity):\n    __tablename__ = \"essays\"\n    id: Mapped[int] = primary(generated=True)\n"
+        "    body: Mapped[str] = column(length={n})\n\n\napp = create_app(ProjectConfig(), entities=[Essay])\n"
+    )
+    p = Project(tmp_path)
+
+    def kind() -> str:
+        return str(p.sql("SELECT type FROM pragma_table_info('essays') WHERE name = 'body'")[0][0])
+
+    p.app(essays.format(n=100000))
+    p.made("essays")
+    p.migrate("up")
+    assert kind() == "VARCHAR(100000)"
+    p.sql("INSERT INTO essays (body) VALUES ('kept')")
+    p.app(essays.format(n=100))
+    p.made("shorter")
+    p.migrate("up")
+    assert kind() == "VARCHAR(100)"
+    p.app(essays.format(n=1000000))
+    p.made("longer")
+    p.migrate("up")
+    assert kind() == "VARCHAR(1000000)"
+    p.migrate("down")
+    assert kind() == "VARCHAR(100)"
+    assert p.sql("SELECT body FROM essays") == [("kept",)]
 
 
 def test_a_failed_migration_is_not_applied(tmp_path: Path) -> None:

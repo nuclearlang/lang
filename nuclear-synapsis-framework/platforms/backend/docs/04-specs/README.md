@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-23
 related: [004-backend-parity/plan.md, ../01-product/roadmap.md]
 ---
 # Specs of the backend platform
@@ -13,4 +13,4 @@ it is done when both checks run it. A change that touches several projects is in
 
 | Spec | What | Status |
 |---|---|---|
-| [004-backend-parity](004-backend-parity/plan.md) | What a real API needs that the platform lacked: relations, migrations, transactions, pagination, authentication and guards, scheduled work, uploads, deploy and operations, the command at parity with mobile | in-progress: F1–F4 done ([ADR-backend-0001](../03-adr/0001-backend-data.md)); F5–F9 left (F9 belongs to the command line tools); one decision open for the user (§5) |
+| [004-backend-parity](004-backend-parity/plan.md) | What a real API needs that the platform lacked: relations, migrations, transactions, pagination, authentication and guards, scheduled work, uploads, deploy and operations, the command at parity with mobile | in-progress: F1–F4 done ([ADR-backend-0001](../03-adr/0001-backend-data.md)); the three decisions of 2026-11-23 delivered (§4b: the 409 of the database, a long text, `migrate make --rename`); F5–F9 left (F9 belongs to the command line tools); one decision open for the user (§5) |

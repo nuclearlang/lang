@@ -6,6 +6,8 @@ project:
     python -m synapsis.migrate down [--to <name>] --dir ../migrations          reverts the last one applied (or every one applied after <name>)
     python -m synapsis.migrate status --dir ../migrations                      every migration: applied or pending
 
+    make takes --rename <table>=<new table> and --rename <table>.<column>=<new column> (the database's names; any
+    number): a rename that keeps the rows, where it would write a drop and an add
     up and down take --fake (the history changes, nothing runs) and --transaction all|each|none (default: all)
 
 A migration is `versions/<timestamp>_<slug>.py` with `upgrade()` and `downgrade()` over Alembic's operations (`op`), in
@@ -28,7 +30,7 @@ import importlib.util
 import re
 import sys
 import warnings
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -37,7 +39,7 @@ from sqlalchemy import DateTime
 
 from .orm import FRACTION, Entity, UtcDateTime
 
-__all__ = ["make", "up", "down", "status", "MigrateError", "run_env"]
+__all__ = ["make", "up", "down", "status", "rename_column", "MigrateError", "run_env"]
 
 HISTORY = "migrations"
 Transaction = Literal["all", "each", "none"]
@@ -49,11 +51,12 @@ class MigrateError(Exception):
 
 FILE = '''"""{message}
 
-Written by `nuclear migrate make` from the entities; it is the project's from now on (a renamed table or column shows
-as a drop and an add: change it to a rename to keep the data).
+Written by `nuclear migrate make` from the entities; it is the project's from now on (a renamed table or column is a
+drop and an add unless make is told: --rename <table>=<new table>, --rename <table>.<column>=<new column>).
 """
 from alembic import op
 import sqlalchemy as sa
+from synapsis.migrate import rename_column
 from synapsis.orm import UtcDateTime
 
 
@@ -229,9 +232,16 @@ def _prepare(ops: list[Any], table: str = "") -> Iterator[str]:
             # by its columns when the migration runs (_drop_constraint, _reflected)
             op.constraint_name = op.constraint_name or named(op.table_name, op.to_constraint())
         elif isinstance(op, o.DropTableOp):
-            yield f"the migration drops table {op.table_name}; if it was renamed, edit it"
+            yield (
+                f"the migration drops table {op.table_name}, with its rows; if it was renamed, delete this migration and "
+                f"make it with --rename {op.table_name}=<new table>"
+            )
         elif isinstance(op, o.DropColumnOp):
-            yield f"the migration drops column {op.table_name or table}.{op.column_name}; if it was renamed, edit it"
+            name = f"{op.table_name or table}.{op.column_name}"
+            yield (
+                f"the migration drops column {name}, with its values; if it was renamed, delete this migration and "
+                f"make it with --rename {name}=<new column>"
+            )
         elif isinstance(op, o.AddColumnOp):
             c = op.column
             if not c.nullable and c.server_default is None and not c.primary_key:
@@ -263,12 +273,77 @@ def create_tables(connection: Any) -> None:
         operations.invoke(op)
 
 
+def rename_column(table: str, old: str, new: str) -> None:
+    """What `--rename <table>.<column>=<new column>` writes in a migration: the column under its new name, in place,
+    with its values, its constraints and what points to it (the four databases take the same statement; Alembic's own
+    rename rebuilds the table on SQLite and needs the whole column again on MySQL)."""
+    from alembic import op
+
+    quote = op.get_bind().dialect.identifier_preparer.quote
+    op.execute(f"ALTER TABLE {quote(table)} RENAME COLUMN {quote(old)} TO {quote(new)}")
+
+
+def _renamed(connection: Any, renames: Sequence[str]) -> tuple[list[str], list[str]]:
+    """`--rename` of `make`: each `<table>=<new table>` or `<table>.<column>=<new column>` (the database's names, as
+    the migrations have them) made on the schema the migrations left, so the comparison writes only what else changed;
+    returns the lines of the migration and of its way back. The tables first: a column is renamed in its table whatever
+    name the table has now. A rename whose old name the migrations do not have, or whose new name the entities do not
+    have, is refused (the same words as the nestjs dialect's tool)."""
+    from sqlalchemy import inspect
+
+    parsed: list[tuple[str, str | None, str]] = []
+    for r in renames:
+        found = re.fullmatch(r"(\w+)(?:\.(\w+))?=(\w+)", r)
+        if not found:
+            raise MigrateError(f"--rename takes <table>=<new table> or <table>.<column>=<new column>, not {r}")
+        parsed.append((found[1], found[2], found[3]))
+
+    def refuse(old: str, to: str, kind: str, now: str, was: bool, still: bool, is_: bool, taken: bool) -> None:
+        # was: the migrations have the old name; still: the entities too; is_: the entities have the new one; taken: the migrations too
+        if not was:
+            raise MigrateError(f"cannot rename {old}: the migrations have no {kind} {old}")
+        if still:
+            raise MigrateError(f"cannot rename {old}: the entities still have the {kind} {old}")
+        if not is_:
+            raise MigrateError(f"cannot rename {old} to {to}: the entities have no {kind} {now}")
+        if taken:
+            raise MigrateError(f"cannot rename {old} to {to}: the migrations already have the {kind} {now}")
+
+    entities = Entity.metadata.tables
+    quote = connection.dialect.identifier_preparer.quote
+    ups: list[str] = []
+    downs: list[str] = []
+    tables: dict[str, str] = {}
+    for t, column, to in parsed:
+        if column is None:
+            had = inspect(connection).get_table_names()
+            refuse(t, to, "table", to, t in had, t in entities, to in entities, to in had)
+            connection.exec_driver_sql(f"ALTER TABLE {quote(t)} RENAME TO {quote(to)}")
+            tables[t] = to
+            ups.append(f"op.rename_table({t!r}, {to!r})")
+            downs.append(f"op.rename_table({to!r}, {t!r})")
+    for table, column, to in parsed:
+        if column is not None:
+            t = tables.get(table, table)
+            reader = inspect(connection)
+            had = {c["name"] for c in reader.get_columns(t)} if reader.has_table(t) else set[str]()
+            have = {c.name for c in entities[t].columns} if t in entities else set[str]()
+            refuse(f"{table}.{column}", to, "column", f"{t}.{to}", column in had, column in have, to in have, to in had)
+            connection.exec_driver_sql(f"ALTER TABLE {quote(t)} RENAME COLUMN {quote(column)} TO {quote(to)}")
+            ups.append(f"rename_column({t!r}, {column!r}, {to!r})")
+            downs.append(f"rename_column({t!r}, {to!r}, {column!r})")
+    return ups, downs[::-1]
+
+
 def _slug(message: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", message.lower()).strip("_")[:60] or "migration"
 
 
-def make(folder: str | Path, message: str, app: str = "app.main", now: datetime | None = None) -> Path | None:
-    """Writes the migration from the migrations of the folder to the entities; None when nothing changed."""
+def make(
+    folder: str | Path, message: str, app: str = "app.main", now: datetime | None = None, renames: Sequence[str] = ()
+) -> Path | None:
+    """Writes the migration from the migrations of the folder to the entities; None when nothing changed. `renames`:
+    what `--rename` names (`_renamed`)."""
     from alembic.autogenerate import produce_migrations, render_python_code
     from sqlalchemy import create_engine, inspect
     from sqlalchemy.orm import configure_mappers
@@ -281,6 +356,7 @@ def make(folder: str | Path, message: str, app: str = "app.main", now: datetime 
             warnings.simplefilter("ignore")  # Alembic's notes on a constraint without a name: _prepare names it
             for file in _files(folder):
                 _apply(connection, _load(file), "up")
+            ups, downs = _renamed(connection, renames)
             context = _context(connection)
             # Alembic does not see a changed key, and no migration of the platform changes one: said, never skipped
             reader = inspect(connection)
@@ -292,7 +368,7 @@ def make(folder: str | Path, message: str, app: str = "app.main", now: datetime 
             script = produce_migrations(context, Entity.metadata)
             ops = script.upgrade_ops
             assert ops is not None and script.downgrade_ops is not None
-            if ops.is_empty():
+            if ops.is_empty() and not ups:
                 return None
             warned = list(_prepare(ops.ops))
             ops.reverse_into(script.downgrade_ops)  # the way back, from the operations with their names
@@ -304,7 +380,11 @@ def make(folder: str | Path, message: str, app: str = "app.main", now: datetime 
                     if "###" not in line
                 ).rstrip()
                 for side, o in (("upgrade", ops), ("downgrade", script.downgrade_ops))
+                if not ops.is_empty()
             }
+            # the renames first, and last on the way back
+            body["upgrade"] = "\n".join([*(f"    {line}" for line in ups), *filter(None, [body.get("upgrade")])])
+            body["downgrade"] = "\n".join([*filter(None, [body.get("downgrade")]), *(f"    {line}" for line in downs)])
     finally:
         engine.dispose()
     versions = Path(folder).resolve() / "versions"
@@ -506,6 +586,7 @@ def main(argv: list[str]) -> None:
     parser.add_argument("--dir", default="../migrations")
     parser.add_argument("--app", default="app.main")
     parser.add_argument("--to")
+    parser.add_argument("--rename", action="append", default=[])
     parser.add_argument("--fake", action="store_true")
     parser.add_argument("--transaction", choices=["all", "each", "none"], default="all")
     a = parser.parse_args(argv)
@@ -516,7 +597,7 @@ def main(argv: list[str]) -> None:
         if a.command == "make":
             if not a.message:
                 parser.error('make needs a message: make "<what changes>"')
-            file = make(a.dir, a.message, a.app)
+            file = make(a.dir, a.message, a.app, renames=a.rename)
             print(f"wrote {file}" if file else "no changes: the entities match the last migration")
         elif a.command == "status":
             all_ = status(a.dir, a.app)

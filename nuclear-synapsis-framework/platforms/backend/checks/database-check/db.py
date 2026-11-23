@@ -185,15 +185,18 @@ EXPECTED: dict[str, dict[str, bool | None]] = {
     },
     "tags": {"id": False, "label": False},
     "orders_tags": {"order_id": False, "tag_id": False},
+    "coupons": {"id": False, "code": False, "customer_id": False},
 }
 TYPES = {
     ("customers", "id"): "int", ("customers", "email"): "str", ("customers", "vip"): "bool", ("customers", "credit"): "float",
     ("customers", "created_at"): "datetime", ("orders", "quantity"): "int", ("orders", "total"): "float",
     ("orders", "note"): "str", ("orders", "placed_at"): "datetime", ("orders", "paid"): "bool",
 }
-UNIQUE = {"customers": ["email"], "tags": ["label"]}
+UNIQUE = {"customers": ["email"], "tags": ["label"], "coupons": ["code"]}
 FOREIGN = {
     "orders": ["customer_id -> customers.id on delete cascade"],
+    # no rule: a customer with coupons is not removed
+    "coupons": ["customer_id -> customers.id"],
     "orders_tags": ["order_id -> orders.id on delete cascade", "tag_id -> tags.id on delete cascade"],
 }
 
@@ -249,6 +252,14 @@ def same(now: dict[str, Any], before: dict[str, Any], what: str) -> None:
             if a.get(part) != b.get(part):
                 lines.append(f"{table} {part}: {b.get(part)}, was {a.get(part)}")
     raise SystemExit(f"{what}: the schema is not the one before:\n  " + "\n  ".join(lines))
+
+
+# `@column(length = n)`: the VARCHAR of that length while the database's holds it, then its text type that does (the
+# reference, §2.1): what each database must name the column of a text of 100000 and of 5000000 characters
+LONG_TEXT = {
+    100000: {"sqlite": "VARCHAR(100000)", "postgres": "VARCHAR(100000)", "mysql": "MEDIUMTEXT", "mariadb": "MEDIUMTEXT"},
+    5000000: {"sqlite": "VARCHAR(5000000)", "postgres": "VARCHAR(5000000)", "mysql": "LONGTEXT", "mariadb": "LONGTEXT"},
+}
 
 
 def seed(url: str) -> None:

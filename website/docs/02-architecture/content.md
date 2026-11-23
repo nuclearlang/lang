@@ -50,6 +50,8 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
 - `[[top]]`: the links of the top bar (a path in the tree is a page; another, a screen: `/tools`, `/platforms/mobile`).
 - `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a
   name; a pattern expands to the matching pages in order, without `README`s, each page once per section.
+  The language's section lists the helpers of the language (`nuclear-synapsis-framework/lodash/docs/07-reference/functions`)
+  right after the library: they are part of the language, so a reader finds them there and not under the framework.
 - The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`
   (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),
   `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`title`, `text`, `systems`: a tab each with

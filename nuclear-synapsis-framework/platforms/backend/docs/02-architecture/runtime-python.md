@@ -14,7 +14,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | Module | Holds |
 |---|---|
 | `result` | `Result`, `Ok`, `Err` |
-| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |
+| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |
 | `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |
 | `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
@@ -81,6 +81,18 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 
 ## Migrations
 
+What the database refuses for integrity answers 409 `conflict` (the platform's reference §2.4; Spring Data REST's
+answer to Spring's `DataIntegrityViolationException`): `create_app` handles SQLAlchemy's `IntegrityError` (a unique,
+a foreign key, a required column, on the four databases) and `errors.IntegrityViolation`, which `repository._fits`
+raises from `save` and `update` for a text longer than its column (counted with `len`: code points). The exception
+leaves `@transactional` through its `session.begin()`, which rolls back. Test:
+`test_what_the_database_refuses_for_integrity_is_a_409` (the same cases as `data.test.ts`).
+
+A text column is `String(n)` (`orm.TEXT_LENGTH` = 255 without `length`). `orm.text_type(dialect, n)` is the one
+rule of its type (the same as `textType` of synapsis-nest), and `orm._text` compiles every `String(n)` with it on
+PostgreSQL, MySQL and MariaDB: an entity, `createTables` and a migration (`sa.String(length=n)`) all name the same
+type.
+
 `synapsis.migrate` is what `nuclear migrate` runs (the dialect's `[toolchain]` keys `migrate_make`, `migrate`,
 `migrate_down`, `migrate_status`):
 
@@ -103,6 +115,11 @@ codes as the TypeScript runtime. How this one keeps them:
   `_prepare` names every unique and foreign key the migration makes or drops (`uq_<table>_<column>`,
   `fk_<table>_<column>`) and collects the warnings. A changed key is compared here, because Alembic does not see
   it, and refused. The entities carry no constraint names, so a migration of before 0.91 still compares equal.
+- `make --rename` (`_renamed`): each rename is checked against the SQLite the migrations made and the entities, made
+  there (`ALTER TABLE ... RENAME`), and written as a line of the file before what autogenerate finds: Alembic's
+  `op.rename_table`, and `rename_column` (this module's: one `ALTER TABLE ... RENAME COLUMN` on every database,
+  where Alembic's `alter_column` rebuilds the table on SQLite and needs the whole column on MySQL). The way back is
+  the same lines reversed, last.
 - The history is the table `migrations` (`_history_table`: `id`, `timestamp`, `name`), read by `_history` in the
   order of `id`. When it is missing it is made, from `alembic_version` if the database was migrated before 0.93
   (every file up to that revision, or to that timestamp, was applied); `alembic_version` is left as it was.

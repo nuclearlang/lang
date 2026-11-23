@@ -89,6 +89,9 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   run [-- <args>]                            the server (uvicorn, npm run dev)
   test [-- <args>]                           the tests written in Nuclear (pytest, node:test)
   migrate make <message>                     one migration of the database: the entities minus the last one
+                                             (--rename <table>=<new table>, --rename <table>.<column>=<new column>,
+                                             any number, the database's names: a rename that keeps the rows, where
+                                             make would write a drop and an add)
   migrate [up] | migrate down                applies the pending migrations, or reverts the last one
                                              (--to <migration>: up to that one, or back to it; --fake: only
                                              the history changes; --transaction all|each|none, default all)

@@ -50,8 +50,8 @@ installer/install.sh                         # the user runs the installed copy:
 - `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).
 - `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).
 - `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.
-- `examples/examples-backend/store_api/`: the example of the database check (customers, orders, tags: relations,
-  pages, searches, transactions), made with `nuclear new` and `nuclear gen`.
+- `examples/examples-backend/store_api/`: the example of the database check (customers, orders, tags, coupons: relations,
+  pages, searches, transactions, what the database refuses), made with `nuclear new` and `nuclear gen`.
 - `examples/examples-fastapi/rick_api/`: the example of the fastapi check.
 - `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.
 - `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
@@ -60,7 +60,7 @@ installer/install.sh                         # the user runs the installed copy:
 - `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the
   guards and the WebSocket of `tasks_api`; `smoke.mjs`).
 - `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the
-  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`), `tables.py` (the tables
+  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`, a rename with `make --rename`, a long text), `tables.py` (the tables
   `createTables` makes against the first migration's) and `scenario.py` (the one HTTP
   scenario whose answers are compared).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.

@@ -75,10 +75,27 @@ A table. `@entity("name")` names it (default: the class name in snake_case, plur
 columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a
 uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,
 `@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the
-column's default. A `string` column without `length` holds 255 characters. A `DateTime` column is an instant: it
+column's default. A `DateTime` column is an instant: it
 comes back as the same instant on every database, with its milliseconds, and its JSON is what `toIso()` writes
 (`2026-03-04T03:06:07.000Z`). The column keeps the fraction of a second on every database (six digits on MySQL,
 MariaDB and SQLite, `DATETIME(6)`; PostgreSQL's own).
+
+**A text column** holds the characters `@column(length = n)` says, 255 without one; a long text is a larger `n`
+(`@column(length = 100000)`), there is no other word for it. The column is the database's `VARCHAR(n)` while that
+type holds `n` characters of any alphabet, and above it the database's text type that holds at least `n`:
+
+| `n`, in characters | PostgreSQL | MySQL, MariaDB | SQLite |
+|---|---|---|---|
+| up to 16 383 | `VARCHAR(n)` | `VARCHAR(n)` | `VARCHAR(n)` |
+| up to 4 194 303 | `VARCHAR(n)` | `MEDIUMTEXT` | `VARCHAR(n)` |
+| up to 10 485 760 | `VARCHAR(n)` | `LONGTEXT` | `VARCHAR(n)` |
+| more | `TEXT` | `LONGTEXT` | `VARCHAR(n)` |
+
+A text longer than `n` characters is never written, on any database: the write is refused with 409 `conflict`
+(§2.4), as PostgreSQL, MySQL and MariaDB refuse it in a `VARCHAR`. Characters are counted, not bytes (`日😀` is two).
+`@maxLength(n)` on the model of the body answers the client first, with a 400 that names the field. A changed
+`length` is a migration (§2.8). A long text is not a key nor a unique column: MySQL and MariaDB refuse a unique
+over a text type.
 
 ```nuclear
 @entity("tasks")
@@ -241,7 +258,20 @@ parameter one reason per field, in the order of the fields' names.
 `field` is a path (`items.0.name`; empty for the body itself); `rule` is the validation's name: `required`, `type`,
 `minLength`, `maxLength`, `min`, `max`, `pattern`, `email`, `url`, `json` (the body is not JSON), `invalid`. A field
 that breaks several rules names the first of that list. A route that does not exist answers `not found`; what
-nothing handled answers 500 with the message `error`. `GET /openapi.json` answers the API's OpenAPI document,
+nothing handled answers 500 with the message `error`.
+
+**What the database refuses for integrity answers 409** with the message `conflict`, on every database, and never
+the database's own words (they name a constraint, a column, a value):
+
+```json
+{ "status": 409, "message": "conflict" }
+```
+
+It is the answer for a repeated value in a unique column, a foreign key that points at no row, a row removed
+while others point to it (a relation without `onDelete`), a null in a required column, and a text longer than its
+column (§2.1). So of many requests at once for one unique value, one writes its row and every other answers 409:
+the use case that checks first (`Conflict("...")`, below) gives the client a better message, and the database
+still decides. Inside `@transactional` the whole transaction is rolled back. `GET /openapi.json` answers the API's OpenAPI document,
 written from the project, with this body as its `Error`.
 
 ```nuclear
@@ -410,6 +440,7 @@ changes by migrations, kept in the project's `migrations/` folder (with the sour
 
 ```sh
 nuclear migrate make "notes on tasks"   # one migration: what the entities changed since the migrations of the folder
+nuclear migrate make "shops are stores" --rename shops=stores --rename orders.shop_id=store_id   # renames that keep the rows
 nuclear migrate                         # applies the pending ones to the default database (also: nuclear migrate up)
 nuclear migrate --to <migration>        # applies the pending ones up to that one
 nuclear migrate down                    # reverts the last one applied
@@ -425,8 +456,20 @@ Making a migration:
   nothing (`no changes: the entities match the last migration`).
 - A migration's name is `<year month day hour minute second>_<message in snake_case>` (local time); `--to` takes the
   name or its timestamp.
-- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or
-  column shows as a drop and an add, so edit it into a rename to keep the data.
+- A migration is a file of the dialect's migration tool, written once and then the project's.
+- **A rename is told to `make`**: after renaming the field or the entity in the code,
+  `nuclear migrate make "<message>" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any
+  number of them, with the names the database has: `customers`, `full_name`). The migration renames in place: the
+  rows, the values and the foreign keys that point there are kept, and `down` renames back. A column of a table
+  renamed in the same command is named by the table's old name (`--rename shops=stores --rename shops.name=title`).
+  The unique and the foreign key of a renamed column keep the name they had. Without `--rename` a renamed table or
+  column is a drop and an add: the data is lost, and `make` warns of it and says the option.
+- `make --rename` refuses, writing nothing, a rename whose old name the migrations do not have (`cannot rename
+  <old>: the migrations have no table <old>`) or the entities still have (`the entities still have the table
+  <old>`), and one whose new name the entities do not have (`cannot rename <old> to <new>: the entities have no
+  column <table>.<new>`) or the migrations already have (`the migrations already have the column <table>.<new>`).
+- A changed `length` of a text column is a change of that column, in both directions; the type follows the table of
+  §2.1. Making a column shorter fails while a row holds a longer text.
 - `make` warns of what loses data or what a table with rows refuses: a dropped table or column, a required column
   added without a default, a column that becomes required.
 - A field with a default (`done: boolean = false`) is also the column's SQL default, so adding it to a table with rows

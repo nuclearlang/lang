@@ -59,6 +59,9 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   run [-- <args>]                            the server (uvicorn, npm run dev)
   test [-- <args>]                           the tests written in Nuclear (pytest, node:test)
   migrate make <message>                     one migration of the database: the entities minus the last one
+                                             (--rename <table>=<new table>, --rename <table>.<column>=<new column>,
+                                             any number, the database's names: a rename that keeps the rows, where
+                                             make would write a drop and an add)
   migrate [up] | migrate down                applies the pending migrations, or reverts the last one
                                              (--to <migration>: up to that one, or back to it; --fake: only
                                              the history changes; --transaction all|each|none, default all)
@@ -1025,7 +1028,7 @@ fn cmd_quote(value: &str) -> String {
 /// `nuclear migrate [make "<message>" | up | down | status]` (ADR-backend-0001, ADR-backend-0002): the dialect's
 /// `migrate_make` / `migrate` / `migrate_down` / `migrate_status` in the generated project, over the project's
 /// `migrations/` folder (kept with the sources). The options of up and down (`--to`, `--fake`, `--transaction`)
-/// reach the dialect's tool as they are.
+/// and of make (`--rename`) reach the dialect's tool as they are.
 fn migrate_command(root: &Path, rest: &[String]) -> Result<(), String> {
     let m = non_mobile_manifest(root)?.ok_or("migrations are of a backend project's database")?;
     let (key, message, mut options) = migrate_args(rest)?;
@@ -1040,16 +1043,31 @@ fn migrate_command(root: &Path, rest: &[String]) -> Result<(), String> {
 }
 
 /// The words of `nuclear migrate`: the `[toolchain]` key, the message of `make`, the options of up and down
-/// (`--to <migration>`, `--fake`, `--transaction all|each|none`) as the dialect's tool takes them.
+/// (`--to <migration>`, `--fake`, `--transaction all|each|none`) and of make (`--rename <table>=<new table>`,
+/// `--rename <table>.<column>=<new column>`: the database's names) as the dialect's tool takes them.
 fn migrate_args(rest: &[String]) -> Result<(&'static str, Option<String>, Vec<String>), String> {
-    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" | nuclear migrate status | \
+    const USAGE: &str = "usage: nuclear migrate make \"<what changes>\" [--rename <table>=<new table>] \
+                         [--rename <table>.<column>=<new column>] | nuclear migrate status | \
                          nuclear migrate [up|down] [--to <migration>] [--fake] [--transaction all|each|none]";
+    // a name of the database: a table or a column
+    let name = |s: &str| !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
     let mut words: Vec<&str> = Vec::new();
     let mut options: Vec<String> = Vec::new();
+    let mut renames: Vec<String> = Vec::new();
     let mut given = rest.iter().take_while(|a| *a != "--").map(String::as_str);
     while let Some(word) = given.next() {
         match word {
             "--fake" => options.push(word.into()),
+            "--rename" => {
+                let value = given.next().ok_or(USAGE)?;
+                let shaped = value.split_once('=').is_some_and(|(old, new)| {
+                    name(new) && old.split_once('.').map_or(name(old), |(table, column)| name(table) && name(column))
+                });
+                if !shaped {
+                    return Err(USAGE.into());
+                }
+                renames.extend([word.to_string(), value.to_string()]);
+            }
             "--to" | "--transaction" => {
                 let value = given.next().ok_or(USAGE)?;
                 if word == "--transaction" && !["all", "each", "none"].contains(&value) {
@@ -1061,7 +1079,8 @@ fn migrate_args(rest: &[String]) -> Result<(&'static str, Option<String>, Vec<St
         }
     }
     match words.as_slice() {
-        ["make", message] if options.is_empty() => Ok(("migrate_make", Some(message.to_string()), options)),
+        ["make", message] if options.is_empty() => Ok(("migrate_make", Some(message.to_string()), renames)),
+        _ if !renames.is_empty() => Err(USAGE.into()),
         [] | ["up"] => Ok(("migrate", None, options)),
         ["down"] => Ok(("migrate_down", None, options)),
         ["status"] if options.is_empty() => Ok(("migrate_status", None, options)),
@@ -2242,7 +2261,21 @@ mod tests {
         );
         assert_eq!(args(&["make", "notes on tasks"]), Ok(("migrate_make", Some("notes on tasks".into()), vec![])));
         assert_eq!(args(&["status"]), Ok(("migrate_status", None, vec![])));
-        let wrong: [&[&str]; 8] = [
+        assert_eq!(
+            args(&["make", "shops are stores", "--rename", "shops=stores", "--rename", "orders.shop_id=store_id"]),
+            Ok((
+                "migrate_make",
+                Some("shops are stores".into()),
+                options(&["--rename", "shops=stores", "--rename", "orders.shop_id=store_id"])
+            ))
+        );
+        let wrong: [&[&str]; 14] = [
+            &["make", "a", "--rename"],
+            &["make", "a", "--rename", "shops"],
+            &["make", "a", "--rename", "shops=sto res"],
+            &["make", "a", "--rename", "a.b.c=d"],
+            &["make", "a", "--rename", "shops=stores", "--fake"],
+            &["up", "--rename", "shops=stores"],
             &["make"],
             &["status", "--to", "x"],
             &["up", "--to"],

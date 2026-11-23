@@ -55,6 +55,12 @@ same; and the JSON and the OpenAPI are made from Nuclear, not from the dialects.
   the documentation page of a `fastapi` app shows the contract's document, without the framework's extras.
 - Decided after (the user, 2026-11-22): a value of another JSON type is refused in every dialect, with the rule
   `type`; nothing converts (the backend's reference, §2.3).
+- Decided after (the user, 2026-11-23: "copia lo que haría springboot"): what the database refuses for integrity
+  is not "what nothing handled". It answers what Spring Data REST's `RepositoryRestExceptionHandler` answers for
+  Spring's `DataIntegrityViolationException`, 409 Conflict, with this body and the fixed message `conflict`
+  (Spring's body carries the database's message; ours never does): a repeated unique value, a foreign key that
+  points at nothing, a row others point to, a null in a required column, a text longer than its column. Plain
+  Spring Boot has no handler for that exception and answers 500 (the backend's reference, §2.4).
 
 ## References
 - `platforms/backend/packages/synapsis-py/src/synapsis/errors.py`, `app.py`;

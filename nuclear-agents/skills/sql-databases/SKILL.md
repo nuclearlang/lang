@@ -50,8 +50,9 @@ A backend stores data: a new table, a changed column, a relation, a query, a dat
 
 ## Pitfalls
 
-- A renamed table or column shows in a migration as a drop and an add: `make` warns of every drop; edit the file
-  into a rename or the data is lost.
+- A renamed table or column is told to `make`, or the migration is a drop and an add and the data is lost (`make`
+  warns of every drop): `nuclear migrate make "<message>" --rename shops=stores --rename orders.shop_id=store_id`
+  (the database's names; `project_migrate` takes them as `rename`).
 - `make` compares the entities with the last migration, never with a live database: a database changed by hand
   drifts silently.
 - Migrations belong to the dialect they were made with; switching `fastapi` ↔ `nestjs` needs new ones.

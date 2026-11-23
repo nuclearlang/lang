@@ -1,12 +1,15 @@
+import { Coupon } from './data/entities/coupon.js';
 import { Customer } from './data/entities/customer.js';
 import { Order } from './data/entities/order.js';
 import { Tag } from './data/entities/tag.js';
+import { NewCoupons } from './domain/models/new_coupons.js';
 import { NewCustomer } from './domain/models/new_customer.js';
 import { NewOrder } from './domain/models/new_order.js';
 import { NewTag } from './domain/models/new_tag.js';
 import { Paid } from './domain/models/paid.js';
 import { TagList } from './domain/models/tag_list.js';
 import { Checkout } from './domain/usecases/checkout.js';
+import { ClearCoupon } from './domain/usecases/clear_coupon.js';
 import { CreateCustomer } from './domain/usecases/create_customer.js';
 import { CreateOrder } from './domain/usecases/create_order.js';
 import { CreateTag } from './domain/usecases/create_tag.js';
@@ -17,6 +20,7 @@ import { DraftCustomer } from './domain/usecases/draft_customer.js';
 import { FullOrder } from './domain/usecases/full_order.js';
 import { GetCustomer } from './domain/usecases/get_customer.js';
 import { GetOrder } from './domain/usecases/get_order.js';
+import { GiveCoupons } from './domain/usecases/give_coupons.js';
 import { ListCustomers } from './domain/usecases/list_customers.js';
 import { ListOrders } from './domain/usecases/list_orders.js';
 import { ListTags } from './domain/usecases/list_tags.js';
@@ -59,6 +63,8 @@ export class StoreAppComponent {
     private readonly payOrdersInstance: PayOrders,
     private readonly tagOrderInstance: TagOrder,
     private readonly draftCustomerInstance: DraftCustomer,
+    private readonly giveCouponsInstance: GiveCoupons,
+    private readonly clearCouponInstance: ClearCoupon,
   ) {}
 
   async listCustomers(page: number): Promise<Result<AppError, Customer[]>> {
@@ -151,5 +157,13 @@ export class StoreAppComponent {
 
   draftCustomer(email: string): Result<AppError, NewCustomer> {
     return this.draftCustomerInstance.exec(email);
+  }
+
+  async giveCoupons(input: NewCoupons): Promise<Result<AppError, Coupon[]>> {
+    return await this.giveCouponsInstance.exec(input);
+  }
+
+  async clearCoupon(id: number): Promise<Result<AppError, number>> {
+    return await this.clearCouponInstance.exec(id);
   }
 }

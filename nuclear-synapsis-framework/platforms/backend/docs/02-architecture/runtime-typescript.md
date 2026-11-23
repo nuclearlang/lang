@@ -18,7 +18,7 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 | | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |
 | | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |
 | | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
-| | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |
+| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below), `configureApp`; serves the contract (`serveContract`) |
 | | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |
 | | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |
 | `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`), `sinks` |
@@ -78,6 +78,18 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 
 ## Migrations
 
+What the database refuses for integrity answers 409 `conflict` (the platform's reference §2.4; Spring Data REST's
+answer to Spring's `DataIntegrityViolationException`): `ErrorFilter` asks `refusedForIntegrity`, true for
+Sequelize's `ValidationError` (a unique, and a required column, which Sequelize checks before the database),
+`ForeignKeyConstraintError`, and a `DatabaseError` whose SQLSTATE is of class 23 or SQLite's `SQLITE_CONSTRAINT`.
+`repository.ts` `fits` throws `Conflict` from `save` and `update` for a text longer than its column (counted in
+code points, not UTF-16 units). `@transactional` rolls back on any error. Test: `data.test.ts` (the same cases as
+`test_data.py`).
+
+A text column is `DataType.STRING(n)` (255 without `length`). `textType(dialect, n)` of `migrate.ts` is the one
+rule of its type (the same as `text_type` of synapsis-py), and `migrator` applies it to every column it makes or
+changes on PostgreSQL, MySQL and MariaDB (`core`): `createTables` and a migration name the same type.
+
 Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run
 by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`,
 `migrate_status`):
@@ -101,6 +113,9 @@ codes as the Python runtime. How this one keeps them:
   exports `schema` (the tables when it was made) and `known` (the migrations it was made after), so a file brings
   only what it changed: two made at the same time both count. A file of before 0.93 has `parent` or neither.
   `diff` refuses a changed key. `render` writes `up` / `down` over `queryInterface`.
+- `make --rename` (`renamed`): each rename is checked against `schemaAfter` and the entities, made on a copy of
+  that schema (the references of the other tables follow), and written as `renameTable` / `renameColumn` before
+  what `diff` finds between that copy and the entities.
 - The history is the table `migrations` (`id`, `timestamp`, `name`), read by `history` in the order of `id`. When
   it is missing it is made, from `SequelizeMeta` if the database was migrated before 0.93; `SequelizeMeta` is left
   as it was. umzug was not needed.

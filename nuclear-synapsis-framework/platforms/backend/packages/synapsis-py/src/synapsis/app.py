@@ -12,10 +12,11 @@ from typing import Any, cast
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import AppConfig, ComponentConfig, Connection
-from .errors import error_body, reasons_of
+from .errors import IntegrityViolation, error_body, reasons_of
 from .inject import inject
 from .web import guarded, router_of
 
@@ -93,6 +94,15 @@ def create_app(
         said = e.detail if isinstance(e.detail, str) else ""
         message = known.get(e.status_code, said) if said in ("Not Found", "Method Not Allowed", "") else said
         return JSONResponse(status_code=e.status_code, content=error_body(e.status_code, message or "error"), headers=e.headers)
+
+    @app.exception_handler(IntegrityError)
+    @app.exception_handler(IntegrityViolation)
+    async def conflict(_: Request, e: Exception) -> JSONResponse:
+        # what the database refuses for integrity: a repeated unique value, a foreign key that points at nothing or a
+        # row others still point to, a null in a required column (the cases of Spring's
+        # DataIntegrityViolationException, which Spring Data REST answers 409); never the database's words: they
+        # name a constraint, a column, a value
+        return JSONResponse(status_code=409, content=error_body(409, "conflict"))
 
     @app.exception_handler(Exception)
     async def failed(_: Request, e: Exception) -> JSONResponse:

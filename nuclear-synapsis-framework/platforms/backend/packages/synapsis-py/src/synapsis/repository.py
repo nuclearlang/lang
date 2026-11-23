@@ -21,11 +21,11 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, cast, get_args, get_origin
 
-from sqlalchemy import Select, Table, delete as sql_delete, func, inspect, select, update as sql_update
+from sqlalchemy import Select, String, Table, delete as sql_delete, func, inspect, select, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from .errors import NotFound
+from .errors import IntegrityViolation, NotFound
 from .orm import PENDING, Entity
 from .result import Err, Ok, Result
 
@@ -133,6 +133,16 @@ def _snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
+def _fits(entity: type[Entity], values: Mapping[str, Any]) -> None:
+    """A text longer than its column (`@column(length = n)`; 255 without one) is refused before it is written, with
+    the 409 of what a database refuses for integrity: PostgreSQL, MySQL and MariaDB refuse it in a VARCHAR, SQLite
+    and a text type would keep it. The length is counted in characters (code points), as the databases count it."""
+    for attribute in entity.__mapper__.column_attrs:
+        value, kind = values.get(attribute.key), attribute.columns[0].type
+        if isinstance(value, str) and isinstance(kind, String) and kind.length and len(value) > kind.length:
+            raise IntegrityViolation(f"{entity.__name__}.{attribute.key} holds {kind.length} characters")
+
+
 class Repository[T: Entity]:
     """The data of one entity: `Repository[Character]`. CRUD without writing it (find, find_all, save, remove)
     and a query builder (where, order_by, limit, offset, then get_one, get_many, count, exists, update, delete)."""
@@ -184,6 +194,7 @@ class Repository[T: Entity]:
         """Writes the row; a `@manyToMany` list set on a found row whose list was not loaded replaces its rows of the
         join table."""
         pending: dict[str, list[Entity]] = inspect(entity).dict.pop(PENDING, {})
+        _fits(self.entity, inspect(entity).dict)
         async with self.use(write=True) as s:
             merged = await s.merge(entity)
             for name, rows in pending.items():
@@ -329,6 +340,7 @@ class Query[T: Entity]:
     async def update(self, values: Mapping[str, Any]) -> int:
         async with self.repo.use(write=True) as s:
             names = {(k if hasattr(self.repo.entity, k) else _snake(k)): v for k, v in values.items()}
+            _fits(self.repo.entity, names)
             done = await s.execute(sql_update(self.repo.entity).where(*self.conditions).values(**names))
         return int(getattr(done, "rowcount", 0))
 

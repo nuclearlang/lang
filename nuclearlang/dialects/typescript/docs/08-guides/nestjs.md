@@ -136,7 +136,7 @@ nuclear migrate status                  # every migration: applied or pending
 ```
 
 They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`; the table `migrations` of the database lists the ones applied);
-each one also keeps the schema it leaves, which the next `make` compares with. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
+each one also keeps the schema it leaves, which the next `make` compares with. A renamed table or column is told to `make`, or it is a drop and an add and its data is lost (`make` warns): `nuclear migrate make "shops are stores" --rename shops=stores --rename orders.shop_id=store_id` (the database's names) writes `queryInterface.renameTable` and `renameColumn`, with their way back. By hand a rename is the same two calls (`queryInterface.renameColumn`, `renameTable`). `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
 
 ## 3. Use cases and events
 
@@ -200,7 +200,7 @@ export class TasksController {
 ```
 
 Path parameters, query parameters and the body are found from the route and the types; the pipes come out by
-themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. Every error answers Nuclear's body
+themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database. Every error answers Nuclear's body
 (`status`, `message`, and the reasons of an invalid body in `errors`), written by the runtime's `ErrorFilter`
 whatever Nest would write; a number or a boolean of the route or the query is read by the runtime's `IntPipe`,
 `DoublePipe` and `BoolPipe`, which name the parameter in the reason (ADR-synapsis-0013).

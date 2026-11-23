@@ -7,6 +7,8 @@
 //   synapsis-nest-migrate down [--to <name>] --dir ../migrations         reverts the last one applied (or every one applied after <name>)
 //   synapsis-nest-migrate status --dir ../migrations                     every migration: applied or pending
 //
+//   make takes --rename <table>=<new table> and --rename <table>.<column>=<new column> (the database's names; any number):
+//   a rename that keeps the rows, where it would write a drop and an add
 //   up and down take --fake (the history changes, nothing runs) and --transaction all|each|none (default: all)
 //
 // A migration is `<timestamp>_<slug>.js` with `up` and `down` over Sequelize's queryInterface, and `schema`: the tables
@@ -103,6 +105,20 @@ export function schemaFrom(s: Sequelize): Schema {
   return schema;
 }
 
+// --- a text column: `@column(length = n)`. The one rule of its type (the same as the fastapi dialect's, synapsis.orm):
+// the database's VARCHAR(n) while it holds n characters of any alphabet, then its text type that does.
+/** The most characters a VARCHAR holds: MySQL and MariaDB keep 65535 bytes and a character takes up to four;
+ * PostgreSQL's own limit; SQLite has none. */
+export const VARCHAR_MAX: Record<string, number> = { mysql: 16383, mariadb: 16383, postgres: 10485760 };
+/** The most characters a MEDIUMTEXT of MySQL and MariaDB holds (16777215 bytes); a longer text is a LONGTEXT. */
+export const MEDIUMTEXT_MAX = 4194303;
+
+/** The type a text column of `length` characters has on `dialect`, as the database names it. */
+export function textType(dialect: string, length: number): string {
+  if (length <= (VARCHAR_MAX[dialect] ?? Infinity)) return `VARCHAR(${length})`;
+  return dialect === 'postgres' ? 'TEXT' : length <= MEDIUMTEXT_MAX ? 'MEDIUMTEXT' : 'LONGTEXT';
+}
+
 const js = (v: unknown): string => (v === undefined ? 'undefined' : JSON.stringify(v)).replace(/"([A-Za-z_$][\w$]*)":/g, '$1: ').replace(/,(?=[A-Za-z_$]+: )/g, ', ');
 
 function column(c: ColumnSchema): string {
@@ -193,15 +209,58 @@ export function diff(before: Schema, after: Schema): Change[] {
       changes.push({
         up: `await queryInterface.removeColumn(${js(t)}, ${js(c)});`,
         down: `await queryInterface.addColumn(${js(t)}, ${js(c)}, ${column(old[c])});`,
-        warning: `the migration drops column ${t}.${c}; if it was renamed, edit it`,
+        warning: `the migration drops column ${t}.${c}, with its values; if it was renamed, delete this migration and make it with --rename ${t}.${c}=<new column>`,
       });
     }
   }
   const dropped = ordered(before, Object.keys(before).filter((t) => !(t in after))).reverse();
   for (const t of dropped) {
-    changes.push({ up: `await queryInterface.dropTable(${js(t)});`, down: table(t, before[t]), warning: `the migration drops table ${t}; if it was renamed, edit it` });
+    changes.push({ up: `await queryInterface.dropTable(${js(t)});`, down: table(t, before[t]), warning: `the migration drops table ${t}, with its rows; if it was renamed, delete this migration and make it with --rename ${t}=<new table>` });
   }
   return changes;
+}
+
+/** `--rename` of `make`: each `<table>=<new table>` or `<table>.<column>=<new column>` (the database's names, as the
+ * migrations have them) as a change that keeps the rows, and `before` with those renames made, so `diff` writes only
+ * what else changed. The tables first: a column is renamed in its table whatever name the table has now. A rename
+ * whose old name the migrations do not have, or whose new name the entities do not have, is refused (the same words
+ * as the fastapi dialect's tool). */
+export function renamed(before: Schema, after: Schema, renames: string[]): { schema: Schema; changes: Change[] } {
+  const schema: Schema = Object.fromEntries(Object.entries(before).map(([t, columns]) => [t, Object.fromEntries(Object.entries(columns).map(([c, v]) => [c, { ...v }]))]));
+  const changes: Change[] = [];
+  const parsed = renames.map((r) => {
+    const m = /^(\w+)(?:\.(\w+))?=(\w+)$/.exec(r);
+    if (!m) throw new Error(`--rename takes <table>=<new table> or <table>.<column>=<new column>, not ${r}`);
+    return { table: m[1], column: m[2] as string | undefined, to: m[3] };
+  });
+  /** was: the migrations have the old name; still: the entities too; is: the entities have the new one; taken: the migrations too */
+  const refuse = (old: string, to: string, kind: string, now: string, was: boolean, still: boolean, is: boolean, taken: boolean): void => {
+    if (!was) throw new Error(`cannot rename ${old}: the migrations have no ${kind} ${old}`);
+    if (still) throw new Error(`cannot rename ${old}: the entities still have the ${kind} ${old}`);
+    if (!is) throw new Error(`cannot rename ${old} to ${to}: the entities have no ${kind} ${now}`);
+    if (taken) throw new Error(`cannot rename ${old} to ${to}: the migrations already have the ${kind} ${now}`);
+  };
+  const references = (change: (r: { model: string; key: string }) => void): void => {
+    for (const columns of Object.values(schema)) for (const c of Object.values(columns)) if (c.references) change((c.references = { ...c.references }));
+  };
+  const tables = new Map<string, string>();
+  for (const { table: t, to } of parsed.filter((r) => !r.column)) {
+    refuse(t, to, 'table', to, t in schema, t in after, to in after, to in schema);
+    schema[to] = schema[t];
+    delete schema[t];
+    references((r) => { if (r.model === t) r.model = to; });
+    tables.set(t, to);
+    changes.push({ up: `await queryInterface.renameTable(${js(t)}, ${js(to)});`, down: `await queryInterface.renameTable(${js(to)}, ${js(t)});` });
+  }
+  for (const { table, column, to } of parsed.filter((r) => r.column)) {
+    const t = tables.get(table) ?? table;
+    const [had, have] = [schema[t] ?? {}, after[t] ?? {}];
+    refuse(`${table}.${column}`, to, 'column', `${t}.${to}`, column! in had, column! in have, to in have, to in had);
+    schema[t] = Object.fromEntries(Object.entries(had).map(([c, v]) => [c === column ? to : c, v]));
+    references((r) => { if (r.model === t && r.key === column) r.key = to; });
+    changes.push({ up: `await queryInterface.renameColumn(${js(t)}, ${js(column)}, ${js(to)});`, down: `await queryInterface.renameColumn(${js(t)}, ${js(to)}, ${js(column)});` });
+  }
+  return { schema, changes };
 }
 
 /** The text of a migration file; `known`: the migrations of the folder when it is made. */
@@ -209,7 +268,7 @@ export function render(message: string, changes: Change[], schema: Schema, known
   const indent = (s: string): string => s.split('\n').map((l) => `  ${l}`).join('\n');
   return `// ${message.replace(/\s+/g, ' ')}
 // Written by \`nuclear migrate make\` from the entities; it is the project's from now on (a renamed table or column
-// shows as a drop and an add: change it to queryInterface.renameColumn / renameTable to keep the data).
+// is a drop and an add unless make is told: --rename <table>=<new table>, --rename <table>.<column>=<new column>).
 
 /** @param {import('sequelize').QueryInterface} queryInterface @param {typeof import('sequelize')} Sequelize */
 export async function up(queryInterface, Sequelize) {
@@ -298,11 +357,13 @@ const slug = (message: string): string => message.toLowerCase().replace(/[^a-z0-
 const stamp = (d = new Date()): string =>
   [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join('');
 
-/** Writes the migration from the migrations of the folder to `models`; null when nothing changed. */
-export async function make(dir: string, message: string, models: unknown[], now = new Date()): Promise<string | null> {
+/** Writes the migration from the migrations of the folder to `models`; null when nothing changed. `renames`: what
+ * `--rename` names (`renamed`). */
+export async function make(dir: string, message: string, models: unknown[], now = new Date(), renames: string[] = []): Promise<string | null> {
   const all = await migrations(dir);
   const after = schemaOf(models);
-  const changes = diff(schemaAfter(all), after);
+  const moved = renamed(schemaAfter(all), after, renames);
+  const changes = [...moved.changes, ...diff(moved.schema, after)];
   if (!changes.length) return null;
   mkdirSync(dir, { recursive: true });
   const at = new Date(now);
@@ -329,7 +390,11 @@ export function migrator(q: QueryInterface): QueryInterface {
   const rows = <T = Row>(sql: string): Promise<T[]> => s.query(sql, { type: 'SELECT' }) as unknown as Promise<T[]>;
   const core = (a: Attribute): Attribute => {
     const { unique: _u, references: _r, onDelete: _d, onUpdate: _p, primaryKey: _k, ...rest } = a;
-    return rest;
+    // a text longer than the database's VARCHAR holds is its text type (textType)
+    const { key, options } = rest.type as { key?: string; options?: { length?: number } };
+    const length = key === 'STRING' ? (options?.length ?? 255) : 0;
+    if (length <= (VARCHAR_MAX[dialect] ?? Infinity)) return rest;
+    return { ...rest, type: dialect === 'postgres' ? DataTypes.TEXT : DataTypes.TEXT(length <= MEDIUMTEXT_MAX ? 'medium' : 'long') };
   };
   const target = (a: Attribute): { table: string; key: string } => {
     const r = a.references as { model: string; key?: string };
@@ -641,7 +706,7 @@ export function databaseOfApp(config: AppConfig, models: unknown[]): Sequelize {
   return uri ? new Sequelize(uri, all) : new Sequelize(all);
 }
 
-const USAGE = 'usage: synapsis-nest-migrate make "<message>" | up | down [--to <name>] [--fake] [--transaction all|each|none] | status [--dir <folder>]';
+const USAGE = 'usage: synapsis-nest-migrate make "<message>" [--rename <table>[.<column>]=<new name>]... | up | down [--to <name>] [--fake] [--transaction all|each|none] | status [--dir <folder>]';
 
 async function main(argv: string[]): Promise<void> {
   const [command, ...rest] = argv;
@@ -656,7 +721,7 @@ async function main(argv: string[]): Promise<void> {
   if (command === 'make') {
     const message = rest.find((a, i) => !a.startsWith('--') && !rest[i - 1]?.startsWith('--'));
     if (!message) throw new Error('usage: make "<what changes>"');
-    const file = await make(dir, message, app.entities);
+    const file = await make(dir, message, app.entities, new Date(), rest.filter((_, i) => rest[i - 1] === '--rename'));
     console.log(file ? `wrote ${file}` : 'no changes: the entities match the last migration');
     return;
   }

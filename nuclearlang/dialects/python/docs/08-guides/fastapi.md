@@ -146,7 +146,7 @@ nuclear migrate status                  # every migration: applied or pending
 ```
 
 They are Alembic operations (`migrations/versions/*.py`; the table `migrations` of the database lists the ones applied), written in batch mode so
-SQLite runs them too. A renamed column shows as a drop and an add (`make` warns): edit the file into a rename to keep the data (`batch_op.alter_column(..., new_column_name=...)`, `op.rename_table`). `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
+SQLite runs them too. A renamed table or column is told to `make`, or it is a drop and an add and its data is lost (`make` warns): `nuclear migrate make "shops are stores" --rename shops=stores --rename orders.shop_id=store_id` (the database's names) writes `op.rename_table` and `rename_column`, with their way back. `--to <migration>` after `migrate` or `migrate down` stops at that one; `--fake` changes the history without running (a database that already has its tables); `--transaction all|each|none` (default `all`).
 
 ## 4. Use cases, models and the API
 
@@ -185,7 +185,7 @@ class CharactersController:
     # ...
 ```
 
-An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.
+An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database.
 Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written
 by the runtime from what FastAPI and pydantic report; `/openapi.json` and `/docs` show the document the transpiler
 wrote from the contract, not one worked out from the generated Python (ADR-synapsis-0013).

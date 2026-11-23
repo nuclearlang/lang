@@ -37,6 +37,64 @@ class Tag(Entity):
     tasks: Mapped[list[Task]] = many_to_many("Tag", "tasks", "Task", "tags")
 
 
+class Member(Entity):
+    """What a database refuses for integrity: a unique column, a required one, a foreign key without a rule."""
+
+    __tablename__ = "members"
+    id: Mapped[int] = primary(generated=True)
+    email: Mapped[str] = column(length=20, unique=True)
+    name: Mapped[str] = column()
+    project: Mapped[Project | None] = many_to_one("Member", "project_id", "projects.id")
+    project_id: Mapped[int | None] = column(nullable=True)
+
+
+class MemberRepository(Repository[Member]):
+    pass
+
+
+class Enroll:
+    def __init__(self, members: MemberRepository) -> None:
+        self.members = members
+
+    @transactional
+    async def exec(self, email: str) -> Result[AppError, int]:
+        await self.members.save(Member(email=f"new-{email}", name="written before the refusal"))
+        await self.members.save(Member(email=email, name="again"))
+        return Ok(1)
+
+
+@controller("members")
+class MemberController:
+    def __init__(self, members: MemberRepository, projects: ProjectRepository) -> None:
+        self.members = members
+        self.projects = projects
+
+    @get("try/{what}")
+    async def attempt(self, what: str, id: int = 0, email: str = "") -> int:
+        """One write the database (or the runtime, before it) refuses; a route lets the error go."""
+        if what == "unique":
+            await self.members.save(Member(email="ana@x.co", name="Other"))
+        elif what == "foreign":
+            await self.members.save(Member(email="luis@x.co", name="Luis", project_id=999))
+        elif what == "parent":
+            await self.projects.remove(id)
+        elif what == "null":
+            await self.members.save(Member(email="eva@x.co"))
+        elif what == "null-update":
+            await self.members.where({"id": id}).update({"name": None})
+        elif what == "long":
+            await self.members.save(Member(email="e" * 21, name="long"))
+        elif what == "long-default":
+            await self.members.save(Member(email="long@x.co", name="n" * 256))
+        elif what == "long-update":
+            await self.members.where({"id": id}).update({"email": "e" * 21})
+        elif what == "fits":
+            await self.members.save(Member(email="😀" * 20, name="ñ" * 255))
+        elif what == "enroll":
+            await Enroll(self.members).exec(email)
+        return await self.members.count()
+
+
 class ProjectRepository(Repository[Project]):
     pass
 
@@ -158,3 +216,33 @@ async def test_the_same_rows_in_every_dialect() -> None:
         listed = (await http.get(f"/projects/tasks/of/{home.id}?minId={task.id}")).json()
         assert [t["title"] for t in listed] == ["paint"]
         assert (await http.get(f"/projects/tasks/of/{home.id}?minId={task.id + 1}")).json() == []
+
+
+async def test_what_the_database_refuses_for_integrity_is_a_409() -> None:
+    """The same cases as data.test.ts: what Spring's DataIntegrityViolationException covers answers 409 `conflict`."""
+    app = create_app(Config(), controllers=[MemberController])
+    async with client(app, Config(), memory_database()) as http:
+        projects, members = inject(ProjectRepository), inject(MemberRepository)
+        team = await projects.save(Project(name="team"))
+        ana = await members.save(Member(email="ana@x.co", name="Ana", project_id=team.id))
+
+        async def tried(what: str) -> tuple[int, Any]:
+            r = await http.get(f"/members/try/{what}")
+            return r.status_code, r.json()
+
+        conflict = (409, {"status": 409, "message": "conflict"})
+        # a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column
+        assert await tried("unique") == conflict
+        assert await tried("foreign") == conflict
+        assert await tried(f"parent?id={team.id}") == conflict
+        assert await tried("null") == conflict
+        assert await tried(f"null-update?id={ana.id}") == conflict
+        # a text longer than its column, counted in characters: 20 of them fit whatever bytes they take
+        assert await tried("long") == conflict
+        assert await tried("long-default") == conflict
+        assert await tried(f"long-update?id={ana.id}") == conflict
+        assert await tried("fits") == (200, 2)
+        # inside @transactional what was written before the refusal is not kept
+        assert await tried("enroll?email=ana@x.co") == conflict
+        assert await members.where({"email": "new-ana@x.co"}).count() == 0
+        assert await tried("enroll?email=eva@x.co") == (200, 4)

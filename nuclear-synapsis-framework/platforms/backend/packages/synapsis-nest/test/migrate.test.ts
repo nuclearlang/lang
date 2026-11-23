@@ -8,7 +8,7 @@ import { basename, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, PrimaryKey, Sequelize, Table, UpdatedAt } from 'sequelize-typescript';
 import { Entity, SQLite, joinTable } from '../src/index.js';
-import { createTables, down, make, status, up } from '../src/migrate.js';
+import { createTables, down, make, status, textType, up } from '../src/migrate.js';
 
 const rejected = (work: Promise<unknown>): Promise<string> => work.then(() => assert.fail('it did not fail'), (e: Error) => e.message);
 
@@ -73,6 +73,32 @@ const V3 = [ProjectV3, tasksOf(() => ProjectV3, true)];
 const V4 = [ProjectV4, tasksOf(() => ProjectV4, false)];
 // the name of a project unique, made by someone who does not have `done` yet
 const V5 = [ProjectV3, tasksOf(() => ProjectV3, false)];
+
+// the projects renamed to teams, and their name to title
+@Table({ tableName: 'teams', underscored: true, timestamps: false })
+class Team extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.STRING(100), allowNull: false })
+  declare title: string;
+}
+const V6 = [Team, tasksOf(() => Team, true)];
+
+/** A table with a text of `length` characters. */
+function essays(length: number): unknown[] {
+  @Table({ tableName: 'essays', underscored: true, timestamps: false })
+  class Essay extends Entity {
+    @PrimaryKey
+    @AutoIncrement
+    @Column(DataType.INTEGER)
+    declare id: number;
+    @Column({ type: DataType.STRING(length), allowNull: false })
+    declare body: string;
+  }
+  return [Essay];
+}
 
 // another key
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
@@ -233,12 +259,78 @@ describe('migrations', () => {
       } finally {
         console.warn = warn;
       }
-      assert.ok(warnings.includes('warning: the migration drops column tasks.done; if it was renamed, edit it'), warnings.join('\n'));
+      assert.ok(warnings.includes('warning: the migration drops column tasks.done, with its values; if it was renamed, delete this migration and make it with --rename tasks.done=<new column>'), warnings.join('\n'));
       assert.ok(warnings.includes('warning: the migration adds the required column projects.code without a default: a table with rows refuses it'));
       // the key of a table: no migration changes it, and make says so
       const text = await rejected(make(dir, 'another key', [ProjectKey, tasksOf(() => ProjectKey, false)]));
       assert.ok(text.startsWith('the key of projects changed (id to key): a migration does not change a key'), text);
       assert.equal(readdirSync(dir).length, 2);
+    }));
+
+  it('make --rename writes a rename that keeps the rows, and refuses one that is not there', () =>
+    project(async ({ dir, db, made, sql }) => {
+      await made('first', V2);
+      await up(dir, db);
+      await sql("INSERT INTO projects (id, name) VALUES (1, 'home')");
+      await sql("INSERT INTO tasks (id, title, project_id) VALUES (1, 'paint', 1)");
+      const at = new Date(2026, 10, 10, 20, 0, 0);
+      // refused, with the same words in every dialect; nothing is written
+      const refusals: [unknown[], string[], string][] = [
+        [V6, ['nothing=teams'], 'cannot rename nothing: the migrations have no table nothing'],
+        [V2, ['projects=teams'], 'cannot rename projects: the entities still have the table projects'],
+        [V6, ['projects=crews'], 'cannot rename projects to crews: the entities have no table crews'],
+        [V6, ['projects=tasks'], 'cannot rename projects to tasks: the migrations already have the table tasks'],
+        [V6, ['projects=teams', 'projects.nope=title'], 'cannot rename projects.nope: the migrations have no column projects.nope'],
+        [V6, ['projects=teams', 'projects.id=title'], 'cannot rename projects.id: the entities still have the column projects.id'],
+        [V6, ['projects=teams', 'projects.name=label'], 'cannot rename projects.name to label: the entities have no column teams.label'],
+        [V6, ['projects=teams', 'projects.name=id'], 'cannot rename projects.name to id: the migrations already have the column teams.id'],
+        [V6, ['projects'], '--rename takes <table>=<new table> or <table>.<column>=<new column>, not projects'],
+      ];
+      for (const [models, renames, message] of refusals) assert.equal(await rejected(make(dir, 'teams', models, at, renames)), message);
+      assert.equal(readdirSync(dir).length, 1);
+
+      const file = (await make(dir, 'teams', V6, at, ['projects=teams', 'projects.name=title']))!;
+      const text = readFileSync(file, 'utf8');
+      assert.match(text, /renameTable\("projects", "teams"\);\n  await queryInterface.renameColumn\("teams", "name", "title"\);/);
+      assert.match(text, /renameColumn\("teams", "title", "name"\);\n  await queryInterface.renameTable\("teams", "projects"\);/);
+      assert.doesNotMatch(text.slice(0, text.indexOf('export const known')), /dropTable|createTable|removeColumn|addColumn|changeColumn/);
+      assert.equal(await make(dir, 'again', V6), null, 'the rename is all that changed');
+      await up(dir, db);
+      assert.deepEqual(await sql('SELECT id, title FROM teams'), [{ id: 1, title: 'home' }], 'the rows stay');
+      const keys = async (): Promise<string[][]> => (await sql<{ table: string; from: string; to: string }>("SELECT * FROM pragma_foreign_key_list('tasks')")).map((k) => [k.table, k.from, k.to]);
+      assert.deepEqual(await keys(), [['teams', 'project_id', 'id']], 'the rows that point to it follow');
+      await down(dir, db);
+      assert.deepEqual(await sql('SELECT id, name FROM projects'), [{ id: 1, name: 'home' }]);
+      assert.deepEqual(await keys(), [['projects', 'project_id', 'id']]);
+      assert.equal((await sql('SELECT * FROM tasks')).length, 1);
+    }));
+
+  it('a text column is the VARCHAR of its length, or the text type that holds it', () =>
+    project(async ({ dir, db, made, sql }) => {
+      // the one rule, the same as the fastapi dialect's runtime (tests/test_migrate.py)
+      const rule = (n: number): string[] => ['sqlite', 'postgres', 'mysql', 'mariadb'].map((d) => textType(d, n));
+      assert.deepEqual(rule(255), ['VARCHAR(255)', 'VARCHAR(255)', 'VARCHAR(255)', 'VARCHAR(255)']);
+      assert.deepEqual(rule(16383), ['VARCHAR(16383)', 'VARCHAR(16383)', 'VARCHAR(16383)', 'VARCHAR(16383)']);
+      assert.deepEqual(rule(16384), ['VARCHAR(16384)', 'VARCHAR(16384)', 'MEDIUMTEXT', 'MEDIUMTEXT']);
+      assert.deepEqual(rule(4194303), ['VARCHAR(4194303)', 'VARCHAR(4194303)', 'MEDIUMTEXT', 'MEDIUMTEXT']);
+      assert.deepEqual(rule(4194304), ['VARCHAR(4194304)', 'VARCHAR(4194304)', 'LONGTEXT', 'LONGTEXT']);
+      assert.deepEqual(rule(10485760), ['VARCHAR(10485760)', 'VARCHAR(10485760)', 'LONGTEXT', 'LONGTEXT']);
+      assert.deepEqual(rule(10485761), ['VARCHAR(10485761)', 'TEXT', 'LONGTEXT', 'LONGTEXT']);
+      // a changed length is a migration, in both directions
+      const type = async (): Promise<string> => (await sql<{ type: string }>("SELECT type FROM pragma_table_info('essays') WHERE name = 'body'"))[0].type;
+      await made('essays', essays(100000));
+      await up(dir, db);
+      assert.equal(await type(), 'VARCHAR(100000)');
+      await sql("INSERT INTO essays (body) VALUES ('kept')");
+      await made('shorter', essays(100));
+      await up(dir, db);
+      assert.equal(await type(), 'VARCHAR(100)');
+      await made('longer', essays(1000000));
+      await up(dir, db);
+      assert.equal(await type(), 'VARCHAR(1000000)');
+      await down(dir, db);
+      assert.equal(await type(), 'VARCHAR(100)');
+      assert.deepEqual(await sql('SELECT body FROM essays'), [{ body: 'kept' }]);
     }));
 
   it('a failed migration is not applied', () =>

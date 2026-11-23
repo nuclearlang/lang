@@ -56,7 +56,7 @@ plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `list
 
 ### 2.1 Entity
 
-A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database.
+A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database. A text is `String(n)` (`String(255)` without `length`): the database's `VARCHAR(n)` or, above what it holds, its text type; `Repository.save` and `update` refuse a longer text before it is written (`synapsis.errors.IntegrityViolation`, a 409).
 
 ```nuclear
 @entity("characters")
@@ -288,7 +288,7 @@ class NewCharacter(Model):
 
 ### 2.4 Use case
 
-One business operation: its dependencies are injected by type; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409).
+One business operation: its dependencies are injected by type; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409). What the database refuses for integrity (SQLAlchemy's `IntegrityError`: a unique, a foreign key, a required column) is answered by the app with 409 `conflict`; inside `@transactional` the transaction is rolled back.
 
 ```nuclear
 model NewCharacter
@@ -742,19 +742,22 @@ What is this dialect's:
 - A `DateTime` column is `UtcDateTime()` (imported from `synapsis.orm`): `DATETIME(6)` on MySQL, MariaDB and
   SQLite, `TIMESTAMP WITH TIME ZONE` on PostgreSQL. A migration of before 0.94 wrote `sa.DateTime(timezone=True)`
   (whole seconds on MySQL and MariaDB): the next `make` writes the `alter_column` of each.
-- A rename, written by hand in place of the drop and the add `make` wrote (MySQL and MariaDB need the column's
-  `existing_type`):
+- A text column is `sa.String(length=n)`: the runtime makes it the database's `VARCHAR(n)`, or its text type when
+  `n` is more than that `VARCHAR` holds (`MEDIUMTEXT` and `LONGTEXT` on MySQL and MariaDB, `TEXT` on PostgreSQL:
+  `synapsis.orm.text_type`).
+- A rename, as `nuclear migrate make "shops are stores" --rename shops=stores --rename orders.shop_id=store_id`
+  writes it: Alembic's `op.rename_table` and the runtime's `rename_column` (imported from `synapsis.migrate`; one
+  `ALTER TABLE ... RENAME COLUMN` on every database, where Alembic's own rename rebuilds the table on SQLite and
+  needs the whole column again on MySQL):
 
 ```python
 def upgrade() -> None:
     op.rename_table('shops', 'stores')
-    with op.batch_alter_table('orders', schema=None) as batch_op:
-        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)
+    rename_column('orders', 'shop_id', 'store_id')
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('orders', schema=None) as batch_op:
-        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)
+    rename_column('orders', 'store_id', 'shop_id')
     op.rename_table('stores', 'shops')
 ```
 

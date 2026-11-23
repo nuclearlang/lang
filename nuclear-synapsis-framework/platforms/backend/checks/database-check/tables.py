@@ -1,6 +1,7 @@
 """The tables of database-check: `createTables` makes the schema the migrations make, and a project migrated before 0.94
 gets the fraction of a `DateTime` from its next `nuclear migrate make`. One project (store_api with
-`createTables = true`) on one database, whose tables the app made when check.sh started it. Run:
+`createTables = true`, and a note of 100000 characters: a text longer than a VARCHAR holds on MySQL and MariaDB) on
+one database, whose tables the app made when check.sh started it. Run:
 
     python tables.py <dialect> <database> <url or file> <project> <out>
 
@@ -58,6 +59,8 @@ def schema() -> dict[str, Any]:
 # --- createTables made the tables: the ones the first migration makes
 created = schema()
 db.check_schema(url)
+if created["orders"]["columns"]["note"]["sql"] != db.LONG_TEXT[100000][database]:
+    fail(f"createTables should make the note of 100000 characters a {db.LONG_TEXT[100000][database]}: {created['orders']['columns']['note']}")
 (out / f"schema-{dialect}-{database}-0-create-tables.json").write_text(json.dumps(created, indent=1, sort_keys=True))
 stamps = [c for t in created.values() for c in t["columns"].values() if c["type"] == "datetime"]
 if database != "postgres" and any(c["sql"] != "DATETIME(6)" for c in stamps):

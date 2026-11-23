@@ -6,7 +6,8 @@ Run: python scenario.py <base url> <database url or SQLite file> <answers file>
 
 Normalized: an id becomes the order its row was made in (`customer#1`), `createdAt` / `updatedAt` their shape
 (`0000-00-00T00:00:00.000Z`), rows in a list of related rows are sorted by id. What the scenario asserts by itself
-(not by comparison): the statuses, the rollbacks (with SQL on the database), the cascade, the concurrent requests.
+(not by comparison): the statuses, the rollbacks (with SQL on the database), the cascade, the concurrent requests (of
+16 for one unique value one makes the row and the others answer 409, never 500).
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ answers: list[dict[str, Any]] = []
 # what differs by database or by run and is not compared: said in the stage's line
 notes: list[str] = []
 # real id → the order its row was made in, per table
-ids: dict[str, dict[int, int]] = {"customer": {}, "order": {}, "tag": {}}
+ids: dict[str, dict[int, int]] = {"customer": {}, "order": {}, "tag": {}, "coupon": {}}
 STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$")
 
 
@@ -47,7 +48,7 @@ def call(method: str, path: str, body: Any = None) -> tuple[int, Any]:
 
 
 def kind_of(row: dict[str, Any]) -> str:
-    return "customer" if "email" in row else "tag" if "label" in row else "order"
+    return "customer" if "email" in row else "tag" if "label" in row else "coupon" if "code" in row else "order"
 
 
 def alias(kind: str, real: Any) -> Any:
@@ -123,7 +124,7 @@ def same(name: str, got: Any, expected: Any) -> None:
 def main() -> None:
     q = urllib.parse.quote
     # the rows the migrations' check left
-    db.execute(database, "DELETE FROM orders", "DELETE FROM customers")
+    db.execute(database, "DELETE FROM coupons", "DELETE FROM orders", "DELETE FROM customers")
 
     # --- CRUD, the defaults, values the databases treat differently
     unicode_name = "Ana María Ñandú 日本語 😀 'quoted' \"double\" \\ %_"
@@ -256,10 +257,33 @@ def main() -> None:
         same("32 reads at once", reads, [41] * 32)
         race = sorted(pool.map(lambda i: call("POST", "/customers", {"email": "race@example.com", "name": f"race {i}"})[0], range(16)))
     same("one email, one row", sql("SELECT COUNT(*) FROM customers WHERE email = 'race@example.com'"), 1)
-    same("one request made it", race.count(201), 1)
-    # a loser the use case saw is a 409; one only the unique column stopped is the database's error
-    notes.append(f"16 requests for one email: {', '.join(f'{race.count(c)} × {c}' for c in sorted(set(race)))}")
+    # a loser the use case saw and one only the unique column stopped answer the same status: never the 500 of an
+    # error nothing handled
+    same("16 requests for one email: one made it, the others are conflicts", race, [201] + [409] * 15)
+    notes.append("16 requests for one email: 1 × 201, 15 × 409")
     same("the count after them", call("GET", "/customers/page?page=9&size=5")[1]["total"], 42)
+
+    # --- what the database refuses for integrity answers 409 `conflict` and never the database's words, as Spring Data
+    # REST answers Spring's DataIntegrityViolationException: the use cases of coupons check nothing on purpose
+    keeper = step("a customer for coupons", "POST", "/customers", {"email": "coupons@example.com", "name": "coupons"}, 201)
+    given = step("two coupons", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["SPRING", "SUMMER"]}, 201)
+    refused = [
+        step("a repeated unique value", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["AUTUMN", "SPRING"]}, 409),
+        step("a unique value twice in one transaction", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["WINTER", "WINTER"]}, 409),
+        step("a foreign key that points at nothing", "POST", "/coupons", {"customerId": 999999, "codes": ["NOBODY"]}, 409),
+        step("a null in a required column", "PUT", f"/coupons/{given[0]['id']}/clear", expect=409),
+        step("a row others point to", "DELETE", f"/customers/{keeper['id']}", expect=409),
+        # a text longer than its column, in characters: refused before the database sees it, so SQLite refuses it too
+        step("a text longer than its column", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["X" * 21]}, 409),
+        step("a text longer than a column of 2000", "POST", "/orders", {"customerId": keeper["id"], "total": 1, "note": "ñ" * 2001}, 409),
+    ]
+    for body in refused:
+        same("the body of what the database refuses", body, {"status": 409, "message": "conflict"})
+    same("the coupons written before a refusal went back with their transaction", sql("SELECT COUNT(*) FROM coupons WHERE code IN ('AUTUMN', 'WINTER')"), 0)
+    same("the refused order was not kept", sql(f"SELECT COUNT(*) FROM orders WHERE customer_id = {keeper['id']}"), 0)
+    wide = step("a text of its column's length, whatever bytes it takes", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["日😀" * 10]}, 201)
+    same("20 characters kept", wide[0]["code"], "日😀" * 10)
+    same("the customer and the coupons are still there", (sql("SELECT COUNT(*) FROM coupons"), sql("SELECT COUNT(*) FROM customers WHERE email = 'coupons@example.com'")), (3, 1))
 
     # --- delete: the row, its orders by the foreign key, then nothing
     step("delete an order", "DELETE", f"/orders/{first['id']}")

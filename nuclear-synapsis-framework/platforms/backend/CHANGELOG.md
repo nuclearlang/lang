@@ -4,6 +4,27 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **Three decisions of the user (2026-11-23), the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and
+  MariaDB** (reference §2.1, §2.4, §2.8; spec 004 §4b):
+  - **what the database refuses for integrity answers 409** `{ "status": 409, "message": "conflict" }`, as Spring
+    Data REST answers Spring's `DataIntegrityViolationException`: a repeated unique value, a foreign key that
+    points at nothing, a row removed while others point to it, a null in a required column, a text longer than its
+    column. It answered 500 (of 16 requests at once for one email: one 201 and, measured on SQLite, 14 of the others
+    500 in `fastapi` and 11 in `nestjs`; now one 201 and fifteen 409). **Breaking for a client** that took that 500
+    as a failure of the server. The message is never the database's; inside `@transactional` the transaction is
+    rolled back;
+  - **a long text is `@column(length = n)`**: the column is the database's `VARCHAR(n)` while it holds `n`
+    characters, then its text type (`MEDIUMTEXT` above 16 383 and `LONGTEXT` above 4 194 303 on MySQL and MariaDB;
+    `TEXT` above 10 485 760 on PostgreSQL). `@column(length = 100000)` failed on MySQL and MariaDB (`Column length
+    too big for column`) in both dialects. A text longer than its column is refused before it is written, on
+    every database (409): SQLite kept it and PostgreSQL answered 500. **Breaking for an app on SQLite** that
+    wrote texts longer than their `length` (255 without one): they are refused now;
+  - **a rename is an option of `nuclear migrate make`**: `--rename <table>=<new table>` and `--rename
+    <table>.<column>=<new column>` (the database's names, any number) write a rename that keeps the rows, with its
+    way back, where the migration was edited by hand in each dialect's migration language. A rename that is not
+    there is refused with the same words in both dialects. Without the option `make` writes the drop and the add
+    as before; its warning now says the option (**the text of the warning changed**).
+  `store_api` has coupons, whose use cases check nothing, so the database check reaches each refusal over HTTP.
 - Fixed (0.94.1): a `fastapi` model with a field named `type` crashed when its class was made (`TypeError: unhashable type: 'dict'`), since 0.94.0's rule of JSON types read the field's schema as a kind; the AI services have such a model, so the release's AI archive did not build.
 - **Five decisions of the user (2026-11-22), the same in `fastapi` and `nestjs`** (reference §2.1, §2.2, §2.3, §2.8):
   - **a value of another JSON type is refused** in a body: a text is never a number or a boolean, a number is never

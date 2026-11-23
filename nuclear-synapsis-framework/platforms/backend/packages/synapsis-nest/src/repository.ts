@@ -12,7 +12,7 @@ import {
   where as whereOf,
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
-import { NotFound } from './errors.js';
+import { Conflict, NotFound } from './errors.js';
 import { Err, Ok, Result } from './result.js';
 
 /**
@@ -145,6 +145,20 @@ function toWhere(model: ModelCtor<Model>, conditions: Conditions[], aliased: boo
   return all.length ? { [Op.and]: all } : {};
 }
 
+/** A text longer than its column (`@column(length = n)`; 255 without one) is refused before it is written, with the
+ * 409 of what a database refuses for integrity: PostgreSQL, MySQL and MariaDB refuse it in a VARCHAR, SQLite and a
+ * text type would keep it. The length is counted in characters (code points), as the databases count it. */
+function fits(model: ModelCtor<Model>, values: Record<string, unknown>): void {
+  for (const [name, a] of Object.entries(model.getAttributes())) {
+    const v = values[name];
+    const { key, options } = a.type as { key?: string; options?: { length?: number } };
+    if (key !== 'STRING' || typeof v !== 'string') continue;
+    const max = options?.length ?? 255;
+    // a text has at most as many characters as UTF-16 units: only a longer one is counted
+    if (v.length > max && [...v].length > max) throw new Conflict();
+  }
+}
+
 /** The data of one entity: CRUD without writing it (find, findAll, save, remove) and a query builder. */
 export class Repository<T extends Model> {
   constructor(readonly model: ModelCtor<T>) {
@@ -175,6 +189,7 @@ export class Repository<T extends Model> {
         entity.set(a.foreignKey, v.get((a as unknown as { targetKey: string }).targetKey));
       }
     }
+    fits(this.model as ModelCtor<Model>, entity.dataValues as Record<string, unknown>);
     const saved = await entity.save(inTransaction());
     // a column the insert did not name is null in the database: the row says so (sequelize leaves it undefined, and
     // the JSON answer would lack it), as a row that was read does
@@ -314,6 +329,7 @@ export class Query<T extends Model> {
   }
 
   async update(values: Record<string, unknown>): Promise<number> {
+    fits(this.repo.model as ModelCtor<Model>, values);
     const [n] = await this.repo.model.update(values as never, { where: this.filter(false), ...inTransaction() });
     return n;
   }

@@ -71,3 +71,12 @@ Environments: `env("NAME", "default")` (`env("NAME")`: required) reads a variabl
 `nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value
 from stdin); `nuclear run|build|test|check --env <name>`. A required one without a value: `nuclear run` refuses, `check --env` says N0312.
 
+
+The database: a text column holds `@column(length = n)` characters (255 without one); a long text is a larger `n`
+(`@column(length = 100000)`), there is no other word. What the database refuses for integrity answers 409
+`{ "status": 409, "message": "conflict" }` on every database: a repeated unique value, a foreign key that points at
+no row, a row removed while others point to it, a null in a required column, a text longer than its column; check
+first in the use case (`Err(Conflict("..."))`) when the client needs a better message. Migrations:
+`nuclear migrate make "<message>"`, `nuclear migrate`, `nuclear migrate down`, `nuclear migrate status`; a renamed
+table or column is told to `make`, or its data is dropped: `nuclear migrate make "<message>" --rename shops=stores
+--rename orders.shop_id=store_id` (the database's names).

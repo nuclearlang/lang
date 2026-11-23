@@ -1,0 +1,10 @@
+// The routes of coupons.
+@controller("coupons")
+controller CouponsController(app: StoreAppComponent)
+  @post
+  give(input: NewCoupons) Result<Error, Coupon[]>
+    ~app.giveCoupons(input)
+
+  @put("{id}/clear")
+  clear(id: int) Result<Error, int>
+    ~app.clearCoupon(id)

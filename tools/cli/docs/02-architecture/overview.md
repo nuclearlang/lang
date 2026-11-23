@@ -88,7 +88,8 @@ mobile app. For it (ADR-cli-0001):
   manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions
   ([packages.md](packages.md)).
 - `nuclear migrate [make "<message>" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /
-  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; the options of up and down
+  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape
+  checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down
   (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's tool as they are
   (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`).
 - A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:

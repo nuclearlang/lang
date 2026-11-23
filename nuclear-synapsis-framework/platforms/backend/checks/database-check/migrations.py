@@ -1,7 +1,7 @@
 """The migrations of database-check: one project (store_api) taken through every kind of schema change with the real
 command, `nuclear migrate`, on one database, and the real schema and rows read back after each step (db.py). The same
-steps for every dialect and database: only the two migrations edited by hand (a rename, a failure made on purpose) are
-written in the dialect's migration language. Run:
+steps for every dialect and database: only the migration edited by hand (a failure made on purpose) is written in the
+dialect's migration language. Run:
 
     python migrations.py <dialect> <database> <url or file> <project> <out>
 
@@ -9,7 +9,8 @@ written in the dialect's migration language. Run:
 dialect's `[toolchain]` needs. <out> gets `migrations-<dialect>-<database>.log` (one line per scenario) and
 `schema-<dialect>-<database>-<step>.json` (the schema after each step, compared between the dialects by check.sh).
 It ends with the entities of the second step again (the first ones and `points`), so the app of the next stage runs
-on a schema seven migrations made and one brought back.
+on a schema seven migrations made and one brought back; a last step makes a text column longer than a VARCHAR holds
+and brings it back.
 """
 
 from __future__ import annotations
@@ -207,44 +208,46 @@ db.execute(
 )
 done("add a table, a foreign key on a table with rows and a join table; down: the schema and the rows of before")
 
-# --- 5. a table and a column renamed: made as a drop and an add (with its warnings), edited into a rename
+# --- 5. a table and two columns renamed: without --rename a drop and an add (with its warnings, which say how to
+# rename); with --rename a rename, the same command in every dialect; what --rename refuses
 edit("shop.nuc", '@entity("shops")', '@entity("stores")')
 edit("shop.nuc", 'inverse = "shop"', 'inverse = "store"')
+edit("shop.nuc", "  name: string\n", "  title: string\n")
 edit("order.nuc", "  shop?: Shop\n  shopId?: int\n", "  store?: Shop\n  storeId?: int\n")
 text = migrate("make", "shops are stores")
-expect(text, "warning: the migration drops table shops; if it was renamed, edit it", "warning: the migration drops column orders.shop_id; if it was renamed, edit it")
-renamed = made(text)
-body = renamed.read_text()
-if dialect == "fastapi":
-    body = body[: body.index("def upgrade")] + (
-        "def upgrade() -> None:\n"
-        "    op.rename_table('shops', 'stores')\n"
-        "    with op.batch_alter_table('orders', schema=None) as batch_op:\n"
-        "        batch_op.alter_column('shop_id', new_column_name='store_id', existing_type=sa.Integer(), existing_nullable=True)\n"
-        "\n\n"
-        "def downgrade() -> None:\n"
-        "    with op.batch_alter_table('orders', schema=None) as batch_op:\n"
-        "        batch_op.alter_column('store_id', new_column_name='shop_id', existing_type=sa.Integer(), existing_nullable=True)\n"
-        "    op.rename_table('stores', 'shops')\n"
-    )
-else:
-    body = body[: body.index("export async function up")] + (
-        "export async function up(queryInterface, Sequelize) {\n"
-        '  await queryInterface.renameTable("shops", "stores");\n'
-        '  await queryInterface.renameColumn("orders", "shop_id", "store_id");\n'
-        "}\n\n"
-        "export async function down(queryInterface, Sequelize) {\n"
-        '  await queryInterface.renameColumn("orders", "store_id", "shop_id");\n'
-        '  await queryInterface.renameTable("stores", "shops");\n'
-        "}\n\n"
-    ) + body[body.index("// the migrations this one was made after") :]
-renamed.write_text(body)
+expect(
+    text,
+    "warning: the migration drops table shops, with its rows; if it was renamed, delete this migration and make it with --rename shops=<new table>",
+    "warning: the migration drops column orders.shop_id, with its values; if it was renamed, delete this migration and make it with --rename orders.shop_id=<new column>",
+)
+made(text).unlink()
+RENAMES = ("--rename", "shops=stores", "--rename", "shops.name=title", "--rename", "orders.shop_id=store_id")
+for wrong, message in (
+    (("--rename", "nothing=stores"), "error: cannot rename nothing: the migrations have no table nothing"),
+    (("--rename", "tags=stores"), "error: cannot rename tags: the entities still have the table tags"),
+    (("--rename", "shops=markets"), "error: cannot rename shops to markets: the entities have no table markets"),
+    (("--rename", "shops=orders"), "error: cannot rename shops to orders: the migrations already have the table orders"),
+    (("--rename", "orders.nothing=store_id"), "error: cannot rename orders.nothing: the migrations have no column orders.nothing"),
+    (("--rename", "orders.total=store_id"), "error: cannot rename orders.total: the entities still have the column orders.total"),
+    (("--rename", "orders.shop_id=shop"), "error: cannot rename orders.shop_id to shop: the entities have no column orders.shop"),
+    (("--rename", "orders.shop_id=total"), "error: cannot rename orders.shop_id to total: the migrations already have the column orders.total"),
+    (("--rename", "shops=stores", "--rename", "shops.name=label"), "error: cannot rename shops.name to label: the entities have no column stores.label"),
+):
+    said = [line for line in migrate("make", "shops are stores", *wrong, code=1).splitlines() if line.startswith("error:")]
+    if said != [message]:
+        fail(f"make {' '.join(wrong)} said {said}, expected {message!r}")
+expect(migrate("make", "shops are stores", "--rename", "shops", code=1), "usage: nuclear migrate make")
+text = migrate("make", "shops are stores", *RENAMES)
+if "warning: the migration" in text or re.search(r"drop_?(table|column)|remove_?column|create_?table|add_?column", made(text).read_text().split("export const known")[0], re.I):
+    fail(f"make --rename wrote more than the renames:\n{text}\n{made(text).read_text()[:1500]}")
 expect(migrate("make", "again"), "no changes: the entities match the last migration")
 migrate("up")
 s5 = schema("5-rename")
 if "shops" in s5 or "store_id -> stores.id on delete set null" not in s5["orders"]["foreign"] or "shop_id" in s5["orders"]["columns"]:
     fail(f"the rename left: tables {sorted(s5)}, orders {sorted(s5['orders']['columns'])}, foreign keys {s5['orders']['foreign']}")
-if db.scalar(url, "SELECT s.name FROM orders o JOIN stores s ON s.id = o.store_id") != "corner":
+if sorted(s5["stores"]["columns"]) != ["id", "title"] or s5["stores"]["columns"]["title"] != s4["shops"]["columns"]["name"]:
+    fail(f"the renamed column is not the column it was: {s5['stores']['columns']}")
+if db.scalar(url, "SELECT s.title FROM orders o JOIN stores s ON s.id = o.store_id") != "corner":
     fail("the renamed table or column lost its rows")
 migrate("down")
 same(schema(), s4, "the rename reverted")
@@ -253,7 +256,7 @@ if db.scalar(url, "SELECT s.name FROM orders o JOIN shops s ON s.id = o.shop_id"
 migrate("up")
 same(schema(), s5, "the rename applied again")
 kept("renamed")
-done("rename a table and a column (the migration edited by hand): the rows and the foreign key follow; down: back")
+done("rename a table and two columns with make --rename (without it: a drop and an add, and a warning that says how): the rows and the foreign key follow; down: back; nine renames that are not there refused with the same words")
 
 # --- 6. what goes: a column, a unique, a foreign key (its column stays)
 edit("customer.nuc", "  @column(length = 30)\n  phone?: string\n", "")
@@ -261,7 +264,7 @@ edit("customer.nuc", "@column(length = 300, unique = true)", "@column(length = 3
 edit("order.nuc", '  @manyToOne(inverse = "orders", onDelete = "set null")\n  store?: Shop\n', "")
 edit("shop.nuc", '  @oneToMany(inverse = "store")\n  orders?: Order[]\n', "")
 text = migrate("make", "less")
-expect(text, "warning: the migration drops column customers.phone; if it was renamed, edit it")
+expect(text, "warning: the migration drops column customers.phone, with its values; if it was renamed")
 # the unique under the name the database gives one made without a name (a migration of before 0.91): found by its column
 if database == "postgres":
     db.execute(url, "ALTER TABLE customers RENAME CONSTRAINT uq_customers_name TO customers_name_key")
@@ -428,5 +431,39 @@ kept("the first entities again")
 expect(migrate("make", "again"), "no changes: the entities match the last migration")
 db.execute(url, "DELETE FROM orders_tags", "DELETE FROM tags")
 done("the first entities again: one migration drops what was added (make warns of each), the schema is the one of the second migration")
+
+# --- 11. a text longer than a VARCHAR holds: the database's text type; a changed length is a migration, both ways
+def note_is(length: int, step: str = "") -> None:
+    column = schema(step)["orders"]["columns"]["note"]
+    if column["sql"] != db.LONG_TEXT[length][database] or column["type"] != "str" or not column["nullable"]:
+        fail(f"orders.note of {length} characters should be a nullable {db.LONG_TEXT[length][database]}: {column}")
+
+
+counted = "LENGTH" if database == "sqlite" else "CHAR_LENGTH"
+edit("order.nuc", "  @column(length = 2000)\n  note?: string\n", "  @column(length = 100000)\n  note?: string\n")
+made(migrate("make", "a long note"))
+migrate("up")
+note_is(100000, "11-long-text")
+db.execute(url, f"UPDATE orders SET note = '{'ñ' * 100000}'")
+edit("order.nuc", "  @column(length = 100000)\n", "  @column(length = 5000000)\n")
+made(migrate("make", "a longer note"))
+migrate("up")
+note_is(5000000, "12-longer-text")
+if db.scalar(url, f"SELECT {counted}(note) FROM orders") != 100000:
+    fail("the note lost characters when its column got longer")
+migrate("down")
+note_is(100000)
+if db.scalar(url, f"SELECT {counted}(note) FROM orders") != 100000:
+    fail("the note lost characters when its column got shorter again")
+migrate("up")
+db.execute(url, "UPDATE orders SET note = NULL")
+edit("order.nuc", "  @column(length = 5000000)\n", "  @column(length = 2000)\n")
+made(migrate("make", "the note as it was"))
+migrate("up")
+same(schema("13-text-back"), s2, "the note of 2000 characters again")
+if db.scalar(url, "SELECT COUNT(*) FROM orders") != 1:
+    fail("changing the length of a text lost the rows")
+expect(migrate("make", "again"), "no changes: the entities match the last migration")
+done(f"a text of 100000 characters is a {db.LONG_TEXT[100000][database]} and one of 5000000 a {db.LONG_TEXT[5000000][database]}: a changed length is a migration, up and down, the text kept")
 
 print(f"{len(names())} migrations, {sum(1 for _ in open(log.name))} scenarios: every change applied and reverted with `nuclear migrate`, the real schema and the rows read back after each")

@@ -6,7 +6,7 @@ import { after, before, describe, it } from 'node:test';
 import {
   AutoIncrement, BelongsTo, BelongsToMany, Column, DataType, HasMany, PrimaryKey, Sequelize, Table,
 } from 'sequelize-typescript';
-import { AppError, Conflict, Entity, Err, Ok, Repository, Result, ilike, joinTable, transactional } from '../src/index.js';
+import { AppError, Conflict, Entity, Err, ErrorFilter, Ok, Repository, Result, ilike, joinTable, transactional } from '../src/index.js';
 
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
 class Project extends Entity {
@@ -51,6 +51,42 @@ class Tag extends Entity {
   declare tasks?: Task[];
 }
 
+// what a database refuses for integrity: a unique column, a required one, a foreign key without a rule
+@Table({ tableName: 'members', underscored: true, timestamps: false })
+class Member extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.STRING(20), allowNull: false, unique: true })
+  declare email: string;
+  @Column({ type: DataType.STRING, allowNull: false })
+  declare name: string;
+  @BelongsTo(() => Project, { foreignKey: 'projectId', onDelete: 'NO ACTION' })
+  declare project?: Project;
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare projectId?: number;
+}
+
+class Enroll {
+  constructor(readonly members: Repository<Member>) {}
+
+  @transactional
+  async exec(email: string): Promise<Result<AppError, number>> {
+    await this.members.save(new Member({ email: `new-${email}`, name: 'written before the refusal' }));
+    await this.members.save(new Member({ email, name: 'again' }));
+    return Ok(1);
+  }
+}
+
+/** What the app answers for an error a route let go: the status and the body `ErrorFilter` writes. */
+function answered(e: unknown): [number, unknown] {
+  let got: [number, unknown] = [0, null];
+  const res = { status: (n: number) => ({ json: (v: unknown) => void (got = [n, v]) }) };
+  new ErrorFilter().catch(e, { switchToHttp: () => ({ getResponse: () => res }) } as never);
+  return got;
+}
+
 class MoveTasks {
   constructor(readonly tasks: Repository<Task>, readonly projects: Repository<Project>) {}
 
@@ -66,7 +102,7 @@ class MoveTasks {
 describe('data (ADR-backend-0001)', () => {
   let db: Sequelize;
   before(async () => {
-    db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag] });
+    db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag, Member] });
     await db.sync();
   });
   after(() => db.close());
@@ -106,6 +142,35 @@ describe('data (ADR-backend-0001)', () => {
 
     await projects.remove(work.id); // ON DELETE CASCADE
     assert.equal(await tasks.count(), 0);
+  });
+
+  // the same cases as test_data.py: what Spring's DataIntegrityViolationException covers answers 409 `conflict`
+  it('answers 409 for what the database refuses for integrity, and rolls the transaction back', async () => {
+    const projects = new Repository(Project);
+    const members = new Repository(Member);
+    const conflict = [409, { status: 409, message: 'conflict' }];
+    const refused = async (work: () => Promise<unknown>): Promise<[number, unknown]> => work().then(() => assert.fail('it was kept'), answered);
+    const team = await projects.save(new Project({ name: 'team' }));
+    const ana = await members.save(new Member({ email: 'ana@x.co', name: 'Ana', projectId: team.id }));
+    // a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column
+    assert.deepEqual(await refused(() => members.save(new Member({ email: 'ana@x.co', name: 'Other' }))), conflict);
+    assert.deepEqual(await refused(() => members.save(new Member({ email: 'luis@x.co', name: 'Luis', projectId: 999 }))), conflict);
+    assert.deepEqual(await refused(() => projects.remove(team.id)), conflict);
+    assert.deepEqual(await refused(() => members.save(new Member({ email: 'eva@x.co' }))), conflict);
+    assert.deepEqual(await refused(() => members.where({ id: ana.id }).update({ name: null })), conflict);
+    // a text longer than its column, counted in characters: 20 of them fit whatever bytes they take
+    assert.deepEqual(await refused(() => members.save(new Member({ email: 'e'.repeat(21), name: 'long' }))), conflict);
+    assert.deepEqual(await refused(() => members.save(new Member({ email: 'long@x.co', name: 'n'.repeat(256) }))), conflict);
+    assert.deepEqual(await refused(() => members.where({ id: ana.id }).update({ email: 'e'.repeat(21) })), conflict);
+    assert.equal((await members.save(new Member({ email: '😀'.repeat(20), name: 'ñ'.repeat(255) }))).email, '😀'.repeat(20));
+    assert.equal(await members.count(), 2);
+    // inside @transactional what was written before the refusal is not kept
+    assert.deepEqual(await refused(() => new Enroll(members).exec('ana@x.co')), conflict);
+    assert.equal(await members.where({ email: 'new-ana@x.co' }).count(), 0);
+    assert.equal((await new Enroll(members).exec('eva@x.co')).value, 1);
+    assert.equal(await members.count(), 4);
+    // anything else the database says is still a 500 that does not say why
+    assert.deepEqual(await refused(() => db.query('SELECT * FROM no_such_table')), [500, { status: 500, message: 'error' }]);
   });
 
   // what packages/synapsis-py/tests/test_data.py checks too: found running one project with both dialects on

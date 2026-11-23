@@ -97,7 +97,8 @@ and where each goes: `path`, `query` or `body`, the answer and error types, the 
 runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`. The OpenAPI document is
 also what `GET /openapi.json` answers in every dialect, and its `Error` schema (`status`, `message`, and `errors`
 with a `field`, a `rule` and a `message` for an invalid body or parameter) is the body every error answers
-(ADR-synapsis-0013).
+(ADR-synapsis-0013). Every route lists that body as its `default` answer: the use case's error, 400 for an invalid body or
+parameter, 409 for what the database refuses for integrity, 500 for what nothing handled.
 
 A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):
 

@@ -1,0 +1,11 @@
+// What a coupon is: a row of the table coupons, of one customer. A customer with coupons is not removed: the foreign
+// key has no rule, so the database refuses it.
+@entity("coupons")
+Coupon()
+  @primary(generated = true)
+  id: int
+  @column(length = 20, unique = true)
+  code: string
+  @manyToOne()
+  customer?: Customer
+  customerId: int

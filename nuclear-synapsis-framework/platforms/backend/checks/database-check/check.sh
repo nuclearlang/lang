@@ -3,7 +3,7 @@
 # for each dialect (fastapi, nestjs) and each database (sqlite, postgres, mysql, mariadb) it builds the project with
 # that connection, runs the target's strict checker, the migrations (migrations.py: every kind of schema change made,
 # applied and reverted with the real command, `nuclear migrate`, the real schema and the rows read back after each;
-# a failing migration; the rules of the history), the app over HTTP with one scenario (scenario.py), the project's
+# a rename with `make --rename`; a text longer than a VARCHAR holds; a failing migration; the rules of the history), the app over HTTP with one scenario (scenario.py), the project's
 # tests, and the same project with `createTables` on an empty database (tables.py: its tables are the ones the first
 # migration makes); then it compares the answers (the same bytes in every dialect on every database) and says where
 # the schemas of the dialects differ. On SQLite it also makes a project with `nuclear new` and migrates it.
@@ -155,6 +155,9 @@ tables() { # the same project with createTables on an empty database: the app ma
     url="${url%/*}/made_$dialect"; export DATABASE_URL="$url"
   fi
   sed -i "s|^    SQLite(.*|    ${connection%)}, createTables = true),|" "$project/config/project_config.nuc"
+  # a text longer than a VARCHAR holds on MySQL and MariaDB: createTables and the first migration make its text type
+  sed -i "s/@column(length = 2000)/@column(length = 100000)/" "$project/components/store/data/entities/order.nuc"
+  grep -qF "length = 100000" "$project/components/store/data/entities/order.nuc" || { echo "the long note was not written"; return 1; }
   grep -qF "createTables = true" "$project/config/project_config.nuc" || { echo "the connection was not written"; return 1; }
   build >/dev/null 2>&1 || { echo "the project with createTables does not build"; return 1; }
   cd "$project/build" || return 1

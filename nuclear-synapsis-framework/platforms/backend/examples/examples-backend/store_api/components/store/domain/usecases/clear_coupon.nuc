@@ -1,0 +1,4 @@
+// Takes the code of a coupon away. The column is required: the database refuses it (409).
+usecase ClearCoupon(repository: CouponRepository)
+  exec(id: int) Result<Error, int>
+    Ok(~repository.clearCode(id))

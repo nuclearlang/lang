@@ -684,7 +684,7 @@ pub fn openapi(contract: &Value) -> Value {
             };
             op.insert("responses".into(), json!({
                 status.to_string(): ok,
-                "default": { "description": "the error of the use case", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+                "default": { "description": "an error: the use case's, or 400 an invalid body or parameter, 409 what the database refuses for integrity, 500 what nothing handled", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
             }));
             let entry = paths.entry(full).or_insert_with(|| Value::Object(Map::new()));
             entry[r["verb"].as_str().unwrap_or("get")] = Value::Object(op);

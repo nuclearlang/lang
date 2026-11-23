@@ -372,7 +372,9 @@ usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository)
 '''
 
 column = '''
-On an entity field: a column. Arguments: `length`, `unique`, `name`.
+On an entity field: a column. Arguments: `length`, `unique`, `name`. `length` is the
+characters a text holds (255 without it); a long text is a larger one (`@column(length = 100000)`): the column is the
+database's VARCHAR, or its text type when the VARCHAR is too short. A longer text is refused when written (409).
 '''
 
 created = '''

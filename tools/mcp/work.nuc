@@ -128,21 +128,26 @@ WorkTools(runner: any = runCommand)
   // database). action: status (every migration, applied or pending: read it first), make (message: what changed;
   // writes one migration, the entities minus the last migration, into the project's migrations/; it warns of every
   // drop and of a required column without a default: tell the user), up (applies the pending ones; to: up to that
-  // migration), down (reverts the last one applied; to: back to that migration). fake (up, down): only the history
+  // migration), down (reverts the last one applied; to: back to that migration). rename (make): the tables and
+  // columns that were renamed, each "<table>=<new table>" or "<table>.<column>=<new column>" in the database's names
+  // (["shops=stores", "orders.shop_id=store_id"]): make writes a rename that keeps the rows, where it would write a
+  // drop and an add; rename the field or the entity in the .nuc first. fake (up, down): only the history
   // changes and nothing runs (a database that already has its tables is brought under the migrations with up and
   // fake). transaction (up, down): all (the default: the whole run in one transaction), each (one per migration)
   // or none. project: the project's folder or one inside it. make, up and down ask the user first (confirm: the token of a preview, when the client cannot
   // ask): up and down change the database of the project's active environment, and down drops what the migration
   // made, with its data. Build the project first (nuclear_build): the migration reads the built entities.
-  projectMigrate(project: string, action: string = "status", message: string = "", to: string = "", confirm: string = "", fake: boolean = false, transaction: string = "", ctx: Context? = null) string
+  projectMigrate(project: string, action: string = "status", message: string = "", to: string = "", confirm: string = "", fake: boolean = false, transaction: string = "", rename: string[] = [], ctx: Context? = null) string
     root = projectOf(project)
     if root == null
       return refused("${project} is not inside a Synapsis project (no config.nuc)")
     if not (action in ["status", "make", "up", "down"])
       return refused("'${action}' is not an action of project_migrate (status, make, up, down)")
-    bad = optionLike([message, to])
+    bad = optionLike([message, to, ...rename])
     if bad != null
-      return refused("'${bad}' is not a message or a migration (it starts with -)")
+      return refused("'${bad}' is not a message, a migration or a rename (it starts with -)")
+    if not rename.isEmpty and action != "make"
+      return refused("rename is for make only")
     if action == "make" and message.trim().isEmpty
       return refused("make needs message: what changed in the entities (\"notes on tasks\")")
     if action != "make" and not message.isEmpty
@@ -156,6 +161,8 @@ WorkTools(runner: any = runCommand)
     args = ["nuclear", "migrate", action]
     if action == "make"
       args = [...args, message]
+    for r in rename
+      args = [...args, "--rename", r]
     if not to.isEmpty
       args = [...args, "--to", to]
     if fake
@@ -164,10 +171,10 @@ WorkTools(runner: any = runCommand)
       args = [...args, "--transaction", transaction]
     if action != "status"
       change = match action
-        "make" -> "Write one migration of ${root} for \"${message}\" into its migrations/ folder (the entities minus the last migration). The database is not changed."
+        "make" -> "Write one migration of ${root} for \"${message}\" into its migrations/ folder (the entities minus the last migration${rename.isEmpty ? "" : "; renamed, keeping the rows: ${rename.join(", ")}"}). The database is not changed."
         "up" -> fake ? "Mark the pending migrations of ${root} as applied in the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}, without running them: the schema is not changed." : "Apply the pending migrations of ${root} to the database of its active environment${to.isEmpty ? "" : ", up to ${to}"}."
         _ -> fake ? "Mark ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} as not applied in the database of ${root}'s active environment, without running anything: the schema is not changed." : "Revert ${to.isEmpty ? "the last migration applied" : "the migrations applied after ${to}"} in the database of ${root}'s active environment: what they made is dropped, with its data."
-      no = ~confirmed(ctx, "project_migrate", { "project": "${root}", "action": action, "message": message, "to": to, "fake": fake, "transaction": transaction }, change, confirm)
+      no = ~confirmed(ctx, "project_migrate", { "project": "${root}", "action": action, "message": message, "to": to, "fake": fake, "transaction": transaction, "rename": rename }, change, confirm)
       if no != null
         return no!
     ran: Ran = ~runner(args, "${root}", "")

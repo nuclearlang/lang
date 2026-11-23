@@ -41,8 +41,8 @@ Checked against TypeORM 1.1.3 (`migration/MigrationExecutor`, its drivers and it
 | A constraint that goes | by the name it has in the database, which TypeORM reads there | found in the database by its column when its name is not the expected one |
 
 **What we do not have because TypeORM does not**, as a decision and not as pending work: a checksum of the applied
-files, a lock against two runs at once, a rename found by `make`, seeds, one migration made from many, a baseline
-other than `--fake`.
+files, a lock against two runs at once, a rename found by `make` (it is told one: difference 7), seeds, one
+migration made from many, a baseline other than `--fake`.
 
 **Where we knowingly differ from TypeORM:**
 
@@ -64,6 +64,16 @@ other than `--fake`.
    On SQLite and MySQL that clock gives whole seconds.
 6. *A failed migration says what is left* (nothing, or what MySQL and MariaDB cannot undo), where TypeORM prints the
    database's error.
+
+7. *A rename is an option of `make`* (the user, 2026-11-23): `nuclear migrate make "<message>" --rename
+   <table>=<new table>` and `--rename <table>.<column>=<new column>` write a rename that keeps the rows, with its
+   way back. TypeORM's `migration:generate` writes a drop and an add, and its user edits the file; here that edit
+   would be made in the migration language of each dialect, so the same Nuclear project would be edited in two
+   target languages. `make` finds no rename by itself (as TypeORM): without the option it writes the drop and the
+   add, and warns with the option to use. It refuses a rename whose old name the migrations do not have or the
+   entities still have, and one whose new name the entities do not have or the migrations already have. The unique
+   and the foreign key of a renamed column keep the name they had (a constraint is found by its column when it
+   goes: the table above).
 
 A database migrated by 0.91 or 0.92 keeps working: the first command reads the history its tool kept
 (`alembic_version`, `SequelizeMeta`), writes `migrations` from it and leaves the old table as it was.

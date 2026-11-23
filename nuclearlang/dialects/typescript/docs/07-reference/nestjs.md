@@ -347,7 +347,7 @@ export class NewTask {
 
 ### 2.4 Use case
 
-One business operation (`@Injectable`): its dependencies are constructor parameters, injected by Nest; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409). `x = ~repo.find(id)` unwraps the `Ok` and returns the `Err` by itself.
+One business operation (`@Injectable`): its dependencies are constructor parameters, injected by Nest; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409). What the database refuses for integrity (Sequelize's `ValidationError`, `UniqueConstraintError` and `ForeignKeyConstraintError`, or the database's own integrity error: a unique, a foreign key, a required column) is answered by `ErrorFilter` with 409 `conflict`, and so is a text longer than its column, which `Repository.save` and `update` refuse before it is written; inside `@transactional` the transaction is rolled back. `x = ~repo.find(id)` unwraps the `Ok` and returns the `Err` by itself.
 
 ```nuclear
 model TaskChanges
@@ -880,7 +880,11 @@ the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backe
 - A `DateTime` column is `Sequelize.DataTypes.DATE({length: 6})`, and the clock of a timestamp
   `Sequelize.literal("(CURRENT_TIMESTAMP)")` (the one spelling MySQL takes for a column with a fraction). A
   migration of before 0.94 wrote `DATE` and `CURRENT_TIMESTAMP`: the next `make` writes the `changeColumn` of each.
-- A rename, written by hand in place of the drop and the add `make` wrote (the `schema` stays as it is):
+- A text column is `Sequelize.DataTypes.STRING({length: n})`: the runtime's `queryInterface` makes it the
+  database's `VARCHAR(n)`, or its text type when `n` is more than that `VARCHAR` holds (`MEDIUMTEXT` and `LONGTEXT`
+  on MySQL and MariaDB, `TEXT` on PostgreSQL: `textType` of `synapsis-nest/migrate`).
+- A rename, as `nuclear migrate make "shops are stores" --rename shops=stores --rename orders.shop_id=store_id`
+  writes it (the `schema` it exports has the new names):
 
 ```js
 export async function up(queryInterface, Sequelize) {

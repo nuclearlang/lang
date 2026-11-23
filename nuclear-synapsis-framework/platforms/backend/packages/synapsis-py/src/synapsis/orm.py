@@ -14,7 +14,7 @@ from typing import Any, ClassVar, cast
 from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, GetCoreSchemaHandler, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
 from pydantic_core import core_schema
-from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
+from sqlalchemy import VARCHAR, Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
 from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import TypeDecorator
@@ -39,6 +39,34 @@ PENDING = "_synapsis_pending"
 # a text column without `length`: what every database takes as a key, a unique column or a column with a default
 # (the same length the nestjs dialect writes)
 TEXT_LENGTH = 255
+
+
+# --- a text column: `@column(length = n)`. The one rule of its type (the same as the nestjs dialect's, migrate.ts):
+# the database's VARCHAR(n) while it holds n characters of any alphabet, then its text type that does.
+# The most characters a VARCHAR holds: MySQL and MariaDB keep 65535 bytes and a character takes up to four;
+# PostgreSQL's own limit; SQLite has none.
+VARCHAR_MAX = {"mysql": 16383, "mariadb": 16383, "postgres": 10485760}
+# the most characters a MEDIUMTEXT of MySQL and MariaDB holds (16777215 bytes); a longer text is a LONGTEXT
+MEDIUMTEXT_MAX = 4194303
+
+
+def text_type(dialect: str, length: int) -> str:
+    """The type a text column of `length` characters has on `dialect` (sqlite, postgres, mysql, mariadb), as the
+    database names it."""
+    if length <= VARCHAR_MAX.get(dialect, length):
+        return f"VARCHAR({length})"
+    return "TEXT" if dialect == "postgres" else "MEDIUMTEXT" if length <= MEDIUMTEXT_MAX else "LONGTEXT"
+
+
+@compiles(String, "postgresql", "mysql", "mariadb")
+@compiles(VARCHAR, "postgresql", "mysql", "mariadb")
+def _text(element: Any, compiler: Any, **kw: Any) -> str:
+    # every `String(n)` an entity or a migration names, and the `VARCHAR(n)` a migration's way back names (read from
+    # SQLite when it was made): the rule above where the VARCHAR is too short
+    dialect = "postgres" if compiler.dialect.name == "postgresql" else compiler.dialect.name
+    if element.length is None or element.length <= VARCHAR_MAX[dialect]:
+        return str(compiler.visit_VARCHAR(element, **kw))
+    return text_type(dialect, element.length)
 
 
 class _LiteDateTime(sqlite.DATETIME):

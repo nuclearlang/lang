@@ -45,6 +45,11 @@ class Conflict(AppError):
     status: int = 409
 
 
+class IntegrityViolation(Exception):
+    """What a database refuses for integrity, refused by the runtime before the database sees it (a text longer than
+    its column): the app answers it as it answers the database's own refusal, 409 `conflict`."""
+
+
 # ---------- the body of an error: Nuclear's, the same in every dialect (ADR-synapsis-0013) ----------
 
 # one reason per field: the first of these rules it breaks

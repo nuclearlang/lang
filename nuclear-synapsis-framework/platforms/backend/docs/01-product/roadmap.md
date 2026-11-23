@@ -86,15 +86,6 @@ expect; each needs a rule before it is changed.
   fastapi leaves them to the database's clock (`CURRENT_TIMESTAMP`: whole seconds there), nestjs writes the app's
   clock. The column keeps the fraction in both (the check compares the shape of these two, not their digits).
 
-- **A unique column the use case did not check answers 500.** Of 16 requests at once for one email, one makes the
-  row, those the use case saw answer 409 and the rest reach the database's unique error: a 500 in both dialects.
-  Wanted: a rule (409?) for a unique violation.
-- **No text column longer than `@column(length = n)`.** A `string` field without a length is 255 characters in both
-  dialects; there is no word for a text of any length.
-- **A migration is edited by hand in the dialect's migration language** (a rename): the same Nuclear project needs
-  two different edits. TypeORM finds no rename either (ADR-backend-0002), so `make` will not; a word in Nuclear
-  for it would be a change of the language.
-
 - The first provider of authentication: JWT only, or also sessions with cookies for web clients
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).
 
@@ -113,6 +104,25 @@ expect; each needs a rule before it is changed.
   the platform's contract, both dialects). The rename tool renames the names built from the old one, so it no
   longer leaves one.
 - **`@acl` and sessions**, as the mobile platform has them (Flutter); a `guard` kind for checks beyond headers.
+- **What the three decisions of 2026-11-23 left** (spec 004 §4b):
+  - *The 409 of the database.* Only the integrity errors are converted (SQLSTATE class 23, SQLite's constraint
+    error). Spring's `DataIntegrityViolationException` also covers the data errors of class 22 (a number out of
+    its column's range, a date that is none): a database that raises one still answers 500, and SQLite raises
+    none (an `int` larger than 32 bits is refused by PostgreSQL, MySQL and MariaDB and kept by SQLite). Not
+    tested: a violation outside HTTP (a listener, a request over the app's WebSocket), a check constraint, a
+    deferred constraint, a deadlock or a lock timeout (still 500).
+  - *A long text.* The length is checked by the repository (`save`, `update`): a row written by SQL, or by a
+    `@manyToMany` list, is not. A long text that is unique, a key or has a default is refused by MySQL and MariaDB
+    when its table is made (a unique over a text type; a default on a text type before MySQL 8.0.13): the compiler
+    does not say it. The row of a table on MySQL and MariaDB holds 65 535 bytes of `VARCHAR` columns: a table with
+    several `@column(length = 16383)` is refused there. The rule counts four bytes per character: a database made
+    with another character set is not tested. Making a column shorter while a row holds a longer text fails on
+    PostgreSQL, MySQL and MariaDB and passes on SQLite; `make` does not warn of it.
+  - *A rename.* The unique and the foreign key of a renamed table or column keep their names (`uq_shops_name` on
+    `stores.title`): a database migrated through a rename has other constraint names than one made new. Not
+    tested: the rename of a key column other tables point to, of a `@created` / `@updated` column, of a join
+    table; MariaDB older than 10.5.2 and MySQL older than 8.0 (no `RENAME COLUMN`); a rename and a change of the
+    same column in one `make` on MySQL and MariaDB.
 - **Limits of the data words** (ADR-backend-0001):
   - the join table's name is always `<owner table>_<field>` (no custom name);
   - `@transactional` uses the default database only (nestjs: the database of the last repository made, a

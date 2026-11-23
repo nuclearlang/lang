@@ -1,8 +1,8 @@
 ---
 status: in-progress
 owner: Julian Molina
-updated: 2026-11-16
-related: [../../03-adr/0001-backend-data.md, ../../01-product/roadmap.md]
+updated: 2026-11-23
+related: [../../03-adr/0001-backend-data.md, ../../03-adr/0002-typeorm-is-the-rule-of-migrations.md, ../../01-product/roadmap.md]
 ---
 
 # 004 — Backend parity: what a real API needs that the backend platform lacks
@@ -70,7 +70,8 @@ answers a project with its tasks, both checks pass, and the contract (spec 003,
 ### F2 — Migrations
 
 DONE 2026-11-10: the delivered form is ADR-backend-0001, migrations (`migrations/` kept with the sources, not `build/`; nestjs
-without umzug). The example below is the first idea.
+without umzug); its behaviour is TypeORM's since 0.93 (ADR-backend-0002); a rename is an option of `make` since
+2026-11-23 (§4b). The example below is the first idea.
 
 Today `createTables = true` creates tables at start (development only). A real database changes by migrations:
 
@@ -234,6 +235,25 @@ Reviewing the first draft of ADR-backend-0001 (which deduced keys and relations 
 - Pagination as drafted (`paginate(page, size)` → `Page<T>`).
 - **The kinds stay as they are**: no kind by folder for repositories and controllers, no default paths.
 - **Transactions in the first step** (`@transactional` on `exec`); migrations are of the database schema, next.
+
+## 4b. Decided by the user (2026-11-23)
+
+Three questions the database check left open (the roadmap's "To decide with the user"), each delivered in both
+dialects on SQLite, PostgreSQL, MySQL and MariaDB:
+
+| Decision | Delivered | Proven by |
+|---|---|---|
+| **What the database refuses for integrity answers as Spring does** ("copia lo que haría springboot"): Spring Data REST's `RepositoryRestExceptionHandler` answers `DataIntegrityViolationException` with 409 Conflict (plain Spring Boot has no handler for it: 500) | 409 with the one error body and the fixed message `conflict`, for a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column and a text longer than its column; `@transactional` rolls back (reference §2.4) | `test_data.py`, `data.test.ts` (the same cases); `scenario.py`: the coupons of `store_api`, and 16 requests at once for one email (one 201, fifteen 409) |
+| **A long text is `@column(length = n)`: no new word**; other options may be added inside `@column` when needed | one rule of the column's type per database (`VARCHAR(n)`, then `MEDIUMTEXT` / `LONGTEXT` / `TEXT`), written once in each runtime (`text_type`, `textType`); a text longer than `n` characters is refused before the write, 409 (reference §2.1); a changed length is a migration | `test_migrate.py`, `migrate.test.ts` (the rule as a table, the migration both ways); `migrations.py` step 13, `tables.py` |
+| **A rename in a migration is an option of the command** | `nuclear migrate make "<message>" --rename <table>=<new table>` / `--rename <table>.<column>=<new column>`, the MCP tool `project_migrate` (`rename`); refused with the same words when a name is not there (reference §2.8; ADR-backend-0002, difference 7) | `test_migrate.py`, `migrate.test.ts`, the CLI's `migrate_reads_its_words`, `test_work.nuc`; `migrations.py` step 6 |
+
+Tasks:
+
+- [x] Spring's facts read from its sources (spring-data-rest 4.4.0, spring-framework 6.2.0, spring-boot 3.4.0).
+- [x] Both runtimes, their tests with the same cases, the CLI, the MCP tool.
+- [x] `store_api` gets coupons (use cases that check nothing) so the database check reaches each refusal over HTTP.
+- [x] The reference, the brief, each dialect's reference and guide, the testing standard, ADR-backend-0002.
+- [ ] What is left is in the [roadmap](../../01-product/roadmap.md) (Pending: the limits of a long text and of a rename).
 
 ## 5. Decisions still pending for the user
 

@@ -1,0 +1,6 @@
+// The coupons of the database: find, findAll, save and remove come with it.
+repository CouponRepository
+  // takes the code of a coupon away: how many rows changed
+  clearCode(id: int) int
+    where({ "id": id })
+    update({ "code": null })

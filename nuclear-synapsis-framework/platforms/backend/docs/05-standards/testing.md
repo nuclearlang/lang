@@ -98,8 +98,10 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
         without `created_at` / `updated_at` (their default).
      4. A column's type, null, default and length changed, a unique added.
      5. A table, a foreign key on a table with rows (`@manyToOne`) and a join table (`@manyToMany`).
-     6. A table and a column renamed: `make` writes a drop and an add and warns; the file is edited into a rename
-        in the dialect's migration language; the rows and the foreign key follow.
+     6. A table and two columns renamed: without `--rename`, `make` writes a drop and an add and warns (the warning
+        says the option); nine renames that are not there are refused with the same words; with `--rename
+        shops=stores --rename shops.name=title --rename orders.shop_id=store_id` it writes the renames only: the
+        rows and the foreign key follow, `down` renames back.
      7. A column, a unique and a foreign key dropped (its column stays); the unique first renamed in the database
         to the name a database gives one made without a name.
      8. A failing migration after a good one, with `--transaction all` (PostgreSQL and SQLite keep neither), `each`
@@ -111,6 +113,9 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      11. `down --to` the first migration (the first schema again, the rows kept), `up --to` the second, `up`.
      12. The entities of step 3 again: one migration drops everything added since; the app of the next stage runs
          on that schema.
+     13. A text longer than a `VARCHAR` holds: the note of an order made 100000 characters long (`MEDIUMTEXT` on
+         MySQL and MariaDB, `VARCHAR(100000)` on the others), then 5000000 (`LONGTEXT`), a text of 100000
+         characters kept through `up` and `down`, then 2000 again: the schema of step 3.
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
      pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an
@@ -119,10 +124,15 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      whole number, a number of the query converted), a model built in code that breaks its rule (500), the relations loaded and
      not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write
      (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique
-     value (one row), the cascade of a delete.
+     value (one row, one 201 and fifteen 409, never a 500), what the database refuses for integrity (the coupons,
+     whose use cases check nothing: a repeated unique value, the same value twice in one transaction, a foreign
+     key that points at nothing, a null in a required column, a row others point to, a text longer than its
+     column: each 409 `conflict`, the transaction rolled back, a text of the column's length in characters
+     kept), the cascade of a delete.
    - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).
    - **tables** (`tables.py`): the same project built with `createTables = true` on an empty database of its own
-     (`made_<dialect>`); the app is started once, so it makes the tables. Their schema, with the names of the
+     (`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app
+     is started once, so it makes the tables. Their schema, with the names of the
      uniques and foreign keys, is written as step 0 for the comparison between the dialects. Then, with
      `nuclear migrate`: `make`, `up` refused (the tables are there), `up --fake`, nothing left to make, `down`
      (the tables go), `up`: the schema must be the one `createTables` made, names included. Last, the first

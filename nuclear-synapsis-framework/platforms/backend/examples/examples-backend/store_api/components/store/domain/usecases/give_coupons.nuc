@@ -1,0 +1,10 @@
+// Gives a customer several coupons in one transaction: all of them or none. Nothing is checked here on purpose: a
+// repeated code, a customer that does not exist and a code longer than its column are refused by the database (409).
+usecase GiveCoupons(repository: CouponRepository)
+  @transactional
+  exec(input: NewCoupons) Result<Error, Coupon[]>
+    given: Coupon[] = []
+    for code in input.codes
+      coupon = ~repository.save(Coupon(customerId = input.customerId, code = code))
+      given.add(coupon)
+    Ok(given)

@@ -18,6 +18,7 @@ import 'reflect-metadata';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Observable, map } from 'rxjs';
+import { DatabaseError, ForeignKeyConstraintError, ValidationError } from 'sequelize';
 import { AppConfig } from './config.js';
 import { AppError, InvalidInput, Invalidity, errorBody, reason, reasonsOf } from './errors.js';
 import { Guard, GuardsOf, Headers, refusal } from './guards.js';
@@ -38,8 +39,20 @@ export class ResultInterceptor implements NestInterceptor {
   }
 }
 
+/** What the database refuses for integrity: a repeated unique value, a foreign key that points at nothing or a row
+ * others still point to, a null in a required column (the validator of the columns refuses that one before the
+ * database does). The cases of Spring's DataIntegrityViolationException, which Spring Data REST answers 409. */
+function refusedForIntegrity(e: unknown): boolean {
+  if (e instanceof ValidationError || e instanceof ForeignKeyConstraintError) return true;
+  if (!(e instanceof DatabaseError)) return false;
+  // SQLSTATE class 23 (PostgreSQL's code, MySQL's and MariaDB's sqlState); SQLite's constraint error
+  const { code, sqlState } = e.original as { code?: string; sqlState?: string };
+  return String(sqlState ?? code).startsWith('23') || String(code).startsWith('SQLITE_CONSTRAINT');
+}
+
 /** Every error answers Nuclear's body, whatever the framework would write (ADR-synapsis-0013): a Result's error, a
- * guard's refusal, an invalid body or parameter with its reasons, a route that does not exist, and what nothing
+ * guard's refusal, an invalid body or parameter with its reasons, a route that does not exist, what the database
+ * refuses for integrity (409 `conflict`), and what nothing
  * handled (a 500 that never says why: the reason may hold what the app must not show). */
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
@@ -49,6 +62,9 @@ export class ErrorFilter implements ExceptionFilter {
       res.status(400).json(errorBody(400, 'invalid', e.errors));
     } else if (e instanceof AppError) {
       res.status(e.status).json(errorBody(e.status, e.message));
+    } else if (refusedForIntegrity(e)) {
+      // never the database's words: they name a constraint, a column, a value
+      res.status(409).json(errorBody(409, 'conflict'));
     } else if (e instanceof HttpException) {
       const status = e.getStatus();
       const said = e.getResponse();
