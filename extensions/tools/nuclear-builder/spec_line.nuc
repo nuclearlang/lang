@@ -242,7 +242,8 @@ specSettle(root: string, id: string, accept: bool) <string, any>
   if not draft.exists()
     throw ValueError("the spec `${id}` has no draft")
   if not accept
-    draft.unlink()
+    // the member's draft is set aside, never deleted: `spec.draft.md.bak` beside it
+    draft.replace(draft.withName("${draft.name}.bak"))
     return { "id": id, "path": found!["path"], "accepted": false }
   text = draft.readText()
   writeAtomic(Path(root, "${found!["path"]}", "spec.md"), text)
@@ -273,6 +274,10 @@ specLine(args: string[]) int
       changed = specUpdate(root, words[0], sys.stdin.read())
       asJson ? printJson(changed) : print("wrote ${changed["path"]}/spec.md")
     else if what == "delete" and not words.isEmpty
+      // its documents are the agents' work: asked first (a terminal's prompt, else `--yes`), and moved, never deleted
+      if not ("--yes" in args) and not confirmedHere("Delete the spec ${words[0]}? Its folder, the documents the agents wrote among it, moves to .nuclear/builder/deleted/. Go on? [y/N] ", args)
+        printJson({ "error": "not done: the spec ${words[0]} and its documents would move to .nuclear/builder/deleted/; confirm with --yes" })
+        return 2
       gone = specDelete(root, words[0])
       asJson ? printJson(gone) : print("${gone["from"]} → ${gone["kept"]}")
     else if what == "move" and not words.isEmpty

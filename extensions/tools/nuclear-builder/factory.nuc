@@ -344,7 +344,8 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
           save()
     threading.Thread(target = beat, daemon = true).start()
 
-  // The stations from `at` on are run again: their steps go to `run.previous`, what they wrote is undone. With
+  // The stations from `at` on are run again: their steps go to `run.previous`, what they wrote is undone (set aside
+  // first, `undoWrites`). With
   // `fromStep`, the steps of the first station before that one are kept, and the parts of it that ended before it.
   forget(at: int, why: string, fromStep: string? = null) void
     left = stages().slice(at)
@@ -369,7 +370,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         if not (s["id"] in keptIds)
           ids.add(s["id"]!)
     changed: string[] = []
-    undone = rollback(root(), run["writes"] ?? [], (id) => not (id in ids), changed)
+    undone = undoWrites(run, why, (id) => not (id in ids), changed)
     run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => not (w["step"] in ids))
     previous: <string, any>[] = run["previous"] ?? []
     previous.add({ "at": nowMs(), "from": left[0]["id"], "step": fromStep, "status": run["status"], "stages": json.loads(json.dumps(left)), "why": why, "undone": undone, "kept": changed })
@@ -391,13 +392,14 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     run["acceptance"] = null
     run["diagnosis"] = null
 
-  // What the steps that did not pass wrote is undone (a file changed since by someone else is kept).
+  // What the steps that did not pass wrote is undone (a file changed since by someone else is kept; every file undone is
+  // set aside first, `undoWrites`).
   undoFailed() void
     kept = passedSteps(run)
-    undone = rollback(root(), run["writes"] ?? [], (id) => id in kept)
+    undone = undoWrites(run, "what the steps that did not pass wrote", (id) => id in kept)
     run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
     if not undone.isEmpty
-      traceEvent(run, "undone", undone.join(", "))
+      traceEvent(run, "undone", "${undone.join(", ")} (their last text set aside in ${RUNS_DIR}/${run["id"]}.set-aside/)")
 
   // *Check the connections*: everything the team will use, before the first station runs.
   preflight(st: <string, any>) boolean

@@ -133,7 +133,16 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   after, the lines added and removed), found by comparing the project's files before and after the step; what a failed step wrote is undone, a
   file changed since is kept and named; an orphaned run is recovered (its running steps failed, their files undone,
   `interrupted`, with the `stepId` it was in) and goes on from that step; a retry from a station moves the steps from
-  there to `previous` and undoes their files; a retry from a step (`--step <id>`) keeps the steps of its station
+  there to `previous` and undoes their files; **nothing an undo takes back is lost** (`undoWrites`): before a file goes
+  back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's
+  `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a failed step's, a repair's, a retry's,
+  a restart's, a recovery's) — a copy, not git, since a project need not be a repository and a copy never touches the
+  user's branches; `retry <id>` of a failed run with neither `--from` nor `--step` goes on from its failed step
+  (`failedStepOf`: in the station that failed, the first step that failed after its last step that passed), so the
+  steps before it, the Developer's code among them, are kept; what a retry or a restart would take back of the agents'
+  work (`takeBackOf`) is asked first: a terminal's prompt, else refused without `--yes` (exit code 2), `--plan` prints
+  `{run, files, setAside}` and runs nothing, the tool `run_retry` refuses without `confirm`; an editor that went away
+  (a closed stdout) no longer fails the step that told it an event; a retry from a step (`--step <id>`) keeps the steps of its station
   before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step
   after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and
   the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free
@@ -170,7 +179,7 @@ The editors' commands (one call each, JSON on stdout with `--json`, an error as 
   the title and never one in use (a spec or a run: `-2`, `-3`…); prints `{id, path, spec}` (`spec` as `parseSpec`
   reads it). A component is a folder name (`[A-Za-z_][A-Za-z0-9_-]*`), a use case one of the editors' seven.
 - `spec show <id> --json`: `{id, path, text, spec, draft, run}` (the draft's text or null, the run's status).
-  `spec delete <id>`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it).
+  `spec delete <id> [--yes]`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it; asked first: a terminal's prompt, else refused without `--yes`). A draft discarded is kept as `spec.draft.md.bak` beside it.
 - `spec update <id> --stdin --json`: the whole markdown on stdin (from its `# title`) over `spec.md`, at once; `{id, path, spec}`; refused while its run is running.
 - `spec list --json`: `[{id, title, component, layer, path, updated, runs}]`, sorted by component, layer and title
   (`component` is `""` for a flat spec; `updated` in ms; `runs` the run ids of the spec).
@@ -233,7 +242,7 @@ team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`)
 for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPlan`, `deliver` [run]) and the status `waiting`; and, from the agent steps,
 `analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the
 actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:
-`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above). A run is read as the
+`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above); `setAside` (what the undos took back, kept). A run is read as the
 project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript
 engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps
 its team and its `assign`; one of the local team that was never saved (`local-team`) gets it again.
@@ -241,8 +250,8 @@ its team and its `assign`; one of the local team that was never saved (`local-te
 ### The process contract
 
 The editors run the line as a process, one per run: `nuclear-builder run <spec.md> --events [--team <id>]
-[--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] --events`,
-`restart <id> --events`), in the project's folder.
+[--confirm-spending] [--force-confirm]` (or `run --resume <id> --events`, `retry <id> [--from <station> | --step <step>] [--yes] --events`,
+`restart <id> --yes --events`), in the project's folder.
 
 - **stdout**: one JSON object per line. `{"type": "event", "step": "<step id>", "event": {…}}` for what a
   provider does (`text`, `tool`, `tool-result`, `cost`, `tokens`, `retry`, `trace`); `{"type": "ask", "id", "kind",

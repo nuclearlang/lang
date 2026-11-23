@@ -313,13 +313,21 @@ BuilderTools(root: string)
       toolSaid(detachRun(homeOf(root, id), id, ["run", "--resume", id]))
     attempt(body)
 
-  // Run a run again from the station that failed (or from `station`, or from one `step` and every step after it),
-  // optionally by another team: what those stations wrote is undone first.
-  runRetryTool(id: string, station: string = "", step: string = "", team: string = "") string
+  // Run a failed run again from the step that failed, every step before it kept (or from `station`, or from one `step`
+  // and every step after it), optionally by another team: what the steps run again wrote is undone first, its last
+  // text set aside in the run's `.set-aside/` folder, never lost.
+  // A retry that takes back the agents' work (a station or a step that passed run again) is refused without
+  // `confirm` = true, given only after the user said yes to the files it names.
+  runRetryTool(id: string, station: string = "", step: string = "", team: string = "", confirm: boolean = false) string
     body = () =>
-      if loadRun(homeOf(root, id), id) == null
+      run = loadRun(homeOf(root, id), id)
+      if run == null
         return toolSaid({ "error": "no run `${id}` (runs lists them)" })
-      args = ["retry", id, ...(station.isEmpty ? [] as string[] : ["--from", station]), ...(step.isEmpty ? [] as string[] : ["--step", step]), ...(team.isEmpty ? [] as string[] : ["--team", team])]
+      startAt: string? = step.isEmpty and station.isEmpty and run!["status"] == "failed" ? failedStepOf(run!) : step.isEmpty ? null : step
+      files = takeBackOf(run!, station.isEmpty ? null : station, startAt, false)
+      if not files.isEmpty and not confirm
+        return toolSaid({ "error": "not done: it takes back ${files.length} file(s) the agents wrote (${files.take(6).join(", ")}${files.length > 6 ? "…" : ""}), set aside first in ${RUNS_DIR}/${id}.set-aside/; ask the user, then call again with confirm = true", "files": files })
+      args = ["retry", id, ...(station.isEmpty ? [] as string[] : ["--from", station]), ...(step.isEmpty ? [] as string[] : ["--step", step]), ...(team.isEmpty ? [] as string[] : ["--team", team]), "--yes"]
       started = detachRun(homeOf(root, id), id, args)
       hint = spendingOf(homeOf(root, id), id, team)
       if hint != null
@@ -331,7 +339,7 @@ BuilderTools(root: string)
   // Ask the user to run a run again from scratch (every file it wrote goes back first): the user's decision.
   runRestartTool(id: string) string
     body = () =>
-      needsUser("run_restart", { "id": id }, "Run ${id} again from scratch? Every file it wrote goes back to what it was first.", "nuclear-builder restart ${id}")
+      needsUser("run_restart", { "id": id }, "Run ${id} again from scratch, from the Analysis? Every file it wrote goes back to what it was first (its last text is set aside in .nuclear/builder/runs/${id}.set-aside/).", "nuclear-builder restart ${id}")
     attempt(body)
 
   // Stop a run's process: a run that asks waits, one that works is interrupted (what its unfinished steps wrote is
@@ -692,7 +700,7 @@ applyForUser(folder: string, tool: string, input: <string, any>) <string, any>
     "team_create" -> teamShown(createTeam(input["draft"]))
     "team_member_add" -> teamShown(addMembers(id, input["members"] ?? ([] as any[])))
     "team_member_update" -> teamShown(updateMember(id, "${input["member"] ?? ""}", input["change"] ?? ({} as <string, any>)))
-    "run_restart" -> detachRun(root, id, ["restart", id])
+    "run_restart" -> detachRun(root, id, ["restart", id, "--yes"])
     "run_answer" -> answerAndGo(root, id, "${input["answer"] ?? ""}", "${input["text"] ?? ""}")
     "line_set" -> setLine(root, { "${input["key"]}": validLineValue("${input["key"]}", input["value"]) })
     "ci_export" -> { "wrote": writeCiFile(root, "${input["provider"] ?? ""}") }

@@ -26,9 +26,9 @@ All of it is in this folder, in two parts while spec 011 (the software factory) 
 |---|---|
 | `setup.nuc` | the set-up: the switch `localModels()` and the profiles offered (`offeredProfiles`, `onStandby`), this machine, the profiles and how each sits on it, the ports, the services at login, the steps (`standby` first on a machine that still has something local, `retireLocal`: the Developer's service and launcher, the models it pulled, Ollama when it installed it, the GB freed; the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |
 | `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `update`, and `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy_imports` of `nuclear.toml` puts each import in its command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |
-| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |
+| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal`; what takes the agents' work back asks first (`takeBackOf`, `--yes`, `--plan`) |
 | `factory.nuc` | the software factory's engine: the stations, the roles' steps, the strategy, the wiring, the repairs, the lead, the acceptance, the diagnosis, the gates, the checks, the money, the delivery |
-| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback, the recovery |
+| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback (every file it takes back set aside first, `undoWrites`: `<id>.set-aside/`), the failed step a retry starts from (`failedStepOf`), the recovery |
 | `specs.nuc`, `spec_line.nuc` | the specs by component and layer (`specs/<component>/[<layer>/]<id>/`, `_global`): their folders, a run's `specPath`; `spec new`, `list`, `move`, `migrate`, a draft's `accept` and `discard` |
 | `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |
 | `usage.nuc`, `metrics.nuc` | the reports (spec 017): the factory's ledger (`~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl`, one line per step, run and chat answer across projects; the lines of a write; the runs of before copied once) and `metrics … --json` (the tool `metrics`): the bill, throughput, cycle, burndown, flow, waiting, quality, people, indicators |
@@ -104,6 +104,8 @@ release brings it in the AI archive (`ai/bin/nuclear-builder`).
 - The page only draws and answers. A run belongs to the extension (`driveRun`'s processes, module-level): closing the
   page or switching tools leaves it running.
 - A run is `.nuclear/builder/runs/<id>.json`, saved on every step: every editor and the command draw that same file.
+- No work of an agent is ever deleted: an undo sets it aside first (`undoWrites`), and what takes it back (a restart, a
+  station or a passed step again, a spec deleted) asks the user first, naming the files and where they are kept.
 - The factory's adapters render a role in a temporary folder of the run, never in the user's files; no agent gets
   a shell; an API key lives only in the keyring and never reaches a log, a run file or an error.
 - Commands are data (`.nuclear/builder.json`): the shell runs nothing that is not there.

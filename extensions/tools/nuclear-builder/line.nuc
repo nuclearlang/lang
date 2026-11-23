@@ -45,7 +45,13 @@ specId(file: Path) string
 tell(e: <string, any>, asJson: boolean, shown: string[]) void
   if asJson
     if e["type"] != "change"
-      print(json.dumps(e, ensureAscii = false), flush = true)
+      // an editor that went away (its window reloaded) closes the pipe: the run goes on, its file is what it draws,
+      // and never fails the step that told it (a closed stdin makes the next question wait)
+      try
+        print(json.dumps(e, ensureAscii = false), flush = true)
+      catch err
+        if not isinstance(err, BrokenPipeError)
+          throw err
     return
   if e["type"] == "ask"
     return
@@ -320,10 +326,36 @@ preparedOrSaid(root: string, files: string[], args: string[]) <string, any>?
     print("${e}", file = sys.stderr)
     return null
 
-// `nuclear-builder retry <id> [--from <station> | --step <step>] [--detach]` · `restart <id>`: what the stations (or
-// the steps) left out wrote is undone first; `--step` runs that step and every step after it. A run of the
-// TypeScript engine (engine 2) can only start again from scratch, with today's stations. `preset` answers the
-// question the run waits on (`run answer`).
+// The files a retry or a restart would take back (each set aside first, `undoWrites`): what the steps it runs again
+// wrote, as `Factory.forget` drops them; none for a run that resumes or recovers (it takes back only unfinished work).
+takeBackOf(run: <string, any>, fromStation: string?, fromStep: string?, scratch: boolean) string[]
+  writes: <string, any>[] = run["writes"] ?? []
+  stations: <string, any>[] = run["stages"]!
+  if scratch
+    return writes.map((w) => "${w["path"]}").unique()
+  if fromStation == null and fromStep == null
+    return [] as string[]
+  at = fromStep != null ? stations.findIndex((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep)) : stations.findIndex((st) => st["id"] == fromStation)
+  if at < 0
+    return [] as string[]
+  ids: string[] = []
+  for st in stations.skip(at)
+    steps: <string, any>[] = st["steps"]!
+    cut = fromStep != null and st["id"] == stations[at]["id"] ? steps.findIndex((x) => x["id"] == fromStep) : 0
+    for i in 0..steps.length
+      x = steps[i]
+      kept = i < cut and (x["status"] == "passed" or x["status"] == "skipped") and x["title"] != "Check the connections"
+      if not kept
+        ids.add("${x["id"]}")
+  writes.filter((w) => w["step"] in ids).map((w) => "${w["path"]}").unique()
+
+// `nuclear-builder retry <id> [--from <station> | --step <step>] [--detach] [--yes] [--plan]` · `restart <id> [--yes]`:
+// what the stations (or the steps) left out wrote is undone first, set aside (`undoWrites`); `--step` runs that step
+// and every step after it, and a failed run with neither goes on from its failed step (`failedStepOf`). What takes
+// back the agents' work asks first: in a terminal a prompt, else refused without `--yes` (exit code 2); `--plan`
+// prints what it would take back (`{run, files, setAside}`) and runs nothing. A run of the TypeScript engine
+// (engine 2) can only start again from scratch, with today's stations. `preset` answers the question the run waits
+// on (`run answer`).
 retryLine(args: string[], scratch: boolean, preset: <string, any>? = null) int
   root = projectRoot("${Path.cwd()}")
   id = args.filter((a) => not a.startsWith("--")).find((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in ["--from", "--step", "--team"]))
@@ -331,34 +363,55 @@ retryLine(args: string[], scratch: boolean, preset: <string, any>? = null) int
   if run == null
     print("no run '${id ?? ""}' (nuclear-builder runs)", file = sys.stderr)
     return 2
+  old = (run!["engine"] ?? 0) < FACTORY_ENGINE
+  if old and not scratch
+    print("the run ${id} was made by the earlier engine: nuclear-builder restart ${id}", file = sys.stderr)
+    return 2
+  fromStation = option(args, "--from")
+  stations: <string, any>[] = run!["stages"]!
+  if fromStation != null and not old and not stations.any((s) => s["id"] == fromStation)
+    print("unknown station '${fromStation}' (${stations.map((s) => "${s["id"]}").join(", ")})", file = sys.stderr)
+    return 2
+  fromStep = scratch ? null : option(args, "--step")
+  // a failed run goes on from the step that failed, keeping every step before it; `--from` runs a whole station again
+  if not scratch and fromStation == null and fromStep == null and run!["status"] == "failed"
+    fromStep = failedStepOf(run!)
+  if fromStep != null and not stations.any((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep))
+    print("the run ${id} has no step '${fromStep}' (the ids are in its .json: <station>-<n>)", file = sys.stderr)
+    return 2
+  files = takeBackOf(run!, fromStation, fromStep, scratch)
+  aside = "${RUNS_DIR}/${id}.set-aside/"
+  if "--plan" in args
+    printJson({ "run": id, "files": files, "setAside": aside })
+    return 0
+  if not files.isEmpty and not ("--yes" in args) and not confirmedHere("${scratch ? "Start the run ${id} over from the Analysis" : "Run ${id} again"}: it takes back ${files.length} file(s) the agents wrote (${files.take(6).join(", ")}${files.length > 6 ? "…" : ""}); their last text is set aside in ${aside}. Go on? [y/N] ", args)
+    print("not done: it would take back ${files.length} file(s) the agents wrote (${files.take(6).join(", ")}${files.length > 6 ? "…" : ""}), set aside in ${aside}; confirm with --yes", file = sys.stderr)
+    return 2
   if "--detach" in args
     if run!["status"] == "running" and not orphaned(run!["owner"])
       printJson({ "error": "the run ${id} is running already" })
       return 1
     command = scratch ? "restart" : "retry"
-    printJson(detachRun(root, id!, [command, ...args.filter((a) => a != "--detach")]))
+    printJson(detachRun(root, id!, [command, ...args.filter((a) => a != "--detach"), ...("--yes" in args ? [] as string[] : ["--yes"])]))
     return 0
   line = readLine(root, "${run!["platform"] ?? ""}")
   team = teamOfRetry(root, option(args, "--team"), "${(run!["factory"] ?? ({} as <string, any>))["team"] ?? ""}")
-  if (run!["engine"] ?? 0) < FACTORY_ENGINE
-    if not scratch
-      print("the run ${id} was made by the earlier engine: nuclear-builder restart ${id}", file = sys.stderr)
-      return 2
-    rollback(root, run!["writes"] ?? [], (s) => false)
+  if old
+    undoWrites(run!, "from scratch, by today's engine", (s) => false)
     fresh = newRun(root, projectCard(root), run!["spec"]!, team, line["stations"] ?? STATIONS, run!["specPath"], run!["assign"])
     fresh["previous"] = [{ "at": nowMs(), "from": "spec", "status": run!["status"], "stages": run!["stages"], "why": "from scratch, by today's engine" }]
+    fresh["setAside"] = run!["setAside"]
     run = fresh
-  fromStation = option(args, "--from")
-  stations: <string, any>[] = run!["stages"]!
-  if fromStation != null and not stations.any((s) => s["id"] == fromStation)
-    print("unknown station '${fromStation}' (${stations.map((s) => "${s["id"]}").join(", ")})", file = sys.stderr)
-    return 2
-  fromStep = scratch ? null : option(args, "--step")
-  if fromStep != null and not stations.any((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep))
-    print("the run ${id} has no step '${fromStep}' (the ids are in its .json: <station>-<n>)", file = sys.stderr)
-    return 2
+    stations = run!["stages"]!
   first = scratch ? "${stations[0]["id"]}" : fromStation
   exitOf(factoryOf(run!, team, args, line, preset).start(first, fromStep))
+
+// The user's yes in a terminal (never asked with `--events`, a CI job or no terminal: those confirm with `--yes`).
+confirmedHere(question: string, args: string[]) boolean
+  if "--events" in args or not sys.stdin.isatty()
+    return false
+  print(question, end = "", flush = true)
+  "${sys.stdin.readline()}".trim().lower() in ["y", "yes"]
 
 runsLine(args: string[] = []) int
   root = projectRoot("${Path.cwd()}")

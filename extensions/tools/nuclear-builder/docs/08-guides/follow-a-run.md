@@ -105,17 +105,25 @@ approve; it never merges. The run's drawer lists the documents.
 
 ## Run anything again
 
-- *Run <station> again*, on every station and every step: it and every station after it run again; the stations
-  before it are kept.
-- *Run again from scratch*, on the run: every station from the Analysis.
+- *Retry from the failed step*, the main action of a failed run: it goes on from the step that stopped it; every step
+  before it is kept, the code the Developer already wrote among them. A test that failed after the code was written
+  runs again over that code.
+- *Retry this step*, in a failed step's detail: that step and every step after it.
+- *Run <station> again*, on every station: it and every station after it run again; the stations before it are kept.
+- *Start over…*, on the run: every station from the Analysis, after you confirm.
 
-What the steps left out wrote is undone first. A file you changed since the run wrote it is kept, and the page says
-so. The attempt left behind stays under the run with its reason. A run made by the earlier engine can only run again
-from scratch.
+**Nothing is lost.** What a run takes back (a failed step's files, a station or the whole run run again) is copied first
+to `.nuclear/builder/runs/<run>.set-aside/<time>/`, at each file's own path: copy back what you want from there. The
+run's *Set aside* lists each copy. Running a station again, a passed step again or the whole run asks you first,
+naming how many files the agents wrote go back and where they are kept; *Cancel* is the default. A file you changed
+since the run wrote it is kept where it is, and the page says so. The attempt left behind stays under the run with its
+reason. A run made by the earlier engine can only start over.
 
 ```sh
-nuclear-builder retry <run> [--from <station>]
-nuclear-builder restart <run>
+nuclear-builder retry <run>                          # from the failed step
+nuclear-builder retry <run> --step <step> | --from <station> [--yes]
+nuclear-builder retry <run> --from <station> --plan  # what it would take back, and where it is kept
+nuclear-builder restart <run> [--yes]                # asked in a terminal; elsewhere refused without --yes
 ```
 
 Over MCP: `developer_retry`.
@@ -127,8 +135,8 @@ Over MCP: `developer_retry`.
 - When a station fails, the member who worked it reads the failure once (*Why it failed, and the repair*): when it
   can fix it (a document to correct, a check's findings to follow), the station runs once more with that diagnosis,
   by itself; when it cannot, or fails again, the run stops with the diagnosis for you. The diagnosis costs at most
-  0.50 USD of the run's budget. *↻ Run <station> again* (or `nuclear-builder retry <run>`) runs it again from there,
-  keeping every station that passed.
+  0.50 USD of the run's budget. *↻ Retry from the failed step* (or `nuclear-builder retry <run>`) goes on from there,
+  keeping every step before it.
 - Several specs in one run (`nuclear-builder run a.md b.md`): they go one after the other; a failure stops the run on
   that spec, and a retry goes on from it.
 

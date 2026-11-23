@@ -352,17 +352,23 @@ public final class NuclearBuilder {
             start(item.project(), List.of("run", "--resume", item.run()));
         }
 
-        /** A station and every one after it again; what they wrote is undone first. */
+        /** A failed run from its failed step (every step before it kept), or a station and every one after it, or from
+         * scratch: what those take back of the agents' work is asked first (Cancel is the default) and set aside. */
         void retry() {
             Item item = selected();
             if (item == null || item.run() == null) {
                 Messages.showInfoMessage(project, "Select a run first.", "Nuclear Builder");
                 return;
             }
-            String[] stations = {"analysis", "design", "tests", "code", "quality", "delivery", "from scratch"};
-            int i = Messages.showChooseDialog(project, "Run again from the station", "Run a Station Again", null, stations, stations[3]);
+            String[] stations = {"the failed step", "analysis", "design", "tests", "code", "quality", "delivery", "from scratch (start over)"};
+            int i = Messages.showChooseDialog(project, "Run again from", "Run Again", null, stations, stations[0]);
             if (i < 0) return;
-            start(item.project(), i == stations.length - 1 ? List.of("restart", item.run()) : List.of("retry", item.run(), "--from", stations[i]));
+            if (i > 0) {
+                String what = i == stations.length - 1 ? "Every station runs again from the Analysis" : "The station " + stations[i] + " and every one after it run again";
+                int go = Messages.showDialog(project, what + ": the files their steps wrote go back to what they were first. Nothing is lost: what they hold now is set aside first in .nuclear/builder/runs/" + item.run() + ".set-aside/.", "Take Back the Agents' Work?", new String[]{"Take them back", "Cancel"}, 1, Messages.getWarningIcon());
+                if (go != 0) return;
+            }
+            start(item.project(), i == 0 ? List.of("retry", item.run()) : i == stations.length - 1 ? List.of("restart", item.run(), "--yes") : List.of("retry", item.run(), "--from", stations[i], "--yes"));
         }
 
         void ci() {

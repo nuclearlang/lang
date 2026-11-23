@@ -166,6 +166,9 @@ journalMarkdown(run: <string, any>) string
   for p in (run["previous"] ?? []) as <string, any>[]
     undone: string[] = p["undone"] ?? []
     out.addAll(["", "- Retried from ${p["from"]} at ${when(p["at"])}: ${p["why"] ?? ""} (the earlier attempt ${p["status"]}; kept in the run's .json)${undone.isEmpty ? "" : "; undone: ${undone.join(", ")}"}"])
+  for k in (run["setAside"] ?? []) as <string, any>[]
+    kept: string[] = k["files"] ?? []
+    out.addAll(["", "- Set aside at ${when(k["at"])} (${k["why"] ?? ""}): ${kept.join(", ")}; their last text is in ${k["folder"]}/"])
   for i in (run["interrupted"] ?? []) as <string, any>[]
     undone: string[] = i["undone"] ?? []
     out.addAll(["", "- Interrupted at ${i["stage"]}${"${i["step"] ?? ""}".isEmpty ? "" : " · ${i["step"]}"} (${when(i["at"])}): the process that ran it stopped; undone: ${undone.isEmpty ? "nothing" : undone.join(", ")}; the trace log is ${RUNS_DIR}/${run["id"]}.log"])
@@ -342,8 +345,9 @@ ledger(run: <string, any>, step: string, before: <string, string>) string[]
   changed
 
 // Undoes the writes of the steps that did not pass, newest first: each file goes back to what it was. A file changed
-// since the run wrote it is the user's: it is kept and named in `changed`.
-rollback(root: string, writes: <string, any>[], passed: (step: string) => boolean, changed: string[] = []) string[]
+// since the run wrote it is the user's: it is kept and named in `changed`. Nothing an agent wrote is lost: before a
+// file goes back (or away), what it holds now is copied under `keep` at its own path (the newest text only).
+rollback(root: string, keep: Path, writes: <string, any>[], passed: (step: string) => boolean, changed: string[] = []) string[]
   undone: string[] = []
   for w in writes.reversed()
     if passed(w["step"]!)
@@ -354,12 +358,46 @@ rollback(root: string, writes: <string, any>[], passed: (step: string) => boolea
       if not (w["path"] in changed)
         changed.add(w["path"]!)
       continue
+    copy = keep.joinpath(w["path"]!)
+    if now != null and not copy.exists()
+      copy.parent.mkdir(parents = true, existOk = true)
+      copy.writeText(now!, encoding = "utf-8")
     if w["before"] == null
       file.unlink(missingOk = true)
     else
       writeAtomic(file, w["before"]!)
     undone.add(w["path"]!)
   undone
+
+// The rollback of a run, its files set aside first: `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>`, named in the
+// run's `setAside` (`at`, `folder`, `files`, `why`) for the user to copy back. A copy, not git: a project need not
+// be a repository, and a copy never touches the user's branches.
+undoWrites(run: <string, any>, why: string, passed: (step: string) => boolean, changed: string[] = []) string[]
+  at = nowMs()
+  folder = "${RUNS_DIR}/${run["id"]}.set-aside/${at}"
+  undone = rollback(run["root"]!, Path(run["root"]!, folder), run["writes"] ?? [], passed, changed)
+  if Path(run["root"]!, folder).exists()
+    setAside: <string, any>[] = run["setAside"] ?? []
+    setAside.add({ "at": at, "folder": folder, "files": undone.unique(), "why": why })
+    run["setAside"] = setAside
+  undone
+
+// The step a retry starts from: in the station that failed, the first step that failed after the last one that
+// passed (what stopped it; a failure the station repaired by itself is left behind). Null: no station failed.
+failedStepOf(run: <string, any>) string?
+  for st in run["stages"] as <string, any>[]
+    if st["status"] != "failed"
+      continue
+    steps: <string, any>[] = st["steps"] ?? []
+    bad: string? = null
+    for x in steps
+      if x["status"] == "passed"
+        bad = null
+      else if x["status"] == "failed" and bad == null
+        bad = "${x["id"]}"
+    if bad != null
+      return bad
+  null
 
 passedSteps(run: <string, any>) string[]
   ids: string[] = []
@@ -399,7 +437,7 @@ recoverRun(run: <string, any>) boolean
       if stage.isEmpty
         stage = st["id"]!
   kept = passedSteps(run)
-  undone = rollback(run["root"]!, run["writes"] ?? [], (id) => id in kept)
+  undone = undoWrites(run, "interrupted", (id) => id in kept)
   run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
   interrupted: <string, any>[] = run["interrupted"] ?? []
   interrupted.add({ "at": nowMs(), "stage": stage, "step": step, "stepId": stepId, "undone": undone })

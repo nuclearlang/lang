@@ -28,7 +28,7 @@ import { CONFIG_FILE, githubIssue, jiraIssue, JiraAuth, jiraMine, suggestContext
 import { missingCommand } from './support';
 import { chat, teamChannel } from '../../../vscode/src/chatView';
 import { askPost, askText, buttonOf, ChatEvent, fmt, lineDiff, RUN_TEXTS, runPosts } from '../../../vscode/src/chatHost';
-import { inline, initials, providerName, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
+import { failedStepOf, inline, initials, providerName, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
 import { assetUrl } from '../../../vscode/src/assetsPage';
 
 export interface BuilderProject {
@@ -54,7 +54,7 @@ type Message =
   | { type: 'atlas'; channel?: string }
   | { type: 'polish'; id: string }
   | { type: 'stop'; id: string }
-  | { type: 'retry'; id: string; station?: string; scratch?: boolean }
+  | { type: 'retry'; id: string; station?: string; step?: string; scratch?: boolean }
   | { type: 'answer'; id: string; ask: string; answer: Answer }
   | { type: 'resume'; id: string }
   | { type: 'context'; id: string }
@@ -501,7 +501,7 @@ function lite(r: Run): RunLite {
 }
 
 /** The page's helpers, inlined in its script: their source, and `W` naming them whatever the bundle called them. */
-const WORKBENCH_JS = inline({ specTree, specOfPath, runOutline, teamLog, providerName, whoLabel, stepTree, stepTitle, initials, teamColor });
+const WORKBENCH_JS = inline({ failedStepOf, specTree, specOfPath, runOutline, teamLog, providerName, whoLabel, stepTree, stepTitle, initials, teamColor });
 
 export class BuilderPanel {
   static current: BuilderPanel | undefined;
@@ -769,13 +769,22 @@ export class BuilderPanel {
         if (m.scratch || (run.engine ?? 0) < FACTORY_ENGINE) {
           // it undoes files: said before it is done (a file changed since the run wrote it is kept either way)
           const files = [...new Set((run.writes ?? []).map((w) => w.path))];
-          const scratch = l10n.t('Run from scratch');
-          const go = await vscode.window.showWarningMessage(l10n.t('Run "{0}" again from scratch?', run.spec.title), { modal: true, detail: [l10n.t('Every station runs again from the Analysis.'), files.length ? l10n.t('The {0} file(s) this run wrote go back to what they were first ({1}); a file you changed since is kept.', files.length, files.slice(0, 6).join(', ') + (files.length > 6 ? '…' : '')) : l10n.t('This run wrote no file.'), l10n.t("The attempt that ends here stays in the run's history.")].join(' ') }, scratch);
+          const scratch = l10n.t('Start over');
+          const go = await vscode.window.showWarningMessage(l10n.t('Start "{0}" over from the Analysis?', run.spec.title), { modal: true, detail: [l10n.t('Every station runs again from the Analysis, the ones that passed too.'), files.length ? l10n.t('The {0} file(s) this run wrote go back to what they were first ({1}); a file you changed since is kept.', files.length, files.slice(0, 6).join(', ') + (files.length > 6 ? '…' : '')) : l10n.t('This run wrote no file.'), files.length ? l10n.t('Nothing is lost: what they hold now is set aside first in {0}.', '.nuclear/builder/runs/' + run.id + '.set-aside/') : '', l10n.t("The attempt that ends here stays in the run's history.")].filter(Boolean).join(' ') }, scratch);
           if (go !== scratch) return;
-          driveRun(this.root, m.id, ['restart', m.id]);
+          driveRun(this.root, m.id, ['restart', m.id, '--yes']);
           return;
         }
-        driveRun(this.root, m.id, ['retry', m.id, ...(m.station ? ['--from', m.station] : [])]);
+        const args = ['retry', m.id, ...(m.step ? ['--step', m.step] : m.station ? ['--from', m.station] : [])];
+        // a station or a step that passed run again takes back what the agents wrote: the engine says which files, the user confirms
+        const plan = await lineJson<{ files?: string[]; setAside?: string; error?: string }>(this.root, [...args, '--plan']).catch(() => ({ files: [] as string[], setAside: '' }));
+        const taken = plan.files ?? [];
+        if (taken.length) {
+          const back = l10n.t('Take them back');
+          const go = await vscode.window.showWarningMessage(l10n.t('Run "{0}" again and take back {1} file(s) the agents wrote?', run.spec.title, taken.length), { modal: true, detail: [l10n.t('The steps run again wrote them: {0}.', taken.slice(0, 6).join(', ') + (taken.length > 6 ? '…' : '')), l10n.t('Nothing is lost: what they hold now is set aside first in {0}.', plan.setAside ?? ''), l10n.t('Every step before it is kept.')].join(' ') }, back);
+          if (go !== back) return;
+        }
+        driveRun(this.root, m.id, [...args, '--yes']);
         return;
       }
       case 'answer':
@@ -1414,7 +1423,7 @@ function specOf() {
 // The diagram (flow.tsx) in C4's four levels: the context, the pipeline, inside a station, inside a step. A click on
 // any node opens it on the right: what it did, the decisions it took and why, its documents and files. What a station
 // asks (a gate, QA's plan, the spending) is above the team; a station can be run again, and the whole run from scratch.
-function failedStep(r) { for (const st of r.stages) { if (st.status !== 'failed') continue; const bad = [...st.steps].reverse().find((x) => x.status === 'failed'); if (bad) return { st, x: bad }; } return null; }
+const failedStep = (r) => W.failedStepOf(r);
 const live = (r) => S.running.includes(r.id);
 const factory = (r) => (r.engine ?? 0) >= 3;
 /** Where the run is, or where it failed or waits: what is open when the user chose nothing. */
@@ -1536,12 +1545,14 @@ function nodeOf(r) {
   return '<div class="nh"><div class="dhead">' + (st.role ? av(st.role) : '') + '<h2>' + esc(st.title) + '</h2><span class="pill"><span class="dot st-' + st.status + '"></span> ' + esc(STATUS(st.status)) + '</span><span class="muted">' + dur(st) + '</span></div>'
     + (st.role ? '<div class="who1" title="' + esc(ACTORS[who(st.role)].does) + '">' + esc(whoFor(st.role, st)) + '</div>' : '')
     + '<div class="acts">' + (!live(r) && factory(r) && st.status !== 'pending' ? '<button id="retryStage" class="primary" title="' + esc(t('retryStageHint')) + '">↻ ' + esc(t('retryStage', st.title)) + '</button>' : '')
+    + (x && x.status === 'failed' && !live(r) && factory(r) && r.status === 'failed' ? '<button id="retryOne" class="primary" title="' + esc(t('retryOneHint')) + '">↻ ' + esc(t('retryOne')) + '</button>' : '')
     + (x ? '<button id="inStep" title="' + esc(t('insideStepHint')) + '">⤢ ' + esc(t('insideStep')) + '</button>' : '')
     + '<button data-over="1" class="ghost" title="' + esc(t('backToRunHint')) + '">‹ ' + esc(t('theRun')) + '</button></div></div>'
     + tree(st.steps.map((y) => stepItem(r, st, y)));
 }
 function runNode(r) {
   const active = r.stages.find((s) => s.status === 'running' || s.status === 'waiting');
+  const aside = (r.setAside ?? []).map((k) => '<div class="crow"><span class="dot st-skipped"></span><div>' + esc(t('setAside', k.files.length, k.folder + '/')) + '<small>' + new Date(k.at).toLocaleString(LANG) + ' · ' + esc(k.files.slice(0, 6).join(', ') + (k.files.length > 6 ? '…' : '')) + '</small></div></div>').join('');
   const tries = (r.previous ?? []).map((p, i) => '<div class="crow"><span class="dot st-' + p.status + '"></span><div>' + esc(t('attempt', i + 1, STATUS(p.status), p.from)) + (p.why ? ': ' + esc(p.why) : '') + '<small>' + new Date(p.at).toLocaleString(LANG) + (p.undone?.length ? ' · ' + esc(t('undone', p.undone.join(', '))) : '') + '</small></div></div>').join('');
   const crit = r.spec.criteria.map((c) => '<div class="crow">☐<div>' + esc(c) + '</div></div>').join('');
   const docs = r.stages.flatMap((s) => s.steps.flatMap((x) => (x.files ?? []).filter((f) => f.startsWith('specs/')))).filter((f, i, all) => all.indexOf(f) === i);
@@ -1552,7 +1563,8 @@ function runNode(r) {
     + fold('checks', esc(t('checksTitle')) + (list ? ' <span class="muted">' + esc(t('checksCount', list.filter((c) => c.on).length, list.length)) + '</span>' : ''), consoleOf(r))
     + fold('crit', esc(t('accTitle')) + ' <span class="muted">' + r.spec.criteria.length + '</span>', crit)
     + fold('docs', esc(t('documents')), docs.map((f) => '<div><a data-open="' + esc(f) + '">' + esc(f) + '</a></div>').join(''))
-    + fold('tries', esc(t('earlierAttempts')) + ' <span class="muted">' + (r.previous ?? []).length + '</span>', tries ? tries + '<small class="muted block">' + esc(t('keptWhole', r.id)) + '</small>' : '');
+    + fold('tries', esc(t('earlierAttempts')) + ' <span class="muted">' + (r.previous ?? []).length + '</span>', tries ? tries + '<small class="muted block">' + esc(t('keptWhole', r.id)) + '</small>' : '')
+    + fold('aside', esc(t('setAsideTitle')) + ' <span class="muted">' + (r.setAside ?? []).length + '</span>', aside);
 }
 /** The stations a spec goes through, each with its role: what the node column says before there is a run. */
 function stationsInfo() {
@@ -1635,7 +1647,7 @@ function head(r) {
   const station = bad ? r.stages.find((s) => s.id === bad.st.id) : null;
   return '<div class="top"><div class="head"><h1>' + esc(r.spec.title) + '</h1><span class="pill"><span class="dot st-' + r.status + '"></span> ' + esc(STATUS(r.status)) + '</span><span class="muted">' + bits.join(' · ') + '</span><div class="grow"></div>'
     + (!idle ? '<button id="stop" title="' + esc(r.waiting ? t('stopWaitingHint') : t('stopHint')) + '">■ ' + esc(t('stop')) + '</button>' : '')
-    + (idle && station && factory(r) && r.status === 'failed' ? '<button id="retry" class="primary" data-station="' + esc(station.id) + '" title="' + esc(t('retryHint')) + '">↻ ' + esc(t('retry', station.title)) + '</button>' : '')
+    + (idle && station && factory(r) && r.status === 'failed' ? '<button id="retry" class="primary" data-step="' + esc(bad.x.id) + '" title="' + esc(t('retryHint', W.stepTitle(bad.x, T), station.title)) + '">↻ ' + esc(t('retry')) + '</button>' : '')
     + (idle && r.status === 'waiting' && !r.waiting ? '<button id="resume" class="primary" title="' + esc(t('resumeHint')) + '">▶ ' + esc(t('resume')) + '</button>' : '')
     + (idle ? '<button id="scratch" title="' + esc(t('scratchHint')) + '">⟲ ' + esc(t('scratch')) + '</button>' : '')
     + '<button data-act="detail">' + esc(detailed ? t('prog.simple') : t('prog.detail')) + '</button>'
@@ -1802,7 +1814,8 @@ document.addEventListener('click', (e) => {
     case 'openBudget': return vscode.postMessage({ type: 'openSection', id: 'spending' });
     case 'stop': return vscode.postMessage({ type: 'stop', id: view.run.id });
     case 'resume': return vscode.postMessage({ type: 'resume', id: view.run.id });
-    case 'retry': view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, station: d.station });
+    case 'retry': view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, step: d.step });
+    case 'retryOne': { const step = view.step; view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, step }); }
     case 'retryStage': { const station = view.stage; view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, station }); }
     case 'inStep': Object.assign(view, { open: view.stage, inStep: view.step, level: null, auto: false }); drawRun(); return report();
     case 'scratch': view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, scratch: true });

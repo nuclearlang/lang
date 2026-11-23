@@ -198,6 +198,22 @@ export function teamColor(id: string): string {
   return 'hsl(' + (h % 360) + ', 52%, 42%)';
 }
 
+/** The step a retry starts from, as `nuclear-builder retry <id>` takes it (run.nuc `failedStepOf`): in the station
+ * that failed, the first step that failed after its last step that passed (a failure the station repaired by itself is
+ * behind it). Null: no station failed. */
+export function failedStepOf<S extends { status: string; steps: { id: string; status: string }[] }>(run: { stages: S[] }): { st: S; x: S['steps'][number] } | null {
+  for (const st of run.stages) {
+    if (st.status !== 'failed') continue;
+    let bad: S['steps'][number] | null = null;
+    for (const x of st.steps) {
+      if (x.status === 'passed') bad = null;
+      else if (x.status === 'failed' && !bad) bad = x;
+    }
+    if (bad) return { st, x: bad };
+  }
+  return null;
+}
+
 /** The source of `fns` for a page's script, and `W` naming each by its key (whatever name the bundle gave it): the
  * functions must use nothing outside themselves but each other. */
 export function inline(fns: Record<string, (...a: never[]) => unknown>): string {

@@ -16,7 +16,7 @@ import { migrateSettings } from '../../../vscode/src/migrateSettings';
 import { addMembers, agentsHere, CommandMissing, createTeam, listTeams, removeMember, roleMember, roster, saveTeam, showTeam, suggestMembers, suggestNames, teamScreen, updateMember, vaultSet } from '../src/teams/cli';
 import { LineRun, lineJson, localSpecs, newRunId, orphaned, Run, specMarkdown, writeSpec } from '../src/runs';
 import { beatOf, beatState, isToolCall, storyOf } from '../src/story';
-import { initials, inline, providerName, runOutline, stepTitle, specOfPath, specTree, stepTree, teamColor, teamLog, teamWork, whoLabel } from '../src/workbench';
+import { failedStepOf, initials, inline, providerName, runOutline, stepTitle, specOfPath, specTree, stepTree, teamColor, teamLog, teamWork, whoLabel } from '../src/workbench';
 import { factoryDir, logoData, rosterFaces } from '../src/teams/cli';
 import { budgetGauge, filterRoster, memberActivity, statLevel, teamSpend } from '../src/teams/hud';
 import { differences, draftOf, filterPool, missingRoles, paidMembers, roleCounts, rosterSkills, sameForAll } from '../src/teams/wizard';
@@ -359,6 +359,17 @@ test('who did a piece of work is one label: employee, role, provider, model; wha
   assert.equal(whoLabel({ name: 'Shell', provider: 'shell' }), 'Shell');
   assert.equal(providerName('opencode'), 'OpenCode');
   assert.equal(providerName('someone-new'), 'someone-new');
+});
+
+test('a failed run is retried from its failed step: the first failure after the station\'s last passed step, as the engine takes it', () => {
+  const steps = [{ id: 'code-1', status: 'failed' }, { id: 'code-2', status: 'skipped' }, { id: 'code-3', status: 'passed' }, { id: 'code-4', status: 'failed' }, { id: 'code-5', status: 'failed' }];
+  const run = { stages: [{ id: 'tests', status: 'passed', steps: [{ id: 'tests-1', status: 'failed' }] }, { id: 'code', status: 'failed', steps }] };
+  // the Developer's code (code-3) passed: the retry starts at the check that failed after it, never at the attempt the station repaired
+  assert.equal(failedStepOf(run)?.x.id, 'code-4');
+  assert.equal(failedStepOf(run)?.st.id, 'code');
+  assert.equal(failedStepOf({ stages: [{ id: 'code', status: 'passed', steps }] }), null);
+  // the page has it inlined, with the other functions it computes
+  assert.match(inline({ failedStepOf }), /W = \{ failedStepOf: /);
 });
 
 test('a step opens like a debugger: outcome, trace and tool calls in order (a call to its input and output), decisions, files, log', () => {

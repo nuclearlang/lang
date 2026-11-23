@@ -173,8 +173,8 @@ step working or failed and its neighbours.
 | `nuclear-builder run --resume <id> [--events]` | a run that waits goes on (it asks its question again) |
 | `nuclear-builder run answer <id> --answer … [--text …]` | the answer to the question a run waits on: to its process (the answer file) or the run goes on with it; never the spending |
 | `nuclear-builder run stop\|show\|journal <id>` | a run's process stopped (a run that asks waits); its file; its journal |
-| `nuclear-builder retry <run> [--from <station>]` | a run again from the station that did not pass, or from a station |
-| `nuclear-builder restart <run>` | every station again from scratch (a run of the earlier engine too) |
+| `nuclear-builder retry <run> [--from <station> \| --step <step>] [--yes] [--plan]` | a failed run again from its failed step (every step before it kept), or from a station or a step; what it would take back of the agents' work is asked first (a terminal's prompt, else refused without `--yes`), `--plan` says it |
+| `nuclear-builder restart <run> [--yes]` | every station again from scratch (a run of the earlier engine too), asked first the same way |
 | `nuclear-builder checks <run> [list \| on \| off \| add \| mark] --json` | the run's checks (the console) |
 | `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` |
 | `nuclear-builder export github\|gitlab\|bitbucket` | writes the CI file |

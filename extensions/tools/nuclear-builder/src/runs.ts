@@ -160,6 +160,8 @@ export interface Run {
   owner?: Owner | null;
   writes?: { path: string; step: string }[];
   previous?: { at: number; from: string; status: string; why?: string; undone?: string[] }[];
+  /** What an undo took back, set aside first (`.nuclear/builder/runs/<id>.set-aside/<at>/<path>`): nothing an agent wrote is lost. */
+  setAside?: { at: number; folder: string; files: string[]; why?: string }[];
   interrupted?: { at: number; stage: string; step: string; undone: string[] }[];
 }
 

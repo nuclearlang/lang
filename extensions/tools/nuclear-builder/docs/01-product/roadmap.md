@@ -40,6 +40,12 @@ What the agents, the strategies and the generators still lack is in their own pr
   answer file on Windows is stopped by `os.kill` without the undo of an interrupt (the next retry's recovery undoes
   it); the real Claude Code and OpenCode run of a member with both servers (prepared, not made: it costs money).
 
+- **The work an undo sets aside** (`.nuclear/builder/runs/<id>.set-aside/`, [engine.md](../02-architecture/engine.md)).
+  Left: a *Restore* action (a command, its tool, a button) that copies a set-aside folder
+  back (today by hand); how long the folders are kept (today: forever); whether a failed step's own files should be
+  undone at all (a Developer cut by its time limit after 186 files loses them from the project, set aside, and the
+  repair starts over: for the user to decide); a retry button in the run's thread of Nuclear Chat; the JetBrains
+  dialogs and the VS Code modals were not clicked in a real editor.
 - **The software factory in Nuclear** ([spec 011](../../../../../docs/04-specs/011-software-factory/tasks.md),
   phases 2 and 3). Done: the teams, the vault, the adapters of every provider, the stations, the gates, the checks,
   the money, the delivery, today's safety (with the watch of a stalled call and a retry from one step), today's agent

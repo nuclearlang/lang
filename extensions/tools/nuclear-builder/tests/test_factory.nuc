@@ -785,3 +785,80 @@ testTheCiFileIsComparedWithoutWritingIt(tmpPath: Path, monkeypatch: any) void
 testTheSameQuestionWithOtherWordsIsAskedOnce() void
   expect(sameQuestion("which CI host (github, gitlab or bitbucket) exports the line's file?", "Which CI host (github, gitlab or bitbucket) exports the line's file, and do you approve adding it?"))
   expect(not sameQuestion("which CI host (github, gitlab or bitbucket) exports the line's file?", "Initialize the git repository and give it a remote?"))
+
+// ---------- a retry from the failed step, and nothing an undo deletes is lost ----------
+
+testARetryGoesOnFromTheFailedStepKeepingTheDevelopersCodeAndEveryStepBeforeIt(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["test -f lib/never.nuc"], "build": [] as string[], "test": [] as string[] } })
+  calls: string[] = []
+  run = factory(root, localCrew(), [], developer(calls)).start()
+  expect(run["status"] == "failed" and Path(root, "lib", "count.nuc").readText() == "count() int = 0\n")
+  // the step that stopped it: the code station's check, after the Developer's code that passed
+  step = failedStepOf(run)!
+  code: <string, any> = (run["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
+  bad: <string, any> = (code["steps"] as <string, any>[]).find((x) => x["id"] == step)!
+  expect(bad["status"] == "failed" and bad["phase"] == "check", "the failed step is the check: ${bad}")
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[] }, "gates": [] as string[] }))
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  done = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start(null, step)
+  // only from that step: no station before it ran again, the Developer did not write the code again, nothing undone
+  expect(done["status"] == "passed", "${done["status"]}")
+  expect(calls.count((c) => c == "/developer/analyze") == 1 and calls.count((c) => c == "/developer/code") == 1 and calls.count((c) => c == "/developer/test") == 1)
+  expect(Path(root, "lib", "count.nuc").readText() == "count() int = 0\n" and Path(root, "test", "count_the_books_test.nuc").exists())
+  last: <string, any> = (done["previous"] as <string, any>[]).last
+  expect(last["from"] == "code" and last["step"] == step and last["undone"] == [], "${last["undone"]}")
+  kept: <string, any> = (done["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
+  expect((kept["steps"] as <string, any>[]).any((x) => x["title"] == "Developer: Code" and x["status"] == "passed"))
+  // the rule: the first failure after the station's last passed step (a failure it repaired by itself is behind)
+  steps: <string, any>[] = [{ "id": "code-1", "status": "failed" }, { "id": "code-2", "status": "skipped" }, { "id": "code-3", "status": "passed" }, { "id": "code-4", "status": "failed" }, { "id": "code-5", "status": "failed" }]
+  expect(failedStepOf({ "stages": [{ "id": "code", "status": "failed", "steps": steps }] }) == "code-4" and failedStepOf({ "stages": [{ "id": "code", "status": "passed", "steps": steps }] }) == null)
+
+testNothingAnUndoTakesBackIsLostItIsSetAsideFirst(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  f = factory(root, localCrew(), given, developer(calls))
+  expect(f.start()["status"] == "passed")
+  code = Path(root, "lib", "count.nuc").readText()
+  Path(root, "test", "count_the_books_test.nuc").writeText("mine\n")
+  // from scratch: every file the run wrote goes back, and what it held is copied first
+  f.forget(0, "from scratch")
+  expect(not Path(root, "lib", "count.nuc").exists())
+  aside: <string, any> = (f.run["setAside"] as <string, any>[]).last
+  folder = Path(root, "${aside["folder"]}")
+  expect("${aside["folder"]}".startsWith("${RUNS_DIR}/count-books.set-aside/") and "lib/count.nuc" in (aside["files"] as string[]))
+  expect(folder.joinpath("lib", "count.nuc").readText() == code, "the Developer's code is set aside whole")
+  // the user's own change stays where it is (not undone, so not copied)
+  expect(Path(root, "test", "count_the_books_test.nuc").readText() == "mine\n" and not folder.joinpath("test", "count_the_books_test.nuc").exists())
+  // the folder is the run's own: no later step's ledger takes it for the project's files
+  expect(not contents(root).keys.any((k) => k.startsWith(".nuclear")))
+  saveRun(f.run)
+  expect("- Set aside at " in Path(root, RUNS_DIR, "count-books.md").readText())
+
+testARestartOrARetryThatTakesBackTheAgentsWorkDoesNothingWithoutTheUsersYes(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  f = factory(root, localCrew(), given, developer(calls))
+  expect(f.start()["status"] == "passed")
+  code = Path(root, "lib", "count.nuc").readText()
+  before = Path(root, RUNS_DIR, "count-books.json").readText()
+  monkeypatch.chdir(root)
+  capsys.readouterr()
+  // no terminal and no --yes: refused, nothing taken back, the run file as it was, no folder set aside
+  expect(retryLine(["count-books"], true) == 2)
+  expect("confirm with --yes" in capsys.readouterr().err)
+  expect(retryLine(["count-books", "--from", "code", "--detach"], false) == 2)
+  expect(Path(root, "lib", "count.nuc").readText() == code and Path(root, RUNS_DIR, "count-books.json").readText() == before and not Path(root, RUNS_DIR, "count-books.set-aside").exists())
+  // what it would take back, told first: the editors' modal names these files
+  capsys.readouterr()
+  expect(retryLine(["count-books", "--plan"], true) == 0)
+  plan: <string, any> = json.loads(capsys.readouterr().out)
+  expect("lib/count.nuc" in (plan["files"] as string[]) and plan["setAside"] == "${RUNS_DIR}/count-books.set-aside/")
+  // the agent's tool too: refused without confirm, with the files to ask about
+  said: <string, any> = json.loads(BuilderTools(root).runRetryTool("count-books", "code"))
+  expect("confirm = true" in "${said["error"]}" and "lib/count.nuc" in (said["files"] as string[]), "${said}")
+  expect(Path(root, "lib", "count.nuc").readText() == code)

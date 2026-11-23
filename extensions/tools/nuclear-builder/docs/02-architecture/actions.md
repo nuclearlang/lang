@@ -55,8 +55,8 @@ never run there (a workspace is no project).
 |---|---|---|---|
 | Start a spec, or several in one run (in order, one bill), with a team (`--assign <role>=<member>`: who works a role; else its first member) | `run <spec.md> [<spec.md>…] [--team <id>] [--assign …] --events` (the page) · `--detach` (apart) | `run_start` (`spec`, or `specs`) | spending |
 | Resume a run that waits | `run --resume <id>` | `run_resume` | spending |
-| Retry from the station that failed, from a station, from a step | `retry <id> [--from <station>] [--step <step>]` | `run_retry` | spending |
-| Run from scratch (its files go back) | `restart <id>` | `run_restart` | user |
+| Retry from the failed step (the page's main action on a failed run), *Retry this step* (a failed step's detail), *Run <station> again* | `retry <id> [--step <step> \| --from <station>] [--yes]` (`--plan --json`: the files it would take back, which the page asks about in a modal before it passes `--yes`) | `run_retry` (`confirm`: refused without it when it would take back the agents' work) | spending; taking back the agents' work: user |
+| Start over from the Analysis (its files go back, set aside first) | `restart <id> --yes` (the page's modal first; without `--yes` a terminal is asked, anything else refused) | `run_restart` | user |
 | Stop | `run stop <id>` | `run_stop` | anyone |
 | The runs | `runs --json` | `runs` | anyone |
 | A run's file | `run show <id>` | `run_file` | anyone |
