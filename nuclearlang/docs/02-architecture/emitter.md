@@ -129,7 +129,9 @@ the type definitions (`Paths.machine()["k"]`), a member.
 - A method named like a member of a base in the file → `override` (extended bases; TS `override`, Dart
   `@override`) or `override_interface` (interfaces; Dart only). `inherited_members(_known)` walks the bases in
   the file and the dialect's type definitions (`Dialect.defs`). A base found in neither leaves the module
-  `open` (no N0106). `options.implicit_base` (Dart: `Object`) makes `toString()` an override. A base with
+  `open` (no N0106). `options.implicit_base` (Dart: `Object`) makes `toString()` an override. An override of a method the definitions mark
+  `must_call_super` gets `super.<name>(...)` (`with_super_call`): last when `options.super_call_last` names it, first
+  otherwise (ADR-lang-0014). A base with
   `kind = "interface"` in the defs goes to `implements`. Kinds use `inherits = ["State"]`; a kind's `inherits`
   count as bases.
 - Constructors of inheriting modules: `super(...)` first in the body; its arguments see the parameters as

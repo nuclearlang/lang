@@ -557,6 +557,12 @@ pub const OPTIONS: &[OptionSpec] = &[
         "class every class extends in the target (Dart: Object); with [dialect] defs, overriding its members (toString) is marked",
     ),
     o(
+        "super_call_last",
+        "array",
+        "[]",
+        "methods whose override calls the overridden one last (teardown: dispose, close); every other method the type definitions mark must_call_super calls it first",
+    ),
+    o(
         "super_in_initializer",
         "bool",
         "false",

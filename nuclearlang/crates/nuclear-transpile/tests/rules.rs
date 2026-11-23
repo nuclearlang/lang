@@ -1489,3 +1489,30 @@ fn a_helper_keeps_the_positions_of_the_file() {
     assert_eq!(&src[d.span.start..d.span.end], "nothing");
     assert_eq!(out.diagnostics.len(), 1, "{:#?}", out.diagnostics);
 }
+
+#[test]
+fn an_override_calls_the_method_its_definition_requires() {
+    // `must_call_super` of the type definitions (State.initState first, State.dispose last): the kind writes the call
+    let src = "stateful Clock(start: int = 0)\n  count: int = 0\n\n  initState() void\n    count = start\n\n  \
+               didUpdateWidget(oldWidget: Clock) void\n    count = 1\n\n  dispose() void\n    print(\"bye\")\n\n  \
+               build(context: BuildContext) Widget\n    Text(\"${count}\")\n";
+    let code = build(src, "flutter");
+    has(&code, "void initState() {\n    super.initState();\n    count = widget.start;\n  }");
+    has(&code, "super.didUpdateWidget(oldWidget);\n    count = 1;");
+    has(&code, "print('bye');\n    super.dispose();\n  }");
+    // written by the user: never twice
+    let own = "stateful Clock\n  initState() void\n    super.initState()\n    print(\"x\")\n\n  \
+               build(context: BuildContext) Widget\n    Text(\"x\")\n";
+    assert_eq!(build(own, "flutter").matches("super.initState()").count(), 1);
+    // a method no definition marks gets nothing
+    assert!(!build(src, "flutter").contains("super.build("));
+    // a mixin's requirement, in a method that returns its value: the call goes before it
+    let keep = "stateful Tab with AutomaticKeepAliveClientMixin\n  get wantKeepAlive() boolean = true\n\n  \
+                build(context: BuildContext) Widget = Text(\"x\")\n";
+    has(&build(keep, "flutter"), "super.build(context);\n    return Text('x');");
+    // teardown is last by the dialect's `super_call_last`, also where the definitions' documentation says nothing
+    let notifier = "Store: ChangeNotifier\n  dispose() void\n    print(\"bye\")\n";
+    has(&build(notifier, "flutter"), "print('bye');\n    super.dispose();\n  }");
+    let cubit = "Counter: Cubit<int>\n  ()\n    super(0)\n\n  close() Future<void>\n    print(\"bye\")\n";
+    has(&build(cubit, "flutter"), "print('bye');\n    return super.close();\n  }");
+}

@@ -62,6 +62,12 @@ dart run bin/defs.dart --project <dir> --out <package folder> --name <n> --versi
   libraries count for `reexports`.
 - `--implicit`: libraries that are always visible (`dart:core`).
 
+`defs.dart` also writes `must_call_super` for a method annotated `@mustCallSuper` (in `api.json`'s member and in
+`index.json`'s class): `last` when its documentation says an override ends with the call to it (`dispose`,
+`deactivate`), `first` otherwise. The emitter writes that call in an override that lacks it, last for the methods
+the dialect's `[options] super_call_last` names (teardown: `dispose`, `close`...), which wins over this position
+(ADR-lang-0014).
+
 `flutter_project/` is an empty project that only resolves the packages; it is also where
 the mobile platform's `analyze-flutter.sh` writes the generated code (`lib/generated/`).
 
@@ -79,3 +85,5 @@ Both write `params` (the unnamed constructor) and `results` (methods that return
 the package declares it or, when that is no name to write, like the module. With no module named, `gen.py
 --distribution <package>` describes the modules that package installs and `gen.js --package <package>` the package's
 own module.
+Neither writes `must_call_super`: Python and TypeScript have no annotation that asks an override to call the method
+it overrides.

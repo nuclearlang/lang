@@ -141,8 +141,10 @@ The minimum the transpiler needs, so that loading it on every build is fast:
   `"interface"` (goes to `implements`) or `"mixin"` (goes to `with`).
 
 Each entry of `classes` may also have `params` (the parameter names of the unnamed constructor; a named argument that
-is not one is N0219) and `results` (method → its `Result<E, T>` return type, so the transpiler unwraps
-`x = ~repo.find(id)` without reading `api.json`).
+is not one is N0219), `results` (method → its `Result<E, T>` return type, so the transpiler unwraps
+`x = ~repo.find(id)` without reading `api.json`) and `must_call_super` (method → `"first"` or `"last"`: an override
+must call the method it overrides; the position is what the target's documentation says, and a dialect's
+`super_call_last` wins over it; §4).
 
 ### 3.3 `api.json`
 
@@ -162,7 +164,7 @@ One declaration per line:
 | `type_params` | `["T"]`, `["T: Comparable<T>"]` |
 | `extends`, `with`, `implements`, `on` | Supertypes; `on` is a mixin's constraint or an extension's type |
 | `constructors` | `name` (`""` = unnamed, `"rich"` = `Text.rich`), `const`, `factory`, `params` |
-| `members` | `name`, `kind` (`property`, `method`, `operator`), `static`, `type` (property), `readonly`, `type_params`, `params`, `returns` |
+| `members` | `name`, `kind` (`property`, `method`, `operator`), `static`, `type` (property), `readonly`, `type_params`, `params`, `returns`, `must_call_super` (`first` or `last`, as in `index.json`) |
 | `params` | `name`, `type`, `named` (goes between `{ }`), `optional`, `default` (written in the target) |
 | `values` | Values of an enum |
 | `type` | Type of a variable or the aliased type (`typedef`) |
@@ -182,6 +184,11 @@ It reads only each package's `index.json`:
 - a base with `kind = "interface"` goes to `implements`;
 - `[kinds.<k>] inherits = ["State"]` takes from the definitions the members and overrides of the class
   the kind generates.
+- an override of a method marked `must_call_super` in a class of its chain (its bases, its mixins, the classes its
+  kind inherits) gets the call to the overridden method written for it, with the method's own arguments: after
+  its statements when the dialect's `[options] super_call_last` names the method (teardown: `dispose`, `close`; in
+  a method that returns a value, that call is the value returned), otherwise as the definitions say (`last`), or
+  else before its statements. A body that already calls it anywhere gets nothing (ADR-lang-0014).
 
 `api.json` is read only when a tool asks for the full API, once per process.
 

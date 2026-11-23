@@ -24,10 +24,10 @@
   "Transition": 0
 },
 "classes": {
-  "Bloc": {"supers":["BlocBase","BlocEventSink"],"members":["add","close","emit","isClosed","on","onDone","onEvent","onTransition"],"params":["initialState"]},
-  "BlocBase": {"supers":["Object","EmittableStateStreamableSource","ErrorSink"],"members":["addError","close","emit","isClosed","onChange","onError","state","stream"],"params":["_state"]},
+  "Bloc": {"supers":["BlocBase","BlocEventSink"],"members":["add","close","emit","isClosed","on","onDone","onEvent","onTransition"],"params":["initialState"],"must_call_super":{"onEvent":"first","onTransition":"first","onDone":"first","close":"first"}},
+  "BlocBase": {"supers":["Object","EmittableStateStreamableSource","ErrorSink"],"members":["addError","close","emit","isClosed","onChange","onError","state","stream"],"params":["_state"],"must_call_super":{"onChange":"first","addError":"first","onError":"first","close":"first"}},
   "BlocEventSink": {"supers":["Object","ErrorSink"],"members":["add"],"params":[]},
-  "BlocObserver": {"supers":["Object"],"members":["onChange","onClose","onCreate","onDone","onError","onEvent","onTransition"],"params":[]},
+  "BlocObserver": {"supers":["Object"],"members":["onChange","onClose","onCreate","onDone","onError","onEvent","onTransition"],"params":[],"must_call_super":{"onCreate":"first","onEvent":"first","onChange":"first","onTransition":"first","onError":"first","onDone":"first","onClose":"first"}},
   "Change": {"supers":["Object"],"members":["currentState","hashCode","nextState","toString"],"params":["currentState","nextState"]},
   "Closable": {"supers":["Object"],"members":["close","isClosed"],"params":[]},
   "Cubit": {"supers":["BlocBase"],"members":[],"params":["initialState"]},

@@ -259,6 +259,19 @@ pub struct ClassDef {
     /// Methods that return a `Result<E, T>` → that type, in Nuclear notation (`find` → `Result<NotFound, T>`).
     #[serde(default)]
     pub results: HashMap<String, String>,
+    /// Methods whose overrides must call the overridden method (Dart's `@mustCallSuper`) → where that call goes.
+    /// The emitter writes it in an override that does not (nuclearlang/docs/02-architecture/type-definitions.md).
+    #[serde(default)]
+    pub must_call_super: HashMap<String, SuperCall>,
+}
+
+/// Where an override calls the method it overrides: before its own statements (`initState`) or after them
+/// (`dispose`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SuperCall {
+    First,
+    Last,
 }
 
 #[derive(Debug, Clone)]
@@ -328,6 +341,9 @@ pub struct Options {
     pub cascade_statements: bool,
     pub super_in_initializer: bool,
     pub implicit_base: String,
+    /// Methods whose override calls the overridden one last (teardown: `dispose`, `close`); every other
+    /// `must_call_super` method of the type definitions calls it first.
+    pub super_call_last: Vec<String>,
     pub interp_prefix: String,
     pub interp_brace_escape: bool,
     pub module_separator: String,
@@ -387,6 +403,7 @@ impl Default for Options {
             snake_case_names: false,
             route_param: "{name}".into(),
             slot_lists: Vec::new(),
+            super_call_last: Vec::new(),
         }
     }
 }
@@ -2376,6 +2393,9 @@ fn parse_options(t: &toml::Table) -> Options {
     o.doc_inside = b("doc_inside", o.doc_inside);
     o.snake_case_names = b("snake_case_names", o.snake_case_names);
     o.route_param = s("route_param", &o.route_param);
+    if let Some(toml::Value::Array(a)) = t.get("super_call_last") {
+        o.super_call_last = a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect();
+    }
     if let Some(toml::Value::Array(a)) = t.get("slot_lists") {
         o.slot_lists = a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect();
     }

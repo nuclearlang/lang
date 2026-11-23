@@ -8,7 +8,7 @@ use crate::analysis;
 use nuclear_diag::{Code, Diagnostic, Span, codes};
 use nuclear_dialect::Dialect;
 use nuclear_dialect::library;
-use nuclear_dialect::model::{FunctionShortcut, ImportShortcut, Kind, closest};
+use nuclear_dialect::model::{FunctionShortcut, ImportShortcut, Kind, SuperCall, closest};
 use nuclear_dialect::template::{Ctx, Template, Value};
 use nuclear_syntax::DocComment;
 use nuclear_syntax::ast::*;
@@ -3137,6 +3137,8 @@ impl<'a> Emitter<'a> {
         if !self.d.options.implicit_base.is_empty() {
             implicit.push(self.d.options.implicit_base.clone());
         }
+        // the classes whose methods an override may have to call (`must_call_super`)
+        let mut super_bases = implicit.clone();
         let implicit_members = self.inherited_members(implicit);
         member_names.extend(implicit_members.iter().cloned());
         // the constructor's parameters are locals of the code written for it (`self.note = note`), and the module's
@@ -3170,6 +3172,9 @@ impl<'a> Emitter<'a> {
         let (iface_bases, class_bases): (Vec<&Type>, Vec<&Type>) =
             d.bases.iter().partition(|b| self.base_is_interface(b));
         let extends_class = !class_bases.is_empty();
+        super_bases.extend(class_bases.iter().filter_map(|t| named(t)));
+        // a mixin (`with M`) is closer than the classes: it is looked at last-in, first-out
+        super_bases.extend(d.clauses.iter().flat_map(|c| c.types.iter()).filter_map(named));
         let base_members = self.inherited_members(class_bases.into_iter().filter_map(named).collect());
         overrides.extend(base_members.iter().cloned());
         // a constructor parameter named like a member of the base is that member: a plain parameter
@@ -3325,6 +3330,12 @@ impl<'a> Emitter<'a> {
                 }
                 Member::Method(md) => {
                     let pre = self.doc_into(md.span.start);
+                    let with_super = if overrides.contains(&md.name.name) {
+                        self.must_call_super(&super_bases, &md.name.name).and_then(|at| with_super_call(md, at))
+                    } else {
+                        None
+                    };
+                    let md = with_super.as_ref().unwrap_or(md);
                     let text = self.method(
                         md,
                         overrides.contains(&md.name.name),
@@ -3524,6 +3535,28 @@ impl<'a> Emitter<'a> {
             }
         }
         (out, known)
+    }
+
+    /// Where an override of `name` calls the overridden method, when a class of `bases` (or one they extend) says
+    /// its overrides must (`must_call_super` of the type definitions).
+    fn must_call_super(&self, bases: &[String], name: &str) -> Option<SuperCall> {
+        let (mut pending, mut seen) = (bases.to_vec(), HashSet::new());
+        while let Some(b) = pending.pop() {
+            if !seen.insert(b.clone()) {
+                continue;
+            }
+            if let Some(info) = self.decl_names.get(&b).and_then(|o| self.decls.get(o)) {
+                pending.extend(info.bases.iter().cloned());
+            } else if let Some(def) = self.d.defs.get(&b) {
+                if let Some(at) = def.must_call_super.get(name) {
+                    // the dialect's teardown list wins; the definitions' own position is the fallback
+                    let last = self.d.options.super_call_last.iter().any(|n| n == name);
+                    return Some(if last { SuperCall::Last } else { *at });
+                }
+                pending.extend(def.supers.iter().cloned());
+            }
+        }
+        None
     }
 
     fn base_is_interface(&self, t: &Type) -> bool {
@@ -8237,6 +8270,51 @@ fn field_decor(members: &[Member]) -> Value {
 }
 
 /// The names a decorator's route text declares: `:id` and `{id}` in `@get("/tasks/:id")` / `@get("/{id}")`.
+/// The method with the call to the method it overrides (`super.initState()`, `super.didUpdateWidget(oldWidget)`)
+/// written at `at`, when its body has none: first, or last (in a method that returns a value, as that value).
+/// `None` when the body already calls it or has no statements to place it among.
+fn with_super_call(md: &Decl, at: SuperCall) -> Option<Decl> {
+    let name = &md.name.name;
+    let calls_it = |e: &Expr| {
+        matches!(&e.kind, ExprKind::Call { callee, .. } if matches!(&callee.kind,
+            ExprKind::Member { object, name: n, .. } if matches!(object.kind, ExprKind::Super) && &n.name == name))
+    };
+    let (mut stmts, body_span) = match &md.body {
+        Body::Block(b) => (b.stmts.clone(), b.span),
+        Body::Expr(e) => (vec![Stmt::Expr(e.clone())], e.span),
+        _ => return None,
+    };
+    let mut found = false;
+    analysis::walk_stmts(&stmts, &mut |s| analysis::walk_stmt_exprs(s, &mut |e| found |= calls_it(e)));
+    if found {
+        return None;
+    }
+    let span = md.name.span;
+    let args = md.params.as_ref().map(|p| p.list.as_slice()).unwrap_or_default().iter().map(|p| Arg {
+        span,
+        name: p.named.then(|| p.name.clone()),
+        value: Expr { span, kind: ExprKind::Name(p.name.name.clone()) },
+        spread: false,
+        ty: None,
+    });
+    let callee = ExprKind::Member {
+        object: Box::new(Expr { span, kind: ExprKind::Super }),
+        name: Ident { name: name.clone(), span },
+        optional: false,
+    };
+    let call = Stmt::Expr(Expr {
+        span,
+        kind: ExprKind::Call { callee: Box::new(Expr { span, kind: callee }), args: args.collect(), type_args: Vec::new() },
+    });
+    match at {
+        SuperCall::First => stmts.insert(0, call),
+        // in a method that returns a value, the overridden method's is the one returned (`return super.close()`)
+        SuperCall::Last => stmts.push(call),
+    }
+    let block = Block { span: body_span, stmts };
+    Some(Decl { body: Body::Block(block), ..md.clone() })
+}
+
 fn route_params(decorators: &[Decorator]) -> HashSet<String> {
     let mut out = HashSet::new();
     for d in decorators {

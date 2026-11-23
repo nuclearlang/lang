@@ -39,7 +39,6 @@ stateful HomePage
   loading: bool = true
 
   initState() void
-    super.initState()
     load()
 
   load() void
@@ -98,13 +97,11 @@ stateful SpinningLogo with SingleTickerProviderStateMixin
   controller: AnimationController
 
   initState() void
-    super.initState()
     controller = AnimationController(vsync = this, duration = Duration(seconds = 2))
     controller.repeat()
 
   dispose() void
     controller.dispose()
-    super.dispose()
 
   build(context: BuildContext) Widget
     RotationTransition(turns = controller, child = FlutterLogo(size = 48))

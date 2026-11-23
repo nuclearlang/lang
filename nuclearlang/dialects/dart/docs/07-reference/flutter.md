@@ -342,7 +342,6 @@ stateful Counter(start: int = 0) with SingleTickerProviderStateMixin
   count: int = 0
 
   initState() void
-    super.initState()
     count = start
 
   build(context: BuildContext) Widget
@@ -361,6 +360,11 @@ stateful Counter(start: int = 0) with SingleTickerProviderStateMixin
 - The members of `State` (`setState`, `context`, `widget`, `mounted`...) are available without declaring
   them, and a method named like one of them (`build`, `initState`, `dispose`, `didUpdateWidget`...) carries
   `@override`.
+- An override of a method whose type definitions require the call to it (`must_call_super`: `initState`,
+  `didUpdateWidget`, `dispose`...) gets that call from the kind, with the method's own arguments: last for the
+  teardown methods (`dispose`, `deactivate`, `close`, `unmount`, `detach`: `super.dispose()` after the method's own
+  statements), first for every other one (`super.initState()`, `super.didUpdateWidget(oldWidget)`). A call the
+  method already makes is not written again.
 - `setState()` + block → `setState(() { ... })`.
 - `build` is required.
 

@@ -11,7 +11,7 @@
 //!
 //! Types are written in NuclearLang notation (`string`, `int[]`, `<string, int>`, `(x: int) => void`).
 
-use crate::model::ClassDef;
+use crate::model::{ClassDef, SuperCall};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -103,6 +103,9 @@ pub struct Member {
     pub doc: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub deprecated: bool,
+    /// An override must call this method (`ClassDef::must_call_super`), and where.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub must_call_super: Option<SuperCall>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

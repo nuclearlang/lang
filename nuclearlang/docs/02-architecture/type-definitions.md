@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-23
 related: [dialects.md, emitter.md, ../03-adr/0008-type-definitions-and-target-packages.md, ../../tools/defs/README.md]
 ---
 # Type definitions
@@ -57,6 +57,13 @@ like its module (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`).
 - `ClassDef.params` (the unnamed constructor): N0219 and N0220 without reading `api.json`
   (`tools/defs/index_params.py` adds them to packages generated before).
 - `ClassDef.results`: methods that return a `Result`.
+- `ClassDef.must_call_super` (method → `SuperCall::First | Last`): `Emitter::must_call_super` walks the class's
+  bases, mixins and kind `inherits`, and `with_super_call` (`emit.rs`) adds `super.<name>(<params>)` to the body
+  of an override that does not call it (ADR-lang-0014): last when the dialect's `options.super_call_last` names the
+  method (the dart language's: `dispose`, `deactivate`, `close`, `unmount`, `detach`), else the definitions'
+  position. Only the Dart generator sets it (`@mustCallSuper`; `last` when the method's documentation says the
+  override ends with the call, `first` otherwise: a fallback, the dialect's list wins): Python and TypeScript have no
+  such annotation.
 - A class in neither the file nor the definitions leaves the module open: no `@override`, no N0106
   ([limits.md](limits.md)).
 

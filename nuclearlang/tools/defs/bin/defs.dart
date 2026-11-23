@@ -161,11 +161,17 @@ Future<void> main(List<String> args) async {
       final kind = e is MixinElement ? 'mixin' : (e is ClassElement && e.isInterface ? 'interface' : null);
       // the parameters of the unnamed constructor: the transpiler rejects a named argument that is not one
       final ctor = (decl['constructors'] as List?)?.cast<Map<String, Object?>>().where((c) => c['name'] == '').firstOrNull;
+      // the overrides that must call the overridden method, and where (the emitter writes the call)
+      final superCalls = {
+        for (final m in e.methods)
+          if (!m.isStatic && m.metadata.hasMustCallSuper && m.name != null && !m.name!.startsWith('_')) m.name!: superCall(m),
+      };
       index[n] = {
         if (kind != null) 'kind': kind,
         'supers': supers,
         'members': members,
         if (ctor != null) 'params': [for (final p in ctor['params'] as List) (p as Map)['name']],
+        if (superCalls.isNotEmpty) 'must_call_super': superCalls,
       };
     }
   }
@@ -341,6 +347,7 @@ List<Map<String, Object?>> members(InstanceElement e, {bool skipEnum = false}) {
       if (m.isStatic) 'static': true,
       ...signature(m),
       ...docOf(m),
+      if (m.metadata.hasMustCallSuper) 'must_call_super': superCall(m),
     });
   }
   return out;
@@ -370,6 +377,11 @@ Map<String, Object?> typeParams(List<TypeParameterElement> tps) => tps.isEmpty
           for (final t in tps) t.bound == null ? t.name : '${t.name}: ${type(t.bound!)}',
         ],
       };
+
+/// Where an override of a `@mustCallSuper` method calls it: `last` when its documentation says the override ends
+/// with that call (`dispose`, `deactivate`), `first` otherwise (`initState`, `didUpdateWidget`).
+String superCall(ExecutableElement e) =>
+    RegExp(r'end\s+with\s+a\s+call\s+to\s+the\s+inherited').hasMatch(e.documentationComment ?? '') ? 'last' : 'first';
 
 /// First paragraph of the dartdoc comment, without markdown links, plus the deprecation flag.
 Map<String, Object?> docOf(Element e) {

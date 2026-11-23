@@ -50,6 +50,7 @@ meaning of every option and template variable: `nuclear spec` and
 | `toplevel_statements = "main"` | loose statements go inside a generated `void main()`; a variable a declaration uses stays top-level |
 | `super_in_initializer` | `super(x)` at the start of a constructor → the initializer list (`Bird(this.wings) : super('bird')`); when it passes the inherited parameters as they are and in order, super parameters (`Dog(super.name, this.breed)`) |
 | `implicit_base = "Object"` | every class extends `Object`: `toString()` gets `@override` |
+| `super_call_last = ["dispose", "deactivate", "close", "unmount", "detach"]` | the teardown methods: an override of a `must_call_super` method calls `super` last (`print(x); super.dispose();`, `return super.close();`); every other one first (ADR-lang-0014) |
 | `catch_var = "error"` | the variable of a `catch` without a name |
 
 ## Declarations

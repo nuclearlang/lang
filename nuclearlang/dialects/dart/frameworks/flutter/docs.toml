@@ -46,7 +46,6 @@ stateful Counter(start: int = 0)
   count: int = 0
 
   initState() void
-    super.initState()
     count = start               // start is read as widget.start
 
   build(context: BuildContext) Widget
@@ -71,7 +70,8 @@ stateful Counter(start: int = 0)
   its state, and a parameter is read as `widget.<name>`.
 - `setState()` + block changes the state and draws it again.
 - `State` members (`setState`, `context`, `widget`, `mounted`) exist without declaring them, and
-  `initState`, `dispose`, `didUpdateWidget`... get `@override`.
+  `initState`, `dispose`, `didUpdateWidget`... get `@override`, and the call to the method they replace
+  (`super.initState()` first, `super.dispose()` last) is written for you.
 - `with Mixin` applies to the `State`:
   `stateful Spinner with SingleTickerProviderStateMixin`.
 - `build` is required (`N0209`). With `@screen` it is a screen, as in `stateless`.
@@ -1117,7 +1117,7 @@ On a method of a `remote` kind: `@stream("path")`, a flow whose chunks it stream
 # after the word; the local agents never read it (they write only Nuclear).
 
 [underneath.kinds]
-stateful = 'a `StatefulWidget` and its `State`: the header parameters are `final` named fields of the widget; `setState()` + block becomes `setState(() { ... })`; `initState`, `dispose`, `didUpdateWidget`... get `@override`.'
+stateful = 'a `StatefulWidget` and its `State`: the header parameters are `final` named fields of the widget; `setState()` + block becomes `setState(() { ... })`; `initState`, `dispose`, `didUpdateWidget`... get `@override` and the `super` call their type definitions require (first, or last for `dispose`).'
 appConfig = "`Http` is a dio client: its options are dio's (`interceptors` included)."
 statemanager = 'a Cubit (bloc).'
 formmanager = 'a Cubit (bloc).'

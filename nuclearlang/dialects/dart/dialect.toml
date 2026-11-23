@@ -29,6 +29,7 @@ omit_null_default = true          # String? data = null → String? data
 interp_bare_names = true           # '${name}' → '$name'
 super_in_initializer = true        # super(x) at the start of the constructor → User(...) : super(x)
 implicit_base = "Object"          # every class extends Object: toString() gets @override
+super_call_last = ["dispose", "deactivate", "close", "unmount", "detach"]   # teardown: super.dispose() after the subclass's own
 
 [syntax]
 # --- imports ---

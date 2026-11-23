@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-21
+updated: 2026-11-23
 related: [../04-specs/README.md, ../02-architecture/limits.md]
 ---
 # Roadmap
@@ -38,6 +38,15 @@ The pending work of the language, the compiler and the language server. A done i
 - Diagnostics of the closed files of a project in the editor: only if the user asks.
 
 ## Pending
+
+### Found regenerating the Dart definitions (2026-11-23)
+
+- `tools/defs/generate.sh` writes the versions installed on the machine: with Flutter 3.47.8 / Dart 3.13.7 it writes
+  new `flutter@3.47.8` / `dart@3.13.7` packages (their API is the same as the tree's 3.47.7 / 3.13.5) and reads
+  `synapsis` and `synapsis_genkit` as 0.96.1 (their `pubspec.yaml` follows the platform's version; the dialect asks
+  for 0.1.0). The `must_call_super` flag was generated with those versions pinned. Left: decide whether the dialect
+  follows the installed SDK and the runtime's version, and regenerate `synapsis_genkit@0.1.0` (its definitions are
+  older than its package: `FirebaseAI` and the documentation of `SynapsisGenkit` changed).
 
 ### Found in the restructure (spec 008)
 
