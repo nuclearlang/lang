@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-23
 related: [overview.md, providers.md, teams-and-vault.md, chat.md, ../00-context/domain.md, ../01-product/roadmap.md]
 ---
 # The engine
@@ -95,6 +95,30 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   declare and the commands that passed, by `/developer/accept` (a QA that is not local is asked for `<n> | met |
   <where>` lines); kept in `run.acceptance` (`criterion`, `met`, `evidence`); never fails the run: a criterion not
   shown met is left for the reviewer (the step is skipped).
+- **The retries, smallest first** (the user, 2026-11-23: every node can be retried, and a failure never throws work
+  away): a failure is tried again at the smallest level first, in place, the files it wrote kept and its output told
+  to the next attempt; only when a level is spent does the next one start. The bounds are the line's `retries`
+  (`RETRIES` of `ci.nuc`, a key left out keeps its default; 0 to 5 each):
+
+  | Level | What is tried again | Default | Where |
+  |---|---|---|---|
+  | `process` | a provider's call that failed (a timeout, a crash, a broken pipe, the agent's exit code), again in its step with the failure and *What it wrote is still in the project* in its task; a command that failed, again in its step (`--- attempt n of m ---` in its log): not one a repair follows (`quiet`) nor one that must fail | 2 | `provider`, `commands` |
+  | `node` | a part of a station (`phase`) whose step failed, worked again with its files kept and the failure in its task (`retrying`: *Your previous attempt failed*); never a part that is the user's (`USER_PHASES`: a gate, QA's plan and its yes, the delivery's question) | 1 | `phase` |
+  | `station` | the diagnosis and the station once more (below, *A failure diagnosed and repaired*) | 1 | `repair` |
+  | the user | the run waits on a question `retry-<station>` (kind `retry`, its `step` and `worth`): *yes* retries the failed step in place, *no* ends the run failed, *stop* or no answer leaves it waiting | — | `retryAsked` |
+
+  Why these: most passing failures (a call cut by its time limit, a crash, a closed pipe, a flaky test) clear in one or
+  two more tries, and each try is bounded by `callTimeoutMs` or `commandTimeoutMs`; a part again costs a whole agent's
+  step, so once; the station once, as before. The local Developer's adapter keeps its own retries of a busy or stalled
+  call (5 tries), so its calls get no `process` level on top. No paid retry starts with the run's budget or the step's
+  spent. A failure no attempt can fix (`NOT_WORTH_RETRYING`: the budget, no key, no model or price, a tool not on the
+  `PATH`, a 401 or 403, a request that is not a run, a test that would have to be rewritten to pass, your stop) skips
+  every level and is asked at once (`worth: false`, the page says what to do first). A failure of *Check the
+  connections* (a configuration error) ends the run failed at once, as before. Each retry is an entry of the run's
+  `retries` (`at`, `level`, `station`, `step`, `title`, `key`, `args`, `attempt`, `of`, `why`), a `retry` event and a
+  line of the step's trace and of the journal (*Retried (node, attempt 2 of 2)*). A run stays `waiting` while a
+  station waits for its retry (`failing`: `station`, `step`, `worth`), so a resumed run asks again without working
+  the station first: the run ends `failed` only when the user says *no* or stops it.
 - **The diagnosis**: a station that fails gets a step *Why it failed* (actor `diagnoser`, skipped) by
   `/developer/diagnose` with the failed step's output told in Nuclear, kept in `run.diagnosis`, when the team has a
   local role; a class the compiler does not know that the plan never had blames the plan.
@@ -130,19 +154,22 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
 - **Safety** (`run.nuc`, today's rules): the run file is written atomically on every change; every event goes to
   `<id>.log` (JSON lines); the process beats every 10 s (`owner`), a beat older than 45 s or a dead process on this
   machine is an orphaned run; every file a step changes goes to the ledger (`writes`: the text before, the digest
-  after, the lines added and removed), found by comparing the project's files before and after the step; what a failed step wrote is undone, a
-  file changed since is kept and named; an orphaned run is recovered (its running steps failed, their files undone,
-  `interrupted`, with the `stepId` it was in) and goes on from that step; a retry from a station moves the steps from
+  after, the lines added and removed), found by comparing the project's files before and after the step; **what a failed
+  step wrote stays in the project** for the next attempt (never undone on a failure, a stop or a crash); an orphaned
+  run is recovered (its running steps failed, their files kept, `interrupted` with the `stepId` it was in) and goes on
+  in place from that step; a retry from a station moves the steps from
   there to `previous` and undoes their files; **nothing an undo takes back is lost** (`undoWrites`): before a file goes
   back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's
-  `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a failed step's, a repair's, a retry's,
-  a restart's, a recovery's) — a copy, not git, since a project need not be a repository and a copy never touches the
-  user's branches; `retry <id>` of a failed run with neither `--from` nor `--step` goes on from its failed step
-  (`failedStepOf`: in the station that failed, the first step that failed after its last step that passed), so the
-  steps before it, the Developer's code among them, are kept; what a retry or a restart would take back of the agents'
+  `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a retry from a station or of a step that
+  passed, a restart, a run of the earlier engine started over) — a copy, not git, since a project need not be a
+  repository and a copy never touches the user's branches; `retry <id>` of a failed run (or one that waits for its
+  retry) with neither `--from` nor `--step` goes on **in place** from its failed step (`failedStepOf`: in the station
+  that failed, the first step that failed after its last step that passed; `inPlace`: a failed step of a station that
+  did not pass): the station goes on from the part that holds it, every step and file kept, nothing to confirm, the
+  retry an entry `you` of `retries`; `--step` of a failed step does the same; what a retry or a restart would take back of the agents'
   work (`takeBackOf`) is asked first: a terminal's prompt, else refused without `--yes` (exit code 2), `--plan` prints
   `{run, files, setAside}` and runs nothing, the tool `run_retry` refuses without `confirm`; an editor that went away
-  (a closed stdout) no longer fails the step that told it an event; a retry from a step (`--step <id>`) keeps the steps of its station
+  (a closed stdout) no longer fails the step that told it an event; a retry from a step that passed (`--step <id>`) keeps the steps of its station
   before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step
   after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and
   the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free
@@ -201,20 +228,20 @@ through every station (the simplest order that keeps a spec's documents together
 run's `spec` and `specPath` are the one at work; when it passes, `nextSpec` keeps its stations in its entry
 (`specs[].stages`), settles what its steps wrote (`writes[].step` becomes `<spec>:<step>`, which `passedSteps` keeps:
 a later spec's failure never undoes it), gives the next spec fresh stations and seeds its checks. A failure stops the
-run on that spec (its entry `failed`); a retry or a resume goes on with it, then the ones after it. The delivery makes
+run on that spec (its entry `failed` when the run ends failed); a retry or a resume goes on with it, then the ones after it. The delivery makes
 one branch per spec (`factory/<spec id>`). A run of one spec has no `specs`: the files of before load as they are.
 
 ### A failure diagnosed and repaired (spec 024 requirement 6)
 
 A station that fails (a step, a check by prompt, QA's report) gets one diagnosis (`repair`; its verdict read through
 any Markdown, `verdictOf`: a real one came back `**FIXABLE**`) by the provider of its own
-role: its last failed step's summary and the tail of its log (a check's findings: 6,000 characters) after
+role, after its steps' own retries (above) and only for a failure worth retrying: its last failed step's summary and the tail of its log (a check's findings: 6,000 characters) after
 `REPAIR_TASK`, capped at `REPAIR_BUDGET_USD` (0.50) of what the budget has left. Its first line `FIXABLE` readies the
-station to run once more: what the failed steps wrote is undone, its parts run again but those of `REPAIR_KEEPS`
+station to run once more (up to `retries.station` times in a process): what the failed steps wrote stays, its parts run again but those of `REPAIR_KEEPS`
 (the generators, QA's plan and the user's yes to it), and its task carries *A repair: …* with the diagnosis
-(`run.repairing` while it runs). `NOT FIXABLE`, no answer, a local role, the budget spent or a second failure of the
-same station in the process: the run fails as before, the diagnosis kept for the user. Each diagnosis is a step
-*Why it failed, and the repair* (`skipped`: whatever it wrote is undone) and an entry of the run's `repairs`
+(`run.repairing` while it runs). `NOT FIXABLE`, no answer, a local role, the budget spent or a failure past
+`retries.station`: the run waits for the user's retry, the diagnosis kept. Each diagnosis is a step
+*Why it failed, and the repair* (`skipped`; it changes no file) and an entry of the run's `repairs`
 (`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`), what the team's channel tells; its cost is the
 run's. When it is Quality that failed, its findings are in the code: the diagnosis goes to the Code station, which
 works once more with it, and Quality judges again. What the station cannot fix alone (`NOT FIXABLE`: a criterion that contradicts a contract,
@@ -242,7 +269,9 @@ team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`)
 for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPlan`, `deliver` [run]) and the status `waiting`; and, from the agent steps,
 `analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the
 actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:
-`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above); `setAside` (what the undos took back, kept). A run is read as the
+`specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above); `setAside` (what the undos took back, kept);
+`retries`, `retrying` and `failing` (the retries, above). A run file of before the retries has none of them and is
+retried in place the same way (a fixture test, `test_compat.nuc`). A run is read as the
 project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript
 engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps
 its team and its `assign`; one of the local team that was never saved (`local-team`) gets it again.
@@ -257,7 +286,7 @@ The editors run the line as a process, one per run: `nuclear-builder run <spec.m
   provider does (`text`, `tool`, `tool-result`, `cost`, `tokens`, `retry`, `trace`); `{"type": "ask", "id", "kind",
   "question", …}` when it needs the user (`kind`: `gate` with its `station` and `documents`, and at the Analysis's
   gate the analysis's open `questions`; `spending` with its `providers` and `budgetUsd`; `checks` with the `checks`
-  file); `{"type": "done", "status", "costUsd"}` at the end.
+  file; `retry` with its `station`, `step` and `worth`: `yes` retries in place, `no` ends the run failed); `{"type": "done", "status", "costUsd"}` at the end.
   The run file changes with every step: the editors draw it, not the events.
 - **stdin**: one JSON object per line, the answer to the last `ask`: `{"answer": "approve"}` (or `"yes"`),
   `{"answer": "change", "text": "…"}` at a gate, `{"answer": "no"}` / `{"answer": "stop"}`. stdin closed or an empty
@@ -279,5 +308,10 @@ answer: [chat.md](chat.md).
   run that ended waiting starts `run --resume <id>` and is given again when the same question comes (`answerRun`).
   `resumeOrphans`, on activation, runs `retry <id>` for every run of this engine that was `running` with no live
   owner (`nuclear.builder.resumeInterrupted`). *Stop* closes the stdin of a run that waits (it keeps waiting) and
-  sends SIGINT to one that works (its working steps fail, what they wrote is undone).
-- **JetBrains** (`NuclearBuilder.java`): the same contract, its questions as dialogs.
+  sends SIGINT to one that works (its working steps fail, what they wrote stays for a retry). A `retry` ask is the
+  page's main action (*↻ Retry "<step>"*) and a question with *Retry*, *End as failed* and *Later*; every step that
+  ended has its *↻* in the node's tree (a failed one in place, one that passed after the modal of what it takes
+  back), and so has each failed attempt inside it; the node lists the run's *Retries* in the page's language
+  (`retryText`).
+- **JetBrains** (`NuclearBuilder.java`): the same contract, its questions as dialogs (a `retry` ask: *Retry*, *End as
+  Failed*, *Later*).

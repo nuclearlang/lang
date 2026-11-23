@@ -37,15 +37,19 @@ What the agents, the strategies and the generators still lack is in their own pr
   decisions asked in the chat, the Builder's and the company screen's messages on commands. Left: the form's helpers
   (Jira and GitHub issues, the context suggested, the pieces the local Developer proposes) as commands; the JetBrains
   tool window answering a waiting run with `run answer` (it resumes and answers on stdin); a run answered through the
-  answer file on Windows is stopped by `os.kill` without the undo of an interrupt (the next retry's recovery undoes
-  it); the real Claude Code and OpenCode run of a member with both servers (prepared, not made: it costs money).
+  answer file on Windows is stopped by `os.kill` (the next retry's recovery marks its steps failed and goes on in
+  place); the real Claude Code and OpenCode run of a member with both servers (prepared, not made: it costs money).
 
 - **The work an undo sets aside** (`.nuclear/builder/runs/<id>.set-aside/`, [engine.md](../02-architecture/engine.md)).
   Left: a *Restore* action (a command, its tool, a button) that copies a set-aside folder
-  back (today by hand); how long the folders are kept (today: forever); whether a failed step's own files should be
-  undone at all (a Developer cut by its time limit after 186 files loses them from the project, set aside, and the
-  repair starts over: for the user to decide); a retry button in the run's thread of Nuclear Chat; the JetBrains
-  dialogs and the VS Code modals were not clicked in a real editor.
+  back (today by hand); how long the folders are kept (today: forever); the JetBrains dialogs and the VS Code modals
+  were not clicked in a real editor.
+- **The retries, smallest first** ([engine.md](../02-architecture/engine.md), *The retries*). Left: a manual retry of
+  one process inside a step (one tool call of an agent, one command of a part) is its step's retry: an agent's session
+  cannot be replayed from one call; a manual retry while the run's own process waits on the `retry` question answers
+  it from the main action only (the tree's *↻* waits until *Later* ends that process); the retries' bounds are not on
+  the settings page (only `line set retries=…`); no limit on a run's whole time (each attempt has its own); the page's
+  retry buttons and the JetBrains *Retry* dialog were not clicked in a real editor.
 - **The software factory in Nuclear** ([spec 011](../../../../../docs/04-specs/011-software-factory/tasks.md),
   phases 2 and 3). Done: the teams, the vault, the adapters of every provider, the stations, the gates, the checks,
   the money, the delivery, today's safety (with the watch of a stalled call and a retry from one step), today's agent

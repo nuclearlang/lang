@@ -105,14 +105,18 @@ approve; it never merges. The run's drawer lists the documents.
 
 ## Run anything again
 
-- *Retry from the failed step*, the main action of a failed run: it goes on from the step that stopped it; every step
-  before it is kept, the code the Developer already wrote among them. A test that failed after the code was written
-  runs again over that code.
-- *Retry this step*, in a failed step's detail: that step and every step after it.
+- *↻ Retry "<step>"*, the main action of a run that failed or waits for your retry: it goes on **in place** from the
+  smallest unit that failed, its step; every step before it is kept, and every file the agents wrote stays in the
+  project (the code the Developer already wrote among them), so nothing is asked. A test that failed after the code
+  was written runs again over that code.
+- *Retry this step*, in a step's detail, and the *↻* of every step in the node's tree (and of each failed attempt
+  inside a step): a failed step goes on in place, the same way; a step that passed runs again with every step after
+  it, after you confirm what it takes back.
 - *Run <station> again*, on every station: it and every station after it run again; the stations before it are kept.
 - *Start over…*, on the run: every station from the Analysis, after you confirm.
 
-**Nothing is lost.** What a run takes back (a failed step's files, a station or the whole run run again) is copied first
+**Nothing is lost.** A failure never takes back what the agents wrote: the next attempt goes on from it. What a run
+takes back by your choice (a station, a passed step or the whole run run again) is copied first
 to `.nuclear/builder/runs/<run>.set-aside/<time>/`, at each file's own path: copy back what you want from there. The
 run's *Set aside* lists each copy. Running a station again, a passed step again or the whole run asks you first,
 naming how many files the agents wrote go back and where they are kept; *Cancel* is the default. A file you changed
@@ -120,7 +124,7 @@ since the run wrote it is kept where it is, and the page says so. The attempt le
 reason. A run made by the earlier engine can only start over.
 
 ```sh
-nuclear-builder retry <run>                          # from the failed step
+nuclear-builder retry <run>                          # in place, from the failed step (nothing taken back)
 nuclear-builder retry <run> --step <step> | --from <station> [--yes]
 nuclear-builder retry <run> --from <station> --plan  # what it would take back, and where it is kept
 nuclear-builder restart <run> [--yes]                # asked in a terminal; elsewhere refused without --yes
@@ -130,22 +134,28 @@ Over MCP: `developer_retry`.
 
 ## When it fails
 
+- **A failure is retried by itself, smallest first, in place.** An agent's call that fails (cut by its time limit,
+  crashed, a broken pipe) or a command that fails (a flaky test) is tried again inside its step, twice more, the
+  failure told to it and what it wrote kept. If its step still fails, the part of the station that holds it is
+  worked again once, told *Your previous attempt failed*. Only then the member who worked the station reads the
+  failure (*Why it failed, and the repair*): when it can fix it (a document to correct, a check's findings to follow),
+  the station runs once more with that diagnosis; the diagnosis costs at most 0.50 USD of the run's budget. Only then
+  the run **waits for you**: *↻ Retry*, *End as failed* or *Later*; it never ends failed by itself. How many times
+  each level tries is the line's `retries` (`nuclear-builder line set retries='{"process": 2, "node": 1, "station":
+  1}'`). Each retry shows as it happens in the step's trace, in the node's *Retries* and in the journal.
+- A failure no retry can fix (the budget spent, a missing key, model or price, a tool not installed, a request that is
+  not a run, a test that would have to change to pass) is asked at once, with what to do first; then *↻ Retry*.
 - A call to the local agents that fails for a passing reason (the service starting, busy, a 5xx) is retried with
-  exponential backoff; the settings say how many times and how long. Each retry is in the step's trace.
-- When a station fails, the member who worked it reads the failure once (*Why it failed, and the repair*): when it
-  can fix it (a document to correct, a check's findings to follow), the station runs once more with that diagnosis,
-  by itself; when it cannot, or fails again, the run stops with the diagnosis for you. The diagnosis costs at most
-  0.50 USD of the run's budget. *↻ Retry from the failed step* (or `nuclear-builder retry <run>`) goes on from there,
-  keeping every step before it.
+  exponential backoff; the settings say how many times and how long.
 - Several specs in one run (`nuclear-builder run a.md b.md`): they go one after the other; a failure stops the run on
   that spec, and a retry goes on from it.
 
 ## It survives the editor, and it keeps working
 
 - A run is a process of `nuclear-builder`, with a trace log, a heartbeat and a ledger of the files it writes. If VS
-  Code closes or crashes in the middle, the run is found interrupted when it opens again, what was left half written
-  is undone, and it goes on from that station (`nuclear.builder.resumeInterrupted`). Two windows never run the same
-  run. *Stop* interrupts a run that works (what its working steps wrote is undone) and leaves one that waits waiting.
+  Code closes or crashes in the middle, the run is found interrupted when it opens again, what it wrote stays, and it
+  goes on in place from the step it was in (`nuclear.builder.resumeInterrupted`). Two windows never run the same
+  run. *Stop* interrupts a run that works (what its working steps wrote stays for a retry) and leaves one that waits waiting.
 - Every run first checks its connections (the graph, each agent's command, a key in the vault for each API provider,
   the MCP server, free disk; the Developer, Ollama and the local roles' models only for a local role, which no team
   has while the local models are on standby, ADR-platform-0013).

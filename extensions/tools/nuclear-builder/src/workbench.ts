@@ -214,6 +214,19 @@ export function failedStepOf<S extends { status: string; steps: { id: string; st
   return null;
 }
 
+/** The smallest unit a run's main action retries: the failed step of a run that failed or that waits for its retry
+ * (the engine's `retry <id>` goes on in place from it, its files kept). Null when there is none to retry. */
+export function retryUnit<S extends { status: string; steps: { id: string; status: string }[] }>(run: { status: string; waiting?: { kind: string } | null; stages: S[] }): { st: S; x: S['steps'][number] } | null {
+  return run.status === 'failed' || run.waiting?.kind === 'retry' ? failedStepOf(run) : null;
+}
+
+/** A retry of the run said in the page's language: `retry.<level>` with the attempt, the bound and the step's title. */
+export function retryText(x: { level: string; attempt: number; of: number; title: string; key?: string; args?: string[] }, T: Record<string, string>): string {
+  const text = T['retry.' + x.level] ?? x.level;
+  const vals = [String(x.attempt), String(x.of), stepTitle(x, T)];
+  return text.replace(/\{(\d+)\}/g, (_, i: string) => vals[+i] ?? '');
+}
+
 /** The source of `fns` for a page's script, and `W` naming each by its key (whatever name the bundle gave it): the
  * functions must use nothing outside themselves but each other. */
 export function inline(fns: Record<string, (...a: never[]) => unknown>): string {

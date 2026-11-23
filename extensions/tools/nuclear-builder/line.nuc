@@ -124,7 +124,7 @@ userAnswer(q: <string, any>, asJson: boolean, root: string = "", id: string = ""
   if not sys.stdin.isatty()
     print("\n? ${q["question"]}\n  (no terminal to answer in: the run waits; nuclear-builder run --resume <id>)")
     return null
-  choices = q["kind"] == "spending" ? "yes/no" : "approve/change <what>/stop"
+  choices = q["kind"] == "spending" ? "yes/no" : q["kind"] == "retry" ? "yes: retry/no: end as failed/stop: later" : "approve/change <what>/stop"
   said = ask("\n? ${q["question"]} [${choices}]: ", "")
   if said.startsWith("change")
     return { "answer": "change", "text": said.substring(6).trim() }
@@ -294,7 +294,7 @@ runLine(args: string[]) int
     return runSubcommand(root, args)
   resume = option(args, "--resume")
   if resume != null
-    return retryLine([resume!, ...args.filter((a) => a != "--resume" and a != resume)], false)
+    return retryLine([resume!, ...args.filter((a) => a != "--resume" and a != resume)], false, null, true)
   skip = ["--team", "--assign"]
   given = args.filter((a) => not a.startsWith("--") and not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in skip))
   newest = newestSpec(root)
@@ -327,13 +327,14 @@ preparedOrSaid(root: string, files: string[], args: string[]) <string, any>?
     return null
 
 // The files a retry or a restart would take back (each set aside first, `undoWrites`): what the steps it runs again
-// wrote, as `Factory.forget` drops them; none for a run that resumes or recovers (it takes back only unfinished work).
+// wrote, as `Factory.forget` drops them; none for a run that resumes or recovers, nor for a failed step retried in
+// place (`inPlace`: its files stay for the next attempt).
 takeBackOf(run: <string, any>, fromStation: string?, fromStep: string?, scratch: boolean) string[]
   writes: <string, any>[] = run["writes"] ?? []
   stations: <string, any>[] = run["stages"]!
   if scratch
     return writes.map((w) => "${w["path"]}").unique()
-  if fromStation == null and fromStep == null
+  if fromStation == null and (fromStep == null or inPlace(run, fromStep!))
     return [] as string[]
   at = fromStep != null ? stations.findIndex((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep)) : stations.findIndex((st) => st["id"] == fromStation)
   if at < 0
@@ -351,12 +352,14 @@ takeBackOf(run: <string, any>, fromStation: string?, fromStep: string?, scratch:
 
 // `nuclear-builder retry <id> [--from <station> | --step <step>] [--detach] [--yes] [--plan]` · `restart <id> [--yes]`:
 // what the stations (or the steps) left out wrote is undone first, set aside (`undoWrites`); `--step` runs that step
-// and every step after it, and a failed run with neither goes on from its failed step (`failedStepOf`). What takes
+// and every step after it, and a failed run with neither (or one that waits for its retry, `failing`) goes on in place
+// from its failed step (`failedStepOf`, `inPlace`: nothing taken back); `resuming` (`run --resume`) asks the question
+// it waits on again instead. What takes
 // back the agents' work asks first: in a terminal a prompt, else refused without `--yes` (exit code 2); `--plan`
 // prints what it would take back (`{run, files, setAside}`) and runs nothing. A run of the TypeScript engine
 // (engine 2) can only start again from scratch, with today's stations. `preset` answers the question the run waits
 // on (`run answer`).
-retryLine(args: string[], scratch: boolean, preset: <string, any>? = null) int
+retryLine(args: string[], scratch: boolean, preset: <string, any>? = null, resuming: boolean = false) int
   root = projectRoot("${Path.cwd()}")
   id = args.filter((a) => not a.startsWith("--")).find((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in ["--from", "--step", "--team"]))
   run: <string, any>? = id == null ? null : loadRun(root, id!)
@@ -374,7 +377,7 @@ retryLine(args: string[], scratch: boolean, preset: <string, any>? = null) int
     return 2
   fromStep = scratch ? null : option(args, "--step")
   // a failed run goes on from the step that failed, keeping every step before it; `--from` runs a whole station again
-  if not scratch and fromStation == null and fromStep == null and run!["status"] == "failed"
+  if not scratch and fromStation == null and fromStep == null and (run!["status"] == "failed" or (run!["failing"] != null and preset == null and not resuming))
     fromStep = failedStepOf(run!)
   if fromStep != null and not stations.any((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep))
     print("the run ${id} has no step '${fromStep}' (the ids are in its .json: <station>-<n>)", file = sys.stderr)
@@ -517,7 +520,7 @@ answerRun(root: string, id: string, answer: string, text: string = "") <string, 
   { "answered": id, "ask": q!["id"], "answer": answer, "resume": true, "preset": given }
 
 // `run stop`: the process that runs a run stops: a run that asks waits (as it does when nobody answers), one that
-// works is interrupted (its unfinished steps fail, what they wrote is undone).
+// works is interrupted (its unfinished steps fail, what they wrote stays for a retry).
 stopRun(root: string, id: string) <string, any>
   run = loadRun(root, id)
   if run == null

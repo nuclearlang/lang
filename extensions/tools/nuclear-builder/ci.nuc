@@ -15,15 +15,25 @@ defaultCommands(platform: string) <string, string[]>
   mobile = platform == "mobile"
   { "check": ["nuclear check . --json"], "build": mobile ? ["nuclear build"] : ["nuclear build", "nuclear install"], "test": ["nuclear test"], "security": [] as string[], "artifacts": mobile ? ["nuclear build web"] : ["nuclear build"], "seed": [] as string[], "integration": [] as string[], "deploy": [] as string[] }
 
+// How many times each level of a run is tried again by itself before the next one (`.nuclear/builder.json` "retries",
+// a key left out keeps its default): `process`, a call of an agent or a command that failed, again in place in its
+// step with the failure told; `node`, a part of a station whose step failed, worked again with its files kept and the
+// failure told; `station`, the diagnosis and one more attempt of a station that failed. Then the run waits for the user.
+RETRIES: <string, int> = { "process": 2, "node": 1, "station": 1 }
+
 // The line of a project: the defaults under the project's `.nuclear/builder.json` (shared with CI).
 readLine(root: string, platform: string) <string, any>
-  line: <string, any> = { "commands": defaultCommands(platform), "branches": ["main", "feature/**"], "gates": ["analysis", "design", "delivery"], "stations": STATIONS, "forceConfirm": false, "minFreeMb": 500, "commandTimeoutMs": 1_200_000, "callTimeoutMs": 900_000, "stallSeconds": 90, "mcpCommand": "nuclear-mcp", "prices": {} as <string, any> }
+  line: <string, any> = { "commands": defaultCommands(platform), "branches": ["main", "feature/**"], "gates": ["analysis", "design", "delivery"], "stations": STATIONS, "forceConfirm": false, "minFreeMb": 500, "commandTimeoutMs": 1_200_000, "callTimeoutMs": 900_000, "stallSeconds": 90, "mcpCommand": "nuclear-mcp", "prices": {} as <string, any>, "retries": dict(RETRIES) }
   file = Path(root, ".nuclear", "builder.json")
   if file.isFile()
     own = json.loads(file.readText(encoding = "utf-8"))
     if isinstance(own, dict)
       for k, v in own as <string, any>
-        if k == "commands" and isinstance(v, dict)
+        if k == "retries" and isinstance(v, dict)
+          retries: <string, any> = line["retries"]!
+          for level, n in v as <string, any>
+            retries[level] = n
+        else if k == "commands" and isinstance(v, dict)
           commands: <string, any> = line["commands"]!
           for name, list in v as <string, any>
             commands[name] = list
@@ -83,7 +93,7 @@ ciFile(provider: string, line: <string, any>, platform: string) <string, string>
 // ---------- the line's file: read and set ----------
 
 // The keys of `.nuclear/builder.json` a command may set, and what each holds.
-LINE_KEYS: <string, string> = { "team": "the id of the team that runs the project's specs", "stations": "the stations a run goes through, in order (a subset of analysis, design, tests, code, quality, delivery)", "gates": "the stations a run stops after for the user's approval", "branches": "the branches the exported CI runs on", "commands": "the project's commands by name (check, build, test, security, artifacts, seed, integration, deploy): lists of shell commands", "forceConfirm": "true: the spending is always confirmed twice by the user, never by --confirm-spending", "minFreeMb": "the free disk a run needs", "commandTimeoutMs": "how long a command may take", "callTimeoutMs": "how long a provider's call may take", "stallSeconds": "how long a local model may say nothing", "mcpCommand": "the Nuclear MCP server's command", "prices": "the USD per million tokens of a model: { \"<provider>/<model>\": [input, output] }", "developerUrl": "the Nuclear Developer's address", "ollamaUrl": "Ollama's address" }
+LINE_KEYS: <string, string> = { "team": "the id of the team that runs the project's specs", "stations": "the stations a run goes through, in order (a subset of analysis, design, tests, code, quality, delivery)", "gates": "the stations a run stops after for the user's approval", "branches": "the branches the exported CI runs on", "commands": "the project's commands by name (check, build, test, security, artifacts, seed, integration, deploy): lists of shell commands", "forceConfirm": "true: the spending is always confirmed twice by the user, never by --confirm-spending", "minFreeMb": "the free disk a run needs", "commandTimeoutMs": "how long a command may take", "callTimeoutMs": "how long a provider's call may take", "stallSeconds": "how long a local model may say nothing", "mcpCommand": "the Nuclear MCP server's command", "prices": "the USD per million tokens of a model: { \"<provider>/<model>\": [input, output] }", "developerUrl": "the Nuclear Developer's address", "ollamaUrl": "Ollama's address", "retries": "how many times a level is tried again by itself before the next: { \"process\": 2, \"node\": 1, \"station\": 1 }" }
 
 // A value of the line, checked before it is kept: a wrong one is said, never written.
 validLineValue(key: string, value: any) any
@@ -104,6 +114,8 @@ validLineValue(key: string, value: any) any
     loadTeam("${value}")
   if key in ["minFreeMb", "commandTimeoutMs", "callTimeoutMs", "stallSeconds"] and not (isinstance(value, int) and not isinstance(value, bool) and (value as int) >= 0)
     throw ValueError("${key} is a whole number of 0 or more")
+  if key == "retries" and not (isinstance(value, dict) and (value as <string, any>).keys.all((k) => k in RETRIES) and (value as <string, any>).values.all((n) => isinstance(n, int) and not isinstance(n, bool) and (n as int) >= 0 and (n as int) <= 5))
+    throw ValueError("retries is { ${RETRIES.keys.map((k) => "\"${k}\"").join(", ")} } with whole numbers from 0 to 5")
   if key in ["mcpCommand", "developerUrl", "ollamaUrl"] and not isinstance(value, str)
     throw ValueError("${key} is a text")
   if key == "prices" and not isinstance(value, dict)

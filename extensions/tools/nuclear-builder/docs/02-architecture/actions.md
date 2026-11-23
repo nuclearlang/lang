@@ -55,13 +55,13 @@ never run there (a workspace is no project).
 |---|---|---|---|
 | Start a spec, or several in one run (in order, one bill), with a team (`--assign <role>=<member>`: who works a role; else its first member) | `run <spec.md> [<spec.md>…] [--team <id>] [--assign …] --events` (the page) · `--detach` (apart) | `run_start` (`spec`, or `specs`) | spending |
 | Resume a run that waits | `run --resume <id>` | `run_resume` | spending |
-| Retry from the failed step (the page's main action on a failed run), *Retry this step* (a failed step's detail), *Run <station> again* | `retry <id> [--step <step> \| --from <station>] [--yes]` (`--plan --json`: the files it would take back, which the page asks about in a modal before it passes `--yes`) | `run_retry` (`confirm`: refused without it when it would take back the agents' work) | spending; taking back the agents' work: user |
+| *↻ Retry "<step>"* (the page's main action on a run that failed or waits for its retry: the smallest unit that failed, in place), *Retry this step* or the tree's *↻* on a failed step or a failed attempt inside it (in place, its files kept), *Run again from this step* on one that passed, *Run <station> again* | `retry <id> [--step <step> \| --from <station>] [--yes]` (`--plan --json`: the files it would take back, none in place, which the page asks about in a modal before it passes `--yes`) | `run_retry` (`confirm`: refused without it when it would take back the agents' work) | spending; taking back the agents' work: user |
 | Start over from the Analysis (its files go back, set aside first) | `restart <id> --yes` (the page's modal first; without `--yes` a terminal is asked, anything else refused) | `run_restart` | user |
 | Stop | `run stop <id>` | `run_stop` | anyone |
 | The runs | `runs --json` | `runs` | anyone |
 | A run's file | `run show <id>` | `run_file` | anyone |
 | A run's journal | `run journal <id>` | `run_journal` | anyone |
-| Answer a gate: Approve / Ask for a change / Later; QA's plan: Go on | `run answer <id> --answer approve\|change\|stop\|yes\|no [--text …]` | `run_answer` | anyone; the delivery gate (a commit and a pull request in the user's name): user; the spending: never (above) |
+| Answer a gate: Approve / Ask for a change / Later; QA's plan: Go on; a station that waits for its retry (`kind: retry`): Retry (`yes`) / End as failed (`no`) / Later (`stop`) | `run answer <id> --answer approve\|change\|stop\|yes\|no [--text …]` | `run_answer` | anyone; the delivery gate (a commit and a pull request in the user's name): user; the spending: never (above) |
 
 `run answer` reaches a run's process through `.nuclear/builder/runs/<id>.answer.json` when one waits on the
 question (the process reads it beside its stdin), else the run goes on with the answer (`--events` for the page,

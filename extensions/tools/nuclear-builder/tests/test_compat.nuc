@@ -181,6 +181,25 @@ testAnEngineThreeRunWithoutTeamMemberOrKeysIsRetriedFromItsStation(tmpPath: Path
     analysis: <string, any> = (done["stages"] as <string, any>[])[0]
     expect((analysis["steps"] as <string, any>[])[0]["key"] == null and analysis["status"] == "passed", fixture)
 
+// A failed run of before the retries (no `retries`, no `failing`) is retried in place from its failed step: nothing
+// taken back, nothing to confirm, every step before it kept.
+testAFailedRunOfBeforeTheRetriesIsRetriedInPlaceFromItsFailedStep(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
+  root = lineProject(tmpPath, monkeypatch, [])
+  old = compatRun(root, "engine3-no-keys")
+  monkeypatch.chdir(root)
+  capsys.readouterr()
+  expect(retryLine(["count-books", "--plan"], false) == 0)
+  plan: <string, any> = printed(capsys)
+  expect(plan["files"] == [], json.dumps(plan))
+  step = failedStepOf(old)!
+  calls: string[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  done = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start(null, step)
+  expect(done["status"] == "passed" and not ("/developer/analyze" in calls) and done["previous"] == null, "${done["status"]}")
+  code: <string, any> = (done["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
+  expect((code["steps"] as <string, any>[]).any((x) => x["id"] == step and x["status"] == "failed") and (done["retries"] as <string, any>[]).last["level"] == "you")
+
 testTheFlatSpecsAreListedAndMovedToTheirComponentWithTheirFiles(tmpPath: Path, monkeypatch: any, capsys: any) void
   compatHome(tmpPath, monkeypatch)
   root = compatProject(tmpPath, monkeypatch)

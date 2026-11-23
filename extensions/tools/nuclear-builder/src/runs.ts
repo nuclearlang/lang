@@ -112,9 +112,12 @@ export interface Spec {
 /** What a run asks the user (`{"type": "ask", …}`, kept in the run as `waiting`). */
 export interface Ask {
   id: string;
-  kind: 'gate' | 'spending' | 'checks';
+  kind: 'gate' | 'spending' | 'checks' | 'retry';
   question: string;
   station?: string;
+  /** A `retry` ask: the step that failed after every level of retries, and whether a retry alone can fix it. */
+  step?: string;
+  worth?: boolean;
   documents?: string[];
   providers?: string[];
   budgetUsd?: number;
@@ -163,6 +166,24 @@ export interface Run {
   /** What an undo took back, set aside first (`.nuclear/builder/runs/<id>.set-aside/<at>/<path>`): nothing an agent wrote is lost. */
   setAside?: { at: number; folder: string; files: string[]; why?: string }[];
   interrupted?: { at: number; stage: string; step: string; undone: string[] }[];
+  /** Every retry as it happened, smallest level first: a call or command again in place (`process`), a station's part
+   * again (`node`), the station diagnosed and worked again (`station`), the user's (`you`); `of` 0 for the user's. */
+  retries?: RetryEntry[];
+  /** The station that waits for the user's retry, and its failed step. */
+  failing?: { station: string; step: string; worth: boolean } | null;
+}
+
+export interface RetryEntry {
+  at: number;
+  level: 'process' | 'node' | 'station' | 'you';
+  station: string;
+  step: string;
+  title: string;
+  key?: string;
+  args?: string[];
+  attempt: number;
+  of: number;
+  why: string;
 }
 
 /** A check of the run (`specs/<id>/checks.json`, `nuclear-builder checks <id> --json`). */

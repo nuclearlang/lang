@@ -16,7 +16,7 @@ import { migrateSettings } from '../../../vscode/src/migrateSettings';
 import { addMembers, agentsHere, CommandMissing, createTeam, listTeams, removeMember, roleMember, roster, saveTeam, showTeam, suggestMembers, suggestNames, teamScreen, updateMember, vaultSet } from '../src/teams/cli';
 import { LineRun, lineJson, localSpecs, newRunId, orphaned, Run, specMarkdown, writeSpec } from '../src/runs';
 import { beatOf, beatState, isToolCall, storyOf } from '../src/story';
-import { failedStepOf, initials, inline, providerName, runOutline, stepTitle, specOfPath, specTree, stepTree, teamColor, teamLog, teamWork, whoLabel } from '../src/workbench';
+import { failedStepOf, initials, inline, providerName, retryText, retryUnit, runOutline, stepTitle, specOfPath, specTree, stepTree, teamColor, teamLog, teamWork, whoLabel } from '../src/workbench';
 import { factoryDir, logoData, rosterFaces } from '../src/teams/cli';
 import { budgetGauge, filterRoster, memberActivity, statLevel, teamSpend } from '../src/teams/hud';
 import { differences, draftOf, filterPool, missingRoles, paidMembers, roleCounts, rosterSkills, sameForAll } from '../src/teams/wizard';
@@ -370,6 +370,34 @@ test('a failed run is retried from its failed step: the first failure after the 
   assert.equal(failedStepOf({ stages: [{ id: 'code', status: 'passed', steps }] }), null);
   // the page has it inlined, with the other functions it computes
   assert.match(inline({ failedStepOf }), /W = \{ failedStepOf: /);
+});
+
+test('the main action retries the smallest unit that failed, also while the run waits for its retry; each retry is said in the page\'s language', async () => {
+  const steps = [{ id: 'code-1', status: 'passed' }, { id: 'code-2', status: 'failed' }];
+  const stages = [{ id: 'code', title: 'Code', status: 'failed', steps }];
+  assert.equal(retryUnit({ status: 'failed', stages })?.x.id, 'code-2');
+  // every level tried, the engine waits on a `retry` ask: the same unit, the station still failed
+  assert.equal(retryUnit({ status: 'waiting', waiting: { kind: 'retry' }, stages })?.x.id, 'code-2');
+  // waiting at a gate, or passed: nothing to retry
+  assert.equal(retryUnit({ status: 'waiting', waiting: { kind: 'gate' }, stages }), null);
+  assert.equal(retryUnit({ status: 'passed', stages: [{ id: 'code', status: 'passed', steps: [{ id: 'code-1', status: 'passed' }] }] }), null);
+  const { BUILDER } = await import('../src/l10n');
+  const es = { ...BUILDER.en, ...BUILDER.es } as Record<string, string>;
+  const en = BUILDER.en as Record<string, string>;
+  const entry = { level: 'process', attempt: 2, of: 3, title: 'Developer: Code', key: 'work', args: ['developer', 'code'] };
+  assert.equal(retryText(entry, en), 'A call or command of “Developer: Code” again in place (attempt 2 of 3)'.replace('Developer: Code', stepTitle(entry, en)));
+  for (const level of ['process', 'node', 'station', 'you']) {
+    assert.ok(en['retry.' + level] && es['retry.' + level] !== en['retry.' + level], level);
+    assert.doesNotMatch(retryText({ ...entry, level }, es), /\{\d\}/);
+  }
+  assert.match(retryText({ level: 'you', attempt: 1, of: 0, title: 'lib/b.nuc' }, es), /Reintentaste «lib\/b\.nuc» en su sitio/);
+  // the page has them inlined
+  assert.match(inline({ retryUnit, retryText }), /W = \{ retryUnit: .*retryText: /);
+  // the chat offers the same answers as buttons
+  const { askPost, RUN_TEXTS } = await import('../../../vscode/src/chatHost');
+  const post = askPost({ id: 'r', spec: { title: 'x' }, stages: [{ id: 'code', title: 'Code', status: 'failed', role: 'developer', steps: [] }] } as never, { id: 'retry-code', kind: 'retry', station: 'code', question: 'q', key: 'retryAsk', args: ['code', 'code-2', 'exit 1'] }, () => 'dev', RUN_TEXTS.es);
+  assert.deepEqual(post.buttons?.map((x) => x.id), ['run|r|retry-code|yes', 'run|r|retry-code|no', 'run|r|retry-code|stop']);
+  assert.match(post.text, /^La estación Código falló en el paso code-2/);
 });
 
 test('a step opens like a debugger: outcome, trace and tool calls in order (a call to its input and output), decisions, files, log', () => {

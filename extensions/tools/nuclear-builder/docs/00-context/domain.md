@@ -79,6 +79,8 @@ So that the local 3B models only think the business logic:
 - A bug's repair goes to the file the failure names, whoever wrote it, and never to the test.
 - Two processes never run the same run.
 - A file the user changed since the run wrote it is never undone.
+- A failure never takes back what the agents wrote: it is retried smallest first, in place (a call, a part, the
+  station), then the run waits for the user's retry.
 - No paid call without the two confirmations (or `--confirm-spending` where the project allows it), and never over
   the run's budget.
 - Nothing is merged: DevOps opens a pull request, only after the user approves it.

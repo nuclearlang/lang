@@ -28,7 +28,7 @@ import { CONFIG_FILE, githubIssue, jiraIssue, JiraAuth, jiraMine, suggestContext
 import { missingCommand } from './support';
 import { chat, teamChannel } from '../../../vscode/src/chatView';
 import { askPost, askText, buttonOf, ChatEvent, fmt, lineDiff, RUN_TEXTS, runPosts } from '../../../vscode/src/chatHost';
-import { failedStepOf, inline, initials, providerName, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
+import { failedStepOf, inline, initials, providerName, retryText, retryUnit, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
 import { assetUrl } from '../../../vscode/src/assetsPage';
 
 export interface BuilderProject {
@@ -501,7 +501,7 @@ function lite(r: Run): RunLite {
 }
 
 /** The page's helpers, inlined in its script: their source, and `W` naming them whatever the bundle called them. */
-const WORKBENCH_JS = inline({ failedStepOf, specTree, specOfPath, runOutline, teamLog, providerName, whoLabel, stepTree, stepTitle, initials, teamColor });
+const WORKBENCH_JS = inline({ failedStepOf, retryUnit, retryText, specTree, specOfPath, runOutline, teamLog, providerName, whoLabel, stepTree, stepTitle, initials, teamColor });
 
 export class BuilderPanel {
   static current: BuilderPanel | undefined;
@@ -1141,6 +1141,7 @@ button.ghost { background: transparent; color: var(--muted); } button.ghost:hove
 .tr.k-decision .tt { font-family: inherit; font-size: 12.5px; }
 .tr.k-summary .tt { font-family: inherit; max-width: none; flex-shrink: 1; white-space: normal; }
 .tl .tv { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: var(--vscode-editor-font-family); font-size: 11.5px; flex: 1; min-width: 0; }
+.tl .trr { padding: 0 5px; font-size: 11px; line-height: 16px; flex-shrink: 0; }
 .tl .tm { margin-left: auto; color: var(--muted); font-size: 11px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .tlab { display: block; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tr.file .tt { color: var(--vscode-textLink-foreground); }
@@ -1429,6 +1430,7 @@ const factory = (r) => (r.engine ?? 0) >= 3;
 /** Where the run is, or where it failed or waits: what is open when the user chose nothing. */
 function pick(r) {
   for (const st of r.stages) for (const x of st.steps) if (x.status === 'running') return { stage: st.id, step: x.id };
+  if (r.waiting?.kind === 'retry') return { stage: r.waiting.station, step: r.waiting.step };
   const w = r.stages.find((st) => st.status === 'waiting');
   if (w) return { stage: r.waiting?.kind === 'checks' ? null : w.id, step: null };
   const f = failedStep(r);
@@ -1507,11 +1509,14 @@ const ICONS = { summary: '≡', trace: '›', tool: '⚒', io: '⇄', decision: 
 function stationItem(r, s) { return { key: r.id + '/' + s.id, kind: 'station', stage: s.id, title: s.title, status: s.status, who: s.role ? whoFor(s.role, s) : '', time: dur(s), tip: s.about, kids: s.steps.map((x) => stepItem(r, s, x)) }; }
 function stepItem(r, s, x) {
   const key = r.id + '/' + s.id + '/' + x.id;
-  return { key, kind: 'step', stage: s.id, step: x.id, title: x.title, status: x.status, who: whoFor(x.actor, x), time: dur(x) + (x.costUsd ? ' · $' + x.costUsd.toFixed(3) : ''), tip: ACTORS[who(x.actor)]?.does, kids: W.stepTree(x).map((n) => innerItem(key, n)) };
+  // every step that ended can be retried by hand (a failed one in place; one that passed after the user confirms what
+  // it takes back), and a process of it that failed (a call or command tried again) retries its step
+  const can = !live(r) && factory(r) && (x.status === 'failed' || x.status === 'passed') ? x.id : '';
+  return { key, kind: 'step', stage: s.id, step: x.id, title: x.title, status: x.status, retry: can, who: whoFor(x.actor, x), time: dur(x) + (x.costUsd ? ' · $' + x.costUsd.toFixed(3) : ''), tip: ACTORS[who(x.actor)]?.does, kids: W.stepTree(x).map((n) => innerItem(key, n, n.kind === 'trace' && n.title === 'retry' ? can : '')) };
 }
-function innerItem(base, n) {
+function innerItem(base, n, retry = '') {
   const key = base + '/' + n.id;
-  return { key, kind: n.kind, title: n.kind === 'io' || n.kind === 'log' ? t('node.' + n.title) : n.title, value: n.kind === 'log' ? t('node.lines', n.value) : n.value, text: n.kind === 'decision' ? t('because', n.text) : n.text, file: n.file, kids: n.children.map((c) => innerItem(key, c)) };
+  return { key, kind: n.kind, retry, title: n.kind === 'io' || n.kind === 'log' ? t('node.' + n.title) : n.title, value: n.kind === 'log' ? t('node.lines', n.value) : n.value, text: n.kind === 'decision' ? t('because', n.text) : n.text, file: n.file, kids: n.children.map((c) => innerItem(key, c)) };
 }
 function rows(items, depth, parent) {
   return items.map((it) => {
@@ -1523,7 +1528,7 @@ function rows(items, depth, parent) {
     const head = '<div class="tr k-' + it.kind + (big ? ' big' : '') + (sel ? ' sel' : '') + (open ? ' open' : '') + (it.file ? ' file' : '') + '" role="treeitem" tabindex="-1" aria-level="' + (depth + 1) + '"' + (can ? ' aria-expanded="' + open + '"' : '') + (sel ? ' aria-selected="true"' : '')
       + ' data-tk="' + esc(it.key) + '" data-tp="' + esc(parent) + '"' + (it.file ? ' data-tf="' + esc(it.file) + '"' : '') + (it.step ? ' data-tst="' + esc(it.stage) + '" data-tsp="' + esc(it.step) + '"' : '') + ' style="--d:' + depth + '"' + (it.tip ? ' title="' + esc(it.tip) + '"' : '') + '>'
       + '<span class="tw">' + (can ? '▸' : '') + '</span>' + lead
-      + '<div class="tb"><div class="tl"><span class="tt">' + esc(it.title) + '</span>' + (it.value ? '<span class="tv">' + esc(it.value) + '</span>' : '') + (big && it.time ? '<span class="tm">' + esc(it.time) + '</span>' : '') + '</div>'
+      + '<div class="tb"><div class="tl"><span class="tt">' + esc(it.title) + '</span>' + (it.value ? '<span class="tv">' + esc(it.value) + '</span>' : '') + (big && it.time ? '<span class="tm">' + esc(it.time) + '</span>' : '') + (it.retry ? '<button class="trr" data-retrystep="' + esc(it.retry) + '" title="' + esc(t(it.status === 'passed' ? 'retryFromHereHint' : 'retryOneHint')) + '" aria-label="' + esc(t(it.status === 'passed' ? 'retryFromHere' : 'retryOne')) + '">↻</button>' : '') + '</div>'
       + (it.who ? '<small class="tlab">' + esc(it.who) + '</small>' : '') + '</div></div>';
     const body = open ? (it.kids?.length ? rows(it.kids, depth + 1, it.key) : '<pre class="tx" style="--d:' + (depth + 1) + '">' + esc(it.text) + '</pre>') : '';
     return head + body;
@@ -1545,7 +1550,7 @@ function nodeOf(r) {
   return '<div class="nh"><div class="dhead">' + (st.role ? av(st.role) : '') + '<h2>' + esc(st.title) + '</h2><span class="pill"><span class="dot st-' + st.status + '"></span> ' + esc(STATUS(st.status)) + '</span><span class="muted">' + dur(st) + '</span></div>'
     + (st.role ? '<div class="who1" title="' + esc(ACTORS[who(st.role)].does) + '">' + esc(whoFor(st.role, st)) + '</div>' : '')
     + '<div class="acts">' + (!live(r) && factory(r) && st.status !== 'pending' ? '<button id="retryStage" class="primary" title="' + esc(t('retryStageHint')) + '">↻ ' + esc(t('retryStage', st.title)) + '</button>' : '')
-    + (x && x.status === 'failed' && !live(r) && factory(r) && r.status === 'failed' ? '<button id="retryOne" class="primary" title="' + esc(t('retryOneHint')) + '">↻ ' + esc(t('retryOne')) + '</button>' : '')
+    + (x && (x.status === 'failed' || x.status === 'passed') && !live(r) && factory(r) ? '<button id="retryOne" class="primary" title="' + esc(t(x.status === 'failed' ? 'retryOneHint' : 'retryFromHereHint')) + '">↻ ' + esc(t(x.status === 'failed' ? 'retryOne' : 'retryFromHere')) + '</button>' : '')
     + (x ? '<button id="inStep" title="' + esc(t('insideStepHint')) + '">⤢ ' + esc(t('insideStep')) + '</button>' : '')
     + '<button data-over="1" class="ghost" title="' + esc(t('backToRunHint')) + '">‹ ' + esc(t('theRun')) + '</button></div></div>'
     + tree(st.steps.map((y) => stepItem(r, st, y)));
@@ -1553,6 +1558,7 @@ function nodeOf(r) {
 function runNode(r) {
   const active = r.stages.find((s) => s.status === 'running' || s.status === 'waiting');
   const aside = (r.setAside ?? []).map((k) => '<div class="crow"><span class="dot st-skipped"></span><div>' + esc(t('setAside', k.files.length, k.folder + '/')) + '<small>' + new Date(k.at).toLocaleString(LANG) + ' · ' + esc(k.files.slice(0, 6).join(', ') + (k.files.length > 6 ? '…' : '')) + '</small></div></div>').join('');
+  const retried = (r.retries ?? []).slice().reverse().map((x) => '<div class="crow"><span class="dot st-' + (x.level === 'you' ? 'running' : 'skipped') + '"></span><div>' + esc(W.retryText(x, T)) + '<small>' + new Date(x.at).toLocaleString(LANG) + (x.why ? ' · ' + esc(x.why) : '') + '</small></div></div>').join('');
   const tries = (r.previous ?? []).map((p, i) => '<div class="crow"><span class="dot st-' + p.status + '"></span><div>' + esc(t('attempt', i + 1, STATUS(p.status), p.from)) + (p.why ? ': ' + esc(p.why) : '') + '<small>' + new Date(p.at).toLocaleString(LANG) + (p.undone?.length ? ' · ' + esc(t('undone', p.undone.join(', '))) : '') + '</small></div></div>').join('');
   const crit = r.spec.criteria.map((c) => '<div class="crow">☐<div>' + esc(c) + '</div></div>').join('');
   const docs = r.stages.flatMap((s) => s.steps.flatMap((x) => (x.files ?? []).filter((f) => f.startsWith('specs/')))).filter((f, i, all) => all.indexOf(f) === i);
@@ -1563,6 +1569,7 @@ function runNode(r) {
     + fold('checks', esc(t('checksTitle')) + (list ? ' <span class="muted">' + esc(t('checksCount', list.filter((c) => c.on).length, list.length)) + '</span>' : ''), consoleOf(r))
     + fold('crit', esc(t('accTitle')) + ' <span class="muted">' + r.spec.criteria.length + '</span>', crit)
     + fold('docs', esc(t('documents')), docs.map((f) => '<div><a data-open="' + esc(f) + '">' + esc(f) + '</a></div>').join(''))
+    + fold('retried', esc(t('retriesTitle')) + ' <span class="muted">' + (r.retries ?? []).length + '</span>', retried)
     + fold('tries', esc(t('earlierAttempts')) + ' <span class="muted">' + (r.previous ?? []).length + '</span>', tries ? tries + '<small class="muted block">' + esc(t('keptWhole', r.id)) + '</small>' : '')
     + fold('aside', esc(t('setAsideTitle')) + ' <span class="muted">' + (r.setAside ?? []).length + '</span>', aside);
 }
@@ -1641,18 +1648,22 @@ function progress(r) {
 }
 function head(r) {
   const bad = failedStep(r);
+  // the main action retries the smallest unit that failed: its step, in place
+  const unit = W.retryUnit(r);
+  const asks = r.waiting?.kind === 'retry' && unit;
   const idle = !live(r);
   const team = r.factory?.teamName ?? teamCtx[r.id]?.team;
   const bits = [esc(t('uc.' + r.spec.useCase)), team ? esc(t('teamOf', team)) : '', dur({ started: r.created, ended: r.ended }), r.costUsd ? 'USD ' + r.costUsd.toFixed(3) + (r.factory?.budgetUsd ? ' / ' + r.factory.budgetUsd.toFixed(2) : '') : ''].filter(Boolean);
   const station = bad ? r.stages.find((s) => s.id === bad.st.id) : null;
   return '<div class="top"><div class="head"><h1>' + esc(r.spec.title) + '</h1><span class="pill"><span class="dot st-' + r.status + '"></span> ' + esc(STATUS(r.status)) + '</span><span class="muted">' + bits.join(' · ') + '</span><div class="grow"></div>'
     + (!idle ? '<button id="stop" title="' + esc(r.waiting ? t('stopWaitingHint') : t('stopHint')) + '">■ ' + esc(t('stop')) + '</button>' : '')
-    + (idle && station && factory(r) && r.status === 'failed' ? '<button id="retry" class="primary" data-step="' + esc(bad.x.id) + '" title="' + esc(t('retryHint', W.stepTitle(bad.x, T), station.title)) + '">↻ ' + esc(t('retry')) + '</button>' : '')
+    + (asks ? '<button class="primary" data-answer="yes" title="' + esc(t('retryHint', W.stepTitle(unit.x, T), unit.st.title)) + '">↻ ' + esc(t('retryUnit', W.stepTitle(unit.x, T))) + '</button>' : '')
+    + (!asks && idle && station && factory(r) && r.status === 'failed' ? '<button id="retry" class="primary" data-step="' + esc(bad.x.id) + '" title="' + esc(t('retryHint', W.stepTitle(bad.x, T), station.title)) + '">↻ ' + esc(t('retryUnit', W.stepTitle(bad.x, T))) + '</button>' : '')
     + (idle && r.status === 'waiting' && !r.waiting ? '<button id="resume" class="primary" title="' + esc(t('resumeHint')) + '">▶ ' + esc(t('resume')) + '</button>' : '')
     + (idle ? '<button id="scratch" title="' + esc(t('scratchHint')) + '">⟲ ' + esc(t('scratch')) + '</button>' : '')
     + '<button data-act="detail">' + esc(detailed ? t('prog.simple') : t('prog.detail')) + '</button>'
     + '<button data-open="' + esc((r.specPath ?? 'specs/' + r.id) + '/spec.md') + '">' + esc(t('openSpec')) + '</button></div>'
-    + (r.waiting ? '<div class="acts" style="margin:6px 0 0"><button class="primary" data-act="showAsk">❗ ' + esc(t('waitsForYouSee')) + '</button></div>' : '')
+    + (r.waiting && !asks ? '<div class="acts" style="margin:6px 0 0"><button class="primary" data-act="showAsk">❗ ' + esc(t('waitsForYouSee')) + '</button></div>' : '')
     + (factory(r) ? '' : '<div class="muted">⚠ ' + esc(t('olderEngine')) + '</div>')
     + ((r.interrupted ?? []).slice(-1).map((i) => '<div class="muted">⚠ ' + esc(t('interrupted', i.stage + (i.step ? ' · ' + i.step : ''), new Date(i.at).toLocaleString(LANG), i.undone.join(', ') || t('nothing'))) + '</div>').join(''))
     + (!detailed ? '' : '<div class="muted hint">' + esc(t('clickHint')) + ((r.previous ?? []).length ? ' <a data-over="1">' + esc(r.previous.length === 1 ? t('earlierOne') : t('earlierMany', r.previous.length)) + '</a>' : '') + '</div>') + '</div>';
@@ -1668,6 +1679,15 @@ function gate(r) {
     return '<div class="gate" role="alert"><div class="q"><span class="bell">💰</span><b>' + esc(t('spendingAsk', (w.providers ?? []).map((p) => PROVIDERS[p] ?? p).join(', '))) + '</b></div>'
       + '<div class="muted">' + esc(live(r) ? t('spendingModal') : t('spendingResume')) + '</div>'
       + (live(r) ? '' : '<div class="acts"><button id="resume" class="primary">💰 ' + esc(t('confirmSpending')) + '</button></div>') + '</div>';
+  }
+  if (w.kind === 'retry') {
+    // every level of retries was tried (or none can fix it): the user retries the failed step in place, ends the run, or later
+    const x = st?.steps.find((y) => y.id === w.step);
+    const name = x ? W.stepTitle(x, T) : w.step ?? '';
+    return '<div class="gate" role="alert"><div class="q"><span class="bell">↻</span>' + (role ? av(role) : '') + '<b>' + esc(t(w.worth === false ? 'retryAskNow' : 'retryAsk', st?.title ?? w.station ?? '', name)) + '</b></div>'
+      + (x?.summary ? '<div class="muted">' + esc(x.summary) + '</div>' : '')
+      + '<div class="muted">' + esc(t(w.worth === false ? 'retryNotWorth' : 'retryKept')) + '</div>'
+      + '<div class="acts"><button class="primary" data-answer="yes">↻ ' + esc(t('retryUnit', name)) + '</button><button data-answer="no">' + esc(t('endFailed')) + '</button><button data-answer="stop" title="' + esc(t('laterHint')) + '">' + esc(t('later')) + '</button></div></div>';
   }
   if (w.kind === 'checks') {
     // the user's own checks up to Quality: Delivery's are asked there, and those a gate answers are marked by its yes
@@ -1737,6 +1757,8 @@ const newSpec = () => { view = { mode: 'form', run: null, spec: null, stage: nul
 const runFor = (id) => S.runs.find((r) => r.id === id);
 
 document.addEventListener('click', (e) => {
+  const rb = e.target.closest('[data-retrystep]');
+  if (rb && view.mode === 'run') { view.auto = true; return vscode.postMessage({ type: 'retry', id: view.run.id, step: rb.dataset.retrystep }); }
   const tr = e.target.closest('#node .tr');
   if (tr) {
     tr.focus({ preventScroll: true });

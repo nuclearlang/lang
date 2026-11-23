@@ -166,12 +166,15 @@ journalMarkdown(run: <string, any>) string
   for p in (run["previous"] ?? []) as <string, any>[]
     undone: string[] = p["undone"] ?? []
     out.addAll(["", "- Retried from ${p["from"]} at ${when(p["at"])}: ${p["why"] ?? ""} (the earlier attempt ${p["status"]}; kept in the run's .json)${undone.isEmpty ? "" : "; undone: ${undone.join(", ")}"}"])
+  for r in (run["retries"] ?? []) as <string, any>[]
+    of: int = r["of"] ?? 0
+    out.addAll(["", "- Retried (${r["level"]}${of > 0 ? ", attempt ${r["attempt"]} of ${of}" : ""}) at ${when(r["at"])}: ${r["station"]} · ${r["title"] ?? r["step"]}: ${r["why"] ?? ""}"])
   for k in (run["setAside"] ?? []) as <string, any>[]
     kept: string[] = k["files"] ?? []
     out.addAll(["", "- Set aside at ${when(k["at"])} (${k["why"] ?? ""}): ${kept.join(", ")}; their last text is in ${k["folder"]}/"])
   for i in (run["interrupted"] ?? []) as <string, any>[]
     undone: string[] = i["undone"] ?? []
-    out.addAll(["", "- Interrupted at ${i["stage"]}${"${i["step"] ?? ""}".isEmpty ? "" : " · ${i["step"]}"} (${when(i["at"])}): the process that ran it stopped; undone: ${undone.isEmpty ? "nothing" : undone.join(", ")}; the trace log is ${RUNS_DIR}/${run["id"]}.log"])
+    out.addAll(["", "- Interrupted at ${i["stage"]}${"${i["step"] ?? ""}".isEmpty ? "" : " · ${i["step"]}"} (${when(i["at"])}): the process that ran it stopped; undone: ${undone.isEmpty ? "nothing (it goes on in place)" : undone.join(", ")}; the trace log is ${RUNS_DIR}/${run["id"]}.log"])
   stations: <string, any>[] = run["stages"] ?? []
   files: string[] = []
   open: string[] = []
@@ -399,6 +402,14 @@ failedStepOf(run: <string, any>) string?
       return bad
   null
 
+// Whether a retry of `stepId` goes on in place (nothing taken back): the step failed, in a station that did not pass.
+inPlace(run: <string, any>, stepId: string) boolean
+  for st in (run["stages"] ?? []) as <string, any>[]
+    for x in (st["steps"] ?? []) as <string, any>[]
+      if x["id"] == stepId
+        return x["status"] == "failed" and st["status"] != "passed" and st["status"] != "skipped"
+  false
+
 passedSteps(run: <string, any>) string[]
   ids: string[] = []
   for st in run["stages"] as <string, any>[]
@@ -413,8 +424,8 @@ passedSteps(run: <string, any>) string[]
           ids.add("${e["id"]}:${s["id"]}")
   ids
 
-// A run left `running` by a process that stopped: its unfinished steps are failed, what they wrote is undone, and
-// it can go on from there. False when the run is not orphaned.
+// A run left `running` by a process that stopped: its unfinished steps are failed, what they wrote stays in the
+// project, and it goes on in place from the step it was in. False when the run is not orphaned.
 recoverRun(run: <string, any>) boolean
   if run["status"] != "running" or not orphaned(run["owner"])
     return false
@@ -436,16 +447,13 @@ recoverRun(run: <string, any>) boolean
       st["ended"] = nowMs()
       if stage.isEmpty
         stage = st["id"]!
-  kept = passedSteps(run)
-  undone = undoWrites(run, "interrupted", (id) => id in kept)
-  run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
   interrupted: <string, any>[] = run["interrupted"] ?? []
-  interrupted.add({ "at": nowMs(), "stage": stage, "step": step, "stepId": stepId, "undone": undone })
+  interrupted.add({ "at": nowMs(), "stage": stage, "step": step, "stepId": stepId, "undone": [] as string[] })
   run["interrupted"] = interrupted
   run["status"] = "failed"
   run["ended"] = nowMs()
   saveRun(run)
-  traceEvent(run, "recovered", "undone: ${undone.isEmpty ? "nothing" : undone.join(", ")}")
+  traceEvent(run, "recovered", "nothing undone: it goes on in place")
   true
 
 // A run as a list shows it: its id, title, status, cost and each station's status.

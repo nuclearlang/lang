@@ -11,7 +11,8 @@ use pathlib{ Path }
 // Quality, Delivery), each worked by its role as the run's team assigned it (a local agent, an agent's command line
 // or an API model, `adapter*.nuc`). Each station writes its documents in the spec's folder (`specPath`: `specs/<component>/[<layer>/]<id>/`) from its role's templates;
 // the gates stop the run for the user; the checks are one list per run; the money has one budget per run and two
-// confirmations before the first paid call; what a failed step wrote is undone and a crashed run resumes. The
+// confirmations before the first paid call; a failure is retried smallest first, in place with its files kept (a
+// call, a part, the station), then waits for the user's retry, and a crashed run resumes. The
 // editors draw the run file and talk to this engine as a process (docs/02-architecture/engine.md).
 
 // The documents each station writes in the spec's folder (`specPath`: `specs/<component>/[<layer>/]<id>/`).
@@ -58,17 +59,33 @@ RunStop(message: string) : RuntimeError(message)
 // What the one diagnosis of a failed station asks its role (spec 024 requirement 6), the failure after it.
 REPAIR_TASK = "A step of this station failed; its failure is below. Do not change any file. Answer FIXABLE or NOT FIXABLE on the first line: FIXABLE when working the station again with what you write next would pass (a document to correct, a check's findings to follow); NOT FIXABLE when it needs the user (a missing tool, key or decision, the money). Then, in at most ten lines, written in the spec's language (its `- Language:` line; the first one is told in the team's channel): what went wrong and what the station must change."
 
+// What an attempt again is told after the failure: the work of before is still there.
+AGAIN_NOTE = "What it wrote is still in the project: go on from it and fix what failed; do not start over."
+
 // The most a diagnosis may spend (USD), within what the run's budget has left.
 REPAIR_BUDGET_USD = 0.5
 
 // The parts of a station a repair never runs again: the generators' and those that asked the user.
 REPAIR_KEEPS = ["generate", "plan", "approve"]
 
+// The parts of a station that are the user's (a gate, QA's plan and its yes, the delivery's question): never tried
+// again by themselves.
+USER_PHASES = ["plan", "approve", "end", "gate"]
+
+// A failure no attempt again can fix: it needs the user (the money, a decision, a key, a tool to install, a setting).
+// It goes to the user at once, past every level of retries (the text of a step's summary or an agent's error).
+NOT_WORTH_RETRYING = ["budget", "no adapter for the provider", "is not installed or not on the PATH", "names no model", "no price for", "no API key", "no local model", "401 Unauthorized", "403 Forbidden", "not a run of the Builder", "a test is not rewritten to pass", "stopped by you"]
+
+// Whether a failure is worth another attempt (a timeout, a crash, a broken pipe, a flaky command, a test the agent can
+// fix): not when it needs the user (`NOT_WORTH_RETRYING`).
+worthRetrying(why: string) boolean
+  not NOT_WORTH_RETRYING.any((p) => p in why)
+
 Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (question: <string, any>) => <string, any>?, emit: (e: <string, any>) => void, options: <string, any> = {})
   lock: threading.Lock = threading.Lock()
   phaseNow: string = ""
   beating: threading.Event = threading.Event()
-  // the stations this process repaired once already (`spec/station`): a second failure stops the run
+  // the stations this process repaired already (`spec/station`, once per repair): past `retries.station` the run waits
   repaired: string[] = []
 
   root() string
@@ -140,11 +157,30 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     decisions: <string, any>[] = s["decisions"]!
     decisions.add({ "what": what, "why": why })
 
+  // How many times a level is tried again by itself (`retries` of the line, ci.nuc `RETRIES`).
+  bound(level: string) int
+    given: <string, any> = line["retries"] ?? ({} as <string, any>)
+    given[level] ?? RETRIES[level] ?? 0
+
+  // A retry as it happens: in the run's `retries` (the level, the attempt, why; the page says it in its language), the
+  // step's trace and the run's events and log.
+  retried(level: string, station: string, s: <string, any>, attempt: int, of: int, why: string) void
+    first = why.trim().split("\n")[0]
+    short = first.substring(0, Math.min(300, first.length))
+    list: <string, any>[] = run["retries"] ?? []
+    list.add({ "at": nowMs(), "level": level, "station": station, "step": s["id"], "title": s["title"], "key": s["key"] ?? "", "args": s["args"] ?? ([] as string[]), "attempt": attempt, "of": of, "why": short })
+    run["retries"] = list
+    detail = of > 0 ? "${level}: attempt ${attempt} of ${of}: ${short}" : "${level}: ${short}"
+    traceEvent(run, "retry", detail, s["id"]!)
+    onEvent(s, { "type": "retry", "step": "retry", "detail": detail })
+    save()
+
   // ---------- a run ----------
 
   // Runs the stations from `fromStation` (a station; null: the first that did not pass), and every one after it; or
   // from `fromStep` (a step's id): that step and every step after it, the steps before it in its station kept. What
-  // the steps left out wrote is undone first (a file changed since is kept). A run whose process stopped goes on
+  // the steps left out wrote is undone first (a file changed since is kept); a failed step in a station that did not pass
+  // goes on in place, nothing undone (`inPlace`). A run whose process stopped goes on
   // from the step it was in.
   start(fromStation: string? = null, fromStep: string? = null) <string, any>
     if run["status"] == "running" and not orphaned(run["owner"])
@@ -168,9 +204,13 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       return run
     // a run that waits for an answer goes on in its station: only the stations after it start again
     resumed = run["status"] == "waiting" and fromStation == null and stepAt == null
-    named = stepAt == null ? "" : "${(owning!["steps"] as <string, any>[]).find((x) => x["id"] == stepAt)!["title"]}"
-    why = stepAt != null ? "from the step \"${named}\" (it and every step after it run again)" : fromStation == null ? "from the station that did not pass" : "from ${fromStation}"
-    forget(resumed ? at + 1 : at, why, stepAt)
+    if stepAt != null and inPlace(run, stepAt!)
+      // a step that failed in a station that did not pass goes on in place: nothing is taken back
+      againInPlace(owning!, stepAt!, recovered and fromStep == null ? "the process that ran it stopped: it goes on in place" : "you asked to retry it")
+    else
+      named = stepAt == null ? "" : "${(owning!["steps"] as <string, any>[]).find((x) => x["id"] == stepAt)!["title"]}"
+      why = stepAt != null ? "from the step \"${named}\" (it and every step after it run again)" : fromStation == null ? "from the station that did not pass" : "from ${fromStation}"
+      forget(resumed ? at + 1 : at, why, stepAt)
     run["status"] = "running"
     run["owner"] = owner()
     run["ended"] = null
@@ -193,36 +233,18 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
           st["status"] = "running"
           st["started"] = st["started"] ?? nowMs()
           save()
-          // a decision left for the user (`deciding`): asked again on resume, the station not worked again before it
-          deciding: <string, any>? = run["deciding"]
-          waits = deciding != null and deciding!["station"] == st["id"]
-          ok = waits ? false : station(st)
-          // diagnosed once; when the diagnosis says the station can fix it, the station runs once more with it
-          if not ok and not waits and repair(st)
-            // Quality's findings are in the code: the Developer works again with the diagnosis, then Quality judges again
-            code = stages().find((x) => "${x["id"]}" == "code")
-            if "${st["id"]}" == "quality" and code != null and wanted(code!)
-              fixing: <string, any> = run["repairing"]!
-              fixing["station"] = "code"
-              code!["phases"] = ((code!["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
-              code!["status"] = "running"
-              save()
-              coded = station(code!)
-              code!["status"] = coded ? "passed" : "failed"
-              ok = coded and station(st)
-            else
-              ok = station(st)
-            run["repairing"] = null
-          // what the station cannot fix alone is asked of the user, with the diagnosis (spec 024 requirement 6)
-          if not ok
-            ok = userDecides(st)
-          st["status"] = ok ? "passed" : "failed"
+          // every level tried, the station failed: the run waits for the user's retry, never ends failed by itself
+          while not stationPasses(st)
+            st["status"] = "failed"
+            st["ended"] = nowMs()
+            save()
+            if not retryAsked(st)
+              return finish("failed")
+            st["status"] = "running"
+            save()
+          st["status"] = "passed"
           st["ended"] = nowMs()
           save()
-          if not ok
-            diagnose(st)
-            undoFailed()
-            return finish("failed")
         if not nextSpec()
           break
         at = 0
@@ -240,17 +262,96 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         ledgerAppend(runEntry(run))
         return run
       if isinstance(e, KeyboardInterrupt)
+        // what the stopped steps wrote stays in the project: a retry goes on from it
         for st in stages()
           for s in st["steps"] as <string, any>[]
             if s["status"] == "running"
               end(s, "failed", "stopped by you")
           if st["status"] == "running"
             st["status"] = "failed"
-        undoFailed()
         return finish("failed")
       throw e
     finally
       beating.set()
+
+  // A station's levels after its steps' own (its calls and its parts, `provider`, `commands`, `phase`): the diagnosis
+  // and its repair, then what only the user can decide. A failure the user must answer (`retryAsked`) is asked again
+  // on resume, the station not worked before it; so is a decision left for the user (`deciding`).
+  stationPasses(st: <string, any>) boolean
+    failing: <string, any>? = run["failing"]
+    if failing != null and failing!["station"] == st["id"]
+      return false
+    deciding: <string, any>? = run["deciding"]
+    waits = deciding != null and deciding!["station"] == st["id"]
+    ok = waits ? false : station(st)
+    // diagnosed; when the diagnosis says the station can fix it, the station runs once more with it, its files kept
+    if not ok and not waits and repair(st)
+      // Quality's findings are in the code: the Developer works again with the diagnosis, then Quality judges again
+      code = stages().find((x) => "${x["id"]}" == "code")
+      if "${st["id"]}" == "quality" and code != null and wanted(code!)
+        fixing: <string, any> = run["repairing"]!
+        fixing["station"] = "code"
+        code!["phases"] = ((code!["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
+        code!["status"] = "running"
+        save()
+        coded = station(code!)
+        code!["status"] = coded ? "passed" : "failed"
+        ok = coded and station(st)
+      else
+        ok = station(st)
+      run["repairing"] = null
+    // what the station cannot fix alone is asked of the user, with the diagnosis (spec 024 requirement 6)
+    if not ok
+      ok = userDecides(st)
+    if not ok
+      diagnose(st)
+    ok
+
+  // A station that failed after every level of retries: the user retries its failed step in place (what it wrote
+  // stays in the project), ends the run as failed (no), or leaves it waiting (later, or nobody answers). A failure no
+  // retry can fix (`NOT_WORTH_RETRYING`) is asked at once, with what the user must do first.
+  retryAsked(st: <string, any>) boolean
+    id = "${st["id"]}"
+    steps: <string, any>[] = st["steps"]!
+    found = failedStepOf({ "stages": [st] })
+    bad: <string, any>? = found == null ? steps.reversed().find((x) => x["status"] == "failed") : steps.find((x) => x["id"] == found)
+    if bad == null
+      return false
+    said = "${bad!["summary"] ?? ""}".trim()
+    shown = said.length > 400 ? "${said.substring(0, 399)}…" : said
+    worth = worthRetrying(said)
+    run["failing"] = { "station": id, "step": bad!["id"], "worth": worth }
+    save()
+    title = STATION_INFO[id]!["title"]
+    answer = askUser({ "id": "retry-${id}", "kind": "retry", "station": id, "step": bad!["id"], "worth": worth, "question": "The ${title} failed${worth ? " after its retries" : ""} at \"${bad!["title"]}\": ${shown}${worth ? "" : " (no retry fixes this alone: do what it says first)"} Retry it (what it wrote stays in the project), end the run as failed, or later?", "key": "retryAsk", "args": [id, "${bad!["id"]}", shown], "documents": [] as string[] })
+    run["failing"] = null
+    given = "${answer["answer"] ?? ""}"
+    if given == "yes" or given == "approve"
+      againInPlace(st, "${bad!["id"]}", "you asked to retry it")
+      return true
+    if given == "no"
+      return false
+    run["failing"] = { "station": id, "step": bad!["id"], "worth": worth }
+    throw RunStop("the ${title} waits for you to retry it")
+
+  // A failed step's station goes on from the part that holds it: the parts before it are kept, its steps and every
+  // file they wrote stay (nothing set aside: nothing goes back), and the retry is said.
+  againInPlace(st: <string, any>, stepId: string, why: string) void
+    steps: <string, any>[] = st["steps"]!
+    x = steps.find((y) => y["id"] == stepId)!
+    cut = "${x["phase"] ?? ""}"
+    phases: string[] = []
+    for p in (st["phases"] ?? []) as string[]
+      if p == cut
+        break
+      phases.add(p)
+    st["phases"] = phases
+    st["status"] = "pending"
+    st["ended"] = null
+    run["failing"] = null
+    run["waiting"] = null
+    run["diagnosis"] = null
+    retried("you", "${st["id"]}", x, ((run["retries"] ?? []) as <string, any>[]).count((r) => r["step"] == stepId and r["level"] == "you") + 1, 0, why)
 
   finish(status: string) <string, any>
     if status != "passed"
@@ -296,7 +397,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
 
   // A failed station diagnosed once by the provider of its own role (spec 024 requirement 6): its last failed step's
   // summary and log tail (a check's findings) go to one capped call; FIXABLE readies the station to run once more with
-  // the diagnosis in its task (what the failed steps wrote undone, its parts run again but the generators' and those
+  // the diagnosis in its task (what the failed steps wrote kept, its parts run again but the generators' and those
   // that asked the user). Recorded in `repairs` (`station`, `spec`, `step`, `diagnosis`, `fixable`, `at`, `costUsd`);
   // the call is the run's cost. False: no second attempt (a local role, the budget spent, repaired once already in
   // this process, not fixable): the run fails with the diagnosis for the user.
@@ -304,11 +405,12 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     id = "${st["id"]}"
     spec = "${(run["spec"] as <string, any>)["id"]}"
     a = assigned("${st["role"]}")
-    if "${spec}/${id}" in repaired or onDeveloper(a) or budgetLeft() <= 0
+    if repaired.count((r) => r == "${spec}/${id}") >= bound("station") or onDeveloper(a) or budgetLeft() <= 0
       return false
     steps: <string, any>[] = st["steps"]!
     bad = steps.reversed().find((x) => x["status"] == "failed")
-    if bad == null
+    // a failure no attempt can fix goes to the user at once
+    if bad == null or not worthRetrying("${bad!["summary"] ?? ""}")
       return false
     repaired.add("${spec}/${id}")
     failure = "${bad!["title"]}: ${bad!["summary"] ?? ""}\n\n${bad!["log"] ?? ""}".trim()
@@ -323,11 +425,11 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     repairs.add({ "station": id, "spec": spec, "step": bad!["id"], "diagnosis": diagnosis, "fixable": fixable, "at": nowMs(), "costUsd": out.costUsd })
     run["repairs"] = repairs
     s["log"] = diagnosis
-    // skipped, not passed: whatever the call wrote is undone with the failed steps
+    // skipped, not passed: the diagnosis changes no file (and what a failed step wrote stays for the next attempt)
     end(s, "skipped", fixable ? "fixable: the station works again with the diagnosis" : out.ok ? "not fixable by the station: the run stops for you" : "no diagnosis: ${out.error}")
     if not fixable
       return false
-    undoFailed()
+    retried("station", id, bad!, repaired.count((r) => r == "${spec}/${id}") + 1, bound("station") + 1, diagnosis)
     st["phases"] = ((st["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
     run["repairing"] = { "station": id, "diagnosis": diagnosis }
     save()
@@ -391,15 +493,6 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
       spec["pieces"] = ((spec["pieces"] ?? []) as <string, any>[]).filter((p) => p["by"] == "you")
     run["acceptance"] = null
     run["diagnosis"] = null
-
-  // What the steps that did not pass wrote is undone (a file changed since by someone else is kept; every file undone is
-  // set aside first, `undoWrites`).
-  undoFailed() void
-    kept = passedSteps(run)
-    undone = undoWrites(run, "what the steps that did not pass wrote", (id) => id in kept)
-    run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
-    if not undone.isEmpty
-      traceEvent(run, "undone", "${undone.join(", ")} (their last text set aside in ${RUNS_DIR}/${run["id"]}.set-aside/)")
 
   // *Check the connections*: everything the team will use, before the first station runs.
   preflight(st: <string, any>) boolean
@@ -489,13 +582,32 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     checked = wired and phase(st, "check", () => id != "code" or checkAndRepair(st))
     checked and phase(st, "checks", () => runChecks(st, role)) and phase(st, "end", () => id == "delivery" ? deliver(st) : gate(st, role))
 
-  // A part of a station, run once: a resumed run goes on after the parts that ended (`st.phases`).
+  // A part of a station, run once: a resumed run goes on after the parts that ended (`st.phases`). A part whose step
+  // failed is worked again in place up to `retries.node` times (a node's retry): its files stay, its task says what
+  // failed (`retrying`); never a part that is the user's (`USER_PHASES`) nor a failure no attempt can fix.
   phase(st: <string, any>, name: string, body: () => boolean) boolean
     done: string[] = st["phases"] ?? []
     if name in done
       return true
     phaseNow = name
+    steps: <string, any>[] = st["steps"]!
+    seen = steps.length
     ok = body()
+    tries = 0
+    while not ok and not (name in USER_PHASES) and tries < bound("node") and budgetLeft() > 0
+      bad = steps.skip(seen).reversed().find((x) => x["status"] == "failed")
+      if bad == null or not worthRetrying("${bad!["summary"] ?? ""}")
+        break
+      tries = tries + 1
+      retried("node", "${st["id"]}", bad!, tries + 1, bound("node") + 1, "${bad!["summary"] ?? ""}")
+      failure = "${bad!["title"]}: ${bad!["summary"] ?? ""}\n\n${tail("${bad!["log"] ?? ""}", 40)}".trim()
+      run["retrying"] = { "station": st["id"], "phase": name, "step": bad!["id"], "failure": failure.substring(Math.max(0, failure.length - 4000)) }
+      save()
+      seen = steps.length
+      phaseNow = name
+      ok = body()
+    if tries > 0
+      run["retrying"] = null
     if ok
       st["phases"] = [...done, name]
       save()
@@ -545,6 +657,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     fixing: <string, any>? = run["repairing"]
     if fixing != null and fixing!["station"] == id
       parts.add("## A repair: this station failed before, and its diagnosis says what to change\n\n${fixing!["diagnosis"]}")
+    again: <string, any>? = run["retrying"]
+    if again != null and again!["station"] == id
+      parts.add("## Your previous attempt failed\n\n${again!["failure"]}\n\n${AGAIN_NOTE}")
     parts.join("\n\n")
 
   // The documents of the stations before this one (and this one's, when it runs again).
@@ -567,16 +682,28 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     for k, v in inputs
       given[k] = v
     Path(specDir()).mkdir(parents = true, existOk = true)
-    w = Work(root(), specDir(), task, documentsBefore(), writes, "${a["model"] ?? ""}", budget, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
-    before = contents(root())
-    out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e), "${a["provider"]}")
-    s["files"] = ledger(run, "${s["id"]}", before)
-    s["usage"] = sumUsage(s["usage"], out.usage)
-    s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
-    run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
-    s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))
-    save()
-    out
+    told = task
+    spent = 0.0
+    attempt = 1
+    // a call that fails is called again in place (a process's retry): its files stay, the failure is told; the local
+    // Developer's adapter retries its own calls
+    while true
+      w = Work(root(), specDir(), told, documentsBefore(), writes, "${a["model"] ?? ""}", budget - spent, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
+      before = contents(root())
+      out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e), "${a["provider"]}")
+      s["files"] = [...((s["files"] ?? []) as string[]), ...ledger(run, "${s["id"]}", before)].unique()
+      s["usage"] = sumUsage(s["usage"], out.usage)
+      s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
+      run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
+      spent = spent + out.costUsd
+      s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))
+      save()
+      paidOut = a["kind"] != "local" and (budgetLeft() <= 0 or budget - spent <= 0)
+      if out.ok or attempt > bound("process") or onDeveloper(a) or not worthRetrying(out.error) or paidOut
+        return out
+      attempt = attempt + 1
+      retried("process", station, s, attempt, bound("process") + 1, out.error)
+      told = "${task}\n\n## Your previous attempt failed\n\n${out.error.substring(Math.max(0, out.error.length - 3000))}\n\n${AGAIN_NOTE}"
 
   // What watches a call of the local Developer while it waits (`adapter_local.nuc`).
   watchOf() <string, any>
@@ -1261,9 +1388,20 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     for command in list
       s = step(st, command, "shell")
       s["input"] = command
-      before = contents(root())
-      out = runShell(command, root(), (text) => onLog(s, text), line["commandTimeoutMs"] ?? 1_200_000)
-      s["files"] = ledger(run, "${s["id"]}", before)
+      tries = 0
+      out: <string, any> = {}
+      // a command that fails is run again in place (a flaky one, a timeout); not one a repair follows (`quiet`) nor
+      // one that must fail
+      while true
+        before = contents(root())
+        out = runShell(command, root(), (text) => onLog(s, text), line["commandTimeoutMs"] ?? 1_200_000)
+        s["files"] = [...((s["files"] ?? []) as string[]), ...ledger(run, "${s["id"]}", before)].unique()
+        failed: int = out["code"]!
+        if failed == 0 or quiet or expectFail or tries >= bound("process")
+          break
+        tries = tries + 1
+        retried("process", "${st["id"]}", s, tries + 1, bound("process") + 1, failed == -9 ? "timed out (killed)" : "exit ${failed}: ${lastLine("${s["log"]}")}")
+        onLog(s, "--- attempt ${tries + 1} of ${bound("process") + 1} ---")
       code: int = out["code"]!
       if code == -9
         end(s, "failed", "timed out: no end after ${((line["commandTimeoutMs"] ?? 1_200_000) / 60000).round()} min (killed)")
@@ -1343,7 +1481,6 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     if said != "change"
       throw RunStop("you left the ${STATION_INFO[id]!["title"]} for later")
     end(step(st, "You decided", "you", "", "youAskedChange"), "passed", "${answer["text"] ?? ""}")
-    undoFailed()
     st["phases"] = ((st["phases"] ?? []) as string[]).filter((p) => p in REPAIR_KEEPS)
     run["repairing"] = { "station": id, "diagnosis": "${diagnosis}\n\nThe user decided: ${answer["text"] ?? ""}" }
     save()

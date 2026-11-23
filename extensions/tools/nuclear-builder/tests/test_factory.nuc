@@ -163,14 +163,17 @@ testTheSpendingIsConfirmedTwiceAsEventsAndHeldToTheBudget(tmpPath: Path, monkeyp
   expect(Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).paidRoles(0).isEmpty)
   f = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => e["type"] == "ask" ? asked.add(e) : null, { "preflight": false, "forceConfirm": true })
   done = f.start()
-  expect(asked.map((q) => q["id"]) == ["spending-1", "spending-2"] and "0.50 USD" in "${asked[1]["question"]}" and "claude-code" in "${asked[1]["question"]}")
-  // the analysis cost 0.40 of 0.50; the design went over the budget: the run fails, and says so
-  expect(done["status"] == "failed" and ((done["costUsd"] as double) - 0.8).abs() < 0.000001)
+  expect(asked.take(2).map((q) => q["id"]) == ["spending-1", "spending-2"] and "0.50 USD" in "${asked[1]["question"]}" and "claude-code" in "${asked[1]["question"]}")
+  // the analysis cost 0.40 of 0.50; the design went over the budget: no retry spends more, the user is asked at once
+  expect(done["status"] == "waiting" and ((done["costUsd"] as double) - 0.8).abs() < 0.000001)
+  waiting: <string, any> = done["waiting"]!
+  expect(waiting["kind"] == "retry" and waiting["worth"] == false and ((done["retries"] ?? []) as any[]).isEmpty, json.dumps(waiting))
   expect(Path(root, "specs", "count-books", "analysis.md").readText().startsWith("# Analysis by Claude"))
   design = stepsOf(done).find((s) => s["role"] == "architect")!
   expect(design["provider"] == "claude-code" and design["model"] == "haiku" and design["status"] == "failed" and "over the run's budget: 0.80 of 0.50 USD" in "${design["summary"]}")
   // nothing more is called once the budget is spent
-  again = Factory(done, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false })
+  retry: <string, any>[] = [{ "answer": "yes" }]
+  again = Factory(done, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(retry, q), (e: <string, any>) => null, { "preflight": false })
   expect(stepsOf(again.start()).filter((s) => s["role"] == "architect").last["summary"] == "the run's budget is spent (0.8 USD)")
 
 testNoSpendingWithoutBothYesesAndNoFlagWhereConfirmationIsForced(tmpPath: Path, monkeypatch: any) void
@@ -189,28 +192,35 @@ testNoSpendingWithoutBothYesesAndNoFlagWhereConfirmationIsForced(tmpPath: Path, 
   stopped = Factory(run2, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false }).start()
   expect(stopped["status"] == "waiting" and run2["costUsd"] == 0)
 
-testWhatAFailedStepWroteIsUndoneAndARetryKeepsTheStationsThatPassed(tmpPath: Path, monkeypatch: any) void
+// Every level tried, a station that failed never ends the run by itself: the run waits for the user's retry, nothing
+// it wrote is taken back, and the user's yes goes on in place.
+testAFailedStationWaitsForTheUsersRetryKeepingEveryFileAndGoesOnInPlace(tmpPath: Path, monkeypatch: any) void
   localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["test -f lib/never.nuc"], "build": [] as string[], "test": [] as string[] } })
   calls: string[] = []
   f = factory(root, localCrew(), [], developer(calls))
   run = f.start()
-  // the code station's check failed: the run stops there; the steps that passed keep what they wrote
+  // the code station's check failed after its retries (the command again in place, then the part again): the run
+  // waits on the retry, the steps keep what they wrote
   stages: <string, any>[] = run["stages"]!
-  expect(run["status"] == "failed" and stages.map((st) => "${st["status"]}") == ["passed", "passed", "passed", "failed", "pending", "pending"])
-  expect(Path(root, "lib", "count.nuc").exists() and Path(root, "test", "count_the_books_test.nuc").exists())
+  expect(run["status"] == "waiting" and stages.map((st) => "${st["status"]}") == ["passed", "passed", "passed", "failed", "pending", "pending"])
+  waiting: <string, any> = run["waiting"]!
+  expect(waiting["kind"] == "retry" and waiting["id"] == "retry-code" and waiting["worth"] == true and waiting["step"] == failedStepOf(run))
+  levels = ((run["retries"] as <string, any>[])).map((r) => "${r["level"]}")
+  // smallest first: the command twice more, then the part again (its command twice more again), then the user
+  expect(levels == ["process", "process", "node", "process", "process"], json.dumps(levels))
+  expect(Path(root, "lib", "count.nuc").exists() and Path(root, "test", "count_the_books_test.nuc").exists() and run["setAside"] == null)
+  // a retry of it takes nothing back: no confirmation asked
+  monkeypatch.chdir(root)
+  expect(takeBackOf(run, null, failedStepOf(run), false).isEmpty)
   Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[] }, "gates": [] as string[] }))
-  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "yes" }, { "answer": "no" }]
   again = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) })
   done = again.start()
-  expect(done["status"] == "passed" and calls.count((c) => c == "/developer/analyze") == 1)
-  previous: <string, any>[] = done["previous"]!
-  // the retry went on from the code station: what it wrote before was undone first, then written again
-  expect(previous.length == 1 and previous[0]["from"] == "code" and previous[0]["undone"] == ["lib/count.nuc"])
-  // the failed station was diagnosed by the local diagnoser; the journal tells the retry
-  failedCode: <string, any>[] = previous[0]["stages"]![0]["steps"]!
-  expect(failedCode.last["title"] == "Why it failed" and failedCode.last["status"] == "skipped" and "/developer/diagnose" in calls)
-  expect("- Retried from code at " in Path(root, RUNS_DIR, "count-books.md").readText())
+  // the user's yes: on in place from the check, no station before it again, nothing undone
+  expect(done["status"] == "passed" and calls.count((c) => c == "/developer/analyze") == 1 and calls.count((c) => c == "/developer/code") == 1)
+  expect(done["previous"] == null and done["failing"] == null and (done["retries"] as <string, any>[]).last["level"] == "you")
+  expect("/developer/diagnose" in calls and "- Retried (you) at " in Path(root, RUNS_DIR, "count-books.md").readText())
 
 testARunAgainFromScratchUndoesEveryFileButOneChangedSince(tmpPath: Path, monkeypatch: any) void
   localOn(monkeypatch)
@@ -247,7 +257,7 @@ testARunLeftRunningByAProcessThatStoppedIsRecoveredAndResumed(tmpPath: Path, mon
   given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
   done = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start()
   interrupted: <string, any>[] = done["interrupted"]!
-  expect(interrupted[0]["stage"] == "code" and interrupted[0]["undone"] == ["lib/count.nuc"])
+  expect(interrupted[0]["stage"] == "code" and interrupted[0]["undone"] == [])
   // it went on from the code station: the stations before were not asked again
   expect(done["status"] == "passed" and not ("/developer/analyze" in calls) and Path(root, "lib", "count.nuc").readText() == "count() int = 0\n")
   expect(readTrace(root, "count-books").any((e) => e["event"] == "recovered"))
@@ -384,18 +394,19 @@ testAnyStepIsRunAgainFromItsIdTheStepsBeforeItKeptWhatTheOthersWroteUndone(tmpPa
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   team = localCrew()
-  // the second piece fails the first time: the run stops at it
+  // the second piece fails the first time: with no retry of a part (`retries.node` 0) the run waits at it
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[] }, "gates": [] as string[], "retries": { "node": 0 } }))
   failing: <string, any> = { "code": "B\n", "check": "1:1 N0001 bad", "attempts": 3 }
   run = again(twoPieces(root, team), root, team, developer(calls, { "/developer/code": [{ "code": "A\n", "check": "ok", "attempts": 1 }, failing, { "code": "B\n", "check": "ok", "attempts": 1 }] })).start()
-  expect(run["status"] == "failed" and Path(root, "lib", "a.nuc").exists() and not Path(root, "lib", "b.nuc").exists())
+  expect(run["status"] == "waiting" and Path(root, "lib", "a.nuc").exists() and not Path(root, "lib", "b.nuc").exists())
   b = stepsOf(run).find((s) => s["file"] == "lib/b.nuc")!
-  // from the step that failed: the piece written before it is not written again
+  // the step that failed, by hand, in place: only it and what follows; the piece written before it is not written again
   done = again(run, root, team, developer(calls, { "/developer/code": { "code": "B\n", "check": "ok", "attempts": 1 } })).start(null, b["id"])
   expect(done["status"] == "passed" and calls.count((c) => c == "/developer/code") == 3 and Path(root, "lib", "b.nuc").readText() == "B\n")
   ids = stepsOf(done).map((s) => "${s["id"]}")
   expect(ids.unique().length == ids.length and stepsOf(done)[1]["file"] == "lib/a.nuc")
-  last: <string, any> = (done["previous"] as <string, any>[]).last
-  expect(last["from"] == "code" and last["step"] == b["id"] and "from the step \"lib/b.nuc\"" in "${last["why"]}")
+  last: <string, any> = (done["retries"] as <string, any>[]).last
+  expect(done["previous"] == null and last["level"] == "you" and last["step"] == b["id"] and last["station"] == "code")
   // any step again, passed or failed: a file changed since the run wrote it is kept, and said
   Path(root, "lib", "b.nuc").writeText("mine\n")
   passedB = stepsOf(done).filter((s) => s["file"] == "lib/b.nuc" and s["status"] == "passed").last
@@ -424,7 +435,7 @@ testARunLeftRunningGoesOnFromTheStepItWasInKeepingThePieceWrittenBefore(tmpPath:
   saveRun(run)
   done = again(loadRun(root, "count-books")!, root, team, developer(calls, { "/developer/code": { "code": "B\n", "check": "ok", "attempts": 1 } })).start()
   expect(done["status"] == "passed" and calls.count((c) => c == "/developer/code") == 1)
-  expect((done["interrupted"] as <string, any>[])[0]["undone"] == ["lib/b.nuc"] and Path(root, "lib", "b.nuc").readText() == "B\n")
+  expect((done["interrupted"] as <string, any>[])[0]["undone"] == [] and Path(root, "lib", "b.nuc").readText() == "B\n")
 
 testACallNothingWorksOnIsCutAsStalledAndRetried() void
   hung = [true]
@@ -455,10 +466,10 @@ testTestsThatInjectAClassThePlanDoesNotHaveStopTheRunAtTestsFirstSayingSo(tmpPat
   code = "tests Characters\n  @test(\"lists\")\n  lists() void\n    characters = inject<CharactersAppComponent>()\n    expect(true)\n"
   done = again(run, root, team, developer([], { "/developer/test": { "code": code, "check": "ok", "attempts": 1 } })).start()
   s = stepsOf(done).find((x) => x["role"] == "developer")!
-  expect(done["status"] == "failed" and s["status"] == "failed")
+  expect(done["status"] == "waiting" and s["status"] == "failed" and (done["waiting"] as <string, any>)["kind"] == "retry")
   expect("the tests need CharactersAppComponent, which is not in the plan (the plan has 1 piece: entity Character)" in "${s["summary"]}", "${s["summary"]}")
-  // what the failed step wrote was undone
-  expect(not Path(root, "test", "count_the_books_test.nuc").exists())
+  // what the failed step wrote stays for the next attempt
+  expect(Path(root, "test", "count_the_books_test.nuc").exists())
 
 testWhenTheGeneratorsWroteEveryFileNothingIsAskedOfTheLocalTester(tmpPath: Path, monkeypatch: any) void
   localOn(monkeypatch)
@@ -522,7 +533,9 @@ testARequestThatIsNotARunStopsAtTheAnalysisAndADeveloperWithoutAnAnalystChangesN
   team = localCrew()
   question = analysisOf({ "strategy": "strategy:question", "title": "Strategy: a question", "mode": "answer", "stages": [] as string[] })
   stopped = factory(root, team, [], developer([], { "/developer/analyze": question })).start()
-  expect(stopped["status"] == "failed" and "question: this kind of request is not a run of the Builder (ask it in Nuclear Atlas)" in "${stepsOf(stopped)[0]["summary"]}")
+  expect(stopped["status"] == "waiting" and "question: this kind of request is not a run of the Builder (ask it in Nuclear Atlas)" in "${stepsOf(stopped)[0]["summary"]}")
+  // not worth retrying: straight to the user, no level tried again
+  expect((stopped["waiting"] as <string, any>)["worth"] == false and stopped["retries"] == null)
   // an older Developer answers 404 to /developer/analyze: the run goes on with every station, as before
   given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
   done = factory(root, team, given, developer([], { "/developer/analyze": "404" })).start()
@@ -658,7 +671,7 @@ repairTeam() <string, any>
 // spec 024 requirement 6: a station that fails is diagnosed once by its own provider; FIXABLE runs it once more with the
 // diagnosis in its task, and the run goes on; the repair is in the run file for the channel.
 testAFailedStationIsDiagnosedOnceAndRunsAgainWithTheDiagnosis(tmpPath: Path, monkeypatch: any) void
-  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"], "retries": { "node": 0 } })
   repairingClaude(tmpPath, monkeypatch, "FIXABLE\nCite ADR-0001 only: ADR-0002 does not exist here.")
   team = repairTeam()
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
@@ -677,7 +690,7 @@ testAFailedStationIsDiagnosedOnceAndRunsAgainWithTheDiagnosis(tmpPath: Path, mon
 // the run waits on it (the station not worked again); resumed with the user's decision, the station works once more
 // with it in its task.
 testADiagnosisThatCannotFixItAsksTheUser(tmpPath: Path, monkeypatch: any) void
-  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"], "retries": { "node": 0 } })
   repairingClaude(tmpPath, monkeypatch, "NOT FIXABLE\nThe user must decide which ADRs apply.")
   team = repairTeam()
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
@@ -793,7 +806,7 @@ testARetryGoesOnFromTheFailedStepKeepingTheDevelopersCodeAndEveryStepBeforeIt(tm
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["test -f lib/never.nuc"], "build": [] as string[], "test": [] as string[] } })
   calls: string[] = []
   run = factory(root, localCrew(), [], developer(calls)).start()
-  expect(run["status"] == "failed" and Path(root, "lib", "count.nuc").readText() == "count() int = 0\n")
+  expect(run["status"] == "waiting" and Path(root, "lib", "count.nuc").readText() == "count() int = 0\n")
   // the step that stopped it: the code station's check, after the Developer's code that passed
   step = failedStepOf(run)!
   code: <string, any> = (run["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
@@ -806,8 +819,8 @@ testARetryGoesOnFromTheFailedStepKeepingTheDevelopersCodeAndEveryStepBeforeIt(tm
   expect(done["status"] == "passed", "${done["status"]}")
   expect(calls.count((c) => c == "/developer/analyze") == 1 and calls.count((c) => c == "/developer/code") == 1 and calls.count((c) => c == "/developer/test") == 1)
   expect(Path(root, "lib", "count.nuc").readText() == "count() int = 0\n" and Path(root, "test", "count_the_books_test.nuc").exists())
-  last: <string, any> = (done["previous"] as <string, any>[]).last
-  expect(last["from"] == "code" and last["step"] == step and last["undone"] == [], "${last["undone"]}")
+  last: <string, any> = (done["retries"] as <string, any>[]).last
+  expect(done["previous"] == null and last["level"] == "you" and last["step"] == step)
   kept: <string, any> = (done["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
   expect((kept["steps"] as <string, any>[]).any((x) => x["title"] == "Developer: Code" and x["status"] == "passed"))
   // the rule: the first failure after the station's last passed step (a failure it repaired by itself is behind)
@@ -862,3 +875,90 @@ testARestartOrARetryThatTakesBackTheAgentsWorkDoesNothingWithoutTheUsersYes(tmpP
   said: <string, any> = json.loads(BuilderTools(root).runRetryTool("count-books", "code"))
   expect("confirm = true" in "${said["error"]}" and "lib/count.nuc" in (said["files"] as string[]), "${said}")
   expect(Path(root, "lib", "count.nuc").readText() == code)
+
+// ---------- the retries, smallest first: a call, a part of a station, the station, then the user ----------
+
+// A fake Claude Code that fails its first `fails` calls (exit 1, "broken pipe"), each after it wrote lib/draft.nuc the
+// first time, then answers the analysis; each prompt goes to prompts.log.
+flakyClaude(tmpPath: Path, monkeypatch: any, fails: int) void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath("claude")
+  log = tmpPath.joinpath("prompts.log")
+  answer = json.dumps({ "type": "result", "result": "--- document: analysis.md ---\n# Analysis by Claude", "total_cost_usd": 0.01, "is_error": false })
+  script = ["#!/usr/bin/env python3", "import os, sys", "open('${log}', 'a').write(' '.join(sys.argv) + '=====')", "n = open('${log}').read().count('=====')", "os.makedirs('lib', exist_ok=True)", "if not os.path.exists('lib/draft.nuc'): open('lib/draft.nuc', 'w').write('first attempt' + chr(10))", "if n <= ${fails}:", "    sys.stderr.write('broken pipe' + chr(10))", "    sys.exit(1)", "print(${json.dumps(answer)})"]
+  tool.writeText(script.join("\n") + "\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+
+analystRun(tmpPath: Path, monkeypatch: any, more: <string, any>, fails: int) <string, any>
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis"], ...more })
+  flakyClaude(tmpPath, monkeypatch, fails)
+  team = crew("Claude", ["analyst"], ROSTERLESS)
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["analysis"])
+  Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+
+testACallThatFailsOnceIsCalledAgainInPlaceAndItsStepPasses(tmpPath: Path, monkeypatch: any) void
+  done = analystRun(tmpPath, monkeypatch, {}, 1)
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+  steps = stepsOf(done).filter((s) => s["role"] == "analyst")
+  // one step: its call was retried inside it, the node never failed
+  expect(steps.length == 1 and steps[0]["status"] == "passed" and (steps[0]["trace"] as <string, any>[]).any((t) => t["step"] == "retry"))
+  retries: <string, any>[] = done["retries"]!
+  expect(retries.length == 1 and retries[0]["level"] == "process" and retries[0]["attempt"] == 2 and retries[0]["of"] == 3 and "broken pipe" in "${retries[0]["why"]}", json.dumps(retries))
+  prompts = tmpPath.joinpath("prompts.log").readText().split("=====").filter((p) => p.length > 0)
+  expect(prompts.length == 2 and not ("Your previous attempt failed" in prompts[0]) and "Your previous attempt failed" in prompts[1] and "broken pipe" in prompts[1])
+  // the first attempt's file is still there for the second
+  root = "${done["root"]}"
+  expect(Path(root, "lib", "draft.nuc").readText() == "first attempt\n" and "lib/draft.nuc" in (steps[0]["files"] as string[]))
+  expect("- Retried (process, attempt 2 of 3) at " in Path(root, RUNS_DIR, "count-books.md").readText())
+  // a flaky command too: again in place in its own step
+  f = factory(root, localCrew(), [], developer([]))
+  st = f.stage("code")
+  expect(f.commands(st, ["test -f flag || { touch flag; exit 1; }"]))
+  ran: <string, any> = (st["steps"] as <string, any>[]).last
+  expect(ran["status"] == "passed" and "--- attempt 2 of 3 ---" in "${ran["log"]}" and (f.run["retries"] as <string, any>[]).last["level"] == "process")
+
+testANodeThatFailsIsWorkedAgainInPlaceWithItsFilesKeptAndTheFailureTold(tmpPath: Path, monkeypatch: any) void
+  done = analystRun(tmpPath, monkeypatch, { "retries": { "process": 0 } }, 1)
+  expect(done["status"] == "passed")
+  steps = stepsOf(done).filter((s) => s["role"] == "analyst")
+  expect(steps.map((s) => "${s["status"]}") == ["failed", "passed"])
+  retries: <string, any>[] = done["retries"]!
+  expect(retries.map((r) => "${r["level"]}") == ["node"] and retries[0]["step"] == steps[0]["id"] and retries[0]["attempt"] == 2 and retries[0]["of"] == 2)
+  prompts = tmpPath.joinpath("prompts.log").readText().split("=====").filter((p) => p.length > 0)
+  expect("Your previous attempt failed" in prompts[1] and "What it wrote is still in the project" in prompts[1] and done["retrying"] == null)
+  expect(Path("${done["root"]}", "lib", "draft.nuc").readText() == "first attempt\n" and done["setAside"] == null)
+
+// A fake Claude Code for the escalation: its check fails `fails` times, then passes; a diagnosis is FIXABLE.
+stubbornClaude(tmpPath: Path, monkeypatch: any, fails: int) void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath("claude")
+  seen = tmpPath.joinpath("checks-seen")
+  script = ["#!/usr/bin/env python3", "import json, os, sys", "prompt = ' '.join(sys.argv)", "if 'NOT FIXABLE' in prompt:", "    said = 'FIXABLE' + chr(10) + 'Cite ADR-0001 only.'", "elif 'PASSED or FAILED' in prompt:", "    open('${seen}', 'a').write('x')", "    said = 'PASSED' if len(open('${seen}').read()) > ${fails} else 'FAILED' + chr(10) + 'ADR-0002 does not exist.'", "else:", "    said = '--- document: design.md ---' + chr(10) + '# Design'", "print(json.dumps({'type': 'result', 'result': said, 'total_cost_usd': 0.01, 'is_error': False}))"]
+  tool.writeText(script.join("\n") + "\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+
+testTheEscalationReachesTheStationOnlyAfterTheNodesAttempts(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  stubbornClaude(tmpPath, monkeypatch, 2)
+  team = repairTeam()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+  // the check failed, its part again (the node) failed too: only then the diagnosis and the station once more
+  expect((done["retries"] as <string, any>[]).map((r) => "${r["level"]}") == ["node", "station"], json.dumps(done["retries"]))
+  expect((done["repairs"] as <string, any>[]).length == 1)
+  // one failure more than the levels allow: the run waits for the user, it does not end failed
+  other = tmpPath.joinpath("other")
+  root2 = lineProject(other, monkeypatch, [], { "stations": ["design"] })
+  stubbornClaude(other, monkeypatch, 9)
+  run2 = newRun(root2, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  waited = Factory(run2, team, readLine(root2, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+  expect(waited["status"] == "waiting" and (waited["waiting"] as <string, any>)["kind"] == "retry" and (waited["failing"] as <string, any>)["station"] == "design")
+  // the user ends it: then, and only then, it is failed
+  no: <string, any>[] = [{ "answer": "no" }]
+  ended = Factory(loadRun(root2, "count-books")!, team, readLine(root2, "backend"), (q: <string, any>) => nextAnswer(no, q), (e: <string, any>) => null, { "preflight": false }).start()
+  expect(ended["status"] == "failed" and ended["failing"] == null)

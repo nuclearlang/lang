@@ -173,7 +173,7 @@ step working or failed and its neighbours.
 | `nuclear-builder run --resume <id> [--events]` | a run that waits goes on (it asks its question again) |
 | `nuclear-builder run answer <id> --answer … [--text …]` | the answer to the question a run waits on: to its process (the answer file) or the run goes on with it; never the spending |
 | `nuclear-builder run stop\|show\|journal <id>` | a run's process stopped (a run that asks waits); its file; its journal |
-| `nuclear-builder retry <run> [--from <station> \| --step <step>] [--yes] [--plan]` | a failed run again from its failed step (every step before it kept), or from a station or a step; what it would take back of the agents' work is asked first (a terminal's prompt, else refused without `--yes`), `--plan` says it |
+| `nuclear-builder retry <run> [--from <station> \| --step <step>] [--yes] [--plan]` | a failed run (or one that waits for its retry) again in place from its failed step (every step and file kept), a failed step in place, a step that passed or a station again; what it would take back of the agents' work is asked first (a terminal's prompt, else refused without `--yes`), `--plan` says it |
 | `nuclear-builder restart <run> [--yes]` | every station again from scratch (a run of the earlier engine too), asked first the same way |
 | `nuclear-builder checks <run> [list \| on \| off \| add \| mark] --json` | the run's checks (the console) |
 | `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` |
@@ -196,6 +196,7 @@ selected step's trace, files and output, or the run's question; a step's file op
 Spec with a Team…* (a choice among `nuclear-builder team list`), *Go On* (`run --resume`), *Run a Station Again…*
 (`retry --from`, or `restart`), Server Stages, Export CI, Stop (a run that waits keeps waiting; one that works gets
 SIGINT), Refresh. A run is `nuclear-builder … --events` in the project: each event a line of the log, each question a
-dialog: a gate (*Approve*, *Ask for a Change…*, *Later*, its documents opened), QA's plan (each of the user's checks
+dialog: a gate (*Approve*, *Ask for a Change…*, *Later*, its documents opened), a station that waits for its retry
+(*Retry*, *End as Failed*, *Later*), QA's plan (each of the user's checks
 marked *Done* or *Failed*, then *Go On*), the spending (two dialogs, the second with the amount and the providers);
 *Later* closes its stdin and the run waits (exit 3). The tree reads the run again every 1.5 s and keeps the selection.
