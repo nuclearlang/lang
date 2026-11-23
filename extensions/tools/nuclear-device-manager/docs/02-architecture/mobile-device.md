@@ -67,7 +67,8 @@ Flutter's `web-server` device is rejected: its debug service has no breakpoints.
 - Its width is saved per screen width (`nuclear.device.widths`; by default 20 % of the screen, between 340 and
   540).
 - *Fit* goes up to zoom 1.5.
-- `lockDeviceGroup` locks its editor group.
+- `lockDeviceGroup` locks its editor group, and only it: VS Code locks the active group, so the device is revealed and
+  the lock waits (up to a second) until the device's group is the active one; never the user's editor group.
 - A device can also be opened in the user's browser (`external`).
 
 ## Hot reload

@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { Launch, logFile, logSize, reason, RUN_STALL_MS, RunFollower, RunStep } from '../../tools/nuclear-device-manager/src/launch-log';
 import { isInstalled } from './card';
-import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
+import { devices, devicesChanged, isDeviceGroup, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
 import { MonitorPanel } from '../../tools/nuclear-monitor/src/panel';
 import { chatCsp, chatGifKey, chatScript, disposeChat, openChatTab, wireChat } from './chatView';
@@ -216,6 +216,15 @@ const inFolders = (root: string) => vscode.workspace.getWorkspaceFolder(vscode.U
 
 /** The dialect badge on a project tab: an icon of the Chernobyl icon theme (Atom Material). */
 const DIALECT_ICONS: Record<string, string> = { flutter: 'flutter', react: 'react', fastapi: 'python', nestjs: 'nest', dart: 'dart', python: 'python', typescript: 'typeScript' };
+
+
+/** A file of the tree opens in the main editor group: the leftmost one that is not a device's. The main group is never
+ * locked: a lock found on it (an earlier build could lock it instead of the device's) is lifted. */
+async function openInMain(uri: vscode.Uri): Promise<void> {
+  const main = vscode.window.tabGroups.all.find((g) => !isDeviceGroup(g));
+  await vscode.window.showTextDocument(uri, { viewColumn: main?.viewColumn ?? vscode.ViewColumn.One, preview: true, preserveFocus: false });
+  if (main) await vscode.commands.executeCommand('workbench.action.unlockEditorGroup');
+}
 
 export function activateWorkspace(context: vscode.ExtensionContext, http: HttpModel): Workspace {
   const ws = new Workspace(context, http);
@@ -1101,7 +1110,7 @@ class Workspace implements vscode.WebviewViewProvider {
           }
           break;
         case 'open':
-          if (m.path) void vscode.commands.executeCommand('vscode.open', vscode.Uri.file(m.path));
+          if (m.path) void openInMain(vscode.Uri.file(m.path));
           break;
         case 'project':
           if (m.root) void this.go(m.root);

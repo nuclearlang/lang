@@ -623,9 +623,18 @@ async function setGroupWidth(width: number, column: vscode.ViewColumn | undefine
   });
 }
 
-/** Locks the device's editor group (VS Code's *Lock Group*): files, pauses and generated code open in another group. */
-async function lockDeviceGroup(back: vscode.TextEditor | undefined): Promise<void> {
-  await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
+/** Locks the device's editor group (VS Code's *Lock Group*): files, pauses and generated code open in another group.
+ * VS Code locks the active group, so the device is made the active one first and the lock is taken only once it is:
+ * locking a moment too early locked the user's own editor group instead (files then opened beside the device). */
+async function lockDeviceGroup(view: vscode.WebviewPanel, back: vscode.TextEditor | undefined): Promise<void> {
+  for (let i = 0; i < 20; i++) {
+    if (isDeviceGroup(vscode.window.tabGroups.activeTabGroup) && view.active) {
+      await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
+      break;
+    }
+    view.reveal(view.viewColumn, false);
+    await new Promise((r) => setTimeout(r, 50));
+  }
   if (back) await vscode.window.showTextDocument(back.document, { viewColumn: back.viewColumn, preserveFocus: false });
 }
 
@@ -760,7 +769,7 @@ export class DevicePanel {
     view.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
     const panel = new DevicePanel(context, view);
     if (preset) panel.post({ type: 'preset', name: preset });
-    void lockDeviceGroup(back);
+    void lockDeviceGroup(view, back);
     return panel;
   }
 

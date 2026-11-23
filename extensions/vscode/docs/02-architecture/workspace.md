@@ -59,7 +59,9 @@ with an `aria-label` of the name and the key.
   (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest
   `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris
   (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts
-  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). The watcher lives as
+  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). A file clicked in the tree
+  opens in the main editor group (`openInMain`: the leftmost group that is not a device's), and a lock found on that
+  group is lifted: there is one main group, at the left. The watcher lives as
   long as its project (the column is drawn again many times a second while a run works, and a new watcher would miss
   what is written while it starts); when watching starts, the page reads every loaded folder again (`all`). It looks and moves
   like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the
