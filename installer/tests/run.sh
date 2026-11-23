@@ -144,7 +144,7 @@ OUT1() {  # what the user reads: the installer in a terminal of 80 and of 60 col
 # The newest published release older than this tree's version, and its files for this system in $1 (a mirror).
 previous_release() {
   current=$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/Cargo.toml" | head -n 1)
-  PREV=$(curl -fsS --max-time 15 "https://api.github.com/repos/nuclearlang/lang/releases?per_page=30" 2>/dev/null \
+  PREV=$(curl -fsSL --max-time 15 "https://api.github.com/repos/nuclearlang/lang/releases?per_page=30" 2>/dev/null \
     | sed -n 's/.*"tag_name": *"v\([0-9.]*\)".*/\1/p' | { cat; echo "$current"; } | sort -t . -k1,1n -k2,2n -k3,3n -u \
     | sed -n "/^$current\$/{x;p;q;};h")
   [ -n "$PREV" ] || return 1

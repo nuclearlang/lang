@@ -95,3 +95,4 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Pending
 - The delivery gate does not build and try the AI archive (`ai` jobs of the release workflow): 0.94.0 passed the gate and failed there, on a model of the AI services the new backend runtime could not make (found 2026-11-22). Wanted: the gate imports the AI services with the tree's runtimes before a tag.
+- The repository is `nuclearlang/nuclearlang` since 2026-11-23 (it was `nuclearlang/lang`): about 90 files of the tree still name the old one, served by GitHub's redirect (the installers, `nuclear update`, the workflows' links, the website, the docs). The redirect ends if a repository named `lang` is made in the organization. Wanted: every reference moved to the new name in one change, then a release. Found when the update case of `installer/tests/run.sh` read the API's redirect as "offline" (fixed: it follows redirects).

@@ -4,6 +4,7 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- Fix: the installer's update test follows GitHub's redirects: since the repository became `nuclearlang/nuclearlang` (it was `nuclearlang/lang`), it took the API's redirect for no network and the delivery gate refused the release. The tree still names the old repository in about 90 files, served by the redirect (the installer's roadmap).
 - Each notification has a check at its left: done or pending. A run's notification is checked by itself once you answer it; any notification can be marked done, or pending again, with it.
 - Fix: the Builder's question card no longer redraws itself every second while a run waits (its buttons flickered and a click could be lost), and its question is in your language (it showed the engine's English).
 - Fixed: a team assigned to a workspace or a project answers in its channel in Nuclear Chat (nobody answered there); the welcome stays open while apps are added from it; **Nuclear Atlas's channels are in the Nuclear workspace's column** in VS Code, beside the open conversation, and Atlas reopens on the conversation you were in last; Nuclear Builder shows a run as its simple progress with the spec it works on, follows the runs the team starts from the chat, and a spec asked in a workspace's channel goes to its app (it went to the workspace's folder).
