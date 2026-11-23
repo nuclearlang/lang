@@ -1,0 +1,24 @@
+// Queries whose field, direction, limits and patterns come from the caller: what the app check tries to break.
+// check.sh copies this file into its copy of store_api and wires each method to a route with `nuclear gen usecase`.
+@repository(Customer)
+repository ProbeRepository
+  sorted(field: string, desc: boolean = false, max: int = 5, skip: int = 0) Customer[]
+    orderBy(field, desc = desc)
+    limit(max)
+    offset(skip)
+    getMany()
+
+  named(pattern: string) Customer[]
+    where({ "name": like(pattern) })
+    orderBy("id")
+    getMany()
+
+  among(emails: string) Customer[]
+    where({ "email": oneOf(emails.split(",")) })
+    orderBy("id")
+    getMany()
+
+  ranged(low: string, high: string) Customer[]
+    where({ "name": between(low, high) })
+    orderBy("id")
+    getMany()

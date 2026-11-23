@@ -38,6 +38,7 @@ cargo test                                   # the examples with both dialects, 
 sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, migrations, a live run
 sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, migrations, a live run
 sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite
+sh nuclear-synapsis-framework/platforms/backend/checks/app-check/check.sh       # needs Docker: the logs, the security and the performance of an app in both dialects
 UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff
 installer/install.sh                         # the user runs the installed copy: install after a change
 ```
@@ -63,6 +64,10 @@ installer/install.sh                         # the user runs the installed copy:
   seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`, a rename with `make --rename`, a long text), `tables.py` (the tables
   `createTables` makes against the first migration's) and `scenario.py` (the one HTTP
   scenario whose answers are compared).
+- `checks/app-check/`: `check.sh` (an app of each dialect run as a user runs it), `logs.py` (every line it prints
+  against an allow-list), `security.py` (the same hostile requests to both dialects), `audit.py` (the advisories of
+  the dependencies), `performance.py` and `load.mjs` (the same load, the SQL statements of a request), `probes/`
+  (the Nuclear of the probe routes), `known.txt` and `known.py` (the findings not fixed yet).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
 Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,

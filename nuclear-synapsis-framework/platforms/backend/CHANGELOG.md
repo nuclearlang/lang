@@ -25,6 +25,11 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
     there is refused with the same words in both dialects. Without the option `make` writes the drop and the add
     as before; its warning now says the option (**the text of the warning changed**).
   `store_api` has coupons, whose use cases check nothing, so the database check reaches each refusal over HTTP.
+- The app check (`checks/app-check/check.sh`, needs Docker): an app of each dialect run as a user runs it. Every line
+  it logs is read against an allow-list, the same hostile requests go to both dialects and the answers are compared
+  (SQL injection, errors, bodies, guards, CORS, the WebSocket), the dependencies' advisories are read, and the same
+  load runs on PostgreSQL with the SQL statements of a request counted. What it found is in the roadmap and in
+  `checks/app-check/known.txt`; nothing of the runtimes changed.
 - Fixed (0.94.1): a `fastapi` model with a field named `type` crashed when its class was made (`TypeError: unhashable type: 'dict'`), since 0.94.0's rule of JSON types read the field's schema as a kind; the AI services have such a model, so the release's AI archive did not build.
 - **Five decisions of the user (2026-11-22), the same in `fastapi` and `nestjs`** (reference §2.1, §2.2, §2.3, §2.8):
   - **a value of another JSON type is refused** in a body: a text is never a number or a boolean, a number is never

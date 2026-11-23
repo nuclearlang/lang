@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-22
+updated: 2026-11-23
 related: [../04-specs/004-backend-parity/plan.md, ../03-adr/0001-backend-data.md]
 ---
 # Roadmap
@@ -57,6 +57,14 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 - Two requests that change the same row at once inside `@transactional` (two checkouts of one customer): the
   platform has no word to lock a row, and no check says what each database does.
 - `nuclear migrate` on Windows (`cmd /C` quoting).
+- **What the app check does not run** (`checks/app-check/`, 2026-11-23): SQL injection and the load on MySQL and
+  MariaDB (SQLite and PostgreSQL only); an app behind a proxy, with TLS or with several processes; `nuclear run`
+  and `nuclear install` themselves (the check starts the dialect's commands over the shared tools of the checks);
+  the `.env` files and the keyring at run time; the routes of an agent (what a prompt can make a tool do), an HTTP
+  repository (where `Http(baseUrl)` can be made to call), Kafka, Redis, telemetry; slow clients, thousands of
+  connections or sockets, a subscription to thousands of topics; the token's comparison measured (it is read in
+  the source: constant time in both, the TypeScript one after a comparison of the lengths); a load longer than
+  seconds (leaks), a table with millions of rows, writes that contend for one row; Windows and macOS.
 - **The types of a body beyond a model's own fields** (a value of another JSON type is refused, reference §2.3;
   the runtime tests and the database check cover `string`, `int`, `double`, `boolean`, `DateTime`, a list of
   texts and of whole numbers, an optional field). Not run in either dialect: a body that is an entity, a model
@@ -86,11 +94,74 @@ expect; each needs a rule before it is changed.
   fastapi leaves them to the database's clock (`CURRENT_TIMESTAMP`: whole seconds there), nestjs writes the app's
   clock. The column keeps the fraction in both (the check compares the shape of these two, not their digits).
 
+Found by the app check (2026-11-23): each needs a rule in the reference before the runtimes are made the same
+(`checks/app-check/known.txt` holds the probes that show it).
+
+- **The largest body an app reads.** One dialect has no limit (30 MB is read and parsed), the other answers 413 from
+  100 KB; over the WebSocket 16 MB and 100 MB. Wanted: one limit, the same answer, a word to change it.
+- **The range of a number.** An `int` of 2^31 is a 500 on PostgreSQL and kept on SQLite; 20 digits are a 500 or
+  kept as 1e20; `NaN`, `Infinity` and `1e999` are a `double` in one dialect and refused in the other; a whole number
+  of the query beyond the database's range is a 500 in both. Wanted: the range of `int` and `double`, checked as a
+  type is (400).
+- **The largest page.** `paginate(page, size)` reads as many rows as the request asks (`size=1000000000`).
+- **The documentation pages in production.** One dialect serves interactive pages at `/docs` and `/redoc` (their
+  scripts from a CDN), the other none; both serve `/openapi.json` and `/.nuclear/*` (a guarded app: neither).
+- **A method a route does not have**: 405 in one dialect, 404 in the other; `HEAD` (405, or the GET's answer) and
+  `OPTIONS` (405, or 204); a path in another case, with a last `/` or with an encoded letter.
+- **What an app logs.** One dialect logs a line per request (address, method, path with its query, status; no time)
+  and the stack of a 500 with the values the client sent; the other logs neither: a 500 leaves no trace. Wanted:
+  one line per request with the same fields, the cause of every 500, never a value of the request.
+- **How an app runs in production.** `nuclear run` starts the development server; nothing says how many processes,
+  on which address (one dialect listens on every network by default), nor the pool: 5 connections and 10 more
+  on demand, a request waits 30 seconds for one and answers 500 in one dialect; 5 connections, 60 seconds, 500 in
+  the other (40 requests with the table locked: 25 and 35 of them answer 500).
+- **The wildcards of `like` and `ilike`** in a text a client sends (`%`, `_`): there is no word to escape them, so
+  `search?text=%25` matches every row.
+
 - The first provider of authentication: JWT only, or also sessions with cookies for web clients
   ([spec 004](../04-specs/004-backend-parity/plan.md) §5).
 
 ## Pending
 
+- **Found by the app check (2026-11-23)**: defects of the runtimes, each with its probes in
+  `checks/app-check/known.txt` (a fix deletes them) and the same test in both runtimes. By severity:
+  1. **A frame of the WebSocket that is JSON and not an object stops the app or the socket.** `null` ends the
+     TypeScript process (an uncaught error in `serve()`'s message handler, `packages/synapsis-nest/src/sockets.ts`);
+     in `packages/synapsis-py/src/synapsis/sockets.py` (`_serve`) `null`, a number, 50 000 levels or a binary frame
+     close the socket with a stack, and a frame whose `headers` is a text gets no answer. Fix: a frame that is not
+     an object closes the socket 1003, in both; the request's headers are built inside `answer`'s `try`.
+  2. **A request of the WebSocket can leave the app** (TypeScript): `answer()` writes the frame's path after
+     `http://127.0.0.1:<port>`, so the path `7/x` goes to the port `<port>7` with the upgrade's headers (its token)
+     and its answer comes back. Fix: only a path that starts with one `/`, resolved with `new URL(path, base)` and
+     refused (404) when its origin is not the app's.
+  3. **An error leaves nothing in the TypeScript app's log** (`ErrorFilter.catch`, `src/web.ts`: the last branch
+     answers 500 and drops the error), and no request is logged. Fix with the rule of the log (to decide).
+  4. **A form is a body** (TypeScript: the framework's own parsers stay on): `POST /customers` with
+     `application/x-www-form-urlencoded` makes the row, which a page of any origin can send without a preflight.
+     Fix: `createApp` (`src/app.ts`) with `bodyParser: false` and only the JSON parser, with the body's limit.
+  5. **A parameter of the path or the query is read differently** (TypeScript): the validation pipe converts it
+     before `IntPipe`, `DoublePipe` and `BoolPipe` see its text (`configureApp`, `src/web.ts`), so `0x1`, `1e0` and
+     a blank are whole numbers, and any text that is not `true` is `false`; a required one that is missing reaches
+     the use case as nothing (200 or 500, where the other dialect answers 400 `required`); one given twice is a
+     500. In Python `1` and `yes` are `true`, and `NaN` a number (`web.py`, `_endpoint`).
+  6. **What cannot be read is not said the same**: a body 50 000 levels deep is a 500 (TypeScript) or a 400 whose
+     message is the framework's (`There was an error parsing the body`, Python: `refused` in `app.py`), invalid
+     UTF-8 is kept as U+FFFD (TypeScript); a body that is a list, a text, `null`, empty or of another content type
+     is refused with different reasons. A text with a NUL character on PostgreSQL is a 500 (Python) or kept
+     changed (TypeScript).
+  7. **An upgrade on a path that is not the socket's is never answered** (TypeScript, `instrument()`: it returns
+     and the connection stays open); a refused upgrade is a 403 in one dialect and a 401 in the other.
+  8. **A guard's header**: spaces around the token pass in one dialect; the header given twice is read as its first
+     value (Python, `_header` in `guards.py`) or as both joined (TypeScript).
+  9. **Every answer names what runs underneath** (`Server`, `X-Powered-By`; an `ETag` in one dialect only); the
+     log of the TypeScript app has the terminal's colours in a file.
+  10. **A read opens a transaction** (Python, `Repository.use`): `BEGIN`, the `SELECT`, `ROLLBACK`: three
+      statements for one row and six for a page, where the other dialect sends one and two.
+  11. **`orderBy` and `where` take any attribute of the entity's class** (Python, `Query._col`: `getattr`): a
+      relation or `metadata` as a field is an error of the database's library (500). No SQL is injected (the check
+      tries): the fix is to take only the entity's columns, and answer the same in both.
+  12. **Advisories**: `chromadb` 1.5.9 (four of the Chroma server, no fixed version; the runtime uses the client)
+      and `uuid` < 11.1.1 through `sequelize` 6 (v3/v5/v6 with a buffer; `sequelize` calls v1 and v4 without one).
 - **Found writing the skills library (2026-11-18)**: no users with password hashing or JWT auth; no multipart upload; no background jobs; no documented way to read a raw request body or headers (webhook signatures); no `graph` make-kind. `@status` is in the reference but undocumented for fastapi, and the reference says 400 for an invalid body where fastapi answers 422.
 - **The listeners of one test receive the events of the next** (synapsis-py): `testing.running` resets the injector
   but not `events._listeners`, so each test adds one more instance of every listener and a published event reaches

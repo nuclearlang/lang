@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-22
+updated: 2026-11-23
 related: [../06-runbooks/change-a-runtime.md, ../02-architecture/overview.md, ../../../docs/05-standards/testing.md]
 ---
 # Testing
@@ -18,6 +18,7 @@ are) are in [testing a platform](../../../docs/05-standards/testing.md). Here: w
 | The fastapi check | `rick_api` built; pyright `--strict` and the project's own tests on the generated code; a live run; then the conformance example | `checks/fastapi-check/check.sh` |
 | The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |
 | The database check | `store_api` built with each dialect for SQLite, PostgreSQL, MySQL and MariaDB (real servers in Docker): the strict checker, every kind of migration with `nuclear migrate` against the real database, one HTTP scenario, the project's tests, the tables `createTables` makes against the first migration's; the answers compared between dialects and databases, the schemas' differences listed; a project made with `nuclear new` migrated | `checks/database-check/check.sh` |
+| The app check | `store_api` and `tasks_api` built with each dialect and run as a user runs them: every line they log read against an allow-list, the same hostile requests sent to both dialects and the answers compared (SQL injection, errors, bodies, guards, CORS, the WebSocket), the advisories of the dependencies, the same load on PostgreSQL with the SQL statements of a request counted | `checks/app-check/check.sh` |
 | The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |
 
 ## Set up, once
@@ -39,6 +40,7 @@ cargo test
 sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh
 sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh
 sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh   # needs Docker
+sh nuclear-synapsis-framework/platforms/backend/checks/app-check/check.sh        # needs Docker and the network
 ```
 
 The first two scripts find the tree from their own place (`NUCLEAR_ROOT` overrides it), build with
@@ -153,6 +155,63 @@ losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product
 only reads: a model built in code that keeps its rules, whose optional field left empty is `null` in one dialect
 and absent in the other (the roadmap).
 
+**`app-check/check.sh`** (needs Docker and, for the advisories, the network; about fifteen minutes). It reads what
+an app prints, attacks it and loads it, in each dialect, and compares the dialects. The apps are `store_api` (with
+four probe routes: the Nuclear of `checks/app-check/probes/`, wired in the copy by `nuclear gen usecase`) and
+`tasks_api` (the guards, the WebSocket), built by `nuclear build`; no target code is written. `check.sh logs`,
+`security` or `performance` runs only those stages. One PostgreSQL runs in a throwaway container
+(`nuclear-appcheck-<pid>-postgres`, a free port of `127.0.0.1`, its data in memory, removed however the script ends).
+
+A defect the check found and nobody fixed yet is a **known finding**: a line of `checks/app-check/known.txt`
+(`<stage> <id> | what it is`), or a pattern of `KNOWN` in `logs.py`. The check fails on a finding that is not there,
+and on a known one that no longer happens: the fix deletes its line, so the file never says more than the truth.
+Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
+
+1. **logs** (SQLite), per dialect: `nuclear build`, the strict checker, then twice (development mode: what
+   `nuclear run` starts; production mode: the same server without the reloader or the watcher) `nuclear migrate`
+   `status`, `make`, `up`, `make`, `status`, `down`, `up`, the app started and driven by the database check's
+   scenario, a request with a token and a body that must never be logged, a 500; then the project's tests.
+   `logs.py` reads every line of every step, and of the apps of the other stages:
+   - each line is on `ALLOW` (what a healthy run prints), on `CAUSES` (the error that ends the stack of a 500 the
+     scenario or a probe provokes on purpose) or on `KNOWN`, each with whose line it is (the tool, the runtime, the
+     generated code, a dependency) and why. A stack counts as one line, its last. **A line on no pattern fails the
+     check**: a new warning, a deprecation notice, an error;
+   - no log holds the database's password, a guard's token or the body of the request;
+   - what a request leaves in each dialect's log is compared: a line per request, the cause of a 500.
+2. **security**: both dialects up at once (`store_api` on SQLite and on PostgreSQL, `tasks_api` on SQLite, production
+   mode) and `security.py` sends each the same request. A probe is a finding when the dialects answer another
+   status (for an error: another body), when an answer is not the one the probe wants, or when an error shows a
+   stack, SQL, a path or the name of what runs underneath:
+   - **SQL injection** (both databases): six hostile texts through the path, the query, a body and every
+     repository word a request can feed (`like`, `ilike`, `oneOf`, `between`, `orderBy`'s field and direction,
+     `limit`, `offset`, `paginate`); a field that is no column; then the table is still there with the same rows in
+     both dialects;
+   - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one;
+   - **errors**: the bodies of 400, 404 and 500, the server's headers, `/docs`, `/redoc`, `/openapi.json`,
+     `/.nuclear/*`, `/.env`, other methods, long paths and headers;
+   - **bodies**: fields the model does not list (`id`, `createdAt`, a relation, `__proto__`), 200 KB to 30 MB,
+     50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types;
+   - **CORS**: without `origins` and with one, a request and a preflight from the listed origin, another and `null`;
+   - **guards**: `Token` and `NoOrigin` (no token, a wrong, shorter, longer, empty, repeated one, the header's and
+     the value's case, in the query, every method, a path in another case or encoded, the documents), a
+     controller's guard over the app's;
+   - **the WebSocket**: the upgrade's guards, a frame that is not JSON, binary, 1 MB and 20 MB, not an object
+     (`null`, a number, a list), a controller's guard, headers of a frame, a path that would leave the app
+     (`@host`, an absolute URL, `<digit>/x`: the port beside the app's); a frame that stops the app ends the probes;
+   - the address the server listens on with no host given;
+   - **advisories** (`audit.py`): pip-audit over `nuclearlang/tools/python/requirements.txt`, `npm audit` over
+     `packages/synapsis-nest` and over the `package.json` of a generated project.
+3. **performance** (PostgreSQL, production mode, one dialect at a time): `performance.py` seeds 120 customers and,
+   for six routes (a row, a page of 20, a row with its orders and their tags with 5 and with 20 orders, a write, a
+   write in `@transactional`), counts the SQL statements of one request in the server's statement log, then runs
+   `load.mjs` three times: 32 kept-alive connections, 3000 requests, after 300 of warm-up, the machine's load read
+   before each. It prints requests per second, p50, p95, p99, the errors, the app's memory, its start-up time and
+   the connections it left open. **It never fails on a speed.** It fails on an error under load, on a route that
+   costs more statements than its bound (`ROUTES` in `performance.py`), on a relation that costs more statements
+   with more rows (N + 1), and on a dialect more than ten times slower than the other on a route (two languages
+   and two libraries, one process each, on a machine that does other work: ten times is a defect, not a
+   difference). `APPCHECK_POOL=1` also exhausts the connection pool (the table locked 75 seconds, 40 requests).
+
 ## Conventions
 
 - **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each
@@ -175,4 +234,4 @@ and absent in the other (the roadmap).
 `.github/workflows/platform-backend.yml`, on a change to `nuclearlang/**`, `tools/cli/**`, the Cargo files or this
 folder: Node 26 and Python 3.14; `npm ci` in `nuclearlang/tools/node` and `installer/release/build-runtimes.sh`;
 the Python tools and the runtime; the equivalences of the `fastapi` and `nestjs` references; then the fastapi and
-nestjs checks. The database check is not in the CI yet ([roadmap](../01-product/roadmap.md)).
+nestjs checks. The database check and the app check are not in the CI yet ([roadmap](../01-product/roadmap.md)).
