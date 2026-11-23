@@ -22,6 +22,9 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
 else RED=""; GREEN=""; BOLD=""; OFF=""; fi
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-after-release.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
+trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: the work folder never stays
+# the work folders of runs that were killed before this rule (1.3 GB each on a shared tmpfs)
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-after-release.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
 fail() { echo ""; echo "${RED}${BOLD}After the release of $V: FAILED: $1${OFF}"; [ -n "${2:-}" ] && echo "${RED}How to fix:${OFF} $2"; exit 1; }
 ok() { echo "  ${GREEN}✓${OFF} $*"; }
 
