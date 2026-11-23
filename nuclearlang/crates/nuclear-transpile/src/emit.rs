@@ -23,6 +23,8 @@ pub(crate) const MONITOR_PATH: &str = "nuclear/monitor";
 // precedence of rendered expressions (higher binds tighter)
 const P_LAMBDA: u8 = 0;
 const P_TERNARY: u8 = 1;
+/// 2^53 − 1: the largest whole number every target's `int` holds exactly (TypeScript's numbers are doubles).
+const MAX_EXACT_INT: u64 = 9_007_199_254_740_991;
 const P_UNARY: u8 = 14;
 const P_POSTFIX: u8 = 16;
 const P_PRIMARY: u8 = 17;
@@ -43,12 +45,45 @@ pub(crate) enum DeclKind {
 enum NumKind {
     Int,
     Double,
+    /// The exact numbers (ADR-lang-0015): never mixed with another kind without a conversion (N0119).
+    BigInt,
+    BigDouble,
+}
+
+impl NumKind {
+    fn is_big(self) -> bool {
+        matches!(self, NumKind::BigInt | NumKind::BigDouble)
+    }
+
+    /// The Nuclear name of the type, which also prefixes its `[syntax]` and `[operators]` keys (`bigdouble_add`).
+    fn name(self) -> &'static str {
+        match self {
+            NumKind::Int => "int",
+            NumKind::Double => "double",
+            NumKind::BigInt => "bigint",
+            NumKind::BigDouble => "bigdouble",
+        }
+    }
 }
 
 fn num_kind_of(t: &Type) -> Option<NumKind> {
     match &t.kind {
         TypeKind::Named { name, .. } if name == "int" => Some(NumKind::Int),
         TypeKind::Named { name, .. } if name == "double" => Some(NumKind::Double),
+        TypeKind::Named { name, .. } if name == "bigint" => Some(NumKind::BigInt),
+        TypeKind::Named { name, .. } if name == "bigdouble" => Some(NumKind::BigDouble),
+        _ => None,
+    }
+}
+
+/// A number literal, alone or with its sign (`5`, `-0.1`): it takes the exact type of the place it is in.
+fn number_literal(e: &Expr) -> Option<&nuclear_syntax::token::Number> {
+    match &e.kind {
+        ExprKind::Number(n) => Some(n),
+        ExprKind::Unary { op: UnaryOp::Neg, expr } => match &expr.kind {
+            ExprKind::Number(n) => Some(n),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -199,6 +234,8 @@ struct FnCtx {
     keep_tail: bool,
     /// Its return type is written and is not `void`: an assignment as its last line returns what it assigned.
     typed_return: bool,
+    /// Its return type, when it is an exact number: a literal returned is written as one (`0` → `0n`).
+    big_ret: Option<Type>,
 }
 
 /// One arm of a match on a Result: `Ok(user) ->`, `Err(e) ->` or `_ ->`.
@@ -399,6 +436,10 @@ pub struct Emitter<'a> {
     local_names: HashSet<String>,
     free_names: HashSet<String>,
     member_only: HashSet<String>,
+    /// The arguments of a member of an exact number that take its type (`big.compareTo(5)`): their literals are exact.
+    exact_args: Option<NumKind>,
+    /// The values of the map literal being written, where a map of exact numbers goes (`<string, bigdouble>`).
+    exact_values: Option<NumKind>,
     /// The names declared inside each loop being written (its variables, its locals): a lambda made there that uses
     /// them gets them bound where the target binds a closure late (Python's `bound_param`).
     loop_names: Vec<HashSet<String>>,
@@ -676,6 +717,8 @@ impl<'a> Emitter<'a> {
             local_names: HashSet::new(),
             free_names: HashSet::new(),
             member_only: HashSet::new(),
+            exact_args: None,
+            exact_values: None,
             loop_names: Vec::new(),
             default_inits: Vec::new(),
             callee_takes_props: false,
@@ -1258,6 +1301,12 @@ impl<'a> Emitter<'a> {
         // still imported: they are what the templates write)
         self.member_only = written.difference(&free).cloned().collect();
         for w in &self.d.written {
+            // a top-level name of the definitions (`pow` of dart:math) written only after a dot is a member of the
+            // value (`big.pow(2)`), not that name; an extension's members (`context.goBack()`) are still imported
+            let top_level = self.d.typedefs.get(w).is_some_and(|(_, d)| matches!(d.kind.as_str(), "function" | "variable" | "constant"));
+            if top_level && self.member_only.contains(w) {
+                continue;
+            }
             if written.contains(w) && !self.decl_names.contains_key(w) {
                 // only the locals of that name wrote it: no template did, nothing to import
                 if let Some(&locals) = self.local_writes.get(w) {
@@ -4563,6 +4612,12 @@ impl<'a> Emitter<'a> {
         if matches!(tail, Tail::Return) && self.fn_ctx.last().is_some_and(|c| c.keep_tail) {
             self.keep_next = true;
         }
+        if matches!(tail, Tail::Return)
+            && let Some(t) = self.fn_ctx.last().and_then(|c| c.big_ret.clone())
+        {
+            self.check_big_value(&t, e);
+            return self.expr_as(e, Some(&t));
+        }
         self.expr(e).0
     }
 
@@ -4584,6 +4639,7 @@ impl<'a> Emitter<'a> {
         FnCtx {
             keep_tail: ret.is_none() || res.is_some(),
             typed_return: ret.is_some_and(|t| !is_void(t)),
+            big_ret: ret.filter(|t| num_kind_of(&strip_nullable((*t).clone())).is_some_and(|k| k.is_big())).cloned(),
             result: match res {
                 Some(i) => Some(i.err),
                 None if result_callback => Some(None),
@@ -4834,6 +4890,31 @@ impl<'a> Emitter<'a> {
     /// A value written where `want` is expected. In a target whose integers and decimals are different values
     /// (`options.decimal_literals`), an integer literal given for a `double` is written as a decimal (`3` → `3.0`).
     fn expr_as(&mut self, e: &Expr, want: Option<&Type>) -> String {
+        // the literals of a list literal where a list of exact numbers goes (`xs: bigint[] = [1, 2]`)
+        if let Some(TypeKind::List(item)) = want.map(|t| strip_nullable(t.clone()).kind)
+            && let Some(big) = num_kind_of(&item).filter(|k| k.is_big())
+            && let ExprKind::List(items) = &e.kind
+            && items.iter().all(|i| !matches!(i.kind, ExprKind::Spread(_) | ExprKind::ListIf { .. }))
+        {
+            let rendered: Vec<String> = items.iter().map(|i| self.big_operand(i, big).0).collect();
+            let items = self.join_items(&rendered, 2);
+            let text = self.tpl("list", Ctx::new().set("items", items.clone()), e.span);
+            return close_on_own_line(text, &items);
+        }
+        // the values of a map literal where a map of exact numbers goes (`m: <string, bigdouble> = { "x": 0.3 }`)
+        if let Some(TypeKind::Map(_, value)) = want.map(|t| strip_nullable(t.clone()).kind)
+            && let Some(big) = num_kind_of(&value).filter(|k| k.is_big())
+            && matches!(e.kind, ExprKind::Object(_))
+        {
+            self.exact_values = Some(big);
+            return self.expr(e).0;
+        }
+        // a literal where an exact number goes is written as one (`x: bigint = 5`)
+        if let Some(big) = want.map(|t| strip_nullable(t.clone())).as_ref().and_then(num_kind_of).filter(|k| k.is_big())
+            && let Some(n) = number_literal(e)
+        {
+            return self.big_literal(e, n, big).0;
+        }
         // a literal given for `any`: the literals inside it hold `any` too (Dart would type them by what they hold)
         self.any_literal = want.map_or(0, any_level);
         let text = self.expr(e).0;
@@ -4876,8 +4957,17 @@ impl<'a> Emitter<'a> {
         bound
     }
 
+    /// N0119 where an exact number meets another number type: an argument, a return, an assignment (a declaration
+    /// checks every basic type with `check_value_type`).
+    fn check_big_value(&mut self, declared: &Type, value: &Expr) {
+        let want_big = num_kind_of(&strip_nullable(declared.clone())).is_some_and(|k| k.is_big());
+        if want_big || self.big_kind(value).is_some() {
+            self.check_value_type(declared, value);
+        }
+    }
+
     fn check_value_type(&mut self, declared: &Type, value: &Expr) {
-        const BASIC: [&str; 4] = ["int", "double", "string", "boolean"];
+        const BASIC: [&str; 6] = ["int", "double", "string", "boolean", "bigint", "bigdouble"];
         let basic = |t: &Type| match &t.kind {
             TypeKind::Named { name, args } if args.is_empty() && BASIC.contains(&name.as_str()) => Some(name.clone()),
             _ => None,
@@ -4888,6 +4978,26 @@ impl<'a> Emitter<'a> {
         };
         let (Some(want), Some(got)) = (want, self.static_type(value).as_ref().and_then(basic)) else { return };
         if want == got || (want == "double" && got == "int") {
+            return;
+        }
+        let number = |t: &str| matches!(t, "int" | "double" | "bigint" | "bigdouble");
+        if number(&want) && number(&got) && (want.starts_with("big") || got.starts_with("big")) {
+            // a literal takes the exact type of its place (a decimal one where a bigint goes: `big_literal` says it)
+            if want.starts_with("big") && number_literal(value).is_some() {
+                return;
+            }
+            let src = self.src_text_any(value.span);
+            let to = match want.as_str() {
+                "int" => "toInt()!",
+                "double" => "toDouble()",
+                "bigint" => "toBigInt()",
+                _ => "toBigDouble()",
+            };
+            self.error(
+                codes::BIG_MIX,
+                value.span,
+                format!("this value is {} {got}, and the name is declared {want}: an exact number is never converted silently; write {src}.{to}", if got == "int" { "an" } else { "a" }),
+            );
             return;
         }
         self.error(
@@ -5055,7 +5165,7 @@ impl<'a> Emitter<'a> {
             AssignOp::UShr => Some(BinaryOp::UShr),
         };
         if let Some(op) = binary
-            && self.d.operators.get(op.key()).is_some_and(|t| !t.value.is_constant())
+            && (self.d.operators.get(op.key()).is_some_and(|t| !t.value.is_constant()) || self.big_kind(&a.target).is_some())
         {
             let expr = Expr {
                 span: a.span,
@@ -5066,6 +5176,9 @@ impl<'a> Emitter<'a> {
             return self.tpl("assign", Ctx::new().set("target", target).set("op", "=").set("value", value), a.span);
         }
         let target_type = if a.op == AssignOp::Set { self.static_type(&a.target) } else { None };
+        if let Some(t) = a.ty.as_ref().or(target_type.as_ref()) {
+            self.check_big_value(&t.clone(), &a.value);
+        }
         let value = self.expr_as(&a.value, a.ty.as_ref().or(target_type.as_ref()));
         self.temp_hint = None;
         self.tpl("assign", Ctx::new().set("target", target).set("op", a.op.as_str()).set("value", value), a.span)
@@ -5530,6 +5643,11 @@ impl<'a> Emitter<'a> {
             ExprKind::Null => (self.plain("null", e.span), P_PRIMARY),
             ExprKind::Bool(b) => (self.plain(if *b { "true" } else { "false" }, e.span), P_PRIMARY),
             ExprKind::Number(n) => {
+                // an exact place writes its literal with `big_literal`: here, a whole literal is an int
+                if n.kind == NumberKind::Int && n.text.replace('_', "").parse::<u128>().is_ok_and(|v| v > u128::from(MAX_EXACT_INT)) {
+                    let msg = format!("'{}' is beyond 2^53 − 1: an int does not hold it exactly in every target; declare it bigint (n: bigint = {})", n.text, n.text);
+                    self.error(codes::BIG_MIX, e.span, msg);
+                }
                 let mut text = if self.d.options.number_separators { n.text.clone() } else { n.text.replace('_', "") };
                 if n.kind == NumberKind::Bin && !self.d.options.binary_literals {
                     let digits: String = n.text[2..].chars().filter(|c| *c != '_').collect();
@@ -5578,10 +5696,21 @@ impl<'a> Emitter<'a> {
                 // `-(a ** b)`: TypeScript rejects `-a ** b`
                 let pow = matches!(expr.kind, ExprKind::Binary { op: BinaryOp::Pow, .. });
                 let operand = self.wrap(operand, if pow { P_POSTFIX } else { P_UNARY });
+                let big = if matches!(op, UnaryOp::Neg | UnaryOp::BitNot) { self.big_kind(expr) } else { None };
+                if let Some(big) = big
+                    && *op == UnaryOp::BitNot
+                {
+                    self.error(codes::BIG_UNSUPPORTED, e.span, format!("the bitwise operators are not operations of a {}", big.name()));
+                }
+                // `-x` of an exact number: `[operators] <kind>_neg` where the plain `neg` is not it
+                let neg = match big.map(|k| format!("{}_neg", k.name())) {
+                    Some(own) if self.operator(&own).is_some() => own,
+                    _ => "neg".to_string(),
+                };
                 let text = match op {
                     UnaryOp::Await => self.tpl("await", Ctx::new().set("expr", operand), e.span),
                     UnaryOp::Not => self.unary_op("not", operand, e.span),
-                    UnaryOp::Neg => self.unary_op("neg", operand, e.span),
+                    UnaryOp::Neg => self.unary_op(&neg, operand, e.span),
                     UnaryOp::BitNot => self.unary_op("bit_not", operand, e.span),
                 };
                 (text, P_UNARY)
@@ -5600,6 +5729,10 @@ impl<'a> Emitter<'a> {
                 (self.tpl("ternary", Ctx::new().set("cond", c).set("then", t).set("else", o), e.span), P_TERNARY)
             }
             ExprKind::Is { expr, ty } => {
+                if let Some(big) = num_kind_of(ty).filter(|k| k.is_big()) {
+                    let msg = format!("'is {}' cannot be told apart from another number in every target (an exact whole number is a plain int in some): keep exact numbers in values of their own type", big.name());
+                    self.error(codes::BIG_UNSUPPORTED, ty.span, msg);
+                }
                 let x = self.expr(expr);
                 let x = self.wrap(x, P_POSTFIX);
                 let t = self.ty(ty);
@@ -5724,6 +5857,9 @@ impl<'a> Emitter<'a> {
     }
 
     fn unary_op(&mut self, key: &str, operand: String, span: Span) -> String {
+        if let Some(h) = self.d.syntax_helpers.get(key) {
+            self.helpers.entry(format!("operators.{key}")).or_insert_with(|| h.render(&Value::Map(BTreeMap::new())));
+        }
         match self.operator(key) {
             Some(t) if t.is_constant() => {
                 let prefix = t.render(&Value::Map(BTreeMap::new()));
@@ -5758,6 +5894,9 @@ impl<'a> Emitter<'a> {
     }
 
     fn binary(&mut self, op: BinaryOp, left: &Expr, right: &Expr, span: Span) -> (String, u8) {
+        if let Some(out) = self.big_binary(op, left, right, span) {
+            return out;
+        }
         let ordered = matches!(op, BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq);
         // `m[k] ?? 0` with a plain default: the target's lookup with a default (Python's `m.get(k, 0)`)
         if op == BinaryOp::Coalesce
@@ -5787,7 +5926,14 @@ impl<'a> Emitter<'a> {
             && self.operator(if op == BinaryOp::Eq { "eq_deep" } else { "not_eq_deep" }).is_some()
         {
             // `==` of two lists, maps or sets compares what they hold, where the target compares the objects
-            if op == BinaryOp::Eq { "eq_deep" } else { "not_eq_deep" }
+            let deep = if op == BinaryOp::Eq { "eq_deep" } else { "not_eq_deep" };
+            // collections of exact decimals compare their values (`bigdouble_eq_deep`), where the target's are objects
+            let exact = [left, right].iter().any(|x| self.holds(x, &["bigdouble"]));
+            match deep {
+                "eq_deep" if exact && self.operator("bigdouble_eq_deep").is_some() => "bigdouble_eq_deep",
+                "not_eq_deep" if exact && self.operator("bigdouble_not_eq_deep").is_some() => "bigdouble_not_eq_deep",
+                _ => deep,
+            }
         } else {
             op.key()
         };
@@ -5865,10 +6011,221 @@ impl<'a> Emitter<'a> {
         (text, p)
     }
 
+    /// An operation on an exact number (ADR-lang-0015): the other side is the same kind, or a literal written as one
+    /// (`big + 1` → `big + 1n`); `[operators] <kind>_<op>` writes it where the plain operator is not it
+    /// (`bigdouble_add`). `None`: not an exact operation (or refused, with its diagnostic): the plain path writes it.
+    fn big_binary(&mut self, op: BinaryOp, left: &Expr, right: &Expr, span: Span) -> Option<(String, u8)> {
+        if matches!(op, BinaryOp::And | BinaryOp::Or | BinaryOp::Range)
+            || matches!(left.kind, ExprKind::Null)
+            || matches!(right.kind, ExprKind::Null)
+        {
+            return None;
+        }
+        if op == BinaryOp::In {
+            return self.big_in(left, right);
+        }
+        let (lb, rb) = (self.big_kind(left), self.big_kind(right));
+        let big = lb.or(rb)?;
+        let name = big.name();
+        if matches!(op, BinaryOp::BitAnd | BinaryOp::BitOr | BinaryOp::BitXor | BinaryOp::Shl | BinaryOp::Shr | BinaryOp::UShr) {
+            self.error(codes::BIG_UNSUPPORTED, span, format!("the bitwise operators are not operations of a {name}"));
+            return None;
+        }
+        if op == BinaryOp::Div && big == NumKind::BigInt {
+            self.error(
+                codes::BIG_UNSUPPORTED,
+                span,
+                "`/` of two bigint has no exact result: write `~/` for the whole quotient, or convert both with toBigDouble()",
+            );
+            return None;
+        }
+        if op == BinaryOp::Pow {
+            if lb != Some(big) || self.num_kind(right) != Some(NumKind::Int) {
+                let msg = format!("the base of `**` is the {name} and the exponent an int: `x ** 3`, `x ** n.toInt()!`");
+                self.error(codes::BIG_MIX, span, msg);
+                return None;
+            }
+        } else {
+            // `??` on a nullable exact value: only the fallback must fit
+            let sides: &[&Expr] = if op == BinaryOp::Coalesce { &[right] } else { &[left, right] };
+            for side in sides {
+                if self.big_kind(side) == Some(big) || self.literal_fits(side, big) {
+                    continue;
+                }
+                let src = self.src_text_any(side.span);
+                let msg = if number_literal(side).is_some() {
+                    format!("'{src}' is a decimal literal, and the other side is a bigint: write a whole number, or use bigdouble")
+                } else {
+                    let what = self.big_kind(side).or_else(|| self.num_kind(side)).map(|k| k.name()).unwrap_or("another type");
+                    let to = if big == NumKind::BigInt { "toBigInt" } else { "toBigDouble" };
+                    format!("'{src}' is {what}, and the other side is a {name}: an exact number is never mixed with another type; convert it ({src}.{to}())")
+                };
+                self.error(codes::BIG_MIX, side.span, msg);
+                return None;
+            }
+        }
+        let prec = op.precedence();
+        let lazy = u32::from(op == BinaryOp::Coalesce);
+        let l = self.big_operand(left, big);
+        self.hoist_blocked += lazy;
+        let r = if op == BinaryOp::Pow { self.expr(right) } else { self.big_operand(right, big) };
+        self.hoist_blocked -= lazy;
+        let own = format!("{name}_{}", op.key());
+        let key = if self.operator(&own).is_some() {
+            own
+        } else if op == BinaryOp::Coalesce && !is_plain_path(left) && self.operator("coalesce_once").is_some() {
+            "coalesce_once".to_string()
+        } else {
+            op.key().to_string()
+        };
+        if let Some(h) = self.d.syntax_helpers.get(&key) {
+            self.helpers.entry(format!("operators.{key}")).or_insert_with(|| h.render(&Value::Map(BTreeMap::new())));
+        }
+        let Some(t) = self.operator(&key) else {
+            self.error(codes::MISSING_TEMPLATE, span, format!("dialect '{}' has no [operators] entry '{key}'", self.d.name));
+            return Some((String::new(), prec));
+        };
+        let operand_prec = if prec == 6 { 11 } else { prec };
+        if t.is_constant() {
+            let sym = t.render(&Value::Map(BTreeMap::new()));
+            let l = self.wrap(l, operand_prec.max(prec));
+            let r = self.wrap(r, operand_prec.max(prec + 1));
+            return Some((format!("{l} {sym} {r}"), prec));
+        }
+        let ctx = Ctx::new()
+            .set("left_arg", l.0.clone())
+            .set("right_arg", r.0.clone())
+            .set("left_infix", self.wrap(l.clone(), operand_prec.max(prec + 1)))
+            .set("right_infix", self.wrap(r.clone(), operand_prec.max(prec + 1)))
+            .set("left", self.wrap(l, P_POSTFIX))
+            .set("right", self.wrap(r, P_POSTFIX));
+        let text = t.render(&ctx.into_value());
+        let p = if is_atomic(&text) {
+            P_POSTFIX
+        } else if self.conditional_form(t) {
+            P_TERNARY
+        } else {
+            prec
+        };
+        Some((text, p))
+    }
+
+    /// `x in xs` where `xs` is a list or a set of exact numbers: `x` is of that type (a literal takes it, N0119
+    /// otherwise), and `[operators] <kind>_in` compares values where the target's `in` compares objects.
+    fn big_in(&mut self, left: &Expr, right: &Expr) -> Option<(String, u8)> {
+        let t = strip_nullable(self.static_type(right)?);
+        let elem = match &t.kind {
+            TypeKind::List(e) => (**e).clone(),
+            TypeKind::Named { name, args } if name == "Set" && args.len() == 1 => args[0].clone(),
+            _ => return None,
+        };
+        // `x in [0.3]`: the literal list takes the exact type of `x`
+        let literal_list = match (&right.kind, self.big_kind(left)) {
+            (ExprKind::List(items), Some(big)) if items.iter().all(|i| number_literal(i).is_some() || self.big_kind(i) == Some(big)) => Some(big),
+            _ => None,
+        };
+        let big = literal_list.or_else(|| num_kind_of(&elem).filter(|k| k.is_big()))?;
+        if self.big_kind(left) != Some(big) && !self.literal_fits(left, big) {
+            let src = self.src_text_any(left.span);
+            let msg = if number_literal(left).is_some() {
+                format!("'{src}' is a decimal literal, and the list holds bigint: write a whole number")
+            } else {
+                format!("the list holds {}, and '{src}' is another type: convert it", big.name())
+            };
+            self.error(codes::BIG_MIX, left.span, msg);
+            return None;
+        }
+        let l = self.big_operand(left, big);
+        let r = match &right.kind {
+            ExprKind::List(items) if literal_list.is_some() => {
+                let rendered: Vec<String> = items.iter().map(|i| self.big_operand(i, big).0).collect();
+                let items = self.join_items(&rendered, 2);
+                (self.tpl("list", Ctx::new().set("items", items), right.span), P_PRIMARY)
+            }
+            _ => self.expr(right),
+        };
+        let own = format!("{}_in", big.name());
+        if self.operator(&own).is_none() {
+            // the target's own `in`, with the literal written as the exact value
+            let is_set = matches!(&t.kind, TypeKind::Named { name, .. } if name == "Set");
+            let (lw, rw) = (self.wrap(l, P_POSTFIX), self.wrap(r, P_POSTFIX));
+            let tpl = self.operator("in")?;
+            let text = if tpl.is_constant() {
+                format!("{lw} {} {rw}", tpl.render(&Value::Map(BTreeMap::new())))
+            } else {
+                let ctx = Ctx::new().set("left", lw).set("right", rw).flag("map", false).flag("object", false).flag("set", is_set);
+                tpl.render(&ctx.into_value())
+            };
+            return Some((text, 6));
+        }
+        if let Some(h) = self.d.syntax_helpers.get(&own) {
+            self.helpers.entry(format!("operators.{own}")).or_insert_with(|| h.render(&Value::Map(BTreeMap::new())));
+        }
+        let t = self.operator(&own)?;
+        let ctx = Ctx::new()
+            .set("left_arg", l.0.clone())
+            .set("right_arg", r.0.clone())
+            .set("left", self.wrap(l, P_POSTFIX))
+            .set("right", self.wrap(r, P_POSTFIX));
+        let text = t.render(&ctx.into_value());
+        let prec = if is_atomic(&text) { P_POSTFIX } else { 6 };
+        Some((text, prec))
+    }
+
+    /// An operand of an exact operation: a literal is written as the exact kind, anything else as it is.
+    fn big_operand(&mut self, e: &Expr, big: NumKind) -> (String, u8) {
+        match number_literal(e) {
+            Some(n) if self.big_kind(e).is_none() => self.big_literal(e, n, big),
+            _ => self.expr(e),
+        }
+    }
+
+    /// A literal where an exact number goes (`x: bigint = 5`, `big + 1`), from its exact text: never through a
+    /// binary number (N0119 for a decimal literal where a `bigint` goes).
+    fn big_literal(&mut self, e: &Expr, n: &nuclear_syntax::token::Number, big: NumKind) -> (String, u8) {
+        let neg = !matches!(e.kind, ExprKind::Number(_));
+        let digits = n.text.replace('_', "");
+        let text = match n.kind {
+            NumberKind::Float if big == NumKind::BigInt => {
+                let msg = format!("'{}' is a decimal literal, and a bigint goes here: write a whole number, or use bigdouble", n.text);
+                self.error(codes::BIG_MIX, e.span, msg);
+                digits
+            }
+            NumberKind::Hex | NumberKind::Bin => {
+                let radix = if n.kind == NumberKind::Hex { 16 } else { 2 };
+                match u128::from_str_radix(&digits[2..], radix) {
+                    Ok(v) => v.to_string(),
+                    Err(_) => {
+                        self.error(codes::BIG_MIX, e.span, format!("'{}' is too large for a literal in base {radix}: write it in decimal", n.text));
+                        digits
+                    }
+                }
+            }
+            _ => digits,
+        };
+        let small = text.len() < 16 || text.parse::<u64>().is_ok_and(|v| v <= MAX_EXACT_INT);
+        let value = if neg { format!("-{text}") } else { text };
+        let key = format!("{}_literal", big.name());
+        let out = self.tpl(&key, Ctx::new().set("value", value).flag("small", small), e.span);
+        let prec = if out.starts_with('-') { P_UNARY } else { P_POSTFIX };
+        (out, prec)
+    }
+
     /// A value as `print` and `"${x}"` write it where the target's text of it is not Nuclear's: a decimal keeps its
     /// `.0` (`show_double`: TypeScript prints `2.0` as `2`) and a missing value is `null` (`show_nullable`: a missed
     /// `?.` or an absent optional is TypeScript's `undefined`).
     fn shown(&mut self, e: &Expr, text: (String, u8)) -> String {
+        // an exact number: its digits (`bigint`), its shortest exact text with a decimal (`bigdouble`)
+        if let Some(big) = self.big_kind(e) {
+            let nullable = self.static_type(e).is_some_and(|t| matches!(t.kind, TypeKind::Nullable(_)));
+            let key = format!("show_{}{}", big.name(), if nullable { "_nullable" } else { "" });
+            if self.has(&key) {
+                return self.tpl(&key, Ctx::new().set("expr", text.0), e.span);
+            }
+            if !nullable {
+                return text.0;
+            }
+        }
         // known decimals only: a decimal literal, a division, a value declared `double` (`Math.min(3, 9)` keeps an int)
         let double = matches!(&e.kind, ExprKind::Number(n) if n.kind == NumberKind::Float)
             || matches!(e.kind, ExprKind::Binary { op: BinaryOp::Div, .. })
@@ -6078,6 +6435,16 @@ impl<'a> Emitter<'a> {
             recv = format!("({recv})");
         }
         let elem = recv_type.as_ref().and_then(elem_of);
+        // the list members that compare or add the elements work on binary numbers in some targets
+        if base == "list"
+            && let Some(big) = elem.as_ref().and_then(num_kind_of).filter(|k| k.is_big())
+            && (matches!(member_name.as_str(), "sum" | "min" | "max")
+                || (big == NumKind::BigDouble
+                    && matches!(member_name.as_str(), "sorted" | "sort" | "unique" | "indexOf" | "lastIndexOf" | "remove")))
+        {
+            let msg = format!("'{member_name}' of a list of {} is not in the standard library yet: write it with reduce or a loop", big.name());
+            self.error(codes::BIG_UNSUPPORTED, name.span, msg);
+        }
         // the types of a callback's parameters: the element (reduce: the accumulator first; replaceAll: a Match)
         let hints: Vec<Type> = match (base, member_name.as_str()) {
             ("list", "reduce") => {
@@ -6088,7 +6455,23 @@ impl<'a> Emitter<'a> {
             _ => elem.clone().into_iter().collect(),
         };
         let key = format!("{}.{}", m.base, member_name);
-        Some(self.library_render(&key, &entry, Some(recv), elem.as_ref(), hints, args.unwrap_or(&[]), type_args))
+        // the other number of `compareTo` is of the receiver's exact type: a literal takes it, anything else is N0119
+        let exact = num_kind_of(&named_type(base, Vec::new(), span)).filter(|k| k.is_big() && member_name == "compareTo");
+        if let Some(big) = exact {
+            for a in args.unwrap_or(&[]) {
+                if self.big_kind(&a.value) != Some(big) && number_literal(&a.value).is_none() {
+                    let src = self.src_text_any(a.value.span);
+                    let to = if big == NumKind::BigInt { "toBigInt" } else { "toBigDouble" };
+                    let what = self.big_kind(&a.value).or_else(|| self.num_kind(&a.value)).map(|k| k.name()).unwrap_or("another type");
+                    let msg = format!("'{src}' is {what}, and compareTo of a {} takes the same type: convert it ({src}.{to}())", big.name());
+                    self.error(codes::BIG_MIX, a.value.span, msg);
+                }
+            }
+        }
+        self.exact_args = exact;
+        let out = self.library_render(&key, &entry, Some(recv), elem.as_ref(), hints, args.unwrap_or(&[]), type_args);
+        self.exact_args = None;
+        Some(out)
     }
 
     /// A name of the dialect's imports that is not a value of a base type: a module imported as itself (`math`), or a
@@ -6133,8 +6516,54 @@ impl<'a> Emitter<'a> {
             self.error(codes::MISSING_TEMPLATE, span, format!("the dialect has no template for library.{obj}.{name}"));
             return None;
         };
+        // `Math` works on binary numbers; JSON has no exact number: an exact one goes as the text of `toString()`
+        if obj == "Set" && type_args.iter().any(|t| matches!(&t.kind, TypeKind::Named { name, .. } if name == "bigdouble")) {
+            self.error(codes::BIG_UNSUPPORTED, span, "a Set of bigdouble is not in the standard library yet: use a list, or a map keyed by toString()");
+        }
+        for a in args.unwrap_or(&[]) {
+            let held = self.holds_big(&a.value);
+            if obj == "Set" && self.holds(&a.value, &["bigdouble"]) {
+                self.error(codes::BIG_UNSUPPORTED, a.value.span, "a Set of bigdouble is not in the standard library yet: use a list, or a map keyed by toString()");
+            }
+            if (obj == "Math" && self.big_kind(&a.value).is_some()) || (obj == "Json" && name == "encode" && held) {
+                let msg = if obj == "Math" {
+                    format!("'Math.{name}' works on int and double, not on an exact number: convert it, or use the exact number's own members")
+                } else {
+                    "JSON has no exact number: write a bigint or a bigdouble as the text of its toString(), and read it back with toBigInt() / toBigDouble()".to_string()
+                };
+                self.error(codes::BIG_UNSUPPORTED, a.value.span, msg);
+            }
+        }
         let key = format!("{obj}.{name}");
         Some(self.library_render(&key, &entry, None, None, Vec::new(), args.unwrap_or(&[]), type_args))
+    }
+
+    /// Whether a value is or holds an exact number: its type (`bigint[]`, `<string, bigdouble>`), or the items of a
+    /// list or map literal.
+    fn holds_big(&self, e: &Expr) -> bool {
+        self.holds(e, &["bigint", "bigdouble"])
+    }
+
+    /// Whether a value is or holds a value of one of the types `names`.
+    fn holds(&self, e: &Expr, names: &[&str]) -> bool {
+        fn in_type(t: &Type, names: &[&str]) -> bool {
+            match &t.kind {
+                TypeKind::Nullable(i) | TypeKind::List(i) => in_type(i, names),
+                TypeKind::Map(k, v) => in_type(k, names) || in_type(v, names),
+                TypeKind::Named { name, args } => names.contains(&name.as_str()) || args.iter().any(|a| in_type(a, names)),
+                _ => false,
+            }
+        }
+        match &e.kind {
+            ExprKind::List(items) => items.iter().any(|i| self.holds(i, names)),
+            ExprKind::Object(entries) => entries.iter().any(|en| match en {
+                ObjEntry::Pair { value, .. } => self.holds(value, names),
+                ObjEntry::Shorthand(n) => self.var_type(&n.name).is_some_and(|t| in_type(&t, names)),
+                ObjEntry::Spread(x) => self.holds(x, names),
+            }),
+            ExprKind::Spread(x) => self.holds(x, names),
+            _ => self.static_type(e).is_some_and(|t| in_type(&t, names)),
+        }
     }
 
     fn lib_entry(&self, base: &str, name: &str) -> Option<nuclear_dialect::model::LibMember> {
@@ -6173,7 +6602,10 @@ impl<'a> Emitter<'a> {
             if lambda.is_some() {
                 self.lambda_hints = hints.clone();
             }
-            let (text, prec) = self.expr(&a.value);
+            let (text, prec) = match (self.exact_args, number_literal(&a.value)) {
+                (Some(big), Some(n)) => self.big_literal(&a.value, n, big),
+                _ => self.expr(&a.value),
+            };
             self.lambda_hints.clear();
             if let Some(l) = lambda
                 && let LambdaBody::Expr(body) = &l.body
@@ -6542,17 +6974,16 @@ impl<'a> Emitter<'a> {
                 | BinaryOp::Or
                 | BinaryOp::In => Some(named_type("boolean", Vec::new(), sp)),
                 BinaryOp::Range => Some(Type { span: sp, kind: TypeKind::List(Box::new(named_type("int", Vec::new(), sp))) }),
-                BinaryOp::Coalesce => self.static_type(right).or_else(|| self.static_type(left).map(strip_nullable)),
+                BinaryOp::Coalesce => match self.big_kind(left) {
+                    Some(big) => Some(named_type(big.name(), Vec::new(), sp)),
+                    None => self.static_type(right).or_else(|| self.static_type(left).map(strip_nullable)),
+                },
                 BinaryOp::Add
                     if [left, right].iter().any(|x| matches!(self.static_type(x).map(|t| receiver_base(&t)), Some(Recv::Base("string")))) =>
                 {
                     Some(named_type("string", Vec::new(), sp))
                 }
-                _ => match self.num_kind(e) {
-                    Some(NumKind::Int) => Some(named_type("int", Vec::new(), sp)),
-                    Some(NumKind::Double) => Some(named_type("double", Vec::new(), sp)),
-                    None => None,
-                },
+                _ => self.num_kind(e).map(|k| named_type(k.name(), Vec::new(), sp)),
             },
             _ => None,
         }
@@ -6763,6 +7194,10 @@ impl<'a> Emitter<'a> {
             Ret::IntOpt => opt(t("int")),
             Ret::Double => t("double"),
             Ret::DoubleOpt => opt(t("double")),
+            Ret::BigInt => t("bigint"),
+            Ret::BigIntOpt => opt(t("bigint")),
+            Ret::BigDouble => t("bigdouble"),
+            Ret::BigDoubleOpt => opt(t("bigdouble")),
             Ret::Bool => t("boolean"),
             Ret::Void => t("void"),
             Ret::Same => recv_t?,
@@ -6834,8 +7269,12 @@ impl<'a> Emitter<'a> {
                 num_kind_of(&self.static_type(e)?)
             }
             ExprKind::Unary { op: UnaryOp::Neg | UnaryOp::BitNot, expr } => self.num_kind(expr),
+            ExprKind::Binary { op: BinaryOp::Coalesce, left, .. } => self.big_kind(left),
             ExprKind::Binary { op, left, right } => {
                 let (l, r) = (self.num_kind(left), self.num_kind(right));
+                if let Some(big) = [l, r].into_iter().flatten().find(|k| k.is_big()) {
+                    return self.big_result(*op, big, left, right);
+                }
                 match op {
                     BinaryOp::Div => Some(NumKind::Double),
                     BinaryOp::IntDiv
@@ -6859,6 +7298,32 @@ impl<'a> Emitter<'a> {
             }
             _ => None,
         }
+    }
+
+    /// The kind of an operation on an exact number, when its operands allow it: the other side is the same kind or a
+    /// literal that takes it; the exponent of `**` is an `int`. `None` is an operation N0119 or N0120 refuses.
+    fn big_result(&self, op: BinaryOp, big: NumKind, left: &Expr, right: &Expr) -> Option<NumKind> {
+        let fits = |e: &Expr| self.num_kind(e) == Some(big) || self.literal_fits(e, big);
+        match op {
+            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Rem if fits(left) && fits(right) => Some(big),
+            BinaryOp::Div if big == NumKind::BigDouble && fits(left) && fits(right) => Some(big),
+            BinaryOp::IntDiv if fits(left) && fits(right) => Some(NumKind::BigInt),
+            BinaryOp::Pow if self.num_kind(left) == Some(big) && self.num_kind(right) == Some(NumKind::Int) => Some(big),
+            _ => None,
+        }
+    }
+
+    /// A literal that takes the exact kind `big`: a whole literal for both, a decimal one only for `bigdouble`.
+    fn literal_fits(&self, e: &Expr, big: NumKind) -> bool {
+        number_literal(e).is_some_and(|n| n.kind != NumberKind::Float || big == NumKind::BigDouble)
+    }
+
+    /// The exact kind of a value (`bigint`, `bigdouble`), also when it may be missing (`"7".toBigInt() ?? 0`).
+    fn big_kind(&self, e: &Expr) -> Option<NumKind> {
+        self.num_kind(e).filter(|k| k.is_big()).or_else(|| {
+            let t = strip_nullable(self.static_type(e)?);
+            num_kind_of(&t).filter(|k| k.is_big())
+        })
     }
 
     fn name_value(&mut self, n: &str, span: Span) -> String {
@@ -7099,6 +7564,7 @@ impl<'a> Emitter<'a> {
 
     fn object(&mut self, entries: &[ObjEntry], span: Span) -> String {
         let any_here = std::mem::take(&mut self.any_here);
+        let exact = self.exact_values.take();
         let mut rendered = Vec::new();
         for en in entries {
             let text = match en {
@@ -7108,7 +7574,10 @@ impl<'a> Emitter<'a> {
                         ObjKey::Str(s) => self.tpl("object_key_string", Ctx::new().set("key", s), span),
                     };
                     self.any_literal = if any_here > 0 { 2 } else { 0 };
-                    let v = self.expr(value).0;
+                    let v = match exact {
+                        Some(big) => self.big_operand(value, big).0,
+                        None => self.expr(value).0,
+                    };
                     self.any_literal = 0;
                     self.tpl("object_entry", Ctx::new().set("key", k).set("value", v), span)
                 }
@@ -7218,10 +7687,14 @@ impl<'a> Emitter<'a> {
                     let mut shown: Vec<String> = Vec::new();
                     let wants_shown = t.used_vars().iter().any(|v| v.name == "shown");
                     for a in args {
-                        let full = self.expr(&a.value);
+                        let mut full = self.expr(&a.value);
+                        // an exact number is given as its text (`print(x)`: Dart and Python write a decimal another way)
+                        if a.name.is_none() && self.big_kind(&a.value).is_some() {
+                            full = (self.shown(&a.value, full), P_POSTFIX);
+                        }
                         let (text, prec) = (full.0.clone(), full.1);
                         if a.name.is_none() && wants_shown {
-                            shown.push(self.shown(&a.value, full));
+                            shown.push(if self.big_kind(&a.value).is_some() { text.clone() } else { self.shown(&a.value, full) });
                         }
                         match &a.name {
                             Some(n) => {
@@ -7497,6 +7970,9 @@ impl<'a> Emitter<'a> {
                 && let TypeKind::Func { params: wanted, .. } = &item.kind
             {
                 self.item_hints = wanted.iter().filter_map(|w| w.ty.as_ref().map(|t| subst_type(t, &bound))).collect();
+            }
+            if let Some(t) = param.and_then(|p| p.ty.as_ref()) {
+                self.check_big_value(t, &a.value);
             }
             let v = self.expr_as(&a.value, param.and_then(|p| p.ty.as_ref()));
             self.lambda_hints.clear();
@@ -7778,6 +8254,17 @@ impl<'a> Emitter<'a> {
                         Some(r) => self.refs.insert(r),
                         None => self.refs.insert(root.to_string()),
                     };
+                }
+                // a set compares its elements as objects in some targets: an exact decimal is not one of its elements
+                if name == "Set" && args.iter().any(|a| matches!(&a.kind, TypeKind::Named { name, .. } if name == "bigdouble")) {
+                    self.error(codes::BIG_UNSUPPORTED, t.span, "a Set of bigdouble is not in the standard library yet: use a list, or a map keyed by toString()");
+                }
+                // an exact number's runtime (the helper of its literal: TypeScript's decimal) goes with its type
+                if (name == "bigint" || name == "bigdouble")
+                    && let Some(h) = self.d.syntax_helpers.get(&format!("{name}_literal"))
+                {
+                    let key = format!("syntax.{name}_literal");
+                    self.helpers.entry(key).or_insert_with(|| h.render(&Value::Map(BTreeMap::new())));
                 }
                 // a declaration of the project keeps its name over the dialect's (`Page` of an app is not `PageOf`)
                 let mapped = if self.decl_names.contains_key(root) { None } else { self.d.types.get(name.as_str()) };
@@ -8371,6 +8858,8 @@ fn receiver_base(t: &Type) -> Recv {
             "string" | "String" => Recv::Base("string"),
             "int" => Recv::Base("int"),
             "double" | "num" => Recv::Base("double"),
+            "bigint" => Recv::Base("bigint"),
+            "bigdouble" => Recv::Base("bigdouble"),
             "boolean" | "bool" => Recv::Base("boolean"),
             // `Map<K, V>()` and `List()` are the target's classes (type definitions), not Nuclear's literals
             "List" | "Map" => Recv::Other,

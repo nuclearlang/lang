@@ -193,6 +193,11 @@ renamed_params = { template = "@_public_names({{#renamed}}{{local}}=\"{{name}}\"
 show_nullable = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
 show_bool = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
 show_any = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
+# the exact numbers (ADR-lang-0015): bigint is int; bigdouble is Decimal, computed with templates/bigdouble.tpl
+bigint_literal = "{{value}}"
+bigdouble_literal = 'Decimal("{{value}}")'
+show_bigdouble = { template = "_dec_text({{expr}})", helper = { file = "templates/bigdouble.tpl" } }
+show_bigdouble_nullable = { template = "_dec_text_or_null({{expr}})", helper = { file = "templates/bigdouble.tpl" } }
 optional_member = "({{object}}.{{name}} if {{object}} is not None else None)"
 # the object is a call: made once
 optional_member_once = { template = "_opt({{object}}, lambda v: v.{{name}})", helper = "def _opt[T, R](value: T | None, read: Callable[[T], R]) -> R | None:\n    return None if value is None else read(value)" }
@@ -251,6 +256,8 @@ string = "str"
 int = "int"
 double = "float"
 number = "float"
+bigint = "int"
+bigdouble = "Decimal"
 boolean = "bool"
 bool = "bool"
 void = "None"
@@ -309,10 +316,21 @@ shr = ">>"
 ushr = "({{left}} % 0x100000000) >> {{right}}"
 in = "{{left}} in {{right}}"
 range = "range({{left}}, {{right}})"
+# the exact numbers: `%` is the remainder of `~/` (the dividend's sign); a Decimal is computed with no rounding
+bigint_rem = { template = "_big_rem({{left_arg}}, {{right_arg}})", helper = "def _big_rem(a: int, b: int) -> int:\n    r = abs(a) % abs(b)\n    return -r if a < 0 else r" }
+bigint_pow = { template = "_big_pow({{left_arg}}, {{right_arg}})", helper = "def _big_pow(x: int, n: int) -> int:\n    if n < 0:\n        raise ValueError(f\"the exponent {n} is not a whole number >= 0\")\n    return x**n" }
+bigdouble_add = { template = "_EXACT.add({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_sub = { template = "_EXACT.subtract({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_mul = { template = "_EXACT.multiply({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_div = { template = "_dec_div({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_rem = { template = "_EXACT.remainder({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_int_div = { template = "int(_EXACT.divide_int({{left_arg}}, {{right_arg}}))", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_pow = { template = "_dec_pow({{left_arg}}, {{right_arg}})", helper = { file = "templates/bigdouble.tpl" } }
+bigdouble_neg = { template = "_EXACT.minus({{expr}})", helper = { file = "templates/bigdouble.tpl" } }
 
 [names]
 # names the templates write: imported from typing / enum when the generated code uses them
-written = ["Any", "ClassVar", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Enum", "auto", "math", "json", "re", "base64", "datetime", "functools", "random", "asyncio"]
+written = ["Decimal", "Context", "MAX_PREC", "MAX_EMAX", "MIN_EMIN", "ROUND_HALF_UP", "Any", "ClassVar", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Enum", "auto", "math", "json", "re", "base64", "datetime", "functools", "random", "asyncio"]
 
 [auto_imports]
 "typing" = ["TYPE_CHECKING", "Any", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Never", "TypedDict", "Annotated", "ClassVar", "Final", "Self"]
@@ -326,6 +344,7 @@ written = ["Any", "ClassVar", "Protocol", "Callable", "Literal", "Iterator", "As
 "random" = ["random"]
 "asyncio" = ["asyncio"]
 "enum" = ["Enum", "auto", "StrEnum", "IntEnum"]
+"decimal" = ["Decimal", "Context", "MAX_PREC", "MAX_EMAX", "MIN_EMIN", "ROUND_HALF_UP"]
 "dataclasses" = ["dataclass", "field"]
 
 [modifiers]

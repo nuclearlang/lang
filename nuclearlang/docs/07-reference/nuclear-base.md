@@ -782,6 +782,7 @@ A function or method receives only the parameters written in its signature. With
 | Description | Types | Examples |
 |---|---|---|
 | native basics | `string`, `double`, `int`, `boolean` | num: double |
+| exact numbers | `bigint`, `bigdouble` (§5.1) | id: bigint = 12345678901234567890 |
 | lists | `User[]` | num[] = [1, 2, 3] |
 | maps | `<Key, Value>` | users: <string, User> = {"julian": User(name = "julian"), "other": User(name = "other")} |
 | nullable | `?` | user: string? |
@@ -791,6 +792,40 @@ Types are optional where the target can infer them (variables, lambda returns).
 
 The members of these types (`length`, `add`, `map`, `split`, `upper`...), `Math`, `Json`, `Regex`, `DateTime` and
 the other objects of the base are Nuclear's own and the same in every dialect: [library.md](library.md).
+
+### 5.1 Exact numbers: `bigint` and `bigdouble`
+
+A `bigint` is a whole number of any size; a `bigdouble` an exact decimal of any size and any number of decimals
+(`0.1 + 0.2 == 0.3`). They give the same value and the same text in every dialect.
+
+```nuclear
+total: bigint = 1
+for i in 1..31
+  total *= i.toBigInt()          // 265252859812191058636308480000000
+price: bigdouble = 19.99
+print(price * 3, price / 3)      // 59.97 6.66333333333333333333
+```
+
+- **A literal takes the exact type of its place**: a name, a parameter or a return declared exact, a list declared of
+  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the
+  argument of `compareTo`. It is the exact value of its text. A decimal
+  literal where a `bigint` goes is error `N0119`, and so is a whole literal beyond 2^53 − 1 in any other place.
+- **Nothing converts silently**: an exact number never meets an `int`, a `double` or the other exact type in an
+  operation, a declaration, an argument or a return (`N0119`). The conversions are written: `n.toBigInt()`,
+  `n.toBigDouble()`, `big.toInt()` (`null` outside ±(2^53 − 1)), `big.toDouble()` (the nearest double)
+  ([library.md](library.md) §5.1).
+- **Operators**: `+`, `-`, `*`, `%`, `**`, `~/`, the comparisons and `==`. `%` is the remainder of `~/` (it has the
+  dividend's sign); `~/` drops the decimals toward zero and gives a `bigint`. `bigint / bigint` does not exist (write
+  `~/`, or convert both to `bigdouble`); `bigdouble / bigdouble` is rounded half away from zero to the larger of 20
+  and the decimals of each side. The exponent of `**` is an `int` ≥ 0 (a negative one is an error when it runs).
+  The bitwise operators are not theirs (`N0120`).
+- **Text**: `print`, `"${x}"` and `toString()` write a `bigint`'s digits and a `bigdouble`'s shortest exact text with
+  at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).
+- **JSON** has no exact number: an exact number goes as the text of `toString()` (`{ "id": id.toString() }`) and comes
+  back with `toBigInt()` / `toBigDouble()`. `Json.encode` of a value known to hold one is `N0120`.
+- Lists and maps of exact numbers compare their values (`==`, `!=`, `x in xs`), as every list does; a `Set` of
+  `bigdouble` is not in the library yet (`N0120`).
+- `x is bigint` and `x is bigdouble` do not exist (`N0120`): an exact number is kept in values of its own type.
 
 Maps:
 - The type is written `<Key, Value>` in any position: variable (`users: <string, User>`), parameter
@@ -829,7 +864,8 @@ Maps:
 - `x as Type` converts the type: `data = read(file) as <string, int>`.
 - `value!` asserts that the value is not null: `user.address!.city`. The `!` goes right after a name, `)` or
   `]`. Before a value, `!` is an error: write `not`.
-- `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). `%`, the bitwise operators and
+- `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). The exact numbers have their own
+  rules (§5.1). `%`, the bitwise operators and
   the integer width are the target's: TypeScript's `%` keeps the dividend's sign and its bitwise operators work on
   32 bits; Dart's `%` is never negative and its integers have 64 bits; Python's `%` has the divisor's sign and its
   integers have no limit.

@@ -237,6 +237,16 @@ pub mod codes {
         title: "a value of another type",
         explanation: "The value given to a name declared with a basic type (`int`, `double`, `string`, `boolean`) is known to be another basic type: `x: int = \"s\"`. An `int` is a `double` (`h: double = 3`); every other pair is an error, because each target would keep or reject the value differently. Change the value, or the type.",
     };
+    pub const BIG_MIX: Code = Code {
+        id: "N0119",
+        title: "an exact number mixed with another number type",
+        explanation: "A `bigint` or a `bigdouble` (the exact numbers) meets a number of another type in an operation, a declaration, an argument or a return: `big + n` with `n: int`, `x: bigint = n`, `total: double = price` with `price: bigdouble`. Nothing converts silently, because a conversion can lose digits: write it (`n.toBigInt()`, `price.toDouble()`). A literal takes the exact type of its place (`big + 1`, `x: bigdouble = 0.1`), except a decimal literal where a `bigint` goes. A whole literal beyond 2^53 − 1 outside an exact place is the same error: an `int` does not hold it exactly in every target; declare it `bigint`.",
+    };
+    pub const BIG_UNSUPPORTED: Code = Code {
+        id: "N0120",
+        title: "not an operation of the exact numbers",
+        explanation: "The exact numbers (`bigint`, `bigdouble`) have their own rules: `/` of two `bigint` has no exact result (write `~/` for the whole quotient, or convert to `bigdouble`); the bitwise operators, `x is bigint` / `x is bigdouble`, `Math` functions, `Json.encode` of a value that holds one, a `Set` of `bigdouble` and the list members that compare or add the elements (`sum`, `min`, `max`, and for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`) are not theirs. In JSON an exact number travels as the text of `toString()`, read back with `toBigInt()` / `toBigDouble()`.",
+    };
     pub const INHERITED_ASSIGN: Code = Code {
         id: "N0118",
         title: "a plain name writes an inherited attribute (warning)",
@@ -458,6 +468,8 @@ pub mod codes {
         PLATFORM_DECORATOR,
         UNKNOWN_MEMBER,
         WRONG_TYPE,
+        BIG_MIX,
+        BIG_UNSUPPORTED,
         INHERITED_ASSIGN,
         NOT_ASYNC,
         SINGLE_BASE,

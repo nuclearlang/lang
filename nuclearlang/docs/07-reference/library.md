@@ -44,6 +44,7 @@
 | `repeat(n)` | `string` | |
 | `padStart(width, fill = " ")` `padEnd(width, fill = " ")` | `string` | |
 | `toInt()` `toDouble()` | `int?` `double?` | `null` when the text is not a number |
+| `toBigInt()` `toBigDouble()` | `bigint?` `bigdouble?` | the exact number, `null` when the text is not one (§5.1) |
 | `compareTo(other)` | `int` | `< 0`, `0`, `> 0` |
 | `String.fromCodes(codes: int[])` | `string` | |
 
@@ -109,8 +110,36 @@
 | `round()` `floor()` `ceil()` `truncate()` | `int` | `round` is half away from zero |
 | `toFixed(digits)` | `string` | fixed decimals |
 | `toInt()` `toDouble()` `toString()` | | conversion |
+| `toBigInt()` `toBigDouble()` | `bigint` `bigdouble` | the exact value (§5.1) |
 | `toRadix(base)` | `string` | `255.toRadix(16)` is `"ff"` |
 | `isNaN` `isFinite` | `boolean` | `double` |
+
+`toBigInt()` and `toBigDouble()` of a number give its exact value (`2.5.toBigInt()` is `2`, toward zero;
+`0.1.toBigDouble()` is `0.1`, from the shortest text of the double); a `double` that is not finite is an error.
+
+### 5.1 The exact numbers: `bigint` and `bigdouble`
+
+The rules of the types are in [nuclear-base.md](nuclear-base.md) §5.1.
+
+| Member | `bigint` | `bigdouble` | Meaning |
+|---|---|---|---|
+| `abs()` | `bigint` | `bigdouble` | |
+| `sign()` | `int` | `int` | `-1`, `0`, `1` |
+| `round()` `floor()` `ceil()` `truncate()` | | `bigint` | `round` is half away from zero |
+| `roundTo(digits)` | | `bigdouble` | rounded half away from zero to `digits` decimals |
+| `toFixed(digits)` | | `string` | fixed decimals, rounded half away from zero |
+| `toInt()` | `int?` | `int?` | toward zero; `null` outside ±(2^53 − 1), the integers every target holds |
+| `toDouble()` | `double` | `double` | the nearest double |
+| `toBigDouble()` | `bigdouble` | | exact |
+| `toBigInt()` | | `bigint` | toward zero |
+| `compareTo(other)` | `int` | `int` | `-1`, `0`, `1`; `other` of the same type (a literal takes it) |
+| `toString()` | `string` | `string` | digits; the shortest exact text with at least one decimal (`2.0`) |
+
+**The check functions** are the parsing members of `string`: `text.toBigInt()` (`bigint?`) accepts an optional sign
+and digits; `text.toBigDouble()` (`bigdouble?`) also a decimal part and an exponent (`-0.5e2`); spaces around are
+ignored, any other text (`"1."`, `"1_000"`, `"abc"`) gives `null`. A member of an exact number needs a receiver whose
+type is known. Not theirs yet (`N0120`): `Math`, a `Set` of `bigdouble`, and the list members `sum`, `min`, `max`
+(for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`).
 
 `Math`: `Math.pi`, `Math.e`, `Math.sqrt(x)`, `Math.cbrt(x)`, `Math.hypot(a, b)`, `Math.sin(x)`, `Math.cos(x)`,
 `Math.tan(x)`, `Math.asin(x)`, `Math.acos(x)`, `Math.atan(x)`, `Math.atan2(y, x)`, `Math.exp(x)`, `Math.log(x)`,
@@ -124,7 +153,8 @@
 
 ## 7. `Json`
 
-`Json.encode(value)` gives the JSON text of a value (models through their JSON form); `Json.decode(text)` gives
+`Json.encode(value)` gives the JSON text of a value (models through their JSON form; an exact number goes as the text of
+its `toString()`, §5.1); `Json.decode(text)` gives
 `any` (maps, lists, strings, numbers, booleans, `null`).
 
 ## 8. `Regex` and `Match`

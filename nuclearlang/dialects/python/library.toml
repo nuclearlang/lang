@@ -43,6 +43,11 @@ compareTo = { template = '_compare({{recv}}, {{arg0}})', helper = """
 def _compare(a: str, b: str) -> int:
     return (a > b) - (a < b)""" }
 toBytes = '{{recv}}.encode()'
+toBigInt = { template = '_to_bigint({{recv}})', helper = """
+def _to_bigint(s: str) -> int | None:
+    t = s.strip()
+    return int(t) if re.fullmatch(r"[+-]?[0-9]+", t) else None""" }
+toBigDouble = { template = '_to_bigdouble({{recv}})', helper = { file = "templates/bigdouble.tpl" } }
 
 [library.list]
 length = 'len({{recv}})'
@@ -146,6 +151,8 @@ truncate = 'math.trunc({{recv}})'
 toFixed = 'f"{{{recv}}:.{{{arg0}}}f}"'
 toInt = 'int({{recv}})'
 toDouble = 'float({{recv}})'
+toBigInt = 'int({{recv}})'
+toBigDouble = { template = '_dec_from({{recv}})', helper = { file = "templates/bigdouble.tpl" } }
 toRadix = { template = '_to_radix({{recv}}, {{arg0}})', helper = """
 def _to_radix(n: int, base: int) -> str:
     digits = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -161,6 +168,34 @@ def _to_radix(n: int, base: int) -> str:
 [library.double]
 isNaN = 'math.isnan({{recv}})'
 isFinite = 'math.isfinite({{recv}})'
+
+# the exact numbers (ADR-lang-0015): bigint is int; bigdouble is Decimal, computed with templates/bigdouble.tpl
+[library.bigint]
+abs = 'abs({{recv}})'
+sign = '(({{recv}} > 0) - ({{recv}} < 0))'
+toInt = { template = '_big_to_int({{recv}})', helper = """
+def _big_to_int(n: int) -> int | None:
+    return n if -9007199254740991 <= n <= 9007199254740991 else None""" }
+toDouble = 'float({{recv}})'
+toBigDouble = 'Decimal({{recv}})'
+compareTo = '(({{recv}} > {{arg0}}) - ({{recv}} < {{arg0}}))'
+
+[library.bigdouble]
+abs = { template = '_EXACT.abs({{recv}})', helper = { file = "templates/bigdouble.tpl" } }
+sign = '(({{recv}} > 0) - ({{recv}} < 0))'
+round = 'int({{recv}}.to_integral_value(rounding=ROUND_HALF_UP))'
+floor = 'math.floor({{recv}})'
+ceil = 'math.ceil({{recv}})'
+truncate = 'int({{recv}})'
+roundTo = { template = '_dec_round({{recv}}, {{arg0}})', helper = { file = "templates/bigdouble.tpl" } }
+toFixed = { template = '_dec_fixed({{recv}}, {{arg0}})', helper = { file = "templates/bigdouble.tpl" } }
+toInt = { template = '_big_to_int(int({{recv}}))', helper = """
+def _big_to_int(n: int) -> int | None:
+    return n if -9007199254740991 <= n <= 9007199254740991 else None""" }
+toDouble = 'float({{recv}})'
+toBigInt = 'int({{recv}})'
+compareTo = '(({{recv}} > {{arg0}}) - ({{recv}} < {{arg0}}))'
+toString = { template = '_dec_text({{recv}})', helper = { file = "templates/bigdouble.tpl" } }
 
 [library.boolean]
 toString = '("true" if {{recv}} else "false")'

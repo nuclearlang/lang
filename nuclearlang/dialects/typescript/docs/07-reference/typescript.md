@@ -1216,6 +1216,44 @@ try {
 throw new Error('something went wrong');
 ```
 
+### Exact numbers (base §5.1)
+
+`bigint` is TypeScript's `bigint` (a literal gets `n`); `bigdouble` is the class `BigDouble` of the dialect's runtime (`templates/bigdouble.tpl`, written once in a file that uses the type: an exact decimal on a `bigint`), whose methods write the operators (`plus`, `times`, `div`, `cmp`...).
+
+```nuclear
+total(prices: bigdouble[], tax: bigdouble) bigdouble
+  sum: bigdouble = 0
+  for p in prices
+    sum += p
+  sum * (1 + tax) / 3
+
+scaled(n: int, text: string) bigint
+  huge: bigint = 12345678901234567890
+  parsed = text.toBigInt() ?? 0
+  huge * n.toBigInt() ~/ 7 + parsed % 10
+
+show(price: bigdouble) void
+  print(price, price.toFixed(2), price.toInt())
+```
+
+```typescript
+export function total(prices: BigDouble[], tax: BigDouble): BigDouble {
+  let sum: BigDouble = BigDouble.of('0');
+  for (const p of prices) {
+    sum = sum.plus(p);
+  }
+  return sum.times(BigDouble.of('1').plus(tax)).div(BigDouble.of('3'));
+}
+export function scaled(n: number, text: string): bigint {
+  const huge: bigint = 12345678901234567890n;
+  const parsed = _toBigInt(text) ?? 0n;
+  return (huge * BigInt(Math.trunc(n))) / 7n + parsed % 10n;
+}
+export function show(price: BigDouble): void {
+  console.log(String(price), price.toFixed(2), (_bigToInt(price.toBigInt()) ?? null));
+}
+```
+
 ## 5. The standard library
 
 [library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/typescript/library.toml` writes it: lists are arrays, maps `<K, V>` are plain

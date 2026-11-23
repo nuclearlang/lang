@@ -37,6 +37,7 @@ Official ecosystem libraries, one per need. What Flutter lacks is in the platfor
 | Routes | `go_router` | `GoRouter`, `GoRoute`, `GoRouterState`... |
 | JSON | `json_serializable` (generates the code) + `json_annotation` | `JsonSerializable`, `JsonKey`, `JsonEnum`, `JsonValue`... |
 | `Result` | `fpdart` (`Either`, `Right`, `Left`) | from the `dart` dialect's `[auto_imports]` |
+| `bigdouble` (ADR-lang-0015) | `decimal` 3.2 (`Decimal`) | from the `dart` dialect's `[auto_imports]`; the app's `pubspec.yaml` must list it (the platforms' step) |
 | Connectivity, session | `connectivity_plus`, `flutter_secure_storage` | `Connectivity`, `FlutterSecureStorage`... |
 | Local database | `hive_ce`, inside the runtime | |
 | Tests | `flutter_test`, `mocktail`, `bloc_test`, `integration_test` | from the dialect's `[auto_imports]` |

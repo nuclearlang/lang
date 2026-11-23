@@ -92,6 +92,11 @@ params_named_group = "{{{params}}}"
 decorator = "@{{name}}{{#has_args}}({{args}}){{/has_args}}{{^has_args}}{{#pascal}}(){{/pascal}}{{/has_args}}"
 generics = "<{{names}}>"
 generic_param = "{{name}}{{#bound}} extends {{bound}}{{/bound}}"
+# the exact numbers (ADR-lang-0015): BigInt, and Decimal of package:decimal (the app depends on it)
+bigint_literal = "{{#small}}BigInt.from({{value}}){{/small}}{{^small}}BigInt.parse('{{value}}'){{/small}}"
+bigdouble_literal = "Decimal.parse('{{value}}')"
+show_bigdouble = { template = "_decText({{expr}})", helper = "String _decText(Decimal d) {\n  final s = d.toString();\n  return s.contains('.') ? s : '$s.0';\n}" }
+show_bigdouble_nullable = { template = "({{expr}} == null ? 'null' : _decText({{expr}}!))", helper = "String _decText(Decimal d) {\n  final s = d.toString();\n  return s.contains('.') ? s : '$s.0';\n}" }
 main = """
 void main() {
   {{body}}
@@ -244,6 +249,8 @@ string = "String"
 int = "int"
 double = "double"
 number = "num"
+bigint = "BigInt"
+bigdouble = "Decimal"
 boolean = "bool"
 bool = "bool"
 void = "void"
@@ -299,6 +306,12 @@ shr = ">>"
 ushr = ">>>"
 in = "{{#map}}{{right}}.containsKey({{left}}){{/map}}{{#object}}{{right}}.containsKey({{left}}){{/object}}{{^map}}{{^object}}{{right}}.contains({{left}}){{/object}}{{/map}}"
 # a collection for: an empty list when the range is empty or inverted (List.generate throws on a negative length)
+# the exact numbers: `%` is the remainder of `~/` (the dividend's sign); `/` of two Decimal is rounded by Nuclear's rule
+bigint_rem = "{{left}}.remainder({{right_arg}})"
+bigint_pow = "{{left}}.pow({{right_arg}})"
+bigdouble_div = { template = "_decDiv({{left_arg}}, {{right_arg}})", helper = "Decimal _decDiv(Decimal a, Decimal b) {\n  // rounded half away from zero to the larger of 20 and the decimals of each side\n  final q = a / b;\n  var s = a.scale > b.scale ? a.scale : b.scale;\n  if (s < 20) s = 20;\n  var n = q.numerator * BigInt.from(10).pow(s);\n  final neg = n.isNegative;\n  if (neg) n = -n;\n  var r = n ~/ q.denominator;\n  if ((n - r * q.denominator) * BigInt.two >= q.denominator) r += BigInt.one;\n  return Decimal.fromBigInt(neg ? -r : r).shift(-s);\n}" }
+bigdouble_rem = "{{left}}.remainder({{right_arg}})"
+bigdouble_pow = { template = "_decPow({{left_arg}}, {{right_arg}})", helper = "Decimal _decPow(Decimal x, int n) {\n  if (n < 0) throw ArgumentError('the exponent $n is not a whole number >= 0');\n  return x.pow(n).toDecimal();\n}" }
 range = "[for (var i = {{left}}; i < {{right}}; i++) i]"
 
 [functions]
@@ -312,7 +325,7 @@ awaitAll = { template = "Future.wait({{arg0}})" }
 # dart:core functions: they exist without importing them
 globals = ["print", "identical", "identityHashCode"]
 # names written by the Result templates: imported from fpdart when the code uses them
-written = ["Either", "Right", "Left", "pow", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "log", "ln10", "ln2", "min", "max", "pi", "Random", "jsonEncode", "jsonDecode", "utf8", "base64", "Uint8List"]
+written = ["Decimal", "Either", "Right", "Left", "pow", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "log", "ln10", "ln2", "min", "max", "pi", "Random", "jsonEncode", "jsonDecode", "utf8", "base64", "Uint8List"]
 
 [modifiers]
 abstract = "abstract "
@@ -355,6 +368,7 @@ template = { file = "templates/data.tpl" }
 
 [auto_imports]
 "package:fpdart/fpdart.dart" = ["Either", "Right", "Left"]
+"package:decimal/decimal.dart" = ["Decimal"]
 
 # projects (nuclearlang/docs/07-reference/projects.md): the .nuc files go to lib/, as in a Dart package
 [project]

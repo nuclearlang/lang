@@ -80,7 +80,7 @@ main() void
   print(kind, rest.length)
 ```
 
-- Types: `string int double number boolean void`, `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.
+- Types: `string int double number boolean void`, exact `bigint bigdouble` (never mixed: `n.toBigInt()`), `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.
 - Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `"""` multi-line.
 - Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block;
   a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.

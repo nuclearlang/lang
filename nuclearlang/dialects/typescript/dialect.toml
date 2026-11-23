@@ -157,6 +157,13 @@ member = "{{object}}.{{name}}"
 show_double = { template = "_double({{expr}})", helper = "function _double(n: number): string {\n  return Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
 show_double_nullable = { template = "_doubleOrNull({{expr}})", helper = "function _doubleOrNull(n: number | null | undefined): string | null {\n  return n == null ? null : Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
 show_nullable = "({{expr}} ?? null)"
+# the exact numbers (ADR-lang-0015): bigint is the native one; bigdouble is the decimal of templates/bigdouble.tpl
+bigint_literal = "{{value}}n"
+bigdouble_literal = { template = "BigDouble.of('{{value}}')", helper = { file = "templates/bigdouble.tpl" } }
+show_bigint = "String({{expr}})"
+show_bigint_nullable = "String({{expr}} ?? null)"
+show_bigdouble = "String({{expr}})"
+show_bigdouble_nullable = "String({{expr}} ?? null)"
 optional_member = "{{object}}?.{{name}}"
 index = "{{object}}[{{index}}]"
 # a method given as a value keeps its object (`this` is lost otherwise)
@@ -211,6 +218,8 @@ string = "string"
 int = "number"
 double = "number"
 number = "number"
+bigint = "bigint"
+bigdouble = "BigDouble"
 boolean = "boolean"
 bool = "boolean"
 void = "void"
@@ -267,6 +276,27 @@ shl = "<<"
 shr = ">>"
 ushr = ">>>"
 in = "{{#map}}{{right}}.has({{left}}){{/map}}{{#set}}{{right}}.has({{left}}){{/set}}{{#object}}{{left}} in {{right}}{{/object}}{{^map}}{{^set}}{{^object}}{{right}}.includes({{left}}){{/object}}{{/set}}{{/map}}"
+# the exact numbers: bigint's `/` drops the decimals toward zero, its `%` keeps the dividend's sign
+bigint_int_div = "{{left_infix}} / {{right_infix}}"
+bigint_pow = "{{left}} ** BigInt({{right_arg}})"
+bigdouble_add = "{{left}}.plus({{right_arg}})"
+bigdouble_sub = "{{left}}.minus({{right_arg}})"
+bigdouble_mul = "{{left}}.times({{right_arg}})"
+bigdouble_div = "{{left}}.div({{right_arg}})"
+bigdouble_rem = "{{left}}.rem({{right_arg}})"
+bigdouble_int_div = "{{left}}.idiv({{right_arg}})"
+bigdouble_pow = "{{left}}.pow({{right_arg}})"
+bigdouble_neg = "{{expr}}.neg()"
+# lists and maps of exact decimals compare their values; `in` of a list of them, too
+bigdouble_eq_deep = { template = "_equalsExact({{left_arg}}, {{right_arg}})", helper = "function _equalsExact(a: unknown, b: unknown): boolean {\n  // an exact decimal is equal by value, also one made by another file of the project\n  const exact = (x: unknown): x is BigDouble => typeof x === 'object' && x !== null && typeof (x as BigDouble).m === 'bigint' && typeof (x as BigDouble).s === 'number';\n  if (exact(a) && exact(b)) return a.m === b.m && a.s === b.s;\n  if (a === b) return true;\n  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => _equalsExact(x, b[i]));\n  if (a instanceof Map && b instanceof Map) return a.size === b.size && [...a].every(([k, v]) => b.has(k) && _equalsExact(v, b.get(k)));\n  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null && Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {\n    const x = a as Record<string, unknown>;\n    const y = b as Record<string, unknown>;\n    const keys = Object.keys(x);\n    return keys.length === Object.keys(y).length && keys.every((k) => k in y && _equalsExact(x[k], y[k]));\n  }\n  return false;\n}" }
+bigdouble_not_eq_deep = { template = "!_equalsExact({{left_arg}}, {{right_arg}})", helper = "function _equalsExact(a: unknown, b: unknown): boolean {\n  // an exact decimal is equal by value, also one made by another file of the project\n  const exact = (x: unknown): x is BigDouble => typeof x === 'object' && x !== null && typeof (x as BigDouble).m === 'bigint' && typeof (x as BigDouble).s === 'number';\n  if (exact(a) && exact(b)) return a.m === b.m && a.s === b.s;\n  if (a === b) return true;\n  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => _equalsExact(x, b[i]));\n  if (a instanceof Map && b instanceof Map) return a.size === b.size && [...a].every(([k, v]) => b.has(k) && _equalsExact(v, b.get(k)));\n  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null && Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {\n    const x = a as Record<string, unknown>;\n    const y = b as Record<string, unknown>;\n    const keys = Object.keys(x);\n    return keys.length === Object.keys(y).length && keys.every((k) => k in y && _equalsExact(x[k], y[k]));\n  }\n  return false;\n}" }
+bigdouble_in = { template = "_inExact({{right_arg}}, {{left_arg}})", helper = "function _inExact(xs: Iterable<BigDouble>, x: BigDouble): boolean {\n  for (const v of xs) if (v.eq(x)) return true;\n  return false;\n}" }
+bigdouble_eq = "{{left}}.eq({{right_arg}})"
+bigdouble_not_eq = "!{{left}}.eq({{right_arg}})"
+bigdouble_lt = "{{left}}.cmp({{right_arg}}) < 0"
+bigdouble_gt = "{{left}}.cmp({{right_arg}}) > 0"
+bigdouble_lt_eq = "{{left}}.cmp({{right_arg}}) <= 0"
+bigdouble_gt_eq = "{{left}}.cmp({{right_arg}}) >= 0"
 range = "Array.from({ length: {{right}} - {{left}} }, (_, i) => {{left}} + i)"
 
 [names]

@@ -520,6 +520,27 @@ total = price * 1.16
 ```
 '''
 
+bigint = '''
+An exact whole number of any size. A literal where a `bigint` goes is exact; an `int` is converted with
+`toBigInt()`, never silently.
+
+```nuclear
+total: bigint = 12345678901234567890
+next = total * 2 + 1
+small = next.toInt() ?? 0
+```
+'''
+
+bigdouble = '''
+An exact decimal: `0.1 + 0.2 == 0.3`. A literal where a `bigdouble` goes is exact; `/` rounds to at least 20
+decimals.
+
+```nuclear
+price: bigdouble = 19.99
+print(price * 3, price.toFixed(1))
+```
+'''
+
 number = '''
 Any number (`int` or `double`).
 

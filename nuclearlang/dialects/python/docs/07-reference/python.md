@@ -598,6 +598,40 @@ def run(command: str, text: str) -> str:
         return json.dumps(text)
 ```
 
+### Exact numbers (base §5.1)
+
+`bigint` is `int`; `bigdouble` is `Decimal`, computed in the context `_EXACT` (no rounding: the default context keeps 28 digits) of the dialect's runtime (`templates/bigdouble.tpl`). `~/` is `_idiv` and `%` is `_big_rem` (toward zero, as the other targets); a decimal is printed by `_dec_text`.
+
+```nuclear
+total(prices: bigdouble[], tax: bigdouble) bigdouble
+  sum: bigdouble = 0
+  for p in prices
+    sum += p
+  sum * (1 + tax) / 3
+
+scaled(n: int, text: string) bigint
+  huge: bigint = 12345678901234567890
+  parsed = text.toBigInt() ?? 0
+  huge * n.toBigInt() ~/ 7 + parsed % 10
+
+show(price: bigdouble) void
+  print(price, price.toFixed(2), price.toInt())
+```
+
+```python
+def total(prices: list[Decimal], tax: Decimal) -> Decimal:
+    sum_: Decimal = Decimal("0")
+    for p in prices:
+        sum_ = _EXACT.add(sum_, p)
+    return _dec_div(_EXACT.multiply(sum_, _EXACT.add(Decimal("1"), tax)), Decimal("3"))
+def scaled(n: int, text: str) -> int:
+    huge: int = 12345678901234567890
+    parsed = _coalesce(_to_bigint(text), lambda: 0)
+    return _idiv(huge * int(n), 7) + _big_rem(parsed, 10)
+def show(price: Decimal) -> None:
+    _print(_dec_text(price), _dec_fixed(price, 2), _big_to_int(int(price)))
+```
+
 ## 4. The standard library
 
 [library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an

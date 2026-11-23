@@ -1516,3 +1516,70 @@ fn an_override_calls_the_method_its_definition_requires() {
     let cubit = "Counter: Cubit<int>\n  ()\n    super(0)\n\n  close() Future<void>\n    print(\"bye\")\n";
     has(&build(cubit, "flutter"), "print('bye');\n    return super.close();\n  }");
 }
+
+#[test]
+fn an_exact_number_mixed_with_another_number_type_is_reported() {
+    // N0119: nothing converts an exact number silently; a literal takes the exact type of its place
+    for src in [
+        "f(big: bigint, n: int) void\n  print(big + n)\n",
+        "f(price: bigdouble) void\n  x: double = price\n  print(x)\n",
+        "f(n: int) void\n  x: bigint = n\n  print(x)\n",
+        "f(a: bigint, b: bigdouble) void\n  print(a * b)\n",
+        "f() void\n  x: bigint = 1.5\n  print(x)\n",
+        "f(big: bigint) void\n  print(big + 0.5)\n",
+        "f() void\n  n = 12345678901234567890\n  print(n)\n",
+        "g(x: bigint) bigint = x\nf(n: int) void\n  print(g(n))\n",
+    ] {
+        for d in ["typescript", "dart", "python"] {
+            assert!(codes(src, d).contains(&"N0119"), "{d}: {src}");
+        }
+    }
+    let ok = "f(n: int) bigint\n  big: bigint = 12345678901234567890\n  x: bigdouble = 0.1\n  print(big + 1, x * 3, x == 0.3, big ~/ 2, big ** 2, n.toBigInt() + big, -big)\n  0\n";
+    for d in ["typescript", "dart", "python"] {
+        build(ok, d);
+    }
+    // the literals are written as exact values, never through a binary number
+    let out = ts(ok);
+    assert!(out.contains("12345678901234567890n") && out.contains("BigDouble.of('0.1')") && out.contains("return 0n;"), "{out}");
+}
+
+#[test]
+fn an_operation_the_exact_numbers_do_not_have_is_reported() {
+    // N0120: no exact `/` of two bigint, no bitwise operators, no `is`, no Math, no JSON number
+    for src in [
+        "f(a: bigint, b: bigint) void\n  print(a / b)\n",
+        "f(a: bigint) void\n  print(a & 1)\n",
+        "f(x: any) void\n  print(x is bigint)\n",
+        "f(a: bigdouble) void\n  print(Math.sqrt(a))\n",
+        "f(id: bigint) void\n  print(Json.encode({ \"id\": id }))\n",
+        "f(xs: bigint[]) void\n  print(xs.sum())\n",
+        "f(xs: bigdouble[]) void\n  print(xs.sorted())\n",
+    ] {
+        assert!(codes(src, "typescript").contains(&"N0120"), "{src}");
+    }
+    build("f(id: bigint) void\n  print(Json.encode({ \"id\": id.toString() }))\n", "typescript");
+}
+
+#[test]
+fn exact_collections_and_arguments_compare_values() {
+    // a literal argument of compareTo takes the receiver's exact type; another number is N0119
+    let src = "f(big: bigint, n: int) void\n  print(big.compareTo(5))\n";
+    assert!(ts(src).contains("_compare(big, 5n)"));
+    for d in ["typescript", "dart", "python"] {
+        assert!(codes("f(big: bigint, n: int) void\n  print(big.compareTo(n))\n", d).contains(&"N0119"), "{d}");
+    }
+    // lists, maps and `in` of exact decimals compare values in TypeScript (its `==` and `includes` compare objects)
+    let src = "f(xs: bigdouble[], ys: bigdouble[], x: bigdouble) void\n  print(xs == ys, xs != ys, x in xs, 0.5 in xs)\n";
+    let out = ts(src);
+    assert!(out.contains("_equalsExact(xs, ys)") && out.contains("!_equalsExact(xs, ys)") && out.contains("_inExact(xs, BigDouble.of('0.5'))"), "{out}");
+    assert!(codes("f() void\n  s = Set<bigdouble>()\n  print(s.length)\n", "typescript").contains(&"N0120"));
+}
+
+#[test]
+fn a_name_of_the_definitions_written_only_as_a_member_is_not_imported() {
+    // `big.pow(3)` is BigInt's method, not dart:math's `pow`; a word in a text is no name either
+    let member = build("f(big: bigint) void\n  print(big ** 3, \"pow max\")\n", "dart");
+    assert!(!member.contains("dart:math"), "{member}");
+    let function = build("f(n: int) void\n  print(n ** 3)\n", "dart");
+    assert!(function.contains("import 'dart:math'"), "{function}");
+}

@@ -33,6 +33,8 @@ toInt = { template = "_toInt({{recv}})", helper = "function _toInt(s: string): n
 toDouble = { template = "_toDouble({{recv}})", helper = "function _toDouble(s: string): number | null {\n  const n = Number(s.trim());\n  return s.trim() === '' || Number.isNaN(n) ? null : n;\n}" }
 compareTo = { template = "_compare({{recv}}, {{arg0}})", helper = "function _compare<T>(a: T, b: T): number {\n  return a < b ? -1 : a > b ? 1 : 0;\n}" }
 toBytes = "new TextEncoder().encode({{recv}})"
+toBigInt = { template = "_toBigInt({{recv}})", helper = "function _toBigInt(s: string): bigint | null {\n  const t = s.trim();\n  return /^[+-]?[0-9]+$/.test(t) ? BigInt(t) : null;\n}" }
+toBigDouble = { template = "BigDouble.tryParse({{recv}})", helper = { file = "templates/bigdouble.tpl" } }
 
 [library.list]
 length = "{{recv}}.length"
@@ -103,10 +105,36 @@ toFixed = "{{recv}}.toFixed({{arg0}})"
 toInt = "Math.trunc({{recv}})"
 toDouble = "{{recv}}"
 toRadix = "{{recv}}.toString({{arg0}})"
+toBigInt = "BigInt(Math.trunc({{recv}}))"
+toBigDouble = { template = "BigDouble.from({{recv}})", helper = { file = "templates/bigdouble.tpl" } }
 
 [library.double]
 isNaN = "Number.isNaN({{recv}})"
 isFinite = "Number.isFinite({{recv}})"
+
+# the exact numbers (ADR-lang-0015): bigint is native; bigdouble is the class of templates/bigdouble.tpl
+[library.bigint]
+abs = "({{recv}} < 0n ? -{{recv}} : {{recv}})"
+sign = "({{recv}} > 0n ? 1 : {{recv}} < 0n ? -1 : 0)"
+toInt = { template = "_bigToInt({{recv}})", helper = "function _bigToInt(n: bigint): number | null {\n  return n >= -9007199254740991n && n <= 9007199254740991n ? Number(n) : null;\n}" }
+toDouble = "Number({{recv}})"
+toBigDouble = { template = "new BigDouble({{recv}}, 0)", helper = { file = "templates/bigdouble.tpl" } }
+compareTo = { template = "_compare({{recv}}, {{arg0}})", helper = "function _compare<T>(a: T, b: T): number {\n  return a < b ? -1 : a > b ? 1 : 0;\n}" }
+
+[library.bigdouble]
+abs = "{{recv}}.abs()"
+sign = "{{recv}}.sign()"
+round = "{{recv}}.round()"
+floor = "{{recv}}.floor()"
+ceil = "{{recv}}.ceil()"
+truncate = "{{recv}}.truncate()"
+roundTo = "{{recv}}.roundTo({{arg0}})"
+toFixed = "{{recv}}.toFixed({{arg0}})"
+toInt = { template = "_bigToInt({{recv}}.toBigInt())", helper = "function _bigToInt(n: bigint): number | null {\n  return n >= -9007199254740991n && n <= 9007199254740991n ? Number(n) : null;\n}" }
+toDouble = "{{recv}}.toNumber()"
+toBigInt = "{{recv}}.toBigInt()"
+compareTo = "{{recv}}.cmp({{arg0}})"
+toString = "{{recv}}.toString()"
 
 [library.boolean]
 toString = "String({{recv}})"

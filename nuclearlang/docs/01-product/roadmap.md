@@ -23,6 +23,25 @@ The pending work of the language, the compiler and the language server. A done i
 - **Dart: `+=` on a map's entry with a ternary** (`found[v] += c ? 1 : 2`) is emitted as
   `found.update(v, (v) => v + c ? 1 : 2)`: the lambda's parameter shadows the key and the value is not parenthesized.
 
+- **The exact numbers, step two** (ADR-lang-0015): the language part is done (`bigint`, `bigdouble`, their
+  operators, members, text and parsing). Left, refused today with N0120 so no target differs:
+  - The platforms (`nuclear-synapsis-framework`, the framework dialects): a model field `bigint` / `bigdouble` is a
+    column `BIGINT` (or `NUMERIC(p, 0)` beyond 64 bits) / `NUMERIC(p, s)` (TypeORM migrations; SQLAlchemy `BigInteger`
+    / `Numeric(asdecimal=True)`, Sequelize `BIGINT` / `DECIMAL` read as strings, drift `BigIntColumn` / a text column
+    for `Decimal`); its JSON is the text of `toString()` both ways (a model's `toJson` writes it, `fromJson` reads it
+    with `toBigInt()` / `toBigDouble()` and refuses another text with the platform's validation error); the
+    validation decorators (`@min`, `@max`, a scale) take exact values; route and query parameters parse with the same
+    texts as `toBigInt()` / `toBigDouble()`. A Dart app's `pubspec.yaml` gets `decimal` (the dialect imports
+    `package:decimal/decimal.dart`).
+  - `Json.encode` of an `any` value that holds an exact number: TypeScript and Dart throw, Python writes a `bigint` as
+    a JSON number (an exact whole number is a plain `int` there, so it cannot be told apart at run time).
+  - The list members that compare or add exact elements (`sum`, `min`, `max`; for `bigdouble` `sorted`, `sort`,
+    `unique`, `indexOf`, `lastIndexOf`, `remove`), a `Set` of `bigdouble` (TypeScript's sets compare objects), and a
+    `bigdouble` as a map key.
+  - `Math` of an exact number (`sqrt` to a scale), `toRadix` of a `bigint`, the bitwise operators of a `bigint`.
+  - A project of several files writes the TypeScript decimal class once per file that uses it (structurally the same
+    class); one shared runtime file, as `Result` has, is the next step.
+
 ## Untested
 
 - The examples in the `docs.toml` files parse: checked once by hand; no test guards it.

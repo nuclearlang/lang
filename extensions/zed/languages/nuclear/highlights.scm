@@ -3,7 +3,7 @@
 (type_identifier) @type
 
 ((identifier) @type.builtin
-  (#match? @type.builtin "^(string|int|double|bool|void|dynamic|num|float|number|any|object|never)$"))
+  (#match? @type.builtin "^(string|int|double|bigint|bigdouble|bool|void|dynamic|num|float|number|any|object|never)$"))
 
 ; calls: `name(...)`, `Type(...)`, `.method(...)`
 ((identifier) @function . (parenthesized))

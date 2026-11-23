@@ -27,6 +27,8 @@ padStart = "{{recv}}.padLeft({{args}})"
 padEnd = "{{recv}}.padRight({{args}})"
 toInt = "int.tryParse({{recv}})"
 toDouble = "double.tryParse({{recv}})"
+toBigInt = { template = "_toBigInt({{recv}})", helper = "BigInt? _toBigInt(String s) {\n  final t = s.trim();\n  return RegExp(r'^[+-]?[0-9]+$').hasMatch(t) ? BigInt.parse(t) : null;\n}" }
+toBigDouble = { template = "_toBigDouble({{recv}})", helper = "Decimal? _toBigDouble(String s) {\n  final t = s.trim();\n  return RegExp(r'^[+-]?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$').hasMatch(t) ? Decimal.parse(t) : null;\n}" }
 compareTo = "{{recv}}.compareTo({{arg0}})"
 toBytes = "utf8.encode({{recv}})"
 
@@ -98,10 +100,37 @@ toFixed = "{{recv}}.toStringAsFixed({{arg0}})"
 toInt = "{{recv}}.toInt()"
 toDouble = "{{recv}}.toDouble()"
 toRadix = "{{recv}}.toRadixString({{arg0}})"
+toBigInt = "BigInt.from({{recv}})"
+toBigDouble = "Decimal.parse({{recv}}.toString())"
 
 [library.double]
 isNaN = "{{recv}}.isNaN"
 isFinite = "{{recv}}.isFinite"
+
+# the exact numbers (ADR-lang-0015): BigInt, and Decimal of package:decimal
+[library.bigint]
+abs = "{{recv}}.abs()"
+sign = "{{recv}}.sign"
+toInt = { template = "_bigToInt({{recv}})", helper = "int? _bigToInt(BigInt n) => n.abs() <= BigInt.from(9007199254740991) ? n.toInt() : null;" }
+toDouble = "{{recv}}.toDouble()"
+toBigDouble = "Decimal.fromBigInt({{recv}})"
+compareTo = "{{recv}}.compareTo({{arg0}}).sign"
+
+[library.bigdouble]
+abs = "{{recv}}.abs()"
+sign = "{{recv}}.sign"
+round = "{{recv}}.round().toBigInt()"
+floor = "{{recv}}.floor().toBigInt()"
+ceil = "{{recv}}.ceil().toBigInt()"
+truncate = "{{recv}}.toBigInt()"
+roundTo = "{{recv}}.round(scale: {{arg0}})"
+toFixed = "{{recv}}.toStringAsFixed({{arg0}})"
+toInt = { template = "_bigToInt({{recv}}.toBigInt())", helper = "int? _bigToInt(BigInt n) => n.abs() <= BigInt.from(9007199254740991) ? n.toInt() : null;" }
+# through its text: the nearest double (dividing two big integers as doubles would round twice)
+toDouble = "double.parse({{recv}}.toString())"
+toBigInt = "{{recv}}.toBigInt()"
+compareTo = "{{recv}}.compareTo({{arg0}}).sign"
+toString = { template = "_decText({{recv}})", helper = "String _decText(Decimal d) {\n  final s = d.toString();\n  return s.contains('.') ? s : '$s.0';\n}" }
 
 [library.boolean]
 toString = "{{recv}}.toString()"

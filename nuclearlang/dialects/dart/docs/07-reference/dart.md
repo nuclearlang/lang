@@ -1094,6 +1094,44 @@ void main() {
 }
 ```
 
+### Exact numbers (base §5.1)
+
+`bigint` is `BigInt`; `bigdouble` is `Decimal` of `package:decimal` (imported when used; the app depends on the package). `%` is `remainder` (the dividend's sign); `/` of two `Decimal` is `_decDiv`, Nuclear's rounding; a decimal is printed by `_decText` (its `.0`).
+
+```nuclear
+total(prices: bigdouble[], tax: bigdouble) bigdouble
+  sum: bigdouble = 0
+  for p in prices
+    sum += p
+  sum * (1 + tax) / 3
+
+scaled(n: int, text: string) bigint
+  huge: bigint = 12345678901234567890
+  parsed = text.toBigInt() ?? 0
+  huge * n.toBigInt() ~/ 7 + parsed % 10
+
+show(price: bigdouble) void
+  print(price, price.toFixed(2), price.toInt())
+```
+
+```dart
+Decimal total(List<Decimal> prices, Decimal tax) {
+  Decimal sum = Decimal.parse('0');
+  for (final p in prices) {
+    sum = sum + p;
+  }
+  return _decDiv(sum * (Decimal.parse('1') + tax), Decimal.parse('3'));
+}
+BigInt scaled(int n, String text) {
+  final BigInt huge = BigInt.parse('12345678901234567890');
+  final parsed = _toBigInt(text) ?? BigInt.from(0);
+  return huge * BigInt.from(n) ~/ BigInt.from(7) + parsed.remainder(BigInt.from(10));
+}
+void show(Decimal price) {
+  print([_decText(price), price.toStringAsFixed(2), _bigToInt(price.toBigInt())].join(' '));
+}
+```
+
 ## 5. The standard library
 
 [library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/dart/library.toml` writes it: lists, maps and sets are Dart's; `Bytes` is

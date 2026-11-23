@@ -11,6 +11,10 @@ pub enum Ret {
     IntOpt,
     Double,
     DoubleOpt,
+    BigInt,
+    BigIntOpt,
+    BigDouble,
+    BigDoubleOpt,
     Bool,
     Void,
     /// The receiver's own type (`trim` on a string, `abs` on an int).
@@ -64,10 +68,10 @@ const fn m(base: &'static str, name: &'static str, returns: Ret) -> Member {
 }
 
 /// The base types, as the `[library.<base>]` sections name them. `number` holds what `int` and `double` share;
-/// `any` holds what every value has (`toString`).
+/// `any` holds what every value has (`toString`). `bigint` and `bigdouble` are the exact numbers (ADR-lang-0015).
 pub const BASES: &[&str] = &[
-    "string", "list", "map", "set", "int", "double", "number", "boolean", "bytes", "datetime", "duration", "regex",
-    "match", "error", "any",
+    "string", "list", "map", "set", "int", "double", "number", "bigint", "bigdouble", "boolean", "bytes", "datetime",
+    "duration", "regex", "match", "error", "any",
 ];
 
 /// The static objects: `Math.sqrt(x)`, `Json.encode(v)`, `Regex(...)` (`new`), `DateTime.now()`.
@@ -100,6 +104,8 @@ pub const MEMBERS: &[Member] = &[
     m("string", "padEnd", Str),
     m("string", "toInt", IntOpt),
     m("string", "toDouble", DoubleOpt),
+    m("string", "toBigInt", BigIntOpt),
+    m("string", "toBigDouble", BigDoubleOpt),
     m("string", "compareTo", Int),
     m("string", "toBytes", Bytes),
     // list
@@ -167,8 +173,31 @@ pub const MEMBERS: &[Member] = &[
     m("number", "toInt", Int),
     m("number", "toDouble", Double),
     m("number", "toRadix", Str),
+    m("number", "toBigInt", BigInt),
+    m("number", "toBigDouble", BigDouble),
     p("double", "isNaN", Bool),
     p("double", "isFinite", Bool),
+    // the exact numbers: a conversion to `int` is `null` outside the integers every target holds exactly (±(2^53 − 1))
+    m("bigint", "abs", Same),
+    m("bigint", "sign", Int),
+    m("bigint", "toInt", IntOpt),
+    m("bigint", "toDouble", Double),
+    m("bigint", "toBigDouble", BigDouble),
+    m("bigint", "compareTo", Int),
+    m("bigdouble", "abs", Same),
+    m("bigdouble", "sign", Int),
+    m("bigdouble", "round", BigInt),
+    m("bigdouble", "floor", BigInt),
+    m("bigdouble", "ceil", BigInt),
+    m("bigdouble", "truncate", BigInt),
+    m("bigdouble", "roundTo", Same),
+    m("bigdouble", "toFixed", Str),
+    m("bigdouble", "toInt", IntOpt),
+    m("bigdouble", "toDouble", Double),
+    m("bigdouble", "toBigInt", BigInt),
+    m("bigdouble", "compareTo", Int),
+    // its text: the shortest exact decimal with at least one decimal (`0.3`, `2.0`), as every target writes it
+    m("bigdouble", "toString", Str),
     // booleans print "true" / "false" in every dialect
     m("boolean", "toString", Str),
     // every value
@@ -273,7 +302,8 @@ pub fn bases_with(name: &str) -> Vec<&'static str> {
     for m in MEMBERS.iter().filter(|m| m.name == name && BASES.contains(&m.base)) {
         let bases: &[&str] = match m.base {
             "number" => &["int", "double"],
-            "any" => &[],
+            // an exact number's members need a receiver whose type is known: an unknown one is never taken for one
+            "any" | "bigint" | "bigdouble" => &[],
             b => std::slice::from_ref(bases_entry(b)),
         };
         for b in bases {

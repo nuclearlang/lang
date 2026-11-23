@@ -175,7 +175,7 @@ pub struct Index {
 }
 
 pub const PRIMITIVE_TYPES: &[&str] = &[
-    "string", "int", "double", "num", "bool", "void", "dynamic", "float", "number", "any", "object", "never", "Object",
+    "string", "int", "double", "bigint", "bigdouble", "num", "bool", "void", "dynamic", "float", "number", "any", "object", "never", "Object",
 ];
 
 impl Index {

@@ -32,6 +32,7 @@ answers your question.
 | [0012](0012-lazy-imports.md) | Imports are made lazy by the transpiler where a project asks (`lazy_imports`); `use` stays at the top of a file | accepted | 2026-11-19 |
 | [0013](0013-helpers-are-part-of-the-language.md) | The helpers of lodash that serve Nuclear are the language's own: no `use`, and the transpiler writes only the ones a program calls | accepted | 2026-11-22 |
 | [0014](0014-the-kind-writes-the-super-call.md) | An override of a method the type definitions mark `must_call_super` gets the call to the overridden method from the transpiler; the user does not write it | accepted | 2026-11-23 |
+| [0015](0015-exact-numbers.md) | The exact numbers `bigint` and `bigdouble`: literals by place, no silent conversion, the same operators, text and parsing in every target; JSON as text | accepted | 2026-11-23 |
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).
