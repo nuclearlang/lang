@@ -13,8 +13,9 @@
 # build, pytest), runtimes (synapsis-py pytest, synapsis-nest npm test), website (as .github/workflows/website.yml:
 # content.mjs without UPDATE_EXAMPLES, so an onboarding example that is no longer what `nuclear new` writes fails here;
 # nuclear build, install, test, the bundle), knowledge (nuclear-graph knowledge check clean), installer (package.sh,
-# then installer/tests/run.sh: every case, OUT1 what the user reads and UPD1 an update from the previous published
-# release included; a case skipped offline fails the gate unless --offline-ok).
+# then installer/tests/run.sh: every case, OUT1 what the user reads, UPD1 an update from the previous published
+# release and PRJ1 the projects that release made and installed, run after the update, included; a case skipped
+# offline fails the gate unless --offline-ok).
 #
 # It never touches the real HOME's installation: no installer/install.sh, the installer tests in fake HOMEs. After the
 # tag is pushed: installer/release/after-release.sh <version>.
@@ -113,7 +114,7 @@ step_installer() {
     echo "a case was skipped offline: the gate needs the network (or --offline-ok)"; return 1
   fi
 }
-fix_installer="installer/tests/run.sh <case> again: the case's last lines are in the log; OUT1 is what the user reads (installer/tests/screen.py), UPD1 an update from the previous release"
+fix_installer="installer/tests/run.sh <case> again: the case's last lines are in the log; OUT1 is what the user reads (installer/tests/screen.py), UPD1 an update from the previous release, PRJ1 its projects run after the update (installer/tests/run.sh PRJ1)"
 
 # --- the gate ---
 

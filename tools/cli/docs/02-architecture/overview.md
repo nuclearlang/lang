@@ -90,7 +90,8 @@ mobile app. For it (ADR-cli-0001):
   ([packages.md](packages.md)). It writes `build/.nuclear-installed` with the platform's version; `run` (and a
   package command) installs again when that file is missing or names another version (`needs_install`): the runtime
   package comes with the platform, so a project installed by an earlier release gets the new runtime (0.96's
-  `synapsis.server` was missing in projects 0.95 had installed).
+  `synapsis.server` was missing in projects 0.95 had installed). `build` of a compiled server (`[toolchain] compile`)
+  installs again first too, or it would compile against the old runtime (a nestjs project of 0.95 lacked `RequiredPipe`).
 - `nuclear migrate [make "<message>" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /
   `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape
   checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down

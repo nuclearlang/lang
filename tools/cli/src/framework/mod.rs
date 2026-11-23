@@ -824,6 +824,13 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
         if let (Some(compile), Some(installed)) = (dialect.tool("compile"), dialect.tool("installed"))
             && out.join(installed).exists()
         {
+            // installed by another version of the platform: its runtime is installed again before the compile, which
+            // would read the old one (a nestjs project of 0.95 lacked 0.96's `RequiredPipe`)
+            if dependencies::needs_install(&out, &dialect) {
+                toolchain::ready(dialect.tool("needs"))?;
+                shell(&out, &toolchain_command(root, "install", m, &dialect, &[], &[])?)?;
+                dependencies::mark_installed(&out);
+            }
             return shell(&out, &fill_command(&dialect, compile, vars)?);
         }
         return Ok(());

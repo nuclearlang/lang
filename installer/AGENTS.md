@@ -28,13 +28,13 @@ installer/tests/stack.sh                 # on a real machine, after an install: 
 installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/
 installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256
 installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it
-installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/), OUT1, UPD1
+installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/), OUT1, UPD1, PRJ1
 installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time
 nuclear-builder setup [--profile remote --yes | --status | --remove]   # the AI services (lite|medium|hard: on standby)
 ```
 
 After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it
-(`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).
+(`gh workflow run installer-windows -R nuclearlang/nuclearlang -f version=<v>`).
 
 The public one-liners (they need a published release):
 
@@ -62,7 +62,10 @@ irm https://nuclearlang.github.io/install.ps1 | iex
   `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of
   80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the
   sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link
-  (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.
+  (`NUCLEAR_UPDATE_DRYRUN=1`); `PRJ1` makes a `fastapi` and a `nestjs` backend and a `react` app with that release's
+  `nuclear` (a resource generated, installed, tested), updates to this tree's archive, then `check`, `build`, `test`
+  and `nuclear run` each until a route of the resource answers 200 (`NUCLEAR_PREVIOUS=<version>` takes another
+  release as the previous one); `PS1` parses `install.ps1` in a PowerShell container.
   `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never
   `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:
   `package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).

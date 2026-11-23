@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-20
+updated: 2026-11-23
 related: [installer/release/delivery.sh, installer/release/after-release.sh, installer/tests/screen.py, installer/release/package.sh, installer/release/clean-machine/Dockerfile, .github/workflows/release.yml, installer/docs/02-architecture/overview.md]
 ---
 # Release, and test an installer
@@ -29,10 +29,15 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
    `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every
    box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an
    update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear
-   update`). `UPD1` needs the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs
+   update`), and `PRJ1`, the projects that release made: a `fastapi` and a `nestjs` backend and a `react` app (when
+   Node.js is there), each with a generated resource, installed and tested by the previous release, then, after the
+   update, `nuclear check`, `build`, `test` and `nuclear run` with the new `nuclear` until a route of the resource
+   answers 200 (about 1.5 minutes, 350 MB in `TMPDIR` while it runs; pip and npm use the user's caches). `UPD1` and
+   `PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs
    some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a
    website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,
-   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link.
+   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link,
+   `nuclear run` failing on every backend project 0.95 had installed (`No module named synapsis.server`).
 3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code
    extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:
    the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts
@@ -42,7 +47,7 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
 4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;
    the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no
    environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher
-   nuclearlang/lang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace
+   nuclearlang/nuclearlang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace
    with *Publishing only*, is used instead only while it exists). The stores read the `version` of
    `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not
    stop the GitHub release.
@@ -50,7 +55,7 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
 6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows
    PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the
    Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R
-   nuclearlang/lang -f version=<version>`.
+   nuclearlang/nuclearlang -f version=<version>`.
 
 7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its
    commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed (a run with a job
@@ -84,7 +89,8 @@ its `.sha256` and `installer/dist/latest`.
 
 **Never run `--uninstall` or a public installer against your real `HOME`.** First `installer/tests/run.sh`: the
 failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken
-binary, uninstall), what the user reads (`OUT1`) and an update from the previous release (`UPD1`), in a minute, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on
+binary, uninstall), what the user reads (`OUT1`), an update from the previous release (`UPD1`) and the projects it made, run after the
+update (`PRJ1`), in three minutes, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on
 six distributions one container at a time, against `package.sh x86_64-unknown-linux-musl` (the release's static
 build: a plain `package.sh` links this machine's glibc and does not run on an older distribution). Then, for the AI services, two ways:
 

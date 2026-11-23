@@ -7,7 +7,10 @@
 #
 # OUT1 renders what a terminal shows (util-linux `script`, python3: installer/tests/screen.py) and reads it as the user
 # does; UPD1 downloads the previous published release (network: "skipped (offline)" without it, which
-# installer/release/delivery.sh refuses unless --offline-ok). PS1 parses install.ps1 in a PowerShell container (one at a time, 1 CPU, 1 GB: this machine has limits).
+# installer/release/delivery.sh refuses unless --offline-ok). PRJ1 makes projects with the previous release (a fastapi
+# and a nestjs backend, a react app: the toolchains this machine has), updates, and runs them with this tree's nuclear
+# (the network for the release and the projects' packages; pip and npm use this user's caches; about 1.5 minutes, 350 MB
+# in TMPDIR). NUCLEAR_PREVIOUS=<version> takes that release as the previous one. PS1 parses install.ps1 in a PowerShell container (one at a time, 1 CPU, 1 GB: this machine has limits).
 #
 # Never the real HOME: every test runs in a new empty folder with HOME and every XDG folder inside it, and the AI
 # services are skipped (--no-ai), so nothing is registered at login and no port is taken.
@@ -18,7 +21,12 @@ DIST="$ROOT/installer/dist"
 INSTALLER="$ROOT/installer/release/install.sh"
 [ -f "$DIST/latest" ] || { echo "no archive: run installer/release/package.sh first"; exit 2; }
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-installer-tests.XXXXXX")
-trap 'rm -rf "$WORK"' EXIT
+SERVERS=""
+# a server PRJ1 started, and anything a fake machine left running (a `nuclear update --when-idle`), go with the folder
+trap 'for p in $SERVERS; do kill_tree "$p"; done; pkill -f "$WORK/" 2>/dev/null; rm -rf "$WORK"' EXIT
+trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: no server and no folder stays
+# the work folders of runs that were killed before this rule
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-installer-tests.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
 PASS=0; FAIL=0; FAILED=""
 
 # A fresh, empty machine for one test: $H is its HOME.
@@ -144,13 +152,15 @@ OUT1() {  # what the user reads: the installer in a terminal of 80 and of 60 col
 # The newest published release older than this tree's version, and its files for this system in $1 (a mirror).
 previous_release() {
   current=$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/Cargo.toml" | head -n 1)
-  PREV=$(curl -fsSL --max-time 15 "https://api.github.com/repos/nuclearlang/lang/releases?per_page=30" 2>/dev/null \
+  PREV=${NUCLEAR_PREVIOUS:-}
+  [ -n "$PREV" ] || PREV=$(curl -fsSL --max-time 15 "https://api.github.com/repos/nuclearlang/nuclearlang/releases?per_page=30" 2>/dev/null \
     | sed -n 's/.*"tag_name": *"v\([0-9.]*\)".*/\1/p' | { cat; echo "$current"; } | sort -t . -k1,1n -k2,2n -k3,3n -u \
     | sed -n "/^$current\$/{x;p;q;};h")
   [ -n "$PREV" ] || return 1
   case $(uname -s) in Darwin) os=macos ;; *) os=linux ;; esac
   case $(uname -m) in arm64|aarch64) arch=aarch64 ;; *) arch=x86_64 ;; esac
-  name="nuclearlang-$PREV-$os-$arch.tar.gz"; url="https://github.com/nuclearlang/lang/releases/download/v$PREV"
+  name="nuclearlang-$PREV-$os-$arch.tar.gz"; url="https://github.com/nuclearlang/nuclearlang/releases/download/v$PREV"
+  [ -s "$1/$name.sha256" ] && return 0  # UPD1 downloaded it already
   mkdir -p "$1" && echo "$PREV" > "$1/latest" &&
     curl -fsSL --max-time 120 -o "$1/$name" "$url/$name" && curl -fsSL --max-time 30 -o "$1/$name.sha256" "$url/$name.sha256" &&
     curl -fsSL --max-time 30 -o "$1/install.sh" "$url/install.sh"
@@ -172,6 +182,75 @@ UPD1() {  # an update from the previous published release, as `nuclear update` r
     "nuclear update through the link finds its installation"
 }
 
+# A process and every process under it (a server with its reloader, npm with node --watch), parent first.
+kill_tree() {
+  kids=$(pgrep -P "$1" 2>/dev/null); kill "$1" 2>/dev/null
+  for kid in $kids; do kill_tree "$kid"; done
+}
+free_port() { python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])'; }
+# The nuclear of machine $H as its user runs it: its link first on PATH (`nuclear run` runs `nuclear build`), never an
+# update of its own, and this user's package caches (only downloads are kept there)
+hn() {
+  env -i PATH="$H/.local/bin:$PATH" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" \
+    XDG_STATE_HOME="$H/.local/state" XDG_DATA_HOME="$H/.local/share" NO_COLOR=1 NUCLEAR_AUTO_UPDATE=0 \
+    PIP_CACHE_DIR="$PIP_CACHE" npm_config_cache="$NPM_CACHE" ${ENVS:-} "$H/.local/bin/nuclear" "$@"
+}
+# One step of a project: `nuclear <args>` in it; a failure says the step, with its last lines.
+step() {
+  what=$1; app=$2; shift 2
+  if (cd "$H/projects/$app" && hn "$@") > "$H/out" 2>&1 < /dev/null; then ok "$app: $what"; else no "$app: $what"; return 1; fi
+}
+# `nuclear run` of a project until a route of its resource answers 200 (2 minutes at most), then stopped. The
+# arguments after the route go to `nuclear run`, PORT in them the free port it serves on (PORT is in its environment too).
+serve() {
+  app=$1; route=$2; shift 2; port=$(free_port); args=$(echo "$*" | sed "s/PORT/$port/g")
+  (cd "$H/projects/$app" && ENVS="PORT=$port" hn run $args) > "$H/out" 2>&1 < /dev/null &
+  pid=$!; SERVERS="$SERVERS $pid"; code=000
+  for _ in $(seq 1 120); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://localhost:$port$route" 2>/dev/null)
+    [ "$code" = 200 ] && break; kill -0 "$pid" 2>/dev/null || break; sleep 1
+  done
+  kill_tree "$pid"; wait "$pid" 2>/dev/null
+  if [ "$code" = 200 ]; then ok "$app: nuclear run answers 200 on $route, then stops"; else no "$app: nuclear run (GET $route: $code)"; fi
+}
+
+PRJ1() {  # projects the previous release made and installed, updated, then checked, built, tested and run
+  machine PRJ1
+  if ! previous_release "$WORK/previous"; then echo "  - PRJ1 skipped (offline: the previous release could not be downloaded)"; return; fi
+  PIP_CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/pip; NPM_CACHE=$HOME/.npm
+  env -i PATH="$PATH" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" XDG_STATE_HOME="$H/.local/state" \
+    XDG_DATA_HOME="$H/.local/share" NO_COLOR=1 NUCLEAR_AUTO_UPDATE=0 NUCLEAR_DOWNLOAD="file://$WORK/previous" \
+    sh "$WORK/previous/install.sh" --no-ai --no-vscode > "$H/out" 2>&1 < /dev/null
+  check 'grep -qx "$PREV" "$H/.local/share/nuclearlang/.version"' "the previous release ($PREV) installs"
+  grep -qx "$PREV" "$H/.local/share/nuclearlang/.version" || return
+  # each project: name:platform:dialect:the route of its resource:how its server takes a port (PORT: the port):more
+  # options of its resource (_ is a space)
+  apps="api_py:backend:fastapi:/products:--_--port_PORT: api_ts:backend:nestjs:/products::"
+  command -v npx > /dev/null 2>&1 && apps="$apps site:web:react:/products:--_--port_PORT:--source_rest:http://127.0.0.1:9" ||
+    echo "  - PRJ1 react skipped (no Node.js)"
+  ready=""
+  mkdir -p "$H/projects"
+  for a in $apps; do
+    IFS=: read -r app platform dialect route _ more <<EOF2
+$a
+EOF2
+    (cd "$H/projects" && hn new "$app" -p "$platform" -d "$dialect") > "$H/out" 2>&1 < /dev/null &&
+      ok "$app: $PREV makes a $dialect project" || { no "$app: nuclear new ($PREV)"; continue; }
+    step "$PREV generates a resource" "$app" gen resource catalog Product --fields "id:int name:string" $(echo "$more" | tr _ ' ') &&
+      step "$PREV installs it" "$app" install && step "$PREV tests it" "$app" test && ready="$ready $a"
+  done
+  ENVS="NUCLEAR_UPDATE=1 NUCLEAR_AUTO_UPDATE=0 NUCLEAR_INSTALL=$H/.local/share/nuclearlang" install_with --no-vscode
+  check 'grep -qx "$current" "$H/.local/share/nuclearlang/.version"' "this installer updates $PREV to $current"
+  grep -qx "$current" "$H/.local/share/nuclearlang/.version" || return
+  for a in $ready; do
+    IFS=: read -r app platform dialect route args _ <<EOF2
+$a
+EOF2
+    step "check ($current)" "$app" check && step "build ($current)" "$app" build && step "test ($current)" "$app" test &&
+      serve "$app" "$route" $(echo "$args" | tr _ ' ')
+  done
+}
+
 PS1() {  # install.ps1 parses (PowerShell in one small container; skipped without Docker)
   machine PS1
   if ! command -v docker >/dev/null 2>&1; then echo "  - PS1 skipped (no docker)"; return; fi
@@ -180,7 +259,7 @@ PS1() {  # install.ps1 parses (PowerShell in one small container; skipped withou
   check '[ "$code" = 0 ]' "install.ps1 has no syntax errors"
 }
 
-ALL="D1 D2 E4 LOCK I1 D6 D7 D13 P1 OUT1 UPD1 PS1"
+ALL="D1 D2 E4 LOCK I1 D6 D7 D13 P1 OUT1 UPD1 PRJ1 PS1"
 for CASE in ${*:-$ALL}; do
   echo "$CASE"
   "$CASE"
