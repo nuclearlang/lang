@@ -1911,6 +1911,76 @@
    }
   },
   {
+   "id": "error:N0119",
+   "type": "diagnostic",
+   "title": "N0119 — an exact number mixed with another number type",
+   "summary": "An exact number (`bigint`, `bigdouble`) mixed with another number type in an operation, a declaration, an argument or a return; a decimal literal where a `bigint` goes; a whole literal beyond 2^53 − 1 outside a `bigint` place",
+   "body": [
+    "`N0119` · resolver · error",
+    "",
+    "**What it is.** An exact number (`bigint`, `bigdouble`) mixed with another number type in an operation, a declaration, an argument or a return; a decimal literal where a `bigint` goes; a whole literal beyond 2^53 − 1 outside a `bigint` place",
+    "",
+    "**Why.** A `bigint` or a `bigdouble` (the exact numbers) meets a number of another type in an operation, a declaration, an argument or a return: `big + n` with `n: int`, `x: bigint = n`, `total: double = price` with `price: bigdouble`. Nothing converts silently, because a conversion can lose digits: write it (`n.toBigInt()`, `price.toDouble()`). A literal takes the exact type of its place (`big + 1`, `x: bigdouble = 0.1`), except a decimal literal where a `bigint` goes. A whole literal beyond 2^53 − 1 outside an exact place is the same error: an `int` does not hold it exactly in every target; declare it `bigint`.",
+    "",
+    "**Example.** `big + n` with `n: int` (fix: `big + n.toBigInt()`), `x: double = price` with `price: bigdouble` (fix: `price.toDouble()`), `n = 12345678901234567890` (fix: `n: bigint = 12345678901234567890`)"
+   ],
+   "keys": [
+    "n0119",
+    "an exact number mixed with another number type"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0119",
+    "family": "resolver",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "resolver",
+    "title": "an exact number mixed with another number type",
+    "what": "An exact number (`bigint`, `bigdouble`) mixed with another number type in an operation, a declaration, an argument or a return; a decimal literal where a `bigint` goes; a whole literal beyond 2^53 − 1 outside a `bigint` place",
+    "fix": "",
+    "example": "`big + n` with `n: int` (fix: `big + n.toBigInt()`), `x: double = price` with `price: bigdouble` (fix: `price.toDouble()`), `n = 12345678901234567890` (fix: `n: bigint = 12345678901234567890`)"
+   }
+  },
+  {
+   "id": "error:N0120",
+   "type": "diagnostic",
+   "title": "N0120 — not an operation of the exact numbers",
+   "summary": "Not an operation of the exact numbers: `/` of two `bigint`, a bitwise operator, `is bigint` / `is bigdouble`, `Math` with one, `Json.encode` of a value that holds one, a `Set` of `bigdouble`, a list member that compares or adds exact elements (`sum`, `min`, `max`; for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`)",
+   "body": [
+    "`N0120` · resolver · error",
+    "",
+    "**What it is.** Not an operation of the exact numbers: `/` of two `bigint`, a bitwise operator, `is bigint` / `is bigdouble`, `Math` with one, `Json.encode` of a value that holds one, a `Set` of `bigdouble`, a list member that compares or adds exact elements (`sum`, `min`, `max`; for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`)",
+    "",
+    "**Why.** The exact numbers (`bigint`, `bigdouble`) have their own rules: `/` of two `bigint` has no exact result (write `~/` for the whole quotient, or convert to `bigdouble`); the bitwise operators, `x is bigint` / `x is bigdouble`, `Math` functions, `Json.encode` of a value that holds one, a `Set` of `bigdouble` and the list members that compare or add the elements (`sum`, `min`, `max`, and for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`) are not theirs. In JSON an exact number travels as the text of `toString()`, read back with `toBigInt()` / `toBigDouble()`.",
+    "",
+    "**Example.** `a / b` with two `bigint` (fix: `a ~/ b`, or `a.toBigDouble() / b.toBigDouble()`), `Json.encode({ \"id\": id })` (fix: `{ \"id\": id.toString() }`)"
+   ],
+   "keys": [
+    "n0120",
+    "not an operation of the exact numbers"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0120",
+    "family": "resolver",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "resolver",
+    "title": "not an operation of the exact numbers",
+    "what": "Not an operation of the exact numbers: `/` of two `bigint`, a bitwise operator, `is bigint` / `is bigdouble`, `Math` with one, `Json.encode` of a value that holds one, a `Set` of `bigdouble`, a list member that compares or adds exact elements (`sum`, `min`, `max`; for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`)",
+    "fix": "",
+    "example": "`a / b` with two `bigint` (fix: `a ~/ b`, or `a.toBigDouble() / b.toBigDouble()`), `Json.encode({ \"id\": id })` (fix: `{ \"id\": id.toString() }`)"
+   }
+  },
+  {
    "id": "error:N0201",
    "type": "diagnostic",
    "title": "N0201 — unknown header word for the dialect",

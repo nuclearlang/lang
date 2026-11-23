@@ -194,9 +194,9 @@
    "id": "doc:device-emulators/README.md#the-devices",
    "type": "readme",
    "title": "The devices",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website Test devices for a Synapsis mobile app without an emulator: the app runs as Flutter web in Chromium, with a phone's size, density and touch, in its own window (`nuclear device`) or inside the terminal (`nuclear…",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website Test devices for a Synapsis mobile app without an emulator: the app runs as Flutter web in Chromium, with a phone's size, density and touch, in its own window (`nuclear device`) or inside the terminal (`nuclear…",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/devices)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/devices)",
     "",
     "Test devices for a Synapsis mobile app without an emulator: the app runs as Flutter web in Chromium, with a phone's",
     "size, density and touch, in its own window (`nuclear device`) or inside the terminal (`nuclear terminal-device`)."
@@ -640,7 +640,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#commands.4b5d3a",
+   "id": "doc:installer/AGENTS.md#commands.6b5314",
    "type": "readme",
    "title": "The installers and the release — Commands",
    "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/version.sh [<v>|--check [v<v>]] # one version for every project (ADR-platform-0011): print, write, check…",
@@ -655,7 +655,7 @@
     "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
-    "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/), OUT1, UPD1",
+    "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/), OUT1, UPD1, PRJ1",
     "installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time",
     "nuclear-builder setup [--profile remote --yes | --status | --remove]   # the AI services (lite|medium|hard: on standby)",
     "```"
@@ -670,13 +670,13 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#commands.f14121",
+   "id": "doc:installer/AGENTS.md#commands.b25455",
    "type": "readme",
    "title": "The installers and the release — Commands",
-   "summary": "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it (`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).",
+   "summary": "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it (`gh workflow run installer-windows -R nuclearlang/nuclearlang -f version=<v>`).",
    "body": [
     "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it",
-    "(`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).",
+    "(`gh workflow run installer-windows -R nuclearlang/nuclearlang -f version=<v>`).",
     "",
     "The public one-liners (they need a published release):",
     "",
@@ -771,7 +771,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#folders.f77ced",
+   "id": "doc:installer/AGENTS.md#folders.ef5ef3",
    "type": "readme",
    "title": "The installers and the release — Folders",
    "summary": "`package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of 80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the sign once); `UPD1` updates the previous published release and runs…",
@@ -780,7 +780,10 @@
     "  `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of",
     "  80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the",
     "  sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link",
-    "  (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
+    "  (`NUCLEAR_UPDATE_DRYRUN=1`); `PRJ1` makes a `fastapi` and a `nestjs` backend and a `react` app with that release's",
+    "  `nuclear` (a resource generated, installed, tested), updates to this tree's archive, then `check`, `build`, `test`",
+    "  and `nuclear run` each until a route of the resource answers 200 (`NUCLEAR_PREVIOUS=<version>` takes another",
+    "  release as the previous one); `PS1` parses `install.ps1` in a PowerShell container.",
     "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
     "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:",
     "  `package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
@@ -937,9 +940,9 @@
    "id": "doc:installer/README.md#the-installers-and-the-release",
    "type": "readme",
    "title": "The installers and the release",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![release](https://github.com/nuclearlang/lang/actions/workflows/release.yml) · Website How NuclearLang gets onto a machine: an installer from the source tree, a release archive per system, the one-line installers, and the set-up…",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) ![release](https://github.com/nuclearlang/nuclearlang/actions/workflows/release.yml) · Website How NuclearLang gets onto a machine: an installer from the source tree, a release archive per system, the one-line installers,…",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![release](https://github.com/nuclearlang/lang/actions/workflows/release.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/release.yml) · [Website](https://nuclearlang.github.io)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![release](https://github.com/nuclearlang/nuclearlang/actions/workflows/release.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/release.yml) · [Website](https://nuclearlang.github.io)",
     "",
     "How NuclearLang gets onto a machine: an installer from the source tree, a release archive per system, the",
     "one-line installers, and the set-up of the AI services."
@@ -1268,12 +1271,12 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.9e5de4",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.9af780",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`), `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also `NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.",
+   "summary": "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/nuclearlang`), `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also `NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.",
    "body": [
-    "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),",
+    "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/nuclearlang`),",
     "`NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also",
     "`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`."
    ],
@@ -1462,6 +1465,35 @@
    }
   },
   {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.25d62d",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "`PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`.",
+   "body": [
+    "`PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs",
+    "   some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a",
+    "   website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,",
+    "   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link,",
+    "   `nuclear run` failing on every backend project 0.95 had installed (`No module named synapsis.server`).",
+    "3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
+    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
+    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
+    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
+    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
+    "   by hand (`workflow_dispatch`).",
+    "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no"
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4d5e97",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
@@ -1491,23 +1523,21 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.5f23e3",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4da865",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding example that is no longer what `nuclear new` writes fails here, then…",
+   "summary": "environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher nuclearlang/nuclearlang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace with *Publishing only*, is used instead only while it exists).",
    "body": [
-    "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website",
-    "   exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding",
-    "   example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);",
-    "   `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,",
-    "   what the user reads (the installer in a pseudo-terminal of 80 and 60 columns with colors, rendered by",
-    "   `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every",
-    "   box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an",
-    "   update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear",
-    "   update`). `UPD1` needs the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs",
-    "   some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a",
-    "   website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,",
-    "   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link."
+    "environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher",
+    "   nuclearlang/nuclearlang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace",
+    "   with *Publishing only*, is used instead only while it exists). The stores read the `version` of",
+    "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
+    "   stop the GitHub release.",
+    "5. The public one-liners download from that release: without a release they fail with a clear error.",
+    "6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
+    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
+    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
+    "   nuclearlang/nuclearlang -f version=<version>`."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1546,15 +1576,23 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.c50d5a",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.6a81d8",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the Smart Graph answers, and uninstalls it leaving nothing.",
+   "summary": "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding example that is no longer what `nuclear new` writes fails here, then…",
    "body": [
-    "6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
-    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
-    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
-    "   nuclearlang/lang -f version=<version>`."
+    "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website",
+    "   exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding",
+    "   example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);",
+    "   `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,",
+    "   what the user reads (the installer in a pseudo-terminal of 80 and 60 columns with colors, rendered by",
+    "   `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every",
+    "   box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an",
+    "   update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear",
+    "   update`), and `PRJ1`, the projects that release made: a `fastapi` and a `nestjs` backend and a `react` app (when",
+    "   Node.js is there), each with a generated resource, installed and tested by the previous release, then, after the",
+    "   update, `nuclear check`, `build`, `test` and `nuclear run` with the new `nuclear` until a route of the resource",
+    "   answers 200 (about 1.5 minutes, 350 MB in `TMPDIR` while it runs; pip and npm use the user's caches). `UPD1` and"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1587,25 +1625,28 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.df39c6",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.2a9277",
    "type": "context",
-   "title": "Release, and test an installer — Publish a release",
-   "summary": "3. Push the tag `v<version>`.",
+   "title": "Release, and test an installer — Test an installer without touching your machine",
+   "summary": "`HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the checksum from there instead of a GitHub release.",
    "body": [
-    "3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
-    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
-    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
-    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
-    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
-    "   by hand (`workflow_dispatch`).",
-    "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
-    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
-    "   environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher",
-    "   nuclearlang/lang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace",
-    "   with *Publishing only*, is used instead only while it exists). The stores read the `version` of",
-    "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
-    "   stop the GitHub release.",
-    "5. The public one-liners download from that release: without a release they fail with a clear error."
+    "- **A fake `HOME` and a mirror.** Serve `installer/dist/` over HTTP on this machine and run the installer with",
+    "  `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the",
+    "  checksum from there instead of a GitHub release.",
+    "- **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`",
+    "  who can sudo, systemd as on a real machine (so the AI set-up registers its services the usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
+    "  Python). The installer reads the archive mounted at",
+    "  `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`).",
+    "",
+    "  ```sh",
+    "  installer/release/package.sh x86_64-unknown-linux-musl",
+    "  installer/release/ai-runtime.sh",
+    "  docker build -t nuclear-clean installer/release/clean-machine",
+    "  docker run -d --name nuclear-clean --cgroupns=private --security-opt writable-cgroups=true \\",
+    "    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -v \"$PWD/installer/dist:/mirror:ro\" nuclear-clean",
+    "  docker exec -it nuclear-clean su - dev      # a terminal of the new user",
+    "  docker rm -f nuclear-clean                  # the machine is gone: run it again for a new one",
+    "  ```"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1617,11 +1658,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.0dee74",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.97d8de",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
-   "summary": "virtual display, the public installer from the internet; the extension is driven over VS Code's debugging port, published to the host through `socat` (Electron listens only on the container's own `127.0.0.1`).",
+   "summary": "Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the host's cgroups, ttys and devices and brings the desktop session down.",
    "body": [
+    "Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the",
+    "  host's cgroups, ttys and devices and brings the desktop session down. `writable-cgroups` gives it only its own.",
+    "",
     "- **The clean machine with an editor** (`clean-machine/editor.Dockerfile`, on top of the image above): VS Code and a",
     "  virtual display, the public installer from the internet; the extension is driven over VS Code's debugging port,",
     "  published to the host through `socat` (Electron listens only on the container's own `127.0.0.1`). Start Electron",
@@ -1639,52 +1683,17 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.400988",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.9a27c2",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
-   "summary": "installer/release/package.sh x86_64-unknown-linux-musl installer/release/ai-runtime.sh docker build -t nuclear-clean installer/release/clean-machine docker run -d --name nuclear-clean --cgroupns=private --security-opt writable-cgroups=true \\ docker exec -it nuclear-clean su - dev # a terminal of…",
-   "body": [
-    "```sh",
-    "  installer/release/package.sh x86_64-unknown-linux-musl",
-    "  installer/release/ai-runtime.sh",
-    "  docker build -t nuclear-clean installer/release/clean-machine",
-    "  docker run -d --name nuclear-clean --cgroupns=private --security-opt writable-cgroups=true \\",
-    "    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -v \"$PWD/installer/dist:/mirror:ro\" nuclear-clean",
-    "  docker exec -it nuclear-clean su - dev      # a terminal of the new user",
-    "  docker rm -f nuclear-clean                  # the machine is gone: run it again for a new one",
-    "  ```",
-    "",
-    "  Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the",
-    "  host's cgroups, ttys and devices and brings the desktop session down. `writable-cgroups` gives it only its own."
-   ],
-   "sources": [
-    "installer/docs/06-runbooks/release.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.a4f248",
-   "type": "context",
-   "title": "Release, and test an installer — Test an installer without touching your machine",
-   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), what the user reads (`OUT1`) and an update from the previous release (`UPD1`), in a minute, against `package.sh`'s archive; and `installer/tests/distros.sh`, the…",
+   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), what the user reads (`OUT1`), an update from the previous release (`UPD1`) and the projects it made, run after the update (`PRJ1`), in three minutes, against…",
    "body": [
     "**Never run `--uninstall` or a public installer against your real `HOME`.** First `installer/tests/run.sh`: the",
     "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken",
-    "binary, uninstall), what the user reads (`OUT1`) and an update from the previous release (`UPD1`), in a minute, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on",
+    "binary, uninstall), what the user reads (`OUT1`), an update from the previous release (`UPD1`) and the projects it made, run after the",
+    "update (`PRJ1`), in three minutes, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on",
     "six distributions one container at a time, against `package.sh x86_64-unknown-linux-musl` (the release's static",
-    "build: a plain `package.sh` links this machine's glibc and does not run on an older distribution). Then, for the AI services, two ways:",
-    "",
-    "- **A fake `HOME` and a mirror.** Serve `installer/dist/` over HTTP on this machine and run the installer with",
-    "  `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the",
-    "  checksum from there instead of a GitHub release.",
-    "- **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`",
-    "  who can sudo, systemd as on a real machine (so the AI set-up registers its services the usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
-    "  Python). The installer reads the archive mounted at",
-    "  `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`)."
+    "build: a plain `package.sh` links this machine's glibc and does not run on an older distribution). Then, for the AI services, two ways:"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -2336,9 +2345,9 @@
    "id": "doc:tools/README.md#the-tools-of-nuclearlang",
    "type": "readme",
    "title": "The tools of NuclearLang",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator behind `new`, `make` and `gen`, and the MCP server an AI client talks to.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator behind `new`, `make` and `gen`, and the MCP server an AI client talks to.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools)",
     "",
     "What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator",
     "behind `new`, `make` and `gen`, and the MCP server an AI client talks to.",
@@ -2744,6 +2753,27 @@
    }
   },
   {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.2c0852",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: `nuclear build` of a nestjs project installed by an earlier release installs its packages again before compiling (it compiled against the old runtime: `no exported member 'RequiredPipe'`); found by the new upgrade check of the delivery gate.",
+    "- Fix: `nuclear run` installs a project's packages again when another version of the platform installed them (`build/.nuclear-installed`): a backend project installed before 0.96 failed with `No module named synapsis.server`, since its runtime stayed the old one.",
+    "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
+    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
+    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/CHANGELOG.md#unreleased.85fc60",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -2775,26 +2805,6 @@
     "panel is `editor-workspace`.",
     "",
     "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
-   ],
-   "sources": [
-    "tools/cli/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.9c9052",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Fix: `nuclear run` installs a project's packages again when another version of the platform installed them (`build/.nuclear-installed`): a backend project installed before 0.96 failed with `No module named synapsis.server`, since its runtime stayed the old one.",
-    "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
-    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
-    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there."
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -2857,9 +2867,9 @@
    "id": "doc:tools/cli/README.md#nuclear-the-command-line-tool",
    "type": "readme",
    "title": "`nuclear`, the command line tool",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website The one command of NuclearLang: the compiler (`build`, `check`, `fix`, `fmt`, `spec`) and the framework, Synapsis (`new`, `gen`, `make`, `run`, `test`, `add`, the devices).",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website The one command of NuclearLang: the compiler (`build`, `check`, `fix`, `fmt`, `spec`) and the framework, Synapsis (`new`, `gen`, `make`, `run`, `test`, `add`, the devices).",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/cli)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/cli)",
     "",
     "The one command of NuclearLang: the compiler (`build`, `check`, `fix`, `fmt`, `spec`) and the framework, Synapsis",
     "(`new`, `gen`, `make`, `run`, `test`, `add`, the devices). You write `.nuc`; it writes the target project into `build/`."
@@ -3311,34 +3321,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.3b5c0d",
-   "type": "context",
-   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
-   "summary": "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through `nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or `wget` and the API; at most 3 s, offline the old answer stays for a day,…",
-   "body": [
-    "**The automatic update** (`update::on_use`, before every command; the user, 2026-11-21): a use of NuclearLang marks",
-    "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through",
-    "`nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or",
-    "`wget` and the API; at most 3 s, offline the old answer stays for a day, `latest-release`). When it is newer, one",
-    "process waits apart (`nuclear update --when-idle`, its own session, `update.lock` with its pid, output in",
-    "`update.log`): every minute it looks at the last use and installs once the user stopped (30 minutes without a use) or",
-    "12 hours after it was found, working on or not; the public installer runs with `NUCLEAR_UPDATE=1` (the choices of the",
-    "last install kept; Windows: in its own window), then `updated` holds the new version (the editor offers a reload).",
-    "Never in CI, under `sudo`, for a build from source (no `.version`), with `NUCLEAR_AUTO_UPDATE=0` (or the old",
-    "`NUCLEAR_NO_UPDATE_CHECK`), or after `nuclear update --auto off` (`~/.config/nuclearlang/auto-update`, written by the",
-    "editor's setting `nuclear.update.auto`); `nuclear update --check [--json]` says `{current, latest, newer, scheduled,",
-    "auto}`; `NUCLEAR_UPDATE_DRYRUN=1` prints the installer's line instead of running it (the tests)."
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/nuclear-command.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.6c0ab9",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
@@ -3389,6 +3371,34 @@
     "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
     "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |",
     "| `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.fe9e0d",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
+   "summary": "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through `nuclear update --touch`); at most once a day the latest tag is asked of the repository `nuclearlang/nuclearlang` (the redirect of `releases/latest` by `curl`, or `wget` and the API; at most…",
+   "body": [
+    "**The automatic update** (`update::on_use`, before every command; the user, 2026-11-21): a use of NuclearLang marks",
+    "the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through",
+    "`nuclear update --touch`); at most once a day the latest tag is asked of the repository `nuclearlang/nuclearlang` (the redirect of `releases/latest` by `curl`, or",
+    "`wget` and the API; at most 3 s, offline the old answer stays for a day, `latest-release`). When it is newer, one",
+    "process waits apart (`nuclear update --when-idle`, its own session, `update.lock` with its pid, output in",
+    "`update.log`): every minute it looks at the last use and installs once the user stopped (30 minutes without a use) or",
+    "12 hours after it was found, working on or not; the public installer runs with `NUCLEAR_UPDATE=1` (the choices of the",
+    "last install kept; Windows: in its own window), then `updated` holds the new version (the editor offers a reload).",
+    "Never in CI, under `sudo`, for a build from source (no `.version`), with `NUCLEAR_AUTO_UPDATE=0` (or the old",
+    "`NUCLEAR_NO_UPDATE_CHECK`), or after `nuclear update --auto off` (`~/.config/nuclearlang/auto-update`, written by the",
+    "editor's setting `nuclear.update.auto`); `nuclear update --check [--json]` says `{current, latest, newer, scheduled,",
+    "auto}`; `NUCLEAR_UPDATE_DRYRUN=1` prints the installer's line instead of running it (the tests)."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -3540,7 +3550,25 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.3f2070",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.a8fdd6",
+   "type": "context",
+   "title": "The command line tool: overview — Backend and web projects",
+   "summary": "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a mobile app.",
+   "body": [
+    "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a",
+    "mobile app. For it (ADR-cli-0001):"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.f29a2e",
    "type": "context",
    "title": "The command line tool: overview — Backend and web projects",
    "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
@@ -3556,7 +3584,7 @@
     "  ([packages.md](packages.md)). It writes `build/.nuclear-installed` with the platform's version; `run` (and a",
     "  package command) installs again when that file is missing or names another version (`needs_install`): the runtime",
     "  package comes with the platform, so a project installed by an earlier release gets the new runtime (0.96's",
-    "  `synapsis.server` was missing in projects 0.95 had installed)."
+    "  `synapsis.server` was missing in projects 0.95 had installed). `build` of a compiled server (`[toolchain] compile`)"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3568,11 +3596,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.8ec7b1",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.f2b1c5",
    "type": "context",
    "title": "The command line tool: overview — Backend and web projects",
-   "summary": "`migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's…",
+   "summary": "installs again first too, or it would compile against the old runtime (a nestjs project of 0.95 lacked `RequiredPipe`).",
    "body": [
+    "installs again first too, or it would compile against the old runtime (a nestjs project of 0.95 lacked `RequiredPipe`).",
     "- `nuclear migrate [make \"<message>\" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /",
     "  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape",
     "  checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down",
@@ -3583,24 +3612,6 @@
     "- `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
     "- `nuclear make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its",
     "  `[layout]` path ([the code generator](../../../code_generator/docs/02-architecture/overview.md))."
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.a8fdd6",
-   "type": "context",
-   "title": "The command line tool: overview — Backend and web projects",
-   "summary": "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a mobile app.",
-   "body": [
-    "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a",
-    "mobile app. For it (ADR-cli-0001):"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -5152,9 +5163,9 @@
    "id": "doc:tools/code_generator/README.md#the-code-generator",
    "type": "readme",
    "title": "The code generator",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website `nuclear-codegen`: what `nuclear new`, `gen` and `make` write.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website `nuclear-codegen`: what `nuclear new`, `gen` and `make` write.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/generator)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/generator)",
     "",
     "`nuclear-codegen`: what `nuclear new`, `gen` and `make` write. `gen` writes finished code that compiles from a",
     "resource's fields; `make` one skeleton of a kind; `new` a new project."

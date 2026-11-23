@@ -232,7 +232,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.dc14a3",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.fec8bc",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.1 Entity",
    "summary": "A table.",
@@ -240,7 +240,9 @@
     "A table. `@entity(\"name\")` names it (default: the class name in snake_case, plural not added). Fields are",
     "columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a",
     "uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,",
-    "`@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the",
+    "`@created`, `@updated` (timestamps: when the row was inserted and last changed, written by the app with their",
+    "milliseconds, the same instant for a new row's two; a row written by SQL gets the database's clock). `T?` is a",
+    "nullable column; a default is the",
     "column's default. A `DateTime` column is an instant: it",
     "comes back as the same instant on every database, with its milliseconds, and its JSON is what `toIso()` writes",
     "(`2026-03-04T03:06:07.000Z`). The column keeps the fraction of a second on every database (six digits on MySQL,",
@@ -526,29 +528,35 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.31be93",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.58e066",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.2 Repository",
-   "summary": "repository TaskRepository byState(done: boolean) Task[] where({ \"done\": done }) orderBy(\"priority\") getMany() byTitle(title: string) Result<Error, Task> where({ \"title\": title }) getOne() page(page: int, size: int = 20) Page<Task> orderBy(\"id\") paginate(page, size) A repository can also be another…",
+   "summary": "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`).",
    "body": [
-    "```nuclear",
-    "repository TaskRepository",
-    "  byState(done: boolean) Task[]",
-    "    where({ \"done\": done })",
-    "    orderBy(\"priority\")",
-    "    getMany()",
-    "",
-    "  byTitle(title: string) Result<Error, Task>",
-    "    where({ \"title\": title })",
-    "    getOne()",
-    "",
-    "  page(page: int, size: int = 20) Page<Task>",
-    "    orderBy(\"id\")",
-    "    paginate(page, size)",
-    "```",
-    "",
-    "#### An HTTP repository (ADR-codegen-0001)",
-    "",
+    "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)`",
+    "(`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE",
+    "query, created for that call: `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`,",
+    "`contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the",
+    "relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`:",
+    "`items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,",
+    "`update({...})`, `delete()`. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is",
+    "answered with that many, and the page's `size` says so. `where` and `orderBy` take only the entity's columns: another",
+    "name (a relation, a field that is none) is an error of the program, answered 500. The caller awaits it:",
+    "`~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ \"title\": t }).exists()`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.b1a580",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.2 Repository",
+   "summary": "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods without a body that carry `@get`, `@post`, `@put`, `@patch` or `@delete` (`path = \":id\"`).",
+   "body": [
     "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods",
     "without a body that carry `@get`, `@post`, `@put`, `@patch` or `@delete` (`path = \":id\"`). They call the `Http(baseUrl)`",
     "connection (§2.8; `connection = \"name\"` picks another): `:name` in a path takes the parameter of that name, the",
@@ -574,25 +582,41 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.dcd1e7",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.f82605",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.2 Repository",
-   "summary": "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`).",
+   "summary": "`like(pattern)` and `ilike(pattern)` take a pattern: `%` is any text and `_` any character.",
    "body": [
-    "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)`",
-    "(`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE",
-    "query, created for that call: `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`,",
-    "`oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the",
-    "relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`:",
-    "`items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,",
-    "`update({...})`, `delete()`. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is",
-    "answered with that many, and the page's `size` says so. `where` and `orderBy` take only the entity's columns: another",
-    "name (a relation, a field that is none) is an error of the program, answered 500. The caller awaits it:",
-    "`~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ \"title\": t }).exists()`.",
+    "`like(pattern)` and `ilike(pattern)` take a pattern: `%` is any text and `_` any character. `contains(text)` and",
+    "`icontains(text)` take a text and match the rows whose column holds it as it is: its `%`, `_` and `/` are",
+    "characters, never wildcards. A text a client sends (a search box) goes to `contains` or `icontains`, never into a",
+    "pattern: `ilike(\"%${text}%\")` with the text `%` matches every row, `icontains(text)` only the rows that hold a `%`.",
     "",
-    "`like` follows the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not (for",
-    "ASCII letters). `ilike` ignores the case on every database: it is the one to use for a search that must find the",
-    "same rows everywhere."
+    "`like` and `contains` follow the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite",
+    "do not (for ASCII letters). `ilike` and `icontains` ignore the case on every database: they are the ones to use for",
+    "a search that must find the same rows everywhere.",
+    "",
+    "```nuclear",
+    "repository TaskRepository",
+    "  byState(done: boolean) Task[]",
+    "    where({ \"done\": done })",
+    "    orderBy(\"priority\")",
+    "    getMany()",
+    "",
+    "  byTitle(title: string) Result<Error, Task>",
+    "    where({ \"title\": title })",
+    "    getOne()",
+    "",
+    "  search(text: string) Task[]",
+    "    where({ \"title\": icontains(text) })",
+    "    getMany()",
+    "",
+    "  page(page: int, size: int = 20) Page<Task>",
+    "    orderBy(\"id\")",
+    "    paginate(page, size)",
+    "```",
+    "",
+    "#### An HTTP repository (ADR-codegen-0001)"
    ],
    "platforms": [
     "backend"
@@ -602,19 +626,44 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.054098",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.12109d",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.3 Model",
+   "summary": "What the API reads and answers, in `domain/models/`.",
+   "body": [
+    "What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:",
+    "`@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An",
+    "invalid body answers **400** with the reasons (below). `NewTask(title = \"x\")` builds one; optional fields (`T?`) may be",
+    "left out. In an answer an optional field is always there: one left empty is `null`, never absent, in the model,",
+    "in a model inside it and in the items of a list or a page (an entity's empty column is `null` too).",
+    "",
+    "**A value's JSON type is its field's: nothing is converted.** In a body each field takes only the JSON type of its",
+    "Nuclear type, and any other is refused with the rule `type`:"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.2fc802",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
    "summary": "`null` is only for an optional field (`T?`); for a required one the rule is `required`.",
    "body": [
-    "`null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the",
-    "character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field.",
+    "| Field | JSON it takes | Refused |",
+    "|---|---|---|",
+    "| `string` | a text | a number, `true` / `false` |",
+    "| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number), from -2^63 to 2^63 - 1 | a text (`\"30\"`), `true` / `false`, a number with a fraction, one beyond 64 bits |",
+    "| `double` | a finite number (`1.5`, `30`) | a text (`\"1.5\"`), `true` / `false`, one too large to be finite (`1e999`) |",
+    "| `boolean` | `true` / `false` | a text (`\"true\"`), a number (`1`) |",
+    "| `DateTime` | a text that is a date and time (`\"2026-03-04T05:06:07Z\"`) | a number, a text that is no date |",
+    "| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |",
     "",
-    "**A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in",
-    "UTF-8; another type, a form among them, answers **415** `unsupported media type`. A body larger than the app's",
-    "`maxBodySize` (§2.8, 1 MB by default) answers **413** `content too large`. JSON that cannot be read (not JSON, not",
-    "UTF-8, `NaN`, nested deeper than 512 levels) answers 400 with the rule `json`; an empty body, or `null`, is `required`;",
-    "one that is not an object is `type`."
+    "`null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the",
+    "character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field."
    ],
    "platforms": [
     "backend"
@@ -624,18 +673,11 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.5a2a6b",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.4058ff",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "around it.",
+   "summary": "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).",
    "body": [
-    "**A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks",
-    "around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`",
-    "a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`.",
-    "Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the",
-    "method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when",
-    "any is refused, the answer has the reason of each refused one, and the body is read only after they pass.",
-    "",
     "**A model built in code is checked like a body.** `NewTask(title = \"\")` breaks `@minLength(1)` and throws; a use",
     "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).",
     "",
@@ -662,27 +704,23 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.c0e7b0",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.c7783a",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "What the API reads and answers, in `domain/models/`.",
+   "summary": "UTF-8; another type, a form among them, answers 415 `unsupported media type`.",
    "body": [
-    "What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:",
-    "`@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An",
-    "invalid body answers **400** with the reasons (below). `NewTask(title = \"x\")` builds one; optional fields (`T?`) may be",
-    "left out.",
+    "**A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in",
+    "UTF-8; another type, a form among them, answers **415** `unsupported media type`. A body larger than the app's",
+    "`maxBodySize` (§2.8, 1 MB by default) answers **413** `content too large`. JSON that cannot be read (not JSON, not",
+    "UTF-8, `NaN`, nested deeper than 512 levels) answers 400 with the rule `json`; an empty body, or `null`, is `required`;",
+    "one that is not an object is `type`.",
     "",
-    "**A value's JSON type is its field's: nothing is converted.** In a body each field takes only the JSON type of its",
-    "Nuclear type, and any other is refused with the rule `type`:",
-    "",
-    "| Field | JSON it takes | Refused |",
-    "|---|---|---|",
-    "| `string` | a text | a number, `true` / `false` |",
-    "| `int` | a number without a fraction (`30`, `30.0`: JSON has one kind of number), from -2^63 to 2^63 - 1 | a text (`\"30\"`), `true` / `false`, a number with a fraction, one beyond 64 bits |",
-    "| `double` | a finite number (`1.5`, `30`) | a text (`\"1.5\"`), `true` / `false`, one too large to be finite (`1e999`) |",
-    "| `boolean` | `true` / `false` | a text (`\"true\"`), a number (`1`) |",
-    "| `DateTime` | a text that is a date and time (`\"2026-03-04T05:06:07Z\"`) | a number, a text that is no date |",
-    "| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |"
+    "**A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks",
+    "around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`",
+    "a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`.",
+    "Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the",
+    "method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when",
+    "any is refused, the answer has the reason of each refused one, and the body is read only after they pass."
    ],
    "platforms": [
     "backend"
@@ -1362,17 +1400,39 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.05b42b",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.0bf180",
    "type": "spec",
    "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "body": [
+    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |",
     "| `api/` | `@controller(\"tasks\") controller Name(deps)` | `@get(\"{id}\")`, `@post()`, `@status(201)`... (segments, no leading slash); a `Result` answers its value or the error's status; `guards = [Token(value = env(\"T\"))]` for its own token |",
     "| `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next(\"node\")` above the node it leaves |",
     "| `ai/states/` | state | the graph's state (`messages: Messages`) |",
     "| `events/` | `listener Name(deps)` | `@consumer(\"topic\")` methods; `~publish(\"topic\", value)` |",
     "| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = \"app.sqlite\"), Postgres(url = env(\"DATABASE_URL\", \"...\")), Redis(...), Kafka(...), Ollama(model = \"...\"), WebSocketServer(path = \"ws\")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"), header = \"X-Token\")]` (every route: headers only); `origins: string[] = [\"http://localhost:5173\"]` (the web apps whose browsers may call it, CORS); `maxBodySize: int` (bytes, default 1 MB), `maxPageSize: int` (rows of a page, default 100) |",
     "| `test/` | `tests Name` | `@test(\"...\")` methods, `inject<X>()`, `expect(cond)` |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.1e2c98",
+   "type": "spec",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "body": [
+    "| Where | Kind | What it is |",
+    "|---|---|---|",
+    "| `data/entities/` | entity | a table: `@entity(\"t\")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`); `@created()` / `@updated()` timestamps, with milliseconds |",
+    "| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})` (a client's search text: `icontains(text)`, never a `like` pattern), `orderBy`, `limit`, `relations(\"tasks\")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |",
+    "| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`; a value of another JSON type is refused (`\"30\"` is not an `int`); built in code (`NewTask(title = \"\")`) it is checked too and throws; an optional field left empty answers `null` |",
+    "| `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |",
+    "| `domain/services/` | `service Name(deps)` | rules several use cases share |"
    ],
    "platforms": [
     "backend"
@@ -1470,28 +1530,6 @@
     "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
     "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
     "from stdin); `nuclear run|build|test|check --env <name>`. A required one without a value: `nuclear run` refuses, `check --env` says N0312."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.f52a04",
-   "type": "spec",
-   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "body": [
-    "| Where | Kind | What it is |",
-    "|---|---|---|",
-    "| `data/entities/` | entity | a table: `@entity(\"t\")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`) |",
-    "| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})`, `orderBy`, `limit`, `relations(\"tasks\")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |",
-    "| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`; a value of another JSON type is refused (`\"30\"` is not an `int`); built in code (`NewTask(title = \"\")`) it is checked too and throws |",
-    "| `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |",
-    "| `domain/services/` | `service Name(deps)` | rules several use cases share |",
-    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |"
    ],
    "platforms": [
     "backend"

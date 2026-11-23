@@ -526,6 +526,145 @@
    }
   },
   {
+   "id": "lib:bigdouble",
+   "type": "library",
+   "title": "`bigdouble` — Nuclear's standard library",
+   "summary": "The members of `bigdouble` in Nuclear's standard library, the same in every dialect: abs, sign, round, floor, ceil, truncate, roundTo, toFixed, toInt, toDouble, toBigInt, compareTo, toString.",
+   "body": "Methods: `abs()` → the same type, `sign()` → int, `round()` → BigInt, `floor()` → BigInt, `ceil()` → BigInt, `truncate()` → BigInt, `roundTo()` → the same type, `toFixed()` → string, `toInt()` → int?, `toDouble()` → double, `toBigInt()` → BigInt, `compareTo()` → int, `toString()` → string.",
+   "keys": [
+    "bigdouble members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "bigdouble"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "abs",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "sign",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "round",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "floor",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "ceil",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "truncate",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "roundTo",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "toFixed",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "toInt",
+      "property": false,
+      "gives": "int?"
+     },
+     {
+      "name": "toDouble",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "toBigInt",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "compareTo",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "toString",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:bigint",
+   "type": "library",
+   "title": "`bigint` — Nuclear's standard library",
+   "summary": "The members of `bigint` in Nuclear's standard library, the same in every dialect: abs, sign, toInt, toDouble, toBigDouble, compareTo.",
+   "body": "Methods: `abs()` → the same type, `sign()` → int, `toInt()` → int?, `toDouble()` → double, `toBigDouble()` → BigDouble, `compareTo()` → int.",
+   "keys": [
+    "bigint members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "bigint"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "abs",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "sign",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "toInt",
+      "property": false,
+      "gives": "int?"
+     },
+     {
+      "name": "toDouble",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "toBigDouble",
+      "property": false,
+      "gives": "BigDouble"
+     },
+     {
+      "name": "compareTo",
+      "property": false,
+      "gives": "int"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
    "id": "lib:boolean",
    "type": "library",
    "title": "`boolean` — Nuclear's standard library",
@@ -1622,8 +1761,8 @@
    "id": "lib:number",
    "type": "library",
    "title": "`number` — Nuclear's standard library",
-   "summary": "The members of `number` in Nuclear's standard library, the same in every dialect: abs, sign, round, floor, ceil, truncate, toFixed, toInt, toDouble, toRadix.",
-   "body": "Methods: `abs()` → the same type, `sign()` → int, `round()` → int, `floor()` → int, `ceil()` → int, `truncate()` → int, `toFixed()` → string, `toInt()` → int, `toDouble()` → double, `toRadix()` → string.",
+   "summary": "The members of `number` in Nuclear's standard library, the same in every dialect: abs, sign, round, floor, ceil, truncate, toFixed, toInt, toDouble, toRadix, toBigInt, toBigDouble.",
+   "body": "Methods: `abs()` → the same type, `sign()` → int, `round()` → int, `floor()` → int, `ceil()` → int, `truncate()` → int, `toFixed()` → string, `toInt()` → int, `toDouble()` → double, `toRadix()` → string, `toBigInt()` → BigInt, `toBigDouble()` → BigDouble.",
    "keys": [
     "number members"
    ],
@@ -1685,6 +1824,16 @@
       "name": "toRadix",
       "property": false,
       "gives": "string"
+     },
+     {
+      "name": "toBigInt",
+      "property": false,
+      "gives": "BigInt"
+     },
+     {
+      "name": "toBigDouble",
+      "property": false,
+      "gives": "BigDouble"
      }
     ],
     "wrong": []
@@ -1831,11 +1980,11 @@
    "id": "lib:string",
    "type": "library",
    "title": "`string` — Nuclear's standard library",
-   "summary": "The members of `string` in Nuclear's standard library, the same in every dialect: length, isEmpty, codeAt, upper, lower, trim, trimStart, trimEnd, startsWith, endsWith, indexOf, lastIndexOf, substring, split, chars, replace, replaceAll, repeat, padStart, padEnd, toInt, toDouble, compareTo, toBytes.",
+   "summary": "The members of `string` in Nuclear's standard library, the same in every dialect: length, isEmpty, codeAt, upper, lower, trim, trimStart, trimEnd, startsWith, endsWith, indexOf, lastIndexOf, substring, split, chars, replace, replaceAll, repeat, padStart, padEnd, toInt, toDouble, toBigInt, toBigDouble, compareTo, toBytes.",
    "body": [
     "Properties (written without parentheses): `length` → int, `isEmpty` → boolean.",
     "",
-    "Methods: `codeAt()` → int, `upper()` → string, `lower()` → string, `trim()` → string, `trimStart()` → string, `trimEnd()` → string, `startsWith()` → boolean, `endsWith()` → boolean, `indexOf()` → int, `lastIndexOf()` → int, `substring()` → string, `split()` → string[], `chars()` → string[], `replace()` → string, `replaceAll()` → string, `repeat()` → string, `padStart()` → string, `padEnd()` → string, `toInt()` → int?, `toDouble()` → double?, `compareTo()` → int, `toBytes()` → Bytes.",
+    "Methods: `codeAt()` → int, `upper()` → string, `lower()` → string, `trim()` → string, `trimStart()` → string, `trimEnd()` → string, `startsWith()` → boolean, `endsWith()` → boolean, `indexOf()` → int, `lastIndexOf()` → int, `substring()` → string, `split()` → string[], `chars()` → string[], `replace()` → string, `replaceAll()` → string, `repeat()` → string, `padStart()` → string, `padEnd()` → string, `toInt()` → int?, `toDouble()` → double?, `toBigInt()` → BigIntOpt, `toBigDouble()` → BigDoubleOpt, `compareTo()` → int, `toBytes()` → Bytes.",
     "",
     "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
     "",
@@ -2013,6 +2162,16 @@
       "name": "toDouble",
       "property": false,
       "gives": "double?"
+     },
+     {
+      "name": "toBigInt",
+      "property": false,
+      "gives": "BigIntOpt"
+     },
+     {
+      "name": "toBigDouble",
+      "property": false,
+      "gives": "BigDoubleOpt"
      },
      {
       "name": "compareTo",

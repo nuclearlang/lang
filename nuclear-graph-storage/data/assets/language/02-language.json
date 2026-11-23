@@ -65,6 +65,25 @@
    ]
   },
   {
+   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#shapes.2c7c52",
+   "type": "reference",
+   "title": "NuclearLang brief (base language) — Shapes",
+   "summary": "a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
+   "body": [
+    "- Types: `string int double number boolean void`, exact `bigint bigdouble` (never mixed: `n.toBigInt()`), `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.",
+    "- Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `\"\"\"` multi-line.",
+    "- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block;",
+    "  a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
+    "- `Result<E, T>` (error first): `Ok(v)`, `Err(e)`; `x = f()` inside a function returning `Result` unwraps it and",
+    "  returns the `Err` by itself (`nuclear help results`).",
+    "- Comments `//`; the comment right above a declaration is its doc comment.",
+    "- Names: `PascalCase` = types and constructors, `camelCase` = the rest. No visibility words: everything is exported."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/brief/nuclear-base.md"
+   ]
+  },
+  {
    "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#shapes.9de52f",
    "type": "reference",
    "title": "NuclearLang brief (base language) — Shapes",
@@ -116,25 +135,6 @@
     "    _ -> \"user\"",
     "  print(kind, rest.length)",
     "```"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/brief/nuclear-base.md"
-   ]
-  },
-  {
-   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#shapes.d00db0",
-   "type": "reference",
-   "title": "NuclearLang brief (base language) — Shapes",
-   "summary": "a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
-   "body": [
-    "- Types: `string int double number boolean void`, `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.",
-    "- Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `\"\"\"` multi-line.",
-    "- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block;",
-    "  a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
-    "- `Result<E, T>` (error first): `Ok(v)`, `Err(e)`; `x = f()` inside a function returning `Result` unwraps it and",
-    "  returns the `Err` by itself (`nuclear help results`).",
-    "- Comments `//`; the comment right above a declaration is its doc comment.",
-    "- Names: `PascalCase` = types and constructors, `camelCase` = the rest. No visibility words: everything is exported."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/brief/nuclear-base.md"
@@ -455,6 +455,7 @@
     "| `repeat(n)` | `string` | |",
     "| `padStart(width, fill = \" \")` `padEnd(width, fill = \" \")` | `string` | |",
     "| `toInt()` `toDouble()` | `int?` `double?` | `null` when the text is not a number |",
+    "| `toBigInt()` `toBigDouble()` | `bigint?` `bigdouble?` | the exact number, `null` when the text is not one (§5.1) |",
     "| `compareTo(other)` | `int` | `< 0`, `0`, `> 0` |",
     "| `String.fromCodes(codes: int[])` | `string` | |",
     "",
@@ -653,7 +654,7 @@
    "id": "lang:nuclearlang/docs/07-reference/library.md#5-numbers-int-and-double",
    "type": "rule",
    "title": "The standard library of Nuclear — 5. Numbers: `int` and `double`",
-   "summary": "`Math`: `Math.pi`, `Math.e`, `Math.sqrt(x)`, `Math.cbrt(x)`, `Math.hypot(a, b)`, `Math.sin(x)`, `Math.cos(x)`, `Math.tan(x)`, `Math.asin(x)`, `Math.acos(x)`, `Math.atan(x)`, `Math.atan2(y, x)`, `Math.exp(x)`, `Math.log(x)`, `Math.log10(x)`, `Math.log2(x)`, `Math.min(a, b)`, `Math.max(a, b)`,…",
+   "summary": "`toBigInt()` and `toBigDouble()` of a number give its exact value (`2.5.toBigInt()` is `2`, toward zero; `0.1.toBigDouble()` is `0.1`, from the shortest text of the double); a `double` that is not finite is an error.",
    "body": [
     "| Member | Gives | Meaning |",
     "|---|---|---|",
@@ -662,14 +663,60 @@
     "| `round()` `floor()` `ceil()` `truncate()` | `int` | `round` is half away from zero |",
     "| `toFixed(digits)` | `string` | fixed decimals |",
     "| `toInt()` `toDouble()` `toString()` | | conversion |",
+    "| `toBigInt()` `toBigDouble()` | `bigint` `bigdouble` | the exact value (§5.1) |",
     "| `toRadix(base)` | `string` | `255.toRadix(16)` is `\"ff\"` |",
     "| `isNaN` `isFinite` | `boolean` | `double` |",
+    "",
+    "`toBigInt()` and `toBigDouble()` of a number give its exact value (`2.5.toBigInt()` is `2`, toward zero;",
+    "`0.1.toBigDouble()` is `0.1`, from the shortest text of the double); a `double` that is not finite is an error."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/library.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/library.md#5-numbers-int-and-double-5-1-the-exact-numbers-bigint-and-bigdouble.4e1f43",
+   "type": "rule",
+   "title": "The standard library of Nuclear — 5.1 The exact numbers: `bigint` and `bigdouble`",
+   "summary": "and digits; `text.toBigDouble()` (`bigdouble?`) also a decimal part and an exponent (`-0.5e2`); spaces around are ignored, any other text (`\"1.\"`, `\"1_000\"`, `\"abc\"`) gives `null`.",
+   "body": [
+    "**The check functions** are the parsing members of `string`: `text.toBigInt()` (`bigint?`) accepts an optional sign",
+    "and digits; `text.toBigDouble()` (`bigdouble?`) also a decimal part and an exponent (`-0.5e2`); spaces around are",
+    "ignored, any other text (`\"1.\"`, `\"1_000\"`, `\"abc\"`) gives `null`. A member of an exact number needs a receiver whose",
+    "type is known. Not theirs yet (`N0120`): `Math`, a `Set` of `bigdouble`, and the list members `sum`, `min`, `max`",
+    "(for `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`).",
     "",
     "`Math`: `Math.pi`, `Math.e`, `Math.sqrt(x)`, `Math.cbrt(x)`, `Math.hypot(a, b)`, `Math.sin(x)`, `Math.cos(x)`,",
     "`Math.tan(x)`, `Math.asin(x)`, `Math.acos(x)`, `Math.atan(x)`, `Math.atan2(y, x)`, `Math.exp(x)`, `Math.log(x)`,",
     "`Math.log10(x)`, `Math.log2(x)`, `Math.min(a, b)`, `Math.max(a, b)`, `Math.clamp(x, low, high)`, `Math.random()`",
     "(a `double` in `[0, 1)`). Powers are `**`, integer division `~/`, the rest as in [nuclear-base.md](nuclear-base.md)",
     "§6.1. Parsing is `\"42\".toInt()`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/library.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/library.md#5-numbers-int-and-double-5-1-the-exact-numbers-bigint-and-bigdouble.b88eeb",
+   "type": "rule",
+   "title": "The standard library of Nuclear — 5.1 The exact numbers: `bigint` and `bigdouble`",
+   "summary": "The rules of the types are in nuclear-base.md §5.1.",
+   "body": [
+    "The rules of the types are in [nuclear-base.md](nuclear-base.md) §5.1.",
+    "",
+    "| Member | `bigint` | `bigdouble` | Meaning |",
+    "|---|---|---|---|",
+    "| `abs()` | `bigint` | `bigdouble` | |",
+    "| `sign()` | `int` | `int` | `-1`, `0`, `1` |",
+    "| `round()` `floor()` `ceil()` `truncate()` | | `bigint` | `round` is half away from zero |",
+    "| `roundTo(digits)` | | `bigdouble` | rounded half away from zero to `digits` decimals |",
+    "| `toFixed(digits)` | | `string` | fixed decimals, rounded half away from zero |",
+    "| `toInt()` | `int?` | `int?` | toward zero; `null` outside ±(2^53 − 1), the integers every target holds |",
+    "| `toDouble()` | `double` | `double` | the nearest double |",
+    "| `toBigDouble()` | `bigdouble` | | exact |",
+    "| `toBigInt()` | | `bigint` | toward zero |",
+    "| `compareTo(other)` | `int` | `int` | `-1`, `0`, `1`; `other` of the same type (a literal takes it) |",
+    "| `toString()` | `string` | `string` | digits; the shortest exact text with at least one decimal (`2.0`) |"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/library.md"
@@ -689,9 +736,10 @@
    "id": "lang:nuclearlang/docs/07-reference/library.md#7-json",
    "type": "rule",
    "title": "The standard library of Nuclear — 7. `Json`",
-   "summary": "`Json.encode(value)` gives the JSON text of a value (models through their JSON form); `Json.decode(text)` gives `any` (maps, lists, strings, numbers, booleans, `null`).",
+   "summary": "`Json.encode(value)` gives the JSON text of a value (models through their JSON form; an exact number goes as the text of its `toString()`, §5.1); `Json.decode(text)` gives `any` (maps, lists, strings, numbers, booleans, `null`).",
    "body": [
-    "`Json.encode(value)` gives the JSON text of a value (models through their JSON form); `Json.decode(text)` gives",
+    "`Json.encode(value)` gives the JSON text of a value (models through their JSON form; an exact number goes as the text of",
+    "its `toString()`, §5.1); `Json.decode(text)` gives",
     "`any` (maps, lists, strings, numbers, booleans, `null`)."
    ],
    "sources": [
@@ -1919,6 +1967,7 @@
     "| Description | Types | Examples |",
     "|---|---|---|",
     "| native basics | `string`, `double`, `int`, `boolean` | num: double |",
+    "| exact numbers | `bigint`, `bigdouble` (§5.1) | id: bigint = 12345678901234567890 |",
     "| lists | `User[]` | num[] = [1, 2, 3] |",
     "| maps | `<Key, Value>` | users: <string, User> = {\"julian\": User(name = \"julian\"), \"other\": User(name = \"other\")} |",
     "| nullable | `?` | user: string? |",
@@ -1927,13 +1976,76 @@
     "Types are optional where the target can infer them (variables, lambda returns).",
     "",
     "The members of these types (`length`, `add`, `map`, `split`, `upper`...), `Math`, `Json`, `Regex`, `DateTime` and",
-    "the other objects of the base are Nuclear's own and the same in every dialect: [library.md](library.md).",
+    "the other objects of the base are Nuclear's own and the same in every dialect: [library.md](library.md)."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.5f35f2",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
+   "summary": "at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).",
+   "body": [
+    "- **Text**: `print`, `\"${x}\"` and `toString()` write a `bigint`'s digits and a `bigdouble`'s shortest exact text with",
+    "  at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).",
+    "- **JSON** has no exact number: an exact number goes as the text of `toString()` (`{ \"id\": id.toString() }`) and comes",
+    "  back with `toBigInt()` / `toBigDouble()`. `Json.encode` of a value known to hold one is `N0120`.",
+    "- Lists and maps of exact numbers compare their values (`==`, `!=`, `x in xs`), as every list does; a `Set` of",
+    "  `bigdouble` is not in the library yet (`N0120`).",
+    "- `x is bigint` and `x is bigdouble` do not exist (`N0120`): an exact number is kept in values of its own type.",
     "",
     "Maps:",
     "- The type is written `<Key, Value>` in any position: variable (`users: <string, User>`), parameter",
     "  (`f(scores: <string, int>)`), return (`get(name: string) <string, string>`), list (`<string, int>[]`) and",
     "  nullable (`<string, int>?`).",
     "- The value always goes between `{ }`: `{\"name\": \"julian\", \"last\": \"molina\"}`. Empty map: `{}`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.84392e",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
+   "summary": "A `bigint` is a whole number of any size; a `bigdouble` an exact decimal of any size and any number of decimals (`0.1 + 0.2 == 0.3`).",
+   "body": [
+    "A `bigint` is a whole number of any size; a `bigdouble` an exact decimal of any size and any number of decimals",
+    "(`0.1 + 0.2 == 0.3`). They give the same value and the same text in every dialect.",
+    "",
+    "```nuclear",
+    "total: bigint = 1",
+    "for i in 1..31",
+    "  total *= i.toBigInt()          // 265252859812191058636308480000000",
+    "price: bigdouble = 19.99",
+    "print(price * 3, price / 3)      // 59.97 6.66333333333333333333",
+    "```"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.b1be08",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
+   "summary": "them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the argument of `compareTo`.",
+   "body": [
+    "- **A literal takes the exact type of its place**: a name, a parameter or a return declared exact, a list declared of",
+    "  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the",
+    "  argument of `compareTo`. It is the exact value of its text. A decimal",
+    "  literal where a `bigint` goes is error `N0119`, and so is a whole literal beyond 2^53 − 1 in any other place.",
+    "- **Nothing converts silently**: an exact number never meets an `int`, a `double` or the other exact type in an",
+    "  operation, a declaration, an argument or a return (`N0119`). The conversions are written: `n.toBigInt()`,",
+    "  `n.toBigDouble()`, `big.toInt()` (`null` outside ±(2^53 − 1)), `big.toDouble()` (the nearest double)",
+    "  ([library.md](library.md) §5.1).",
+    "- **Operators**: `+`, `-`, `*`, `%`, `**`, `~/`, the comparisons and `==`. `%` is the remainder of `~/` (it has the",
+    "  dividend's sign); `~/` drops the decimals toward zero and gives a `bigint`. `bigint / bigint` does not exist (write",
+    "  `~/`, or convert both to `bigdouble`); `bigdouble / bigdouble` is rounded half away from zero to the larger of 20",
+    "  and the decimals of each side. The exponent of `**` is an `int` ≥ 0 (a negative one is an error when it runs).",
+    "  The bitwise operators are not theirs (`N0120`)."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/nuclear-base.md"
@@ -1969,7 +2081,7 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.58e9ea",
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.975be8",
    "type": "rule",
    "title": "NuclearLang — Base language v0.1 (draft) — 6.1 Operators (lowest to highest precedence)",
    "summary": "values (`[1, 2] == [1, 2]` is `true` in every dialect); two objects of a module, when they are the same object.",
@@ -1982,7 +2094,8 @@
     "- `x as Type` converts the type: `data = read(file) as <string, int>`.",
     "- `value!` asserts that the value is not null: `user.address!.city`. The `!` goes right after a name, `)` or",
     "  `]`. Before a value, `!` is an error: write `not`.",
-    "- `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). `%`, the bitwise operators and",
+    "- `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). The exact numbers have their own",
+    "  rules (§5.1). `%`, the bitwise operators and",
     "  the integer width are the target's: TypeScript's `%` keeps the dividend's sign and its bitwise operators work on",
     "  32 bits; Dart's `%` is never negative and its integers have 64 bits; Python's `%` has the divisor's sign and its",
     "  integers have no limit.",

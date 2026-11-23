@@ -8,9 +8,9 @@
    "id": "doc:nuclearlang/dialects/README.md#dialects",
    "type": "readme",
    "title": "Dialects",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run time.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run time.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)",
     "",
     "A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run",
     "time. The same `.nuc` is written once and each dialect turns it into its language or framework."
@@ -379,9 +379,9 @@
    "id": "doc:nuclearlang/dialects/dart/README.md#the-dart-dialect",
    "type": "readme",
    "title": "The `dart` dialect",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · Website How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) ![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) · Website How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)",
     "",
     "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings. Its framework dialect,",
     "`flutter`, generates the whole app of the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/README.md)."
@@ -463,6 +463,36 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/dependencies.md#libraries-the-flutter-output-is-written-against-adr-dart-0001.23f6bc",
+   "type": "context",
+   "title": "Dependencies of the `dart` dialect — Libraries the `flutter` output is written against (ADR-dart-0001)",
+   "summary": "Libraries the `flutter` output is written against (ADR-dart-0001)",
+   "body": [
+    "| Need | Library | Names imported automatically |",
+    "|---|---|---|",
+    "| Synapsis runtime | `synapsis` | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `SynapsisForm`, `SynapsisDialog`, `Popups`, `Translations`, `inject`... |",
+    "| State | `bloc` + `flutter_bloc` | `Cubit`, `Bloc`, `Emitter`, `BlocProvider`, `BlocBuilder`, `BlocListener`, `BlocConsumer`, `BlocSelector`, `MultiBlocProvider`... |",
+    "| Dependency injection | `get_it` | `GetIt` |",
+    "| Network | `dio` | `Dio`, `BaseOptions`, `Options`, `Response`, `Interceptor`, `DioException`, `CancelToken`, `FormData`... |",
+    "| Routes | `go_router` | `GoRouter`, `GoRoute`, `GoRouterState`... |",
+    "| JSON | `json_serializable` (generates the code) + `json_annotation` | `JsonSerializable`, `JsonKey`, `JsonEnum`, `JsonValue`... |",
+    "| `Result` | `fpdart` (`Either`, `Right`, `Left`) | from the `dart` dialect's `[auto_imports]` |",
+    "| `bigdouble` (ADR-lang-0015) | `decimal` 3.2 (`Decimal`) | from the `dart` dialect's `[auto_imports]`; the app's `pubspec.yaml` must list it (the platforms' step) |",
+    "| Connectivity, session | `connectivity_plus`, `flutter_secure_storage` | `Connectivity`, `FlutterSecureStorage`... |",
+    "| Local database | `hive_ce`, inside the runtime | |",
+    "| Tests | `flutter_test`, `mocktail`, `bloc_test`, `integration_test` | from the dialect's `[auto_imports]` |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/dependencies.md#libraries-the-flutter-output-is-written-against-adr-dart-0001.2eb37d",
    "type": "context",
    "title": "Dependencies of the `dart` dialect — Libraries the `flutter` output is written against (ADR-dart-0001)",
@@ -479,25 +509,11 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/dependencies.md#libraries-the-flutter-output-is-written-against-adr-dart-0001.db78a6",
+   "id": "doc:nuclearlang/dialects/dart/docs/02-architecture/dependencies.md#libraries-the-flutter-output-is-written-against-adr-dart-0001.e8d733",
    "type": "context",
    "title": "Dependencies of the `dart` dialect — Libraries the `flutter` output is written against (ADR-dart-0001)",
    "summary": "Libraries the `flutter` output is written against (ADR-dart-0001)",
-   "body": [
-    "| Need | Library | Names imported automatically |",
-    "|---|---|---|",
-    "| Synapsis runtime | `synapsis` | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `SynapsisForm`, `SynapsisDialog`, `Popups`, `Translations`, `inject`... |",
-    "| State | `bloc` + `flutter_bloc` | `Cubit`, `Bloc`, `Emitter`, `BlocProvider`, `BlocBuilder`, `BlocListener`, `BlocConsumer`, `BlocSelector`, `MultiBlocProvider`... |",
-    "| Dependency injection | `get_it` | `GetIt` |",
-    "| Network | `dio` | `Dio`, `BaseOptions`, `Options`, `Response`, `Interceptor`, `DioException`, `CancelToken`, `FormData`... |",
-    "| Routes | `go_router` | `GoRouter`, `GoRoute`, `GoRouterState`... |",
-    "| JSON | `json_serializable` (generates the code) + `json_annotation` | `JsonSerializable`, `JsonKey`, `JsonEnum`, `JsonValue`... |",
-    "| `Result` | `fpdart` (`Either`, `Right`, `Left`) | from the `dart` dialect's `[auto_imports]` |",
-    "| Connectivity, session | `connectivity_plus`, `flutter_secure_storage` | `Connectivity`, `FlutterSecureStorage`... |",
-    "| Local database | `hive_ce`, inside the runtime | |",
-    "| Tests | `flutter_test`, `mocktail`, `bloc_test`, `integration_test` | from the dialect's `[auto_imports]` |",
-    "| AI (plugin `genkit`) | Genkit Dart (`genkit`, `schemantic`) and a provider package | [flutter.md](flutter.md), Plugins |"
-   ],
+   "body": "| AI (plugin `genkit`) | Genkit Dart (`genkit`, `schemantic`) and a provider package | [flutter.md](flutter.md), Plugins |",
    "agents": false,
    "sources": [
     "nuclearlang/dialects/dart/docs/02-architecture/dependencies.md"
@@ -2290,6 +2306,58 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#4-equivalences-exact-numbers-base-5-1",
+   "type": "spec",
+   "title": "Dialect `dart` — Exact numbers (base §5.1)",
+   "summary": "`bigint` is `BigInt`; `bigdouble` is `Decimal` of `package:decimal` (imported when used; the app depends on the package).",
+   "body": [
+    "`bigint` is `BigInt`; `bigdouble` is `Decimal` of `package:decimal` (imported when used; the app depends on the package). `%` is `remainder` (the dividend's sign); `/` of two `Decimal` is `_decDiv`, Nuclear's rounding; a decimal is printed by `_decText` (its `.0`).",
+    "",
+    "```nuclear",
+    "total(prices: bigdouble[], tax: bigdouble) bigdouble",
+    "  sum: bigdouble = 0",
+    "  for p in prices",
+    "    sum += p",
+    "  sum * (1 + tax) / 3",
+    "",
+    "scaled(n: int, text: string) bigint",
+    "  huge: bigint = 12345678901234567890",
+    "  parsed = text.toBigInt() ?? 0",
+    "  huge * n.toBigInt() ~/ 7 + parsed % 10",
+    "",
+    "show(price: bigdouble) void",
+    "  print(price, price.toFixed(2), price.toInt())",
+    "```",
+    "",
+    "```dart",
+    "Decimal total(List<Decimal> prices, Decimal tax) {",
+    "  Decimal sum = Decimal.parse('0');",
+    "  for (final p in prices) {",
+    "    sum = sum + p;",
+    "  }",
+    "  return _decDiv(sum * (Decimal.parse('1') + tax), Decimal.parse('3'));",
+    "}",
+    "BigInt scaled(int n, String text) {",
+    "  final BigInt huge = BigInt.parse('12345678901234567890');",
+    "  final parsed = _toBigInt(text) ?? BigInt.from(0);",
+    "  return huge * BigInt.from(n) ~/ BigInt.from(7) + parsed.remainder(BigInt.from(10));",
+    "}",
+    "void show(Decimal price) {",
+    "  print([_decText(price), price.toStringAsFixed(2), _bigToInt(price.toBigInt())].join(' '));",
+    "}",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/dart.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#4-equivalences-function-aliases-base-4-1-2",
    "type": "spec",
    "title": "Dialect `dart` — Function aliases (base §4.1.2)",
@@ -3791,9 +3859,9 @@
    "id": "doc:nuclearlang/dialects/python/README.md#the-python-dialect",
    "type": "readme",
    "title": "The `python` dialect",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · Website How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · Website How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)",
     "",
     "How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`. Its framework dialect,",
     "`fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md) of Synapsis."
@@ -5734,6 +5802,54 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-exact-numbers-base-5-1",
+   "type": "spec",
+   "title": "Dialect `python` — Exact numbers (base §5.1)",
+   "summary": "`bigint` is `int`; `bigdouble` is `Decimal`, computed in the context `_EXACT` (no rounding: the default context keeps 28 digits) of the dialect's runtime (`templates/bigdouble.tpl`).",
+   "body": [
+    "`bigint` is `int`; `bigdouble` is `Decimal`, computed in the context `_EXACT` (no rounding: the default context keeps 28 digits) of the dialect's runtime (`templates/bigdouble.tpl`). `~/` is `_idiv` and `%` is `_big_rem` (toward zero, as the other targets); a decimal is printed by `_dec_text`.",
+    "",
+    "```nuclear",
+    "total(prices: bigdouble[], tax: bigdouble) bigdouble",
+    "  sum: bigdouble = 0",
+    "  for p in prices",
+    "    sum += p",
+    "  sum * (1 + tax) / 3",
+    "",
+    "scaled(n: int, text: string) bigint",
+    "  huge: bigint = 12345678901234567890",
+    "  parsed = text.toBigInt() ?? 0",
+    "  huge * n.toBigInt() ~/ 7 + parsed % 10",
+    "",
+    "show(price: bigdouble) void",
+    "  print(price, price.toFixed(2), price.toInt())",
+    "```",
+    "",
+    "```python",
+    "def total(prices: list[Decimal], tax: Decimal) -> Decimal:",
+    "    sum_: Decimal = Decimal(\"0\")",
+    "    for p in prices:",
+    "        sum_ = _EXACT.add(sum_, p)",
+    "    return _dec_div(_EXACT.multiply(sum_, _EXACT.add(Decimal(\"1\"), tax)), Decimal(\"3\"))",
+    "def scaled(n: int, text: str) -> int:",
+    "    huge: int = 12345678901234567890",
+    "    parsed = _coalesce(_to_bigint(text), lambda: 0)",
+    "    return _idiv(huge * int(n), 7) + _big_rem(parsed, 10)",
+    "def show(price: Decimal) -> None:",
+    "    _print(_dec_text(price), _dec_fixed(price, 2), _big_to_int(int(price)))",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/python.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#4-the-standard-library.630396",
    "type": "spec",
    "title": "Dialect `python` — 4. The standard library",
@@ -6084,9 +6200,9 @@
    "id": "doc:nuclearlang/dialects/typescript/README.md#the-typescript-dialect",
    "type": "readme",
    "title": "The `typescript` dialect",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website How Nuclear is written in…",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · Website How Nuclear is…",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/typescript/reference/typescript)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/typescript/reference/typescript)",
     "",
     "How Nuclear is written in TypeScript: TypeScript 5 with ES modules that passes `tsc --strict`. Its framework",
     "dialects write `react` for the [web platform](../../../nuclear-synapsis-framework/platforms/web/README.md) and",
@@ -7950,6 +8066,58 @@
     "export class Cart {",
     "  /** Number of products. */",
     "  items: number = 0;",
+    "}",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/typescript.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#4-equivalences-exact-numbers-base-5-1",
+   "type": "spec",
+   "title": "Dialect `typescript` — Exact numbers (base §5.1)",
+   "summary": "`bigint` is TypeScript's `bigint` (a literal gets `n`); `bigdouble` is the class `BigDouble` of the dialect's runtime (`templates/bigdouble.tpl`, written once in a file that uses the type: an exact decimal on a `bigint`), whose methods write the operators (`plus`, `times`, `div`, `cmp`...).",
+   "body": [
+    "`bigint` is TypeScript's `bigint` (a literal gets `n`); `bigdouble` is the class `BigDouble` of the dialect's runtime (`templates/bigdouble.tpl`, written once in a file that uses the type: an exact decimal on a `bigint`), whose methods write the operators (`plus`, `times`, `div`, `cmp`...).",
+    "",
+    "```nuclear",
+    "total(prices: bigdouble[], tax: bigdouble) bigdouble",
+    "  sum: bigdouble = 0",
+    "  for p in prices",
+    "    sum += p",
+    "  sum * (1 + tax) / 3",
+    "",
+    "scaled(n: int, text: string) bigint",
+    "  huge: bigint = 12345678901234567890",
+    "  parsed = text.toBigInt() ?? 0",
+    "  huge * n.toBigInt() ~/ 7 + parsed % 10",
+    "",
+    "show(price: bigdouble) void",
+    "  print(price, price.toFixed(2), price.toInt())",
+    "```",
+    "",
+    "```typescript",
+    "export function total(prices: BigDouble[], tax: BigDouble): BigDouble {",
+    "  let sum: BigDouble = BigDouble.of('0');",
+    "  for (const p of prices) {",
+    "    sum = sum.plus(p);",
+    "  }",
+    "  return sum.times(BigDouble.of('1').plus(tax)).div(BigDouble.of('3'));",
+    "}",
+    "export function scaled(n: number, text: string): bigint {",
+    "  const huge: bigint = 12345678901234567890n;",
+    "  const parsed = _toBigInt(text) ?? 0n;",
+    "  return (huge * BigInt(Math.trunc(n))) / 7n + parsed % 10n;",
+    "}",
+    "export function show(price: BigDouble): void {",
+    "  console.log(String(price), price.toFixed(2), (_bigToInt(price.toBigInt()) ?? null));",
     "}",
     "```"
    ],

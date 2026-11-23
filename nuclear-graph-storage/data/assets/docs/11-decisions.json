@@ -2692,7 +2692,7 @@
     "- [x] T5.1 Reinstalled from the tree (`installer/install.sh`); the AI services run on the renamed code. The VS Code",
     "      extension was built and packaged, not installed: its version must be raised first.",
     "- [x] T5.2 Publish the website from this repository: the `nuclearlang.github.io` repository holds only the",
-    "      workflow that builds `website/` of `nuclearlang/lang` (its roadmap in `website/`).",
+    "      workflow that builds `website/` of `nuclearlang/nuclearlang` (its roadmap in `website/`).",
     "- [x] T5.3 The repositories that are now folders are archived (2026-11-16): `dragonfly`, `dragonfly-web`,",
     "      `dragonfly-mobile`, `dragonfly-backend`, `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-developer`,",
     "      `nuclear-knowledge`, `nuclear-graph`. Not archived: `nuclear-zed` (the grammar `extensions/zed/extension.toml`",
@@ -8164,6 +8164,31 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.2cbb75",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
+   "summary": "What is hard, and the proposals",
+   "body": [
+    "| Today | Where | Why it is hard | Proposal |",
+    "|---|---|---|---|",
+    "| repository `lang` | github.com/nuclearlang/nuclearlang | generic: \"nuclearlang/nuclearlang\" says \"lang\" twice, and a search for the project finds nothing by the repo's name | rename to `nuclearlang/nuclearlang` (GitHub redirects the old URL, clones keep working) |",
+    "| folder `nuclearlang/` inside the repository | the tree | the repository and one folder have the same name | `language/` (or `compiler/`) |",
+    "| `nuclear-synapsis-framework/` | the tree | long; \"nuclear\" and \"framework\" add nothing | `synapsis/` |",
+    "| `nuclear-graph-storage/`, command `nuclear-graph`, product \"the Smart Graph\", chat \"Nuclear Atlas\" | the tree, the CLI, the docs, the editor | four names for two things (the knowledge base, the chat that asks it) | the knowledge base is **Nuclear Graph** everywhere (folder `graph/`, command `nuclear-graph`); the chat stays **Atlas** |",
+    "| `nuclear-agents/nuclear_developer`, \"Nuclear Developer\", port 7879 | the tree, the docs | underscore and hyphen in the same path; \"Developer\" reads as a person | folder `agents/`; the product **Nuclear Agents** (the local agents) |",
+    "| `tools/code_generator`, crate `nuclear-codegen`, commands `gen`/`make` | the tree | three names; underscore | folder `tools/codegen/` |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/naming.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.439c9f",
    "type": "spec",
    "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
@@ -8195,31 +8220,6 @@
     "| the themes **Chernobyl** and **Chernobyl Soft** | the editors, the website | a real disaster that killed people: press and companies may find it in bad taste, and it ties the brand to danger at launch | rename to a name of the same palette without the tragedy (e.g. **Isotope** and **Isotope Soft**, or **Radium**); the old theme ids keep working |",
     "| the radioactive mark ☢ | the logo | strong and recognizable, but a hazard sign | keep (it is the brand), soften with the green glow already used; never paired with disaster imagery |",
     "| \"dialect\" | the docs | accurate but uncommon for \"target\" | keep in the docs; the website's first pages say \"target (dialect)\" once |"
-   ],
-   "agents": false,
-   "sources": [
-    "docs/04-specs/019-launch-and-growth/naming.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/04-specs/019-launch-and-growth/naming.md#what-is-hard-and-the-proposals.e02fea",
-   "type": "spec",
-   "title": "Spec 019: Launch and growth — The names — What is hard, and the proposals",
-   "summary": "What is hard, and the proposals",
-   "body": [
-    "| Today | Where | Why it is hard | Proposal |",
-    "|---|---|---|---|",
-    "| repository `lang` | github.com/nuclearlang/lang | generic: \"nuclearlang/lang\" says \"lang\" twice, and a search for the project finds nothing by the repo's name | rename to `nuclearlang/nuclearlang` (GitHub redirects the old URL, clones keep working) |",
-    "| folder `nuclearlang/` inside the repository | the tree | the repository and one folder have the same name | `language/` (or `compiler/`) |",
-    "| `nuclear-synapsis-framework/` | the tree | long; \"nuclear\" and \"framework\" add nothing | `synapsis/` |",
-    "| `nuclear-graph-storage/`, command `nuclear-graph`, product \"the Smart Graph\", chat \"Nuclear Atlas\" | the tree, the CLI, the docs, the editor | four names for two things (the knowledge base, the chat that asks it) | the knowledge base is **Nuclear Graph** everywhere (folder `graph/`, command `nuclear-graph`); the chat stays **Atlas** |",
-    "| `nuclear-agents/nuclear_developer`, \"Nuclear Developer\", port 7879 | the tree, the docs | underscore and hyphen in the same path; \"Developer\" reads as a person | folder `agents/`; the product **Nuclear Agents** (the local agents) |",
-    "| `tools/code_generator`, crate `nuclear-codegen`, commands `gen`/`make` | the tree | three names; underscore | folder `tools/codegen/` |"
    ],
    "agents": false,
    "sources": [
@@ -8666,7 +8666,27 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.2a70c5",
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.2b0864",
+   "type": "spec",
+   "title": "Spec 019: Launch and growth — Tasks — Phase 2 — Presentable",
+   "summary": "Collective accounts.",
+   "body": [
+    "- [ ] T2.9 agent: `FUNDING.yml`, `CITATION.cff`, `TRADEMARKS.md`, `PRIVACY.md`. user: open GitHub Sponsors and Open",
+    "      Collective accounts.",
+    "- [ ] T2.10 user (decisions): each line of [naming.md](naming.md). agent: the renames decided, one release."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/019-launch-and-growth/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.acf4c3",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Tasks — Phase 2 — Presentable",
    "summary": "repositories (0 stars, 0 forks, moved into `lang`): `gh repo delete nuclearlang/<name> --yes` (the agent's permission mode does not allow deleting repositories).",
@@ -8683,29 +8703,9 @@
     "      `CONTRIBUTING.md` with the DCO.",
     "- [x] T2.7 agent: topics (14), description, Discussions on, private vulnerability reporting on (2026-11-20).",
     "      user: upload the social preview image (`github-profile/profile/assets/social-preview.png`, 1280×640, made)",
-    "      in github.com/nuclearlang/lang → Settings → Social preview (no API).",
+    "      in github.com/nuclearlang/nuclearlang → Settings → Social preview (no API).",
     "- [ ] T2.8 agent: labels done (`good first issue`, `help wanted`, `dialect`, `platform`, `docs`, `rfc`); left: the first ten",
     "      `good first issue` issues, each with what, where and how to test."
-   ],
-   "agents": false,
-   "sources": [
-    "docs/04-specs/019-launch-and-growth/tasks.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-2-presentable.2b0864",
-   "type": "spec",
-   "title": "Spec 019: Launch and growth — Tasks — Phase 2 — Presentable",
-   "summary": "Collective accounts.",
-   "body": [
-    "- [ ] T2.9 agent: `FUNDING.yml`, `CITATION.cff`, `TRADEMARKS.md`, `PRIVACY.md`. user: open GitHub Sponsors and Open",
-    "      Collective accounts.",
-    "- [ ] T2.10 user (decisions): each line of [naming.md](naming.md). agent: the renames decided, one release."
    ],
    "agents": false,
    "sources": [
@@ -8739,7 +8739,7 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.c2404f",
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.780f13",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
    "summary": "OIDC login).",
@@ -8753,7 +8753,7 @@
     "- [ ] T3.4 agent: Homebrew tap, Scoop bucket, winget manifest, AUR package, updated by the release.",
     "- [ ] T3.5 Open VSX namespace verified (EclipseFdn/open-vsx.org#16010, done 2026-11-20); release.yml publishes with",
     "      trusted publishing once the secret is gone (done). Left, user: register the trusted publisher on open-vsx.org",
-    "      (nuclearlang/lang, release.yml), delete `OVSX_PAT`.",
+    "      (nuclearlang/nuclearlang, release.yml), delete `OVSX_PAT`.",
     "- [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).",
     "- [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact",
     "      attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).",
@@ -10520,7 +10520,7 @@
    "body": [
     "9. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads",
     "   anything from the internet. If a bundled asset is missing (a broken install), the extension says so and, as a",
-    "   contingency, takes it from the release of its own version on GitHub (nuclearlang/lang), checked against the",
+    "   contingency, takes it from the release of its own version on GitHub (nuclearlang/nuclearlang), checked against the",
     "   release's checksum, kept in its storage."
    ],
    "agents": false,
@@ -20988,6 +20988,152 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#consequences",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — Consequences",
+   "summary": "strict typing finds every mix at compile time.",
+   "body": [
+    "- Positive: the same exact values and the same text in the three targets (`examples/conformance/big_numbers.nuc`);",
+    "  strict typing finds every mix at compile time.",
+    "- Negative: a Dart app depends on `package:decimal`; TypeScript files that use `bigdouble` carry the class; several",
+    "  list members, JSON and the platforms' columns wait for their step (`docs/01-product/roadmap.md`)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — Context and problem",
+   "summary": "Nuclear had two number types, `int` and `double`, and both are the target's: TypeScript holds whole numbers exactly only up to 2^53 − 1, and every target's `double` is binary (`0.1 + 0.2 != 0.3`).",
+   "body": [
+    "Nuclear had two number types, `int` and `double`, and both are the target's: TypeScript holds whole numbers exactly",
+    "only up to 2^53 − 1, and every target's `double` is binary (`0.1 + 0.2 != 0.3`). Money, identifiers of 64 bits,",
+    "counters and big factorials had no type that gives the same exact value in every target. The user decided on",
+    "2026-11-23: \"create the data types `bigint` and `bigdouble` in Nuclear, and add the check functions for those types.",
+    "Yes, exact types.\""
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#decision.8f8d20",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — Decision",
+   "summary": "1. Two base types.",
+   "body": [
+    "1. **Two base types.** `bigint`: a whole number of any size (TypeScript `bigint`, Dart `BigInt`, Python `int`).",
+    "   `bigdouble`: an exact decimal of any size and any number of decimals (Python `decimal.Decimal` computed in a",
+    "   context with no rounding, Dart `Decimal` of `package:decimal`, TypeScript a class of the dialect's own runtime).",
+    "2. **No new literal syntax.** A literal takes the exact type of its place (a typed name, a parameter, a return, a",
+    "   list declared of them, the other side of an operator): `x: bigint = 12345678901234567890`, `big + 1`,",
+    "   `price: bigdouble = 19.99`. It is written from its text, never through a binary number. A decimal literal where a",
+    "   `bigint` goes, and a whole literal beyond 2^53 − 1 anywhere else, are errors (N0119).",
+    "3. **Strict: no silent conversion.** An exact number never mixes with `int`, `double` or the other exact type",
+    "   (N0119); conversions are written: `toBigInt()`, `toBigDouble()`, `toInt()` (`null` outside ±(2^53 − 1), the",
+    "   integers every target's `int` holds), `toDouble()` (the nearest double).",
+    "4. **Operators**: `+ - * % ** ~/`, comparisons and `==` with the same meaning in every target. `%` is the remainder",
+    "   of `~/` (the dividend's sign). `/` of two `bigint` does not exist (N0120); `/` of two `bigdouble` is rounded half"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#decision.d52ddf",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — Decision",
+   "summary": "away from zero to the larger of 20 and the decimals of each side.",
+   "body": [
+    "away from zero to the larger of 20 and the decimals of each side. The exponent of `**` is an `int` ≥ 0.",
+    "5. **Text**: a `bigint` prints its digits; a `bigdouble` its shortest exact text with at least one decimal (`0.3`,",
+    "   `2.0`), never an exponent, as `double` prints. Parsing (`text.toBigInt()`, `text.toBigDouble()`) accepts the same",
+    "   texts everywhere and gives `null` for any other: these are the check functions, in the shape of `text.toInt()`.",
+    "6. **JSON** has no exact number (a JavaScript parser rounds beyond 2^53): an exact number travels as the text of",
+    "   `toString()` and is read back with `toBigInt()` / `toBigDouble()`. `Json.encode` of a value known to hold one is",
+    "   N0120. The platforms' models will write and read their exact fields this way.",
+    "7. Lists and maps of exact numbers compare values with `==`, `!=` and `in` in every target (TypeScript's decimal",
+    "   needs the dialect's value comparison). Not theirs, refused with N0120 until each one is the same in every target:",
+    "   the bitwise operators, `is bigint` / `is bigdouble` (in Python an exact whole number is a plain `int`), `Math`, a",
+    "   `Set` of `bigdouble`, and the list members that compare or add the elements (`sum`, `min`, `max`; for",
+    "   `bigdouble` also `sorted`, `sort`, `unique`, `indexOf`, `lastIndexOf`, `remove`)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#options-considered",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — Options considered",
+   "summary": "1. Literals by place (chosen): the smallest rule, no new token, and the place already says the type.",
+   "body": [
+    "1. Literals by place (chosen): the smallest rule, no new token, and the place already says the type.",
+    "2. A suffix (`123n`, `0.1d`): a new lexical form, and `total + 1` would still need one on every literal.",
+    "3. Automatic widening (`int` → `bigint`): short, but a `double` → `bigdouble` widening would bring the binary error",
+    "   in, and the user asked for strict types.",
+    "4. TypeScript with `decimal.js`: its precision applies to `+ - *` too (20 significant digits by default, a global",
+    "   setting) and its rounding differs from the other targets; `big.js` is not a dependency of the dialect. A",
+    "   minimal decimal on the native `bigint` (about 150 lines, written once per file that uses it, like the `Result`",
+    "   runtime) gives exactly the rules above."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/03-adr/0015-exact-numbers.md#references",
+   "type": "adr",
+   "title": "ADR-lang-0015: The exact numbers `bigint` and `bigdouble` — References",
+   "summary": "diagnostics N0119 and N0120: `docs/07-reference/diagnostics.md`; the equivalences: each language dialect's reference.",
+   "body": [
+    "- The rules: `docs/07-reference/nuclear-base.md` §5.1; the members: `docs/07-reference/library.md` §5.1; the",
+    "  diagnostics N0119 and N0120: `docs/07-reference/diagnostics.md`; the equivalences: each language dialect's",
+    "  reference."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.2b2e31",
    "type": "adr",
    "title": "Architecture Decision Records — the language",
@@ -21014,12 +21160,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.45e1bb",
+   "id": "doc:nuclearlang/docs/03-adr/README.md#architecture-decision-records-the-language.4b489b",
    "type": "adr",
    "title": "Architecture Decision Records — the language",
    "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
    "body": [
     "| [0014](0014-the-kind-writes-the-super-call.md) | An override of a method the type definitions mark `must_call_super` gets the call to the overridden method from the transpiler; the user does not write it | accepted | 2026-11-23 |",
+    "| [0015](0015-exact-numbers.md) | The exact numbers `bigint` and `bigdouble`: literals by place, no silent conversion, the same operators, text and parsing in every target; JSON as text | accepted | 2026-11-23 |",
     "",
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."

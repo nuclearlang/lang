@@ -373,9 +373,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#synapsis-web",
    "type": "readme",
    "title": "Synapsis web",
-   "summary": "![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website Single-page apps in the browser, written in Nuclear with the same words as the mobile platform, and built today with the `react` dialect on the runtime `synapsis-web`.",
+   "summary": "![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · Website Single-page apps in the browser, written in Nuclear with the same words as the mobile platform, and built today with the `react` dialect on the runtime `synapsis-web`.",
    "body": [
-    "[![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms/web)",
+    "[![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms/web)",
     "",
     "Single-page apps in the browser, written in Nuclear with the same words as the mobile platform, and built today with",
     "the `react` dialect on the runtime `synapsis-web`."
@@ -621,15 +621,19 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.08daaa",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.201f4e",
    "type": "context",
    "title": "Dependencies — Inside the tree",
-   "summary": "The package names the tree as its repository (`nuclearlang/lang`, `package.json` `repository` and `bugs`).",
+   "summary": "Inside the tree",
    "body": [
-    "| The installer | `platform.toml`, `docs/07-reference/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-web` first |",
-    "| The website of NuclearLang | this platform | a Synapsis web project | `website/` of this tree |",
-    "",
-    "The package names the tree as its repository (`nuclearlang/lang`, `package.json` `repository` and `bugs`)."
+    "| Who | Depends on | How | Notes |",
+    "|---|---|---|---|",
+    "| The dialect `react` | `platform.toml` | data, merged by the loader | `platform = \"web\"` in its `dialect.toml` |",
+    "| A built web app | `synapsis-web` | a library | the dialect's `[toolchain] install` installs it from the installation's `packages/`, as a copy |",
+    "| The compiler and the editors | the type definitions of the runtime and of the libraries a view uses | `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/` | generated from `nuclearlang/tools/node/node_modules` ([runbook](../06-runbooks/change-the-runtime.md)) |",
+    "| The check | `nuclearlang/tools/node/node_modules`, the `nuclear` command (`cargo run -p nuclear-cli`) | tools | the versions the check and the type definitions are made with are those installed there (`package.json`) |",
+    "| The compiler's tests | `examples/examples-web/characters/` and `examples/expected/characters/` | a golden | `nuclearlang/crates/nuclear-transpile/tests/projects.rs` |",
+    "| A web project | a backend's contract | generated models and repositories (`contracts(...)` in `config.nuc`) | ADR-synapsis-0006; [the backend platform's guide](../../../backend/docs/08-guides/contracts.md) |"
    ],
    "platforms": [
     "web"
@@ -644,19 +648,15 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.201f4e",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.634027",
    "type": "context",
    "title": "Dependencies — Inside the tree",
-   "summary": "Inside the tree",
+   "summary": "The package names the tree as its repository (`nuclearlang/nuclearlang`, `package.json` `repository` and `bugs`).",
    "body": [
-    "| Who | Depends on | How | Notes |",
-    "|---|---|---|---|",
-    "| The dialect `react` | `platform.toml` | data, merged by the loader | `platform = \"web\"` in its `dialect.toml` |",
-    "| A built web app | `synapsis-web` | a library | the dialect's `[toolchain] install` installs it from the installation's `packages/`, as a copy |",
-    "| The compiler and the editors | the type definitions of the runtime and of the libraries a view uses | `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/` | generated from `nuclearlang/tools/node/node_modules` ([runbook](../06-runbooks/change-the-runtime.md)) |",
-    "| The check | `nuclearlang/tools/node/node_modules`, the `nuclear` command (`cargo run -p nuclear-cli`) | tools | the versions the check and the type definitions are made with are those installed there (`package.json`) |",
-    "| The compiler's tests | `examples/examples-web/characters/` and `examples/expected/characters/` | a golden | `nuclearlang/crates/nuclear-transpile/tests/projects.rs` |",
-    "| A web project | a backend's contract | generated models and repositories (`contracts(...)` in `config.nuc`) | ADR-synapsis-0006; [the backend platform's guide](../../../backend/docs/08-guides/contracts.md) |"
+    "| The installer | `platform.toml`, `docs/07-reference/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-web` first |",
+    "| The website of NuclearLang | this platform | a Synapsis web project | `website/` of this tree |",
+    "",
+    "The package names the tree as its repository (`nuclearlang/nuclearlang`, `package.json` `repository` and `bugs`)."
    ],
    "platforms": [
     "web"
@@ -1862,9 +1862,9 @@
    "id": "doc:website/README.md#nuclearlang-website",
    "type": "readme",
    "title": "NuclearLang website",
-   "summary": "![website](https://github.com/nuclearlang/lang/actions/workflows/website.yml) · Website The site of NuclearLang: it shows in a minute what NuclearLang gives and publishes every project's documentation.",
+   "summary": "![website](https://github.com/nuclearlang/nuclearlang/actions/workflows/website.yml) · Website The site of NuclearLang: it shows in a minute what NuclearLang gives and publishes every project's documentation.",
    "body": [
-    "[![website](https://github.com/nuclearlang/lang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/website.yml) · [Website](https://nuclearlang.github.io)",
+    "[![website](https://github.com/nuclearlang/nuclearlang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/website.yml) · [Website](https://nuclearlang.github.io)",
     "",
     "The site of NuclearLang: it shows in a minute what NuclearLang gives and publishes every project's documentation. It",
     "is itself a Synapsis web app written in Nuclear (dialect `react`)."

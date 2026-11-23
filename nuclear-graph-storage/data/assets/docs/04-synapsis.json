@@ -260,9 +260,9 @@
    "id": "doc:nuclear-synapsis-framework/README.md#synapsis",
    "type": "readme",
    "title": "Synapsis",
-   "summary": "![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website The…",
+   "summary": "![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) ![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml)…",
    "body": [
-    "[![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/synapsis/guide/README)",
+    "[![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/synapsis/guide/README)",
     "",
     "The framework of NuclearLang, as Actix is Rust's: you write an app, a backend or a web app in Nuclear on one of",
     "three platforms (`mobile`, `backend`, `web`), and a dialect turns it into Flutter, FastAPI, NestJS or React."
@@ -2989,12 +2989,35 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.5f3563",
+   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.bcbf22",
    "type": "readme",
    "title": "Nuclear's helpers of lodash",
-   "summary": "![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml) (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written once in Nuclear.",
+   "summary": "nuclear-synapsis-framework/lodash/check.sh `AGENTS.md` to change it.",
    "body": [
-    "[![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/language.yml)",
+    "```sh",
+    "nuclear-synapsis-framework/lodash/check.sh",
+    "# ok    checker typescript ... ok    array typescript (72 cases) ... ok    string python (57 cases)",
+    "```",
+    "",
+    "**Where to read next.** [The functions](docs/07-reference/functions.md), [what is pending](docs/01-product/roadmap.md),",
+    "[`AGENTS.md`](AGENTS.md) to change it."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/lodash/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.e1b05b",
+   "type": "readme",
+   "title": "Nuclear's helpers of lodash",
+   "summary": "![language](https://github.com/nuclearlang/nuclearlang/actions/workflows/language.yml) (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written once in Nuclear.",
+   "body": [
+    "[![language](https://github.com/nuclearlang/nuclearlang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/language.yml)",
     "",
     "**What it is.** 117 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions",
     "(`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written",
@@ -3011,29 +3034,6 @@
     "MIT-licensed work of the OpenJS Foundation and its contributors; this library copies none of its source.",
     "",
     "**Try it.**"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/lodash/README.md"
-   ],
-   "meta": {
-    "section": "04-synapsis",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/lodash/README.md#nuclear-s-helpers-of-lodash.bcbf22",
-   "type": "readme",
-   "title": "Nuclear's helpers of lodash",
-   "summary": "nuclear-synapsis-framework/lodash/check.sh `AGENTS.md` to change it.",
-   "body": [
-    "```sh",
-    "nuclear-synapsis-framework/lodash/check.sh",
-    "# ok    checker typescript ... ok    array typescript (72 cases) ... ok    string python (57 cases)",
-    "```",
-    "",
-    "**Where to read next.** [The functions](docs/07-reference/functions.md), [what is pending](docs/01-product/roadmap.md),",
-    "[`AGENTS.md`](AGENTS.md) to change it."
    ],
    "sources": [
     "nuclear-synapsis-framework/lodash/README.md"
@@ -3779,9 +3779,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/README.md#the-platforms-of-synapsis",
    "type": "readme",
    "title": "The platforms of Synapsis",
-   "summary": "![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website The three…",
+   "summary": "![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) ![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml)…",
    "body": [
-    "[![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms)",
+    "[![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms)",
     "",
     "The three kinds of software Synapsis makes: `mobile` apps, `backend` services and `web` apps. This level holds what",
     "the three share: the contract every dialect of a platform implements."

@@ -345,89 +345,11 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.2d4595",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.146dca",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "`/.nuclear/*` stay.",
-   "body": [
-    "`/.nuclear/*` stay. **Breaking** for whoever opened `/docs`;",
-    "  - one line in the log per request, the same in both (`<time> <METHOD> <path> <status> <ms>ms`, never the query),",
-    "    and the cause of every 500 with its stack (`nestjs` logged neither), never a value of the request (`fastapi`",
-    "    logged the query, SQL parameters and `input_value`); no terminal colours in a file;",
-    "  - **the app listens on `127.0.0.1`** (`HOST` changes it, `HOST=0.0.0.0` in a container; `nestjs` listened on every",
-    "    network). **Breaking** for a deployment that relied on it; no `Server` nor `X-Powered-By` header, no `ETag`;",
-    "  - a path is matched as written: `/TASKS` and `/tasks/` are 404 (`nestjs` served them, `fastapi` redirected the",
-    "    second), an encoded letter is the letter, an encoded `/` matches nothing; another method of a path answers 405",
-    "    with `Allow` (`nestjs`: 404), `HEAD` answers as `GET`, `OPTIONS` 200 with `Allow`, after the app's guards;",
-    "  - CORS: a preflight from a listed origin answers 200, from another 403 `origin not allowed` (400 or 204 before);",
-    "  - a guard reads its header without the blanks around it, and a header given twice is not given;",
-    "  - `where` and `orderBy` take only the entity's columns (`fastapi` took any attribute of the class);",
-    "  - `fastapi` reads a row in one SQL statement (no `BEGIN` / `ROLLBACK` around it on PostgreSQL and SQLite), a page"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.31f9de",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "characters, then its text type (`MEDIUMTEXT` above 16 383 and `LONGTEXT` above 4 194 303 on MySQL and MariaDB; `TEXT` above 10 485 760 on PostgreSQL).",
-   "body": [
-    "- **a long text is `@column(length = n)`**: the column is the database's `VARCHAR(n)` while it holds `n`",
-    "    characters, then its text type (`MEDIUMTEXT` above 16 383 and `LONGTEXT` above 4 194 303 on MySQL and MariaDB;",
-    "    `TEXT` above 10 485 760 on PostgreSQL). `@column(length = 100000)` failed on MySQL and MariaDB (`Column length",
-    "    too big for column`) in both dialects. A text longer than its column is refused before it is written, on",
-    "    every database (409): SQLite kept it and PostgreSQL answered 500. **Breaking for an app on SQLite** that",
-    "    wrote texts longer than their `length` (255 without one): they are refused now;",
-    "  - **a rename is an option of `nuclear migrate make`**: `--rename <table>=<new table>` and `--rename",
-    "    <table>.<column>=<new column>` (the database's names, any number) write a rename that keeps the rows, with its",
-    "    way back, where the migration was edited by hand in each dialect's migration language. A rename that is not",
-    "    there is refused with the same words in both dialects. Without the option `make` writes the drop and the add",
-    "    as before; its warning now says the option (**the text of the warning changed**).",
-    "  `store_api` has coupons, whose use cases check nothing, so the database check reaches each refusal over HTTP.",
-    "- The app check (`checks/app-check/check.sh`, needs Docker): an app of each dialect run as a user runs it. Every line"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.413ef4",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "milliseconds where `fastapi` read seconds).",
-   "body": [
-    "milliseconds where `fastapi` read seconds). An item of a list that breaks its type is named by its place in",
-    "    both (`labels.1`; `nestjs` named the list). A parameter of the path or the query still converts from its text.",
-    "    In `fastapi` the rule is the model's, so it also holds where a model is read from something else than a",
-    "    request (the answer of an HTTP repository: an API that sends `\"30\"` for an `int` field is refused now);",
-    "  - **a `DateTime` keeps its fraction on MySQL and MariaDB**: the column is `DATETIME(6)` (TypeORM's precision for",
-    "    the date columns it gives a fraction on MySQL), written by the migrations and by `createTables`; SQLite names it",
-    "    the same, PostgreSQL's `TIMESTAMP WITH TIME ZONE` already kept it. The same instant comes back with its",
-    "    milliseconds on the four databases. The next `nuclear migrate make` of an existing project writes the change",
-    "    of each `DateTime` column;",
-    "  - **a model built in code is checked in both dialects**: `NewCustomer(email = \"nope\")` throws in `nestjs` as it",
-    "    did in `fastapi` (it built the model unchecked), and a use case that lets the error go answers the same 500;",
-    "  - **`createTables` makes the schema the migrations make**, in both dialects on the four databases: the default",
-    "    of the timestamps, the foreign keys (of a join table too), the names of the types on SQLite, the names of the"
-   ],
+   "summary": "Unreleased",
+   "body": "- **`like` follows the case rule of the database** and `ilike` is the same everywhere: said in the reference.",
    "platforms": [
     "backend"
    ],
@@ -459,6 +381,37 @@
     "  - `make` also warns of a required column added without a default and of a column that becomes required; two",
     "    migrations made in the same second get different names;",
     "  - migrations made before this version still run."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.487775",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "that are a text) closes the socket with 1003; `null` ended the `nestjs` process, a frame larger than the limit ended it too (an unhandled error of `ws`), and `fastapi` closed with a stack.",
+   "body": [
+    "that are a text) closes the socket with 1003; `null` **ended the `nestjs` process**, a frame larger than the",
+    "    limit ended it too (an unhandled error of `ws`), and `fastapi` closed with a stack. A frame's `path` starts with",
+    "    one `/` and stays in the app: `nestjs` **sent `7/x` to the port beside the app's with the upgrade's token**. A",
+    "    refused upgrade answers the guard's status and the error's body (it was 403 in `fastapi` whatever the guard);",
+    "    an upgrade on another path answers 404 (`nestjs` never answered it). A frame's own headers replace the",
+    "    upgrade's of the same name; `Host`, `Content-Length`, `Transfer-Encoding` are never taken from a frame;",
+    "  - one body limit: **1 MB for a body and a WebSocket frame** (`maxBodySize: int` in the `appConfig` changes it), a",
+    "    larger body answers 413 `content too large` and a larger frame closes 1009 (`fastapi` read any size, `nestjs`",
+    "    refused from 100 KB; frames 16 MB and 100 MB). **Breaking** for a client that sends more than 1 MB;",
+    "  - a body is JSON in UTF-8 (`application/json` or `application/<x>+json`): **a form, a text, XML or a body without",
+    "    a type answer 415** (`nestjs` made a row from a form, which any web page can send). **Breaking** for a client",
+    "    that sends forms. An empty body or `null` is `required`, a body that is not an object `type`, JSON that cannot"
    ],
    "platforms": [
     "backend"
@@ -567,25 +520,23 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.81842f",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.804c1c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "in two; it starts with `python -m synapsis.server` (`nuclear run` too), the generated `pyproject.toml` sets pytest-asyncio's loop scope (a deprecation notice on every `nuclear test`); a frame whose headers are a text no longer leaves \"Task exception was never retrieved\"; project that enables the…",
+   "summary": "too big for column`) in both dialects.",
    "body": [
-    "in two; it starts with `python -m synapsis.server` (`nuclear run` too), the generated `pyproject.toml` sets",
-    "    pytest-asyncio's loop scope (a deprecation notice on every `nuclear test`); a frame whose headers are a text no",
-    "    longer leaves \"Task exception was never retrieved\";",
-    "  - a build no longer warns that `nestjs` does not bring `telemetry` (N0305): `nuclear dialect check` says it, and a",
-    "    project that enables the plugin with that dialect is refused.",
-    "- **Three decisions of the user (2026-11-23), the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and",
-    "  MariaDB** (reference §2.1, §2.4, §2.8; spec 004 §4b):",
-    "  - **what the database refuses for integrity answers 409** `{ \"status\": 409, \"message\": \"conflict\" }`, as Spring",
-    "    Data REST answers Spring's `DataIntegrityViolationException`: a repeated unique value, a foreign key that",
-    "    points at nothing, a row removed while others point to it, a null in a required column, a text longer than its",
-    "    column. It answered 500 (of 16 requests at once for one email: one 201 and, measured on SQLite, 14 of the others",
-    "    500 in `fastapi` and 11 in `nestjs`; now one 201 and fifteen 409). **Breaking for a client** that took that 500",
-    "    as a failure of the server. The message is never the database's; inside `@transactional` the transaction is",
-    "    rolled back;"
+    "too big for column`) in both dialects. A text longer than its column is refused before it is written, on",
+    "    every database (409): SQLite kept it and PostgreSQL answered 500. **Breaking for an app on SQLite** that",
+    "    wrote texts longer than their `length` (255 without one): they are refused now;",
+    "  - **a rename is an option of `nuclear migrate make`**: `--rename <table>=<new table>` and `--rename",
+    "    <table>.<column>=<new column>` (the database's names, any number) write a rename that keeps the rows, with its",
+    "    way back, where the migration was edited by hand in each dialect's migration language. A rename that is not",
+    "    there is refused with the same words in both dialects. Without the option `make` writes the drop and the add",
+    "    as before; its warning now says the option (**the text of the warning changed**).",
+    "  `store_api` has coupons, whose use cases check nothing, so the database check reaches each refusal over HTTP.",
+    "- The app check (`checks/app-check/check.sh`, needs Docker): an app of each dialect run as a user runs it. Every line",
+    "  it logs is read against an allow-list, the same hostile requests go to both dialects and the answers are compared",
+    "  (SQL injection, errors, bodies, guards, CORS, the WebSocket), the dependencies' advisories are read, and the same"
    ],
    "platforms": [
     "backend"
@@ -600,24 +551,56 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.86064c",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.83b9e5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "a type answer 415 (`nestjs` made a row from a form, which any web page can send).",
+   "summary": "network).",
    "body": [
-    "- a body is JSON in UTF-8 (`application/json` or `application/<x>+json`): **a form, a text, XML or a body without",
-    "    a type answer 415** (`nestjs` made a row from a form, which any web page can send). **Breaking** for a client",
-    "    that sends forms. An empty body or `null` is `required`, a body that is not an object `type`, JSON that cannot",
-    "    be read (`NaN`, invalid UTF-8, deeper than 512 levels) `json`, a text with U+0000 `invalid`;",
-    "  - an `int` holds 64 bits and a `double` is finite, in a body and a parameter (`1e20` was kept by `nestjs`, `NaN`,",
-    "    `Infinity` and `1e400` were a number in `fastapi`); a parameter of the path or the query is exactly its type",
-    "    (`0x1`, `1e0`, a blank were whole numbers in `nestjs`; `1` and `yes` were true in `fastapi`, `maybe` false in",
-    "    `nestjs`), given once, a missing required one is `required` (it was 200 or 500 in `nestjs`); the parameters are",
-    "    checked together, before the body;",
-    "  - `nestjs` kept the default of a controller's parameter (`list(page: int = 1)` answered 500);",
-    "  - **a page holds at most 100 rows** (`maxPageSize: int` changes it; a larger `size` is answered with that many, as",
-    "    Spring Data's `max-page-size`). **Breaking** for a client that asks for more;",
-    "  - **no app serves `/docs` or `/redoc`** (`fastapi` served them, their scripts from a CDN); `/openapi.json` and"
+    "- **the app listens on `127.0.0.1`** (`HOST` changes it, `HOST=0.0.0.0` in a container; `nestjs` listened on every",
+    "    network). **Breaking** for a deployment that relied on it; no `Server` nor `X-Powered-By` header, no `ETag`;",
+    "  - a path is matched as written: `/TASKS` and `/tasks/` are 404 (`nestjs` served them, `fastapi` redirected the",
+    "    second), an encoded letter is the letter, an encoded `/` matches nothing; another method of a path answers 405",
+    "    with `Allow` (`nestjs`: 404), `HEAD` answers as `GET`, `OPTIONS` 200 with `Allow`, after the app's guards;",
+    "  - CORS: a preflight from a listed origin answers 200, from another 403 `origin not allowed` (400 or 204 before);",
+    "  - a guard reads its header without the blanks around it, and a header given twice is not given;",
+    "  - `where` and `orderBy` take only the entity's columns (`fastapi` took any attribute of the class);",
+    "  - `fastapi` reads a row in one SQL statement (no `BEGIN` / `ROLLBACK` around it on PostgreSQL and SQLite), a page",
+    "    in two; it starts with `python -m synapsis.server` (`nuclear run` too), the generated `pyproject.toml` sets",
+    "    pytest-asyncio's loop scope (a deprecation notice on every `nuclear test`); a frame whose headers are a text no",
+    "    longer leaves \"Task exception was never retrieved\";"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.982247",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(reference §2.1, §2.2, §2.3): its `%`, `_` and `/` characters, never wildcards (`contains` has `like`'s case, the database's; `icontains` ignores it everywhere, as `ilike`).",
+   "body": [
+    "- **Three decisions of 2026-11-23, the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB**",
+    "  (reference §2.1, §2.2, §2.3):",
+    "  - new repository words `contains(text)` and `icontains(text)`: the rows whose column holds the text as it is,",
+    "    its `%`, `_` and `/` characters, never wildcards (`contains` has `like`'s case, the database's; `icontains`",
+    "    ignores it everywhere, as `ilike`). A client's search text goes there: `ilike(\"%${text}%\")` with the text `%`",
+    "    matched every row. `like` and `ilike` stay patterns. `store_api`'s search is `icontains(text)`;",
+    "  - an optional field of a model left empty is `null` in every answer (a model, a model inside one, the items of a",
+    "    list or a page): **`nestjs` left it out. Breaking** for a `nestjs` client that tells an absent field from `null`;",
+    "  - `@created` / `@updated` are written by the app with their milliseconds, one instant for a new row's two",
+    "    (`fastapi` left them to the database's clock: whole seconds on SQLite and MySQL). A row written by SQL still",
+    "    gets the database's default; existing rows are not rewritten.",
+    "- **What the app check found (2026-11-23), fixed the same in `fastapi` and `nestjs`** (reference §1, §2.2, §2.3,",
+    "  §2.7, §2.8, §2.9; the user's decisions of the same day):",
+    "  - the WebSocket: a frame that is not a JSON object (`null`, a number, a list, binary, 50 000 levels, `headers`"
    ],
    "platforms": [
     "backend"
@@ -665,59 +648,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.a260d3",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "constraints.",
-   "body": [
-    "constraints. Each runtime makes the tables with what its first migration runs. After it,",
-    "    `nuclear migrate --fake` leaves nothing for the next `make`;",
-    "  - **`like` follows the case rule of the database** and `ilike` is the same everywhere: said in the reference."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.a99f8c",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "§2.7, §2.8, §2.9; the user's decisions of the same day): that are a text) closes the socket with 1003; `null` ended the `nestjs` process, a frame larger than the limit ended it too (an unhandled error of `ws`), and `fastapi` closed with a stack.",
-   "body": [
-    "- **What the app check found (2026-11-23), fixed the same in `fastapi` and `nestjs`** (reference §1, §2.2, §2.3,",
-    "  §2.7, §2.8, §2.9; the user's decisions of the same day):",
-    "  - the WebSocket: a frame that is not a JSON object (`null`, a number, a list, binary, 50 000 levels, `headers`",
-    "    that are a text) closes the socket with 1003; `null` **ended the `nestjs` process**, a frame larger than the",
-    "    limit ended it too (an unhandled error of `ws`), and `fastapi` closed with a stack. A frame's `path` starts with",
-    "    one `/` and stays in the app: `nestjs` **sent `7/x` to the port beside the app's with the upgrade's token**. A",
-    "    refused upgrade answers the guard's status and the error's body (it was 403 in `fastapi` whatever the guard);",
-    "    an upgrade on another path answers 404 (`nestjs` never answered it). A frame's own headers replace the",
-    "    upgrade's of the same name; `Host`, `Content-Length`, `Transfer-Encoding` are never taken from a frame;",
-    "  - one body limit: **1 MB for a body and a WebSocket frame** (`maxBodySize: int` in the `appConfig` changes it), a",
-    "    larger body answers 413 `content too large` and a larger frame closes 1009 (`fastapi` read any size, `nestjs`",
-    "    refused from 100 KB; frames 16 MB and 100 MB). **Breaking** for a client that sends more than 1 MB;"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.aae2ef",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -737,6 +667,71 @@
     "- Guards (ADR-synapsis-0007), fastapi and nestjs: `guards: Guard[] = [NoOrigin(), Token(value = env(\"T\"), header =",
     "  \"X-Token\")]` in the `appConfig` checks every route, the contract's routes and the WebSocket's upgrade;",
     "  `@controller(\"x\", guards = [...])` adds a controller's own. Headers only (never a token in the query); an empty"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.ab5455",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "be read (`NaN`, invalid UTF-8, deeper than 512 levels) `json`, a text with U+0000 `invalid`; `Infinity` and `1e400` were a number in `fastapi`); a parameter of the path or the query is exactly its type (`0x1`, `1e0`, a blank were whole numbers in `nestjs`; `1` and `yes` were true in `fastapi`,…",
+   "body": [
+    "be read (`NaN`, invalid UTF-8, deeper than 512 levels) `json`, a text with U+0000 `invalid`;",
+    "  - an `int` holds 64 bits and a `double` is finite, in a body and a parameter (`1e20` was kept by `nestjs`, `NaN`,",
+    "    `Infinity` and `1e400` were a number in `fastapi`); a parameter of the path or the query is exactly its type",
+    "    (`0x1`, `1e0`, a blank were whole numbers in `nestjs`; `1` and `yes` were true in `fastapi`, `maybe` false in",
+    "    `nestjs`), given once, a missing required one is `required` (it was 200 or 500 in `nestjs`); the parameters are",
+    "    checked together, before the body;",
+    "  - `nestjs` kept the default of a controller's parameter (`list(page: int = 1)` answered 500);",
+    "  - **a page holds at most 100 rows** (`maxPageSize: int` changes it; a larger `size` is answered with that many, as",
+    "    Spring Data's `max-page-size`). **Breaking** for a client that asks for more;",
+    "  - **no app serves `/docs` or `/redoc`** (`fastapi` served them, their scripts from a CDN); `/openapi.json` and",
+    "    `/.nuclear/*` stay. **Breaking** for whoever opened `/docs`;",
+    "  - one line in the log per request, the same in both (`<time> <METHOD> <path> <status> <ms>ms`, never the query),",
+    "    and the cause of every 500 with its stack (`nestjs` logged neither), never a value of the request (`fastapi`",
+    "    logged the query, SQL parameters and `input_value`); no terminal colours in a file;"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.b0c482",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "In `fastapi` the rule is the model's, so it also holds where a model is read from something else than a request (the answer of an HTTP repository: an API that sends `\"30\"` for an `int` field is refused now); the date columns it gives a fraction on MySQL), written by the migrations and by…",
+   "body": [
+    "In `fastapi` the rule is the model's, so it also holds where a model is read from something else than a",
+    "    request (the answer of an HTTP repository: an API that sends `\"30\"` for an `int` field is refused now);",
+    "  - **a `DateTime` keeps its fraction on MySQL and MariaDB**: the column is `DATETIME(6)` (TypeORM's precision for",
+    "    the date columns it gives a fraction on MySQL), written by the migrations and by `createTables`; SQLite names it",
+    "    the same, PostgreSQL's `TIMESTAMP WITH TIME ZONE` already kept it. The same instant comes back with its",
+    "    milliseconds on the four databases. The next `nuclear migrate make` of an existing project writes the change",
+    "    of each `DateTime` column;",
+    "  - **a model built in code is checked in both dialects**: `NewCustomer(email = \"nope\")` throws in `nestjs` as it",
+    "    did in `fastapi` (it built the model unchecked), and a use case that lets the error go answers the same 500;",
+    "  - **`createTables` makes the schema the migrations make**, in both dialects on the four databases: the default",
+    "    of the timestamps, the foreign keys (of a join table too), the names of the types on SQLite, the names of the",
+    "    constraints. Each runtime makes the tables with what its first migration runs. After it,",
+    "    `nuclear migrate --fake` leaves nothing for the next `make`;"
    ],
    "platforms": [
     "backend"
@@ -775,14 +770,45 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.d6383f",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.bd674c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "it logs is read against an allow-list, the same hostile requests go to both dialects and the answers are compared (SQL injection, errors, bodies, guards, CORS, the WebSocket), the dependencies' advisories are read, and the same load runs on PostgreSQL with the SQL statements of a request counted.",
+   "summary": "project that enables the plugin with that dialect is refused.",
    "body": [
-    "it logs is read against an allow-list, the same hostile requests go to both dialects and the answers are compared",
-    "  (SQL injection, errors, bodies, guards, CORS, the WebSocket), the dependencies' advisories are read, and the same",
-    "  load runs on PostgreSQL with the SQL statements of a request counted. What it found is in the roadmap and in",
+    "- a build no longer warns that `nestjs` does not bring `telemetry` (N0305): `nuclear dialect check` says it, and a",
+    "    project that enables the plugin with that dialect is refused.",
+    "- **Three decisions of the user (2026-11-23), the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and",
+    "  MariaDB** (reference §2.1, §2.4, §2.8; spec 004 §4b):",
+    "  - **what the database refuses for integrity answers 409** `{ \"status\": 409, \"message\": \"conflict\" }`, as Spring",
+    "    Data REST answers Spring's `DataIntegrityViolationException`: a repeated unique value, a foreign key that",
+    "    points at nothing, a row removed while others point to it, a null in a required column, a text longer than its",
+    "    column. It answered 500 (of 16 requests at once for one email: one 201 and, measured on SQLite, 14 of the others",
+    "    500 in `fastapi` and 11 in `nestjs`; now one 201 and fifteen 409). **Breaking for a client** that took that 500",
+    "    as a failure of the server. The message is never the database's; inside `@transactional` the transaction is",
+    "    rolled back;",
+    "  - **a long text is `@column(length = n)`**: the column is the database's `VARCHAR(n)` while it holds `n`",
+    "    characters, then its text type (`MEDIUMTEXT` above 16 383 and `LONGTEXT` above 4 194 303 on MySQL and MariaDB;",
+    "    `TEXT` above 10 485 760 on PostgreSQL). `@column(length = 100000)` failed on MySQL and MariaDB (`Column length"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.da7e8d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "load runs on PostgreSQL with the SQL statements of a request counted.",
+   "body": [
+    "load runs on PostgreSQL with the SQL statements of a request counted. What it found is in the roadmap and in",
     "  `checks/app-check/known.txt`; nothing of the runtimes changed.",
     "- Fixed (0.94.1): a `fastapi` model with a field named `type` crashed when its class was made (`TypeError: unhashable type: 'dict'`), since 0.94.0's rule of JSON types read the field's schema as a kind; the AI services have such a model, so the release's AI archive did not build.",
     "- **Five decisions of the user (2026-11-22), the same in `fastapi` and `nestjs`** (reference §2.1, §2.2, §2.3, §2.8):",
@@ -790,7 +816,9 @@
     "    a text, a boolean or a `DateTime`; a number without a fraction is a whole number (`30.0`) and a whole number is a",
     "    `double`. The answer is the 400 with the rule `type`. **Breaking for a client of a `fastapi` app** that sent",
     "    `\"30\"` for an `int`, `\"1.5\"` for a `double`, `\"true\"` or `1` for a `boolean`, or a number for a `DateTime`: they",
-    "    were converted, and are refused now (`nestjs` refused all but the number for a `DateTime`, which it read as"
+    "    were converted, and are refused now (`nestjs` refused all but the number for a `DateTime`, which it read as",
+    "    milliseconds where `fastapi` read seconds). An item of a list that breaks its type is named by its place in",
+    "    both (`labels.1`; `nestjs` named the list). A parameter of the path or the query still converts from its text."
    ],
    "platforms": [
     "backend"
@@ -955,9 +983,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#synapsis-backend",
    "type": "readme",
    "title": "Synapsis backend",
-   "summary": "![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · Website HTTP APIs, databases, events and AI agents, written once in Nuclear and built with `fastapi` (Python) or `nestjs` (TypeScript).",
+   "summary": "![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · Website HTTP APIs, databases, events and AI agents, written once in Nuclear and built with `fastapi` (Python) or `nestjs` (TypeScript).",
    "body": [
-    "[![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/platforms/backend)",
+    "[![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/platforms/backend)",
     "",
     "HTTP APIs, databases, events and AI agents, written once in Nuclear and built with `fastapi` (Python) or `nestjs`",
     "(TypeScript)."
@@ -1232,14 +1260,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.3733e9",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.b1917c",
    "type": "context",
    "title": "Dependencies — Inside the tree",
-   "summary": "Both packages name the tree as their repository: `nuclearlang/lang` (`pyproject.toml` `Repository`, `package.json` `repository` and `bugs`).",
+   "summary": "Both packages name the tree as their repository: `nuclearlang/nuclearlang` (`pyproject.toml` `Repository`, `package.json` `repository` and `bugs`).",
    "body": [
     "| The installer | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-nest` first |",
     "",
-    "Both packages name the tree as their repository: `nuclearlang/lang` (`pyproject.toml` `Repository`,",
+    "Both packages name the tree as their repository: `nuclearlang/nuclearlang` (`pyproject.toml` `Repository`,",
     "`package.json` `repository` and `bugs`)."
    ],
    "platforms": [
@@ -1611,44 +1639,16 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.6a4fa2",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.7b56fc",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Data",
-   "summary": "so a non-null column can be added to a table that has rows.",
-   "body": "so a non-null column can be added to a table that has rows.",
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.8f7fa7",
-   "type": "context",
-   "title": "The Python runtime: `synapsis-py` — Data",
-   "summary": "is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.",
+   "summary": "both sides elsewhere).",
    "body": [
-    "is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.",
-    "- **A `@manyToMany` list set on a found row** whose list was not loaded is kept on the row (`Entity.__setattr__`)",
-    "  and written by `Repository.save`, which replaces its rows of the join table.",
-    "- **What the generated project gives the runtime**: `main.py` and `conftest.py` list every entity",
-    "  (`entities=[...]`), so SQLAlchemy knows all the tables; two entities that name each other are imported only for",
-    "  the type checker (`if TYPE_CHECKING:`).",
-    "- **A value's JSON type is its field's** (the reference, §2.3): `models.typed` rewrites the core schema pydantic",
-    "  makes of a `Model` (and of an entity's schema): a boolean is strict, and a whole number, a number and a date get",
-    "  a check before pydantic's that refuses the Python types pydantic would convert (a text, a boolean; a number for a",
-    "  date). `30.0` stays a whole number and the keys of a map stay texts. A route or query parameter is not a model:",
-    "  FastAPI converts it from its text.",
-    "- **A model built in code** is checked by pydantic when it is made (`ValidationError`); nothing handles it, so it",
-    "  answers 500.",
+    "both sides elsewhere). The other runtime writes the same SQL.",
+    "- **An optional field left empty** is `None` and pydantic writes it `null`: it is never left out of an answer.",
     "- **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins.",
-    "- **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),"
+    "- **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),",
+    "  so a non-null column can be added to a table that has rows."
    ],
    "platforms": [
     "backend"
@@ -1668,6 +1668,40 @@
    "title": "The Python runtime: `synapsis-py` — Data",
    "summary": "How the data words of ADR-backend-0001 are built:",
    "body": "How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are built:",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.de45d3",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Data",
+   "summary": "is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.",
+   "body": [
+    "is complete on a database without `RETURNING`; SQLite tables are `AUTOINCREMENT`.",
+    "- **A `@manyToMany` list set on a found row** whose list was not loaded is kept on the row (`Entity.__setattr__`)",
+    "  and written by `Repository.save`, which replaces its rows of the join table.",
+    "- **What the generated project gives the runtime**: `main.py` and `conftest.py` list every entity",
+    "  (`entities=[...]`), so SQLAlchemy knows all the tables; two entities that name each other are imported only for",
+    "  the type checker (`if TYPE_CHECKING:`).",
+    "- **A value's JSON type is its field's** (the reference, §2.3): `models.typed` rewrites the core schema pydantic",
+    "  makes of a `Model` (and of an entity's schema): a boolean is strict, and a whole number, a number and a date get",
+    "  a check before pydantic's that refuses the Python types pydantic would convert (a text, a boolean; a number for a",
+    "  date). `30.0` stays a whole number and the keys of a map stay texts. A route or query parameter is not a model:",
+    "  FastAPI converts it from its text.",
+    "- **A model built in code** is checked by pydantic when it is made (`ValidationError`); nothing handles it, so it",
+    "  answers 500.",
+    "- **`contains` / `icontains`** are SQLAlchemy's `contains` / `icontains` with `autoescape=True`: `LIKE '%' || :text",
+    "  || '%' ESCAPE '/'`, the text's `%`, `_` and `/` escaped with `/` (`icontains`: `ILIKE` on PostgreSQL, `lower()` on"
+   ],
    "platforms": [
     "backend"
    ],
@@ -1807,7 +1841,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.f22fd7",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations.c59a0f",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Migrations",
    "summary": "before 0.94 has `sa.DateTime(timezone=True)`, which makes the column without a fraction as it always did: `_compare_type` tells the two apart on `make`'s SQLite by the words of the type, so the next `make` writes the change.",
@@ -1820,8 +1854,11 @@
     "  and run in the migrations' context: what the first migration runs, so the tables are the same.",
     "- `_drop_constraint` replaces Alembic's implementation of `drop_constraint`: on PostgreSQL, MySQL and MariaDB a",
     "  unique or a foreign key whose name is not in the database is found by its columns.",
-    "- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `(CURRENT_TIMESTAMP)` as the server default: with the",
-    "  parentheses, the one spelling MySQL takes for a column with a fraction.",
+    "- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `(CURRENT_TIMESTAMP)` as the server default (with the",
+    "  parentheses, the one spelling MySQL takes for a column with a fraction), for a row written by SQL. The app writes",
+    "  them itself (`default` and `onupdate` `_clock`: UTC to the millisecond, once per statement, so a new row's two are",
+    "  one instant), as the other runtime does: the database's clock has whole seconds on SQLite and MySQL. `schema_of`",
+    "  still leaves them out of a body (`info[\"clock\"]`).",
     "- `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback."
    ],
    "platforms": [
@@ -1894,21 +1931,18 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.6edc0b",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.9c38d9",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Modules",
    "summary": "Modules",
    "body": [
-    "| Module | Holds |",
-    "|---|---|",
-    "| `result` | `Result`, `Ok`, `Err` |",
-    "| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |",
-    "| `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |",
-    "| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |",
-    "| `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |",
-    "| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `one_of`, `is_null`, `between`), `Page`, `transactional` |",
-    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |",
-    "| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |"
+    "| `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |",
+    "| `wire` | how a request is read, the same as the other runtime: `read_json` (UTF-8, no `NaN`, 512 levels, no U+0000), `is_json`, `parse_param` (the parameters of the path and the query), `LIMITS` (`maxBodySize`, `maxPageSize`) |",
+    "| `server` | `python -m synapsis.server [--reload] [--port]`: uvicorn on `HOST` (default `127.0.0.1`) and `PORT`, no `Server` header, no access log of its own |",
+    "| `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |",
+    "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
+    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |",
+    "| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |"
    ],
    "platforms": [
     "backend"
@@ -1923,18 +1957,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.9c38d9",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.ddeb3f",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Modules",
    "summary": "Modules",
    "body": [
-    "| `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |",
-    "| `wire` | how a request is read, the same as the other runtime: `read_json` (UTF-8, no `NaN`, 512 levels, no U+0000), `is_json`, `parse_param` (the parameters of the path and the query), `LIMITS` (`maxBodySize`, `maxPageSize`) |",
-    "| `server` | `python -m synapsis.server [--reload] [--port]`: uvicorn on `HOST` (default `127.0.0.1`) and `PORT`, no `Server` header, no access log of its own |",
-    "| `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |",
-    "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
-    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |",
-    "| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |"
+    "| Module | Holds |",
+    "|---|---|",
+    "| `result` | `Result`, `Ok`, `Err` |",
+    "| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |",
+    "| `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |",
+    "| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |",
+    "| `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |",
+    "| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |",
+    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |",
+    "| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |"
    ],
    "platforms": [
     "backend"
@@ -2022,16 +2059,11 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.99ee34",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.07e31b",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Data",
-   "summary": "without values, so the pipe checks it once.",
+   "summary": "opens on the database of the last repository made (roadmap).",
    "body": [
-    "without values, so the pipe checks it once.",
-    "- **Columns**: a `DateTime` is `DataType.DATE(6)`; Sequelize writes the milliseconds only to a column with a",
-    "  length.",
-    "- **Types**: `Related<T>` types a single relation, so the decorator metadata never reads the other class (two ES",
-    "  modules that import each other).",
     "- **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It",
     "  opens on the database of the last repository made ([roadmap](../01-product/roadmap.md))."
    ],
@@ -2048,7 +2080,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.b5e4dc",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.7cc42b",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Data",
    "summary": "`save` writes a `@manyToOne` that is set to a row and `$set`s a `@manyToMany` list.",
@@ -2060,13 +2092,12 @@
     "- **Rows**: after an insert `save` sets `null` in every column the insert did not name (sequelize leaves them",
     "  undefined, and the JSON answer would lack them).",
     "- **`ilike`** is PostgreSQL's `ILIKE` there and `lower(column) LIKE lower(pattern)` on the other databases.",
-    "- **A value's JSON type is its field's** (the reference, §2.3): the validation pipe converts nothing",
-    "  (`transform` without implicit conversion), so class-validator's type decorators refuse a value of another type.",
-    "  Two things are the runtime's: `IsDateTime` reads the value as it came (class-transformer has already made a",
-    "  `Date` of a number) and takes a text only; `reasonsOf` names the item of a list that breaks its type",
-    "  (`tags.1`), which class-validator does not.",
-    "- **A model built in code** is checked by its constructor when it is given values (`checkModel`:",
-    "  `validateSync`, `InvalidModel` with the same reasons as a body). class-transformer builds the body of a request"
+    "- **`contains` / `icontains`** (`Contains`): `column LIKE '%text%' ESCAPE '/'`, the text's `%`, `_` and `/` escaped",
+    "  with `/` and the whole pattern quoted by `sequelize.escape` (Sequelize has no `ESCAPE`); `icontains` is `ILIKE` on",
+    "  PostgreSQL and `lower(column) LIKE lower('%text%')` elsewhere: the SQL SQLAlchemy's `contains(autoescape=True)`",
+    "  writes in the other runtime.",
+    "- **Answers**: `ResultInterceptor` gives every answer to `answerOf` (`model.ts`), which writes `null` for each",
+    "  optional field of a model left `undefined` (the fields class-validator's `IsOptional` marks, read once per class),"
    ],
    "platforms": [
     "backend"
@@ -2086,6 +2117,70 @@
    "title": "The TypeScript runtime: `synapsis-nest` — Data",
    "summary": "How the data words of ADR-backend-0001 are built:",
    "body": "How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are built:",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.e23bef",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Data",
+   "summary": "in a model, a model inside it and the items of a list or a `Page`; a row (a Sequelize model) is not walked (its columns are `null` already), and an answer that needs nothing is answered as it is.",
+   "body": [
+    "in a model, a model inside it and the items of a list or a `Page`; a row (a Sequelize model) is not walked (its",
+    "  columns are `null` already), and an answer that needs nothing is answered as it is.",
+    "- **`@created` / `@updated`** are Sequelize's `@CreatedAt` / `@UpdatedAt`: the app's clock (`new Date()`, to the",
+    "  millisecond), the same instant for a new row's two.",
+    "- **A value's JSON type is its field's** (the reference, §2.3): the validation pipe converts nothing",
+    "  (`transform` without implicit conversion), so class-validator's type decorators refuse a value of another type.",
+    "  Two things are the runtime's: `IsDateTime` reads the value as it came (class-transformer has already made a",
+    "  `Date` of a number) and takes a text only; `reasonsOf` names the item of a list that breaks its type",
+    "  (`tags.1`), which class-validator does not.",
+    "- **A model built in code** is checked by its constructor when it is given values (`checkModel`:",
+    "  `validateSync`, `InvalidModel` with the same reasons as a body). class-transformer builds the body of a request",
+    "  without values, so the pipe checks it once.",
+    "- **Columns**: a `DateTime` is `DataType.DATE(6)`; Sequelize writes the milliseconds only to a column with a",
+    "  length.",
+    "- **Types**: `Related<T>` types a single relation, so the decorator metadata never reads the other class (two ES",
+    "  modules that import each other)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.8b81f1",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
+   "summary": "Entry points and modules",
+   "body": [
+    "| Import | Module | Holds |",
+    "|---|---|---|",
+    "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
+    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
+    "| | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
+    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
+    "| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |",
+    "| | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |",
+    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |"
+   ],
    "platforms": [
     "backend"
    ],
@@ -2144,35 +2239,6 @@
     "| `synapsis-nest/migrate` | `migrate` | the migrations (below); also the bin `synapsis-nest-migrate` |",
     "",
     "Behaviour worth knowing:"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": "typescript"
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.ca33a1",
-   "type": "context",
-   "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
-   "summary": "Entry points and modules",
-   "body": [
-    "| Import | Module | Holds |",
-    "|---|---|---|",
-    "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
-    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
-    "| | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
-    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
-    "| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |",
-    "| | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |",
-    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |"
    ],
    "platforms": [
     "backend"
@@ -2447,11 +2513,13 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#conventions",
    "type": "context",
    "title": "Testing — Conventions",
-   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations: `tests/test_migrate.py`, `test/migrate.test.ts`).",
+   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`: `contains`, `@created` / `@updated` to the millisecond; `tests/test_types.py`, `test/types.test.ts`: an optional field…",
    "body": [
     "- **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each",
     "  dialect runs with its own runner; a behaviour of the runtimes has the same test in both",
-    "  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations:",
+    "  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`: `contains`, `@created` /",
+    "  `@updated` to the millisecond; `tests/test_types.py`, `test/types.test.ts`: an optional field `null` in every",
+    "  answer; the migrations:",
     "  `tests/test_migrate.py`, `test/migrate.test.ts`).",
     "- **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An",
     "  expected file the build no longer produces is a failure too.",
@@ -2477,12 +2545,46 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.04fb8a",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.040c20",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "write in `@transactional`), counts the SQL statements of one request in the server's statement log, then runs `load.mjs` three times: 32 kept-alive connections, 3000 requests, after 300 of warm-up, the machine's load read before each.",
+   "summary": "`/.nuclear/*`, `/.env`, other methods, long paths and headers; 50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types; the value's case, in the query, every method, a path in another case or encoded, the documents), a controller's guard over the app's;…",
    "body": [
-    "write in `@transactional`), counts the SQL statements of one request in the server's statement log, then runs",
+    "`/.nuclear/*`, `/.env`, other methods, long paths and headers;",
+    "   - **bodies**: fields the model does not list (`id`, `createdAt`, a relation, `__proto__`), 200 KB to 30 MB,",
+    "     50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types;",
+    "   - **CORS**: without `origins` and with one, a request and a preflight from the listed origin, another and `null`;",
+    "   - **guards**: `Token` and `NoOrigin` (no token, a wrong, shorter, longer, empty, repeated one, the header's and",
+    "     the value's case, in the query, every method, a path in another case or encoded, the documents), a",
+    "     controller's guard over the app's;",
+    "   - **the WebSocket**: the upgrade's guards, a frame that is not JSON, binary, 1 MB and 20 MB, not an object",
+    "     (`null`, a number, a list), a controller's guard, headers of a frame, a path that would leave the app",
+    "     (`@host`, an absolute URL, `<digit>/x`: the port beside the app's); a frame that stops the app ends the probes;",
+    "   - the address the server listens on with no host given;",
+    "   - **advisories** (`audit.py`): pip-audit over `nuclearlang/tools/python/requirements.txt`, `npm audit` over",
+    "     `packages/synapsis-nest` and over the `package.json` of a generated project.",
+    "3. **performance** (PostgreSQL, production mode, one dialect at a time): `performance.py` seeds 120 customers and,"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.056bf3",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "for six routes (a row, a page of 20, a row with its orders and their tags with 5 and with 20 orders, a write, a write in `@transactional`), counts the SQL statements of one request in the server's statement log, then runs `load.mjs` three times: 32 kept-alive connections, 3000 requests, after 300…",
+   "body": [
+    "for six routes (a row, a page of 20, a row with its orders and their tags with 5 and with 20 orders, a write, a",
+    "   write in `@transactional`), counts the SQL statements of one request in the server's statement log, then runs",
     "   `load.mjs` three times: 32 kept-alive connections, 3000 requests, after 300 of warm-up, the machine's load read",
     "   before each. It prints requests per second, p50, p95, p99, the errors, the app's memory, its start-up time and",
     "   the connections it left open. **It never fails on a speed.** It fails on an error under load, on a route that",
@@ -2504,123 +2606,26 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.081ce1",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.229bb7",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types; the value's case, in the query, every method, a path in another case or encoded, the documents), a controller's guard over the app's; (`null`, a number, a list), a controller's guard, headers of a…",
+   "summary": "`ON UPDATE`).",
    "body": [
-    "50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types;",
-    "   - **CORS**: without `origins` and with one, a request and a preflight from the listed origin, another and `null`;",
-    "   - **guards**: `Token` and `NoOrigin` (no token, a wrong, shorter, longer, empty, repeated one, the header's and",
-    "     the value's case, in the query, every method, a path in another case or encoded, the documents), a",
-    "     controller's guard over the app's;",
-    "   - **the WebSocket**: the upgrade's guards, a frame that is not JSON, binary, 1 MB and 20 MB, not an object",
-    "     (`null`, a number, a list), a controller's guard, headers of a frame, a path that would leave the app",
-    "     (`@host`, an absolute URL, `<digit>/x`: the port beside the app's); a frame that stops the app ends the probes;",
-    "   - the address the server listens on with no host given;",
-    "   - **advisories** (`audit.py`): pip-audit over `nuclearlang/tools/python/requirements.txt`, `npm audit` over",
-    "     `packages/synapsis-nest` and over the `package.json` of a generated project.",
-    "3. **performance** (PostgreSQL, production mode, one dialect at a time): `performance.py` seeds 120 customers and,",
-    "   for six routes (a row, a page of 20, a row with its orders and their tags with 5 and with 20 orders, a write, a"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.16f08d",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "`<time> ERROR <METHOD> <path> <type>: <message>`, read with its stack as one line), no query, no parameter of SQL, no `input_value`, no terminal colour in a file.",
-   "body": [
-    "`<time> ERROR <METHOD> <path> <type>: <message>`, read with its stack as one line), no query, no parameter of",
-    "     SQL, no `input_value`, no terminal colour in a file.",
-    "2. **security**: both dialects up at once (`store_api` on SQLite and on PostgreSQL, `tasks_api` on SQLite, production",
-    "   mode) and `security.py` sends each the same request. A probe is a finding when the dialects answer another",
-    "   status (for an error: another body), when an answer is not the one the probe wants, or when an error shows a",
-    "   stack, SQL, a path or the name of what runs underneath:",
-    "   - **SQL injection** (both databases): six hostile texts through the path, the query, a body and every",
-    "     repository word a request can feed (`like`, `ilike`, `oneOf`, `between`, `orderBy`'s field and direction,",
-    "     `limit`, `offset`, `paginate`); a field that is no column; then the table is still there with the same rows in",
-    "     both dialects;",
-    "   - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one; a",
-    "     page larger than `maxPageSize` (answered with 100 rows);",
-    "   - **errors**: the bodies of 400, 404 and 500, the server's headers, `/docs`, `/redoc`, `/openapi.json`,",
-    "     `/.nuclear/*`, `/.env`, other methods, long paths and headers;",
-    "   - **bodies**: fields the model does not list (`id`, `createdAt`, a relation, `__proto__`), 200 KB to 30 MB,"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.3219be",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "`createdAt` / `updatedAt` their shape, `401.0` is `401`; the body of an error whole, with its reasons) and the files are compared byte by byte: the same in every dialect on every database.",
-   "body": [
-    "`createdAt` / `updatedAt` their shape, `401.0` is `401`; the body of an error whole, with its reasons) and the files are",
+    "`ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.",
+    "4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,",
+    "   `createdAt` / `updatedAt` their shape with the milliseconds, and the scenario fails if not one of them has a",
+    "   fraction, `401.0` is `401`; the body of an error whole, with its reasons) and the files are",
     "   compared byte by byte: the same in every dialect on every database.",
     "",
     "What the scenario leaves out of the comparison because it differs by run, and says in its line: how many of the",
-    "losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product/roadmap.md)). And one answer it",
-    "only reads: a model built in code that keeps its rules, whose optional field left empty is `null` in one dialect",
-    "and absent in the other (the roadmap).",
+    "losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product/roadmap.md)).",
     "",
     "**`app-check/check.sh`** (needs Docker and, for the advisories, the network; about fifteen minutes). It reads what",
     "an app prints, attacks it and loads it, in each dialect, and compares the dialects. The apps are `store_api` (with",
-    "four probe routes: the Nuclear of `checks/app-check/probes/`, wired in the copy by `nuclear gen usecase`) and",
+    "six probe routes: the Nuclear of `checks/app-check/probes/`, wired in the copy by `nuclear gen usecase`) and",
     "`tasks_api` (the guards, the WebSocket), built by `nuclear build`; no target code is written. `check.sh logs`,",
     "`security` or `performance` runs only those stages. One PostgreSQL runs in a throwaway container",
     "(`nuclear-appcheck-<pid>-postgres`, a free port of `127.0.0.1`, its data in memory, removed however the script ends)."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.32e782",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds of a `DateTime` written and read back, a value of another JSON type refused for each…",
-   "body": [
-    "pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
-    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds of a",
-    "     `DateTime` written and read back, a value of another JSON type refused for each type (and `30.0` taken as a",
-    "     whole number, a number of the query converted), a model built in code that breaks its rule (500), the relations loaded and",
-    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
-    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
-    "     value (one row, one 201 and fifteen 409, never a 500), what the database refuses for integrity (the coupons,",
-    "     whose use cases check nothing: a repeated unique value, the same value twice in one transaction, a foreign",
-    "     key that points at nothing, a null in a required column, a row others point to, a text longer than its",
-    "     column: each 409 `conflict`, the transaction rolled back, a text of the column's length in characters",
-    "     kept), the cascade of a delete.",
-    "   - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).",
-    "   - **tables** (`tables.py`): the same project built with `createTables = true` on an empty database of its own"
    ],
    "platforms": [
     "backend"
@@ -2743,6 +2748,39 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.97961d",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "(`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app is started once, so it makes the tables.",
+   "body": [
+    "- **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).",
+    "   - **tables** (`tables.py`): the same project built with `createTables = true` on an empty database of its own",
+    "     (`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app",
+    "     is started once, so it makes the tables. Their schema, with the names of the",
+    "     uniques and foreign keys, is written as step 0 for the comparison between the dialects. Then, with",
+    "     `nuclear migrate`: `make`, `up` refused (the tables are there), `up --fake`, nothing left to make, `down`",
+    "     (the tables go), `up`: the schema must be the one `createTables` made, names included. Last, the first",
+    "     migration is written as 0.93 wrote it (a `DateTime` without its fraction; the lines in the dialect's",
+    "     migration language) and applied, and rows are written by SQL; the next `make` must write the change, and",
+    "     `up` must give the schema `createTables` made with the rows kept and a fraction written by SQL kept too;",
+    "     `down` and `up` again.",
+    "3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step,",
+    "   and the one `createTables` left (step 0, with the names of the constraints)",
+    "   (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.a370d4",
    "type": "context",
    "title": "Testing — Running the checks",
@@ -2812,6 +2850,36 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.acab58",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "pages, search in any case (`icontains`: a `%`, a `_`, the escape `/` and a backslash in the text are characters), filters and order, unicode and emoji, a text of 2000 characters, the limits of an `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds…",
+   "body": [
+    "pages, search in any case (`icontains`: a `%`, a `_`, the escape `/` and a backslash in the text are characters), filters and order, unicode and emoji, a text of 2000 characters, the limits of an",
+    "     `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds of a",
+    "     `DateTime` written and read back, a value of another JSON type refused for each type (and `30.0` taken as a",
+    "     whole number, a number of the query converted), a model built in code that breaks its rule (500) and one that keeps them (its optional field left empty is `null`), the relations loaded and",
+    "     not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write",
+    "     (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique",
+    "     value (one row, one 201 and fifteen 409, never a 500), what the database refuses for integrity (the coupons,",
+    "     whose use cases check nothing: a repeated unique value, the same value twice in one transaction, a foreign",
+    "     key that points at nothing, a null in a required column, a row others point to, a text longer than its",
+    "     column: each 409 `conflict`, the transaction rolled back, a text of the column's length in characters",
+    "     kept), the cascade of a delete."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.b52afa",
    "type": "context",
    "title": "Testing — Running the checks",
@@ -2835,25 +2903,25 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.b8fbbe",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.cb33b8",
    "type": "context",
    "title": "Testing — Running the checks",
-   "summary": "(`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app is started once, so it makes the tables.",
+   "summary": "`<time> ERROR <METHOD> <path> <type>: <message>`, read with its stack as one line), no query, no parameter of SQL, no `input_value`, no terminal colour in a file.",
    "body": [
-    "(`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app",
-    "     is started once, so it makes the tables. Their schema, with the names of the",
-    "     uniques and foreign keys, is written as step 0 for the comparison between the dialects. Then, with",
-    "     `nuclear migrate`: `make`, `up` refused (the tables are there), `up --fake`, nothing left to make, `down`",
-    "     (the tables go), `up`: the schema must be the one `createTables` made, names included. Last, the first",
-    "     migration is written as 0.93 wrote it (a `DateTime` without its fraction; the lines in the dialect's",
-    "     migration language) and applied, and rows are written by SQL; the next `make` must write the change, and",
-    "     `up` must give the schema `createTables` made with the rows kept and a fraction written by SQL kept too;",
-    "     `down` and `up` again.",
-    "3. **schemas**: `db.py compare` compares the schemas the two dialects left on the same database after each step,",
-    "   and the one `createTables` left (step 0, with the names of the constraints)",
-    "   (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and",
-    "   `ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.",
-    "4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,"
+    "`<time> ERROR <METHOD> <path> <type>: <message>`, read with its stack as one line), no query, no parameter of",
+    "     SQL, no `input_value`, no terminal colour in a file.",
+    "2. **security**: both dialects up at once (`store_api` on SQLite and on PostgreSQL, `tasks_api` on SQLite, production",
+    "   mode) and `security.py` sends each the same request. A probe is a finding when the dialects answer another",
+    "   status (for an error: another body), when an answer is not the one the probe wants, or when an error shows a",
+    "   stack, SQL, a path or the name of what runs underneath:",
+    "   - **SQL injection** (both databases): six hostile texts through the path, the query, a body and every",
+    "     repository word a request can feed (`like`, `ilike`, `contains`, `icontains`, `oneOf`, `between`, `orderBy`'s",
+    "     field and direction, `limit`, `offset`, `paginate`); a field that is no column; then the table is still there",
+    "     with the same rows in both dialects; a `%` stays a wildcard of `like` and is a character of `contains` and",
+    "     `icontains` (and so are `_`, a backslash and the escape `/`);",
+    "   - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one; a",
+    "     page larger than `maxPageSize` (answered with 100 rows);",
+    "   - **errors**: the bodies of 400, 404 and 500, the server's headers, `/docs`, `/redoc`, `/openapi.json`,"
    ],
    "platforms": [
     "backend"

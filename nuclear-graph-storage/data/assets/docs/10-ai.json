@@ -153,9 +153,9 @@
    "id": "doc:extensions/tools/nuclear-atlas/README.md#nuclear-atlas",
    "type": "readme",
    "title": "Nuclear Atlas",
-   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website Your direct message with the factory's general agent in Nuclear Chat, answered by the agent or provider you pick (Claude Code by default) from the Smart Graph.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · Website Your direct message with the factory's general agent in Nuclear Chat, answered by the agent or provider you pick (Claude Code by default) from the Smart Graph.",
    "body": [
-    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/atlas)",
+    "[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/atlas)",
     "",
     "Your direct message with the factory's general agent in [Nuclear Chat](../../../nuclear-chat/README.md), answered",
     "by the agent or provider you pick (Claude Code by default) from the [Smart Graph](../../../nuclear-graph-storage/README.md). In VS Code (`Ctrl+Alt+A`): a message",
@@ -960,9 +960,9 @@
    "id": "doc:extensions/tools/nuclear-builder/README.md#nuclear-builder",
    "type": "readme",
    "title": "Nuclear Builder",
-   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and every step shows who did it.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · Website The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and every step shows who did it.",
    "body": [
-    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/builder)",
+    "[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/builder)",
     "",
     "The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and",
     "every step shows who did it. In VS Code (`Ctrl+Alt+P`), JetBrains (`Alt+Shift+P`) and as `nuclear-builder` in a terminal or CI."
@@ -1481,7 +1481,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-line-nuclear-builder-json-ci-the-connections-a-file.c5e25e",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#the-line-nuclear-builder-json-ci-the-connections-a-file.a7c2c7",
    "type": "context",
    "title": "The actions: every button is a command and a tool — The line (`.nuclear/builder.json`), CI, the connections, a file",
    "summary": "The line (`.nuclear/builder.json`), CI, the connections, a file",
@@ -1492,7 +1492,7 @@
     "| Set the team, the stations, the branches | `line set team=… stations=[…]` | `line_set` | anyone |",
     "| Set the gates, the commands, forceConfirm, the addresses, the prices | `line set KEY=<json>` | `line_set` | user (the gates are the user's stops, the commands run in the shell, forceConfirm guards the money) |",
     "| *Pipeline settings* (opens the file; writes its defaults first) | `line set stations=… gates=… forceConfirm=false` | — | the page |",
-    "| Export the CI file | `export github\\|gitlab\\|bitbucket --json` | `ci_export` | anyone; replacing a file: user |",
+    "| Export the CI file (it installs Nuclear with the installer of `nuclearlang/nuclearlang`) | `export github\\|gitlab\\|bitbucket --json` | `ci_export` | anyone; replacing a file: user |",
     "| Compare the CI file with the line's (nothing written) | `export github\\|gitlab\\|bitbucket --print [--json]` | `ci_preview` | anyone |",
     "| *Check the connections* | `connections [--team <id>] --json` | `connections_check` | anyone |",
     "| The agents a conversation can choose (the chat's dropdown) | `agents --json`: the local Nuclear Developer (always), each agent whose command is on the PATH, each API provider with a key noted by the vault and a priced model; `{id, kind, provider, label, models, defaultModel, available, paid, why?}` | `agents_list` | anyone |"
@@ -18373,7 +18373,7 @@
     "| Hugging Face | EmbeddingGemma's ONNX files, downloaded once (`nuclear-graph model`, else the first search) into the data folder's `models/` | `NUCLEAR_GRAPH_EMBED_FILE` (another export of the same model, `onnx/<file>.onnx`) |",
     "| The desktop keyring | the documents' key, the tokens | — |",
     "| `nuclear`, `nuclear-builder`, `nuclear-mcp` | their help and `nuclear-mcp tools` (rows); `Toolchain` runs `nuclear` (`Toolchain.project(root, args)` runs `nuclear <args>` in a project) | on the `PATH` |",
-    "| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia; the User-Agent names `github.com/nuclearlang/lang` | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |",
+    "| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia; the User-Agent names `github.com/nuclearlang/nuclearlang` | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |",
     "",
     "Every setting: [the runbook](../06-runbooks/install-and-serve.md#settings)."
    ],
@@ -18534,14 +18534,14 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.b93888",
+   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.d2aa85",
    "type": "context",
    "title": "The knowledge base: assets, versions, and how it stays current — Three kinds of content",
    "summary": "the advantages, the concepts and the theory, the questions people ask, what can and cannot be done, the limits of the local agents, the playbooks and the strategies, the roles and skills, the failures of the tools and services, the mistakes small models repeat.",
    "body": [
     "| the Builder's stages, the editor's commands and settings | `extensions/tools/nuclear-builder/src/engine.ts`, `extensions/vscode/package.json` |",
     "| the local agents | their own sources in `nuclear-agents/nuclear_developer/` |",
-    "| each component's version (and its repository: `nuclearlang/lang`, the whole tree) | its manifest (`COMPONENTS` in `extract_tools.nuc`) |",
+    "| each component's version (and its repository: `nuclearlang/nuclearlang`, the whole tree) | its manifest (`COMPONENTS` in `extract_tools.nuc`) |",
     "| the examples | every `.nuc` of the example projects, by kind and platform; and the programs that run the same in every dialect, each with what it prints: the standard library's, the conformance suite's (`example:conformance/<name>`), the semantics' and the benchmarks' |",
     "| the solved tasks | the validated answers of the `train` tasks of the Developer's evaluation, never the held-out ones |",
     "| the documents | every markdown file of the tree and the website: one row per heading section, on the shelf its section of `data/sections.toml` names |",
@@ -20771,9 +20771,9 @@
    "id": "doc:tools/mcp/README.md#nuclear-mcp-the-mcp-server",
    "type": "readme",
    "title": "`nuclear-mcp`, the MCP server",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio.",
+   "summary": "![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · Website The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio.",
    "body": [
-    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)",
+    "[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)",
     "",
     "The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio. Its tools:",
     "the **generators**, the **Smart Graph** and the **compiler** (the local developer is on standby with the local models,",
