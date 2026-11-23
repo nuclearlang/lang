@@ -22,3 +22,13 @@ repository ProbeRepository
     where({ "name": between(low, high) })
     orderBy("id")
     getMany()
+
+  alike(pattern: string) Customer[]
+    where({ "name": ilike(pattern) })
+    orderBy("id")
+    getMany()
+
+  holding(text: string) Customer[]
+    where({ "name": contains(text) })
+    orderBy("id")
+    getMany()

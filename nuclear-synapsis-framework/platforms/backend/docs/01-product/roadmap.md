@@ -84,16 +84,6 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 
 ## To decide with the user
 
-Found by the database check (2026-11-21): the same in both dialects today, or different, but not what a user would
-expect; each needs a rule before it is changed.
-
-- **An optional field of a model that was left empty is `null` in one dialect's answer and absent in the other's**
-  (found 2026-11-22: `GET /customers/draft` of `store_api` answers `"nickname": null` in fastapi and no `nickname`
-  in nestjs; an entity's answer has `null` in both). The check reads that answer and does not compare it.
-- **`@created` / `@updated` have whole seconds in one dialect and milliseconds in the other** on SQLite and MySQL:
-  fastapi leaves them to the database's clock (`CURRENT_TIMESTAMP`: whole seconds there), nestjs writes the app's
-  clock. The column keeps the fraction in both (the check compares the shape of these two, not their digits).
-
 Found by the app check (2026-11-23), left by the fixes of the same day (`checks/app-check/known.txt` holds the
 probes that show what still differs):
 
@@ -106,9 +96,6 @@ probes that show what still differs):
   `int` within 64 bits is rounded before the app sees it (`body.number.precision`: `9007199254740993` is
   `9007199254740992`), and the bound 2^63 - 1 itself is read as 2^63 and refused. Making it exact is a `bigint` for
   every `int` of the dialect (its models, entities, the database driver): not decided.
-- **The wildcards of `like` and `ilike`** in a text a client sends (`%`, `_`): there is no word to escape them, so
-  `search?text=%25` matches every row (the same in both dialects). Spring Data escapes them in its `Containing`,
-  `StartingWith`, `EndingWith`: a word of that kind (`contains(text)`) is a new word of the platform, to decide.
 - **How an app runs in production.** The address is decided (`127.0.0.1`, `HOST`); nothing says how many processes,
   nor the pool: 5 connections and 10 more on demand, a request waits 30 seconds for one and answers 500 in one
   dialect; 5 connections, 60 seconds, 500 in the other (40 requests with the table locked: 25 and 35 of them answer
@@ -124,6 +111,18 @@ probes that show what still differs):
      and `uuid` < 11.1.1 through `sequelize` 6 (v3/v5/v6 with a buffer; `sequelize` calls v1 and v4 without one).
   2. **A request frame with a body on `GET`** is sent by one runtime and refused by the other's HTTP client (500):
      no probe sends it; wanted: the body of a `GET` frame left out in both.
+- **Left by the decisions of 2026-11-23 on `contains`, `null` and the milliseconds:**
+  - *The case of a letter beyond ASCII on SQLite.* SQLite's `lower()` folds ASCII letters only, so `ilike` and
+    `icontains` tell `Ñ` from `ñ` there (PostgreSQL, MySQL and MariaDB do not). And the TypeScript runtime's `ilike`
+    lowers its pattern in JavaScript (`toLowerCase`) where the Python one lowers it in SQL: `ilike("%Ñ%")` finds
+    `Ñandú` with one dialect on SQLite and not with the other (`icontains` lowers in SQL in both). Not run: a
+    pattern or a text with letters beyond ASCII in any case.
+  - *The OpenAPI document* marks an optional field `nullable` and leaves it out of `required`: one schema serves the
+    body (where it may be left out) and the answer (where it is always there, `null` when empty), so a client
+    generator does not learn from it that the answer always has the field.
+  - *`@created` / `@updated` of a row written another way*: a row written by SQL, by a migration's own statement or
+    by a `@manyToMany` join gets the database's clock (whole seconds on SQLite and MySQL). Rows the fastapi dialect wrote
+    before the app's clock keep the whole seconds they have.
 - **Found writing the skills library (2026-11-18)**: no users with password hashing or JWT auth; no multipart upload; no background jobs; no documented way to read a raw request body or headers (webhook signatures); no `graph` make-kind. `@status` is in the reference but undocumented for fastapi, and the reference says 400 for an invalid body where fastapi answers 422.
 - **The listeners of one test receive the events of the next** (synapsis-py): `testing.running` resets the injector
   but not `events._listeners`, so each test adds one more instance of every listener and a published event reaches

@@ -16,9 +16,9 @@ file goes: `nuclear help layout --platform backend`.
 
 | Where | Kind | What it is |
 |---|---|---|
-| `data/entities/` | entity | a table: `@entity("t")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`) |
-| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})`, `orderBy`, `limit`, `relations("tasks")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |
-| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r"...")`; a value of another JSON type is refused (`"30"` is not an `int`); built in code (`NewTask(title = "")`) it is checked too and throws |
+| `data/entities/` | entity | a table: `@entity("t")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`); `@created()` / `@updated()` timestamps, with milliseconds |
+| `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})` (a client's search text: `icontains(text)`, never a `like` pattern), `orderBy`, `limit`, `relations("tasks")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |
+| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r"...")`; a value of another JSON type is refused (`"30"` is not an `int`); built in code (`NewTask(title = "")`) it is checked too and throws; an optional field left empty answers `null` |
 | `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |
 | `domain/services/` | `service Name(deps)` | rules several use cases share |
 | `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |

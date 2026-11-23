@@ -11,7 +11,7 @@ import pytest
 from annotated_types import MinLen
 from pydantic import ValidationError
 
-from synapsis import AppConfig, Model, SQLite, controller, create_app, get, post
+from synapsis import AppConfig, Model, Page, SQLite, controller, create_app, get, post
 from synapsis.testing import client, memory_database
 
 
@@ -25,6 +25,12 @@ class Typed(Model):
     sizes: list[int] = []
 
 
+class Box(Model):
+    note: str | None = None
+    inner: Typed | None = None
+    items: list[Typed] = []
+
+
 @controller("/typed")
 class TypedController:
     @post("")
@@ -35,6 +41,14 @@ class TypedController:
     async def built(self, name: str, count: int = 1) -> Typed:
         # a model built in code: its rules are checked here, and nothing handles what it raises
         return Typed(name=name, count=count)
+
+    @get("/box")
+    async def box(self) -> Box:
+        return Box(items=[Typed()])
+
+    @get("/page")
+    async def page(self) -> Page[Typed]:
+        return Page(items=[Typed()], page=1, size=20, total=1, pages=1)
 
 
 class Config(AppConfig):
@@ -109,3 +123,14 @@ def test_a_field_may_have_the_name_of_a_key_of_the_schema() -> None:
         Event(type="3")  # pyright: ignore[reportArgumentType]
     with pytest.raises(ValidationError):
         Event(type=1, fields=["1"])  # pyright: ignore[reportArgumentType]
+
+
+async def test_an_optional_field_left_empty_is_null_in_the_answer() -> None:
+    """The same as types.test.ts: null, never absent, in a model, a body, a model inside one, a list and a page."""
+    app = create_app(Config(), controllers=[TypedController])
+    async with client(app, Config(), memory_database()) as http:
+        typed = {"count": 1, "price": 1.0, "on": False, "name": "name", "at": None, "tags": [], "sizes": []}
+        assert (await http.get("/typed/built?name=name")).json() == typed
+        assert (await http.post("/typed", json={})).json() == typed
+        assert (await http.get("/typed/box")).json() == {"note": None, "inner": None, "items": [typed]}
+        assert (await http.get("/typed/page")).json() == {"items": [typed], "page": 1, "size": 20, "total": 1, "pages": 1}

@@ -9,7 +9,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import {
   BuildOptions, FindOptions, IncludeOptions, Model as SequelizeModel, ModelStatic, Op, Order, Transaction, WhereOptions, col, fn,
-  where as whereOf,
+  literal, where as whereOf,
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
 import { limits } from './edge.js';
@@ -125,6 +125,15 @@ export type SortOrder = { desc?: boolean } | boolean;
 // `ilike` is the platform's word (nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md), the same in every backend dialect
 // (only PostgreSQL has an ILIKE: on the others it is written lower(column) LIKE lower(pattern), as SQLAlchemy does)
 export const ilike = (pattern: string) => new Operator({ [Op.iLike]: pattern }, pattern);
+/** `contains` and `icontains`: the rows whose column holds `text` as it is. Its `%`, `_` and `/` (the escape) are
+ * characters, never wildcards: `LIKE '%' || text || '%' ESCAPE '/'`, as SQLAlchemy's `contains(autoescape)` writes
+ * it, so both dialects ask the same SQL. `contains` has `like`'s case (the database's); `icontains` ignores it on
+ * every database (PostgreSQL's ILIKE, lower() on both sides elsewhere). */
+export class Contains {
+  constructor(readonly text: string, readonly anyCase: boolean) {}
+}
+export const contains = (text: string) => new Contains(text, false);
+export const icontains = (text: string) => new Contains(text, true);
 export const oneOf = (values: unknown[]) => new Operator({ [Op.in]: values });
 export const isNull = (isNullValue = true) => new Operator(isNullValue ? { [Op.is]: null } : { [Op.not]: null });
 export const between = (low: unknown, high: unknown) => new Operator({ [Op.between]: [low, high] });
@@ -148,7 +157,18 @@ function column(model: ModelCtor<Model>, field: string): string {
 function toWhere(model: ModelCtor<Model>, conditions: Conditions[], aliased: boolean): WhereOptions {
   const all: WhereOptions[] = [];
   for (const [k, v] of conditions.flatMap((c) => Object.entries(c))) {
-    if (v instanceof Operator && v.anyCase !== undefined && model.sequelize?.getDialect() !== 'postgres') {
+    if (v instanceof Contains) {
+      const name = model.getAttributes()[k]?.field ?? k;
+      const target = col(aliased ? `${model.name}.${name}` : name);
+      // the value is quoted by sequelize's own escape, as it quotes every value of a where
+      const text = model.sequelize!.escape(`%${v.text.replace(/[/%_]/g, '/$&')}%`);
+      const postgres = model.sequelize!.getDialect() === 'postgres';
+      all.push(
+        !v.anyCase ? whereOf(target, { [Op.like]: literal(`${text} ESCAPE '/'`) })
+        : postgres ? whereOf(target, { [Op.iLike]: literal(`${text} ESCAPE '/'`) })
+        : whereOf(fn('lower', target), { [Op.like]: literal(`lower(${text}) ESCAPE '/'`) }),
+      );
+    } else if (v instanceof Operator && v.anyCase !== undefined && model.sequelize?.getDialect() !== 'postgres') {
       const column = model.getAttributes()[k]?.field ?? k;
       all.push(whereOf(fn('lower', col(aliased ? `${model.name}.${column}` : column)), { [Op.like]: v.anyCase.toLowerCase() }));
     } else {

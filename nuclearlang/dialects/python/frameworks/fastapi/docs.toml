@@ -26,7 +26,7 @@ Full rules: `nuclear help backend`.
 repository = '''
 The **data of one entity**: CRUD without writing it and queries built line by line.
 
-The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page`, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~characters.byName(name)`.
+The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page`, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~characters.byName(name)`.
 
 ```nuclear
 repository CharacterRepository
@@ -492,6 +492,31 @@ min = 'pydantic `Ge`.'
 max = 'pydantic `Le`.'
 
 [words]
+
+contains = '''
+**`contains(text)`** in a `where({...})`: the rows whose column holds `text` as it is. Its `%`, `_` and `/` are
+characters, never wildcards, so a client's text (a search box) goes here, never into a `like` pattern. The case is
+`like`'s: the database's (PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not, for ASCII letters).
+
+```nuclear
+repository CharacterRepository
+  holding(text: string) Character[]
+    where({ "name": contains(text) })
+    getMany()
+```
+'''
+
+icontains = '''
+**`icontains(text)`** in a `where({...})`: `contains` in any case, the same rows on every database (as `ilike`). The
+word for a search box: `name: icontains(text)` with the text `%` finds only the rows that hold a `%`.
+
+```nuclear
+repository CharacterRepository
+  search(text: string) Character[]
+    where({ "name": icontains(text) })
+    getMany()
+```
+'''
 
 env = '''
 **`env("NAME", "default")`**: the value of a variable of the environment the backend runs in (spec 021);

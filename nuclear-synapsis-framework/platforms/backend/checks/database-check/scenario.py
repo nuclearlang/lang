@@ -5,7 +5,7 @@ the files: the same Nuclear must answer the same bytes in every dialect on every
 Run: python scenario.py <base url> <database url or SQLite file> <answers file>
 
 Normalized: an id becomes the order its row was made in (`customer#1`), `createdAt` / `updatedAt` their shape
-(`0000-00-00T00:00:00.000Z`), rows in a list of related rows are sorted by id. What the scenario asserts by itself
+(`0000-00-00T00:00:00.000Z`: with its milliseconds, which are not all zero), rows in a list of related rows are sorted by id. What the scenario asserts by itself
 (not by comparison): the statuses, the rollbacks (with SQL on the database), the cascade, the concurrent requests (of
 16 for one unique value one makes the row and the others answer 409, never 500).
 """
@@ -31,6 +31,8 @@ notes: list[str] = []
 # real id → the order its row was made in, per table
 ids: dict[str, dict[int, int]] = {"customer": {}, "order": {}, "tag": {}, "coupon": {}}
 STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$")
+# every @created / @updated the app answered
+stamps: list[str] = []
 
 
 def call(method: str, path: str, body: Any = None) -> tuple[int, Any]:
@@ -82,6 +84,7 @@ def normal(value: Any) -> Any:
                 raise AssertionError(f"{key} has no time zone: {v!r}")
             if abs(datetime.now(UTC) - written) > timedelta(minutes=10):
                 raise AssertionError(f"{key} is not now: {v!r}")
+            stamps.append(v)
             out[key] = re.sub(r"\d", "0", v)
         elif key in ("orders", "tags") and isinstance(v, list):
             # related rows come in the order the database gives them: by id here
@@ -158,6 +161,12 @@ def main() -> None:
     step("search page 2", "GET", "/customers/search?text=CUSTOMER&page=2&size=5")
     step("search a text with a quote", "GET", f"/customers/search?text={q(chr(39) + 'quoted')}&page=1&size=5")
     step("search nothing", "GET", "/customers/search?text=nobody&page=1&size=5")
+    # a client's text is a text: its %, _ and the escape are characters, never wildcards (ana's name has them)
+    for name, text, total in (
+        ("a % is a character", "%", 1), ("a _ is a character", "_", 1), ("a % and a _", " %_", 1),
+        ("the escape is a character", "/", 0), ("a backslash", "\\", 1), ("a % is no wildcard", "M%a", 0),
+    ):
+        same(f"search: {name}", step(f"search: {name}", "GET", f"/customers/search?text={q(text)}&page=1&size=5")["total"], total)
     vips = step("the vips by credit", "GET", "/customers/vips?credit=300")
     same("vips", [c["credit"] for c in vips], [1234.5, 601.5, 401.0])
     step("the first page of the list", "GET", "/customers?page=1")
@@ -207,8 +216,9 @@ def main() -> None:
 
     # --- a model built in code is checked as a body is: a use case that lets its error go answers 500
     step("a model built in code that breaks its rule", "GET", "/customers/draft?email=nope", expect=500)
-    drafted = call("GET", "/customers/draft?email=draft@example.com")
-    same("a model built in code that keeps its rules", (drafted[0], drafted[1]["email"], drafted[1]["name"]), (200, "draft@example.com", "draft"))
+    drafted = step("a model built in code that keeps its rules", "GET", "/customers/draft?email=draft@example.com")
+    same("a model built in code that keeps its rules", (drafted["email"], drafted["name"]), ("draft@example.com", "draft"))
+    same("its optional field left empty is null", drafted.get("nickname", "absent"), None)
     step("an order of a missing customer", "POST", "/orders", {"customerId": 999999, "total": 1}, 404)
     step("an order without a total", "POST", "/orders", {"customerId": ana["id"]}, 400)
     step("read the order", "GET", f"/orders/{first['id']}")
@@ -292,6 +302,10 @@ def main() -> None:
     step("delete luis", "DELETE", f"/customers/{luis['id']}")
     same("his orders went with him", sql(f"SELECT COUNT(*) FROM orders WHERE customer_id = {luis['id']}"), 0)
     step("delete luis again", "DELETE", f"/customers/{luis['id']}", expect=404)
+
+    # @created / @updated are the app's clock with its milliseconds, in every dialect on every database: of so many
+    # rows, not one has a fraction only if they were written in whole seconds
+    same("@created and @updated have milliseconds", (len(stamps) > 20, any(not s.endswith(".000Z") for s in stamps)), (True, True))
 
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(answers, f, ensure_ascii=False, indent=1, sort_keys=True)

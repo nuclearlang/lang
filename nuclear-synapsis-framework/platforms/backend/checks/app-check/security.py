@@ -136,7 +136,9 @@ def injection(bases: dict[str, str], db: str) -> None:
         q = quote(h)
         # a value is a value: a text with SQL in it matches no row and changes nothing
         probe(f"inject.like.{i}{t}", bases, "GET", f"/probe/named?pattern={q}", want=count(0))
-        probe(f"inject.ilike.{i}{t}", bases, "GET", f"/customers/search?text={q}&page=1&size=5", want=count(0))
+        probe(f"inject.ilike.{i}{t}", bases, "GET", f"/probe/alike?pattern={q}", want=count(0))
+        probe(f"inject.contains.{i}{t}", bases, "GET", f"/probe/holding?text={q}", want=count(0))
+        probe(f"inject.icontains.{i}{t}", bases, "GET", f"/customers/search?text={q}&page=1&size=5", want=count(0))
         probe(f"inject.oneOf.{i}{t}", bases, "GET", f"/probe/among?emails=c1@example.com,{q}", want=count(1))
         probe(f"inject.between.{i}{t}", bases, "GET", f"/probe/ranged?low=cust1&high={q}", want=lambda a: a[0] == 200)
         probe(f"inject.path.{i}{t}", bases, "GET", f"/customers/{q}", want=(400, 404))
@@ -161,8 +163,13 @@ def injection(bases: dict[str, str], db: str) -> None:
     probe(f"offset.negative{t}", bases, "GET", "/probe/sorted?field=name&desc=false&max=2&skip=-1")
     probe(f"limit.huge{t}", bases, "GET", "/probe/sorted?field=name&desc=false&max=99999999999999999999&skip=0", want=400)
     probe(f"page.huge{t}", bases, "GET", "/customers/page?page=99999999999&size=99999999999", want=(200, 400))
-    # the wildcards of a search text are the caller's: there is no word to escape them
-    probe(f"like.wildcard{t}", bases, "GET", "/customers/search?text=%25&page=1&size=50", want=lambda a: a[0] == 200)
+    # a pattern's wildcards are the caller's (`like`, `ilike`); a client's text is a text (`contains`, `icontains`):
+    # of the names above only one holds a %, one a _ and one a backslash, none a /
+    probe(f"like.wildcard{t}", bases, "GET", "/probe/named?pattern=%25", want=lambda a: a[0] == 200 and rows(a) > 3)
+    for name, text in (("percent", "%25"), ("underscore", "_"), ("backslash", "%5C")):
+        probe(f"contains.{name}{t}", bases, "GET", f"/probe/holding?text={text}", want=count(1))
+        probe(f"icontains.{name}{t}", bases, "GET", f"/customers/search?text={text}&page=1&size=50", want=count(1))
+    probe(f"contains.escape{t}", bases, "GET", "/probe/holding?text=%2F", want=count(0))
     probe(f"text.nul{t}", bases, "POST", "/customers", {"email": "nul@example.com", "name": "a\u0000b"}, want=(201, 400))
     probe(f"int.beyond32{t}", bases, "POST", "/orders", {"customerId": 1, "total": 1, "quantity": 2147483648}, want=(201, 400))
     probe(f"int.beyond64{t}", bases, "POST", "/orders", {"customerId": 1, "total": 1, "quantity": 99999999999999999999}, want=400)

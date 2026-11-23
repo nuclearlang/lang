@@ -104,7 +104,7 @@ project_of() { # project_of <name> <example> <dialect> <sqlite|postgres> [create
   [ "$4" = postgres ] && printf '  origins: string[] = ["http://localhost:5173"]\n' >>"$project/config/project_config.nuc"
   # the probe routes: Nuclear of probes/, wired by the generator
   cp "$self/probes/probe_repository.nuc" "$project/components/store/data/repositories/"
-  (cd "$project" && for u in "ProbeSorted sorted" "ProbeNamed named" "ProbeAmong among" "ProbeRanged ranged"; do
+  (cd "$project" && for u in "ProbeSorted sorted" "ProbeNamed named" "ProbeAlike alike" "ProbeHolding holding" "ProbeAmong among" "ProbeRanged ranged"; do
     set -- $u
     nuclear gen usecase store "$1" --calls "ProbeRepository.$2" --route "GET probe/$2" >/dev/null 2>&1 || exit 1
   done)

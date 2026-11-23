@@ -120,10 +120,10 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
          characters kept through `up` and `down`, then 2000 again: the schema of step 3.
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
-     pages, search in any case, filters and order, unicode and emoji, a text of 2000 characters, the limits of an
+     pages, search in any case (`icontains`: a `%`, a `_`, the escape `/` and a backslash in the text are characters), filters and order, unicode and emoji, a text of 2000 characters, the limits of an
      `int`, decimals, booleans, null against an empty text, timestamps with a time zone, the milliseconds of a
      `DateTime` written and read back, a value of another JSON type refused for each type (and `30.0` taken as a
-     whole number, a number of the query converted), a model built in code that breaks its rule (500), the relations loaded and
+     whole number, a number of the query converted), a model built in code that breaks its rule (500) and one that keeps them (its optional field left empty is `null`), the relations loaded and
      not loaded, the tags of an order replaced, two `@transactional` use cases whose `Err` comes after a write
      (checked with SQL: nothing was kept), 32 concurrent writes and reads, 16 concurrent requests for one unique
      value (one row, one 201 and fifteen 409, never a 500), what the database refuses for integrity (the coupons,
@@ -147,17 +147,16 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
    (columns, the type as the database names it, null, default, key, unique, foreign keys with `ON DELETE` and
    `ON UPDATE`). Any difference is a failure (`~` lines): ADR-backend-0002.
 4. **answers**: every answer of the scenario is written normalized (an id becomes the order its row was made in,
-   `createdAt` / `updatedAt` their shape, `401.0` is `401`; the body of an error whole, with its reasons) and the files are
+   `createdAt` / `updatedAt` their shape with the milliseconds, and the scenario fails if not one of them has a
+   fraction, `401.0` is `401`; the body of an error whole, with its reasons) and the files are
    compared byte by byte: the same in every dialect on every database.
 
 What the scenario leaves out of the comparison because it differs by run, and says in its line: how many of the
-losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product/roadmap.md)). And one answer it
-only reads: a model built in code that keeps its rules, whose optional field left empty is `null` in one dialect
-and absent in the other (the roadmap).
+losers of the race for a unique value answer 409 or 500 ([roadmap](../01-product/roadmap.md)).
 
 **`app-check/check.sh`** (needs Docker and, for the advisories, the network; about fifteen minutes). It reads what
 an app prints, attacks it and loads it, in each dialect, and compares the dialects. The apps are `store_api` (with
-four probe routes: the Nuclear of `checks/app-check/probes/`, wired in the copy by `nuclear gen usecase`) and
+six probe routes: the Nuclear of `checks/app-check/probes/`, wired in the copy by `nuclear gen usecase`) and
 `tasks_api` (the guards, the WebSocket), built by `nuclear build`; no target code is written. `check.sh logs`,
 `security` or `performance` runs only those stages. One PostgreSQL runs in a throwaway container
 (`nuclear-appcheck-<pid>-postgres`, a free port of `127.0.0.1`, its data in memory, removed however the script ends).
@@ -187,9 +186,10 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
    status (for an error: another body), when an answer is not the one the probe wants, or when an error shows a
    stack, SQL, a path or the name of what runs underneath:
    - **SQL injection** (both databases): six hostile texts through the path, the query, a body and every
-     repository word a request can feed (`like`, `ilike`, `oneOf`, `between`, `orderBy`'s field and direction,
-     `limit`, `offset`, `paginate`); a field that is no column; then the table is still there with the same rows in
-     both dialects;
+     repository word a request can feed (`like`, `ilike`, `contains`, `icontains`, `oneOf`, `between`, `orderBy`'s
+     field and direction, `limit`, `offset`, `paginate`); a field that is no column; then the table is still there
+     with the same rows in both dialects; a `%` stays a wildcard of `like` and is a character of `contains` and
+     `icontains` (and so are `_`, a backslash and the escape `/`);
    - **parameters**: what is a whole number, a number, true or false; a missing, a repeated, a default one; a
      page larger than `maxPageSize` (answered with 100 rows);
    - **errors**: the bodies of 400, 404 and 500, the server's headers, `/docs`, `/redoc`, `/openapi.json`,
@@ -221,7 +221,9 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
 
 - **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each
   dialect runs with its own runner; a behaviour of the runtimes has the same test in both
-  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the migrations:
+  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`: `contains`, `@created` /
+  `@updated` to the millisecond; `tests/test_types.py`, `test/types.test.ts`: an optional field `null` in every
+  answer; the migrations:
   `tests/test_migrate.py`, `test/migrate.test.ts`).
 - **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An
   expected file the build no longer produces is a failure too.

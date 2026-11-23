@@ -52,9 +52,18 @@ repository TaskRepository
     where({ "done": done })
     orderBy("priority")
     getMany()
+
+  search(text: string) Task[]
+    where({ "title": icontains(text) })
+    getMany()
 ```
 
-The models of `domain/models/` are DTOs; their decorators become class-validator rules:
+A search box's text goes to `icontains(text)` (or `contains`, in the database's case): its `%` and `_` are
+characters. `like` and `ilike` take a pattern written by the program (`like("Buy%")`). `@created()` is written by the
+app with its milliseconds.
+
+The models of `domain/models/` are DTOs; their decorators become class-validator rules (an optional field left
+empty answers `null`):
 
 ```nuclear
 NewTask

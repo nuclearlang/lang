@@ -50,7 +50,7 @@ A kind or a name of a plugin not enabled is N0304: `tools`, `agent`, `state`, `g
 
 ### 2.1 Entity
 
-A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default. A `DateTime` is `DataType.DATE(6)` (the timestamps too): the column keeps the fraction of a second on every database.
+A table (sequelize-typescript). In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case); columns are snake_case in the database (`underscored`). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives; `length = 36`), `@column(length = 100, unique = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. The SQL type comes from the field type; `name?: T` allows null; a default is the column's default. A `DateTime` is `DataType.DATE(6)` (the timestamps too): the column keeps the fraction of a second on every database. `@created()` / `@updated()` are Sequelize's `@CreatedAt` / `@UpdatedAt`: the app's clock, with its milliseconds, one instant for a new row's two.
 
 ```nuclear
 @entity("tasks")
@@ -188,7 +188,7 @@ export class Tag extends Entity {
 
 ### 2.2 Repository
 
-The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`); Nest injects its Sequelize model. It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page` from 1, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~tasks.byTitle(title)`.
+The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`); Nest injects its Sequelize model. It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page` from 1, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~tasks.byTitle(title)`.
 
 ```nuclear
 repository TaskRepository
@@ -228,6 +228,25 @@ export class TaskRepository extends Repository<Task> {
     return q.getMany();
   }
 }
+```
+
+A client's text goes to `contains` / `icontains`: `LIKE '%…%' ESCAPE '/'` with its `%`, `_` and `/` escaped, never
+wildcards (`icontains`: PostgreSQL's `ILIKE`, `lower()` on both sides elsewhere); `like` and `ilike` take a pattern:
+
+```nuclear
+repository TaskRepository
+  search(text: string) Task[]
+    where({ "title": icontains(text) })
+    orderBy("title")
+    getMany()
+
+  holding(text: string) Task[]
+    where({ "title": contains(text) })
+    getMany()
+```
+
+```typescript
+import { Repository, contains, icontains } from 'synapsis-nest';
 ```
 
 A page and a relation:
@@ -304,7 +323,7 @@ export class CharacterRepository extends HttpRepository {
 
 ### 2.3 Model
 
-What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. Nothing converts a value (the pipe has no implicit conversion): a text is never a number or a boolean; a `DateTime` field is `@IsDateTime()` (the runtime's: a text read as a `Date`, any other JSON type refused); an item of a list that breaks its type is named by its place (`tags.1`). `NewTask(title = "x")` builds one: the constructor that is given values checks them (`checkModel`) and throws `InvalidModel`; the body of a request is built without values and checked once, by the pipe.
+What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. Nothing converts a value (the pipe has no implicit conversion): a text is never a number or a boolean; a `DateTime` field is `@IsDateTime()` (the runtime's: a text read as a `Date`, any other JSON type refused); an item of a list that breaks its type is named by its place (`tags.1`). `NewTask(title = "x")` builds one: the constructor that is given values checks them (`checkModel`) and throws `InvalidModel`; the body of a request is built without values and checked once, by the pipe. An optional field left empty is `null` in the answer, never absent: the runtime's `ResultInterceptor` (`answerOf`) writes `null` for each `@IsOptional()` field that is `undefined`, in a model, a model inside it, and the items of a list or a page.
 
 ```nuclear
 model NewTask

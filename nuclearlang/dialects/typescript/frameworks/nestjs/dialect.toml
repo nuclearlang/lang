@@ -13,16 +13,16 @@ description = "Synapsis for NestJS: controllers, Sequelize repositories, use cas
 replaces = ["auto_imports.Transform", "syntax.project_import"]
 # type definitions (nuclearlang/docs/07-reference/definitions.md): generated from the .d.ts by nuclearlang/tools/defs/typescript (defs/typescript/)
 # order = which package gives a name two of them export: class-validator's IsInt/Min/Max (not sequelize-typescript's),
-# Nest's Query (not the runtime's)
+# Nest's Query (not the runtime's), the runtime's `contains` (the platform's word, not class-validator's validator)
 defs = [
   "typescript@5.9.3",
   "nestjs_common@12.3.2",
   "nestjs_core@12.3.2",
   "nestjs_sequelize@12.0.0",
+  "synapsis-nest@0.1.0",
   "class_validator@0.15.1",
   "class_transformer@0.5.1",
   "sequelize_typescript@2.1.6",
-  "synapsis-nest@0.1.0",
   "sequelize@6.37.8",
   "nestjs_testing@12.3.2",
   "rxjs@7.8.2",

@@ -14,7 +14,7 @@ from typing import Any, ClassVar, cast
 from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, GetCoreSchemaHandler, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
 from pydantic_core import core_schema
-from sqlalchemy import VARCHAR, Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
+from sqlalchemy import VARCHAR, Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, inspect, text
 from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.types import TypeDecorator
@@ -202,18 +202,31 @@ def _sql_literal(value: Any) -> str | None:
 
 
 # the database's clock as the default of a column, written the one way the four databases take for a column with a
-# fraction (MySQL refuses CURRENT_TIMESTAMP without the parentheses there)
+# fraction (MySQL refuses CURRENT_TIMESTAMP without the parentheses there): what a row written by SQL gets
 CLOCK = "(CURRENT_TIMESTAMP)"
 
 
+def _clock(context: Any) -> datetime:
+    """The app's clock to the millisecond, as every dialect writes @created and @updated (the database's clock has
+    whole seconds on SQLite and MySQL); one instant per statement, so a new row's two are the same."""
+    now: datetime | None = getattr(context, "_synapsis_now", None)
+    if now is None:
+        t = datetime.now(UTC)
+        now = t.replace(microsecond=t.microsecond - t.microsecond % 1000)
+        context._synapsis_now = now
+    return now
+
+
 def created() -> Any:
-    """When the row was inserted: never empty, the database's clock by default (ADR-backend-0002)."""
-    return mapped_column(UtcDateTime(), server_default=text(CLOCK), nullable=False)
+    """When the row was inserted: never empty, written by the app with its milliseconds (ADR-backend-0002)."""
+    return mapped_column(UtcDateTime(), default=_clock, server_default=text(CLOCK), nullable=False, info={"clock": True})
 
 
 def updated() -> Any:
-    """When the row last changed: never empty, the database's clock by default, written again with every change."""
-    return mapped_column(UtcDateTime(), server_default=text(CLOCK), onupdate=func.now(), nullable=False)
+    """When the row last changed: never empty, written by the app with its milliseconds, again with every change."""
+    return mapped_column(
+        UtcDateTime(), default=_clock, onupdate=_clock, server_default=text(CLOCK), nullable=False, info={"clock": True}
+    )
 
 
 _ACTIONS = {"cascade": "CASCADE", "set null": "SET NULL", "restrict": "RESTRICT", "no action": "NO ACTION"}
@@ -314,7 +327,8 @@ def schema_of(entity: type[Entity], create: bool = False) -> type[BaseModel]:
         for col in entity.__table__.columns:
             # a column with a literal default (column(default=...)) also has it as the SQL default, but the client
             # may still give it
-            server_filled = (col.server_default is not None and col.default is None) or (
+            # (a @created / @updated has the app's clock as its default too: still not the client's)
+            server_filled = (col.server_default is not None and (col.default is None or "clock" in col.info)) or (
                 col.primary_key and (col.autoincrement is True or col.default is not None)
             )
             if create and server_filled:

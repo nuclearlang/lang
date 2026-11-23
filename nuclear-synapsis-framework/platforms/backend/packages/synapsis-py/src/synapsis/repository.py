@@ -32,7 +32,7 @@ from .result import Err, Ok, Result
 
 __all__ = [
     "Repository", "Query", "Page", "transactional",
-    "gt", "gte", "lt", "lte", "ne", "like", "ilike", "one_of", "is_null", "between",
+    "gt", "gte", "lt", "lte", "ne", "like", "ilike", "contains", "icontains", "one_of", "is_null", "between",
 ]
 
 
@@ -120,6 +120,17 @@ def like(pattern: str) -> Op:
 
 def ilike(pattern: str) -> Op:
     return Op(lambda c: c.ilike(pattern))
+
+
+def contains(text: str) -> Op:
+    """The rows whose column holds `text` as it is: its `%`, `_` and `/` (the escape) are characters, never
+    wildcards. The case is `like`'s: the database's."""
+    return Op(lambda c: c.contains(text, autoescape=True))
+
+
+def icontains(text: str) -> Op:
+    """`contains` in any case, on every database (`ilike`'s rule)."""
+    return Op(lambda c: c.icontains(text, autoescape=True))
 
 
 def one_of(values: list[Any]) -> Op:

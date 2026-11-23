@@ -24,6 +24,9 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 
 ## Pending
 
+- **Found making a backend with timestamps (2026-11-23):** `gen resource --fields` has no way to give an
+  entity `@created()` / `@updated()` (`createdAt:DateTime?` becomes a plain column, and a field of the model too):
+  they were written by hand in the entity.
 - **Found making the backend's `store_api` (2026-11-21):** `gen resource --source db` with a `DateTime` field writes
   a test that does not parse (`NewOrder(..., placedAt =)`: no example value for a `DateTime`); the test says "adds a
   order"; a use case made with `--calls` drops the defaults of the repository method's parameters

@@ -76,6 +76,9 @@ repository CharacterRepository
 
 `getOne()` answers `Err(NotFound(...))` when nothing matches, so the caller never checks for `None`.
 
+A search box's text goes to `icontains(text)` (or `contains`, in the database's case): its `%` and `_` are
+characters. `like` and `ilike` take a pattern written by the program (`like("Rick%")`).
+
 ### Relations, pages and transactions
 
 Relations are TypeORM's decorators; the related entity is the field's type. A relation field is optional: it is only

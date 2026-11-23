@@ -4,9 +4,11 @@ import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import {
-  AutoIncrement, BelongsTo, BelongsToMany, Column, DataType, HasMany, PrimaryKey, Sequelize, Table,
+  AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, HasMany, PrimaryKey, Sequelize, Table, UpdatedAt,
 } from 'sequelize-typescript';
-import { AppError, Conflict, Entity, Err, ErrorFilter, Ok, Repository, Result, ilike, joinTable, transactional } from '../src/index.js';
+import {
+  AppError, Conflict, Entity, Err, ErrorFilter, Ok, Repository, Result, contains, icontains, ilike, joinTable, like, transactional,
+} from '../src/index.js';
 
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
 class Project extends Entity {
@@ -68,6 +70,29 @@ class Member extends Entity {
   declare projectId?: number;
 }
 
+// @created and @updated: written by the app, with their milliseconds (as the dialect writes them)
+@Table({ tableName: 'notes', underscored: true, timestamps: true, createdAt: 'createdAt', updatedAt: 'updatedAt' })
+class Note extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.STRING, allowNull: false })
+  declare text: string;
+  @CreatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
+  declare createdAt: Date;
+  @UpdatedAt
+  @Column({ type: DataType.DATE(6), allowNull: false })
+  declare updatedAt: Date;
+}
+
+/** The clock, once its milliseconds are not zero: a time with whole seconds is then before it. */
+async function millisecond(): Promise<number> {
+  while (Date.now() % 1000 < 2) await new Promise((r) => setTimeout(r, 1));
+  return Date.now();
+}
+
 class Enroll {
   constructor(readonly members: Repository<Member>) {}
 
@@ -102,7 +127,7 @@ class MoveTasks {
 describe('data (ADR-backend-0001)', () => {
   let db: Sequelize;
   before(async () => {
-    db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag, Member] });
+    db = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false, models: [Project, Task, Tag, Member, Note] });
     await db.sync();
   });
   after(() => db.close());
@@ -184,6 +209,15 @@ describe('data (ADR-backend-0001)', () => {
     const task = await tasks.save(new Task({ title: 'paint', projectId: home.id, dueAt: due }));
     assert.equal(task.note, null); // a column left out is null in the row `save` answers
     assert.equal(await projects.where({ name: ilike('%SWEET%') }).count(), 1); // any case, on every database
+    // contains: the text as it is, its % _ and / never wildcards; icontains: in any case
+    const odd = await projects.save(new Project({ name: '100% A_b/c' }));
+    assert.equal(await projects.where({ name: contains('0% A_b') }).count(), 1);
+    const counts = await Promise.all(['%', '_', '/', 'A%b', 'A_', 'x'].map((t) => projects.where({ name: contains(t) }).count()));
+    assert.deepEqual(counts, [1, 1, 1, 0, 1, 0]);
+    assert.equal(await projects.where({ name: icontains('a_B/C') }).count(), 1);
+    assert.equal(await projects.where({ name: icontains('SWEET') }).count(), 1);
+    assert.equal(await projects.where({ name: like('1_0%') }).count(), 1); // like is a pattern
+    await projects.remove(odd.id);
 
     const found = (await tasks.find(task.id)).value;
     assert.equal(found.dueAt?.getTime(), due.getTime()); // an instant
@@ -202,5 +236,28 @@ describe('data (ADR-backend-0001)', () => {
     assert.deepEqual(row.tags.map((t) => t.label), ['b']);
     assert.deepEqual(Object.keys(row.tags[0]).sort(), ['id', 'label']); // the related row only, with Nuclear's names
     assert.deepEqual([row.dueAt, row.projectId, row.note], ['2026-03-04T03:06:07.123Z', home.id, null]);
+  });
+
+  // the same as test_data.py: the app writes @created and @updated to the millisecond, on every database, one
+  // instant for a new row's two
+  it('writes @created and @updated with their milliseconds', async () => {
+    const notes = new Repository(Note);
+    const before = await millisecond();
+    const note = await notes.save(new Note({ text: 'a' }));
+    assert.ok(before <= note.createdAt.getTime() && note.createdAt.getTime() <= Date.now());
+    assert.equal(note.createdAt.getTime(), note.updatedAt.getTime());
+    const found = (await notes.find(note.id)).value;
+    assert.deepEqual([found.createdAt.getTime(), found.updatedAt.getTime()], [note.createdAt.getTime(), note.updatedAt.getTime()]);
+    const stamp = note.createdAt.toISOString();
+    const body = JSON.parse(JSON.stringify(found)) as { createdAt: string; updatedAt: string };
+    assert.deepEqual([body.createdAt, body.updatedAt], [stamp, stamp]);
+
+    const later = await millisecond();
+    found.text = 'b';
+    const changed = await notes.save(found);
+    assert.ok(changed.updatedAt.getTime() >= later && changed.createdAt.getTime() === note.createdAt.getTime());
+    const again = await millisecond();
+    await notes.where({ id: note.id }).update({ text: 'd' });
+    assert.ok((await notes.find(note.id)).value.updatedAt.getTime() >= again); // update() writes it too
   });
 });

@@ -4,6 +4,17 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **Three decisions of 2026-11-23, the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB**
+  (reference §2.1, §2.2, §2.3):
+  - new repository words `contains(text)` and `icontains(text)`: the rows whose column holds the text as it is,
+    its `%`, `_` and `/` characters, never wildcards (`contains` has `like`'s case, the database's; `icontains`
+    ignores it everywhere, as `ilike`). A client's search text goes there: `ilike("%${text}%")` with the text `%`
+    matched every row. `like` and `ilike` stay patterns. `store_api`'s search is `icontains(text)`;
+  - an optional field of a model left empty is `null` in every answer (a model, a model inside one, the items of a
+    list or a page): **`nestjs` left it out. Breaking** for a `nestjs` client that tells an absent field from `null`;
+  - `@created` / `@updated` are written by the app with their milliseconds, one instant for a new row's two
+    (`fastapi` left them to the database's clock: whole seconds on SQLite and MySQL). A row written by SQL still
+    gets the database's default; existing rows are not rewritten.
 - **What the app check found (2026-11-23), fixed the same in `fastapi` and `nestjs`** (reference §1, §2.2, §2.3,
   §2.7, §2.8, §2.9; the user's decisions of the same day):
   - the WebSocket: a frame that is not a JSON object (`null`, a number, a list, binary, 50 000 levels, `headers`

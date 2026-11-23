@@ -23,6 +23,7 @@ import { AppConfig } from './config.js';
 import { INT_MAX, INT_MIN, MAX_BODY_SIZE, MAX_PAGE_SIZE, RawBody, Unreadable, edge, limits, logCause, readJson } from './edge.js';
 import { AppError, InvalidInput, Invalidity, Reason, errorBody, reason, reasonsOf } from './errors.js';
 import { Guard, GuardsOf, Headers, headersOf, refusal } from './guards.js';
+import { answerOf } from './model.js';
 import { Result } from './result.js';
 
 @Injectable()
@@ -30,9 +31,9 @@ export class ResultInterceptor implements NestInterceptor {
   intercept(_: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
       map((value: unknown) => {
-        if (!(value instanceof Result)) return value;
+        if (!(value instanceof Result)) return answerOf(value);
         const r = value as Result<unknown, unknown>;
-        if (r.isOk) return r.value;
+        if (r.isOk) return answerOf(r.value);
         const e = r.error;
         throw e instanceof AppError ? e : new AppError(String(e), 500);
       }),

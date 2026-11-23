@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+import asyncio
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from synapsis import (
-    AppConfig, AppError, Conflict, Entity, Err, Mapped, Ok, Page, Repository, Result, SQLite, column, controller,
-    create_app, get, ilike, inject, many_to_many, many_to_one, one_to_many, primary, transactional,
+    AppConfig, AppError, Conflict, Entity, Err, Mapped, Ok, Page, Repository, Result, SQLite, column, contains,
+    controller, create_app, created, get, icontains, ilike, inject, like, many_to_many, many_to_one, one_to_many,
+    primary, transactional, updated,
 )
 from synapsis.testing import client, memory_database
 
@@ -50,6 +52,30 @@ class Member(Entity):
 
 class MemberRepository(Repository[Member]):
     pass
+
+
+class Note(Entity):
+    """@created and @updated: written by the app, with their milliseconds."""
+
+    __tablename__ = "notes"
+    id: Mapped[int] = primary(generated=True)
+    text: Mapped[str] = column()
+    created_at: Mapped[datetime] = created()
+    updated_at: Mapped[datetime] = updated()
+
+
+class NoteRepository(Repository[Note]):
+    pass
+
+
+@controller("notes")
+class NoteController:
+    def __init__(self, notes: NoteRepository) -> None:
+        self.notes = notes
+
+    @get("{id}")
+    async def one(self, id: int) -> Result[AppError, Note]:
+        return await self.notes.find(id)
 
 
 class Enroll:
@@ -196,6 +222,14 @@ async def test_the_same_rows_in_every_dialect() -> None:
         task = await tasks.save(Task(title="paint", project_id=home.id, due_at=due))
         assert task.note is None  # a column left out is null in the row `save` answers
         assert await projects.where({"name": ilike("%SWEET%")}).count() == 1  # any case, on every database
+        # contains: the text as it is, its % _ and / never wildcards; icontains: in any case
+        odd = await projects.save(Project(name="100% A_b/c"))
+        assert await projects.where({"name": contains("0% A_b")}).count() == 1
+        assert [await projects.where({"name": contains(t)}).count() for t in ("%", "_", "/", "A%b", "A_", "x")] == [1, 1, 1, 0, 1, 0]
+        assert await projects.where({"name": icontains("a_B/C")}).count() == 1
+        assert await projects.where({"name": icontains("SWEET")}).count() == 1
+        assert await projects.where({"name": like("1_0%")}).count() == 1  # like is a pattern
+        await projects.remove(odd.id)
 
         found = (await tasks.find(task.id)).value
         assert found.due_at == due and found.due_at.utcoffset() == timedelta(0)  # an instant, read back in UTC
@@ -246,3 +280,36 @@ async def test_what_the_database_refuses_for_integrity_is_a_409() -> None:
         assert await tried("enroll?email=ana@x.co") == conflict
         assert await members.where({"email": "new-ana@x.co"}).count() == 0
         assert await tried("enroll?email=eva@x.co") == (200, 4)
+
+
+async def millisecond() -> datetime:
+    """The clock, once its milliseconds are not zero: a time with whole seconds is then before it."""
+    while (now := datetime.now(UTC)).microsecond < 2000:
+        await asyncio.sleep(0.001)
+    return now.replace(microsecond=now.microsecond - now.microsecond % 1000)
+
+
+async def test_created_and_updated_have_their_milliseconds() -> None:
+    """The same as data.test.ts: the app writes @created and @updated to the millisecond, on every database (the
+    database's clock has whole seconds on SQLite and MySQL), one instant for a new row's two."""
+    app = create_app(Config(), controllers=[NoteController])
+    async with client(app, Config(), memory_database()) as http:
+        notes = inject(NoteRepository)
+        before = await millisecond()
+        note = await notes.save(Note(text="a"))
+        assert before <= note.created_at <= datetime.now(UTC)
+        assert note.created_at == note.updated_at and note.created_at.microsecond % 1000 == 0
+        found = (await notes.find(note.id)).value
+        assert (found.created_at, found.updated_at) == (note.created_at, note.updated_at)  # kept by the database
+        answer = (await http.get(f"/notes/{note.id}")).json()
+        stamp = note.created_at.strftime("%Y-%m-%dT%H:%M:%S.") + f"{note.created_at.microsecond // 1000:03d}Z"
+        assert (answer["createdAt"], answer["updatedAt"]) == (stamp, stamp)
+
+        later = await millisecond()
+        found.text = "b"
+        changed = await notes.save(found)
+        assert changed.updated_at >= later and changed.created_at == note.created_at
+        await notes.where({"id": note.id}).update({"text": "c"})
+        again = await millisecond()
+        await notes.where({"id": note.id}).update({"text": "d"})
+        assert (await notes.find(note.id)).value.updated_at >= again  # update() writes it too

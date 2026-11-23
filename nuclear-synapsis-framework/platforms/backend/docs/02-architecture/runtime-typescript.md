@@ -17,7 +17,7 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 | | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |
 | | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |
 | | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |
-| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
+| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
 | | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |
 | | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |
 | | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |
@@ -68,6 +68,16 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **Rows**: after an insert `save` sets `null` in every column the insert did not name (sequelize leaves them
   undefined, and the JSON answer would lack them).
 - **`ilike`** is PostgreSQL's `ILIKE` there and `lower(column) LIKE lower(pattern)` on the other databases.
+- **`contains` / `icontains`** (`Contains`): `column LIKE '%text%' ESCAPE '/'`, the text's `%`, `_` and `/` escaped
+  with `/` and the whole pattern quoted by `sequelize.escape` (Sequelize has no `ESCAPE`); `icontains` is `ILIKE` on
+  PostgreSQL and `lower(column) LIKE lower('%text%')` elsewhere: the SQL SQLAlchemy's `contains(autoescape=True)`
+  writes in the other runtime.
+- **Answers**: `ResultInterceptor` gives every answer to `answerOf` (`model.ts`), which writes `null` for each
+  optional field of a model left `undefined` (the fields class-validator's `IsOptional` marks, read once per class),
+  in a model, a model inside it and the items of a list or a `Page`; a row (a Sequelize model) is not walked (its
+  columns are `null` already), and an answer that needs nothing is answered as it is.
+- **`@created` / `@updated`** are Sequelize's `@CreatedAt` / `@UpdatedAt`: the app's clock (`new Date()`, to the
+  millisecond), the same instant for a new row's two.
 - **A value's JSON type is its field's** (the reference, §2.3): the validation pipe converts nothing
   (`transform` without implicit conversion), so class-validator's type decorators refuse a value of another type.
   Two things are the runtime's: `IsDateTime` reads the value as it came (class-transformer has already made a

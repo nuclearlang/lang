@@ -75,7 +75,9 @@ database connection needs its plugin.
 A table. `@entity("name")` names it (default: the class name in snake_case, plural not added). Fields are
 columns: `@primary` (the key; `@primary(generated = true)`: the database gives it, auto increment for an `int`, a
 uuid for a `string`; `@primary(length = 8)`: the app gives a code), `@column(length, unique, nullable, name)`,
-`@created`, `@updated` (timestamps written by the database). `T?` is a nullable column; a default is the
+`@created`, `@updated` (timestamps: when the row was inserted and last changed, written by the app with their
+milliseconds, the same instant for a new row's two; a row written by SQL gets the database's clock). `T?` is a
+nullable column; a default is the
 column's default. A `DateTime` column is an instant: it
 comes back as the same instant on every database, with its milliseconds, and its JSON is what `toIso()` writes
 (`2026-03-04T03:06:07.000Z`). The column keeps the fraction of a second on every database (six digits on MySQL,
@@ -156,7 +158,7 @@ Task()
 The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)`
 (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE
 query, created for that call: `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`,
-`oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the
+`contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the
 relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`:
 `items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,
 `update({...})`, `delete()`. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is
@@ -164,9 +166,14 @@ answered with that many, and the page's `size` says so. `where` and `orderBy` ta
 name (a relation, a field that is none) is an error of the program, answered 500. The caller awaits it:
 `~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ "title": t }).exists()`.
 
-`like` follows the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite do not (for
-ASCII letters). `ilike` ignores the case on every database: it is the one to use for a search that must find the
-same rows everywhere.
+`like(pattern)` and `ilike(pattern)` take a pattern: `%` is any text and `_` any character. `contains(text)` and
+`icontains(text)` take a text and match the rows whose column holds it as it is: its `%`, `_` and `/` are
+characters, never wildcards. A text a client sends (a search box) goes to `contains` or `icontains`, never into a
+pattern: `ilike("%${text}%")` with the text `%` matches every row, `icontains(text)` only the rows that hold a `%`.
+
+`like` and `contains` follow the case rule of the database: PostgreSQL tells `A` from `a`; MySQL, MariaDB and SQLite
+do not (for ASCII letters). `ilike` and `icontains` ignore the case on every database: they are the ones to use for
+a search that must find the same rows everywhere.
 
 ```nuclear
 repository TaskRepository
@@ -178,6 +185,10 @@ repository TaskRepository
   byTitle(title: string) Result<Error, Task>
     where({ "title": title })
     getOne()
+
+  search(text: string) Task[]
+    where({ "title": icontains(text) })
+    getMany()
 
   page(page: int, size: int = 20) Page<Task>
     orderBy("id")
@@ -208,7 +219,8 @@ repository CharacterRepository
 What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:
 `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An
 invalid body answers **400** with the reasons (below). `NewTask(title = "x")` builds one; optional fields (`T?`) may be
-left out.
+left out. In an answer an optional field is always there: one left empty is `null`, never absent, in the model,
+in a model inside it and in the items of a list or a page (an entity's empty column is `null` too).
 
 **A value's JSON type is its field's: nothing is converted.** In a body each field takes only the JSON type of its
 Nuclear type, and any other is refused with the rule `type`:

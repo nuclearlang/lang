@@ -10,7 +10,7 @@ repository CustomerRepository
 
   // the customers whose name has the text, in any case, by name
   search(text: string, page: int = 1, size: int = 20) Page<Customer>
-    where({ "name": ilike("%${text}%") })
+    where({ "name": icontains(text) })
     orderBy("name")
     orderBy("id")
     paginate(page, size)

@@ -57,7 +57,7 @@ plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `list
 
 ### 2.1 Entity
 
-A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database. A text is `String(n)` (`String(255)` without `length`): the database's `VARCHAR(n)` or, above what it holds, its text type; `Repository.save` and `update` refuse a longer text before it is written (`synapsis.errors.IntegrityViolation`, a 409).
+A table. In `components/<c>/data/entities/` the kind is given by the folder; elsewhere write `entity`. `@entity("table")` names the table (default: the name in snake_case). Each field is a column: `@primary(generated = true)` (a key the database gives: auto increment for an `int`, a uuid for a `string`), `@primary()` (a key the app gives), `@column(length = 100, unique = true, index = true, nullable = true, name = "x")`, `@created()`, `@updated()`; without a decorator it is a column too. Its SQL type comes from the field type; `name?: T` is nullable; a default goes to the column. A `DateTime` is the runtime's `UtcDateTime` (the timestamps too): the column keeps the fraction of a second on every database. `@created()` / `@updated()` are written by the app (`synapsis.orm`'s clock, to the millisecond, one instant for a new row's two), with `(CURRENT_TIMESTAMP)` as the column's default for a row written by SQL. A text is `String(n)` (`String(255)` without `length`): the database's `VARCHAR(n)` or, above what it holds, its text type; `Repository.save` and `update` refuse a longer text before it is written (`synapsis.errors.IntegrityViolation`, a 409).
 
 ```nuclear
 @entity("characters")
@@ -159,7 +159,7 @@ class Tag(Entity):
 
 ### 2.2 Repository
 
-The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page` from 1, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~characters.byName(name)`.
+The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)` (`Ok(entity)` / `Err(NotFound)`), `findAll()`, `save(entity)` and `remove(id)`. Each method's lines build ONE query, created for that call (`q`): `where({...})` (equality, or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations("tasks", "tasks.tags")` (the relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`: `items`, `page` from 1, `size`, `total`, `pages`), `count()`, `exists()`, `update({...})`, `delete()`. The caller awaits it: `~characters.byName(name)`.
 
 ```nuclear
 repository CharacterRepository
@@ -192,6 +192,30 @@ class CharacterRepository(Repository[Character]):
         q.where({"status": "alive", "year": gte(year)})
         q.order_by("name")
         q.limit(max_)
+        return q.get_many()
+```
+
+A client's text goes to `contains` / `icontains` (its `%`, `_` and `/` are characters, never wildcards:
+SQLAlchemy's `contains(..., autoescape=True)`); `like` and `ilike` take a pattern:
+
+```nuclear
+repository CharacterRepository
+  search(text: string) Character[]
+    where({ "name": icontains(text) })
+    orderBy("name")
+    getMany()
+```
+
+```python
+from synapsis import Repository, icontains
+from typing import Awaitable
+
+
+class CharacterRepository(Repository[Character]):
+    def search(self, text: str) -> Awaitable[list[Character]]:
+        q = self.query()
+        q.where({"name": icontains(text)})
+        q.order_by("name")
         return q.get_many()
 ```
 
@@ -259,7 +283,7 @@ class CharacterRepository(HttpRepository):
 
 What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:
 its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's
-(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = "")` built in code is checked by pydantic and raises its `ValidationError`.
+(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = "")` built in code is checked by pydantic and raises its `ValidationError`. An optional field left empty is `None`, written `null` in the answer, never absent.
 
 ```nuclear
 model NewCharacter

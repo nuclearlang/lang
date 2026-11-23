@@ -18,7 +18,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |
 | `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
-| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
+| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
 | `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |
 | `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |
 | `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |
@@ -86,6 +86,10 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
   FastAPI converts it from its text.
 - **A model built in code** is checked by pydantic when it is made (`ValidationError`); nothing handles it, so it
   answers 500.
+- **`contains` / `icontains`** are SQLAlchemy's `contains` / `icontains` with `autoescape=True`: `LIKE '%' || :text
+  || '%' ESCAPE '/'`, the text's `%`, `_` and `/` escaped with `/` (`icontains`: `ILIKE` on PostgreSQL, `lower()` on
+  both sides elsewhere). The other runtime writes the same SQL.
+- **An optional field left empty** is `None` and pydantic writes it `null`: it is never left out of an answer.
 - **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins.
 - **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),
   so a non-null column can be added to a table that has rows.
@@ -152,8 +156,11 @@ codes as the TypeScript runtime. How this one keeps them:
   and run in the migrations' context: what the first migration runs, so the tables are the same.
 - `_drop_constraint` replaces Alembic's implementation of `drop_constraint`: on PostgreSQL, MySQL and MariaDB a
   unique or a foreign key whose name is not in the database is found by its columns.
-- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `(CURRENT_TIMESTAMP)` as the server default: with the
-  parentheses, the one spelling MySQL takes for a column with a fraction.
+- `created()` and `updated()` (`orm.py`) are `NOT NULL` with `(CURRENT_TIMESTAMP)` as the server default (with the
+  parentheses, the one spelling MySQL takes for a column with a fraction), for a row written by SQL. The app writes
+  them itself (`default` and `onupdate` `_clock`: UTC to the millisecond, once per statement, so a new row's two are
+  one instant), as the other runtime does: the database's clock has whole seconds on SQLite and MySQL. `schema_of`
+  still leaves them out of a body (`info["clock"]`).
 - `MigrateError` is what a user must know or do: printed as `error: ...`, exit code 1, no traceback.
 
 ## Tests and type definitions

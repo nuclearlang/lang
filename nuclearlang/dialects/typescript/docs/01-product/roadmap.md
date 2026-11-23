@@ -19,7 +19,7 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 
 ## Pending
 
-- `defs/synapsis-nest/0.1.0/` was edited by hand on 2026-11-23 (`Required` became `RequiredPipe`, `TextPipe` and `IsWhole` added), against the rule that `defs/` is generated: `tools/defs/typescript/generate.sh` regenerates every package of the dialect and changes ten third-party ones (a `defaults` key appears). Wanted: the generator writes one package (`synapsis-nest`) alone, or the `defaults` churn understood and accepted; then the hand edit is replaced by a generated one.
+- `tools/defs/typescript/generate.sh` regenerates every package of the dialect and changes ten third-party ones (a `defaults` key appears): `defs/synapsis-nest/0.1.0/` is regenerated alone, by running its `gen.js` line by hand (2026-11-23, which replaced the hand edit of the same day). Wanted: the script writes one package alone, or the `defaults` churn understood and accepted.
 - **Each `nuclear migrate` command of a nestjs project prints three `npm notice run` lines** (`npx` in
   `[toolchain]`), found by the backend's app check (2026-11-23).
 

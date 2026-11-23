@@ -4,8 +4,9 @@ import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Body, Controller, Get, Module, Post, Query } from '@nestjs/common';
-import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
-import { IntPipe, InvalidModel, IsDateTime, checkModel } from '../src/index.js';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
+import { IntPipe, InvalidModel, IsDateTime, Page, checkModel } from '../src/index.js';
 import { startTestApp, stopTestApp } from '../src/testing.js';
 
 // a model as the dialect writes it
@@ -37,6 +38,27 @@ class Typed {
   }
 }
 
+class Box {
+  @IsOptional()
+  @IsString()
+  note?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Typed)
+  inner?: Typed;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Typed)
+  items: Typed[] = [];
+
+  constructor(values?: Partial<Box>) {
+    if (values) {
+      Object.assign(this, values);
+      checkModel(this);
+    }
+  }
+}
+
 @Controller('typed')
 class TypedController {
   @Post()
@@ -48,6 +70,16 @@ class TypedController {
   built(@Query('name') name: string, @Query('count', IntPipe) count?: number): Typed {
     // a model built in code: its rules are checked here, and nothing handles what it throws
     return new Typed({ name, count: count ?? 1 });
+  }
+
+  @Get('box')
+  box(): Box {
+    return new Box({ items: [new Typed()] });
+  }
+
+  @Get('page')
+  page(): Page<Typed> {
+    return new Page([new Typed()], 1, 20, 1, 1);
   }
 }
 
@@ -104,6 +136,14 @@ describe('the types of a model', () => {
       assert.equal(new Typed({ name: 'ok' }).count, 1);
       assert.deepEqual(await answer(await fetch(`${base}/typed/built?name=x`)), [500, { status: 500, message: 'error' }]);
       assert.equal(((await (await fetch(`${base}/typed/built?name=ok`)).json()) as { name: string }).name, 'ok');
+
+      // an optional field left empty is null, never absent: in a model, a body, a model inside one, a list and a page
+      // (the same as test_types.py)
+      const typed = { count: 1, price: 1.0, on: false, name: 'name', at: null, tags: [], sizes: [] };
+      assert.deepEqual(await answer(await fetch(`${base}/typed/built?name=name`)), [200, typed]);
+      assert.deepEqual(await answer(await fetch(`${base}/typed`, { method: 'POST', headers: json, body: '{}' })), [201, typed]);
+      assert.deepEqual(await answer(await fetch(`${base}/typed/box`)), [200, { note: null, inner: null, items: [typed] }]);
+      assert.deepEqual(await answer(await fetch(`${base}/typed/page`)), [200, { items: [typed], page: 1, size: 20, total: 1, pages: 1 }]);
     } finally {
       await stopTestApp(app);
     }

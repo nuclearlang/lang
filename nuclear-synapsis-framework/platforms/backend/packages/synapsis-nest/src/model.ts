@@ -1,7 +1,8 @@
 // The models of an app: what a field of a model checks beyond its validator's own decorators, and the check of a
 // model built in code. A value's JSON type is its field's (the platform's reference, §2.3): nothing converts.
 import { Transform } from 'class-transformer';
-import { IsDate, ValidateBy, ValidationOptions, validateSync } from 'class-validator';
+import { IsDate, ValidateBy, ValidationOptions, ValidationTypes, getMetadataStorage, validateSync } from 'class-validator';
+import { Model as Row } from 'sequelize';
 import { INT_MAX, INT_MIN } from './edge.js';
 import { Invalidity, Reason, errorBody, reasonsOf } from './errors.js';
 
@@ -46,4 +47,41 @@ export function checkModel(model: object): void {
   // a model without a rule has nothing to check (the validator would refuse it as unknown)
   const errors = validateSync(model, { forbidUnknownValues: false });
   if (errors.length) throw new InvalidModel(model.constructor.name, errorBody(500, '', reasonsOf(errors as Invalidity[])).errors ?? []);
+}
+
+const optionals = new Map<Function, string[]>();
+
+/** The optional fields of a model's class: those its validator lets be empty (`IsOptional`, which the dialect writes
+ * on every `T?` field). Read once per class. */
+function optionalOf(model: Function): string[] {
+  let names = optionals.get(model);
+  if (!names) {
+    const all = getMetadataStorage().getTargetValidationMetadatas(model, '', true, false);
+    names = [...new Set(all.filter((m) => m.type === ValidationTypes.CONDITIONAL_VALIDATION).map((m) => m.propertyName))];
+    optionals.set(model, names);
+  }
+  return names;
+}
+
+/** `value` as an answer: an optional field of a model left empty is `null`, never absent, as in every dialect (the
+ * platform's reference, §2.3), in a model, a model inside it, the items of a list and of a page. A row of the
+ * database is already its columns with `null` and is not walked; what needs no change is answered as it is. */
+export function answerOf(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    let out: unknown[] | undefined;
+    value.forEach((v, i) => {
+      const a = answerOf(v);
+      if (a !== v) (out ??= [...value])[i] = a;
+    });
+    return out ?? value;
+  }
+  if (value === null || typeof value !== 'object' || value instanceof Date || value instanceof Row) return value;
+  const fields = value as Record<string, unknown>;
+  let out: Record<string, unknown> | undefined;
+  for (const name of optionalOf(value.constructor)) if (fields[name] === undefined) (out ??= { ...fields })[name] = null;
+  for (const [name, v] of Object.entries(fields)) {
+    const a = answerOf(v);
+    if (a !== v) (out ??= { ...fields })[name] = a;
+  }
+  return out ?? value;
 }
