@@ -18,7 +18,7 @@ compiler (an arrow passed where a `void` callback is expected passes `nuclear ch
   `repository_dispatch` of type `website`. The tree's CI (`.github/workflows/website.yml`) sends that dispatch after a
   green push to `main` with the secret `SITE_DISPATCH_TOKEN`, and skips it while the secret is not set. TODO(human):
   create it (decided 2026-11-18): a fine-grained token, owner `nuclearlang`, only `nuclearlang.github.io`, "Contents:
-  read and write", saved as the secret `SITE_DISPATCH_TOKEN` of `nuclearlang/lang`.
+  read and write", saved as the secret `SITE_DISPATCH_TOKEN` of `nuclearlang/nuclearlang`.
 
 ## Untested
 

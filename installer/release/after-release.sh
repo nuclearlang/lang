@@ -15,7 +15,7 @@
 set -u
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 V=${1:?usage: installer/release/after-release.sh <version>}; V=${V#v}
-GH_REPO=nuclearlang/lang; SITE=https://nuclearlang.github.io
+GH_REPO=nuclearlang/nuclearlang; SITE=https://nuclearlang.github.io
 WAIT=${AFTER_RELEASE_WAIT:-90}; SITE_WAIT=${AFTER_RELEASE_SITE:-10}
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
   RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); BOLD=$(printf '\033[1m'); OFF=$(printf '\033[0m')

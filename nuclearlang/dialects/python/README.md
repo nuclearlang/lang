@@ -1,6 +1,6 @@
 # The `python` dialect
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)
 
 How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`. Its framework dialect,
 `fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md) of Synapsis.

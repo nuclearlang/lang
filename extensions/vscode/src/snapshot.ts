@@ -42,7 +42,7 @@ async function offerExtension(context: vscode.ExtensionContext, own: string, to:
   const install = l10n.t('Install the extension {0}', to);
   const message = l10n.t('This extension is {0} and NuclearLang {1} is installed. Every part of a release goes together: install the extension of {1}.', own, to);
   if ((await vscode.window.showWarningMessage(message, install)) !== install) return;
-  const url = `https://github.com/nuclearlang/lang/releases/download/v${to}/nuclearlang-${to}.vsix`;
+  const url = `https://github.com/nuclearlang/nuclearlang/releases/download/v${to}/nuclearlang-${to}.vsix`;
   const file = path.join(context.globalStorageUri.fsPath, `nuclearlang-${to}.vsix`);
   try {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: l10n.t('Downloading the extension {0}…', to) }, async () => {

@@ -1,6 +1,6 @@
 # Synapsis web
 
-[![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms/web)
+[![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/platforms/web)
 
 Single-page apps in the browser, written in Nuclear with the same words as the mobile platform, and built today with
 the `react` dialect on the runtime `synapsis-web`.

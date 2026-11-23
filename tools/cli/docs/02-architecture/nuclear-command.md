@@ -34,7 +34,7 @@ prints it, and `nuclear help <command>` prints its lines of it; for a command of
 
 **The automatic update** (`update::on_use`, before every command; the user, 2026-11-21): a use of NuclearLang marks
 the user as working (`~/.cache/nuclearlang/activity`: every command, the editor and the MCP server through
-`nuclear update --touch`); at most once a day the latest tag is asked (the redirect of `releases/latest` by `curl`, or
+`nuclear update --touch`); at most once a day the latest tag is asked of the repository `nuclearlang/nuclearlang` (the redirect of `releases/latest` by `curl`, or
 `wget` and the API; at most 3 s, offline the old answer stays for a day, `latest-release`). When it is newer, one
 process waits apart (`nuclear update --when-idle`, its own session, `update.lock` with its pid, output in
 `update.log`): every minute it looks at the last use and installs once the user stopped (30 minutes without a use) or

@@ -22,7 +22,7 @@ release, with the old command or setting still working where a user typed it.
 
 | Today | Where | Why it is hard | Proposal |
 |---|---|---|---|
-| repository `lang` | github.com/nuclearlang/lang | generic: "nuclearlang/lang" says "lang" twice, and a search for the project finds nothing by the repo's name | rename to `nuclearlang/nuclearlang` (GitHub redirects the old URL, clones keep working) |
+| repository `lang` | github.com/nuclearlang/nuclearlang | generic: "nuclearlang/nuclearlang" says "lang" twice, and a search for the project finds nothing by the repo's name | rename to `nuclearlang/nuclearlang` (GitHub redirects the old URL, clones keep working) |
 | folder `nuclearlang/` inside the repository | the tree | the repository and one folder have the same name | `language/` (or `compiler/`) |
 | `nuclear-synapsis-framework/` | the tree | long; "nuclear" and "framework" add nothing | `synapsis/` |
 | `nuclear-graph-storage/`, command `nuclear-graph`, product "the Smart Graph", chat "Nuclear Atlas" | the tree, the CLI, the docs, the editor | four names for two things (the knowledge base, the chat that asks it) | the knowledge base is **Nuclear Graph** everywhere (folder `graph/`, command `nuclear-graph`); the chat stays **Atlas** |

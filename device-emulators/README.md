@@ -1,6 +1,6 @@
 # The devices
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/devices)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/devices)
 
 Test devices for a Synapsis mobile app without an emulator: the app runs as Flutter web in Chromium, with a phone's
 size, density and touch, in its own window (`nuclear device`) or inside the terminal (`nuclear terminal-device`).

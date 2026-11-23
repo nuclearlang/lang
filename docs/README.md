@@ -46,7 +46,7 @@ its documents with one line each saying when to read it. Under 150 lines. A `CLA
 
 `README.md` beside it: the page a person reads first, on GitHub or in the folder. It is not `AGENTS.md` (that one
 is for whoever changes the project) and it repeats no reference. Under the title, one line: the badge of each CI
-workflow that tests the project (`https://github.com/nuclearlang/lang/actions/workflows/<file>.yml/badge.svg`, linked
+workflow that tests the project (`https://github.com/nuclearlang/nuclearlang/actions/workflows/<file>.yml/badge.svg`, linked
 to the workflow) and the link to its page on the website (`https://nuclearlang.github.io/...`). Then, in this order,
 short enough to read in a minute (about 60 lines; the detail is in the guides it links):
 

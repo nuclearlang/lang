@@ -1,6 +1,6 @@
 # The devices in the editor
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/devices)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/devices)
 
 Your app running inside VS Code, beside its code: the **Synapsis device** runs a mobile app in a panel, like Android
 Studio's *Running Devices*; the **web device** shows a web app at desktop, laptop, tablet or phone size (`Ctrl+Alt+V`).

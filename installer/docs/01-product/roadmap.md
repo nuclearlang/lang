@@ -31,7 +31,7 @@ The pending work of the installers, the release and the set-up of the AI service
   ([the runbook](../06-runbooks/release.md)); both stores have 0.86.0. The Open VSX namespace `nuclearlang` is verified
   (EclipseFdn/open-vsx.org#16010, 2026-11-20); the job publishes with Trusted Publishing as soon as `OVSX_PAT` is gone.
   Left, for the user: register the trusted publisher on open-vsx.org (the namespace's settings: GitHub, repository
-  nuclearlang/lang, workflow release.yml), delete the secret `OVSX_PAT`, and remove the Open VSX administrator from the
+  nuclearlang/nuclearlang, workflow release.yml), delete the secret `OVSX_PAT`, and remove the Open VSX administrator from the
   Marketplace publisher's Members.
 - **The AI services built into the installer** (ADR-installer-0002; [the guide](../08-guides/ai-setup.md)). Left:
   - Android Studio has no wizard (`nuclear-builder setup`).
@@ -95,5 +95,3 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Pending
 - The delivery gate does not build and try the AI archive (`ai` jobs of the release workflow): 0.94.0 passed the gate and failed there, on a model of the AI services the new backend runtime could not make (found 2026-11-22). Wanted: the gate imports the AI services with the tree's runtimes before a tag.
-- The repository is `nuclearlang/nuclearlang` since 2026-11-23 (it was `nuclearlang/lang`): about 90 files of the tree still name the old one, served by GitHub's redirect (the installers, `nuclear update`, the workflows' links, the website, the docs). The redirect ends if a repository named `lang` is made in the organization. Wanted: every reference moved to the new name in one change, then a release. Found when the update case of `installer/tests/run.sh` read the API's redirect as "offline" (fixed: it follows redirects).
-- No check runs a project an earlier release made and installed, after the update (found 2026-11-23: 0.96.0 changed the fastapi run command to `synapsis.server`, and projects 0.95 had installed kept their old runtime: `nuclear run` failed). Every check makes a fresh project. Wanted: the update case (`UPD1`, or a check of the gate) makes and installs a backend project of each dialect with the previous release, updates, then `nuclear run` and `nuclear test` it.

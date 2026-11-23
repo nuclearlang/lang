@@ -1,6 +1,6 @@
 # Nuclear Monitor
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml)
 
 Where your app spends its time, without a debugger: each function and method of your Nuclear code with its time,
 own time, calls, connections and memory, as a tree that opens like an accordion down to the slow line.

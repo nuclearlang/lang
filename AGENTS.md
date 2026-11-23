@@ -2,7 +2,7 @@
 
 A minimal base language for AI agents and people. A Rust transpiler turns `.nuc` into other technologies through
 **declarative dialects** (TOML and templates loaded at run time), one way only (`.nuc` → `.ts` / `.dart` / `.py`).
-Website: [nuclearlang.github.io](https://nuclearlang.github.io); repository: `nuclearlang/lang`.
+Website: [nuclearlang.github.io](https://nuclearlang.github.io); repository: `nuclearlang/nuclearlang`.
 The language comes with its framework, as Rust has Actix: three platforms (`web`, `mobile`, `backend`), each
 written once in Nuclear and built by its dialects. Vision: [docs/00-context/vision.md](docs/00-context/vision.md).
 

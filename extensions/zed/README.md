@@ -1,6 +1,6 @@
 # NuclearLang for Zed
 
-[![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/zed)
+[![extension-zed](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/zed)
 
 The NuclearLang extension for Zed: a token grammar, the `nuclear-lsp` client, the Chernobyl theme and icons, and
 the Synapsis tasks and runnables.

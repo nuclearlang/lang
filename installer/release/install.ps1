@@ -37,7 +37,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 # `nuclear update --reinstall` asks for it through the environment
 if ($env:NUCLEAR_REINSTALL -eq '1') { $Reinstall = [switch]$true }
-$Repo = if ($env:NUCLEAR_REPO) { $env:NUCLEAR_REPO } else { 'nuclearlang/lang' }
+$Repo = if ($env:NUCLEAR_REPO) { $env:NUCLEAR_REPO } else { 'nuclearlang/nuclearlang' }
 $Install = if ($env:NUCLEAR_INSTALL) { $env:NUCLEAR_INSTALL } else { Join-Path $env:LOCALAPPDATA 'nuclearlang' }
 $Bin = Join-Path $Install 'bin'
 # an update (`nuclear update`, NUCLEAR_UPDATE=1) keeps the choices of the last install
@@ -269,7 +269,7 @@ try {
   if ($NuclearHere) { Ok "NuclearLang $Version is already installed in $Install (kept: nothing downloaded)" } else {
   $Zip = Join-Path $Tmp $Name
   try { Save-Url "$Base/$Name" $Zip "Downloading NuclearLang $Version" "The compiler, the language server and the standard library, for Windows $Dot $Arch" }
-  catch { Fail "Downloading NuclearLang $Version" "$($_.Exception.Message)" 'Check your connection and run the installer again. The releases: https://github.com/nuclearlang/lang/releases' }
+  catch { Fail "Downloading NuclearLang $Version" "$($_.Exception.Message)" 'Check your connection and run the installer again. The releases: https://github.com/nuclearlang/nuclearlang/releases' }
   Ok "Downloaded NuclearLang $Version"
   $Want = (Get-Sum "$Base/$Name.sha256")
   $Got = (Get-FileHash $Zip -Algorithm SHA256).Hash.ToLower()

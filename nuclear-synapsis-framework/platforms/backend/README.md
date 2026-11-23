@@ -1,6 +1,6 @@
 # Synapsis backend
 
-[![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/platforms/backend)
+[![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/platforms/backend)
 
 HTTP APIs, databases, events and AI agents, written once in Nuclear and built with `fastapi` (Python) or `nestjs`
 (TypeScript).

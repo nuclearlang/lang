@@ -12,8 +12,8 @@ backends y apps web a partir de él.
 [Extensión de VS Code](https://marketplace.visualstudio.com/items?itemName=nuclearlang.nuclearlang) ·
 [English](README.md)
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/nuclearlang/lang?color=a7ff00&label=release)](https://github.com/nuclearlang/lang/releases/latest)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/nuclearlang/nuclearlang?color=a7ff00&label=release)](https://github.com/nuclearlang/nuclearlang/releases/latest)
 [![license](https://img.shields.io/badge/license-Apache--2.0-a7ff00)](LICENSE)
 
 </div>
@@ -87,7 +87,7 @@ La documentación técnica está en inglés; el sitio web, la extensión y este 
 
 ## Comunidad
 
-Preguntas e ideas: [GitHub Discussions](https://github.com/nuclearlang/lang/discussions). Cómo contribuir:
+Preguntas e ideas: [GitHub Discussions](https://github.com/nuclearlang/nuclearlang/discussions). Cómo contribuir:
 [CONTRIBUTING.md](CONTRIBUTING.md). Código de conducta: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Seguridad:
 [SECURITY.md](SECURITY.md). Cómo se decide: [GOVERNANCE.md](GOVERNANCE.md).
 

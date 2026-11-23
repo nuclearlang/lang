@@ -55,7 +55,7 @@ test('a missing file is taken from the release, checked by its .sha256, only the
   assert.equal(brokenInstall('out/chat-embed.js', ext), true);
   assert.deepEqual(await resolveAssets(FILES, { extensionDir: ext, cache, version: '1.2.3', fetch: r.fetch }), { from: 'release', dir: cache });
   assert.deepEqual(r.asked, [vsixUrl('1.2.3'), vsixUrl('1.2.3') + '.sha256']);
-  assert.equal(r.asked[0], 'https://github.com/nuclearlang/lang/releases/download/v1.2.3/nuclearlang-1.2.3.vsix');
+  assert.equal(r.asked[0], 'https://github.com/nuclearlang/nuclearlang/releases/download/v1.2.3/nuclearlang-1.2.3.vsix');
   assert.equal(fs.readFileSync(path.join(cache, 'out', 'chat-embed.js'), 'utf8'), 'export const mount = 1;');
   assert.ok(fs.existsSync(path.join(cache, 'icons', 'icon.svg')));
   assert.equal(fs.existsSync(path.join(cache, 'out', 'other.js')), false, 'only what the pages need');

@@ -1011,10 +1011,10 @@ vectorsFile() Path
   (given.length > 0 ? Path(given) : dataFolder("nuclear-graph")).joinpath("models", "embeddings.npz")
 
 // The release's address of a file: `NUCLEAR_DOWNLOAD` (a mirror, as the installers read it), else the GitHub release
-// of `version` (`NUCLEAR_REPO`, default nuclearlang/lang).
+// of `version` (`NUCLEAR_REPO`, default nuclearlang/nuclearlang).
 releaseUrl(version: string, name: string, env: <string, string>? = null) string
   e = env ?? dict(os.environ)
-  base = e["NUCLEAR_DOWNLOAD"] ?? "https://github.com/${e["NUCLEAR_REPO"] ?? "nuclearlang/lang"}/releases/download/v${version}"
+  base = e["NUCLEAR_DOWNLOAD"] ?? "https://github.com/${e["NUCLEAR_REPO"] ?? "nuclearlang/nuclearlang"}/releases/download/v${version}"
   "${base}/${name}"
 
 // The vectors of this release's knowledge base (ADR-graph-0003), computed once by the release for every system: with

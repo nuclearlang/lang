@@ -95,7 +95,7 @@ Done, and never tried in a running VS Code (only headless renders, node checks, 
   everything that runs code (the server, run, build, the tools' commands) only once trusted, with a line that says so.
 - The VS Code listing (`extensions/vscode/README.md`): the example goes in a ```` ```nuclear ```` block; a relative
   image breaks locally and `vsce` rejects it without `repository`. `package.json` names the tree
-  (`nuclearlang/lang`, directory `extensions/vscode`); whether `vsce` rewrites the README's relative links
+  (`nuclearlang/nuclearlang`, directory `extensions/vscode`); whether `vsce` rewrites the README's relative links
   (`../tools/`, `../docs/03-adr/`) against that directory was not tried: package once and read the listing.
 - The development build of the server is not found since the tree changed: `findServer` (`src/extension.ts`) looks
   in `../target/{release,debug}` from the extension's folder, which is `extensions/target/`; the tree's is

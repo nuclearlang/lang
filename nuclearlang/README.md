@@ -1,6 +1,6 @@
 # NuclearLang — the language
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/nuclearlang/guide/README)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/nuclearlang/guide/README)
 
 The base language (`.nuc`), the Rust compiler that turns it into TypeScript, Dart or Python through declarative
 dialects, and the language server every editor runs.

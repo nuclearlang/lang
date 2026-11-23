@@ -1,6 +1,6 @@
 # `nuclear`, the command line tool
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/cli)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/cli)
 
 The one command of NuclearLang: the compiler (`build`, `check`, `fix`, `fmt`, `spec`) and the framework, Synapsis
 (`new`, `gen`, `make`, `run`, `test`, `add`, the devices). You write `.nuc`; it writes the target project into `build/`.

@@ -1,6 +1,6 @@
 # Nuclear's helpers of lodash
 
-[![language](https://github.com/nuclearlang/lang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/language.yml)
+[![language](https://github.com/nuclearlang/nuclearlang/actions/workflows/language.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/language.yml)
 
 **What it is.** 117 helpers of [lodash](https://lodash.com) over lists, maps, texts, numbers and functions
 (`chunk`, `difference`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize`...), written

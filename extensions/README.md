@@ -1,6 +1,6 @@
 # NuclearLang in the editors
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) [![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/extensions)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) [![extension-zed](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/extensions)
 
 Extensions for VS Code, Android Studio / IntelliJ and Zed. Each starts the same language server, and brings the
 platform's tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) where the code is.

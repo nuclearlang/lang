@@ -1,6 +1,6 @@
 # HTTP Connections
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/http-connections)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/http-connections)
 
 An HTTP and WebSocket client like Postman or Bruno, inside the editor, that already knows every endpoint of your
 projects. In VS Code (`Ctrl+Alt+H`) and JetBrains (`Alt+Shift+H`).

@@ -12,7 +12,7 @@ A tree-sitter grammar of tokens: comments, strings with `${}`, numbers, decorato
 brackets. It never fails on half-written code. Zed reads a published extension's grammar from a git commit:
 `[grammars.nuclear]` of `extension.toml` names the repository, the path and the `rev`. The installed extension
 uses `grammar/nuclear.wasm`, which `build.sh` regenerates. The extension's own `repository` is the tree,
-`nuclearlang/lang`; the grammar's is still `nuclearlang/nuclear-zed` (the roadmap).
+`nuclearlang/nuclearlang`; the grammar's is still `nuclearlang/nuclear-zed` (the roadmap).
 
 ## The language (`languages/nuclear/`)
 

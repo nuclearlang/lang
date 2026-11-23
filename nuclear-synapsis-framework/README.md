@@ -1,6 +1,6 @@
 # Synapsis
 
-[![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/synapsis/guide/README)
+[![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) [![platform-backend](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/synapsis/guide/README)
 
 The framework of NuclearLang, as Actix is Rust's: you write an app, a backend or a web app in Nuclear on one of
 three platforms (`mobile`, `backend`, `web`), and a dialect turns it into Flutter, FastAPI, NestJS or React.

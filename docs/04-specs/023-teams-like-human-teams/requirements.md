@@ -45,5 +45,5 @@ each team follows the instructions its user wrote for it.
 ## Local first
 9. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads
    anything from the internet. If a bundled asset is missing (a broken install), the extension says so and, as a
-   contingency, takes it from the release of its own version on GitHub (nuclearlang/lang), checked against the
+   contingency, takes it from the release of its own version on GitHub (nuclearlang/nuclearlang), checked against the
    release's checksum, kept in its storage.

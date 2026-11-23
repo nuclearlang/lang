@@ -1,6 +1,6 @@
 # The code generator
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/generator)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/generator)
 
 `nuclear-codegen`: what `nuclear new`, `gen` and `make` write. `gen` writes finished code that compiles from a
 resource's fields; `make` one skeleton of a kind; `new` a new project.

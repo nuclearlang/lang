@@ -1,6 +1,6 @@
 # The `dart` dialect
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)
 
 How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings. Its framework dialect,
 `flutter`, generates the whole app of the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/README.md).

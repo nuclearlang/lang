@@ -8,7 +8,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as zlib from 'node:zlib';
 
-export const RELEASES = 'https://github.com/nuclearlang/lang/releases/download';
+export const RELEASES = 'https://github.com/nuclearlang/nuclearlang/releases/download';
 export const vsixUrl = (version: string) => `${RELEASES}/v${version}/nuclearlang-${version}.vsix`;
 
 /** What the pages load from the extension's folder: taken together when one is missing. A folder ends in `/`. */

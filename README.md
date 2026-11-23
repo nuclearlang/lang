@@ -12,8 +12,8 @@ it.
 [VS Code extension](https://marketplace.visualstudio.com/items?itemName=nuclearlang.nuclearlang) ·
 [Español](README.es.md)
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/nuclearlang/lang?color=a7ff00&label=release)](https://github.com/nuclearlang/lang/releases/latest)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/nuclearlang/nuclearlang?color=a7ff00&label=release)](https://github.com/nuclearlang/nuclearlang/releases/latest)
 [![license](https://img.shields.io/badge/license-Apache--2.0-a7ff00)](LICENSE)
 
 </div>
@@ -83,7 +83,7 @@ app with `-p web`.
 
 ## Community
 
-Questions and ideas: [GitHub Discussions](https://github.com/nuclearlang/lang/discussions). How to contribute:
+Questions and ideas: [GitHub Discussions](https://github.com/nuclearlang/nuclearlang/discussions). How to contribute:
 [CONTRIBUTING.md](CONTRIBUTING.md). Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Security:
 [SECURITY.md](SECURITY.md). How decisions are made: [GOVERNANCE.md](GOVERNANCE.md).
 

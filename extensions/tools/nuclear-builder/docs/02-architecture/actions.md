@@ -130,7 +130,7 @@ The wizard keeps a new team's skills and clones in its draft until *Create team*
 | Set the team, the stations, the branches | `line set team=… stations=[…]` | `line_set` | anyone |
 | Set the gates, the commands, forceConfirm, the addresses, the prices | `line set KEY=<json>` | `line_set` | user (the gates are the user's stops, the commands run in the shell, forceConfirm guards the money) |
 | *Pipeline settings* (opens the file; writes its defaults first) | `line set stations=… gates=… forceConfirm=false` | — | the page |
-| Export the CI file | `export github\|gitlab\|bitbucket --json` | `ci_export` | anyone; replacing a file: user |
+| Export the CI file (it installs Nuclear with the installer of `nuclearlang/nuclearlang`) | `export github\|gitlab\|bitbucket --json` | `ci_export` | anyone; replacing a file: user |
 | Compare the CI file with the line's (nothing written) | `export github\|gitlab\|bitbucket --print [--json]` | `ci_preview` | anyone |
 | *Check the connections* | `connections [--team <id>] --json` | `connections_check` | anyone |
 | The agents a conversation can choose (the chat's dropdown) | `agents --json`: the local Nuclear Developer (always), each agent whose command is on the PATH, each API provider with a key noted by the vault and a priced model; `{id, kind, provider, label, models, defaultModel, available, paid, why?}` | `agents_list` | anyone |

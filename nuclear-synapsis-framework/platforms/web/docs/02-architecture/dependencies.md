@@ -19,7 +19,7 @@ related: [overview.md, runtime.md]
 | The installer | `platform.toml`, `docs/07-reference/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-web` first |
 | The website of NuclearLang | this platform | a Synapsis web project | `website/` of this tree |
 
-The package names the tree as its repository (`nuclearlang/lang`, `package.json` `repository` and `bugs`).
+The package names the tree as its repository (`nuclearlang/nuclearlang`, `package.json` `repository` and `bugs`).
 
 ## Outside: `synapsis-web` (`packages/synapsis-web/package.json`)
 

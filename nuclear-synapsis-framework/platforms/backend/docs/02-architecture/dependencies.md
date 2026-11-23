@@ -18,7 +18,7 @@ related: [overview.md, runtime-python.md, runtime-typescript.md]
 | The mobile and web platforms | a backend's contract (`.nuclear/contract.json`) | generated models and repositories | ADR-synapsis-0006; the mobile example `tasks_app` is generated against `tasks_api` |
 | The installer | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-nest` first |
 
-Both packages name the tree as their repository: `nuclearlang/lang` (`pyproject.toml` `Repository`,
+Both packages name the tree as their repository: `nuclearlang/nuclearlang` (`pyproject.toml` `Repository`,
 `package.json` `repository` and `bugs`).
 
 ## Outside: `synapsis-py` (`packages/synapsis-py/pyproject.toml`)

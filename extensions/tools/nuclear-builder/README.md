@@ -1,6 +1,6 @@
 # Nuclear Builder
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/builder)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/builder)
 
 The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and
 every step shows who did it. In VS Code (`Ctrl+Alt+P`), JetBrains (`Alt+Shift+P`) and as `nuclear-builder` in a terminal or CI.

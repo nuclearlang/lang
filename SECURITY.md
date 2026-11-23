@@ -3,7 +3,7 @@
 ## Report a vulnerability
 
 Please do not open a public issue. Use GitHub's private reporting:
-[**Report a vulnerability**](https://github.com/nuclearlang/lang/security/advisories/new). Say what is affected, how to reproduce it and what an attacker gains. You will get an
+[**Report a vulnerability**](https://github.com/nuclearlang/nuclearlang/security/advisories/new). Say what is affected, how to reproduce it and what an attacker gains. You will get an
 answer within a week, and a fix or a plan within thirty days for a confirmed issue; you are credited in the release
 notes unless you prefer not to be.
 

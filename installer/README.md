@@ -1,6 +1,6 @@
 # The installers and the release
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![release](https://github.com/nuclearlang/lang/actions/workflows/release.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/release.yml) · [Website](https://nuclearlang.github.io)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) [![release](https://github.com/nuclearlang/nuclearlang/actions/workflows/release.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/release.yml) · [Website](https://nuclearlang.github.io)
 
 How NuclearLang gets onto a machine: an installer from the source tree, a release archive per system, the
 one-line installers, and the set-up of the AI services.

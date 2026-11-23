@@ -223,7 +223,7 @@ testALaunchAgentIsLeftAloneWhenLoadedAndRetriedWhileLaunchdHoldsIt(monkeypatch: 
 
 // The vectors computed ahead come from the release of this archive, or a mirror (ADR-graph-0003).
 testTheReleasesVectorsAreFetchedFromItsReleaseOrAMirror() void
-  expect(releaseUrl("0.1.8", "nuclearlang-embeddings-0.1.8.npz", {}) == "https://github.com/nuclearlang/lang/releases/download/v0.1.8/nuclearlang-embeddings-0.1.8.npz")
+  expect(releaseUrl("0.1.8", "nuclearlang-embeddings-0.1.8.npz", {}) == "https://github.com/nuclearlang/nuclearlang/releases/download/v0.1.8/nuclearlang-embeddings-0.1.8.npz")
   expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_DOWNLOAD": "http://127.0.0.1:9000" }) == "http://127.0.0.1:9000/x.npz")
   expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_REPO": "me/fork" }).startsWith("https://github.com/me/fork/releases/download/v0.1.8/"))
 

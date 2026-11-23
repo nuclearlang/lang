@@ -12,8 +12,8 @@ use std::process::{Command, ExitCode, Stdio};
 use std::time::{Duration, SystemTime};
 
 const CURRENT: &str = env!("CARGO_PKG_VERSION");
-const LATEST_URL: &str = "https://github.com/nuclearlang/lang/releases/latest";
-const LATEST_API: &str = "https://api.github.com/repos/nuclearlang/lang/releases/latest";
+const LATEST_URL: &str = "https://github.com/nuclearlang/nuclearlang/releases/latest";
+const LATEST_API: &str = "https://api.github.com/repos/nuclearlang/nuclearlang/releases/latest";
 const DAY: Duration = Duration::from_secs(24 * 60 * 60);
 /// The user has stopped: no use of NuclearLang for this long.
 const IDLE: Duration = Duration::from_secs(30 * 60);
@@ -417,9 +417,9 @@ mod tests {
 
     #[test]
     fn reads_the_version_of_the_redirect_and_of_the_api() {
-        assert_eq!(version_of("https://github.com/nuclearlang/lang/releases/tag/v0.1.16"), Some("0.1.16"));
+        assert_eq!(version_of("https://github.com/nuclearlang/nuclearlang/releases/tag/v0.1.16"), Some("0.1.16"));
         assert_eq!(version_of("{\n  \"url\": \"x\",\n  \"tag_name\": \"v0.80.0\",\n}"), Some("0.80.0"));
-        assert_eq!(version_of("https://github.com/nuclearlang/lang/releases/latest"), None);
+        assert_eq!(version_of("https://github.com/nuclearlang/nuclearlang/releases/latest"), None);
         assert_eq!(version_of(""), None);
     }
 

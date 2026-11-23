@@ -7,7 +7,7 @@ use pathlib{ Path }
 
 CI_STAGES = ["check", "test", "security", "artifacts", "deploy"]
 CI_PROVIDERS = ["github", "gitlab", "bitbucket"]
-INSTALL = "curl -fsSL https://raw.githubusercontent.com/nuclearlang/lang/main/installer/release/install.sh | sh"
+INSTALL = "curl -fsSL https://raw.githubusercontent.com/nuclearlang/nuclearlang/main/installer/release/install.sh | sh"
 COMMAND_NAMES = ["check", "build", "test", "security", "artifacts", "seed", "integration", "deploy"]
 
 // The default commands of a platform: the ones its CLI already has.

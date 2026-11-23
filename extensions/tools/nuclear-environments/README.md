@@ -1,6 +1,6 @@
 # Environments
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml)
 
 The settings of your app in every environment, without opening a `.env` file: each variable your code reads with
 `env("NAME", "default")`, its value in development, staging, production (any name), where the value comes from, and

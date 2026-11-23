@@ -1,6 +1,6 @@
 # The tools of NuclearLang
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools)
 
 What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator
 behind `new`, `make` and `gen`, and the MCP server an AI client talks to.

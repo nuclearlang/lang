@@ -6,7 +6,7 @@ Thank you for helping. The whole platform is this one repository; each folder is
 ## Set up
 
 ```sh
-git clone https://github.com/nuclearlang/lang && cd lang
+git clone https://github.com/nuclearlang/nuclearlang && cd lang
 installer/install.sh
 ```
 
@@ -36,9 +36,9 @@ Changes written with an AI agent are welcome under the same review: you answer f
 
 ## Where to start
 
-Issues labelled [`good first issue`](https://github.com/nuclearlang/lang/labels/good%20first%20issue); a dialect
+Issues labelled [`good first issue`](https://github.com/nuclearlang/nuclearlang/labels/good%20first%20issue); a dialect
 (TOML and templates, no compiler code: [nuclearlang/dialects/README.md](nuclearlang/dialects/README.md)); examples;
-type definitions; translations. Questions: [Discussions](https://github.com/nuclearlang/lang/discussions). How
+type definitions; translations. Questions: [Discussions](https://github.com/nuclearlang/nuclearlang/discussions). How
 decisions are made: [GOVERNANCE.md](GOVERNANCE.md). Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE).

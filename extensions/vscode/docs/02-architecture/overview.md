@@ -31,7 +31,7 @@ finishes (`onStartupFinished`).
 | `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |
 | `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |
 | `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent (only for an API's work, unless forced) | [ai-services.md](ai-services.md) |
-| `assets.ts`, `assetsPage.ts` | the pages' bundled files, local first (spec 023): a page's URL of `out/chat-embed.js`, `out/builder-flow.*` or an icon from the extension's folder, else from the copy kept in `<globalStorage>/assets/<version>/` (that folder added to the page's roots, beside the extension's); a file in neither (a broken install) is said and taken once from this version's release (`nuclearlang-<version>.vsix` of `github.com/nuclearlang/lang`), checked against its `.sha256` (else its announced size and its `extension/package.json` version), only the pages' files extracted; then *Reload Window*. No `vscode` import in `assets.ts` (`test/assets.test.ts`, which also scans every page's sources and bundles for a URL of the internet they would load) | [overview.md](overview.md) |
+| `assets.ts`, `assetsPage.ts` | the pages' bundled files, local first (spec 023): a page's URL of `out/chat-embed.js`, `out/builder-flow.*` or an icon from the extension's folder, else from the copy kept in `<globalStorage>/assets/<version>/` (that folder added to the page's roots, beside the extension's); a file in neither (a broken install) is said and taken once from this version's release (`nuclearlang-<version>.vsix` of `github.com/nuclearlang/nuclearlang`), checked against its `.sha256` (else its announced size and its `extension/package.json` version), only the pages' files extracted; then *Reload Window*. No `vscode` import in `assets.ts` (`test/assets.test.ts`, which also scans every page's sources and bundles for a URL of the internet they would load) | [overview.md](overview.md) |
 | `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |
 | `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |
 | `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |
@@ -48,7 +48,7 @@ is here: `src/chatHost.ts` and `src/chatView.ts` ([ai-services.md](ai-services.m
 
 ## What `package.json` contributes
 
-- Its `repository` is the tree, `nuclearlang/lang`, directory `extensions/vscode`; `bugs` its issues.
+- Its `repository` is the tree, `nuclearlang/nuclearlang`, directory `extensions/vscode`; `bugs` its issues.
 
 - The language `nuclear` (`.nuc`), its grammars, the semantic token modifiers and scopes.
 - The themes (Chernobyl, Chernobyl Soft) and the icon themes (Chernobyl Icons, Chernobyl Soft Icons).

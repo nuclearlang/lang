@@ -1,7 +1,7 @@
 # NuclearLang for VS Code
 
-[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml)
-· [Website](https://nuclearlang.github.io/tools/vscode) · [Source](https://github.com/nuclearlang/lang/tree/main/extensions/vscode)
+[![extension-vscode](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/extension-vscode.yml)
+· [Website](https://nuclearlang.github.io/tools/vscode) · [Source](https://github.com/nuclearlang/nuclearlang/tree/main/extensions/vscode)
 
 **NuclearLang** (`.nuc`) is a minimal language written by AI agents and read by people. A Rust transpiler turns it
 into the code an expert would write: Dart and Flutter, TypeScript, or Python. Its framework, **Synapsis**, gives you
@@ -126,10 +126,10 @@ Theme* → Chernobyl.
 
 ## Learn more
 
-- [The guide](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/README.md): every
+- [The guide](https://github.com/nuclearlang/nuclearlang/blob/main/extensions/vscode/docs/08-guides/README.md): every
   command, key and setting
-- [The workspace](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/workspace.md) ·
-  [Run and debug](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/docs/08-guides/run-and-debug.md)
-- [What changed](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/CHANGELOG.md) ·
-  [Issues](https://github.com/nuclearlang/lang/issues)
-- To change it: [AGENTS.md](https://github.com/nuclearlang/lang/blob/main/extensions/vscode/AGENTS.md)
+- [The workspace](https://github.com/nuclearlang/nuclearlang/blob/main/extensions/vscode/docs/08-guides/workspace.md) ·
+  [Run and debug](https://github.com/nuclearlang/nuclearlang/blob/main/extensions/vscode/docs/08-guides/run-and-debug.md)
+- [What changed](https://github.com/nuclearlang/nuclearlang/blob/main/extensions/vscode/CHANGELOG.md) ·
+  [Issues](https://github.com/nuclearlang/nuclearlang/issues)
+- To change it: [AGENTS.md](https://github.com/nuclearlang/nuclearlang/blob/main/extensions/vscode/AGENTS.md)

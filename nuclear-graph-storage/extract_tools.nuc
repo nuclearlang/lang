@@ -392,7 +392,7 @@ ExtractTools
       rows.add({
         "id": "component:${name}", "type": "component", "title": "`${name}` ${version} — ${what}",
         "summary": "`${name}` is ${what}; its version is ${version}.",
-        "body": "Version ${version}, read from `${rel}`. Repository: `nuclearlang/lang`, the whole tree.",
+        "body": "Version ${version}, read from `${rel}`. Repository: `nuclearlang/nuclearlang`, the whole tree.",
         "keys": ["${name} version"], "asks": ["what version is ${name}", "which version of ${name} is this"],
         "sources": [rel], "meta": { "tool": name, "name": "version", "version": version },
         "data": { "component": name, "what": what, "file": rel },

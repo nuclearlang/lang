@@ -1,6 +1,6 @@
 # NuclearLang website
 
-[![website](https://github.com/nuclearlang/lang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/website.yml) · [Website](https://nuclearlang.github.io)
+[![website](https://github.com/nuclearlang/nuclearlang/actions/workflows/website.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/website.yml) · [Website](https://nuclearlang.github.io)
 
 The site of NuclearLang: it shows in a minute what NuclearLang gives and publishes every project's documentation. It
 is itself a Synapsis web app written in Nuclear (dialect `react`).

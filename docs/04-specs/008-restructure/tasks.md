@@ -74,7 +74,7 @@ own for the workflows); the framework's changelog is `tools/cli/CHANGELOG.md`, t
 - [x] T5.1 Reinstalled from the tree (`installer/install.sh`); the AI services run on the renamed code. The VS Code
       extension was built and packaged, not installed: its version must be raised first.
 - [x] T5.2 Publish the website from this repository: the `nuclearlang.github.io` repository holds only the
-      workflow that builds `website/` of `nuclearlang/lang` (its roadmap in `website/`).
+      workflow that builds `website/` of `nuclearlang/nuclearlang` (its roadmap in `website/`).
 - [x] T5.3 The repositories that are now folders are archived (2026-11-16): `dragonfly`, `dragonfly-web`,
       `dragonfly-mobile`, `dragonfly-backend`, `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-developer`,
       `nuclear-knowledge`, `nuclear-graph`. Not archived: `nuclear-zed` (the grammar `extensions/zed/extension.toml`

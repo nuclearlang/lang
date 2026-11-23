@@ -1,6 +1,6 @@
 # Synapsis mobile
 
-[![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/platforms/mobile)
+[![platform-mobile](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/platforms/mobile)
 
 Apps for Android, iOS, desktop and the web, written once in Nuclear and built today with the `flutter` dialect, on
 the runtime packages `synapsis` and `synapsis_genkit`.

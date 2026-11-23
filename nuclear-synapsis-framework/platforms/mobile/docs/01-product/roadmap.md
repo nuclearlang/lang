@@ -38,7 +38,7 @@ Done; each needs a manual test.
   generators `nuclear g chat|flow|tools`, a persistent `Knowledge` (today in memory), multimodal parts (images)
   in chats.
 - **The packages:** publish `synapsis` on pub.dev; then `nuclear new` uses the published version. The
-  `repository` field of both pubspecs names `github.com/nuclearlang/lang/...`.
+  `repository` field of both pubspecs names `github.com/nuclearlang/nuclearlang/...`.
   TODO(human): which `repository` URL do the pubspecs take now that the packages live in the one `nuclear`
   repository? And is the package's license MIT (its README and [synapsis.md](../07-reference/synapsis.md)) or
   Apache-2.0 (its `LICENSE` file)?

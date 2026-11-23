@@ -38,7 +38,7 @@ payment, a decision, a click in a website's settings), **agent → user** (the a
       `CONTRIBUTING.md` with the DCO.
 - [x] T2.7 agent: topics (14), description, Discussions on, private vulnerability reporting on (2026-11-20).
       user: upload the social preview image (`github-profile/profile/assets/social-preview.png`, 1280×640, made)
-      in github.com/nuclearlang/lang → Settings → Social preview (no API).
+      in github.com/nuclearlang/nuclearlang → Settings → Social preview (no API).
 - [ ] T2.8 agent: labels done (`good first issue`, `help wanted`, `dialect`, `platform`, `docs`, `rfc`); left: the first ten
       `good first issue` issues, each with what, where and how to test.
 - [ ] T2.9 agent: `FUNDING.yml`, `CITATION.cff`, `TRADEMARKS.md`, `PRIVACY.md`. user: open GitHub Sponsors and Open
@@ -56,7 +56,7 @@ payment, a decision, a click in a website's settings), **agent → user** (the a
 - [ ] T3.4 agent: Homebrew tap, Scoop bucket, winget manifest, AUR package, updated by the release.
 - [ ] T3.5 Open VSX namespace verified (EclipseFdn/open-vsx.org#16010, done 2026-11-20); release.yml publishes with
       trusted publishing once the secret is gone (done). Left, user: register the trusted publisher on open-vsx.org
-      (nuclearlang/lang, release.yml), delete `OVSX_PAT`.
+      (nuclearlang/nuclearlang, release.yml), delete `OVSX_PAT`.
 - [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).
 - [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact
       attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).

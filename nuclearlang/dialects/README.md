@@ -1,6 +1,6 @@
 # Dialects
 
-[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)
+[![ci](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/nuclearlang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)
 
 A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run
 time. The same `.nuc` is written once and each dialect turns it into its language or framework.
