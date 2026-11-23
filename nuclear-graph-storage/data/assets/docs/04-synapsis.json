@@ -3955,7 +3955,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#what-the-loader-checks.8915cf",
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#what-the-loader-checks.4b6032",
    "type": "context",
    "title": "The contract of a platform: `platform.toml` — What the loader checks",
    "summary": "`check_platform` in `nuclearlang/crates/nuclear-dialect/src/model.rs` runs when a dialect that names a platform is loaded.",
@@ -3973,7 +3973,7 @@
     "| The dialect declares a plugin that is not in `plugins` | error |",
     "| `[layout]` names something that is not a kind of the platform | error |",
     "| `[skeletons]` or a `[[generators.<what>]]` of the platform's `generators.toml` names a kind with no place in `[layout]`; a generator's `name` or `template` does not compile (`load_generators`, same file) | error |",
-    "| The dialect does not bring a plugin of `plugins` yet | warning |"
+    "| The dialect does not bring a plugin of `plugins` yet | warning of `nuclear dialect check` and the bundle check (a build is silent); an error in a project that enables it |"
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"

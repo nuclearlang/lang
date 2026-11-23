@@ -446,7 +446,8 @@
     "- **The gates**: after Analysis, Design and before Delivery by default (`.nuclear/builder.json` `gates`); `nuclear-builder run --resume <id>` goes on.",
     "- **The journal**: `.nuclear/builder/runs/<id>.md`, next to the run file `<id>.json` the editors draw.",
     "- **When it fails**: the diagnoser says why; `nuclear-builder retry <id>` goes on from the step that failed, keeping every step before it (the Developer's code too); `--from <station>` runs a station again and `--step <step>` one step with every step after it; `nuclear-builder restart <id>` runs it all again. A retry or a restart that would take files back asks first (refused without `--yes` outside a terminal; the page and the tools ask the user), and every file the engine takes back is set aside first in `.nuclear/builder/runs/<id>.set-aside/`: no agent's work is lost.",
-    "- **On a server**: `nuclear-builder ci` runs the commands of `.nuclear/builder.json` and `nuclear-builder export github|gitlab|bitbucket` writes the CI file."
+    "- **On a server**: `nuclear-builder ci` runs the commands of `.nuclear/builder.json` and `nuclear-builder export github|gitlab|bitbucket` writes the CI file.",
+    "- **Retries, smallest first** (2026-11-23): a call or command that fails is tried again in place (2 times), then its part of the station (once), then the station's repair (once), then the run waits for the user (Retry / End as failed / Later): it never ends failed by itself while something can be retried. A failure never takes the agents' files out of the project. What is not worth retrying (budget, a missing key or model, 401/403) goes to the user at once. The bounds: `.nuclear/builder.json` `retries`."
    ],
    "keys": [
     "loop",

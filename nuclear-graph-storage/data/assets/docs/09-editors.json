@@ -5871,6 +5871,21 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d28cf4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",

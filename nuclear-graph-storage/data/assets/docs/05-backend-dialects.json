@@ -12,7 +12,7 @@
    "body": [
     "What this dialect adds to the platform's sheet: the project is generated as FastAPI + SQLAlchemy 2 async + pydantic +",
     "LangGraph in `build/` (never edit it). `nuclear build`, `nuclear install` (a virtualenv), `nuclear run`",
-    "(uvicorn), `nuclear test` (pytest), `nuclear migrate` (Alembic). Names are written in snake_case underneath; the",
+    "(`python -m synapsis.server`, uvicorn underneath), `nuclear test` (pytest), `nuclear migrate` (Alembic). Names are written in snake_case underneath; the",
     "`.nuc` keeps camelCase and the compiler's messages use it. Full rules: `nuclear help fastapi`."
    ],
    "platforms": [
@@ -83,30 +83,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#1-project.6e1ed0",
-   "type": "spec",
-   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 1. Project",
-   "summary": "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"fastapi\")`, backend.md §1); `nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml` with the `app(...)` name, version and description).",
-   "body": [
-    "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"fastapi\")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);",
-    "`nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml`",
-    "with the `app(...)` name, version and description). Run it with",
-    "`uvicorn app.main:app` from `build/`; test it with `pytest`."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "fastapi"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#1-project.a80fd8",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 1. Project",
@@ -132,6 +108,31 @@
     "",
     "Generated once per project: `app/main.py` (the FastAPI `app`: config, component configs, controllers, listeners),",
     "`tests/conftest.py` (each test with the connections open, databases in memory) and `pyproject.toml`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#1-project.f7268a",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 1. Project",
+   "summary": "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"fastapi\")`, backend.md §1); `nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml` with the `app(...)` name, version and description).",
+   "body": [
+    "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"fastapi\")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);",
+    "`nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml`",
+    "with the `app(...)` name, version and description). Run it with",
+    "`python -m synapsis.server` from `build/` (the runtime's server over uvicorn: `HOST`, default `127.0.0.1`, and `PORT`,",
+    "default 8000; `--reload` in development; no `Server` header, the request lines the app's own); test it with `pytest`."
    ],
    "platforms": [
     "backend"
@@ -990,7 +991,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.20731a",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.7d2d32",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
    "summary": "from future import annotations from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env class ProjectConfig(AppConfig): connections: list[Connection] = [ Postgres(url=env(\"DATABASE_URL\", \"postgres://localhost/rick\")), Redis(url=env(\"REDIS_URL\", \"redis://localhost:6379/0\")),…",
@@ -1009,20 +1010,7 @@
     "    ]",
     "```",
     "",
-    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)",
-    "",
-    "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app",
-    "serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
-    "`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:",
-    "`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards",
-    "on the upgrade and sends every request frame through the app with httpx's ASGI transport.",
-    "",
-    "```nuclear",
-    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
-    "",
-    "appConfig ProjectConfig",
-    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
-    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]"
+    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)"
    ],
    "platforms": [
     "backend"
@@ -1074,18 +1062,53 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.fbb585",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.e8bf7d",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
-   "summary": "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))]) controller AdminController() @get() info() string \"ok\" from future import annotations from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get from synapsis.sockets import WebSocketServer…",
+   "summary": "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app serves no `/openapi.json`; no app serves `/docs` or `/redoc`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
    "body": [
+    "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app",
+    "serves no `/openapi.json`; no app serves `/docs` or `/redoc`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
+    "`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:",
+    "`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards",
+    "on the upgrade (a refusal is the upgrade's HTTP answer, the WebSocket Denial Response) and sends every request frame",
+    "through the app with httpx's ASGI transport. Every request passes the runtime's `Edge` (an ASGI middleware: the line",
+    "of the log, the cause of a 500, the body's limit and type, CORS); a parameter of the path or the query is read by one",
+    "dependency of the route (`synapsis.wire.parse_param`), the body by FastAPI through the runtime's JSON reader.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
+    "",
     "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
     "controller AdminController()",
     "  @get()",
     "  info() string",
     "    \"ok\"",
-    "```",
-    "",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.f8f1e0",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
+   "summary": "from future import annotations from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get from synapsis.sockets import WebSocketServer class ProjectConfig(AppConfig): connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")]…",
+   "body": [
     "```python",
     "from __future__ import annotations",
     "",
@@ -1604,30 +1627,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api.473231",
-   "type": "guide",
-   "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 4. Use cases, models and the API",
-   "summary": "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.",
-   "body": [
-    "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database.",
-    "Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written",
-    "by the runtime from what FastAPI and pydantic report; `/openapi.json` and `/docs` show the document the transpiler",
-    "wrote from the contract, not one worked out from the generated Python (ADR-synapsis-0013)."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/python/docs/08-guides/fastapi.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "fastapi"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api.7ffd51",
    "type": "guide",
    "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 4. Use cases, models and the API",
@@ -1667,6 +1666,30 @@
     "        return await self.characters.character(id)",
     "    # ...",
     "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/08-guides/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#4-use-cases-models-and-the-api.da2724",
+   "type": "guide",
+   "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 4. Use cases, models and the API",
+   "summary": "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller.",
+   "body": [
+    "An `Err(NotFound(...))` becomes a 404, `Conflict` a 409, and an invalid body a 400, with no code in the controller. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database.",
+    "Every error answers Nuclear's body (`status`, `message`, and the reasons of an invalid body in `errors`), written",
+    "by the runtime from what FastAPI and pydantic report; `/openapi.json` is the document the transpiler",
+    "wrote from the contract (no `/docs` page), not one worked out from the generated Python (ADR-synapsis-0013)."
    ],
    "platforms": [
     "backend"
@@ -1745,17 +1768,18 @@
    "id": "doc:nuclearlang/dialects/python/docs/08-guides/fastapi.md#6-build-run-and-test",
    "type": "guide",
    "title": "Synapsis for Python: a backend with FastAPI and LangGraph — 6. Build, run and test",
-   "summary": "nuclear build # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml) nuclear install # a venv in build/ with the runtime and the app's packages nuclear run # uvicorn app.main:app --reload: http://localhost:8000/docs nuclear test # pytest: the tests written in Nuclear The same…",
+   "summary": "nuclear build # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml) nuclear install # a venv in build/ with the runtime and the app's packages nuclear run # python -m synapsis.server --reload: http://localhost:8000 nuclear test # pytest: the tests written in Nuclear The same…",
    "body": [
     "```sh",
     "nuclear build                    # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml)",
     "nuclear install                  # a venv in build/ with the runtime and the app's packages",
-    "nuclear run                      # uvicorn app.main:app --reload: http://localhost:8000/docs",
+    "nuclear run                      # python -m synapsis.server --reload: http://localhost:8000",
     "nuclear test                     # pytest: the tests written in Nuclear",
     "```",
     "",
     "The same by hand, from `build/`: `python -m venv .venv`, `pip install ~/.local/share/nuclearlang/packages/synapsis-py`",
-    "(the runtime, until it is on PyPI), `pip install -e \".[test]\"`, `uvicorn app.main:app --reload`, `pytest`.",
+    "(the runtime, until it is on PyPI), `pip install -e \".[test]\"`, `python -m synapsis.server --reload` (production: without `--reload`; `HOST=0.0.0.0` in a",
+    "container), `pytest`.",
     "",
     "In VS Code: while ▷ Serve runs, saving a `.nuc` rebuilds and uvicorn reloads; ◉ Debug (or F5 with",
     "`build/<name>.code-workspace`) runs the server under debugpy (the Python extension) with the venv of `build/`: a",
@@ -1853,13 +1877,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#1-project.25487e",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#1-project.16d910",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 1. Project",
    "summary": "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"nestjs\")`, backend.md §1); `nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`.",
    "body": [
     "A folder with `config.nuc` (`synapsis(platform = \"backend\", dialect = \"nestjs\")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);",
-    "`nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`. In `build/`: `npm install`, `npm run dev` (port `PORT`, default 3000), `npm test`.",
+    "`nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`. In `build/`: `npm install`, `npm run dev` (port `PORT`, default 3000; address `HOST`, default `127.0.0.1`), `npm test`.",
     "The output is ES modules (NestJS 12): relative imports name the `.js` file.",
     "",
     "```",
@@ -2594,7 +2618,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-3-model.e9e257",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-3-model.c7e0f1",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.3 Model",
    "summary": "What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons).",
@@ -2614,15 +2638,15 @@
     "```",
     "",
     "```typescript",
-    "import { IsEmail, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';",
-    "import { checkModel } from 'synapsis-nest';",
+    "import { IsEmail, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';",
+    "import { IsWhole, checkModel } from 'synapsis-nest';",
     "",
     "export class NewTask {",
     "  @IsString()",
     "  @MinLength(1)",
     "  @MaxLength(200)",
     "  title!: string;",
-    "  @IsInt()",
+    "  @IsWhole()",
     "  @Min(1)",
     "  @Max(3)",
     "  priority: number = 2;",
@@ -2856,7 +2880,43 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.3556bd",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.1e5996",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
+   "summary": "@Get(':id') async one(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, Task>> { return await this.tasks.task(id); } @Patch(':id') async complete(@Param('id', RequiredPipe, IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await…",
+   "body": [
+    "@Get(':id')",
+    "  async one(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, Task>> {",
+    "    return await this.tasks.task(id);",
+    "  }",
+    "",
+    "  @Patch(':id')",
+    "  async complete(@Param('id', RequiredPipe, IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
+    "    return await this.tasks.complete(id, changes);",
+    "  }",
+    "",
+    "  @Get()",
+    "  search(@Query('text', TextPipe) text?: string): string {",
+    "    return text ?? '';",
+    "  }",
+    "}",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.7504b1",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
    "summary": "REST routes, like NestJS: `@controller(\"tasks\")` and `@get`, `@post` (201), `@put`, `@patch`, `@delete` with Nest's route (`\":id\"`), and `@status(204)`.",
@@ -2885,7 +2945,7 @@
     "```typescript",
     "import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';",
     "import { IsBoolean, IsOptional } from 'class-validator';",
-    "import { AppError, IntPipe, Result, checkModel } from 'synapsis-nest';",
+    "import { AppError, IntPipe, RequiredPipe, Result, TextPipe, checkModel } from 'synapsis-nest';",
     "",
     "export class TaskChanges {",
     "  @IsOptional()",
@@ -2903,42 +2963,6 @@
     "@Controller('tasks')",
     "export class TasksController {",
     "  constructor(private readonly tasks: TasksAppComponent) {}"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "nestjs"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-6-controller.37ca2b",
-   "type": "spec",
-   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.6 Controller",
-   "summary": "@Get(':id') async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> { return await this.tasks.task(id); } @Patch(':id') async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> { return await this.tasks.complete(id,…",
-   "body": [
-    "@Get(':id')",
-    "  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {",
-    "    return await this.tasks.task(id);",
-    "  }",
-    "",
-    "  @Patch(':id')",
-    "  async complete(@Param('id', IntPipe) id: number, @Body() changes: TaskChanges): Promise<Result<AppError, Task>> {",
-    "    return await this.tasks.complete(id, changes);",
-    "  }",
-    "",
-    "  @Get()",
-    "  search(@Query('text') text?: string): string {",
-    "    return text ?? '';",
-    "  }",
-    "}",
-    "```"
    ],
    "platforms": [
     "backend"
@@ -3620,7 +3644,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/nestjs.md#4-the-controller.a6af61",
+   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/nestjs.md#4-the-controller.967a98",
    "type": "guide",
    "title": "Synapsis for NestJS: a TypeScript backend with Sequelize — 4. The controller",
    "summary": "@controller(\"tasks\") controller TasksController(tasks: TasksAppComponent) @get() all(done?: boolean) Result<Error, Task[]> ~tasks.list(done) @get(\"{id}\") one(id: int) Result<Error, Task> ~tasks.task(id) @post() create(input: NewTask) Result<Error, Task> ~tasks.create(input) @Controller('tasks')…",
@@ -3647,12 +3671,12 @@
     "  constructor(private readonly tasks: TasksAppComponent) {}",
     "",
     "  @Get()",
-    "  async all(@Query('done', new ParseBoolPipe({ optional: true })) done?: boolean): Promise<Result<AppError, Task[]>> {",
+    "  async all(@Query('done', BoolPipe) done?: boolean): Promise<Result<AppError, Task[]>> {",
     "    return await this.tasks.list(done);",
     "  }",
     "",
     "  @Get(':id')",
-    "  async one(@Param('id', IntPipe) id: number): Promise<Result<AppError, Task>> {",
+    "  async one(@Param('id', RequiredPipe, IntPipe) id: number): Promise<Result<AppError, Task>> {",
     "    return await this.tasks.task(id);",
     "  }",
     "  // ...",
@@ -3673,7 +3697,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/nestjs.md#4-the-controller.d7c8eb",
+   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/nestjs.md#4-the-controller.acea99",
    "type": "guide",
    "title": "Synapsis for NestJS: a TypeScript backend with Sequelize — 4. The controller",
    "summary": "Path parameters, query parameters and the body are found from the route and the types; the pipes come out by themselves.",
@@ -3681,8 +3705,11 @@
     "Path parameters, query parameters and the body are found from the route and the types; the pipes come out by",
     "themselves. `Err(NotFound(...))` answers 404, `Conflict` 409, an invalid body 400. What the database itself refuses (a repeated unique value, a foreign key that points at nothing, a null in a required column, a text longer than its `@column(length = n)`) answers 409 `conflict` too, whatever the database. Every error answers Nuclear's body",
     "(`status`, `message`, and the reasons of an invalid body in `errors`), written by the runtime's `ErrorFilter`",
-    "whatever Nest would write; a number or a boolean of the route or the query is read by the runtime's `IntPipe`,",
-    "`DoublePipe` and `BoolPipe`, which name the parameter in the reason (ADR-synapsis-0013)."
+    "whatever Nest would write; a parameter of the route or the query is read by the runtime's `IntPipe`, `DoublePipe`,",
+    "`BoolPipe` and `TextPipe` (`RequiredPipe` when it has no default), by the platform's rules (exactly its type, given",
+    "once), and the route refuses every refused one together, before the body (ADR-synapsis-0013). The body is read by",
+    "the runtime's own JSON reader (Nest's parsers are off: JSON only, `maxBodySize`); `main.ts` listens on `HOST`",
+    "(default `127.0.0.1`) and `PORT`."
    ],
    "platforms": [
     "backend"

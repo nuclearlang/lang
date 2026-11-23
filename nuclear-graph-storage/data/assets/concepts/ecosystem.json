@@ -404,7 +404,8 @@
     "Real time and guards are configuration too: a backend's `WebSocketServer(path = \"ws\")` in `connections` and `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]`; a web app's `WebSocket(url = \"ws://...\")` instead of `Http(...)` (can:real-time, can:backend-guards).",
     "",
     "A value that changes per machine or per environment comes from `env(\"DATABASE_URL\", \"default\")`, valued by the project's `.env` files and the keyring (concept:environments). A secret is never written in the code.",
-    "Several apps of one business project live in a workspace: a folder with `.workspace/workspace.nuc` that lists them, each with its own `config.nuc` (concept:workspace)."
+    "Several apps of one business project live in a workspace: a folder with `.workspace/workspace.nuc` that lists them, each with its own `config.nuc` (concept:workspace).",
+    "Limits of a backend are words of the `appConfig` too: `maxBodySize: int` (1 MB by default) and `maxPageSize: int` (100); where it listens is the environment's `HOST` (127.0.0.1 by default) and `PORT`."
    ],
    "keys": [
     "config.nuc",
@@ -972,7 +973,8 @@
     "|---|---|",
     "| `nuclearlang/` | the language: the compiler, the language server, the base words, the examples |",
     "| `nuclearlang/dialects/` | the dialects: `python` (with `fastapi`), `typescript` (with `nestjs`, `react`), `dart` (with `flutter`), `nodejs` |",
-    "| `nuclear-synapsis-framework/` | the framework and its three platforms: `mobile`, `backend`, `web` |", "| `nuclear-synapsis-framework/lodash/` | the helpers of lodash that serve Nuclear (lists, maps, texts, numbers, functions), written in Nuclear and tested in every language dialect |",
+    "| `nuclear-synapsis-framework/` | the framework and its three platforms: `mobile`, `backend`, `web` |",
+    "| `nuclear-synapsis-framework/lodash/` | the helpers of lodash that serve Nuclear (lists, maps, texts, numbers, functions), written in Nuclear and tested in every language dialect |",
     "| `tools/` | the `nuclear` command, the code generator, the MCP server (`nuclear-mcp`) |",
     "| `extensions/` | the VS Code, JetBrains and Zed extensions and their tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) |",
     "| `device-emulators/` | the devices the tools and the editors start |",

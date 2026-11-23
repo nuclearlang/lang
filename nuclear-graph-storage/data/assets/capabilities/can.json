@@ -15,7 +15,8 @@
     "- Guards: `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]` in the `appConfig`, `@controller(\"x\", guards = [...])` for one controller (see can:backend-guards).",
     "- `WebSocketServer(path = \"ws\")` in the connections serves the same controllers over a WebSocket (see can:real-time).",
     "- The build serves `/.nuclear/contract.json` and `/.nuclear/openapi.json`.",
-    "- The same Nuclear builds as a Python service (`fastapi`) or a TypeScript one (`nestjs`)."
+    "- The same Nuclear builds as a Python service (`fastapi`) or a TypeScript one (`nestjs`).",
+    "- The edge, the same in every dialect: a body is JSON in UTF-8 (anything else, a form too, answers 415), at most 1 MB (413; `maxBodySize: int` in the `appConfig`), nested 512 levels at most; an `int` is 64-bit signed and a `double` finite; a path or query parameter is exactly its type (`true`/`false`, no `0x1`), given once; a method a route lacks answers 405 with `Allow`, HEAD like GET, OPTIONS with `Allow`; paths match as written (no redirect for a last `/`). No `/docs` nor `/redoc`; `/openapi.json` stays. The app listens on 127.0.0.1 (`HOST` and `PORT` change it); no `Server` nor `X-Powered-By` header."
    ],
    "keys": [
     "rest api",
@@ -75,7 +76,8 @@
     "- Migrations, the same in every dialect (TypeORM's behaviour is their rule): `nuclear migrate make \"<message>\"`, `nuclear migrate [--to <migration>]`, `nuclear migrate down [--to <migration>]`, `nuclear migrate status`; `--fake` marks them applied or reverted without running them (a database that already has the tables), `--transaction all|each|none` (default `all`). A renamed table or column is told to `make`, or its data is dropped: `nuclear migrate make \"<message>\" --rename shops=stores --rename orders.shop_id=store_id` (the database's names).",
     "- Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`. Tests run on an in-memory database. `createTables = true` (development) makes the same schema the migrations make.",
     "",
-    "Both dialects are checked on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11 in Docker (`platforms/backend/checks/database-check`): the same answers, byte for byte."
+    "Both dialects are checked on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11 in Docker (`platforms/backend/checks/database-check`): the same answers, byte for byte.",
+    "- A page has at most 100 rows: a larger `size` is clamped to 100 and the answer's `size` says so (`maxPageSize: int` in the `appConfig`). `orderBy` and `where` take only columns. Known limits: an `int` column is 32-bit on PostgreSQL, MySQL and MariaDB (2^31 answers 500), and `%` and `_` in a text given to `like` are wildcards."
    ],
    "keys": [
     "database",
@@ -569,7 +571,8 @@
     "- Specs imported from Jira or a GitHub issue (VS Code).",
     "- The internet for facts: `web_search`, `web_read`, `api_inspect` (MCP tools).",
     "- CI: `nuclear-builder export github|gitlab|bitbucket`; `nuclear-builder ci` runs the same commands locally.",
-    "- A direct message with the general agent (Atlas, `nuclear-builder member --role chat`, its provider in `nuclear.builder.chat`): Nuclear Atlas's page (VS Code); it informs and runs no task: `/task` there is answered with the tech leads to ask."
+    "- A direct message with the general agent (Atlas, `nuclear-builder member --role chat`, its provider in `nuclear.builder.chat`): Nuclear Atlas's page (VS Code); it informs and runs no task: `/task` there is answered with the tech leads to ask.",
+    "- A run retries what fails from the smallest unit to the largest and keeps the agents' work in place; every node of the tree can be retried by hand (concept:loop)."
    ],
    "keys": [
     "ai workflow",
@@ -799,7 +802,8 @@
     "- No code for the spans: each request and each use case's `exec` (named `component › usecase › Class.exec`); an `Err` marks the span as an error.",
     "- Business metrics: `Metric.count(\"orders.created\", region = r)`, `Metric.record(\"orders.total\", total)`.",
     "- `@untraced` on a use case (no span), on a route (the request starts no trace, e.g. a health check) or on a controller (every route). Without the plugin it does nothing.",
-    "- Not yet: nestjs, spans of queries, outgoing HTTP, listeners and agents; `Log` with the trace."
+    "- Not yet: nestjs, spans of queries, outgoing HTTP, listeners and agents; `Log` with the trace.",
+    "- The log, the same in every dialect: one line per request on stdout (`<time> <METHOD> <path without its query> <status> <ms>ms`), and the cause of each 500 on stderr with its stack; never a value the client sent."
    ],
    "keys": [
     "telemetry",
@@ -858,7 +862,8 @@
     "- The frames (JSON): `{id, method, path, headers, body}` → `{id, status, body}`; `{subscribe}`, `{unsubscribe}`; `{event, data}`.",
     "- `nuclear new <name> -p backend --websocket`, `nuclear new <name> -p web --websocket`.",
     "- The contract says `webSocket`, each controller's `transports` and the `events` the app publishes.",
-    "- Tested in the project: `ws = (~appClient().socket(\"/ws\", headers = TOKEN)).value`, `~ws.subscribe(t)`, `~ws.request(...)`, `~ws.next()` (see can:test-the-app)."
+    "- Tested in the project: `ws = (~appClient().socket(\"/ws\", headers = TOKEN)).value`, `~ws.subscribe(t)`, `~ws.request(...)`, `~ws.next()` (see can:test-the-app).",
+    "- The socket's limits: a frame of at most 1 MB (else closed with 1009); a frame that is not a JSON object, or binary, closes with 1003; a frame's path starts with one `/` and stays in the app (else 404); an upgrade on another path answers 404, a refused one the guard's status with the error body."
    ],
    "keys": [
     "websocket",
@@ -919,7 +924,8 @@
     "- A guarded app serves no documentation pages; the contract lists the guards with their headers, never a value.",
     "- A project's tests prove them: `app = appClient()`, `expect((~app.get(\"/x\")).status == 401)`, with the test token of `testEnv(TOKEN = \"test\")` in `config.nuc` (see can:test-the-app).",
     "- `nuclear new <name> -p backend --token <ENV_VAR>` writes them.",
-    "- Not yet: users, sessions, a guard kind for checks beyond headers."
+    "- Not yet: users, sessions, a guard kind for checks beyond headers.",
+    "- A guard's header is read the same in every dialect: its value trimmed; a header sent twice counts as missing (`Token` refuses it); `NoOrigin` refuses any `Origin`, even empty."
    ],
    "keys": [
     "guard",
@@ -969,7 +975,8 @@
    "body": [
     "- `origins: string[] = [env(\"WEB_ORIGIN\", \"http://localhost:5173\")]` in `config/project_config.nuc`, beside `connections`.",
     "- Without `origins`, no browser on another origin can call the API: a web app that reads the backend fails with a CORS error in its console.",
-    "- `NoOrigin()` (a guard) does the opposite: it refuses every request from a web page."
+    "- `NoOrigin()` (a guard) does the opposite: it refuses every request from a web page.",
+    "- A preflight from a listed origin answers 200 (the methods, the requested headers, max-age 1800); from any other origin 403 `origin not allowed`; credentials are never allowed."
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
@@ -1324,7 +1331,8 @@
     "- `rule` is the validation's name in Nuclear: `required`, `type`, `minLength`, `maxLength`, `min`, `max`, `pattern`, `email`, `url`, `json` (the body is not JSON), `invalid`. A field that breaks several names the first of that list. `field` is a path (`items.0.name`).",
     "- Each runtime converts what its framework reports into that body, so a client never knows the dialect.",
     "- `GET /openapi.json` and `GET /.nuclear/openapi.json`: the OpenAPI 3.1 document the transpiler writes from the contract; its `Error` schema is this body.",
-    "- A client that read `detail` or `statusCode` (before 0.91) reads `message` and `status`."
+    "- A client that read `detail` or `statusCode` (before 0.91) reads `message` and `status`.",
+    "- The edge's answers: 413 `content too large` (a body over the limit), 415 `unsupported media type` (not JSON), 405 with `Allow`; the cause of every 500 is logged (its type, message and stack) and never answered; no value a client sent is ever logged."
    ],
    "keys": [
     "error body",

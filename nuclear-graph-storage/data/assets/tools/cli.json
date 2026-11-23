@@ -228,9 +228,11 @@
     "                                on with it); never the spending: that is confirmed twice where you answer",
     "nuclear-builder run stop <id> | show <id> | journal <id>",
     "                                a run's process stopped (a run that asks waits) · its file (JSON) · its journal",
-    "nuclear-builder retry <id>                   a failed run again from the step that failed (every step before it kept)",
+    "nuclear-builder retry <id>                   a failed run (or one that waits for its retry) again in place from the",
+    "                                step that failed: every step before it and every file kept",
+    "nuclear-builder retry <id> --step <step>     a failed step again in place (it and what follows it, its files kept);",
+    "                                a step that passed again with every step after it (what they wrote taken back)",
     "nuclear-builder retry <id> --from <station>  a run again from a station (it and every station after it)",
-    "nuclear-builder retry <id> --step <step>     a run again from one step (it and every step after it)",
     "nuclear-builder restart <id>                 the whole run again from the Analysis: every file it wrote goes back",
     "                                first, its last text set aside in .nuclear/builder/runs/<id>.set-aside/",
     "nuclear-builder runs [--json]                the runs of this project",
@@ -653,13 +655,15 @@
   {
    "id": "tool:nuclear-builder.retry",
    "type": "cli",
-   "title": "`nuclear-builder retry` — A failed run again from the step that failed (every step before it kept); A run again from a…",
-   "summary": "A failed run again from the step that failed (every step before it kept); A run again from a station (it and every station after it); A run again from one step (it and every step after it)",
+   "title": "`nuclear-builder retry` — A failed run (or one that waits for its retry) again in place from the step that failed: every…",
+   "summary": "A failed run (or one that waits for its retry) again in place from the step that failed: every step before it and every file kept; A failed step again in place (it and what follows it, its files kept); a step that passed again with every step after it (what they wrote taken back); A run again from a station (it and every station after it)",
    "body": [
     "```text",
-    "nuclear-builder retry <id>                   a failed run again from the step that failed (every step before it kept)",
+    "nuclear-builder retry <id>                   a failed run (or one that waits for its retry) again in place from the",
+    "                                step that failed: every step before it and every file kept",
+    "nuclear-builder retry <id> --step <step>     a failed step again in place (it and what follows it, its files kept);",
+    "                                a step that passed again with every step after it (what they wrote taken back)",
     "nuclear-builder retry <id> --from <station>  a run again from a station (it and every station after it)",
-    "nuclear-builder retry <id> --step <step>     a run again from one step (it and every step after it)",
     "```"
    ],
    "keys": [

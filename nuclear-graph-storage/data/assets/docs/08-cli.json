@@ -2742,33 +2742,14 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.3c37f2",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.27bc28",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
+   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
    "body": [
-    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
-    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there.",
-    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.",
     "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
-    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,"
-   ],
-   "sources": [
-    "tools/cli/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.7c10f9",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "platform)` per app), read by the compiler's parser as `config.nuc` is.",
-   "body": [
-    "platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
+    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
+    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
     "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
     "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
     "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
@@ -2800,6 +2781,26 @@
     "  MCP server registers no `developer_*` tool while its `LOCAL_MODELS` (held to Nuclear Builder's `localModels`) is",
     "  false, and `nuclear_start`'s work cycle never sends an agent to the local Developer.",
     "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.da2d8e",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
+    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
+    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there.",
+    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command."
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -3291,29 +3292,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.1101d4",
-   "type": "context",
-   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
-   "summary": "Commands",
-   "body": [
-    "| `fix <folder\\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |",
-    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |",
-    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |",
-    "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |",
-    "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
-    "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |",
-    "| `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/nuclear-command.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.3b5c0d",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
@@ -3369,6 +3347,29 @@
     "| `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |",
     "| `update` | The latest release: runs the public installer again for this installation (`NUCLEAR_INSTALL`); only an installation a public installer made (its `.version`), a build from source says so and exits 2 | `update::command` |",
     "| `defs list [--dialect]`, `defs show <Name\\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.d53f86",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
+   "summary": "Commands",
+   "body": [
+    "| `fix <folder\\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |",
+    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |",
+    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |",
+    "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated, and a warning (N0305) for each plugin of its platform it does not bring yet (`missing_plugins_warning`; a build never prints it) | `dialect_check`, `print_report` |",
+    "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
+    "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |",
+    "| `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
