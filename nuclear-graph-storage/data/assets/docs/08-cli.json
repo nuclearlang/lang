@@ -1519,41 +1519,22 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.85e18d",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.692649",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
-   "body": [
-    "answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
-    "",
-    "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md))."
-   ],
-   "sources": [
-    "installer/docs/06-runbooks/release.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.b065d3",
-   "type": "context",
-   "title": "Release, and test an installer — Publish a release",
-   "summary": "7. After the tag: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the GitHub release has every asset `release.yml` publishes (the six archives, the…",
+   "summary": "7. After the tag: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed (a run with a job GitHub never gave a runner, cancelled with no step, as macOS runners short of…",
    "body": [
     "7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its",
-    "   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the",
+    "   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed (a run with a job",
+    "   GitHub never gave a runner, cancelled with no step, as macOS runners short of capacity do, is run again once",
+    "   first); says which store the extension did not reach (the job `marketplaces` never fails a release); checks that the",
     "   GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the",
     "   `.vsix` and its `.sha256` (the extension checks a copy it downloads against it), the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`",
     "   are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs",
     "   the user's path in a fake `HOME`: the public one-liner, and the previous release installed by its own installer and",
     "   updated as `nuclear update` does. The release is done only when it passes; a failure is fixed by a PATCH release.",
     "   `AFTER_RELEASE_WAIT` and `AFTER_RELEASE_SITE` change the minutes it waits.",
-    "8. **On a real Mac and a real Linux** (the services cannot start in a fake `HOME`): the public one-liner on a machine",
-    "   that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
-    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each"
+    "8. **On a real Mac and a real Linux** (the services cannot start in a fake `HOME`): the public one-liner on a machine"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1574,6 +1555,27 @@
     "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
     "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
     "   nuclearlang/lang -f version=<version>`."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.d79559",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "that never had NuclearLang, again on the same machine, and an update over the previous release; after each, `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each answering on the port of `ai.env`, the MCP server in an AI client, the…",
+   "body": [
+    "that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
+    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each",
+    "   answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
+    "",
+    "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md))."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -2742,33 +2744,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.27bc28",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
-   "body": [
-    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
-    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
-    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
-    "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
-    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
-    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
-    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
-    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace",
-    "  panel is `editor-workspace`.",
-    "",
-    "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
-   ],
-   "sources": [
-    "tools/cli/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/CHANGELOG.md#unreleased.85fc60",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -2792,15 +2767,59 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.da2d8e",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.991cb0",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "panel is `editor-workspace`.",
+   "body": [
+    "panel is `editor-workspace`.",
+    "",
+    "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.9c9052",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- Fix: `nuclear run` installs a project's packages again when another version of the platform installed them (`build/.nuclear-installed`): a backend project installed before 0.96 failed with `No module named synapsis.server`, since its runtime stayed the old one.",
     "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
     "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
-    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there.",
-    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command."
+    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.bb2299",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
+   "body": [
+    "- The automatic update: a newer release (looked for once a day while you use NuclearLang) installs itself when you stop working, 30 minutes without a use, or within 12 hours, in the background (`nuclear update --when-idle`); every command, VS Code and the MCP server count as a use (`nuclear update --touch`). `nuclear update --check [--json]`, `--auto on|off`, `NUCLEAR_AUTO_UPDATE=0`; never in CI or under sudo. It replaces the question before a command.",
+    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
+    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
+    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
+    "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
+    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
+    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
+    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
+    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace"
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -3521,12 +3540,44 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.14d36e",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.3f2070",
    "type": "context",
    "title": "The command line tool: overview — Backend and web projects",
-   "summary": "(`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`).",
+   "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
    "body": [
-    "(`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`).",
+    "- `build` is `nuclear build .`; `install`, `run`, `test`, `analyze` run the dialect's `[toolchain]` command of that",
+    "  name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by",
+    "  `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder. `fill_command` also fills `{{tools}}`",
+    "  (`<install>/tools`), `{{url}}`, `{{port}}` and `{{host}}`. A command the dialect does not have is refused with the",
+    "  list of those it has. Each of these commands also writes the editor workspace (`vscode::write`), and `build`",
+    "  runs `[toolchain] compile` once the app is installed, so a running server restarts on the build.",
+    "- `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package",
+    "  manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions",
+    "  ([packages.md](packages.md)). It writes `build/.nuclear-installed` with the platform's version; `run` (and a",
+    "  package command) installs again when that file is missing or names another version (`needs_install`): the runtime",
+    "  package comes with the platform, so a project installed by an earlier release gets the new runtime (0.96's",
+    "  `synapsis.server` was missing in projects 0.95 had installed)."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.8ec7b1",
+   "type": "context",
+   "title": "The command line tool: overview — Backend and web projects",
+   "summary": "`migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's…",
+   "body": [
+    "- `nuclear migrate [make \"<message>\" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /",
+    "  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape",
+    "  checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down",
+    "  (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's tool as they are",
+    "  (`migrate_command`, `migrate_args`; `ADR-backend-0001` §5, `ADR-backend-0002`).",
     "- A `[toolchain]` command needs the install directory only when it names it (`{{packages}}`, `{{tools}}`:",
     "  `fill_command`), so `migrate`, `run` and `test` also run with the tree's own build.",
     "- `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
@@ -3550,35 +3601,6 @@
    "body": [
     "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a",
     "mobile app. For it (ADR-cli-0001):"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.c57aad",
-   "type": "context",
-   "title": "The command line tool: overview — Backend and web projects",
-   "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
-   "body": [
-    "- `build` is `nuclear build .`; `install`, `run`, `test`, `analyze` run the dialect's `[toolchain]` command of that",
-    "  name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by",
-    "  `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder. `fill_command` also fills `{{tools}}`",
-    "  (`<install>/tools`), `{{url}}`, `{{port}}` and `{{host}}`. A command the dialect does not have is refused with the",
-    "  list of those it has. Each of these commands also writes the editor workspace (`vscode::write`), and `build`",
-    "  runs `[toolchain] compile` once the app is installed, so a running server restarts on the build.",
-    "- `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package",
-    "  manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions",
-    "  ([packages.md](packages.md)).",
-    "- `nuclear migrate [make \"<message>\" | up | down | status]` runs `migrate_make` / `migrate` / `migrate_down` /",
-    "  `migrate_status` with `{{message}}` and `{{migrations}}` = `<project>/migrations`; `--rename` of make (its shape",
-    "  checked here: `<table>=<new table>`, `<table>.<column>=<new column>`) and the options of up and down",
-    "  (`--to <migration>`, `--fake`, `--transaction all|each|none`) go to the dialect's tool as they are"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
