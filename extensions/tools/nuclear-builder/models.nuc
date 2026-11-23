@@ -119,6 +119,19 @@ localModel(id: string, sizeGb: double, params: string, quant: string, installed:
 
 // ---------- each provider's models ----------
 
+// The models of the local kind's OpenCode (`opencode-local`): each model Ollama has installed, as OpenCode names it
+// (`ollama/<tag>`: OpenCode finds them by itself), with what it needs of this machine's memory; none, with why, when
+// Ollama does not answer or has none. Ollama and its models are the user's: nothing is pulled here.
+openCodeLocalModels(memory: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
+  found = ollamaModels(memory, transport)
+  models = (found["models"] as <string, any>[]).filter((m) => m["installed"] == true).map((m) => { ...m, "id": "${OLLAMA_PREFIX}${m["id"]}" })
+  out: <string, any> = { "models": models, "free": false, "source": "ollama" }
+  if found["why"] != null
+    out["why"] = "Ollama does not answer at ${urls()["ollama"]}: start it (its app, or `ollama serve`)"
+  else if models.isEmpty
+    out["why"] = "Ollama has no model: ollama pull <model>"
+  out
+
 // Every model Ollama has installed (`/api/tags`), but the embedding models (they do not answer), then the pullable
 // ones it lacks; when Ollama does not answer, the pullable ones with why.
 ollamaModels(memory: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
@@ -245,6 +258,8 @@ readProviderModels(provider: string, root: string, memory: <string, any>, transp
   kind = providerKind(provider)
   line = readLine(root, "")
   prices: <string, any> = line["prices"] ?? ({} as <string, any>)
+  if provider == "opencode-local"
+    return openCodeLocalModels(memory, transport)
   if kind == "local"
     // on standby (ADR-platform-0013): no Ollama model is listed
     return localModels() ? ollamaModels(memory, transport) : { "models": [] as <string, any>[], "free": true, "source": "standby", "why": STANDBY }
@@ -306,7 +321,10 @@ memoryWarnings(members: any, local: <string, any>[], memory: <string, any>) <str
   for m in given
     if "${m["kind"] ?? "local"}" != "local" or "${m["model"] ?? ""}".isEmpty
       continue
-    model = local.find((x) => x["id"] == m["model"])
+    // the local OpenCode's models carry OpenCode's prefix (`ollama/<tag>`), Ollama's list does not
+    named = "${m["model"]}"
+    tag = named.startsWith(OLLAMA_PREFIX) ? named.substring(OLLAMA_PREFIX.length) : named
+    model = local.find((x) => x["id"] == tag)
     if model == null or not (model!["fit"] in ["too-big", "tight"])
       continue
     need = model!["needGb"]

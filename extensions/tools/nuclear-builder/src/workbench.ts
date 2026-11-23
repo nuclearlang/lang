@@ -130,7 +130,7 @@ export function stepTitle(x: { title: string; key?: string; args?: string[] }, T
 
 /** A provider as people know it ("claude-code" → "Claude Code"). */
 export function providerName(id: string): string {
-  const names: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
+  const names: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', 'opencode-local': 'OpenCode + Ollama', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
   return names[id] ?? id;
 }
 

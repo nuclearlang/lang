@@ -87,7 +87,7 @@ keyLines(body: string) <string, any>?
 
 // The kind of a provider when the editor does not say it.
 kindOf(provider: string) string
-  provider == "nuclear-developer" ? "local" : provider in PROVIDERS["agent"]! ? "agent" : "api"
+  providerKind(provider)
 
 // Every file of the roles' folder, as it is: what the chat's agent must leave as it found it.
 roleFiles(dir: Path?) <string, any>
@@ -370,9 +370,9 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
   // The factory's tools, as a prompt's section: an agent or an API model has them as the MCP server
   // `nuclear_builder` (beside `nuclear`); the local member calls them as text blocks.
   toolsSection() string
-    if kind() != "local" and informs()
+    if not onDeveloper(given) and informs()
       return "## Your tools\n\nThe MCP server `nuclear_builder` gives you what reads the factory: the project's specs, its runs and their state, the teams (team_list: each team's tech lead and whether it is free), a file of the project (project_read); the MCP server `nuclear` gives you Nuclear's documents and the Smart Graph, and the team tools (team_create, team_edit, member_add, member_edit), which ask the user before each change. No tool of yours writes a spec, starts a run or changes the project: that is a team's work."
-    if kind() != "local"
+    if not onDeveloper(given)
       return "## The factory's tools\n\nThe MCP server `nuclear_builder` gives you every action of Nuclear Builder (specs, runs and their answers, checks, teams, the line, the CI file, reading a file of the project): call them as tools. A tool that answers `waiting: spending` or `needsUser` waits for the user: say so, never answer it yourself."
     // a small model's window holds the tools a chat calls most, described; the rest by name
     all = builderToolList(root).filter((t) => not informs() or t["name"] in INFORM_TOOLS)

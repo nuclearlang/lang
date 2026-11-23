@@ -128,9 +128,10 @@ test('the local models of an earlier version (ADR-platform-0013): a local chat g
 
 test('no page of the editor offers a local model, a profile to choose, Ollama or the Nuclear Developer (ADR-platform-0013)', () => {
   const web = { cspSource: 'vscode-resource:' } as never;
-  // the squad screen mounted in the welcome is the Builder's (editors.test.ts holds it to no local kind); it still names
-  // the Nuclear Developer of an older member, only to say it was converted
-  for (const [name, page] of [['the welcome', setupHtml(web).replace(SQUAD_SCRIPT, '')], ['Settings and integrations', settingsHtml(web)]] as const) {
+  // the squad screen mounted in the welcome, with its texts, is the Builder's (editors.test.ts holds its local kind to
+  // OpenCode on Ollama's models); it still names the Nuclear Developer of an older member, only to say it was converted
+  const welcome = setupHtml(web).replace(SQUAD_SCRIPT, '').replace(/"sq\.[^"]+":"(?:[^"\\]|\\.)*",?/g, '');
+  for (const [name, page] of [['the welcome', welcome], ['Settings and integrations', settingsHtml(web)]] as const) {
     for (const word of [/ollama/i, /Nuclear Developer/, /data-profile/, /data-local/, /data-pull/, /'lite'|'medium'|'hard'/, /nuclear-developer/, /localModels/, /3B/])
       assert.doesNotMatch(page, word, `${name}: ${word}`);
   }

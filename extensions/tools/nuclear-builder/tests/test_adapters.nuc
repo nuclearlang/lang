@@ -107,3 +107,8 @@ testAFailureThatWillNotPassIsNotRetried(tmpPath: Path) void
   work.inputs["route"] = "/developer/code"
   out = localAdapter(composeRole("developer", {}, tmpPath), "code", work, (e) => null)
   expect(not out.ok and calls[0] == 1 and "/developer/code: 422 bad body" in out.error)
+
+testTheLocalOpenCodeRunsOnlyOllamasModels() void
+  expect(localOpenCodeModel("", ["ollama/qwen2.5-coder:3b", "ollama/gemma4:e2b"]) == "ollama/qwen2.5-coder:3b")
+  expect(localOpenCodeModel("gemma4:e2b", []) == "ollama/gemma4:e2b" and localOpenCodeModel("ollama/gemma4:e2b", []) == "ollama/gemma4:e2b")
+  expect(localOpenCodeModel("", []) == "" and ADAPTERS["opencode-local"] == localOpenCodeAdapter)

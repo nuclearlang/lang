@@ -772,7 +772,7 @@
    "id": "limit:remote-agents-only",
    "type": "limit",
    "title": "Limit: remote agents only, the one profile while the local models are on standby",
-   "summary": "The profile `remote` is the only one (ADR-platform-0013): only the Smart Graph (its own small model, 0.3 GB, no Ollama) and Nuclear Chat run here. The MCP server gives an agent (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) the generators, the compiler, the command line, the internet tools and the `graph_*` tools, no `developer_*` tool; the Builder's teams are worked by agents and API providers.",
+   "summary": "The profile `remote` is the only one (ADR-platform-0013): only the Smart Graph (its own small model, no Ollama) and Nuclear Chat run here. The MCP server gives an agent the generators, the compiler, the command line, the internet tools and the `graph_*` tools, no `developer_*` tool; the Builder's teams are worked by agents, API providers or OpenCode on your Ollama (the kind Local).",
    "body": [
     "- The agent writes every line the generators do not write: all of it is paid tokens, or the agent's subscription.",
     "- The strategy of a request (`graph_strategy`) and the search of the knowledge base work: the Smart Graph runs in every profile (ADR-installer-0004, ADR-graph-0003).",

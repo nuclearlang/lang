@@ -18,8 +18,13 @@ agents (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok).
   The MCP server mirrors it in one constant, held to `setup.json` by a test.
 - With the switch off nothing local is offered, installed, started or listed: the set-up has only the profile
   `remote` (the Smart Graph and the MCP server); the installers never install Ollama, a local model or the Developer;
-  Nuclear Builder has no `local` kind and no Ollama models in its pickers; the MCP server registers no `developer_*`
-  tool; the editors show no local model, profile, Ollama step or Developer status.
+  Nuclear Builder offers no Nuclear Developer; the MCP server registers no `developer_*` tool; the editors show no
+  profile, Ollama step or Developer status.
+- **Local AI is OpenCode on the user's Ollama** (decided 2026-11-23, while the Nuclear Developer improves): Nuclear
+  Builder's kind `local` has one provider offered, `opencode-local`, OpenCode on the models Ollama has installed
+  (`ollama/<tag>`, OpenCode finds them by itself), free, chosen in the pickers as a paid provider is. Choosing
+  *Local* lists only them; OpenCode as an agent lists none of them. Nothing installs Ollama or pulls a model: both are
+  the user's.
 - **Nuclear Atlas** is answered by an external provider or agent the user picks, over the Smart Graph, as Nuclear
   Chat's members are.
 - **Existing installations**: an update takes away everything local NuclearLang put there: the Developer's service,
@@ -48,8 +53,8 @@ keep alive. The knowledge base says the local models are on standby.
   writes `ai.env` as `remote`, and says the GB freed.
 - `setup --profile lite|medium|hard` (also `--events`) is refused: exit 2, "on standby (ADR-platform-0013)". The
   installers ask nothing and always run `setup --profile remote --yes`.
-- `agents --json`, `models --json` and `team screen` list no `local` kind and no Ollama model (`team screen` carries
-  `"localModels": false`). `models --provider nuclear-developer` answers no models and a `why`.
+- `agents --json`, `models --json` and `team screen` list no Nuclear Developer; the kind `local` is `opencode-local`
+  only, its models Ollama's installed ones (`team screen` carries `"localModels": false`). `models --provider nuclear-developer` answers no models and a `why`.
 - The default external choice (a member with no who-works, a converted one, the chat's general agent): the first
   agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else
   the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else
@@ -57,6 +62,6 @@ keep alive. The knowledge base says the local models are on standby.
   warning). A team's converted members are told as `warnings` (a list of texts): in the team of `team show`,
   in each entry of `team list`, in each shown team of `team screen` and at its top (every team's, as
   `<team name>: <warning>`); the team file is rewritten once, its old version kept as `<id>.json.bak`. `team create`
-  and `team member add|update` refuse the kind `local`.
+  and `team member add|update` refuse the provider `nuclear-developer`.
 - `chat-host --json`: Atlas's `responder.choice` is the default external choice (`""` with `responder.why` when there
   is none); its `choices` hold no local agent.

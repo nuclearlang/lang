@@ -468,7 +468,7 @@ test('the company screen\'s HUD: a stat\'s level, the budget gauge, the hiring p
   assert.equal(typeof window.Squad?.receive, 'function');
 });
 
-test('the model pickers list every model every time and survive repeated choices; no local kind, an older local member said converted', () => {
+test('the model pickers list every model every time and survive repeated choices; the local kind is only OpenCode on Ollama, an older local member said converted', () => {
   // the page's script on a DOM that only keeps its HTML: the events are handed to its listeners as the browser would
   const on: Record<string, (e: unknown) => void> = {};
   const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
@@ -483,14 +483,16 @@ test('the model pickers list every model every time and survive repeated choices
   assert.ok(el.innerHTML.includes('member dev was local: now claude-code') && el.innerHTML.includes('sq.converted'));
   // the machine's agents and every provider's models are asked once the member's brain is drawn
   assert.ok(sent.some((m) => m.type === 'team:wizard') && sent.some((m) => m.type === 'team:models'));
-  squad.receive({ type: 'team:agents', agents: [{ id: 'claude-code', provider: 'claude-code', kind: 'agent', available: true, models: ['haiku', 'sonnet', 'opus'] }] });
-  squad.receive({ type: 'team:models', models: { memory: { totalGb: 16, availableGb: 8 }, providers: { 'claude-code': { models: ['fable', 'opus', 'sonnet', 'haiku'].map((id) => ({ id, family: id, version: 'latest', alias: true })), free: true } } } });
+  squad.receive({ type: 'team:agents', agents: [{ id: 'claude-code', provider: 'claude-code', kind: 'agent', available: true, models: ['haiku', 'sonnet', 'opus'] }, { id: 'opencode', provider: 'opencode', kind: 'agent', available: true, models: ['openai/gpt-y'] }, { id: 'opencode-local', provider: 'opencode-local', kind: 'local', available: true, models: ['ollama/qwen2.5-coder:3b'] }] });
+  squad.receive({ type: 'team:models', models: { memory: { totalGb: 16, availableGb: 8 }, providers: { 'claude-code': { models: ['fable', 'opus', 'sonnet', 'haiku'].map((id) => ({ id, family: id, version: 'latest', alias: true })), free: true }, opencode: { models: [{ id: 'openai/gpt-y' }], free: true }, 'opencode-local': { models: [{ id: 'ollama/qwen2.5-coder:3b', needGb: 3.4, fit: 'fits', installed: true }], free: false } } } });
   const options = () => (el.innerHTML.match(/<option /g) ?? []).length;
   const change = (f: string, value: string) => on.change({ target: { dataset: { f }, value } });
   const click = (ds: Record<string, string>) => on.click({ target: { closest: () => ({ dataset: ds, disabled: false }) } });
   const all = options();
-  // no local kind, no Ollama model: the local models are on standby (ADR-platform-0013)
-  assert.ok(el.innerHTML.includes('value="agent|claude-code|fable"') && !el.innerHTML.includes('value="local|') && !el.innerHTML.includes('sq.kindWord.local'));
+  // the local kind is only OpenCode on Ollama's models, free (no $); OpenCode as an agent lists none of them; the local
+  // Nuclear Developer is never offered (ADR-platform-0013)
+  assert.ok(el.innerHTML.includes('value="agent|claude-code|fable"') && el.innerHTML.includes('value="local|opencode-local|ollama/qwen2.5-coder:3b"') && el.innerHTML.includes('value="agent|opencode|openai/gpt-y"'));
+  assert.ok(!el.innerHTML.includes('value="agent|opencode|ollama/') && !el.innerHTML.includes('value="local|nuclear-developer') && !el.innerHTML.includes('$ OpenCode + Ollama'));
   // every line says what kind of thing it is, every group how it is paid; an alias says it is the latest
   assert.ok(el.innerHTML.includes('Claude Code (sq.kindWord.agent) · fable — sq.model.latest') && el.innerHTML.includes('label="sq.group.agent Claude Code Claude"'));
   // the brain chosen again and again: every model still listed (the converted line goes once a choice is made), each
@@ -502,10 +504,10 @@ test('the model pickers list every model every time and survive repeated choices
     assert.equal(options(), all - 1, v);
   }
   assert.equal(sent.filter((m) => m.type === 'team:memberUpdate').length, 5);
-  // the wizard's step 5: the kinds are agent and api only; the older local member is given the default agent
+  // the wizard's step 5: the kinds are agent, local (OpenCode on Ollama) and api; the older local member is given the default agent
   click({ a: 'editMembers' });
   click({ wzgo: '4' });
-  assert.ok(el.innerHTML.includes('data-wzkind="0|agent"') && el.innerHTML.includes('data-wzkind="0|api"') && !el.innerHTML.includes('|local"') && !el.innerHTML.includes('wzAllLocal'));
+  assert.ok(el.innerHTML.includes('data-wzkind="0|agent"') && el.innerHTML.includes('data-wzkind="0|local"') && el.innerHTML.includes('data-wzkind="0|api"') && !el.innerHTML.includes('nuclear-developer"') && !el.innerHTML.includes('wzAllLocal'));
   assert.ok(el.innerHTML.includes('<select data-f="wzmodel-1"') && !el.innerHTML.includes('datalist'));
   const step = options();
   for (const v of ['haiku', 'sonnet', 'opus', 'haiku']) {
@@ -738,7 +740,7 @@ test('every kind of text the engine, the agents list and the set-up write has it
   assert.deepEqual(asks.filter((k) => !(RUN_TEXTS.es.ask as Record<string, string>)[k]), []);
   // why an agent cannot work here, on the company screen and in the chat's agent picker
   const why = kinds(src('chat_agents.nuc'), /reason\("[^\n]*?", "([a-zA-Z]+)"/g);
-  assert.deepEqual(why.sort(), ['noAnswer', 'noKey', 'noPrice', 'notOnPath']);
+  assert.deepEqual(why.sort(), ['noAnswer', 'noKey', 'noLocalModel', 'noPrice', 'notOnPath']);
   assert.deepEqual(why.filter((k) => !(SQUAD.es as Record<string, string>)['sq.why.' + k] || !WHY_TEXTS.es[k]), []);
   // the set-up: a machine's fit, a requirement's state, the steps
   const setup = src('setup.nuc');

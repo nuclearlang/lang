@@ -10,7 +10,7 @@ use pathlib{ Path }
 // Nuclear Developer, the Smart Graph, Ollama and the models of the local roles; the command line of each agent; a key
 // in the vault for each API provider; the MCP server; free disk in the project and the temporary folder.
 
-AGENT_COMMANDS: <string, string> = { "claude-code": "claude", "opencode": "opencode", "codex": "codex", "gemini-cli": "gemini", "cursor": "agent", "grok": "grok" }
+AGENT_COMMANDS: <string, string> = { "claude-code": "claude", "opencode": "opencode", "opencode-local": "opencode", "codex": "codex", "gemini-cli": "gemini", "cursor": "agent", "grok": "grok" }
 
 // The command of an agent provider on this PATH. Cursor's CLI is `agent`, a generic name: it is Cursor's only when
 // its real path names Cursor (its installer's link into `~/.local/share/cursor-agent/`), else the older
@@ -45,15 +45,17 @@ checkConnections(team: <string, any>, root: string, config: <string, any>, trans
   env = toolEnv()
   client = httpx.Client(transport = transport)
   try
+    // the local kind: the Nuclear Developer, or OpenCode on Ollama's models (`opencode-local`); both need Ollama
     local = roles.filter((r) => r["kind"] == "local")
     if not local.isEmpty
-      dev = "${config["developerUrl"] ?? developerUrl()}"
-      graph = "${config["graphUrl"] ?? "http://127.0.0.1:7878"}"
       ollama = "${config["ollamaUrl"] ?? "http://localhost:11434"}"
-      d = probe(client, dev + "/docs")
-      out.add(check("Nuclear Developer", d["ok"] == true, d["ok"] == true ? dev : "${dev} does not answer (${d["error"] ?? d["status"]}): nuclear-builder setup --restart developer"))
-      g = probe(client, graph + "/v1/health")
-      out.add(check("Smart Graph", g["ok"] == true, g["ok"] == true ? graph : "${graph} does not answer (${g["error"] ?? g["status"]}): nuclear-builder setup --restart graph"))
+      if local.any((r) => onDeveloper(r))
+        dev = "${config["developerUrl"] ?? developerUrl()}"
+        graph = "${config["graphUrl"] ?? "http://127.0.0.1:7878"}"
+        d = probe(client, dev + "/docs")
+        out.add(check("Nuclear Developer", d["ok"] == true, d["ok"] == true ? dev : "${dev} does not answer (${d["error"] ?? d["status"]}): nuclear-builder setup --restart developer"))
+        g = probe(client, graph + "/v1/health")
+        out.add(check("Smart Graph", g["ok"] == true, g["ok"] == true ? graph : "${graph} does not answer (${g["error"] ?? g["status"]}): nuclear-builder setup --restart graph"))
       tags = probe(client, ollama + "/api/tags")
       out.add(check("Ollama", tags["ok"] == true, tags["ok"] == true ? ollama : "${ollama} does not answer (${tags["error"] ?? tags["status"]}): start Ollama"))
       if tags["ok"] == true
@@ -65,13 +67,14 @@ checkConnections(team: <string, any>, root: string, config: <string, any>, trans
         catch e
           if not isinstance(e, ValueError)
             throw e
-        for m in local.map((r) => "${r["model"] ?? ""}").filter((m: string) => m.length > 0).unique()
+        // OpenCode names Ollama's models `ollama/<tag>`
+        for m in local.map((r) => "${r["model"] ?? ""}".replace(OLLAMA_PREFIX, "")).filter((m: string) => m.length > 0).unique()
           has = m in installed or "${m}:latest" in installed
           out.add(check("model ${m}", has, has ? "installed" : "not installed: ollama pull ${m}"))
   finally
     client.close()
-  for provider in roles.filter((r) => r["kind"] == "agent").map((r) => "${r["provider"]}").unique()
-    out.add(versionCheck(agentCommand(provider, env), env))
+  for command in roles.filter((r) => r["kind"] == "agent" or r["provider"] == "opencode-local").map((r) => agentCommand("${r["provider"]}", env)).unique()
+    out.add(versionCheck(command, env))
   for provider in roles.filter((r) => r["kind"] == "api").map((r) => "${r["provider"]}").unique()
     try
       kept = vaultKey(provider, 0) != null
@@ -80,7 +83,7 @@ checkConnections(team: <string, any>, root: string, config: <string, any>, trans
       if not isinstance(e, RuntimeError)
         throw e
       out.add(check("key of ${provider}", false, "${e}"))
-  if roles.any((r) => r["kind"] != "local")
+  if roles.any((r) => not onDeveloper(r))
     mcp = "${config["mcpCommand"] ?? "nuclear-mcp"}"
     found = shutil.which(mcp, path = env["PATH"]) != null
     out.add(check("MCP server", found, found ? mcp : "${mcp} is not on the PATH: nuclear-builder setup"))

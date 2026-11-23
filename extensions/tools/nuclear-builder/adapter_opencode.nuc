@@ -72,3 +72,19 @@ onOpenCodeLine(line: string, emit: (e: <string, any>) => void, found: <string, a
   ev = jsonLine(line)
   if ev != null
     openCodeLine(ev!, emit, found)
+
+// The model the local kind's OpenCode (`opencode-local`) runs: the member's, as OpenCode names it (`ollama/<tag>`), else
+// the first Ollama has (`installed`, OpenCode's names): never OpenCode's own default, which may be a paid one. Empty:
+// Ollama has none.
+localOpenCodeModel(model: string, installed: string[]) string
+  if model.isEmpty
+    return installed.isEmpty ? "" : installed[0]
+  model.startsWith(OLLAMA_PREFIX) ? model : "${OLLAMA_PREFIX}${model}"
+
+// The local kind's OpenCode: OpenCode on one of Ollama's models, free.
+localOpenCodeAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  installed = work.model.isEmpty ? (openCodeLocalModels(machineMemory())["models"] as <string, any>[]).map((m) => "${m["id"]}") : ([] as string[])
+  work.model = localOpenCodeModel(work.model, installed)
+  if work.model.isEmpty
+    return Outcome(false, "", {}, [], 0, [], "no local model: Ollama has none (ollama pull <model>), or it does not answer")
+  openCodeAdapter(role, station, work, emit)

@@ -27,11 +27,13 @@ Nuclear Builder) and press **New team**: five steps, *Next, Next*.
 4. **The roster**: everyone, filtered by role, temperament, gender, skill and words. Choose several at once, any
    number per role. The list of the chosen counts each role and flags a role the stations need that has nobody: a
    team runs when each of them has a member.
-5. **Who works each member**: an agent (the first this machine has, Claude Code by default) or an API, the provider
+5. **Who works each member**: an agent (the first this machine has, Claude Code by default), local or an API, the provider
    and the model: an agent that is not installed, or an API without a key, shows why and cannot be chosen. The model
    list is the provider's own: Claude Code's models, OpenCode's, an API's; **Other model…** lets you type one where
-   the provider takes any. There is no local kind: the local models are on standby (ADR-platform-0013); a member an
-   older team file left local is converted to the default agent, and the page says so in a warning line.
+   the provider takes any. **Local** is OpenCode on the models Ollama has on this machine, free: install OpenCode and
+   Ollama, pull a model (`ollama pull qwen2.5-coder:7b`), and it is listed with the memory it needs. A member an older
+   team file left to the Nuclear Developer (on standby, ADR-platform-0013) is converted to the default agent, and the
+   page says so in a warning line.
    **The same for** gives everyone (or all the developers, all the QA…) one agent and model in one click: a member is
    their profile, not their model. Under each row, **Make them different** holds what makes that member themselves:
    their temperament (the employee's own unless you choose another), their characteristics, their instructions, the

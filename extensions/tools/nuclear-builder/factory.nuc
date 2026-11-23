@@ -50,7 +50,7 @@ STATION_TASK: <string, string> = { "analysis": "Read the spec as the client's re
 STRATEGY_STATIONS: <string, string> = { "generate": "design", "plan": "design", "test": "tests", "code": "code", "verify": "quality", "security": "quality" }
 
 // The adapter of each provider.
-ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome> = { "nuclear-developer": localAdapter, "claude-code": claudeCodeAdapter, "opencode": openCodeAdapter, "codex": codexAdapter, "gemini-cli": geminiCliAdapter, "cursor": cursorAdapter, "grok": grokAdapter, "anthropic": anthropicAdapter, "openai": openAIAdapter, "google": googleAdapter, "openrouter": openRouterAdapter }
+ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome> = { "nuclear-developer": localAdapter, "claude-code": claudeCodeAdapter, "opencode": openCodeAdapter, "opencode-local": localOpenCodeAdapter, "codex": codexAdapter, "gemini-cli": geminiCliAdapter, "cursor": cursorAdapter, "grok": grokAdapter, "anthropic": anthropicAdapter, "openai": openAIAdapter, "google": googleAdapter, "openrouter": openRouterAdapter }
 
 // A run that cannot go on now: it waits for an answer of the user (a gate, the spending), or for a command.
 RunStop(message: string) : RuntimeError(message)
@@ -304,7 +304,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     id = "${st["id"]}"
     spec = "${(run["spec"] as <string, any>)["id"]}"
     a = assigned("${st["role"]}")
-    if "${spec}/${id}" in repaired or a["kind"] == "local" or budgetLeft() <= 0
+    if "${spec}/${id}" in repaired or onDeveloper(a) or budgetLeft() <= 0
       return false
     steps: <string, any>[] = st["steps"]!
     bad = steps.reversed().find((x) => x["status"] == "failed")
@@ -508,7 +508,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     if a["kind"] != "local" and budgetLeft() <= 0
       end(s, "failed", "the run's budget is spent (${run["costUsd"]} USD)")
       return false
-    if a["kind"] == "local"
+    if onDeveloper(a)
       return localStation(st, s, role, more)
     out: Outcome = provider(withTemplates(role, STATION_DOCS[id]!), id, s, taskOf(id, more), STATION_DOCS[id]!, budgetLeft())
     if budgetLeft() < 0
@@ -908,7 +908,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // team's Architect when a paid provider works it and the local Developer writes (the `claude` preset: the frontier
   // model plans and reviews, the local agents write).
   lead() string?
-    assigned("developer")["kind"] == "local" and assigned("architect")["kind"] != "local" ? "architect" : null
+    onDeveloper(assigned("developer")) and not onDeveloper(assigned("architect")) ? "architect" : null
 
   roleTitle(id: string) string
     composeRole(id, assigned(id)).title
@@ -991,7 +991,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     s["file"] = file
     s["input"] = task
     decide(s, "give ${file} to the ${isTest ? "tester" : "coder"}", "${isTest ? "it is a test file: it is repaired against the names of the plan" : "it is a file of the code"}; ${problem.split("\n")[0].substring(0, 160)}")
-    if assigned("developer")["kind"] != "local"
+    if not onDeveloper(assigned("developer"))
       out: Outcome = provider(dev, "code", s, "${task}\n\nThe file is ${file}: change it in place.", [], budgetLeft())
       end(s, out.ok ? "passed" : "failed", out.ok ? "${out.files.length} files changed" : out.error)
       return
@@ -1156,7 +1156,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     for i in 0..criteria.length
       numbered.add("${i + 1}. ${criteria[i]}")
     role = composeRole("qa", assigned("qa"))
-    local = assigned("qa")["kind"] == "local"
+    local = onDeveloper(assigned("qa"))
     s = step(st, "Acceptance criteria", "qa", "qa", "acceptance")
     s["input"] = "${numbered.join("\n")}\n\n${facts}"
     files = texts.map((t) => "```nuclear\n// ${t["path"]}\n${t["code"]}```").join("\n\n")
@@ -1185,7 +1185,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // by the model); the user retries from there. Only when the team has a local role (the Developer is part of the
   // run); the station stays failed: this step only explains it.
   diagnose(st: <string, any>) void
-    if not ((team["members"] ?? []) as <string, any>[]).any((r) => r["kind"] == "local")
+    if not ((team["members"] ?? []) as <string, any>[]).any((r) => onDeveloper(r))
       return
     steps: <string, any>[] = st["steps"]!
     if steps.isEmpty
@@ -1294,7 +1294,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     ok = true
     for c in mine
       s = step(st, "Check: ${c["title"]}", role.id, role.id, "check", ["${c["id"]}", "${c["title"]}", "${c["title_es"] ?? c["title"]}"])
-      if c["command"] == null and assigned(role.id)["kind"] == "local"
+      if c["command"] == null and onDeveloper(assigned(role.id))
         // the local agents answer their own routes, not a check's prompt
         c["state"] = "skipped"
         c["note"] = "a check by prompt needs an agent or an API model for the ${role.title}"

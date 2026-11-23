@@ -34,7 +34,7 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   root = agentsProject(tmpPath, monkeypatch)
   found = agentsHere(root, down())
   ids = found.map((a) => "${a["id"]}")
-  expect(ids == ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"], json.dumps(ids))
+  expect(ids == ["nuclear-developer", "opencode-local", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"], json.dumps(ids))
   byId: <string, any> = {}
   for a in found
     byId["${a["id"]}"] = a
@@ -42,7 +42,10 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   // the local agent is always there, told when its service does not answer
   expect(local["available"] == true and local["kind"] == "local" and local["paid"] == false and "does not answer" in "${local["why"]}" and local["whyKey"] == "noAnswer", json.dumps(local))
   expect(byId["claude-code"] == { "id": "claude-code", "kind": "agent", "provider": "claude-code", "label": "Claude Code", "models": ["haiku", "sonnet", "opus"], "defaultModel": "", "available": true, "paid": true }, json.dumps(byId["claude-code"]))
-  expect((byId["opencode"] as <string, any>)["models"] == ["anthropic/claude-x", "ollama/qwen2.5-coder:3b"])
+  // Ollama's models are the local kind's OpenCode, never OpenCode's as an agent; Ollama does not answer here
+  expect((byId["opencode"] as <string, any>)["models"] == ["anthropic/claude-x"])
+  ocLocal: <string, any> = byId["opencode-local"]!
+  expect(ocLocal["kind"] == "local" and ocLocal["paid"] == false and ocLocal["available"] == false and ocLocal["whyKey"] == "noLocalModel" and "Ollama does not answer" in "${ocLocal["why"]}", json.dumps(ocLocal))
   codex: <string, any> = byId["codex"]!
   expect(codex["available"] == true or "not on the PATH" in "${codex["why"]}")
   anthropic: <string, any> = byId["anthropic"]!
@@ -55,7 +58,7 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   // the local one offers only the machine's chat model
   local = chatChoices(found)[0]
   expect(local["id"] == "nuclear-developer" and local["models"] == [local["defaultModel"]] and "${local["defaultModel"]}".length > 0)
-  choice = chatChoices(found)[1]
+  choice = chatChoices(found)[2]
   expect(choice["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"])
 
 testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) void
@@ -67,10 +70,11 @@ testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) v
   responder: <string, any> = atlas["responder"]!
   expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and atlas["listed"] == true and "tech lead" in "${(atlas["profile"] as <string, any>)["bio"]}")
   expect(responder["choice"] == "nuclear-developer" and responder["paid"] == false and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "local", "--provider", "nuclear-developer"])
-  expect((responder["choices"] as <string, any>[]).length == 11)
+  expect((responder["choices"] as <string, any>[]).length == 12)
 
-// The local models on standby (ADR-platform-0013): no local agent is offered or listed with models, and the default
-// choice is the first agent installed, else the first API provider with a key, else none (a provider is chosen).
+// The local models on standby (ADR-platform-0013): the local Nuclear Developer is not offered nor listed with models
+// (the local kind is OpenCode on Ollama's models), and the default choice is the first agent installed, else the first
+// API provider with a key, else none (a provider is chosen).
 testOnStandbyNoLocalAgentIsOfferedAndTheDefaultIsTheFirstExternalOne(tmpPath: Path, monkeypatch: any) void
   root = agentsProject(tmpPath, monkeypatch)
   expect(not localModels())
@@ -81,7 +85,7 @@ testOnStandbyNoLocalAgentIsOfferedAndTheDefaultIsTheFirstExternalOne(tmpPath: Pa
   host = chatHost(root, "en", down())
   responder: <string, any> = (host["members"] as <string, any>[]).last["responder"]!
   expect(responder["choice"] == "claude-code" and responder["paid"] == true and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"] and responder["why"] == null, json.dumps(responder))
-  expect(not (responder["choices"] as <string, any>[]).any((c) => c["kind"] == "local"))
+  expect(not (responder["choices"] as <string, any>[]).any((c) => c["id"] == "nuclear-developer"))
   models = modelsHere(root)
   expect(not ("nuclear-developer" in (models["providers"] as <string, any>)))
   asked: <string, any> = (modelsHere(root, "nuclear-developer")["providers"] as <string, any>)["nuclear-developer"]!
@@ -126,3 +130,20 @@ testASpendingConfirmedHoldsOnlyForTheAgentItNamed(tmpPath: Path, monkeypatch: an
   other = Chat(root, "member-x-chat-dm-atlas", { "provider": "opencode", "kind": "agent" }, {}, () => null, (e: <string, any>) => print(e))
   other.load()
   expect(same.confirmed and not other.confirmed)
+
+// The local kind's OpenCode (`opencode-local`): the models Ollama has installed, as OpenCode names them, free, with
+// what each needs of the memory; the embedding models left out; OpenCode as an agent never lists them.
+testOpenCodeLocalOffersOnlyOllamasModels(tmpPath: Path, monkeypatch: any) void
+  root = agentsProject(tmpPath, monkeypatch)
+  tags = { "models": [{ "name": "qwen2.5-coder:3b", "size": 1_900_000_000, "details": { "family": "qwen2", "parameter_size": "3.1B", "quantization_level": "Q4_K_M" } }, { "name": "embeddinggemma:300m", "details": { "family": "gemma3" } }] }
+  ollama = httpx.MockTransport((request: httpx.Request) => httpx.Response(200, json = tags))
+  found = agentsHere(root, ollama)
+  ocLocal: <string, any> = found.find((a) => a["id"] == "opencode-local")!
+  expect(ocLocal["available"] == true and ocLocal["kind"] == "local" and ocLocal["paid"] == false and ocLocal["models"] == ["ollama/qwen2.5-coder:3b"] and ocLocal["defaultModel"] == "ollama/qwen2.5-coder:3b", json.dumps(ocLocal))
+  models: <string, any>[] = openCodeLocalModels({ "totalGb": 16.0, "availableGb": 8.0 }, ollama)["models"]!
+  expect(models.length == 1 and models[0]["id"] == "ollama/qwen2.5-coder:3b" and models[0]["needGb"] != null, json.dumps(models))
+  expect(whyNotHere("opencode-local") == "" and providerKind("opencode-local") == "local" and not asksSpending("local", true))
+  none = openCodeLocalModels({ "totalGb": 16.0, "availableGb": 8.0 }, httpx.MockTransport((request: httpx.Request) => httpx.Response(200, json = { "models": [] })))
+  expect(none["models"] == [] and "ollama pull" in "${none["why"]}", json.dumps(none))
+  // a member worked by it is the local kind, never the Developer
+  expect(onDeveloper({ "kind": "local" }) and not onDeveloper({ "kind": "local", "provider": "opencode-local" }))

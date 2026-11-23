@@ -12,8 +12,9 @@ export const ROLES = ['analyst', 'architect', 'developer', 'qa', 'devops'] as co
 export type RoleId = (typeof ROLES)[number];
 export const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'] as const;
 
-/** Who may do a role, by kind (teams.nuc's PROVIDERS). No `local` kind: the local models are on standby
- * (ADR-platform-0013); a stored local member is converted by the command, with its `warnings`. */
+/** Who may do the chat, by kind (teams.nuc's PROVIDERS). No `local` kind here: the team page adds the local kind's
+ * OpenCode on Ollama (`opencode-local`); the local Nuclear Developer is on standby (ADR-platform-0013) and a stored
+ * member of it is converted by the command, with its `warnings`. */
 export const PROVIDERS = {
   agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'],
   api: ['anthropic', 'openai', 'google', 'openrouter'],
@@ -302,7 +303,7 @@ export const suggestMembers = (purpose: string, skills: string[], lang: 'en' | '
 export const suggestNames = (purpose: string, lang: 'en' | 'es') => team<string[]>(['name-suggest', '--purpose', purpose, '--lang', lang]);
 /** The agents of this machine (`agents --json`): who can work a member here; none from an older nuclear-builder. */
 // an older nuclear-builder may still list the local kind: never offered (ADR-platform-0013)
-export const agentsHere = () => call<Agent[]>(['agents', '--json']).then((xs) => xs.filter((a) => (a.kind as string) !== 'local'), () => [] as Agent[]);
+export const agentsHere = () => call<Agent[]>(['agents', '--json']).then((xs) => xs.filter((a) => a.provider !== 'nuclear-developer'), () => [] as Agent[]);
 
 /** A model a provider offers (`models --json`): a local one with its size, memory need and fit on this machine. */
 export interface ModelInfo {
@@ -328,7 +329,7 @@ export interface ModelsHere {
 }
 /** Each provider's models, from the provider (Ollama's with their memory need), and this machine's memory; none when
  * the command cannot tell (the pickers then list what `agents --json` gave). */
-export const modelsHere = () => call<ModelsHere>(['models', '--json']).then((m) => ({ ...m, providers: Object.fromEntries(Object.entries(m.providers ?? {}).filter(([, p]) => (p.kind as string) !== 'local')) })).catch((): ModelsHere => ({ memory: { totalGb: 0, availableGb: 0 }, providers: {} }));
+export const modelsHere = () => call<ModelsHere>(['models', '--json']).then((m) => ({ ...m, providers: Object.fromEntries(Object.entries(m.providers ?? {}).filter(([id]) => id !== 'nuclear-developer')) })).catch((): ModelsHere => ({ memory: { totalGb: 0, availableGb: 0 }, providers: {} }));
 /** A team's name changed (`team update <id> --name`). */
 /** What `team update` changes of a team in the team view (spec 023): its brain (`noBrain`: none, each member keeps
  * its own), its method (empty: Scrum) and its instructions. */

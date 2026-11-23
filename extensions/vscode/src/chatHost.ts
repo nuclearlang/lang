@@ -132,8 +132,8 @@ export interface HostChoice {
 
 /** Why an agent cannot answer, by its kind (`agents --json`'s `whyKey`), in the chat's language. */
 export const WHY_TEXTS: Record<'en' | 'es', Record<string, string>> = {
-  en: { notOnPath: 'not installed: `{0}` is not on the PATH', noKey: 'no API key: nuclear-builder vault set {0}', noPrice: 'no model with a price: .nuclear/builder.json "prices"', noAnswer: '{0} does not answer' },
-  es: { notOnPath: 'no instalado: `{0}` no está en el PATH', noKey: 'sin clave de API: nuclear-builder vault set {0}', noPrice: 'ningún modelo con precio: .nuclear/builder.json "prices"', noAnswer: '{0} no responde' },
+  en: { notOnPath: 'not installed: `{0}` is not on the PATH', noKey: 'no API key: nuclear-builder vault set {0}', noPrice: 'no model with a price: .nuclear/builder.json "prices"', noAnswer: '{0} does not answer', noLocalModel: 'no local model: start Ollama and pull one (ollama pull <model>)' },
+  es: { notOnPath: 'no instalado: `{0}` no está en el PATH', noKey: 'sin clave de API: nuclear-builder vault set {0}', noPrice: 'ningún modelo con precio: .nuclear/builder.json "prices"', noAnswer: '{0} no responde', noLocalModel: 'ningún modelo local: inicia Ollama y descarga uno (ollama pull <modelo>)' },
 };
 /** A choice's `why` in `lang`, else the English the host file gave. */
 export const whyOf = (c: HostChoice, lang: 'en' | 'es'): string | undefined => (c.whyKey && WHY_TEXTS[lang][c.whyKey] ? fmt(WHY_TEXTS[lang][c.whyKey], ...(c.whyArgs ?? [])) : c.why);

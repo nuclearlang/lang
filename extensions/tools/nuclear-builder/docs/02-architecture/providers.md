@@ -33,13 +33,19 @@ Every provider of a role is called the same way (`adapter.nuc`):
 
 ## Who does a role
 
-The kind `local` is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers it,
-and a member of it is converted on read (teams-and-vault.md); its adapter stays, dormant.
+The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as
+OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory
+(`openCodeLocalModels`); OpenCode as an agent never lists them. A member with no model takes the first Ollama has,
+never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. The local Nuclear Developer
+(`nuclear-developer`) is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers
+it, a member of it is converted on read (teams-and-vault.md), and its adapter stays, dormant; what the factory does
+only for it (its routes, the lead after it, no repair, no check by prompt) asks `onDeveloper`, never the kind.
 
 | Kind | Provider | File | How | The role becomes | The cost |
 |---|---|---|---|---|---|
 | `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |
 | `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |
+| `local` | `opencode-local` | `adapter_opencode.nuc` (`localOpenCodeAdapter`) | OpenCode's, below, with `--model ollama/<tag>` | as OpenCode's | 0 |
 | `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`) | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |
 | `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |
 | `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |

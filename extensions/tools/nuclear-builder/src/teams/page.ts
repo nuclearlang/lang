@@ -449,8 +449,8 @@ window.Squad = (() => {
   // the stations each role works (roles.nuc's STATION_ROLE), the roles' order
   const WORKS = { analyst: ['analysis'], architect: ['design'], developer: ['tests', 'code'], qa: ['quality'], devops: ['delivery'] };
   // no local kind: the local models are on standby (ADR-platform-0013)
-  const PROVIDERS = { agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
-  const PNAME = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+  const PROVIDERS = { agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'], local: ['opencode-local'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
+  const PNAME = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', 'opencode-local': 'OpenCode + Ollama', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
   const MODELS = { 'claude-code': ['haiku', 'sonnet', 'opus'] };
   const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'];
   const BEHAVIOURS = ['askBeforeWriting', 'explainDecisions', 'stopAtFirstFailure'];
@@ -513,9 +513,10 @@ window.Squad = (() => {
   const memberName = (x) => x?.name || empOf(x)?.name || t('sq.role.' + x?.role);
   const opCode = (id) => String(id || '').toUpperCase();
   const worksText = (r) => WORKS[r].map((s) => t('sq.station.' + s)).join(' · ');
-  // a member an older file left local, not yet converted by the command: said, never offered (ADR-platform-0013)
-  const wasLocal = (x) => x?.kind === 'local' || x?.provider === 'nuclear-developer';
-  const ledOf = (x) => wasLocal(x) ? ['off', t('sq.converted')] : ['paid', t('sq.led.paid')];
+  // a member an older file left to the local Nuclear Developer, not yet converted by the command: said, never offered
+  // (ADR-platform-0013); the local kind is OpenCode on Ollama's models (opencode-local), free
+  const wasLocal = (x) => x?.provider === 'nuclear-developer' || (x?.kind === 'local' && x?.provider !== 'opencode-local');
+  const ledOf = (x) => wasLocal(x) ? ['off', t('sq.converted')] : x?.kind === 'local' ? ['on', t('sq.led.local')] : ['paid', t('sq.led.paid')];
   // the tech lead: the member the team names, else its first Architect (teams.nuc)
   const leadOf = (team) => team?.techLead || team?.members?.find((m) => m.role === 'architect')?.id || '';
   const sep = '<i>·</i>', dot = '<i>·</i>';
@@ -733,15 +734,15 @@ window.Squad = (() => {
    * agent, the paid ones marked, the ones that cannot work here disabled with why (the wizard's rules). */
   function brainOptions(x, bare) {
     const kindOf = (prov) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(prov)) ?? (AGENTS ?? []).find((a) => a.provider === prov)?.kind ?? 'api';
-    const ids = [...new Set([...PROVIDERS.agent, ...PROVIDERS.api, ...(AGENTS ?? []).map((a) => a.provider)])];
+    const ids = [...new Set([...PROVIDERS.agent, ...PROVIDERS.local, ...PROVIDERS.api, ...(AGENTS ?? []).map((a) => a.provider).filter((p) => p !== 'nuclear-developer')])];
     const cur = (x.kind || 'agent') + '|' + x.provider + '|' + (x.model ?? '');
     let found = false;
     const groups = ids.map((prov) => {
       const k = kindOf(prov), ok = usable(prov), label = provKind(prov);
       // the provider's default, then every model it lists (a too-big one in red), then *Other…* where any is taken
       const list = [{ id: '' }, ...(ok ? modelsFor(prov) : [])];
-      const opts = list.map((m) => { const v = k + '|' + prov + '|' + m.id, on = v === cur || (!found && prov === x.provider && !m.id && !x.model); if (on) found = true; const level = ramLevel(m); return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + (ok && m.priced !== false ? '' : ' disabled') + (level ? ' class="ram-' + level + '"' : '') + '>' + esc('$ ' + label + ' · ' + (m.id ? modelText(m) : t('sq.modelDefault')) + (ok ? '' : ' — ' + whyNot(prov))) + '</option>'; }).join('')
-        + (ok && freeModel(prov) ? '<option value="' + esc(k + '|' + prov + '|__other__') + '">' + esc('$ ' + label + ' · ' + t('sq.model.other')) + '</option>' : '');
+      const opts = list.map((m) => { const v = k + '|' + prov + '|' + m.id, on = v === cur || (!found && prov === x.provider && !m.id && !x.model); if (on) found = true; const level = ramLevel(m); return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + (ok && m.priced !== false ? '' : ' disabled') + (level ? ' class="ram-' + level + '"' : '') + '>' + esc((k === 'local' ? '' : '$ ') + label + ' · ' + (m.id ? modelText(m) : t('sq.modelDefault')) + (ok ? '' : ' — ' + whyNot(prov))) + '</option>'; }).join('')
+        + (ok && freeModel(prov) ? '<option value="' + esc(k + '|' + prov + '|__other__') + '">' + esc((k === 'local' ? '' : '$ ') + label + ' · ' + t('sq.model.other')) + '</option>' : '');
       return '<optgroup label="' + esc(provGroup(prov)) + '">' + opts + '</optgroup>';
     }).join('');
     // a choice this machine does not list (a model typed in the wizard, another machine's agent) stays shown
@@ -1172,7 +1173,7 @@ window.Squad = (() => {
   /** What a provider is: agent (an agent's command line) or api (a model paid per token with a key). */
   const kindOfProvider = (p) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(p)) ?? agentOf(p)?.kind ?? 'api';
   // the account an agent's command line works on (its group says it)
-  const ACCOUNT = { 'claude-code': 'Claude', opencode: 'OpenCode', codex: 'ChatGPT', 'gemini-cli': 'Google', cursor: 'Cursor', grok: 'xAI' };
+  const ACCOUNT = { 'claude-code': 'Claude', opencode: 'OpenCode', 'opencode-local': 'Ollama', codex: 'ChatGPT', 'gemini-cli': 'Google', cursor: 'Cursor', grok: 'xAI' };
   const provName = (p) => agentOf(p)?.label ?? (PNAME[p] ?? p) + (kindOfProvider(p) === 'api' ? ' API' : '');
   /** A provider with its kind: "Claude Code (agent)", "Anthropic API (model)". */
   const provKind = (p) => provName(p) + ' (' + t('sq.kindWord.' + kindOfProvider(p)) + ')';
@@ -1228,7 +1229,7 @@ window.Squad = (() => {
     + '<div class="sq-row"><button class="primary" data-a="ramNo">' + esc(t('sq.wz.cancel')) + '</button><button class="danger" data-a="ramYes">' + esc(t('sq.ram.useAnyway')) + '</button></div></div></div>';
   /** This machine's agents and every provider's models, asked once (the wizard, the member's brain). */
   function askAgents() { if (!AGENTS) post({ type: 'team:wizard' }); if (!HERE) post({ type: 'team:models' }); }
-  const kindButtons = (attr, cur) => '<div class="sq-seg" role="group" aria-label="' + esc(t('sq.whoWorks')) + '">' + ['agent', 'api'].map((k) => { const none = !firstUsable(k); return '<button ' + attr + k + '" aria-pressed="' + (cur === k) + '" class="' + (cur === k ? 'sel' : '') + '"' + (none && cur !== k ? ' disabled title="' + esc(t('sq.wz.noneHere')) + '"' : '') + '>' + esc(t('sq.wz.kind.' + k)) + '</button>'; }).join('') + '</div>';
+  const kindButtons = (attr, cur) => '<div class="sq-seg" role="group" aria-label="' + esc(t('sq.whoWorks')) + '">' + ['agent', 'local', 'api'].map((k) => { const none = !firstUsable(k); return '<button ' + attr + k + '" aria-pressed="' + (cur === k) + '" class="' + (cur === k ? 'sel' : '') + '"' + (none && cur !== k ? ' disabled title="' + esc(t('sq.wz.noneHere')) + '"' : '') + '>' + esc(t('sq.wz.kind.' + k)) + '</button>'; }).join('') + '</div>';
   /** Who works a member, the same for everyone or for a role's members (a member is its profile, not its model). */
   function sameBar() {
     const a = W.same, counts = roleCounts(W.members);

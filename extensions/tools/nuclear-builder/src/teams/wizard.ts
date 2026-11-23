@@ -2,7 +2,8 @@
 // roles a team lacks, the paid members, the pool's filter, the roster's skills, the draft of `team create`. Inlined in
 // the page's script by `toString()`: no import, each function uses nothing outside itself.
 
-/** A member as the wizard holds it: an employee of a role and who works them (an agent or an API: no local kind, ADR-platform-0013). */
+/** A member as the wizard holds it: an employee of a role and who works them (an agent, an API, or the local kind's
+ * OpenCode on Ollama's models; never the local Nuclear Developer, ADR-platform-0013). */
 export interface WizardMember {
   role: string;
   employee?: string;
@@ -82,7 +83,8 @@ export function draftOf(w: { name: string; description: string; purpose: string;
     const out: Record<string, unknown> = { role: m.role };
     if (m.employee) out.employee = m.employee;
     if (m.name) out.name = m.name;
-    const local = m.kind === 'local' || !m.kind;
+    // the local Nuclear Developer (an older draft's) becomes the default agent; OpenCode on Ollama stays local
+    const local = !m.kind || m.provider === 'nuclear-developer' || (m.kind === 'local' && m.provider !== 'opencode-local');
     // a member worked by the team's brain names no kind, provider nor model of its own
     if (!(w.brain && m.inherits)) {
       out.kind = local ? 'agent' : m.kind;

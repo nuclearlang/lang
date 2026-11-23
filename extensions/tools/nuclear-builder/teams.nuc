@@ -17,9 +17,14 @@ use pathlib{ Path }
 // `factory/settings.json` (`{ "defaultTeam": "<id>" }`).
 
 // The providers of each kind (design.md "Who does a role").
-PROVIDERS: <string, string[]> = { "local": ["nuclear-developer"], "agent": ["claude-code", "codex", "gemini-cli", "opencode", "cursor", "grok"], "api": ["anthropic", "openai", "google", "openrouter"] }
+PROVIDERS: <string, string[]> = { "local": ["nuclear-developer", "opencode-local"], "agent": ["claude-code", "codex", "gemini-cli", "opencode", "cursor", "grok"], "api": ["anthropic", "openai", "google", "openrouter"] }
 
 DEFAULT_BUDGET = 5.0
+
+// Whether the local Nuclear Developer works `m` (a member, a step, a worker): the local kind with no other provider.
+// The local kind's other provider, `opencode-local`, is OpenCode on Ollama's models: an agent like any other, free.
+onDeveloper(m: <string, any>) boolean
+  "${m["kind"] ?? "local"}" == "local" and "${m["provider"] ?? "nuclear-developer"}" == "nuclear-developer"
 
 // A member's personality (design.md "The workbench, second version"): how often they send a GIF and at which
 // moments; its note is part of their character.
@@ -231,9 +236,9 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
     kind = m["kind"] ?? "local"
     // a member worked by the team's brain has no kind of its own to convert
     inherits = isinstance(t["brain"], dict) and inheritsOf(m)
-    // the local kind or a local model while the local models are on standby (ADR-platform-0013): the default external
+    // the local Nuclear Developer while the local models are on standby (ADR-platform-0013): the default external
     // choice works it, and the user is told
-    if not inherits and not localModels() and (kind == "local" or m["provider"] == "nuclear-developer")
+    if not inherits and not localModels() and (onDeveloper(m) or m["provider"] == "nuclear-developer")
       if standbyWorker == null
         found = externalWorker()
         standbyNone = found == null

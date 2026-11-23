@@ -99,13 +99,14 @@ there are no presets.
   provider whose key the vault notes and that has a priced model, with its default model; else Claude Code, the user
   to choose); with them on, the local Nuclear Developer with the profile's `CODER_MODEL` for a developer and
   `ASSISTANT_MODEL` for the rest (`localWorker`); every skill of its role on; a free id.
-- **A local member on standby** (ADR-platform-0013): a member of kind `local` (or none, which meant local) or of the
-  provider `nuclear-developer`, the tech lead too, is worked by the default external choice when the team is read
+- **A local member on standby** (ADR-platform-0013): a member of the local Nuclear Developer (`onDeveloper`: kind
+  `local` with no other provider, or none, which meant it) or of the provider `nuclear-developer`, the tech lead too, is worked by the default external choice when the team is read
   (`healTeam`), each told in the team's `warnings` (`<member>: the local models are on standby (ADR-platform-0013);
   Codex works it now`, or that a provider must be chosen); the file is written once, the one of before kept as
   `<id>.json.bak`. The warnings come in `team show`, in each entry of `team list` and in `team screen` (each shown
   team's, and every team's at the top as `<team name>: <warning>`), until the user saves the team. `team create`,
-  `team member add|update` refuse the kind `local` (`whyKey` `standby`).
+  `team member add|update` refuse the provider `nuclear-developer` (`whyKey` `standby`); the local kind's
+  `opencode-local` is never converted.
 - Who works a member is an agent this machine has (`workableHere`, `chat_agents.nuc`, the rules of `agents --json`:
   `whyNotHere`; an agent that cannot gives `why` in English and `whyKey`, `whyArgs` (`notOnPath`, `noKey`, `noPrice`,
   `noAnswer`), which the screens say in their language): an agent's command on the tools' PATH, an API provider whose key the vault notes and that has a
@@ -273,9 +274,10 @@ new team is `team create`, members added or removed `team member add|remove`.
      role; the chosen list counts each role and flags the roles the stations need that it lacks;
   5. *Who works each member*: kind, provider and model from `agents --json` and `models --json` (providers.md), local
      by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field
-     where the provider takes any model); the kinds are agent and API only, a new member gets the first agent this
-     machine has (Claude Code when the list has not come), and the local kind is never offered (ADR-platform-0013:
-     `agents --json` and `models --json` entries of kind `local` from an older command are dropped by `cli.ts`); an agent this machine
+     where the provider takes any model); the kinds are agent, local (OpenCode on Ollama's models, free, no `$`) and
+     API, a new member gets the first agent this machine has (Claude Code when the list has not come), and the local
+     Nuclear Developer is never offered (ADR-platform-0013: its entries in `agents --json` and `models --json` are
+     dropped by `cli.ts`); an agent this machine
      lacks is shown disabled with its why (as the chat's agent picker) and is never chosen. *The same for* sets one
      agent and model for everyone, or for all the members of a role, in one click: a member
      is their profile, not their model. Each row folds out *Make them different*: the temperament (the employee's

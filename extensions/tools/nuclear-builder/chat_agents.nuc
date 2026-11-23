@@ -9,9 +9,9 @@ use pathlib{ Path }
 // has a model with a price. `nuclear-builder agents --json`, the tool `agents_list`, and the general agent's choices
 // in the chat's host file (`chat-host`).
 
-AGENT_ORDER = ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"]
+AGENT_ORDER = ["nuclear-developer", "opencode-local", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"]
 
-AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "codex": "Codex", "gemini-cli": "Gemini CLI", "cursor": "Cursor", "grok": "Grok Build", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
+AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "opencode-local": "OpenCode + Ollama", "codex": "Codex", "gemini-cli": "Gemini CLI", "cursor": "Cursor", "grok": "Grok Build", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
 
 // The default external choice while the local models are on standby (ADR-platform-0013): the agents first, then the
 // API providers.
@@ -46,15 +46,19 @@ CLAUDE_MODELS = ["haiku", "sonnet", "opus"]
 // The model an API provider's chat starts with, when it has a price.
 API_DEFAULTS: <string, string> = { "anthropic": "claude-sonnet-5-5" }
 
+// The provider prefix of Ollama's models in OpenCode (`ollama/<tag>`): OpenCode finds Ollama's models by itself. They
+// are the local kind's (`opencode-local`), never OpenCode's as an agent.
+OLLAMA_PREFIX = "ollama/"
+
 // OpenCode's models (`opencode models`, one `provider/model` a line), or none when it does not answer in 5 s: the
-// model is then written by hand.
+// model is then written by hand. Ollama's are left out: they are `opencode-local`'s.
 openCodeModels(command: string, env: <string, string>) string[]
   try
     r = subprocess.run([command, "models"], captureOutput = true, text = true, timeout = 5, env = env)
     if r.returncode != 0
       return []
     lines: string[] = r.stdout.split("\n")
-    lines.map((l: string) => l.trim()).filter((l: string) => Regex(r"^[\w.-]+/\S+$").test(l))
+    lines.map((l: string) => l.trim()).filter((l: string) => Regex(r"^[\w.-]+/\S+$").test(l) and not l.startsWith(OLLAMA_PREFIX))
   catch e
     if not isinstance(e, subprocess.TimeoutExpired) and not isinstance(e, OSError)
       throw e
@@ -95,9 +99,9 @@ whyNotHere(provider: string, prices: <string, any> = {}, env: <string, string>? 
 // `whyNotHere` with its key for the screens (`reason`), null when the provider can work here.
 whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, string>? = null) <string, any>?
   kind = providerKind(provider)
-  if kind == "local"
+  if kind == "local" and provider == "nuclear-developer"
     return localModels() ? null : reason(STANDBY, "standby", [] as string[])
-  if kind == "agent"
+  if kind == "agent" or provider == "opencode-local"
     paths = env ?? toolEnv()
     command = agentCommand(provider, paths)
     return shutil.which(command, path = paths["PATH"]) == null ? reason("`${command}` is not on the PATH", "notOnPath", [command]) : null
@@ -115,7 +119,7 @@ workableHere(m: <string, any>) void
     return
   allowed: string[] = PROVIDERS["${m["kind"] ?? "local"}"] ?? ["nuclear-developer"]
   provider = "${m["provider"] ?? allowed[0]}"
-  if provider == "nuclear-developer" and localModels()
+  if onDeveloper({ "kind": m["kind"] ?? "local", "provider": provider }) and localModels()
     return
   root = projectRoot("${Path.cwd()}")
   why = whyNotHere(provider, readLine(root, "")["prices"] ?? ({} as <string, any>))
@@ -147,6 +151,14 @@ agentsHere(root: string, transport: httpx.BaseTransport? = null) <string, any>[]
       client.close()
   if localModels()
     out.add(agentOf("nuclear-developer", [], "", true, answers ? null : reason("${dev} does not answer: nuclear-builder setup --restart developer", "noAnswer", [dev])))
+  // OpenCode on Ollama's models (the local kind): offered when OpenCode is here, with the models Ollama has
+  local = agentCommand("opencode-local", env)
+  if shutil.which(local, path = env["PATH"]) == null
+    out.add(agentOf("opencode-local", [], "", false, reason("`${local}` is not on the PATH", "notOnPath", [local])))
+  else
+    found = openCodeLocalModels(machineMemory(), transport)
+    ids = (found["models"] as <string, any>[]).map((m) => "${m["id"]}")
+    out.add(agentOf("opencode-local", ids, ids.isEmpty ? "" : ids[0], not ids.isEmpty, found["why"] == null ? null : reason("${found["why"]}", "noLocalModel", [] as string[])))
   for id in AGENT_ORDER.filter((p) => providerKind(p) == "agent")
     command = agentCommand(id, env)
     found = shutil.which(command, path = env["PATH"])

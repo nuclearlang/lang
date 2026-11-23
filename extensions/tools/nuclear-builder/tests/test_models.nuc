@@ -86,14 +86,15 @@ testClaudeCodeGivesItsAliasesAndACommandsListIsKeptAWhile(tmpPath: Path, monkeyp
   bin = tmpPath.joinpath("bin")
   bin.mkdir()
   fake = bin.joinpath("opencode")
-  fake.writeText("#!/bin/sh\necho 'ollama/qwen2.5-coder:3b'\n")
+  // Ollama's models are the local kind's OpenCode (`opencode-local`), never listed for OpenCode as an agent
+  fake.writeText("#!/bin/sh\necho 'openai/gpt-y'\necho 'ollama/qwen2.5-coder:3b'\n")
   fake.chmod(493)
   monkeypatch.setenv("PATH", "${bin}")
   first = providerModels("opencode", "${root}", SMALL)
   fake.writeText("#!/bin/sh\necho 'anthropic/claude-x'\n")
   kept = providerModels("opencode", "${root}", SMALL)
   again = providerModels("opencode", "${root}", SMALL, true)
-  expect((first["models"] as <string, any>[])[0]["id"] == "ollama/qwen2.5-coder:3b" and kept == first and first["free"] == true)
+  expect((first["models"] as <string, any>[]).map((m) => m["id"]) == ["openai/gpt-y"] and kept == first and first["free"] == true, json.dumps(first))
   expect((again["models"] as <string, any>[])[0]["id"] == "anthropic/claude-x", json.dumps(again))
   // an API with no key: its priced models
   api = providerModels("anthropic", "${root}", SMALL, true)
@@ -106,6 +107,9 @@ testAMemberWithATooBigLocalModelIsWarned() void
   expect(warned.length == 2, json.dumps(warned))
   expect(warned[0]["member"] == "dev" and warned[0]["fit"] == "too-big" and "can make the computer freeze or restart" in "${warned[0]["text"]}" and "16.0 GB" in "${warned[0]["text"]}", json.dumps(warned[0]))
   expect(warned[1]["member"] == "arc" and warned[1]["fit"] == "tight")
+  // the local kind's OpenCode names the same model `ollama/<tag>`: warned the same
+  oc = memoryWarnings([{ "id": "oc", "role": "developer", "kind": "local", "provider": "opencode-local", "model": "ollama/gemma4:26b" }], local, SMALL)
+  expect(oc.length == 1 and oc[0]["fit"] == "too-big", json.dumps(oc))
 
 testEveryModelSaysItsFamilyAndVersion() void
   expect(modelNamed("opus") == { "family": "opus", "version": "latest", "label": "opus (latest)", "alias": true })

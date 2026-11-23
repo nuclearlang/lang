@@ -176,9 +176,10 @@
   {
    "id": "faq:local-models",
    "type": "faq",
-   "title": "Which local models does NuclearLang use? None: they are on standby",
-   "summary": "None: NuclearLang's own local models (Ollama, the Nuclear Developer, the profiles `lite`, `medium`, `hard`, the local chat model) are on standby behind one switch (`localModels: false`, ADR-platform-0013). The set-up installs only `remote`: the Smart Graph (its own small model, no Ollama), the MCP server and Nuclear Chat. The AI work is done by the agents and API providers you choose.",
+   "title": "Can I use a local model? Yes: OpenCode on your Ollama, as the Builder's kind Local",
+   "summary": "Yes, through OpenCode: in Nuclear Builder choose *Local* for a team member, the Brain or the chat, and the picker lists only the models your Ollama has installed (`ollama/<tag>`), free, with the memory each needs. Nothing installs Ollama or pulls a model. The Nuclear Developer and the profiles `lite`, `medium`, `hard` stay on standby (ADR-platform-0013).",
    "body": [
+    "- **Local AI**: install OpenCode and Ollama, pull a model (`ollama pull qwen2.5-coder:7b`); the Builder's kind *Local* is OpenCode on it (`opencode-local`). OpenCode as an agent lists no Ollama model. A model of a few B parameters writes pieces well but leads a whole run poorly: a larger one, or a paid lead, does the design.",
     "- **Who does the work**: an agent on your machine (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) or an API provider with its key in the vault (Anthropic, OpenAI, Google, OpenRouter): Nuclear Builder's team members, Nuclear Atlas and the chat.",
     "- **Atlas and the chat** answer with the first agent whose command is installed, else an API provider with a key, else they say a provider must be chosen; the setting `nuclear.builder.chat` picks it (Claude Code by default).",
     "- **An older installation**: an update (`nuclear update`, or the installer again) takes away the Developer's service, the models NuclearLang pulled and Ollama when NuclearLang installed it (what was there before stays), and says how many GB it freed. A team member of the old `local` kind is converted on read to an external choice, the old file kept as `.bak`, with a warning.",
@@ -200,7 +201,9 @@
     "are the local models on standby",
     "do I need ollama",
     "do I need a gpu",
-    "puedo usar un modelo local"
+    "puedo usar un modelo local",
+    "how do I use ollama with nuclear builder",
+    "como uso un modelo local con opencode"
    ],
    "links": [
     {

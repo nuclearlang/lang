@@ -19,10 +19,10 @@ What the agents, the strategies and the generators still lack is in their own pr
   Developer, the set-up's local steps), and `retireLocal` kept only for machines on `remote`. Untested: `retireLocal`
   on a real machine that had a local profile (macOS's launch agent, Windows's Startup script, Ollama's removal).
 
-- **Local models on standby, ADR-platform-0013** (the editor's pages): the squad screen, the wizard, the Brain and
-  the chat's setting offer no `local` kind and no Ollama model; an older local member or chat setting is converted on
-  read and said. The memory guard of the pickers (`ramLevel`, `ramLine`, the too-big dialog in `teams/page.ts`) stays
-  in the code, dormant (only local models carried a fit) and untested; turning the switch on again needs its tests.
+- **The local kind, OpenCode on Ollama** (`opencode-local`). Done: the pickers, the wizard, the Brain, the agents and
+  models lists, the run's checks, the adapter. Left: the chat's setting of VS Code (`nuclear.builder.chat`) still
+  offers agent and API only; no factory run measured end to end with a local model (only one `opencode run` with
+  `ollama/qwen2.5-coder:7b`); the too-big dialog of the pickers with a local model untested in the editor.
 
 - **The reports** ([spec 017](../../../../../docs/04-specs/017-productivity-reports/tasks.md), [reports.md](../02-architecture/reports.md)).
   Done: the usage of every provider at the source, the factory's ledger, `metrics` and its MCP tool, the VS Code page

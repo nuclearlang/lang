@@ -6,9 +6,10 @@ of the user's team (a local agent or a provider), and every step shows who did i
 provider and model, the shell, you). It is a tool of the Nuclear workspace in VS Code
 (`Ctrl+Alt+P`), a tool window in Android Studio / IntelliJ (`Alt+Shift+P`) and the `nuclear-builder` command in a
 terminal or a CI job. It needs the Smart Graph and Nuclear Chat running. The local models (the Nuclear Developer,
-Ollama, the profiles lite, medium and hard, the `local` kind) are on standby (ADR-platform-0013): the switch
+Ollama's set-up, the profiles lite, medium and hard) are on standby (ADR-platform-0013): the switch
 `"localModels": false` of `setup.json` (`localModels()`), read everywhere one is run or offered; their code stays,
-dormant, and turning it on again needs its own tests.
+dormant, and turning it on again needs its own tests. The `local` kind is OpenCode on Ollama's models
+(`opencode-local`, providers.md).
 
 ## Where the code is
 All of it is in this folder, in two parts while spec 011 (the software factory) moves the engine to Nuclear:
