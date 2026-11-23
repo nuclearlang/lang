@@ -2426,7 +2426,8 @@
     "- Its width is saved per screen width (`nuclear.device.widths`; by default 20 % of the screen, between 340 and",
     "  540).",
     "- *Fit* goes up to zoom 1.5.",
-    "- `lockDeviceGroup` locks its editor group.",
+    "- `lockDeviceGroup` locks its editor group, and only it: VS Code locks the active group, so the device is revealed and",
+    "  the lock waits (up to a second) until the device's group is the active one; never the user's editor group.",
     "- A device can also be opened in the user's browser (`external`)."
    ],
    "platforms": [
@@ -5528,24 +5529,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5323f6",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw.",
-    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.53f8c9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5642,6 +5625,24 @@
     "- The welcome's installation shows the new first step of an older installation, *Removing the local models (on standby)* / *Quitando los modelos locales (en standby)*, with its lines (the last one says what it freed), and every step of the remote set-up has its title in both languages: the Smart Graph and the MCP server, the AI clients, the graph's model (with its name and size), the graph's service, the knowledge base and Nuclear Chat's service.",
     "- Nuclear Builder has no chat of its own any more: a member or a team (in the Builder and in *Your software company*: a member's face, *💬 Talk*, a team's *💬 Channel*) opens Nuclear Atlas on that conversation, the member's direct message or the team's channel (`nuclear.atlas.open`). A built team shows only its members: the catalogue of candidates appears in the new-team wizard, and under a team only while you add members (a role's *+ Add*, closed with *Done*).",
     "- The actions of a project (▷ Run or Serve, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check, ⇄ API) no longer sit as a row of buttons above the file tree: they are in the editor title bar and, for Cursor (which hides those), in an *Actions* section at the bottom of the workspace's files pane, collapsed by default like VS Code's npm scripts."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.8931b1",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: a file clicked in the workspace's tree opened beside the device instead of in the main editor group: the device locked the user's editor group when the focus was still there. The device's lock now waits until its own group is active, and the tree opens files in the main (leftmost) group, lifting a lock left on it.",
+    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5996,21 +5997,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d28cf4",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too.",
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -6055,6 +6041,24 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f207c6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it.",
+    "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -7967,24 +7971,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.07473f",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.80c868",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The pane of each tab",
-   "summary": "`files.exclude`, folders first.",
+   "summary": "Under every pane, the list of every tool's notices (below, *Badges and notifications*).",
    "body": [
-    "- **A project**: its file tree. `list` → `entries`, lazily; `Icons.entriesOf` skips `.git` and the plain names of",
-    "  `files.exclude`, folders first. Each entry wears its icon of the Chernobyl icon theme",
-    "  (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest",
-    "  `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris",
-    "  (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts",
-    "  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). The watcher lives as",
-    "  long as its project (the column is drawn again many times a second while a run works, and a new watcher would miss",
-    "  what is written while it starts); when watching starts, the page reads every loaded folder again (`all`). It looks and moves",
-    "  like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the",
-    "  list's hover, selection (active when the tree has the focus, inactive otherwise) and focus outline; the keyboard",
-    "  walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open). The active editor's file is",
-    "  revealed (`reveal`: its folders opened, the file selected). The indent is the explorer's default (8 px), not the",
-    "  user's `workbench.tree.indent`."
+    "- **The other tools**: a line about the tool.",
+    "",
+    "Under every pane, the list of every tool's notices (below, *Badges and notifications*)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7996,11 +7990,42 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.f34476",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.a1e0d4",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The pane of each tab",
-   "summary": "`GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview).",
+   "summary": "`files.exclude`, folders first.",
    "body": [
+    "- **A project**: its file tree. `list` → `entries`, lazily; `Icons.entriesOf` skips `.git` and the plain names of",
+    "  `files.exclude`, folders first. Each entry wears its icon of the Chernobyl icon theme",
+    "  (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest",
+    "  `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris",
+    "  (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts",
+    "  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). A file clicked in the tree",
+    "  opens in the main editor group (`openInMain`: the leftmost group that is not a device's), and a lock found on that",
+    "  group is lifted: there is one main group, at the left. The watcher lives as",
+    "  long as its project (the column is drawn again many times a second while a run works, and a new watcher would miss",
+    "  what is written while it starts); when watching starts, the page reads every loaded folder again (`all`). It looks and moves",
+    "  like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the",
+    "  list's hover, selection (active when the tree has the focus, inactive otherwise) and focus outline; the keyboard"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-pane-of-each-tab.e71d92",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The pane of each tab",
+   "summary": "walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open).",
+   "body": [
+    "walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open). The active editor's file is",
+    "  revealed (`reveal`: its folders opened, the file selected). The indent is the explorer's default (8 px), not the",
+    "  user's `workbench.tree.indent`.",
     "- **`tool:http-connections`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline",
     "  `GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview). An endpoint →",
     "  `nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`, the others (`addSocket`, and",
@@ -8010,10 +8035,7 @@
     "- **`tool:builder`**: *+ New spec*, the Builder's specs by component and layer and its runs as an accordion",
     "  (`builderSidebar()` of `tools/nuclear-builder/src/panel.ts`, drawn with `workbench.ts`'s `specTree` and `runOutline`",
     "  inlined; `sidebarChanged` sends `builderSidebar` messages, the tree redrawn in place). A click is a",
-    "  `builder` message (`op`: `spec`, `run`, `node`, `new`) → `BuilderPanel.drive`, which opens the page and does it.",
-    "- **The other tools**: a line about the tool.",
-    "",
-    "Under every pane, the list of every tool's notices (below, *Badges and notifications*)."
+    "  `builder` message (`op`: `spec`, `run`, `node`, `new`) → `BuilderPanel.drive`, which opens the page and does it."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
