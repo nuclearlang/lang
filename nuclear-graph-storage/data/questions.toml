@@ -226,7 +226,7 @@ expect = ["can:backend-data", "playbook:migrate-the-database", "tool:synapsis.mi
 
 [[question]]
 ask = "can nuclear convert my existing flutter app"
-expect = ["cannot:read-target-code"]
+expect = ["can:migrate-a-project"]
 
 [[question]]
 ask = "does nuclear support express"
@@ -873,12 +873,12 @@ request = true
 
 [[question]]
 ask = "tengo un proyecto en React, pásalo a Nuclear"
-expect = ["strategy:beyond"]
+expect = ["strategy:migrate-project"]
 request = true
 
 [[question]]
 ask = "translate this Dart widget to Nuclear"
-expect = ["strategy:beyond"]
+expect = ["strategy:migrate-project"]
 request = true
 
 [[question]]
@@ -1077,3 +1077,30 @@ expect = ["can:project-registry", "mcp:projects_list", "tool:nuclear.projects"]
 [[question]]
 ask = "mi app de flutter en chrome dice sin conexion al servidor"
 expect = ["can:backend-cors", "can:project-registry"]
+
+[[question]]
+ask = "migrate my existing projects written in Dart, TypeScript and React to Nuclear and rewrite them in NuclearLang"
+expect = ["strategy:migrate-project"]
+request = true
+
+[[question]]
+ask = "rewrite my Express and Sequelize backend in Nuclear"
+expect = ["strategy:migrate-project"]
+request = true
+
+[[question]]
+ask = "modify the transpiler so my app builds"
+expect = ["strategy:beyond"]
+request = true
+
+[[question]]
+ask = "can an agent modify the transpiler or a dialect"
+expect = ["cannot:change-nuclear"]
+
+[[question]]
+ask = "is there an automatic importer from typescript into nuclear"
+expect = ["cannot:read-target-code"]
+
+[[question]]
+ask = "why does the build say the installation was modified"
+expect = ["cannot:change-nuclear"]

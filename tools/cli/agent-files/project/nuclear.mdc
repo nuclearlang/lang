@@ -7,4 +7,6 @@ alwaysApply: false
 The `.nuc` files are NuclearLang, not TypeScript nor Dart. Follow AGENTS.md: read
 `nuclear spec --brief --dialect {dialect}` before writing, and run `{check}` after each change.
 Make it with the tools (`nuclear gen`, `nuclear make`, the MCP server, `nuclear add`): never write target code for a
-feature nor translate TypeScript, Dart or Python into Nuclear by hand.
+feature. A project of another technology is migrated with MCP `migration_inspect` and the strategy
+`migrate a project into Nuclear`, never line by line. Never change Nuclear (compiler, dialects, installation): a limit
+is reported, not patched.

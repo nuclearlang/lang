@@ -2744,7 +2744,7 @@ nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writ
 nuclear flutter remove <package>...
 nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove
 nuclear update                             # the latest release (in a terminal every command asks when one is out)
-nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)
+nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code; the seal of the installation)
 nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)
 nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)
 nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n

@@ -173,7 +173,8 @@ packages and devices (flutter, inside the app)
   flutter <any flutter command>              run any flutter command inside the app
 
 setup
-  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code
+  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code;
+                                             whether the installation is the one its installer sealed (--seal: the installers' last step)
                                              (--json: the toolchains, for the editor)
   setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)
   setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear
@@ -413,12 +414,17 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
         "remove" => with_root(project_dir, |root| package_command(root, "remove", &rest)),
         "doctor" => {
             let start = project_dir.map(PathBuf::from).unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            if rest.iter().any(|a| a == "--json") {
+            if rest.iter().any(|a| a == "--seal") {
+                // the installers' last step (ADR-platform-0016)
+                let root = nuclear_dialect::install_dir().ok_or("no installation to seal: run the installer".to_string());
+                root.and_then(|r| nuclear_dialect::seal::seal(&r).map(|n| println!("sealed {n} files of {}", r.display())))
+            } else if rest.iter().any(|a| a == "--json") {
                 println!("{}", doctor::json());
+                Ok(())
             } else {
                 doctor::doctor(start.ancestors().find(|d| d.join("main.nuc").is_file()), workspace::find(&start).as_deref());
+                Ok(())
             }
-            Ok(())
         }
         "setup" => match rest.first().map(String::as_str) {
             Some("flutter") => setup::setup(rest[1..].to_vec()),

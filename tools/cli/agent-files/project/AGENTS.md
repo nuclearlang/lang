@@ -16,6 +16,9 @@ and nothing about it is in your training: learn it from the installation, never 
   `nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.
 {synapsis}{packages}- Never edit generated code ({generated}): change the `.nuc` files.
 - Make it with the tools: `nuclear gen`, `nuclear make`, the MCP server, `nuclear add` for a library. Never write
-  target code for a feature nor translate TypeScript, Dart or Python into Nuclear by hand; when a tool cannot do
-  something, say so instead of working around it.
+  target code for a feature; when a tool cannot do something, say so instead of working around it.
+- A project of another technology is migrated by reading it and rewriting it in Nuclear with the tools (MCP
+  `migration_inspect`, then `graph_strategy("migrate a project into Nuclear")`), never line by line.
+- Never change Nuclear (the compiler, a dialect, a template, a runtime, the installation): a limit is reported, not
+  patched. The installation is sealed and a changed one builds nothing (N0226).
 <!-- /nuclearlang -->

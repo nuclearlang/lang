@@ -68,11 +68,27 @@ fn home_relative(p: &Path) -> String {
 
 fn synapsis() -> Check {
     let exe = std::env::current_exe().map(|p| home_relative(&p)).unwrap_or_default();
-    let files = match nuclear_dialect::install_dir() {
-        Some(dir) => format!("files: {}", home_relative(&dir)),
-        None => "files: the repository it was built from (not installed: installer/install.sh in the repository)".into(),
+    let title = concat!("synapsis ", env!("CARGO_PKG_VERSION"));
+    let Some(dir) = nuclear_dialect::install_dir() else {
+        let files = "files: the repository it was built from (not installed: installer/install.sh in the repository)";
+        return check(Status::Ok, title, vec![format!("binary: {exe}"), files.into()]);
     };
-    check(Status::Ok, concat!("synapsis ", env!("CARGO_PKG_VERSION")), vec![format!("binary: {exe}"), files])
+    let mut details = vec![format!("binary: {exe}"), format!("files: {}", home_relative(&dir))];
+    // every hash, not only sizes and times as a build does (ADR-platform-0016)
+    match nuclear_dialect::seal::verify(&dir, true) {
+        Ok(p) if p.is_empty() => details.push("sealed: unchanged since it was installed".into()),
+        Ok(p) => {
+            details.push("the installation was modified: it builds nothing until it is installed again (N0226)".into());
+            details.extend(p);
+            details.push("run the installer again: nuclear update --reinstall".into());
+            return check(Status::Fail, title, details);
+        }
+        Err(e) => {
+            details.push(format!("{e}: run the installer again (nuclear update --reinstall)"));
+            return check(Status::Fail, title, details);
+        }
+    }
+    check(Status::Ok, title, details)
 }
 
 fn nuclear() -> Check {

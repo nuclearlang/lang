@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; point 2 amended by ADR-platform-0015
 date: 2026-11-16
 deciders: Julian Molina
 ---

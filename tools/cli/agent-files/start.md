@@ -23,13 +23,21 @@ never search the disk for Nuclear's source code or its documents, and never gues
 2. **A product is made with the tools.** `nuclear new` creates the project, `nuclear gen` writes finished code of a
    resource, `nuclear make` the skeleton of each piece where the platform puts it, `nuclear add` a library. Write by
    hand only what they leave, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, never
-   translate code of another language into Nuclear by hand, never edit `build/`. When a tool cannot do something,
-   say so.
-3. **Nuclear's standard library only** (`nuclear help library`): strings, lists, maps, dates, JSON... never the
+   edit `build/`. When a tool cannot do something, say so.
+3. **Migrating a project is allowed and expected.** A project of another technology (React, Express, NestJS, Dart,
+   Flutter, Python...) is read as the specification and rewritten in Nuclear with the tools, never line by line:
+   MCP `migration_inspect(folder)`, then `graph_strategy("migrate a project into Nuclear")` and its plan. The
+   transpiler reads only `.nuc`; you read the original. Express is a source like any other (it is postponed only
+   as a dialect Nuclear writes).
+4. **Never change Nuclear.** Not the compiler, a dialect, a template, a generator, a runtime, the installation or
+   this MCP server, and never a `dialects/` folder in a project to replace an installed one (N0225). The
+   installation is sealed: a changed one builds nothing (N0226) until it is installed again. A limit of Nuclear is
+   said to the user, never patched.
+5. **Nuclear's standard library only** (`nuclear help library`): strings, lists, maps, dates, JSON... never the
    target's names in platform code.
-4. **Check after every change.** `nuclear check --json` must print `[]`; fix exactly what each error says (most
+6. **Check after every change.** `nuclear check --json` must print `[]`; fix exactly what each error says (most
    carry a `fix`, and `nuclear fix` applies them). Then `nuclear test`.
-5. **The project documents itself.** Its `AGENTS.md` and `docs/` say what it is and how it is made; keep them true
+7. **The project documents itself.** Its `AGENTS.md` and `docs/` say what it is and how it is made; keep them true
    in the same change (topic `context-docs`). The project's own `docs/README.md` wins over this default.
 
 ## The work cycle

@@ -8,8 +8,11 @@ related: [requirements.md, design.md]
 
 ## Phase 0: decisions of the user
 
-- [ ] T0.1 A new ADR of the platform: a migration is made by the migration tool, and an agent only resolves the
-      points it lists (it amends ADR-platform-0004, point 2: "No agent migrates code by hand").
+Until the importer exists, an agent migrates with the tools ([ADR-platform-0015](../../03-adr/0015-migrating-a-project-into-nuclear.md):
+MCP `migration_inspect`, the graph's `strategy:migrate-project`); the importer then does the translation and the
+agent resolves only its points.
+
+
 - [ ] T0.2 The rule of each case of the catalogue marked "decision of the user" (`%`, integer width, `>>>`, powers).
 - [ ] T0.3 The name of the command (`nuclear migrate` is the database's) and of the importer's project.
 

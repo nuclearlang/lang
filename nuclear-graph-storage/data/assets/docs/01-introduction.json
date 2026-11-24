@@ -29,17 +29,16 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.82780b",
+   "id": "doc:AGENTS.md#hard-rules.5d4ab3",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
-   "summary": "16. The same Nuclear means the same everywhere (ADR-platform-0014).",
+   "summary": "17. No agent changes Nuclear while it works on a product (ADR-platform-0016): not the compiler, a dialect, a template, a generator, a runtime, the installation or the MCP server.",
    "body": [
-    "16. **The same Nuclear means the same everywhere** ([ADR-platform-0014](docs/03-adr/0014-stability-and-parity.md)).",
-    "    The language's rules are not changed by a fix. Every change to the transpiler, a dialect or the library runs",
-    "    every test set first (`nuclearlang/docs/05-standards/testing.md`); generated code compiles with no warning of its",
-    "    target. What a client sees never depends on the dialect: a runtime converts what its framework answers to one",
-    "    output of Nuclear's, and where nothing is decided one mature tool is the rule for every dialect (TypeORM for",
-    "    migrations). A capability of a project has its MCP tool, and the knowledge base its rows."
+    "17. **No agent changes Nuclear while it works on a product**",
+    "    ([ADR-platform-0016](docs/03-adr/0016-the-installation-is-sealed.md)): not the compiler, a dialect, a",
+    "    template, a generator, a runtime, the installation or the MCP server. A limit is reported, never patched. The",
+    "    installers seal the installation (read-only, `.seal`); a changed one builds nothing (N0226), and a dialect",
+    "    outside the installation never takes an installed one's name (N0225)."
    ],
    "sources": [
     "AGENTS.md"
@@ -51,7 +50,7 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.9a9f12",
+   "id": "doc:AGENTS.md#hard-rules.717049",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
    "summary": "installations is released with a tag `v<version>`: one version for the whole platform, that follows Semantic Versioning: a fix raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises MINOR) (docs/05-standards/coding.md).",
@@ -61,13 +60,13 @@
     "    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)). A tag is pushed only after",
     "    `installer/release/delivery.sh <version>` passes; after it, `installer/release/after-release.sh <version>`.",
     "11. `CodeBuilder/` is teaching material only: never in references, context or code.",
-    "12. Node.js/Express is postponed by the user: do not touch it until asked.",
+    "12. Node.js/Express is postponed by the user as a dialect: do not touch it until asked. An Express project is a",
+    "    source like any other: it is migrated to the `backend` platform (ADR-platform-0015).",
     "13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).",
     "    A product is any software made from Nuclear (an app, a backend, the website, an example). Its code is Nuclear,",
     "    its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP",
-    "    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a",
-    "    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when",
-    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it."
+    "    server, its libraries from `nuclear add`. No agent writes target code for a feature. A project of another",
+    "    technology (React, Express, NestJS, Dart, Flutter, Python...) is **migrated** by an agent that reads it as the"
    ],
    "sources": [
     "AGENTS.md"
@@ -79,23 +78,50 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.ab6323",
+   "id": "doc:AGENTS.md#hard-rules.c2e3a9",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
-   "summary": "14. Built for a fresh machine and a fresh agent.",
+   "summary": "specification and rewrites it in Nuclear with the tools (`migration_inspect`, the generators), never line by line around them (ADR-platform-0015).",
    "body": [
+    "specification and rewrites it in Nuclear with the tools (`migration_inspect`, the generators), never line by",
+    "    line around them ([ADR-platform-0015](docs/03-adr/0015-migrating-a-project-into-nuclear.md)). By hand outside",
+    "    Nuclear only when strictly necessary: say so, and record the missing capability in the roadmap of the tool",
+    "    that should do it.",
+    "",
     "14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the",
     "    installer and an agent with no context at all. The installer and the MCP server are the only sources of",
     "    Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's",
     "    machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves",
-    "    services that run on their own on every system.",
-    "",
+    "    services that run on their own on every system."
+   ],
+   "sources": [
+    "AGENTS.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:AGENTS.md#hard-rules.ce577a",
+   "type": "readme",
+   "title": "NuclearLang — Hard rules",
+   "summary": "15. Every change is deployed, never only written.",
+   "body": [
     "15. **Every change is deployed, never only written.** A new feature, a change or an update of a tool, and always",
     "    when it is published or written in a CHANGELOG, ends with everything that serves it at the new version: the",
     "    context files (`AGENTS.md`, `docs/`, the skill, the briefs), the Smart Graph and its Chroma",
     "    (`nuclear-graph knowledge build`, `knowledge check` clean, `ingest`), the MCP server (built, tested,",
     "    `uv tool install --reinstall tools/mcp`), and what the user runs installed again (`installer/install.sh`; an",
-    "    extension's version raised and installed) ([docs/05-standards/coding.md](docs/05-standards/coding.md))."
+    "    extension's version raised and installed) ([docs/05-standards/coding.md](docs/05-standards/coding.md)).",
+    "",
+    "16. **The same Nuclear means the same everywhere** ([ADR-platform-0014](docs/03-adr/0014-stability-and-parity.md)).",
+    "    The language's rules are not changed by a fix. Every change to the transpiler, a dialect or the library runs",
+    "    every test set first (`nuclearlang/docs/05-standards/testing.md`); generated code compiles with no warning of its",
+    "    target. What a client sees never depends on the dialect: a runtime converts what its framework answers to one",
+    "    output of Nuclear's, and where nothing is decided one mature tool is the rule for every dialect (TypeORM for",
+    "    migrations). A capability of a project has its MCP tool, and the knowledge base its rows."
    ],
    "sources": [
     "AGENTS.md"
@@ -753,6 +779,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.9ab757",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Migrating a project into Nuclear** (ADR-platform-0015; the user: \"one of the most important features of the ecosystem\"): an agent asked to migrate a project of another technology refused, because the rules and the Smart Graph said Nuclear \"cannot read TypeScript, Dart or Python\". Now the transpiler still reads only `.nuc`, and an agent reads the original as the specification and rewrites it in Nuclear with the tools. New MCP tool `migration_inspect(folder)` (read-only): each app of the original (`package.json`, `pubspec.yaml`, `pyproject.toml`, `requirements.txt`), its language and frameworks, the Nuclear platform and dialect it becomes (React → `web`/`react`; Flutter, React Native → `mobile`/`flutter`; Express, NestJS → `backend`/`nestjs`; FastAPI, Flask, Django → `backend`/`fastapi`), its database plugin and what becomes of each dependency. The graph's new strategy `strategy:migrate-project` is the plan (inventory, workspace, one spec per component, the generators, the rest in Nuclear, the original's tests as the proof), with `can:migrate-a-project`. Express is a source like any other: it is postponed only as a dialect.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.a0dea1",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -835,6 +876,21 @@
     "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
     "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.b36ce4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **No agent changes Nuclear; the installation is sealed** (ADR-platform-0016): the installers write `.seal` (size, time and SHA-256 of every file of `bin/`, `dialects/`, `platforms/`, `generators/`) and make those folders read-only; every build and check compares sizes and times (once per process) and refuses a changed installation (**N0226**), `nuclear doctor` compares the hashes. A dialect from outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) with the name of an installed one is refused (**N0225**): before, a folder `dialects/fastapi/` in a project replaced the installed dialect. `nuclear doctor --seal` is the installers' last step. The rule, `cannot:change-nuclear`, is in the skill, `nuclear_start`, the MCP server's instructions and the project's `AGENTS.md`.",
    "sources": [
     "CHANGELOG.md"
    ],

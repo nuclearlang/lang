@@ -170,6 +170,7 @@
     "- The generators: `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`.",
     "- The graph: `graph_strategy` (which kind of request it is and the plan of that kind: the first call after `nuclear_start`), `graph_answer`, `graph_search`, `graph_card`, `graph_prompt`, `graph_remember`, `graph_monitor` (the hot spots of the last run with `--monitor`, kept for later).",
     "- The compiler and the command line: `project_monitor` (where the app is slow: the report of `nuclear run --monitor`), `nuclear_check`, `nuclear_build`, `nuclear_fmt`, `nuclear_help`, `nuclear_brief`, `nuclear_defs`, `nuclear_project` (new, build, install, test, check, analyze, make, gen, migrate, add, remove, explain).",
+    "- A migration of a project of another technology: `migration_inspect(folder)` (read-only: each app, its Nuclear platform and dialect, its database, its dependencies), then the strategy `strategy:migrate-project`.",
     "- The internet: `web_search`, `web_read`.",
     "",
     "**The way of working it asks for.** The generators write the standard code; the model writes the rest, validates (`nuclear_check`, `nuclear test`) and corrects only what is wrong.",

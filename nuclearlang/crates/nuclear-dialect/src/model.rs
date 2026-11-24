@@ -782,6 +782,9 @@ pub struct Loader {
     /// Extra roots of the type definitions repository (`<language>/<package>/<version>/`), searched before the
     /// `<language>/defs/` of each dialect search path.
     pub defs_paths: Vec<PathBuf>,
+    /// The dialects folders of NuclearLang's own homes (`Loader::of`): a dialect found elsewhere never has the name
+    /// of one of theirs (N0225), and the installation's must be the one its installer sealed (N0226).
+    pub installed: Vec<PathBuf>,
 }
 
 /// Where a dialect's files are.
@@ -883,7 +886,7 @@ impl Loader {
         // an install, an editor's bundle: `platforms/` next to `dialects/`
         let beside = |name: &str| search_paths.iter().map(|p| p.join("..").join(name)).filter(|p| p.is_dir()).collect();
         let (platform_paths, generator_paths) = (beside("platforms"), beside("generators"));
-        Loader { search_paths, platform_paths, generator_paths, packages: Vec::new(), defs_paths: Vec::new() }
+        Loader { search_paths, platform_paths, generator_paths, packages: Vec::new(), defs_paths: Vec::new(), installed: Vec::new() }
     }
 
     /// `first` (a flag, a project's own `dialects/`), then the dialects and the platforms of `homes`.
@@ -891,6 +894,7 @@ impl Loader {
         let mut l = Loader::new(first.into_iter().chain(homes.iter().map(|h| h.dialects.clone())).collect());
         l.platform_paths.extend(homes.iter().map(|h| h.platforms.clone()));
         l.generator_paths.extend(homes.iter().map(|h| h.generators.clone()));
+        l.installed = homes.iter().map(|h| h.dialects.clone()).collect();
         l
     }
 
@@ -931,44 +935,71 @@ impl Loader {
     }
 
     fn locate(&self, name_or_path: &str) -> Option<Located> {
-        let direct = Path::new(name_or_path);
-        let candidates: Vec<PathBuf> = if direct.exists() {
-            vec![direct.to_path_buf()]
-        } else {
-            self.search_paths
-                .iter()
-                .flat_map(|d| {
-                    let mut v = vec![d.join(name_or_path), d.join(format!("{name_or_path}.toml"))];
-                    // a framework dialect: under the language it is written in
-                    let languages = std::fs::read_dir(d).into_iter().flatten().flatten().map(|e| e.path());
-                    let mut inner: Vec<PathBuf> = languages.map(|l| l.join(FRAMEWORKS).join(name_or_path)).collect();
-                    inner.sort();
-                    v.extend(inner);
-                    v
-                })
-                .collect()
-        };
-        for c in candidates {
-            if is_dialect_dir(&c) {
-                let mut files: Vec<PathBuf> = std::fs::read_dir(&c)
-                    .ok()?
-                    .flatten()
-                    .map(|e| e.path())
-                    .filter(|p| p.extension().is_some_and(|x| x == "toml") && !p.ends_with(DOCS_FILE))
-                    .collect();
-                files.sort();
-                return Some(Located { name: file_stem(&c), files });
-            }
-            if c.is_file() {
-                return Some(Located { name: file_stem(&c), files: vec![c] });
-            }
-        }
-        None
+        locate_in(&self.search_paths, name_or_path)
     }
 
+    /// N0225: `located`, found outside NuclearLang's own homes, has the name of one of their dialects.
+    fn shadows(&self, located: &Located) -> Option<PathBuf> {
+        let canon = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+        let file = canon(located.files.first()?);
+        if self.installed.iter().any(|root| file.starts_with(canon(root))) {
+            return None;
+        }
+        let theirs = locate_in(&self.installed, &located.name)?;
+        theirs.files.first().map(|f| canon(f.parent().unwrap_or(f)))
+    }
+}
+
+fn locate_in(search_paths: &[PathBuf], name_or_path: &str) -> Option<Located> {
+    let direct = Path::new(name_or_path);
+    let candidates: Vec<PathBuf> = if direct.exists() {
+        vec![direct.to_path_buf()]
+    } else {
+        search_paths
+            .iter()
+            .flat_map(|d| {
+                let mut v = vec![d.join(name_or_path), d.join(format!("{name_or_path}.toml"))];
+                // a framework dialect: under the language it is written in
+                let languages = std::fs::read_dir(d).into_iter().flatten().flatten().map(|e| e.path());
+                let mut inner: Vec<PathBuf> = languages.map(|l| l.join(FRAMEWORKS).join(name_or_path)).collect();
+                inner.sort();
+                v.extend(inner);
+                v
+            })
+            .collect()
+    };
+    for c in candidates {
+        if is_dialect_dir(&c) {
+            let mut files: Vec<PathBuf> = std::fs::read_dir(&c)
+                .ok()?
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|x| x == "toml") && !p.ends_with(DOCS_FILE))
+                .collect();
+            files.sort();
+            return Some(Located { name: file_stem(&c), files });
+        }
+        if c.is_file() {
+            return Some(Located { name: file_stem(&c), files: vec![c] });
+        }
+    }
+    None
+}
+
+impl Loader {
     /// Loads a dialect by name (searched in `search_paths`) or by path.
     pub fn load(&self, name_or_path: &str) -> (Option<Dialect>, Report) {
         let mut report = Report::default();
+        // a changed installation builds nothing (ADR-platform-0016)
+        let install = crate::install_dir().map(|d| d.join("dialects"));
+        if install.is_some_and(|d| self.installed.contains(&d) || self.search_paths.contains(&d))
+            && let Some(problem) = crate::seal::problem()
+        {
+            let f = report.file(name_or_path, "");
+            let msg = format!("{problem}: NuclearLang does not build with a changed compiler; run the installer again (nuclear update --reinstall)");
+            report.add(f, Diagnostic::error(codes::INSTALL_MODIFIED, Span::default(), msg));
+            return (None, report);
+        }
         let mut stack = Vec::new();
         let mut dialect = self.load_inner(name_or_path, &mut report, &mut stack);
         if let Some(d) = &mut dialect {
@@ -1085,6 +1116,18 @@ impl Loader {
                     format!("dialect inheritance cycle: {cycle}"),
                 ),
             );
+            return None;
+        }
+        if let Some(theirs) = self.shadows(&located) {
+            let f = report.file(&located.files[0].display().to_string(), "");
+            let msg = format!(
+                "dialect '{}' at {} has the name of the installed one ({}): an installed dialect is never replaced; give yours another name with `extends = \"{}\"`, or remove the folder",
+                located.name,
+                located.files[0].parent().unwrap_or(&located.files[0]).display(),
+                theirs.display(),
+                located.name
+            );
+            report.add(f, Diagnostic::error(codes::SHADOWS_INSTALLED, Span::default(), msg));
             return None;
         }
         stack.push(located.name.clone());

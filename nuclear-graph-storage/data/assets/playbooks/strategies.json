@@ -3152,6 +3152,131 @@
    }
   },
   {
+   "id": "strategy:migrate-project",
+   "type": "strategy",
+   "title": "Strategy: migrate a project of another technology into Nuclear",
+   "summary": "Read the original project (TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter, Python...) as the specification and rewrite it in Nuclear with the tools, one app and one component at a time; prove it with the original's behaviour. Never line by line, never target code, never a change to Nuclear.",
+   "body": [
+    "**The plan.**",
+    "",
+    "1. `migration_inspect(folder)` of the original: its apps, the platform and dialect of each, the database plugin, the dependencies. Read it with the user; the dialect of an app is the user's decision when the tool says so.",
+    "2. Read the original: its routes or screens, models and schema, business rules, tests and API answers. This is the specification; reading it is the job.",
+    "3. A workspace: `workspace_create` in the user's destination folder, then `app_add` per app (its platform and dialect from step 1). Each change is asked to the user first.",
+    "4. Size it (`task-size`): a migration is large. Write one spec per component (`spec_create`: the component's resources, rules and the original's examples) and propose Nuclear Builder, or do one component at a time.",
+    "5. Per component: `generate_resource` for each model (its fields from the original's model or schema, `from_json` from the original API's answer, `api_inspect` first); `generate_usecase` for each operation that only calls a repository; plugins in `config.nuc` for the database and what the platform covers.",
+    "6. What is left, written in Nuclear after `nuclear_brief(<platform>)`: the rules of the original's services, its views' details. Nuclear's standard library for the target's helpers (lodash, moment, intl...); `nuclear add` only for a library of the same language with no Nuclear equivalent.",
+    "7. Map, never copy: a router or controller → `controller`; a service → `usecase`; a Sequelize/TypeORM/Prisma model → `entity` + `repository`; a DTO → a model; middleware and auth → the platform's guards; a React component or page → a screen; Redux/Zustand/bloc/provider state → the platform's state; a fetch/axios/dio client → `Http` or a client generated from a backend's contract.",
+    "8. The proof: the original's tests become Nuclear tests (`nuclear test`); the original API's answers are the expected answers of the migrated routes. `nuclear_check` clean, every test green.",
+    "9. Every gap of a tool met on the way is told to the user (the tool and what it lacks), never worked around by changing Nuclear (`cannot:change-nuclear`).",
+    "",
+    "**A model writes:** Nuclear only, what the generators leave.",
+    "",
+    "**Done when:** every app of the original has its Nuclear app, `nuclear_check` is clean, the migrated tests pass, and the user has the list of what was not proved.",
+    "",
+    "**Stop and say it when:** the original's behaviour is unclear (ask the user); a feature needs what the platform cannot do (`strategy:beyond`, with its row); the original names no destination folder (ask)."
+   ],
+   "keys": [
+    "migrate project",
+    "migration into nuclear",
+    "rewrite in nuclear",
+    "migrar proyecto"
+   ],
+   "asks": [
+    "migrate my existing project written in Dart, TypeScript and React to Nuclear",
+    "tengo un proyecto en React, pásalo a Nuclear",
+    "rewrite my Express and Sequelize backend in Nuclear",
+    "convierte mi app de Flutter a Nuclear",
+    "translate this Dart widget to Nuclear",
+    "migra estos proyectos a nuclearlang"
+   ],
+   "links": [
+    {
+     "rel": "tool",
+     "to": "mcp:migration_inspect"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:workspace_create"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:app_add"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:generate_resource"
+    },
+    {
+     "rel": "capability",
+     "to": "can:migrate-a-project"
+    },
+    {
+     "rel": "limit",
+     "to": "cannot:read-target-code"
+    },
+    {
+     "rel": "limit",
+     "to": "cannot:change-nuclear"
+    },
+    {
+     "rel": "see",
+     "to": "strategy:system"
+    }
+   ],
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "use_case": "migration",
+    "role": "analyst",
+    "family": "create",
+    "scope": "system",
+    "triggers": [
+     "migrate",
+     "migrar",
+     "migra",
+     "migration to nuclear",
+     "rewrite",
+     "reescribir",
+     "re-escribir",
+     "convert",
+     "convierte",
+     "convertir",
+     "port",
+     "translate",
+     "traducir",
+     "import my",
+     "pásalo",
+     "pasalo"
+    ]
+   },
+   "data": {
+    "signals": [
+     "\\b(migrat\\w*|migr[aá]\\w*|convert\\w*|conviert\\w*|port\\w*|translat\\w*|traduc\\w*|rewrit\\w*|re-?escrib\\w*|re-?writ\\w*|import\\w*|p[aá]s\\w*)\\b.{0,80}\\b(nuclear|nuclearlang|\\.nuc)\\b",
+     "\\b(typescript|javascript|dart|python|flutter|react|express|nestjs|next\\.?js|django|flask|fastapi|sequelize|prisma)\\b.{0,60}\\b(to|a|into|en|in)\\s+(nuclear|nuclearlang)\\b"
+    ],
+    "mode": "write",
+    "stages": [
+     "spec",
+     "generate",
+     "plan",
+     "test",
+     "code",
+     "verify",
+     "security",
+     "artifacts",
+     "deploy"
+    ],
+    "pieces": "plan",
+    "generators": [
+     "resource",
+     "usecase"
+    ],
+    "needs": {},
+    "lead": "frontier"
+   }
+  },
+  {
    "id": "strategy:beyond",
    "type": "strategy",
    "title": "Strategy: something NuclearLang or an agent cannot do",
@@ -3160,7 +3285,7 @@
     "**The plan.**",
     "",
     "1. Which limit: the capabilities rows whose words the request writes (`cannot:*`, `limit:*`).",
-    "2. By design: target code is never read or converted into Nuclear (`cannot:read-target-code`); Node.js with Express is postponed (`cannot:nodejs-express`).",
+    "2. By design: the transpiler reads only `.nuc` (`cannot:read-target-code`: a project of another technology is migrated instead, `strategy:migrate-project`); Nuclear itself is never changed to make a product work (`cannot:change-nuclear`); Node.js with Express is postponed as a dialect (`cannot:nodejs-express`), not as a source.",
     "3. Not yet in a platform: `limit:backend-not-yet`, `limit:mobile-not-yet`, `limit:web-first-version`, `limit:generators`.",
     "4. Beyond the model at work, not the platform (too big, or a judgment nobody gave): split it, give the missing facts, or give it to a stronger model (`playbook:escalate`). The limits of the local agents, on standby, are `limit:agent-one-file`, `limit:agent-context` and `limit:agent-reasoning`.",
     "5. What is possible instead: the closest thing the platform does, with its row.",
@@ -3176,11 +3301,9 @@
     "beyond"
    ],
    "asks": [
-    "convert this TypeScript into Nuclear",
-    "convierte este código Python a Nuclear",
     "an Express server",
     "push notifications on mobile",
-    "import my Flutter project",
+    "modify the transpiler so my app builds",
     "authentication with OAuth"
    ],
    "links": [
@@ -3211,6 +3334,10 @@
     {
      "rel": "limit",
      "to": "limit:web-first-version"
+    },
+    {
+     "rel": "limit",
+     "to": "cannot:change-nuclear"
     }
    ],
    "meta": {
@@ -3219,23 +3346,18 @@
     "family": "beyond",
     "scope": "project",
     "triggers": [
-     "convert",
-     "convierte",
-     "convertir",
-     "port",
-     "import",
-     "importar",
-     "translate",
-     "traducir",
      "express",
      "node.js",
-     "nodejs"
+     "nodejs",
+     "transpiler",
+     "transpilador",
+     "compiler internals"
     ]
    },
    "data": {
     "signals": [
-     "\\b(convert|converts|convierte|convertir|port|translate|traduce|traducir|import|importa|importar)\\b.{0,50}\\b(typescript|javascript|dart|python|java|kotlin|swift|flutter|react|express)\\b",
-     "\\b(express|node\\.?js)\\b"
+     "\\b(modif\\w*|change|cambi\\w*|patch\\w*|edit\\w*|parche\\w*)\\b.{0,40}\\b(transpiler|transpilador|compiler|compilador|dialect|dialecto|installation|instalaci[oó]n)\\b",
+     "\\b(write|escrib\\w*|build|constru\\w*|create|crea\\w*|new|nuevo)\\b.{0,30}\\b(express|node\\.?js)\\b"
     ],
     "mode": "lead",
     "stages": [],

@@ -39,6 +39,7 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 - `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `project_migrate`, `spec_*`,
   `team_*`, `member_*`, `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every
   change goes through (`confirmed`); `projectOf`.
+- `migration.nuc`: `migration_inspect`'s inventory of an original project in another technology (read-only).
 - `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.
 - `tests/`: `test_server.nuc`, `test_work.nuc` (the work's tools with a fake command runner and a fake client) and
   `support.nuc` (`expect`).

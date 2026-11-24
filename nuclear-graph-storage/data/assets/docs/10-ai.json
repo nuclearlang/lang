@@ -20141,7 +20141,28 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.17e41b",
+   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.52a8cf",
+   "type": "readme",
+   "title": "AGENTS — NuclearLang",
+   "summary": "`migration_inspect`, then `graph_strategy(\"migrate a project into Nuclear\")`), never line by line.",
+   "body": [
+    "- A project of another technology is migrated by reading it and rewriting it in Nuclear with the tools (MCP",
+    "  `migration_inspect`, then `graph_strategy(\"migrate a project into Nuclear\")`), never line by line.",
+    "- Never change Nuclear (the compiler, a dialect, a template, a runtime, the installation): a limit is reported, not",
+    "  patched. The installation is sealed and a changed one builds nothing (N0226).",
+    "<!-- /nuclearlang -->"
+   ],
+   "sources": [
+    "tools/cli/agent-files/project/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.d8df4b",
    "type": "readme",
    "title": "AGENTS — NuclearLang",
    "summary": "every topic), then `nuclear_doc(<topic>)`.",
@@ -20158,8 +20179,7 @@
     "  `nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.",
     "{synapsis}{packages}- Never edit generated code ({generated}): change the `.nuc` files.",
     "- Make it with the tools: `nuclear gen`, `nuclear make`, the MCP server, `nuclear add` for a library. Never write",
-    "  target code for a feature nor translate TypeScript, Dart or Python into Nuclear by hand; when a tool cannot do",
-    "  something, say so instead of working around it."
+    "  target code for a feature; when a tool cannot do something, say so instead of working around it."
    ],
    "sources": [
     "tools/cli/agent-files/project/AGENTS.md"
@@ -20387,7 +20407,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#nuclearlang",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#nuclearlang.8cd8be",
    "type": "doc",
    "title": "NuclearLang",
    "summary": "NuclearLang (`.nuc`) is a minimal language transpiled to TypeScript, Dart or Python by declarative dialects.",
@@ -20401,9 +20421,8 @@
     "",
     "**Make it with the tools.** A product (any software made from Nuclear) is made with the platform's tools:",
     "`nuclear new`, `nuclear gen`, `nuclear make`, the MCP server's tools, `nuclear add` for a library, `nuclear fix`; only",
-    "what they leave is written by hand, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, and",
-    "never translate React, Node.js, Python or Dart code into Nuclear by hand. Only when strictly necessary, and then say",
-    "so: the tool that should have done it is missing something."
+    "what they leave is written by hand, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature. Only",
+    "when strictly necessary, and then say so: the tool that should have done it is missing something."
    ],
    "sources": [
     "tools/cli/agent-files/skills/nuclear/SKILL.md"
@@ -20415,7 +20434,56 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/start.md#rules-never-broken",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#nuclearlang.c3dd10",
+   "type": "doc",
+   "title": "NuclearLang",
+   "summary": "own: read the original as the specification, then rewrite it in Nuclear with the tools, never line by line.",
+   "body": [
+    "**Migrating a project of another technology** (React, Express, NestJS, Dart, Flutter, Python...) is a task of its",
+    "own: read the original as the specification, then rewrite it in Nuclear with the tools, never line by line. MCP",
+    "`migration_inspect(folder)` first (each app, its Nuclear platform and dialect, its database, its dependencies), then",
+    "`graph_strategy(\"migrate a project into Nuclear\")` and its plan. Express is a source like any other.",
+    "",
+    "**Never change Nuclear.** Not the compiler, a dialect, a template, a generator, a runtime, the installation or the",
+    "MCP server, and never a `dialects/` folder in a project to replace an installed dialect. The installation is",
+    "sealed: a changed one builds nothing (N0226). A limit of Nuclear is said to the user, never patched."
+   ],
+   "sources": [
+    "tools/cli/agent-files/skills/nuclear/SKILL.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/start.md#rules-never-broken.20d3f7",
+   "type": "doc",
+   "title": "Start here: NuclearLang for an agent with no context — Rules never broken",
+   "summary": "this MCP server, and never a `dialects/` folder in a project to replace an installed one (N0225).",
+   "body": [
+    "this MCP server, and never a `dialects/` folder in a project to replace an installed one (N0225). The",
+    "   installation is sealed: a changed one builds nothing (N0226) until it is installed again. A limit of Nuclear is",
+    "   said to the user, never patched.",
+    "5. **Nuclear's standard library only** (`nuclear help library`): strings, lists, maps, dates, JSON... never the",
+    "   target's names in platform code.",
+    "6. **Check after every change.** `nuclear check --json` must print `[]`; fix exactly what each error says (most",
+    "   carry a `fix`, and `nuclear fix` applies them). Then `nuclear test`.",
+    "7. **The project documents itself.** Its `AGENTS.md` and `docs/` say what it is and how it is made; keep them true",
+    "   in the same change (topic `context-docs`). The project's own `docs/README.md` wins over this default."
+   ],
+   "sources": [
+    "tools/cli/agent-files/start.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/start.md#rules-never-broken.b48c56",
    "type": "doc",
    "title": "Start here: NuclearLang for an agent with no context — Rules never broken",
    "summary": "1. Read before writing.",
@@ -20427,14 +20495,13 @@
     "2. **A product is made with the tools.** `nuclear new` creates the project, `nuclear gen` writes finished code of a",
     "   resource, `nuclear make` the skeleton of each piece where the platform puts it, `nuclear add` a library. Write by",
     "   hand only what they leave, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, never",
-    "   translate code of another language into Nuclear by hand, never edit `build/`. When a tool cannot do something,",
-    "   say so.",
-    "3. **Nuclear's standard library only** (`nuclear help library`): strings, lists, maps, dates, JSON... never the",
-    "   target's names in platform code.",
-    "4. **Check after every change.** `nuclear check --json` must print `[]`; fix exactly what each error says (most",
-    "   carry a `fix`, and `nuclear fix` applies them). Then `nuclear test`.",
-    "5. **The project documents itself.** Its `AGENTS.md` and `docs/` say what it is and how it is made; keep them true",
-    "   in the same change (topic `context-docs`). The project's own `docs/README.md` wins over this default."
+    "   edit `build/`. When a tool cannot do something, say so.",
+    "3. **Migrating a project is allowed and expected.** A project of another technology (React, Express, NestJS, Dart,",
+    "   Flutter, Python...) is read as the specification and rewritten in Nuclear with the tools, never line by line:",
+    "   MCP `migration_inspect(folder)`, then `graph_strategy(\"migrate a project into Nuclear\")` and its plan. The",
+    "   transpiler reads only `.nuc`; you read the original. Express is a source like any other (it is postponed only",
+    "   as a dialect Nuclear writes).",
+    "4. **Never change Nuclear.** Not the compiler, a dialect, a template, a generator, a runtime, the installation or"
    ],
    "sources": [
     "tools/cli/agent-files/start.md"
@@ -20739,6 +20806,7 @@
     "- `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `project_migrate`, `spec_*`,",
     "  `team_*`, `member_*`, `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every",
     "  change goes through (`confirmed`); `projectOf`.",
+    "- `migration.nuc`: `migration_inspect`'s inventory of an original project in another technology (read-only).",
     "- `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.",
     "- `tests/`: `test_server.nuc`, `test_work.nuc` (the work's tools with a fake command runner and a fake client) and",
     "  `support.nuc` (`expect`).",
@@ -21058,21 +21126,12 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-groups.05a71e",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-groups.080e9e",
    "type": "context",
    "title": "The MCP server: overview — The groups",
-   "summary": "`taskSlug(title)`), runs `nuclear-builder run <spec> --lead local` and answers the journal `.nuclear/builder/runs/<run>.md`.",
+   "summary": "engine available: a SearXNG of the user's own (`NUCLEAR_SEARXNG_URL`), Brave Search with the key kept by `nuclear-graph web-key brave`, else Wikipedia (no key).",
    "body": [
-    "`taskSlug(title)`), runs `nuclear-builder run <spec> --lead local` and answers the journal",
-    "  `.nuclear/builder/runs/<run>.md`. `developer_retry` runs `nuclear-builder retry <run> [--step <id> | --from <stage>]`,",
-    "  or `nuclear-builder restart <run>` for a run from scratch. `developer_review` appends the lead's notes to",
-    "  `<run>.review.md` and, when the project's check is `ok`, keeps each corrected `.nuc` file of the project with its",
-    "  task in the graph's `examples`. `developer_code`, `developer_test` and `developer_security` post to the Nuclear",
-    "  Developer over HTTP (`developer(path, body)`).",
-    "- **The Smart Graph** (`GraphClient(\"mcp\")`): `graph_strategy`, `graph_answer`, `graph_search`, `graph_card`,",
-    "  `graph_prompt`, `graph_remember`, with the token of the client `mcp`.",
-    "- **The internet** (`Web` of the graph's package, `nuclear-graph-storage/web.nuc`): `web_search` uses the first",
-    "  engine available: a SearXNG of the user's own (`NUCLEAR_SEARXNG_URL`), Brave Search with the key kept by",
+    "engine available: a SearXNG of the user's own (`NUCLEAR_SEARXNG_URL`), Brave Search with the key kept by",
     "  `nuclear-graph web-key brave`, else Wikipedia (no key). `web_read` gives a page as plain text. Code blocks are removed (what comes back is facts for the business",
     "  logic, never code: the agents keep writing only Nuclear), and a url whose host resolves to this machine or the",
     "  local network is refused (`publicUrl`): the graph and the Developer listen on 127.0.0.1."
@@ -21087,7 +21146,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-groups.c9a186",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-groups.4ace17",
    "type": "context",
    "title": "The MCP server: overview — The groups",
    "summary": "`generate_component`, `generate_resource`, `generate_usecase`); `generate_screen` runs `nuclear make screen`; `api_inspect` fetches a url and answers the shape of its JSON (`shape`, `shapeKind`: one key per line, a nested object indented, a list by its first item) and, with a project, the files…",
@@ -21096,15 +21155,45 @@
     "  `generate_component`, `generate_resource`, `generate_usecase`); `generate_screen` runs `nuclear make screen`;",
     "  `api_inspect` fetches a url and answers the shape of its JSON (`shape`, `shapeKind`: one key per line, a nested",
     "  object indented, a list by its first item) and, with a project, the files `generate_resource` would write.",
+    "- **Migration** (`migration.nuc`). `migration_inspect` walks an original project written in another technology",
+    "  (depth 4, without dependencies, builds and native shells), reads each app's manifest and answers its language,",
+    "  frameworks, Nuclear platform and dialect, database plugin, sources by extension and what becomes of each",
+    "  dependency (`MIGRATION_COVERED`, `MIGRATION_DRIVERS`; `nuclear add` only when the target is the same language).",
+    "  It writes nothing.",
     "- **The compiler and the command line** (`Toolchain` of the graph's package,",
     "  `nuclear-graph-storage/toolchain.nuc`): `check` and `build` of a piece of Nuclear, `checkProject`, `fmt`, `help`,",
     "  `brief`, `layout` / `pathOf`, and `project(root, args)`, which runs `nuclear <args>`. A name such as `backend` is",
-    "  passed as `--platform`, any other as `--dialect` (`target`). Answers are short texts: `ok`, or",
-    "  `line:col CODE message (fix: ...)` per error (`describe`). The `nuclear_project(project, command, args)` tool",
+    "  passed as `--platform`, any other as `--dialect` (`target`). Answers are short texts: `ok`, or"
+   ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-groups.5efdda",
+   "type": "context",
+   "title": "The MCP server: overview — The groups",
+   "summary": "`line:col CODE message (fix: ...)` per error (`describe`).",
+   "body": [
+    "`line:col CODE message (fix: ...)` per error (`describe`). The `nuclear_project(project, command, args)` tool",
     "  refuses a command that is not in `PROJECT_COMMANDS` (`new`, `n`, `build`, `install`, `test`, `check`, `analyze`,",
     "  `make`, `g`, `gen`, `migrate`, `add`, `remove`, `explain`).",
     "- **The local developer.** `developer_task` finds the project (`projectOf`: the closest folder up with a",
-    "  `config.nuc`), writes `specs/<run>/spec.md` (`specMarkdown`: led by the local agents; the run's name is"
+    "  `config.nuc`), writes `specs/<run>/spec.md` (`specMarkdown`: led by the local agents; the run's name is",
+    "  `taskSlug(title)`), runs `nuclear-builder run <spec> --lead local` and answers the journal",
+    "  `.nuclear/builder/runs/<run>.md`. `developer_retry` runs `nuclear-builder retry <run> [--step <id> | --from <stage>]`,",
+    "  or `nuclear-builder restart <run>` for a run from scratch. `developer_review` appends the lead's notes to",
+    "  `<run>.review.md` and, when the project's check is `ok`, keeps each corrected `.nuc` file of the project with its",
+    "  task in the graph's `examples`. `developer_code`, `developer_test` and `developer_security` post to the Nuclear",
+    "  Developer over HTTP (`developer(path, body)`).",
+    "- **The Smart Graph** (`GraphClient(\"mcp\")`): `graph_strategy`, `graph_answer`, `graph_search`, `graph_card`,",
+    "  `graph_prompt`, `graph_remember`, with the token of the client `mcp`.",
+    "- **The internet** (`Web` of the graph's package, `nuclear-graph-storage/web.nuc`): `web_search` uses the first"
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -21254,7 +21343,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#what-it-stands-on.955c45",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#what-it-stands-on.665ed2",
    "type": "context",
    "title": "The MCP server: overview — What it stands on",
    "summary": "What it stands on",
@@ -21264,6 +21353,7 @@
     "| `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |",
     "| `workspace_*`, `app_*` | the installed `nuclear` with `nuclear workspace` |",
     "| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |",
+    "| `migration_inspect` | nothing: it reads the original project's folder (`migration.nuc`) |",
     "| `api_inspect`, `web_search`, `web_read` | the internet |",
     "| `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |",
     "| `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |"
@@ -21306,7 +21396,31 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#1-set-up",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#1-set-up.585fee",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — 1. Set up",
+   "summary": "1. Set up",
+   "body": [
+    "| Tools | They need |",
+    "|---|---|",
+    "| `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |",
+    "| `migration_inspect` | nothing: it reads the original project's folder |",
+    "| `api_inspect`, `web_search`, `web_read` | the internet |",
+    "| `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |",
+    "| `workspace_*`, `app_*` | the installed `nuclear` (`nuclear workspace`) |",
+    "| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#1-set-up.9cc0db",
    "type": "guide",
    "title": "The MCP server of NuclearLang — 1. Set up",
    "summary": "The server comes with the AI services: set them up first (the set-up also allows MCP clients to read the graph).",
@@ -21334,15 +21448,7 @@
     "Every machine has the Smart Graph and no local developer: the server offers the generators, the compiler, the",
     "command line, the internet tools and the `graph_*` tools, and tells the model to write what the generators do not.",
     "",
-    "What each group of tools needs running:",
-    "",
-    "| Tools | They need |",
-    "|---|---|",
-    "| `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |",
-    "| `api_inspect`, `web_search`, `web_read` | the internet |",
-    "| `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |",
-    "| `workspace_*`, `app_*` | the installed `nuclear` (`nuclear workspace`) |",
-    "| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |"
+    "What each group of tools needs running:"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
@@ -21456,15 +21562,11 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-generators.272ebc",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-generators.4a5022",
    "type": "guide",
    "title": "The MCP server of NuclearLang — Generators",
    "summary": "generate_resource(project, \"orders\", \"Order\", fields=\"id:int total:double status:string\", source=\"db\") generate_usecase(project, \"orders\", \"PageOrders\", calls=\"OrderRepository.page\", route=\"GET orders/pages/{page}\") generate_usecase(project, \"orders\", \"CancelOrder\", route=\"POST…",
    "body": [
-    "| `generate_usecase(project, component, name, calls, route, dry_run)` | a use case wired into its component: its alias in the facade and, with `route` (backend), its route. With `calls` the use case is written too, because it only calls that repository method; without it the use case is one the project already has |",
-    "| `generate_screen(project, component, screen, route)` | mobile and web: a screen with its state manager and state model, for a view that is not a resource's list |",
-    "| `api_inspect(url, project, component, name)` | the shape of a public API's JSON answer; with a project, the files `generate_resource` would write from it |",
-    "",
     "```",
     "generate_resource(project, \"orders\", \"Order\", fields=\"id:int total:double status:string\", source=\"db\")",
     "generate_usecase(project, \"orders\", \"PageOrders\", calls=\"OrderRepository.page\", route=\"GET orders/pages/{page}\")",
@@ -21498,6 +21600,26 @@
     "| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for later sessions |",
     "| `generate_component(project, component)` | a new component with its facade |",
     "| `generate_resource(project, component, name, from_json \\| from_spec \\| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-generators.90cf33",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — Generators",
+   "summary": "Generators",
+   "body": [
+    "| `generate_usecase(project, component, name, calls, route, dry_run)` | a use case wired into its component: its alias in the facade and, with `route` (backend), its route. With `calls` the use case is written too, because it only calls that repository method; without it the use case is one the project already has |",
+    "| `generate_screen(project, component, screen, route)` | mobile and web: a screen with its state manager and state model, for a view that is not a resource's list |",
+    "| `migration_inspect(folder)` | read-only: the inventory of an original project in another technology (TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter, Python) to rewrite in Nuclear: each app (a folder with a `package.json`, `pubspec.yaml`, `pyproject.toml` or `requirements.txt`), its language and frameworks, the platform and dialect it becomes, its database plugin, its sources by extension and what becomes of each dependency; then `graph_strategy(\"migrate a project into Nuclear\")` |",
+    "| `api_inspect(url, project, component, name)` | the shape of a public API's JSON answer; with a project, the files `generate_resource` would write from it |"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"

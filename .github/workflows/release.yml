@@ -154,6 +154,7 @@ jobs:
           cargo build --release --quiet -p nuclear-cli
           exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
           installer/release/stage.sh "$RUNNER_TEMP/nuclearlang" "target/release/nuclear$exe"
+          "$RUNNER_TEMP/nuclearlang/bin/nuclear$exe" doctor --seal
           echo "NUCLEAR=$RUNNER_TEMP/nuclearlang/bin/nuclear$exe" >> "$GITHUB_ENV"
       - name: The AI archive, built and tried
         run: installer/release/ai-runtime.sh

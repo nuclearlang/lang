@@ -200,7 +200,8 @@ packages and devices (flutter, inside the app)
   flutter <any flutter command>              run any flutter command inside the app
 
 setup
-  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code
+  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code;
+                                             whether the installation is the one its installer sealed (--seal: the installers' last step)
                                              (--json: the toolchains, for the editor)
   setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)
   setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear

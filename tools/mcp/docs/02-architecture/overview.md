@@ -29,6 +29,7 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 | `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |
 | `workspace_*`, `app_*` | the installed `nuclear` with `nuclear workspace` |
 | `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |
+| `migration_inspect` | nothing: it reads the original project's folder (`migration.nuc`) |
 | `api_inspect`, `web_search`, `web_read` | the internet |
 | `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |
 | `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |
@@ -84,6 +85,11 @@ product is made with these tools: no target code for a feature, no native code t
   `generate_component`, `generate_resource`, `generate_usecase`); `generate_screen` runs `nuclear make screen`;
   `api_inspect` fetches a url and answers the shape of its JSON (`shape`, `shapeKind`: one key per line, a nested
   object indented, a list by its first item) and, with a project, the files `generate_resource` would write.
+- **Migration** (`migration.nuc`). `migration_inspect` walks an original project written in another technology
+  (depth 4, without dependencies, builds and native shells), reads each app's manifest and answers its language,
+  frameworks, Nuclear platform and dialect, database plugin, sources by extension and what becomes of each
+  dependency (`MIGRATION_COVERED`, `MIGRATION_DRIVERS`; `nuclear add` only when the target is the same language).
+  It writes nothing.
 - **The compiler and the command line** (`Toolchain` of the graph's package,
   `nuclear-graph-storage/toolchain.nuc`): `check` and `build` of a piece of Nuclear, `checkProject`, `fmt`, `help`,
   `brief`, `layout` / `pathOf`, and `project(root, args)`, which runs `nuclear <args>`. A name such as `backend` is

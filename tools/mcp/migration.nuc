@@ -1,0 +1,148 @@
+use pathlib{ Path }
+
+// migration_inspect: the inventory of an ORIGINAL project (another technology) that is going to be rewritten in
+// Nuclear. It reads the apps' manifests and counts their sources; it never writes anything.
+
+// The folders a walk never enters: dependencies, builds, caches and the native shells of a mobile app.
+MIGRATION_SKIPPED = ["node_modules", ".git", "build", "dist", ".dart_tool", ".venv", "venv", "__pycache__", ".next", "target", "ios", "android"]
+MIGRATION_MANIFESTS = ["package.json", "pubspec.yaml", "pyproject.toml", "requirements.txt"]
+MIGRATION_SOURCES = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".vue", ".dart", ".py"]
+// The frameworks a dependency names, by the platform it becomes.
+MIGRATION_WEB = ["react", "react-dom", "next", "vite", "vue", "@angular/core", "svelte"]
+MIGRATION_MOBILE = ["flutter", "react-native", "expo"]
+MIGRATION_BACKEND = ["express", "@nestjs/core", "fastify", "koa", "@hapi/hapi", "fastapi", "flask", "django", "shelf", "dart_frog"]
+// A database driver → the backend plugin.
+MIGRATION_DRIVERS: <string, string> = { "pg": "postgres", "postgres": "postgres", "psycopg": "postgres", "psycopg2": "postgres", "psycopg2-binary": "postgres", "asyncpg": "postgres", "mysql": "mysql", "mysql2": "mysql", "pymysql": "mysql", "mysqlclient": "mysql", "aiomysql": "mysql", "mariadb": "mariadb", "sqlite3": "sqlite", "better-sqlite3": "sqlite", "aiosqlite": "sqlite", "sqflite": "sqlite" }
+// What the platform already does in place of a dependency.
+MIGRATION_COVERED: <string, string> = {
+  "react": "the web platform (screens, the react dialect)", "react-dom": "the web platform", "next": "the web platform (screens and routes)", "vite": "the build of the web platform", "vue": "the web platform (screens)", "@angular/core": "the web platform (screens)", "svelte": "the web platform (screens)",
+  "react-router": "the routes of the screens (@screen)", "react-router-dom": "the routes of the screens (@screen)", "go_router": "the routes of the screens (@screen)", "auto_route": "the routes of the screens (@screen)",
+  "redux": "the platform's state (a state manager per screen)", "@reduxjs/toolkit": "the platform's state", "zustand": "the platform's state", "mobx": "the platform's state", "bloc": "the platform's state", "flutter_bloc": "the platform's state", "provider": "the platform's state", "riverpod": "the platform's state", "flutter_riverpod": "the platform's state", "get_it": "the platform's injection", "injectable": "the platform's injection",
+  "axios": "the platform's Http", "dio": "the platform's Http", "http": "the platform's Http", "httpx": "the platform's Http", "requests": "the platform's Http",
+  "express": "the backend platform (controllers)", "@nestjs/core": "the backend platform (controllers)", "@nestjs/common": "the backend platform", "fastify": "the backend platform (controllers)", "koa": "the backend platform (controllers)", "fastapi": "the backend platform (controllers)", "flask": "the backend platform (controllers)", "django": "the backend platform (controllers, entities)", "uvicorn": "the backend platform runs it", "shelf": "the backend platform (controllers)",
+  "sequelize": "entities and repositories", "typeorm": "entities and repositories", "prisma": "entities and repositories", "@prisma/client": "entities and repositories", "sqlalchemy": "entities and repositories", "sqlmodel": "entities and repositories", "drift": "entities and repositories", "mongoose": "entities and repositories (SQL databases only: no MongoDB plugin)", "pydantic": "the platform's models",
+  "flutter": "the mobile platform (the flutter dialect)", "react-native": "the mobile platform (the flutter dialect)", "expo": "the mobile platform (the flutter dialect)",
+  "body-parser": "the backend platform's HTTP pipeline", "cors": "the backend platform's origins", "helmet": "the backend platform's HTTP pipeline", "compression": "the backend platform's HTTP pipeline", "cookie-parser": "the backend platform's HTTP pipeline", "morgan": "the backend platform's logs", "errorhandler": "the backend platform's errors (one error body)",
+  "dotenv": "the project's environments (nuclear env)", "convict": "the project's config (config.nuc, nuclear env)", "inversify": "the platform's injection", "node-dependency-injection": "the platform's injection",
+  "lodash": "Nuclear's helpers (no use needed)", "typescript": "the dialect's toolchain", "npm": "the dialect's toolchain",
+  "mocha": "Nuclear's tests (nuclear test)", "jest": "Nuclear's tests (nuclear test)", "vitest": "Nuclear's tests (nuclear test)", "sinon": "Nuclear's tests (nuclear test)", "chai": "Nuclear's tests (nuclear test)", "chai-http": "Nuclear's tests (nuclear test)", "pytest": "Nuclear's tests (nuclear test)", "flutter_test": "Nuclear's tests (nuclear test)", "mocktail": "Nuclear's tests (nuclear test)", "mockito": "Nuclear's tests (nuclear test)",
+}
+
+// The dependency names of one manifest: package.json's dependencies, pubspec.yaml's `dependencies:` block,
+// requirements.txt's lines, pyproject.toml's `dependencies = [...]` or `[tool.poetry.dependencies]`.
+manifestDependencies(file: Path) string[]
+  text = file.readText(errors = "replace")
+  if file.name == "package.json"
+    data: <string, any> = Json.decode(text) ?? {}
+    found: <string, any> = data["dependencies"] ?? {}
+    return found.keys
+  names: string[] = []
+  if file.name == "pubspec.yaml"
+    inside = false
+    for line in text.split("\n")
+      if not line.startsWith(" ") and line.trim().length > 0
+        inside = line.trim() == "dependencies:"
+      else if inside and line.startsWith("  ") and not line.startsWith("   ") and ":" in line
+        names.add(line.trim().substring(0, line.trim().indexOf(":")))
+    return names
+  poetry = false
+  listed = false
+  for line in text.split("\n")
+    clean = line.trim()
+    if file.name == "requirements.txt"
+      if clean.length > 0 and not clean.startsWith("#") and not clean.startsWith("-")
+        names.add(packageName(clean))
+      continue
+    if clean.startsWith("dependencies") and "[" in clean
+      listed = true
+    if listed
+      for quoted in Regex(r'"([^"]+)"').findAll(clean)
+        names.add(packageName(quoted[1]!))
+      listed = not ("]" in clean)
+      continue
+    if clean.startsWith("[")
+      poetry = clean == "[tool.poetry.dependencies]"
+    else if poetry and "=" in clean and not clean.startsWith("python")
+      names.add(clean.split("=")[0].trim().lower())
+  names
+
+// The name of a requirement ("fastapi[all]>=0.110; python_version>'3'" → "fastapi").
+packageName(requirement: string) string
+  requirement.trim().split(Regex(r"[=<>~!;\[ ]"))[0].lower()
+
+// The sources under `dir` by extension, without the skipped folders.
+sourceCounts(dir: Path, depth: int = 0) <string, int>
+  counts: <string, int> = {}
+  for entry in dir.iterdir()
+    if entry.isDir()
+      if depth < 8 and not (entry.name in MIGRATION_SKIPPED)
+        for ext, n in sourceCounts(entry, depth + 1)
+          counts[ext] = (counts[ext] ?? 0) + n
+    else if entry.suffix in MIGRATION_SOURCES
+      counts[entry.suffix] = (counts[entry.suffix] ?? 0) + 1
+  counts
+
+// One app of the original: its language, frameworks, platform and dialect, database plugin, sources and what
+// becomes of each dependency.
+// shortcut: a monorepo's root manifest also counts its packages' sources; read the counts per app when they overlap.
+inspectApp(dir: Path, root: Path) <string, any>
+  manifests: Path[] = MIGRATION_MANIFESTS.map((m) => dir.joinpath(m)).filter((p) => p.isFile())
+  all: string[] = []
+  for m in manifests
+    all.addAll(manifestDependencies(m))
+  deps = all.unique()
+  first: string = manifests[0].name
+  language = first == "package.json" ? (dir.joinpath("tsconfig.json").isFile() or "typescript" in deps ? "typescript" : "javascript") : (first == "pubspec.yaml" ? "dart" : "python")
+  frameworks = deps.filter((d) => d in MIGRATION_WEB or d in MIGRATION_MOBILE or d in MIGRATION_BACKEND or d in ["sequelize", "typeorm", "prisma", "@prisma/client", "mongoose", "sqlalchemy", "bloc", "flutter_bloc", "provider", "riverpod", "flutter_riverpod", "dio", "http"])
+  platform = "none"
+  dialect = "none"
+  if deps.any((d) => d in MIGRATION_MOBILE)
+    platform = "mobile"
+    dialect = "flutter"
+  else if deps.any((d) => d in MIGRATION_BACKEND)
+    platform = "backend"
+    dialect = language == "python" ? "fastapi" : (language == "dart" ? "ask the user (fastapi or nestjs)" : "nestjs")
+  else if deps.any((d) => d in MIGRATION_WEB)
+    platform = "web"
+    dialect = "react"
+  plugins = deps.filter((d) => d in MIGRATION_DRIVERS).map((d) => MIGRATION_DRIVERS[d]!).unique()
+  target = dialect == "fastapi" ? "python" : (dialect == "flutter" ? "dart" : "typescript")
+  same = language == target or (language == "javascript" and target == "typescript")
+  becomes: <string, string> = {}
+  for d in deps
+    if d.startsWith("@types/")
+      continue
+    becomes[d] = d.startsWith("express-") or d.endsWith("-express") ? "the backend platform (controllers, its HTTP pipeline)" : (d in MIGRATION_DRIVERS ? "the ${MIGRATION_DRIVERS[d]!} plugin" : (MIGRATION_COVERED[d] ?? (same and platform != "none" ? "nuclear add ${d}" : "rewrite with Nuclear's library")))
+  rel = dir == root ? "." : "${dir.relativeTo(root)}"
+  { "name": dir.name, "path": rel, "language": language, "frameworks": frameworks, "platform": platform, "dialect": dialect, "plugins": plugins, "sources": sourceCounts(dir), "dependencies": becomes }
+
+// Every folder under `dir` (depth <= 4) that holds a manifest.
+appFolders(dir: Path, depth: int = 0) Path[]
+  found: Path[] = MIGRATION_MANIFESTS.any((m) => dir.joinpath(m).isFile()) ? [dir] : []
+  if depth < 4
+    for entry in dir.iterdir().sorted()
+      if entry.isDir() and not (entry.name in MIGRATION_SKIPPED)
+        found.addAll(appFolders(entry, depth + 1))
+  found
+
+// The inventory as the tool answers it.
+inspectOriginal(folder: string) string
+  root = Path(folder).expanduser().resolve()
+  if not root.isDir()
+    return "not a folder: ${root}"
+  apps = appFolders(root).map((d) => inspectApp(d, root))
+  if apps.isEmpty
+    return "no app in ${root}: no package.json, pubspec.yaml, pyproject.toml or requirements.txt (depth 4)"
+  lines = ["The original project at ${root}: ${apps.length} app(s) to rewrite in Nuclear (nothing was changed).", ""]
+  for app in apps
+    sources: <string, int> = app["sources"]
+    counted: string[] = []
+    for ext, n in sources
+      counted.add("${n} ${ext}")
+    lines.addAll(["## ${app["name"]} (${app["path"]})", "- language: ${app["language"]}; frameworks: ${(app["frameworks"] as string[]).join(", ")}", "- Nuclear: platform ${app["platform"]}, dialect ${app["dialect"]}${(app["plugins"] as string[]).isEmpty ? "" : "; plugins: ${(app["plugins"] as string[]).join(", ")}"}", "- sources: ${counted.isEmpty ? "none" : counted.join(", ")}", "- dependencies:"])
+    becomes: <string, string> = app["dependencies"]
+    for d, what in becomes
+      lines.add("  - ${d} → ${what}")
+    lines.add("")
+  lines.add("Next: graph_strategy(\"migrate a project into Nuclear\") (strategy:migrate-project), then workspace_create and one app_add per app with the platform and dialect above. An app with platform none is a library: ask the user where its logic goes. Node.js/Express is postponed only as a target dialect: an Express app is a source, rewritten on the backend platform.")
+  lines.join("\n")

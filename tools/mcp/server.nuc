@@ -19,7 +19,7 @@ PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", 
 
 // What the server tells every client: only where to begin. The rules and the work cycle are nuclear_start's answer
 // (spec 016: an agent with no context learns Nuclear from this server alone).
-FIRST = "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first."
+FIRST = "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature; when a tool cannot do something, say so. Migrating a project of another technology (React, Express, NestJS, Dart, Flutter, Python...) into Nuclear is allowed and expected: read the original as the specification and rewrite it with these tools, never line by line (migration_inspect first, then graph_strategy). Never change Nuclear itself (the compiler, a dialect, a template, a runtime, the installation, this server): its installation is sealed and a changed one builds nothing; a limit is reported, never patched. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first."
 LOCAL_FIRST = " Then, for a request, call graph_strategy with the user's own words and follow its plan."
 // Where the work starts and how a change is confirmed (spec 022), the first part of nuclear_start's cycle.
 WORKSPACE = "Size each request before any work (nuclear_doc(\"task-size\")): count the files and lines it would change and whether it adds a feature (a screen, endpoint, entity, component, a contract or schema). Small (<= 3 files, <= 100 lines) and medium (<= 10 files, <= 400 lines) without a new feature are yours to do; larger, a new feature or several specs: propose Nuclear Builder (spec_create, then run_start) with your count, and let the user decide. Start from a workspace: the folder that holds .workspace/workspace.nuc and names the apps of one business project. workspace_show (with the user's folder) says it and its apps; when there is none, create it with workspace_create, then add each app with app_add (mobile, web or backend), never a project in a loose folder. Write each feature as a spec with spec_create (Nuclear Builder shows it at once) and keep the teams with team_* and member_*. Every tool that changes something asks the user first: the user's yes comes through the client (elicitation); a client that cannot ask gets a preview with a confirm token, which you show to the user and pass back (confirm) only after their yes, never on your own. A change declined is not done: ask what to do instead. What the editor does and these tools do not (runs, HTTP Connections, the chat's channels, the skills library, the line, the reports...) is listed in nuclear_doc(\"mcp\"), section 4, with where the user does it: say that, never pretend it was done. "
@@ -343,6 +343,15 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       args.addAll(["--route", route])
     ~tools.project(project, args)
 
+  // The inventory of an ORIGINAL project, written in another technology (TypeScript, JavaScript, React, Express,
+  // NestJS, Dart, Flutter, Python...), that is going to be rewritten in Nuclear: each app (a folder with a
+  // package.json, pubspec.yaml, pyproject.toml or requirements.txt, depth 4), its language and frameworks, the Nuclear
+  // platform and dialect it becomes, its database plugin, its sources by extension and what becomes of each
+  // dependency (covered by the platform, nuclear add, or rewritten with Nuclear's library). Read-only: it changes
+  // nothing. Call it first in a migration, then graph_strategy("migrate a project into Nuclear").
+  migrationInspect(folder: string) string
+    ~asyncio.toThread(inspectOriginal, folder)
+
   // Fetches a public API's url and answers the shape of its JSON (keys, types, nested objects, a paged answer).
   // With project, component and name it also shows the files generate_resource would write from it.
   apiInspect(url: string, project: string = "", component: string = "", name: string = "") string
@@ -495,14 +504,14 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   all() any[]
     [
       nuclearStart, nuclearDoc, graphSearch, graphAnswer, graphStrategy, graphCard, graphPrompt, graphRemember, nuclearCheck, nuclearBuild, nuclearHelp, nuclearBrief, nuclearFmt, nuclearDefs,
-      nuclearProject, nuclearEnv, projectInspect, projectMonitor, projectRunLog, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
+      nuclearProject, nuclearEnv, projectInspect, projectMonitor, projectRunLog, graphMonitor, migrationInspect, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 
 // The tools of an agent that only informs (`nuclear-mcp --informs`: Nuclear Atlas, spec 023): what teaches Nuclear and
 // reads the user's projects, workspaces, specs and teams, and the team tools (each change asked first); nothing that
 // does the work (no generator, build, project command, developer, spec or workspace written).
-INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit", "runs", "run_file", "run_journal", "checks", "team_suggest", "team_name_suggest", "team_runnable", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "metrics", "agents_list", "models_list"]
+INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "migration_inspect", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit", "runs", "run_file", "run_journal", "checks", "team_suggest", "team_name_suggest", "team_runnable", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "metrics", "agents_list", "models_list"]
 
 // The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always); `informs`:
 // only `INFORM_TOOLS`.

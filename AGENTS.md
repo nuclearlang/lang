@@ -72,13 +72,17 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)). A tag is pushed only after
     `installer/release/delivery.sh <version>` passes; after it, `installer/release/after-release.sh <version>`.
 11. `CodeBuilder/` is teaching material only: never in references, context or code.
-12. Node.js/Express is postponed by the user: do not touch it until asked.
+12. Node.js/Express is postponed by the user as a dialect: do not touch it until asked. An Express project is a
+    source like any other: it is migrated to the `backend` platform (ADR-platform-0015).
 13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).
     A product is any software made from Nuclear (an app, a backend, the website, an example). Its code is Nuclear,
     its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP
-    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a
-    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when
-    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it.
+    server, its libraries from `nuclear add`. No agent writes target code for a feature. A project of another
+    technology (React, Express, NestJS, Dart, Flutter, Python...) is **migrated** by an agent that reads it as the
+    specification and rewrites it in Nuclear with the tools (`migration_inspect`, the generators), never line by
+    line around them ([ADR-platform-0015](docs/03-adr/0015-migrating-a-project-into-nuclear.md)). By hand outside
+    Nuclear only when strictly necessary: say so, and record the missing capability in the roadmap of the tool
+    that should do it.
 
 14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the
     installer and an agent with no context at all. The installer and the MCP server are the only sources of
@@ -99,6 +103,12 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     target. What a client sees never depends on the dialect: a runtime converts what its framework answers to one
     output of Nuclear's, and where nothing is decided one mature tool is the rule for every dialect (TypeORM for
     migrations). A capability of a project has its MCP tool, and the knowledge base its rows.
+
+17. **No agent changes Nuclear while it works on a product**
+    ([ADR-platform-0016](docs/03-adr/0016-the-installation-is-sealed.md)): not the compiler, a dialect, a
+    template, a generator, a runtime, the installation or the MCP server. A limit is reported, never patched. The
+    installers seal the installation (read-only, `.seal`); a changed one builds nothing (N0226), and a dialect
+    outside the installation never takes an installed one's name (N0225).
 
 ## Commands of the whole tree
 

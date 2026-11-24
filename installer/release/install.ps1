@@ -286,6 +286,9 @@ try {
   if (Test-Path $Install) { Fail 'Installing' "$Install could not be replaced: a program still uses it." 'Close the editors and terminals that use NuclearLang, then run the installer again.' }
   New-Item -ItemType Directory -Path (Split-Path $Install) -Force | Out-Null
   Move-Item (Join-Path $Tmp 'nuclearlang') $Install
+  # the seal: what was installed, read-only; a build refuses a changed compiler (N0226, ADR-platform-0016)
+  & (Join-Path $Install 'bin\nuclear.exe') doctor --seal | Out-Null
+  if ($LASTEXITCODE -ne 0) { Fail 'Installing' 'The installation could not be sealed.' 'Run the installer again.' }
   & (Join-Path $Bin 'nuclear.exe') dialect list | Out-Null
   if ($LASTEXITCODE -ne 0) { Fail 'Installing' 'The installed nuclear does not run on this system.' 'Check that your antivirus let it in, then run the installer again.' }
   Set-Content -Path (Join-Path $Install '.version') -Value $Version -Encoding ascii

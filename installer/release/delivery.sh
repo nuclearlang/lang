@@ -39,10 +39,10 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
 else RED=""; GREEN=""; BOLD=""; DIM=""; OFF=""; fi
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-delivery.XXXXXX")
-trap 'rm -rf "$WORK"' EXIT
+trap 'chmod -R u+w "$WORK" 2>/dev/null; rm -rf "$WORK"' EXIT
 trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: the work folder never stays
 # the work folders of runs that were killed before this rule (1.3 GB each on a shared tmpfs)
-find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-delivery.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-delivery.*' ! -path "$WORK" -mmin +180 -exec chmod -R u+w {} + -exec rm -rf {} + 2>/dev/null || true
 LOGS="$REPO/target/delivery"; rm -rf "$LOGS"; mkdir -p "$LOGS"
 DONE=""
 
@@ -61,7 +61,7 @@ fix_clippy="fix every warning cargo clippy --all-targets prints"
 step_nuclear() {
   cd "$REPO" && installer/release/build-runtimes.sh && cargo build --release -p nuclear-cli -p nuclear-lsp &&
     installer/release/stage.sh "$WORK/nuclearlang" target/release/nuclear target/release/nuclear-lsp &&
-    "$WORK/nuclearlang/bin/nuclear" dialect list
+    "$WORK/nuclearlang/bin/nuclear" doctor --seal && "$WORK/nuclearlang/bin/nuclear" dialect list
 }
 fix_nuclear="cargo build --release -p nuclear-cli -p nuclear-lsp and installer/release/stage.sh must work"
 staged_path() { [ -x "$WORK/nuclearlang/bin/nuclear" ] || step_nuclear > "$LOGS/nuclear.log" 2>&1; PATH="$WORK/nuclearlang/bin:$PATH"; export PATH; }

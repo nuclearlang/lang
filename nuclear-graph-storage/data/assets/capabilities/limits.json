@@ -6,23 +6,23 @@
   {
    "id": "cannot:read-target-code",
    "type": "cannot",
-   "title": "Cannot: read or convert TypeScript, Dart or Python into Nuclear",
-   "summary": "NuclearLang goes one way only, from `.nuc` to the target. It does not import, read or convert existing target code, and the generated code in `build/` is never edited or read back.",
+   "title": "Cannot: the transpiler reads only .nuc (a migration is an agent's work)",
+   "summary": "The transpiler goes one way only, from `.nuc` to the target: it never reads, imports or converts TypeScript, Dart or Python, and the generated code in `build/` is never edited or read back. A project of another technology is still migrated: an agent reads it and rewrites it in Nuclear with the tools (can:migrate-a-project).",
    "body": [
-    "An existing app is not migrated by a tool: its logic is written again in Nuclear, kind by kind (the generators help: a resource of an existing API is generated from its answer).",
-    "",
-    "A library of the target is used through its type definitions, not by reading its code."
+    "- **What the transpiler cannot do:** read target code. There is no automatic importer yet (`nuclear port`, spec 010): nothing turns a `.ts`, `.dart` or `.py` file into `.nuc` by itself.",
+    "- **What an agent does instead:** a migration (`strategy:migrate-project`): `migration_inspect(folder)` inventories the original, a workspace with one app per original app, the generators for each resource from the original's models or API, the rest written in Nuclear, the original's tests as Nuclear tests.",
+    "- A library of the target is used through its type definitions (`nuclear add`), not by reading its code."
    ],
    "keys": [
-    "convert",
-    "migrate existing code",
-    "import code",
-    "reverse"
+    "reverse transpile",
+    "read build",
+    "importer",
+    "nuclear port"
    ],
    "asks": [
-    "can nuclear convert my flutter app",
-    "can I import typescript into nuclear",
-    "can I migrate my existing backend"
+    "can the transpiler read typescript",
+    "is there an automatic importer into nuclear",
+    "can nuclear read the generated code back"
    ],
    "links": [
     {
@@ -31,25 +31,87 @@
     },
     {
      "rel": "instead",
+     "to": "can:migrate-a-project"
+    },
+    {
+     "rel": "instead",
      "to": "concept:type-definitions"
     }
    ],
    "sources": [
-    "docs/01-product/prd.md"
+    "docs/01-product/prd.md",
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
    ],
    "meta": {
     "area": "compiler",
     "status": "by-design",
     "triggers": [
-     "convert my",
-     "migrate my",
-     "import my",
-     "existing flutter",
-     "existing typescript",
-     "existing python",
-     "existing code",
-     "from typescript",
-     "from dart"
+     "reverse transpile",
+     "transpile back",
+     "read the build",
+     "automatic importer",
+     "nuclear port"
+    ]
+   }
+  },
+  {
+   "id": "cannot:change-nuclear",
+   "type": "cannot",
+   "title": "Cannot: change Nuclear itself (the compiler, a dialect, the installation) to make a product work",
+   "summary": "An agent working on a product (an app, a backend, a migration) never changes the compiler, a dialect, a template, a platform's contract, a generator, a runtime package, the installation or the MCP server. The installation is sealed and read-only; a changed one builds nothing (N0226), and a dialect outside it never replaces an installed one (N0225). A limit is said to the user and reported, never patched.",
+   "body": [
+    "- **Why:** the same `.nuc` must build the same on every machine with the same version (ADR-platform-0014). A private patch hides the limit and makes the product build only on that machine.",
+    "- **The seal:** the installers write `.seal` (size, time and SHA-256 of every file of `bin/`, `dialects/`, `platforms/`, `generators/`) and make those folders read-only. Every build compares sizes and times; `nuclear doctor` compares the hashes.",
+    "- **N0226** (a changed installation): `nuclear update --reinstall` puts it back. **N0225** (a project's `dialects/<name>/`, `--dialect-path` or `NUCLEAR_DIALECT_PATH` with the name of an installed dialect): give the dialect its own name and `extends` the installed one, or remove the folder.",
+    "- **What to do with a limit:** say it to the user, with the row of the limit (`cannot:*`, `limit:*`) and what is possible instead (`strategy:beyond`). Work on Nuclear itself is done in NuclearLang's repository by its team.",
+    "- A dialect of a new language or framework is a feature of its own (topic `new-dialect`): it has its own name and extends the installed dialects, never edits them."
+   ],
+   "keys": [
+    "change the transpiler",
+    "modify the compiler",
+    "patch a dialect",
+    "edit the installation",
+    "n0225",
+    "n0226",
+    "seal"
+   ],
+   "asks": [
+    "can I modify the transpiler to make my app work",
+    "can an agent patch a dialect template",
+    "why does the build say the installation was modified",
+    "can I put my own fastapi dialect in the project"
+   ],
+   "links": [
+    {
+     "rel": "why",
+     "to": "concept:made-with-the-tools"
+    },
+    {
+     "rel": "instead",
+     "to": "strategy:beyond"
+    }
+   ],
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "area": "compiler",
+    "status": "by-design",
+    "triggers": [
+     "modify the transpiler",
+     "modify the compiler",
+     "change the transpiler",
+     "change the compiler",
+     "patch the compiler",
+     "patch the transpiler",
+     "edit the dialect",
+     "patch a dialect",
+     "modificar el transpilador",
+     "cambiar el transpilador",
+     "modificar el compilador",
+     "installation was modified",
+     "N0225",
+     "N0226"
     ]
    }
   },
@@ -106,9 +168,11 @@
    "id": "cannot:nodejs-express",
    "type": "cannot",
    "title": "Cannot: Node.js with Express (postponed)",
-   "summary": "Everything about plain Node.js and Express is postponed by the project's owner. A TypeScript backend is written on the backend platform and built with the `nestjs` dialect.",
+   "summary": "Plain Node.js and Express are postponed by the project's owner as a dialect Nuclear writes. A TypeScript backend is written on the backend platform and built with the `nestjs` dialect; an existing Express project is migrated to it like any other source.",
    "body": [
-    "`use express as \"express\"` does not parse and there is no Express dialect. For an HTTP service in TypeScript: `nuclear new <name> -p backend -d nestjs`."
+    "`use express as \"express\"` does not parse and there is no Express dialect. For an HTTP service in TypeScript: `nuclear new <name> -p backend -d nestjs`.",
+    "",
+    "An Express (or Sequelize, Prisma, Mongoose) project is a **source**, not a target: it is migrated to the `backend` platform with `strategy:migrate-project` (its routers become controllers, its models entities, its services use cases)."
    ],
    "keys": [
     "express",
@@ -127,10 +191,15 @@
     {
      "rel": "instead",
      "to": "platform:backend"
+    },
+    {
+     "rel": "see",
+     "to": "strategy:migrate-project"
     }
    ],
    "sources": [
-    "nuclearlang/docs/02-architecture/limits.md"
+    "nuclearlang/docs/02-architecture/limits.md",
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
    ],
    "meta": {
     "area": "backend",

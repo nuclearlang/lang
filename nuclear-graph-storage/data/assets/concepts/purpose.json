@@ -310,25 +310,25 @@
   {
    "id": "concept:made-with-the-tools",
    "type": "concept",
-   "title": "A product is made with the tools, never by porting code by hand",
-   "summary": "A product (any software made from Nuclear: an app, a backend, the website, an example) is made with the platform's tools: `nuclear new`, `gen`, `make`, the MCP server, `nuclear add` for a library, `nuclear fix`. No agent writes target code (TypeScript, Dart, Python) for a feature, and no agent translates React, Node.js, Python or Dart code into Nuclear by hand.",
+   "title": "A product is made with the tools; a migration reads the original and rewrites it with them",
+   "summary": "A product (any software made from Nuclear) is made with the platform's tools: `nuclear new`, `gen`, `make`, the MCP server, `nuclear add`, `nuclear fix`. No agent writes target code (TypeScript, Dart, Python) for a feature. A project of another technology is migrated by reading it and rewriting it in Nuclear with the same tools, never line by line (strategy:migrate-project).",
    "body": [
-    "Every product is a test of the platform: if an agent writes a feature by hand in the target's language, or ports native code into Nuclear by itself, nobody learns whether the tools would have made it.",
+    "Every product is a test of the platform: if an agent writes a feature by hand in the target's language, or ports native code line by line around the tools, nobody learns whether the tools would have made it.",
     "",
     "1. The code is Nuclear; the target code comes from the transpiler. Never edit `build/`.",
     "2. The standard parts come from the generators (`nuclear gen resource`, `nuclear gen usecase`, `nuclear make <kind>`) and the MCP server's tools.",
     "3. A library is added with `nuclear add <package>` and used through its generated type definitions.",
     "4. Only what the tools leave is written by hand, in Nuclear.",
-    "5. By hand outside Nuclear only when strictly necessary (the product cannot work otherwise, or the work is on Nuclear itself): say so, and the missing capability goes to the roadmap of the tool that should have done it."
+    "5. Migrating a project of another technology (React, Express, NestJS, Dart, Flutter, Python) is allowed and expected: the agent reads the original as the specification and rewrites it with the tools (`migration_inspect`, then `strategy:migrate-project`; ADR-platform-0015).",
+    "6. By hand outside Nuclear only when strictly necessary (the product cannot work otherwise): say so, and the missing capability goes to the roadmap of the tool that should have done it.",
+    "7. Never change Nuclear itself (the compiler, a dialect, a runtime, the installation) to make a product work: `cannot:change-nuclear`."
    ],
    "keys": [
     "made with the tools",
-    "no manual migration",
     "port by hand"
    ],
    "asks": [
     "can I write the typescript by hand",
-    "should I translate the react code to nuclear myself",
     "how do I add a feature the generators do not make",
     "may an agent edit the generated code"
    ],
@@ -340,10 +340,19 @@
     {
      "rel": "see",
      "to": "concept:golden-rule"
+    },
+    {
+     "rel": "see",
+     "to": "strategy:migrate-project"
+    },
+    {
+     "rel": "see",
+     "to": "cannot:change-nuclear"
     }
    ],
    "sources": [
-    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+    "docs/03-adr/0004-products-are-made-with-the-tools.md",
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
    ],
    "meta": {
     "topic": "purpose"

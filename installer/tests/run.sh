@@ -23,15 +23,16 @@ INSTALLER="$ROOT/installer/release/install.sh"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-installer-tests.XXXXXX")
 SERVERS=""
 # a server PRJ1 started, and anything a fake machine left running (a `nuclear update --when-idle`), go with the folder
-trap 'for p in $SERVERS; do kill_tree "$p"; done; pkill -f "$WORK/" 2>/dev/null; rm -rf "$WORK"' EXIT
+# a sealed installation is read-only (ADR-platform-0016): chmod before every rm of a work folder
+trap 'for p in $SERVERS; do kill_tree "$p"; done; pkill -f "$WORK/" 2>/dev/null; chmod -R u+w "$WORK" 2>/dev/null; rm -rf "$WORK"' EXIT
 trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: no server and no folder stays
 # the work folders of runs that were killed before this rule
-find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-installer-tests.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-installer-tests.*' ! -path "$WORK" -mmin +180 -exec chmod -R u+w {} + -exec rm -rf {} + 2>/dev/null || true
 PASS=0; FAIL=0; FAILED=""
 
 # A fresh, empty machine for one test: $H is its HOME.
 machine() {
-  H="$WORK/$1"; rm -rf "$H"; mkdir -p "$H"
+  H="$WORK/$1"; chmod -R u+w "$H" 2>/dev/null; rm -rf "$H"; mkdir -p "$H"
 }
 # The installer in that machine (NO_COLOR, no terminal): its output in $H/out, its exit code returned.
 install() {

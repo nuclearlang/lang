@@ -854,7 +854,7 @@ dependencies = [
 
 [[package]]
 name = "nuclear-cli"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "base64",
  "crossterm",
@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "nuclear-codegen"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "nuclear-diag",
  "nuclear-dialect",
@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "nuclear-devices"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "base64",
  "crossterm",
@@ -895,25 +895,26 @@ dependencies = [
 
 [[package]]
 name = "nuclear-diag"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "serde_json",
 ]
 
 [[package]]
 name = "nuclear-dialect"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "nuclear-diag",
  "nuclear-syntax",
  "serde",
  "serde_json",
+ "sha2",
  "toml",
 ]
 
 [[package]]
 name = "nuclear-lsp"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "nuclear-diag",
  "nuclear-dialect",
@@ -924,7 +925,7 @@ dependencies = [
 
 [[package]]
 name = "nuclear-syntax"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "nuclear-diag",
  "toml",
@@ -932,7 +933,7 @@ dependencies = [
 
 [[package]]
 name = "nuclear-transpile"
-version = "0.100.0"
+version = "0.101.0"
 dependencies = [
  "nuclear-diag",
  "nuclear-dialect",

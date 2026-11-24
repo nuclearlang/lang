@@ -1976,11 +1976,12 @@
   {
    "id": "tool:nuclear.doctor",
    "type": "cli",
-   "title": "`nuclear doctor` — What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the…",
-   "summary": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor)",
+   "title": "`nuclear doctor` — What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code; whether the…",
+   "summary": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code; whether the installation is the one its installer sealed (--seal: the installers' last step) (--json: the toolchains, for the editor)",
    "body": [
     "```text",
-    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code",
+    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code;",
+    "                                             whether the installation is the one its installer sealed (--seal: the installers' last step)",
     "                                             (--json: the toolchains, for the editor)",
     "```"
    ],
@@ -2003,7 +2004,7 @@
       "usage": "nuclear doctor [--json]",
       "alias": "",
       "note": "",
-      "does": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor)"
+      "does": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code; whether the installation is the one its installer sealed (--seal: the installers' last step) (--json: the toolchains, for the editor)"
      }
     ]
    }

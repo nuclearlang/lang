@@ -46,6 +46,7 @@ What each group of tools needs running:
 | Tools | They need |
 |---|---|
 | `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |
+| `migration_inspect` | nothing: it reads the original project's folder |
 | `api_inspect`, `web_search`, `web_read` | the internet |
 | `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |
 | `workspace_*`, `app_*` | the installed `nuclear` (`nuclear workspace`) |
@@ -109,6 +110,7 @@ options, the examples and what each platform gets.
 | `generate_resource(project, component, name, from_json \| from_spec \| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |
 | `generate_usecase(project, component, name, calls, route, dry_run)` | a use case wired into its component: its alias in the facade and, with `route` (backend), its route. With `calls` the use case is written too, because it only calls that repository method; without it the use case is one the project already has |
 | `generate_screen(project, component, screen, route)` | mobile and web: a screen with its state manager and state model, for a view that is not a resource's list |
+| `migration_inspect(folder)` | read-only: the inventory of an original project in another technology (TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter, Python) to rewrite in Nuclear: each app (a folder with a `package.json`, `pubspec.yaml`, `pyproject.toml` or `requirements.txt`), its language and frameworks, the platform and dialect it becomes, its database plugin, its sources by extension and what becomes of each dependency; then `graph_strategy("migrate a project into Nuclear")` |
 | `api_inspect(url, project, component, name)` | the shape of a public API's JSON answer; with a project, the files `generate_resource` would write from it |
 
 ```

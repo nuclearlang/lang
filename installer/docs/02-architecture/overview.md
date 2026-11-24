@@ -177,3 +177,12 @@ ADR-installer-0002.
 - On Linux the services are the systemd user units `nuclear-graph` and `nuclear-chat`
   (`systemctl --user restart nuclear-chat` after a change to its code;
   `journalctl --user -u nuclear-chat -n 50`); `nuclear-builder setup --status` says what is installed and running.
+
+## The seal (ADR-platform-0016)
+
+Each installer's last step on the files is `nuclear doctor --seal`: `.seal` at the root of the installation (the
+SHA-256, size and time of every file of `bin/`, `dialects/`, `platforms/` and `generators/`), and those folders
+read-only. Before an installer replaces or removes the installation it makes it writable again (`chmod -R u+w`;
+`Remove-Item -Force` on Windows). A build refuses a changed installation (N0226) and `nuclear doctor` names each
+file that changed. Not sealed: `kinds/` (packages the user adds), `packages/` (setuptools builds `synapsis-py` in
+place), `tools/` (the definitions generators fetch their packages on first use) and `ai/`.

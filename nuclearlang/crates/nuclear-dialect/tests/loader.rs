@@ -510,3 +510,15 @@ fn every_platform_kind_has_a_place_in_the_layout() {
         assert!(d.layout.values().all(|p| p.ends_with(".nuc")), "{dialect}: {:?}", d.layout);
     }
 }
+
+#[test]
+fn a_dialect_outside_nuclears_homes_never_replaces_an_installed_one() {
+    // a project's own `dialects/fastapi/` would change how every fastapi project is built (N0225)
+    let own = tmp("shadow", &[("python/frameworks/fastapi/dialect.toml", "name = \"fastapi\"\nextends = \"python\"\n")]);
+    assert_eq!(codes(vec![own.clone()], "fastapi"), ["N0225"]);
+    // a dialect of its own name that extends the installed one loads
+    let mine = tmp("extends", &[("python/frameworks/myapi/dialect.toml", "name = \"myapi\"\nextends = \"fastapi\"\n")]);
+    assert!(!codes(vec![mine.clone()], "myapi").contains(&"N0225"));
+    std::fs::remove_dir_all(own).unwrap();
+    std::fs::remove_dir_all(mine).unwrap();
+}

@@ -49,6 +49,7 @@ for arg in "$@"; do
       rm -f "$BIN_DIR/nuclear" "$BIN_DIR/nuclear-lsp" "$BIN_DIR/nuclear-builder" "$BIN_DIR/nuclear-developer" "$BIN_DIR/nuclear-chat"
       command -v uv >/dev/null 2>&1 && { uv tool uninstall nuclear-graph; uv tool uninstall nuclear-mcp; } >/dev/null 2>&1 || true
       rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/zed/extensions/installed/nuclearlang"
+      [ -d "$HOME_DIR" ] && chmod -R u+w "$HOME_DIR"
       rm -rf "$HOME_DIR"
       for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
       rm -rf "${XDG_STATE_HOME:-$HOME/.local/state}/synapsis"   # the intro shows again on the next install
@@ -72,6 +73,8 @@ case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
 "$REPO/installer/release/stage.sh" "$HOME_DIR" "$REPO/target/release/nuclear$EXE" "$REPO/target/release/nuclear-lsp$EXE"
 ln -sf "$HOME_DIR/bin/nuclear" "$BIN_DIR/nuclear"
 ln -sf "$HOME_DIR/bin/nuclear-lsp" "$BIN_DIR/nuclear-lsp"
+# the seal (ADR-platform-0016): what was installed, read-only; a build refuses a changed compiler (N0226)
+"$HOME_DIR/bin/nuclear$EXE" doctor --seal >/dev/null
 
 # from source the AI services are the working tree's own folders (stage.sh copied them): their set-up installs the
 # graph editable (the Developer is on standby: not built); the set-up itself (Nuclear, the python dialect) is this tree's

@@ -51,6 +51,8 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Untested
 
+- **The seal on Windows and macOS** (ADR-platform-0016): `install.ps1` runs `nuclear doctor --seal` and `Remove-Item -Force` takes the read-only files away; neither tried on a Windows or a Mac yet.
+
 - **A new run on Windows** (`install.ps1`: `.version`, `-Reinstall` while the services run, `Stop-Under`): written
   without a Windows at hand; `installer-windows.yml` runs it again and with `-Reinstall` on every case.
 - **`nuclear setup flutter|node` on a clean macOS** (the editor's second choice, marked there as not tried).
@@ -94,5 +96,7 @@ The pending work of the installers, the release and the set-up of the AI service
     `4b` as assistant.
 
 ## Pending
+- **Seal the runtimes and the definitions generators** (ADR-platform-0016): `packages/` and `tools/` are not sealed because setuptools builds `synapsis-py` in place and `tools/defs` runs `dart pub get` on first use. Wanted: the runtimes installed from a built wheel or archive, `tools/defs` fetched at install time, then both sealed.
+- The language server bundled in an editor extension reads its own copy of the dialects, which no seal covers (a build still refuses a changed installation).
 - The delivery gate does not build and try the AI archive (`ai` jobs of the release workflow): 0.94.0 passed the gate and failed there, on a model of the AI services the new backend runtime could not make (found 2026-11-22). Wanted: the gate imports the AI services with the tree's runtimes before a tag.
 - **The editor end-to-end check** (the user chose it on 2026-11-23, after a port change broke their app while every suite was green): VS Code with the extension, a real workspace of a backend, a web app and a mobile app, run as the user does (Serve, the Synapsis device), screenshots checked that the web and the device show the backend's data, Serve/Stop work, switching tools keeps the layout; in the delivery gate and before a change is called done. Not built yet: next, after the fix of the port registry is proved.

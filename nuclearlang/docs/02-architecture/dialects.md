@@ -30,6 +30,12 @@ or how dialects are found. This is a summary for who changes the loader: the ful
 - `nuclear_dialect::Home` is where the files are: an install (`$NUCLEAR_HOME/dialects`, `$NUCLEAR_HOME/platforms`
   and `$NUCLEAR_HOME/generators`) or the source tree (`nuclearlang/dialects`, `nuclear-synapsis-framework/platforms`
   and `tools/code_generator/platforms`): `Home.dialects`, `Home.platforms`, `Home.generators`. `homes()` gives the install first, then the tree while it is on disk.
+- `Loader::of(first, homes)` searches `first` (a flag, `NUCLEAR_DIALECT_PATH`, a project's own `dialects/`) before
+  the homes, and keeps the homes' dialects folders in `Loader.installed`: a dialect found outside them with the name
+  of one of theirs is refused (N0225, ADR-platform-0016). The language server passes its own folders (its bundle,
+  the install, the tree). A load from an install checks its seal once per process (`seal::problem`, sizes and
+  times against `.seal`; N0226); `seal::seal` writes it and `seal::verify(root, full)` compares, the hashes too
+  with `full` (`nuclear doctor`).
 - `Loader::new(search_paths)` adds the `platforms/` and the `generators/` next to each search path; `Loader::of(first, homes)` puts a
   caller's own folders (a flag, a project's `dialects/`) before the homes.
 - The command line tool's flags and the server's settings that add search paths are theirs: `../tools/cli/` and

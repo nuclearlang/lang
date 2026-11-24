@@ -3072,6 +3072,80 @@
    }
   },
   {
+   "id": "error:N0225",
+   "type": "diagnostic",
+   "title": "N0225 — a dialect that replaces an installed one",
+   "summary": "A dialect found outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) has the name of an installed dialect: it would replace how NuclearLang builds that dialect",
+   "body": [
+    "`N0225` · dialects · error",
+    "",
+    "**What it is.** A dialect found outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) has the name of an installed dialect: it would replace how NuclearLang builds that dialect",
+    "",
+    "**Why.** A dialect found outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) has the name of a dialect NuclearLang installed, so it would change how every program of that dialect is built. An installed dialect is never replaced: give yours another name and `extends` the installed one, or remove the folder.",
+    "",
+    "**Example.** a folder `dialects/fastapi/` inside a backend project",
+    "",
+    "**Fix.** another name, with `extends = \"fastapi\"`; or remove the folder"
+   ],
+   "keys": [
+    "n0225",
+    "a dialect that replaces an installed one"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0225",
+    "family": "dialect",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "dialects",
+    "title": "a dialect that replaces an installed one",
+    "what": "A dialect found outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) has the name of an installed dialect: it would replace how NuclearLang builds that dialect",
+    "fix": "another name, with `extends = \"fastapi\"`; or remove the folder",
+    "example": "a folder `dialects/fastapi/` inside a backend project"
+   }
+  },
+  {
+   "id": "error:N0226",
+   "type": "diagnostic",
+   "title": "N0226 — the installation of NuclearLang was modified",
+   "summary": "The installation was modified: a file of its `bin/`, `dialects/`, `platforms/` or `generators/` is not the one the installer sealed (`.seal`), or one was added or removed; every build and check refuses",
+   "body": [
+    "`N0226` · dialects · error",
+    "",
+    "**What it is.** The installation was modified: a file of its `bin/`, `dialects/`, `platforms/` or `generators/` is not the one the installer sealed (`.seal`), or one was added or removed; every build and check refuses",
+    "",
+    "**Why.** A file of the installation (the compiler, the dialects, the platforms, the generators) is not the one the installer sealed: it was edited, added or removed. NuclearLang does not build with a changed compiler. Run the installer again (`nuclear update --reinstall`); a limit of the compiler is reported, never patched.",
+    "",
+    "**Example.** a template of `dialects/python/` edited by hand",
+    "",
+    "**Fix.** run the installer again: `nuclear update --reinstall`"
+   ],
+   "keys": [
+    "n0226",
+    "the installation of nuclearlang was modified"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0226",
+    "family": "dialect",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "dialects",
+    "title": "the installation of NuclearLang was modified",
+    "what": "The installation was modified: a file of its `bin/`, `dialects/`, `platforms/` or `generators/` is not the one the installer sealed (`.seal`), or one was added or removed; every build and check refuses",
+    "fix": "run the installer again: `nuclear update --reinstall`",
+    "example": "a template of `dialects/python/` edited by hand"
+   }
+  },
+  {
    "id": "error:N0301",
    "type": "diagnostic",
    "title": "N0301 — architecture: this declaration cannot use that one",

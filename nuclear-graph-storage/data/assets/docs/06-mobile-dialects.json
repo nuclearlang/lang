@@ -2217,39 +2217,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3e09ee",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear monitor --on | --off # keep the app measured on every build, watch and run, or stop nuclear add <package>[@version]... # into config.nuc and the app, and generates its definitions nuclear remove <package>... # out of config.nuc and the app (the definitions stay in the cache) nuclear…",
-   "body": [
-    "nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop",
-    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
-    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
-    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
-    "nuclear flutter remove <package>...",
-    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove",
-    "nuclear update                             # the latest release (in a terminal every command asks when one is out)",
-    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)",
-    "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
-    "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
-    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
-    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
-    "```"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.4116e7",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
@@ -2410,6 +2377,39 @@
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
    "summary": "The CLI is the `nuclear` command (the framework's commands: `tools/cli/src/framework/`).",
    "body": "The CLI is the `nuclear` command (the framework's commands: `tools/cli/src/framework/`). Names are written in any form (`user_profile`, `UserProfile`) and normalized.",
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.dac752",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear monitor --on | --off # keep the app measured on every build, watch and run, or stop nuclear add <package>[@version]... # into config.nuc and the app, and generates its definitions nuclear remove <package>... # out of config.nuc and the app (the definitions stay in the cache) nuclear…",
+   "body": [
+    "nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop",
+    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
+    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
+    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
+    "nuclear flutter remove <package>...",
+    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove",
+    "nuclear update                             # the latest release (in a terminal every command asks when one is out)",
+    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code; the seal of the installation)",
+    "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
+    "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
+    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
+    "```"
+   ],
    "platforms": [
     "mobile"
    ],

@@ -377,6 +377,16 @@ pub mod codes {
         title: "an asynchronous call used without `~`",
         explanation: "A member or an index of what an asynchronous call returns (`books.exec(a).length`) reads a value that is not there yet: await the call, `(~books.exec(a)).length`.",
     };
+    pub const SHADOWS_INSTALLED: Code = Code {
+        id: "N0225",
+        title: "a dialect that replaces an installed one",
+        explanation: "A dialect found outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) has the name of a dialect NuclearLang installed, so it would change how every program of that dialect is built. An installed dialect is never replaced: give yours another name and `extends` the installed one, or remove the folder.",
+    };
+    pub const INSTALL_MODIFIED: Code = Code {
+        id: "N0226",
+        title: "the installation of NuclearLang was modified",
+        explanation: "A file of the installation (the compiler, the dialects, the platforms, the generators) is not the one the installer sealed: it was edited, added or removed. NuclearLang does not build with a changed compiler. Run the installer again (`nuclear update --reinstall`); a limit of the compiler is reported, never patched.",
+    };
     pub const KIND_SEALED_MEMBER: Code = Code {
         id: "N0223",
         title: "a method named like a member the kind's runtime owns",
@@ -482,6 +492,8 @@ pub mod codes {
         KIND_METHOD_BODY,
         NOT_AWAITED,
         KIND_SEALED_MEMBER,
+        SHADOWS_INSTALLED,
+        INSTALL_MODIFIED,
         DECORATOR_ARGS,
         KIND_IGNORES,
         UNKNOWN_NAMED_ARG,

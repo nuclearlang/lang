@@ -89,3 +89,25 @@ testTheInformingServerOffersNoToolThatDoesTheWork() void
   expect("nuclear_start" in names and "graph_answer" in names and "team_create" in names and "team_list" in names)
   expect(not ("spec_create" in names) and not ("nuclear_build" in names) and not ("generate_resource" in names) and not ("nuclear_project" in names) and not ("workspace_create" in names))
   expect(names.all((n) => n in INFORM_TOOLS))
+
+// A migration starts from the original's inventory: an Express API with Sequelize on PostgreSQL becomes a backend
+// (nestjs) with the postgres plugin, a Flutter app a mobile app; nothing is written.
+testMigrationInspectMapsAnOriginalProjectToItsPlatformsDialectsAndPlugins(tmpPath: Path) void
+  api = tmpPath.joinpath("fidelity", "api")
+  api.joinpath("src").mkdir(parents = true)
+  api.joinpath("package.json").writeText("{\"dependencies\": {\"express\": \"^4\", \"sequelize\": \"^6\", \"pg\": \"^8\", \"jsonwebtoken\": \"^9\"}}")
+  api.joinpath("src", "index.js").writeText("")
+  api.joinpath("node_modules", "x").mkdir(parents = true)
+  api.joinpath("node_modules", "x", "package.json").writeText("{}")
+  app = tmpPath.joinpath("fidelity", "app")
+  app.mkdir()
+  app.joinpath("pubspec.yaml").writeText("name: app\ndependencies:\n  flutter:\n    sdk: flutter\n  dio: ^5.0.0\nflutter:\n  uses-material-design: true\n")
+  backend = inspectApp(api, tmpPath)
+  expect(backend["platform"] == "backend" and backend["dialect"] == "nestjs" and (backend["plugins"] as string[]) == ["postgres"])
+  deps: <string, string> = backend["dependencies"]
+  expect(deps["sequelize"] == "entities and repositories" and deps["jsonwebtoken"] == "nuclear add jsonwebtoken")
+  mobile = inspectApp(app, tmpPath)
+  expect(mobile["platform"] == "mobile" and mobile["dialect"] == "flutter" and (mobile["dependencies"] as <string, string>)["dio"] == "the platform's Http")
+  out = inspectOriginal("${tmpPath.joinpath("fidelity")}")
+  expect("2 app(s)" in out and "1 .js" in out and "strategy:migrate-project" in out)
+  expect(packageName("fastapi[all]>=0.110; python_version>'3'") == "fastapi")

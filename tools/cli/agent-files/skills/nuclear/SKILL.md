@@ -14,9 +14,17 @@ syntax is NOT TypeScript, Dart nor Python: read the sheet before writing.
 
 **Make it with the tools.** A product (any software made from Nuclear) is made with the platform's tools:
 `nuclear new`, `nuclear gen`, `nuclear make`, the MCP server's tools, `nuclear add` for a library, `nuclear fix`; only
-what they leave is written by hand, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, and
-never translate React, Node.js, Python or Dart code into Nuclear by hand. Only when strictly necessary, and then say
-so: the tool that should have done it is missing something.
+what they leave is written by hand, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature. Only
+when strictly necessary, and then say so: the tool that should have done it is missing something.
+
+**Migrating a project of another technology** (React, Express, NestJS, Dart, Flutter, Python...) is a task of its
+own: read the original as the specification, then rewrite it in Nuclear with the tools, never line by line. MCP
+`migration_inspect(folder)` first (each app, its Nuclear platform and dialect, its database, its dependencies), then
+`graph_strategy("migrate a project into Nuclear")` and its plan. Express is a source like any other.
+
+**Never change Nuclear.** Not the compiler, a dialect, a template, a generator, a runtime, the installation or the
+MCP server, and never a `dialects/` folder in a project to replace an installed dialect. The installation is
+sealed: a changed one builds nothing (N0226). A limit of Nuclear is said to the user, never patched.
 
 ## 1. Load the sheet (once per task, ~3k tokens)
 

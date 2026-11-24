@@ -1951,6 +1951,52 @@
    }
   },
   {
+   "id": "mcp:migration_inspect",
+   "type": "mcp",
+   "title": "`migration_inspect` — a tool of the Nuclear MCP server",
+   "summary": "The inventory of an ORIGINAL project, written in another technology (TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter, Python...), that is going to be rewritten in Nuclear: each app (a folder with a package.json, pubspec.yaml, pyproject.toml or requirements.txt, depth 4), its language and frameworks, the Nuclear platform and dialect it becomes, its database plugin, its sources by…",
+   "body": [
+    "The inventory of an ORIGINAL project, written in another technology (TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter, Python...), that is going to be rewritten in Nuclear: each app (a folder with a package.json, pubspec.yaml, pyproject.toml or requirements.txt, depth 4), its language and frameworks, the Nuclear platform and dialect it becomes, its database plugin, its sources by extension and what becomes of each dependency (covered by the platform, nuclear add, or rewritten with Nuclear's library). Read-only: it changes nothing. Call it first in a migration, then graph_strategy(\"migrate a project into Nuclear\").",
+    "",
+    "Parameters:",
+    "",
+    "- `folder`: string"
+   ],
+   "keys": [
+    "migration_inspect",
+    "migration inspect"
+   ],
+   "asks": [
+    "what does migration_inspect do",
+    "que hace migration_inspect"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "migration_inspect"
+   },
+   "data": {
+    "group": "migration",
+    "runs": "",
+    "params": [
+     {
+      "name": "folder",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:models_list",
    "type": "mcp",
    "title": "`models_list` — a tool of the Nuclear MCP server",
@@ -3452,13 +3498,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 91 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 92 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
-    "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
+    "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature; when a tool cannot do something, say so. Migrating a project of another technology (React, Express, NestJS, Dart, Flutter, Python...) into Nuclear is allowed and expected: read the original as the specification and rewrite it with these tools, never line by line (migration_inspect first, then graph_strategy). Never change Nuclear itself (the compiler, a dialect, a template, a runtime, the installation, this server): its installation is sealed and a changed one builds nothing; a limit is reported, never patched. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `project_migrate`, `project_test`, `projects_list`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `migration_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `project_migrate`, `project_test`, `projects_list`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
    ],
    "keys": [
     "mcp",

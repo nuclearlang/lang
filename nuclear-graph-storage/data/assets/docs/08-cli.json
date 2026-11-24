@@ -1421,6 +1421,28 @@
    }
   },
   {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-seal-adr-platform-0016",
+   "type": "context",
+   "title": "The installers: overview — The seal (ADR-platform-0016)",
+   "summary": "Each installer's last step on the files is `nuclear doctor --seal`: `.seal` at the root of the installation (the SHA-256, size and time of every file of `bin/`, `dialects/`, `platforms/` and `generators/`), and those folders read-only.",
+   "body": [
+    "Each installer's last step on the files is `nuclear doctor --seal`: `.seal` at the root of the installation (the",
+    "SHA-256, size and time of every file of `bin/`, `dialects/`, `platforms/` and `generators/`), and those folders",
+    "read-only. Before an installer replaces or removes the installation it makes it writable again (`chmod -R u+w`;",
+    "`Remove-Item -Force` on Windows). A build refuses a changed installation (N0226) and `nuclear doctor` names each",
+    "file that changed. Not sealed: `kinds/` (packages the user adds), `packages/` (setuptools builds `synapsis-py` in",
+    "place), `tools/` (the definitions generators fetch their packages on first use) and `ai/`."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/06-runbooks/release.md#after-a-change-in-the-tree",
    "type": "context",
    "title": "Release, and test an installer — After a change in the tree",
@@ -4681,6 +4703,35 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.516390",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "setup doctor [--json] what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code; whether the installation is the one its installer sealed (--seal: the installers' last step) (--json: the toolchains, for the editor) setup [flutter] [--dir ~/develop] install Flutter step by…",
+   "body": [
+    "setup",
+    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code;",
+    "                                             whether the installation is the one its installer sealed (--seal: the installers' last step)",
+    "                                             (--json: the toolchains, for the editor)",
+    "  setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)",
+    "  setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear",
+    "                                             (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)",
+    "  credits | author                           the intro animation, the author and the repository",
+    "",
+    "options",
+    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
+    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.56bef2",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4939,34 +4990,6 @@
     "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
     "                                        --route, its route in the controller (backend)",
     "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.c4ae61",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "setup doctor [--json] what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor) setup [flutter] [--dir ~/develop] install Flutter step by step (system packages, SDK, PATH) setup node | python Nuclear's own Node.js (nestjs, react)…",
-   "body": [
-    "setup",
-    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code",
-    "                                             (--json: the toolchains, for the editor)",
-    "  setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)",
-    "  setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear",
-    "                                             (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)",
-    "  credits | author                           the intro animation, the author and the repository",
-    "",
-    "options",
-    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
-    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)",
-    "```"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

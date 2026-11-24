@@ -23,10 +23,10 @@ else RED=""; GREEN=""; BOLD=""; OFF=""; fi
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-after-release.XXXXXX")
 # what the fake installs left running (a detached `nuclear update --when-idle` wrote the folder again after it was
 # removed: five of 1.3 GB stayed on /tmp) is stopped first
-trap 'pkill -f "$WORK/" 2>/dev/null; sleep 1; rm -rf "$WORK"' EXIT
+trap 'pkill -f "$WORK/" 2>/dev/null; sleep 1; chmod -R u+w "$WORK" 2>/dev/null; rm -rf "$WORK"' EXIT
 trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: the work folder never stays
 # the work folders of runs that were killed before this rule (1.3 GB each on a shared tmpfs)
-find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-after-release.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-after-release.*' ! -path "$WORK" -mmin +180 -exec chmod -R u+w {} + -exec rm -rf {} + 2>/dev/null || true
 fail() { echo ""; echo "${RED}${BOLD}After the release of $V: FAILED: $1${OFF}"; [ -n "${2:-}" ] && echo "${RED}How to fix:${OFF} $2"; exit 1; }
 ok() { echo "  ${GREEN}✓${OFF} $*"; }
 
@@ -112,7 +112,7 @@ ok "the public one-liner installs $V and nuclear runs"
 prev=$(gh release list -R "$GH_REPO" --limit 30 --json tagName -q '.[].tagName' | sed 's/^v//' | { cat; echo "$V"; } |
   sort -t . -k1,1n -k2,2n -k3,3n -u | sed -n "/^$V\$/{x;p;q;};h")
 if [ -n "$prev" ]; then
-  rm -rf "$H"; mkdir -p "$H"
+  chmod -R u+w "$H" 2>/dev/null; rm -rf "$H"; mkdir -p "$H"
   curl -fsSL "https://github.com/$GH_REPO/releases/download/v$prev/install.sh" -o "$WORK/install-$prev.sh" ||
     fail "cannot download the installer of $prev"
   in_home sh "$WORK/install-$prev.sh" --version "$prev" --no-ai --no-vscode > "$WORK/previous.log" 2>&1

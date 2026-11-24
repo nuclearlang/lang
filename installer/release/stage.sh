@@ -16,6 +16,8 @@ DEVELOPER="$REPO/nuclear-agents/nuclear_developer"
 GENERATORS="$REPO/tools/code_generator/platforms"
 MCP="$REPO/tools/mcp"
 
+# a sealed installation is read-only (ADR-platform-0016): writable again before it is replaced
+[ -d "$DEST" ] && chmod -R u+w "$DEST"
 rm -rf "$DEST"
 mkdir -p "$DEST/bin" "$DEST/packages"
 for b in "$@"; do cp "$b" "$DEST/bin/"; done

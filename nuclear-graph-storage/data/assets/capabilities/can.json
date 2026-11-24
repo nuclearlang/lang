@@ -1577,6 +1577,56 @@
     "area": "language",
     "status": "done"
    }
+  },
+  {
+   "id": "can:migrate-a-project",
+   "type": "can",
+   "title": "Can: migrate a project of another technology into Nuclear",
+   "summary": "A project written in TypeScript, JavaScript, React, Next, Express, NestJS, Dart, Flutter or Python becomes a Nuclear workspace with one app per original app, on the platform each maps to. An agent reads the original as the specification and rewrites it with the tools; the transpiler itself reads only `.nuc`.",
+   "body": [
+    "- **Start:** MCP `migration_inspect(folder)`: each app of the original, its language and frameworks, the Nuclear platform and dialect it becomes, the plugin of its database, its sources, and what becomes of each dependency. Read-only.",
+    "- **The plan:** `strategy:migrate-project` (MCP `graph_strategy(\"migrate a project into Nuclear\")`).",
+    "- **What maps to what:** React, Next, Vite → `web` (`react`); Flutter, React Native → `mobile` (`flutter`); Express, NestJS, Fastify, Koa → `backend` (`nestjs`); FastAPI, Flask, Django → `backend` (`fastapi`).",
+    "- **Not automatic yet:** no importer translates the code by itself (spec 010); the agent writes what the generators leave, in Nuclear."
+   ],
+   "keys": [
+    "migrate a project",
+    "migration into nuclear",
+    "rewrite in nuclear",
+    "port to nuclear",
+    "migrar a nuclear"
+   ],
+   "asks": [
+    "can I migrate my existing backend",
+    "can nuclear convert my flutter app",
+    "can I import my typescript project into nuclear",
+    "puedo migrar mi proyecto a nuclear"
+   ],
+   "links": [
+    {
+     "rel": "playbook",
+     "to": "strategy:migrate-project"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:migration_inspect"
+    },
+    {
+     "rel": "limit",
+     "to": "cannot:read-target-code"
+    },
+    {
+     "rel": "limit",
+     "to": "cannot:change-nuclear"
+    }
+   ],
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "area": "migration",
+    "status": "agent"
+   }
   }
  ]
 }

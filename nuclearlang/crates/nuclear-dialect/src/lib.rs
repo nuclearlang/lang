@@ -9,6 +9,7 @@ pub mod contract;
 pub mod defs;
 pub mod library;
 pub mod model;
+pub mod seal;
 pub mod template;
 
 pub use model::{Dialect, Loader, Report, missing_plugins_warning};

@@ -26,6 +26,16 @@ pub fn search_paths(configured: &[String], roots: &[PathBuf]) -> Vec<PathBuf> {
         paths.extend(env.split(':').filter(|s| !s.is_empty()).map(PathBuf::from));
     }
     paths.extend(roots.iter().map(|r| r.join("dialects")));
+    paths.extend(own());
+    paths.retain(|p| p.is_dir());
+    paths.dedup();
+    paths
+}
+
+/// NuclearLang's own dialects folders: the server's bundle (beside its binary), the installation, the source tree.
+/// A dialect found elsewhere never has the name of one of theirs (N0225).
+fn own() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
     if let Some(dir) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
         paths.push(dir.join("dialects"));
         paths.push(dir.join("../dialects"));
@@ -34,7 +44,6 @@ pub fn search_paths(configured: &[String], roots: &[PathBuf]) -> Vec<PathBuf> {
     paths.extend(nuclear_dialect::install_dir().map(|d| d.join("dialects")));
     paths.push(nuclear_dialect::Home::tree().dialects);
     paths.retain(|p| p.is_dir());
-    paths.dedup();
     paths
 }
 
@@ -43,6 +52,7 @@ pub fn search_paths(configured: &[String], roots: &[PathBuf]) -> Vec<PathBuf> {
 pub fn load(name: &str, paths: Vec<PathBuf>, project: Option<&Path>) -> Result<Dialect, String> {
     // the platforms' contracts: next to each dialects folder (`Loader::new`), and the source tree's
     let mut loader = Loader::new(paths);
+    loader.installed = own();
     loader.platform_paths.push(nuclear_dialect::Home::tree().platforms);
     loader.packages.extend(project.map(|p| p.join("kinds")));
     loader.packages.extend(nuclear_dialect::install_dir().map(|d| d.join("kinds")));

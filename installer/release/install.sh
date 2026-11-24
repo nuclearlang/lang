@@ -320,6 +320,7 @@ if [ "$UNINSTALL" = 1 ]; then
   fi
   remove_core() {
     rm -f "$BIN/nuclear-developer" "$BIN/nuclear" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
+    [ -d "$INSTALL" ] && chmod -R u+w "$INSTALL"
     rm -rf "$INSTALL"
     for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
     # the compiler's cache of type definitions and the folder of the machine's choices
@@ -474,10 +475,14 @@ install_core() {
   tar -xzf "$CACHE/$name" -C "$tmp"
   # the AI services already there are kept (their running services use them; a new version of them replaces them later)
   if [ -d "$INSTALL/ai" ]; then mv "$INSTALL/ai" "$tmp/nuclearlang/ai"; fi
+  # a sealed installation is read-only (ADR-platform-0016): writable again before it is replaced
+  [ -d "$INSTALL" ] && chmod -R u+w "$INSTALL"
   rm -rf "$INSTALL"
   mkdir -p "$(dirname "$INSTALL")" "$BIN"
   mv "$tmp/nuclearlang" "$INSTALL"
   link_core
+  # the seal: what was installed, read-only; a build refuses a changed compiler (N0226)
+  "$BIN/nuclear" doctor --seal > /dev/null || { echo "the installation could not be sealed"; exit 1; }
   "$BIN/nuclear" dialect list > /dev/null || { echo "the installed nuclear does not run on this system: the archive is not the one of $where (a local build linked to another C library?)"; exit 1; }
   # what a new run reads to keep it
   printf '%s\n' "$VERSION" > "$INSTALL/.version"

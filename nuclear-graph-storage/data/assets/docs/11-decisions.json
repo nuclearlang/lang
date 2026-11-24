@@ -1786,23 +1786,19 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.8eba91",
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#consequences",
    "type": "adr",
-   "title": "Decisions of the platform",
-   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — Consequences",
+   "summary": "in that tool's roadmap.",
    "body": [
-    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
-    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
-    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
-    "| [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |",
-    "| [ADR-platform-0013](0013-local-models-on-standby.md) | The local models (Ollama, the Nuclear Developer, the `local` kind) are on standby behind one switch; the AI work is done by external providers and agents; the Smart Graph stays | accepted |",
-    "| [ADR-platform-0014](0014-stability-and-parity.md) | The same Nuclear means the same in every dialect: the language's rules stay, every change runs every test set, a converter and one reference tool settle what dialects answer differently, the MCP server and the knowledge base serve every new thing | accepted |",
-    "",
-    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
+    "- Positive: an agent can migrate the user's projects today, and every gap it meets is a gap of a tool, recorded",
+    "  in that tool's roadmap.",
+    "- Negative: a hand-written migration can miss behaviour the original's tests do not cover; the agent says what it",
+    "  could not prove."
    ],
    "agents": false,
    "sources": [
-    "docs/03-adr/README.md"
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
    ],
    "meta": {
     "section": "11-decisions",
@@ -1811,21 +1807,242 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.ac5460",
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — Context and problem",
+   "summary": "Migrating existing software into Nuclear is one of the reasons the platform exists: a project written in TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter or Python becomes a Nuclear project that does what the original did, in every dialect of its platform.",
+   "body": [
+    "Migrating existing software into Nuclear is one of the reasons the platform exists: a project written in",
+    "TypeScript, JavaScript, React, Express, NestJS, Dart, Flutter or Python becomes a Nuclear project that does what the",
+    "original did, in every dialect of its platform. The automatic importer (spec 010, `nuclear port`) is not built.",
+    "Meanwhile the rules said \"no agent translates code of another language into Nuclear\" (ADR-platform-0004, point 2)",
+    "and the knowledge base said \"Nuclear cannot read TypeScript, Dart or Python\": an agent asked to migrate the user's",
+    "projects refused, and read \"Node.js/Express is postponed\" as \"an Express project cannot be migrated\".",
+    "",
+    "Two different things were one sentence: what the **transpiler** does (it reads only `.nuc`, one way, by design) and",
+    "what an **agent** may read to do its work (anything the user gives it)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#decision.3b03bb",
+   "type": "adr",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — Decision",
+   "summary": "1. A migration is a request of its own, distinct from writing a feature: the user names an original project and asks for it in Nuclear.",
+   "body": [
+    "1. **A migration is a request of its own**, distinct from writing a feature: the user names an original project and",
+    "   asks for it in Nuclear. Its plan is the strategy `strategy:migration` of the Smart Graph.",
+    "2. **The agent reads the original project** (its code, its tests, its API, its screens, its schema) as the",
+    "   specification of its behaviour, in any technology. Reading it is allowed and expected.",
+    "3. **The agent rewrites it in Nuclear with the tools**, never line by line: `migration_inspect` (the inventory: each",
+    "   app, the Nuclear platform and dialect it becomes, the plugin of its database, what becomes of each dependency),",
+    "   a workspace with one app per original app (`workspace_create`, `app_add`), the generators for every resource",
+    "   (`generate_resource` with the original's models as `fields` or its API's answer as `from_json`), `nuclear add`",
+    "   for a library of the same language, Nuclear's standard library for everything else; only what they leave is",
+    "   written by hand, in Nuclear. A large migration is specs for Nuclear Builder, one component at a time.",
+    "4. **The original's language is a source, not a target.** Express, Sequelize, Prisma, React Native are read and",
+    "   become the platform's shapes (`backend` with `nestjs`; `mobile`): Node.js/Express stays postponed only as a",
+    "   dialect Nuclear writes."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#decision.421afc",
+   "type": "adr",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — Decision",
+   "summary": "5. The proof is behaviour.",
+   "body": [
+    "5. **The proof is behaviour.** The original's tests become Nuclear tests; the original's API answers are the",
+    "   expected answers of the migrated backend.",
+    "6. **The transpiler still reads only `.nuc`** and target code is still never written for a feature",
+    "   (ADR-platform-0004, points 1, 3 and 4). When the importer of spec 010 exists, it does step 3's translation",
+    "   and the agent resolves only the points it lists.",
+    "",
+    "This amends ADR-platform-0004, point 2: what it forbids is target code written by the agent, and a port that skips",
+    "the tools, not reading another project to rewrite it in Nuclear."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#options-considered",
+   "type": "adr",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — Options considered",
+   "summary": "1. The agent migrates with the tools now; the importer replaces the hand-written part later (chosen).",
+   "body": [
+    "1. The agent migrates with the tools now; the importer replaces the hand-written part later (chosen).",
+    "2. No migration until the importer exists: the main use of the platform waits months."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0015-migrating-a-project-into-nuclear.md#references",
+   "type": "adr",
+   "title": "ADR-platform-0015: A project of another technology is migrated into Nuclear by an agent, with the tools — References",
+   "summary": "References",
+   "body": "- Amends: ADR-platform-0004 (point 2). Related: ADR-platform-0016 (no agent changes Nuclear), spec 010.",
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0015-migrating-a-project-into-nuclear.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0016-the-installation-is-sealed.md#consequences",
+   "type": "adr",
+   "title": "ADR-platform-0016: No agent changes Nuclear; the installation is sealed and a changed one builds nothing — Consequences",
+   "summary": "up as a report, never as a private patch.",
+   "body": [
+    "- Positive: the same `.nuc` builds the same on every machine with the same version; a gap of the compiler shows",
+    "  up as a report, never as a private patch.",
+    "- Negative: the seal is a guard, not a lock: a user (or an agent with the user's permissions) who restores the",
+    "  times and the permissions can pass the quick check; `nuclear doctor` still finds it. The runtimes of",
+    "  `packages/` are not sealed while setuptools builds `synapsis-py` in place."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0016-the-installation-is-sealed.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0016: No agent changes Nuclear; the installation is sealed and a changed one builds nothing — Context and problem",
+   "summary": "An agent working on a product (an app, a migration) that meets a limit of the compiler can \"fix\" it where it lives: edit a template of an installed dialect, drop a folder `dialects/fastapi/` in the project (the loader searched a project's own dialects before the installed ones), point…",
+   "body": [
+    "An agent working on a product (an app, a migration) that meets a limit of the compiler can \"fix\" it where it",
+    "lives: edit a template of an installed dialect, drop a folder `dialects/fastapi/` in the project (the loader",
+    "searched a project's own dialects before the installed ones), point `NUCLEAR_DIALECT_PATH` elsewhere, or patch the",
+    "runtime. The product then builds with a Nuclear nobody else has: the same `.nuc` means something else on another",
+    "machine (ADR-platform-0014), and the limit is hidden instead of reported."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0016-the-installation-is-sealed.md#decision",
+   "type": "adr",
+   "title": "ADR-platform-0016: No agent changes Nuclear; the installation is sealed and a changed one builds nothing — Decision",
+   "summary": "1. An agent never changes Nuclear while it works on a product: not the compiler, a dialect, a template, a platform's contract, a generator, a runtime package, the installation or the MCP server.",
+   "body": [
+    "1. **An agent never changes Nuclear** while it works on a product: not the compiler, a dialect, a template, a",
+    "   platform's contract, a generator, a runtime package, the installation or the MCP server. A limit is said to the",
+    "   user and reported (the capability that is missing); work on Nuclear itself is done in NuclearLang's own",
+    "   repository, by its team.",
+    "2. **The installation is sealed.** The installers write `.seal` (the size, time and SHA-256 of every file of `bin/`,",
+    "   `dialects/`, `platforms/` and `generators/`) and make those folders read-only. `kinds/` (packages the user",
+    "   adds), `packages/` and `tools/` (written in place by package managers) and `ai/` are not sealed.",
+    "3. **A changed installation builds nothing.** Every load of a dialect from the installation compares sizes and",
+    "   times with the seal (a few milliseconds, once per process) and refuses with N0226; `nuclear doctor` compares the",
+    "   hashes too. The fix is to install again (`nuclear update --reinstall`).",
+    "4. **An installed dialect is never replaced.** A dialect found outside NuclearLang's own folders with the name of",
+    "   one of theirs is refused (N0225). A user's own dialect has a name of its own and `extends` an installed one."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0016-the-installation-is-sealed.md#options-considered",
+   "type": "adr",
+   "title": "ADR-platform-0016: No agent changes Nuclear; the installation is sealed and a changed one builds nothing — Options considered",
+   "summary": "1. Rules for agents only: nothing stops an agent that does not read them.",
+   "body": [
+    "1. Rules for agents only: nothing stops an agent that does not read them.",
+    "2. Rules, read-only files, and a build that refuses a changed installation (chosen).",
+    "3. Hash every file on every build: proves more, costs tens of milliseconds per build (the golden rule)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0016-the-installation-is-sealed.md#references",
+   "type": "adr",
+   "title": "ADR-platform-0016: No agent changes Nuclear; the installation is sealed and a changed one builds nothing — References",
+   "summary": "References",
+   "body": "- Related: ADR-platform-0014 (stability and parity), ADR-platform-0015 (migration).",
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0016-the-installation-is-sealed.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.214d6b",
    "type": "adr",
    "title": "Decisions of the platform",
    "summary": "Decisions of the platform",
    "body": [
-    "| ADR | Decision | Status |",
-    "|---|---|---|",
-    "| [ADR-platform-0001](0001-english-everywhere.md) | Everything is written in English | accepted |",
-    "| [ADR-platform-0002](0002-one-repository-a-project-per-folder.md) | One repository; each project in its folder, with its own documents | accepted |",
-    "| [ADR-platform-0003](0003-the-ai-loop.md) | The AI loop: a private knowledge base, local agents, one MCP server and a pipeline tool | accepted |",
-    "| [ADR-platform-0004](0004-products-are-made-with-the-tools.md) | A product is made with the platform's tools, never by porting code by hand | accepted |",
-    "| [ADR-platform-0005](0005-the-software-factory.md) | The software factory: stations, roles as files, providers as assignments, teams (amends 0003) | accepted |",
-    "| [ADR-platform-0006](0006-the-builders-workbench.md) | The Builder is a workbench: specs by component and layer, a general agent's chat (amends 0005) | accepted |",
-    "| [ADR-platform-0007](0007-everything-is-a-component.md) | Everything is a component, as in a framework: a piece two tools need is its own project | accepted |",
-    "| [ADR-platform-0008](0008-nuclear-chat-the-factorys-workplace.md) | Nuclear Chat, the factory's workplace, is a project of its own (amends 0006) | accepted |"
+    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
+    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
+    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
+    "| [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |",
+    "| [ADR-platform-0013](0013-local-models-on-standby.md) | The local models (Ollama, the Nuclear Developer, the `local` kind) are on standby behind one switch; the AI work is done by external providers and agents; the Smart Graph stays | accepted |",
+    "| [ADR-platform-0014](0014-stability-and-parity.md) | The same Nuclear means the same in every dialect: the language's rules stay, every change runs every test set, a converter and one reference tool settle what dialects answer differently, the MCP server and the knowledge base serve every new thing | accepted |"
    ],
    "agents": false,
    "sources": [
@@ -1846,6 +2063,54 @@
     "Only the decisions about the whole platform. Each project keeps its own in its `docs/03-adr/`, numbered from 0001",
     "and cited with its key (`../README.md` has the table of keys). The format is `0000-template.md`. An accepted ADR",
     "is not edited: a new one replaces it."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.f461a2",
+   "type": "adr",
+   "title": "Decisions of the platform",
+   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "body": [
+    "| [ADR-platform-0015](0015-migrating-a-project-into-nuclear.md) | A project of another technology is migrated into Nuclear by an agent that reads it and rewrites it with the tools; the transpiler still reads only `.nuc` (amends 0004) | accepted |",
+    "| [ADR-platform-0016](0016-the-installation-is-sealed.md) | No agent changes Nuclear; the installation is sealed and a changed one builds nothing (N0225, N0226) | accepted |",
+    "",
+    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.f64ded",
+   "type": "adr",
+   "title": "Decisions of the platform",
+   "summary": "Decisions of the platform",
+   "body": [
+    "| ADR | Decision | Status |",
+    "|---|---|---|",
+    "| [ADR-platform-0001](0001-english-everywhere.md) | Everything is written in English | accepted |",
+    "| [ADR-platform-0002](0002-one-repository-a-project-per-folder.md) | One repository; each project in its folder, with its own documents | accepted |",
+    "| [ADR-platform-0003](0003-the-ai-loop.md) | The AI loop: a private knowledge base, local agents, one MCP server and a pipeline tool | accepted |",
+    "| [ADR-platform-0004](0004-products-are-made-with-the-tools.md) | A product is made with the platform's tools, never by porting code by hand | accepted; point 2 amended by 0015 |",
+    "| [ADR-platform-0005](0005-the-software-factory.md) | The software factory: stations, roles as files, providers as assignments, teams (amends 0003) | accepted |",
+    "| [ADR-platform-0006](0006-the-builders-workbench.md) | The Builder is a workbench: specs by component and layer, a general agent's chat (amends 0005) | accepted |",
+    "| [ADR-platform-0007](0007-everything-is-a-component.md) | Everything is a component, as in a framework: a piece two tools need is its own project | accepted |",
+    "| [ADR-platform-0008](0008-nuclear-chat-the-factorys-workplace.md) | Nuclear Chat, the factory's workplace, is a project of its own (amends 0006) | accepted |"
    ],
    "agents": false,
    "sources": [
@@ -3369,10 +3634,12 @@
    "id": "doc:docs/04-specs/010-migration-into-nuclear/tasks.md#phase-0-decisions-of-the-user",
    "type": "spec",
    "title": "Spec 010 — Tasks — Phase 0: decisions of the user",
-   "summary": "points it lists (it amends ADR-platform-0004, point 2: \"No agent migrates code by hand\").",
+   "summary": "Until the importer exists, an agent migrates with the tools (ADR-platform-0015: MCP `migration_inspect`, the graph's `strategy:migrate-project`); the importer then does the translation and the agent resolves only its points.",
    "body": [
-    "- [ ] T0.1 A new ADR of the platform: a migration is made by the migration tool, and an agent only resolves the",
-    "      points it lists (it amends ADR-platform-0004, point 2: \"No agent migrates code by hand\").",
+    "Until the importer exists, an agent migrates with the tools ([ADR-platform-0015](../../03-adr/0015-migrating-a-project-into-nuclear.md):",
+    "MCP `migration_inspect`, the graph's `strategy:migrate-project`); the importer then does the translation and the",
+    "agent resolves only its points.",
+    "",
     "- [ ] T0.2 The rule of each case of the catalogue marked \"decision of the user\" (`%`, integer width, `>>>`, powers).",
     "- [ ] T0.3 The name of the command (`nuclear migrate` is the database's) and of the importer's project."
    ],
