@@ -11636,7 +11636,13 @@
     "| Tokens in | 8 822 587 | 5 641 860 | 4 990 301 | −43 % |",
     "| Minutes | 18.4 | 10.2 | 9.4 | −49 % |",
     "",
-    "The note took the reads by hand down 43 % from phase 1. One run each: what holds is the direction, not the digit."
+    "The note took the reads by hand down 43 % from phase 1. One run each: what holds is the direction, not the digit.",
+    "",
+    "Again with `\"\"` under `@required` answering `required` (ADR-synapsis-0014, the user's decision on the question this",
+    "baseline raised): analysis to tests in 89 turns, 108 calls, 30 by hand, 5 155 947 tokens in, 10.9 minutes, as the",
+    "run before. It passed that question and stopped at the Tests on another: the analysis planned that a body that is",
+    "not JSON answers `json`, and a test cannot send one (the backend platform's roadmap, *Pending*). What stops a run",
+    "now is what the platform cannot do yet, not the factory's context."
    ],
    "agents": false,
    "sources": [

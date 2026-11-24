@@ -224,6 +224,7 @@
     "- `nuclear watch` does not exist for backend projects.",
     "- A `@transactional` use case uses the default database only.",
     "- The join table of a `@manyToMany` is always named `<owner table>_<field>`.",
+    "- A test's `appClient()` sends every body as JSON: a test cannot send one that is not JSON (the rule `json` is not testable in Nuclear yet).",
     "",
     "A task that needs one of these is written with the kinds that exist (a use case with its own rules) or reported as not possible yet."
    ],

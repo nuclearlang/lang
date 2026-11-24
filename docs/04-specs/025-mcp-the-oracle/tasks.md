@@ -109,6 +109,12 @@ the stations they all ran:
 
 The note took the reads by hand down 43 % from phase 1. One run each: what holds is the direction, not the digit.
 
+Again with `""` under `@required` answering `required` (ADR-synapsis-0014, the user's decision on the question this
+baseline raised): analysis to tests in 89 turns, 108 calls, 30 by hand, 5 155 947 tokens in, 10.9 minutes, as the
+run before. It passed that question and stopped at the Tests on another: the analysis planned that a body that is
+not JSON answers `json`, and a test cannot send one (the backend platform's roadmap, *Pending*). What stops a run
+now is what the platform cannot do yet, not the factory's context.
+
 ## Phase 2 — The oracle answers more per call
 
 - [ ] T2.1 agent: the project's map in `project_inspect`.

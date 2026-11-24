@@ -112,6 +112,11 @@ probes that show what still differs):
 
 ## Pending
 
+- **A test cannot send a body that is not JSON** (found 2026-11-24 by spec 025's runs). `appClient()` encodes every
+  `body` as JSON (`"{not json"` is sent as a JSON text and answers `type`), so the rule `json` (§2.3: a body that is
+  not JSON) cannot be shown by a test in Nuclear, and an agent that plans that criterion stops at the Tests. Wanted:
+  a raw body for `~app.request` (a text sent as it is, with its own `content-type`), in both runtimes' test clients.
+
 - **Found by the app check (2026-11-23)**, what its fixes left:
   1. **Advisories**: `chromadb` 1.5.9 (four of the Chroma server, no fixed version; the runtime uses the client)
      and `uuid` < 11.1.1 through `sequelize` 6 (v3/v5/v6 with a buffer; `sequelize` calls v1 and v4 without one).
