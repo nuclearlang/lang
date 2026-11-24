@@ -37,6 +37,27 @@ testTwoUsagesAddUpAndACountNeverReportedStaysNull() void
   expect(both["inTokens"] == 5 and both["outTokens"] == 2 and both["costUsd"] == 0.75 and both["ms"] == 15 and both["model"] == "o4")
   expect(sumUsage(null, a)["inTokens"] == null)
 
+// Spec 025: what a call's events say of its context, and the turns the agent reported.
+testACallSaysItsTurnsToolCallsAndReadsByHand(tmpPath: Path, monkeypatch: any) void
+  read = { "type": "tool_use", "part": { "tool": "read", "callID": "1", "state": { "status": "completed", "input": { "filePath": "a.nuc" }, "output": "12345" } } }
+  again = { "type": "tool_use", "part": { "tool": "read", "callID": "2", "state": { "status": "completed", "input": { "filePath": "a.nuc" }, "output": "12345" } } }
+  doc = { "type": "tool_use", "part": { "tool": "nuclear_nuclear_doc", "callID": "3", "state": { "status": "completed", "input": { "topic": "x" }, "output": "abc" } } }
+  step = { "type": "step_finish", "part": { "cost": 0.0, "tokens": { "input": 10, "output": 1 } } }
+  fakeAgent(tmpPath, monkeypatch, "opencode", [read, step, again, doc, step, step])
+  out = runAdapter(openCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, "openai/gpt"), (e) => null, "opencode")
+  expect(out.usage["turns"] == 3 and out.usage["toolCalls"] == 3 and out.usage["handReads"] == 2 and out.usage["repeatedReads"] == 1, json.dumps(out.usage))
+  expect(out.usage["resultChars"] == 13 and (out.usage["promptChars"] as int) > 0, json.dumps(out.usage))
+  claude = [{ "type": "assistant", "message": { "id": "m1", "content": [{ "type": "text", "text": "a" }] } }, { "type": "assistant", "message": { "id": "m1", "content": [{ "type": "tool_use", "id": "t", "name": "Read", "input": { "file_path": "b" } }] } }, { "type": "assistant", "message": { "id": "m2", "content": [{ "type": "text", "text": "done" }] } }, { "type": "result", "result": "done", "total_cost_usd": 0.0, "is_error": false, "usage": { "input_tokens": 1, "output_tokens": 1 } }]
+  fakeAgent(tmpPath, monkeypatch, "claude", claude)
+  two = runAdapter(claudeCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "claude-code")
+  expect(two.usage["turns"] == 2 and two.usage["handReads"] == 1, json.dumps(two.usage))
+  // a provider that does not report its turns: null, never a guess
+  fakeAgent(tmpPath, monkeypatch, "codex", [{ "type": "item.completed", "item": { "type": "agent_message", "text": "ok" } }])
+  three = runAdapter(codexAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "codex")
+  expect(three.usage["turns"] == null and three.usage["toolCalls"] == 0)
+  both = sumUsage(sumUsage(null, out.usage), two.usage)
+  expect(both["turns"] == 5 and both["handReads"] == 3)
+
 testAWriteCountsTheLinesItAddedAndRemoved() void
   expect(lineDelta(null, "a\nb\n") == { "added": 2, "removed": 0 })
   expect(lineDelta("a\nb\nc\n", "a\nc\nd\ne\n") == { "added": 2, "removed": 1 })
@@ -116,6 +137,11 @@ testTheReportsOfAFixtureLedger(tmpPath: Path, monkeypatch: any) void
   m = metricsOf(all, f, "", MONDAY + 2 * DAY)
   for v in VIEWS
     expect(m[v] != null, v)
+  // spec 025: the context by station, provider and model; a count not reported is left out
+  groups: <string, any>[] = (m["context"] as <string, any>)["groups"]!
+  coded = groups.find((g) => g["station"] == "code" and g["provider"] == "claude-code")!
+  expect(coded["steps"] == 2 and (coded["inTokens"] as <string, any>)["count"] == 2 and (coded["turns"] as <string, any>)["count"] == 0, json.dumps(coded))
+  expect(groups.any((g) => g["station"] == "chat"))
   bill: <string, any> = m["bill"]!
   total: <string, any> = bill["total"]!
   expect(total["inTokens"] == 1910 and total["outTokens"] == 955 and total["costUsd"] == 0.75 and total["calls"] == 5 and total["notReported"] == 1, json.dumps(total))

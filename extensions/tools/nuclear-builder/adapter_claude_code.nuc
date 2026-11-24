@@ -50,6 +50,10 @@ claudeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, 
   message: <string, any> = ev["message"] ?? ({} as <string, any>)
   parts: <string, any>[] = message["content"] ?? []
   if kind == "assistant"
+    // one turn of the model is one message; its parts may come as several lines with the same id
+    if message["id"] != null and message["id"] != found["lastMessage"]
+      found["lastMessage"] = message["id"]
+      addTokens(found, "turns", 1)
     for c in parts
       if c["type"] == "text"
         found["text"] = c["text"]

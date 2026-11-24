@@ -1,5 +1,5 @@
 ---
-status: approved
+status: in-progress
 priority: high
 owner: Julian Molina
 updated: 2026-11-24
@@ -12,9 +12,10 @@ the baseline, every test set of the tree (`nuclearlang/docs/05-standards/testing
 
 ## Phase 0 — The measure (the gate)
 
-- [ ] T0.1 agent: the ledger's new fields (turns, fixed prompt's size, tools' results' characters, reads by hand,
+- [x] T0.1 agent: the ledger's new fields (turns, fixed prompt's size, tools' results' characters, reads by hand,
       repeated reads) and `metrics` by station, provider and model.
-- [ ] T0.2 user: the budget and the models of the baseline (spec 020's tiers, and gemma4 local).
+- [x] T0.2 user: the budget and the models of the baseline: 5 USD of API at most, used well; the tests on OpenCode's
+      subscription (10 USD a month) with its cheapest models (the user, 2026-11-24).
 - [ ] T0.3 agent: the baseline: the benchmark's tasks on each model, recorded here.
 
 ## Phase 1 — Free wins

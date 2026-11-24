@@ -126,6 +126,7 @@ apiLoop(provider: string, ask: (key: string, model: string, system: string, turn
       cost += spent
       addTokens(used, "inTokens", turn.inputTokens)
       addTokens(used, "outTokens", turn.outputTokens)
+      addTokens(used, "turns", 1)
       say({ "type": "cost", "usd": spent, "inputTokens": turn.inputTokens, "outputTokens": turn.outputTokens })
       if turn.text.length > 0
         say({ "type": "text", "text": turn.text })

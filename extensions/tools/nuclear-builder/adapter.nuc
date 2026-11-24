@@ -58,9 +58,38 @@ addTokens(found: <string, any>, key: string, n: any) void
 
 // The usage of a call as every report reads it: the tokens the adapter found (null: not reported), the cost, the
 // time, the provider and the model (the one the provider said, else the one asked for).
-usageOf(out: Outcome, provider: string, model: string, ms: int) <string, any>
+usageOf(out: Outcome, provider: string, model: string, ms: int, promptChars: int? = null) <string, any>
   said = "${out.usage["model"] ?? ""}"
-  { "inTokens": out.usage["inTokens"], "outTokens": out.usage["outTokens"], "costUsd": out.costUsd, "ms": ms, "provider": provider, "model": said.isEmpty ? model : said }
+  { "inTokens": out.usage["inTokens"], "outTokens": out.usage["outTokens"], "costUsd": out.costUsd, "ms": ms, "provider": provider, "model": said.isEmpty ? model : said, "turns": out.usage["turns"], "promptChars": promptChars, ...contextOf(out.events) }
+
+// The counts of a usage that two calls add up (tokens, time, and the context of spec 025).
+USAGE_COUNTS = ["inTokens", "outTokens", "ms", "turns", "promptChars", "toolCalls", "handReads", "repeatedReads", "resultChars"]
+
+// The tools an agent finds its way with by hand, file by file (spec 025: what the MCP server should answer instead).
+HAND_TOOLS = ["read", "glob", "grep", "list", "ls", "view", "find", "read_file", "list_directory", "search_file_content"]
+
+// What a call's events say of its context (spec 025): its tool calls, the calls by hand, the calls by hand repeated
+// with the same input, and the characters of the tools' results (each as the adapter kept it, at most 20 000).
+contextOf(events: <string, any>[]) <string, any>
+  calls = 0
+  hand = 0
+  repeated = 0
+  chars = 0
+  seen: string[] = []
+  for e in events
+    if e["type"] == "tool"
+      calls += 1
+      name = "${e["tool"] ?? ""}".lower()
+      if name in HAND_TOOLS
+        hand += 1
+        key = "${name}:${e["input"] ?? ""}"
+        if key in seen
+          repeated += 1
+        else
+          seen.add(key)
+    else if e["type"] == "tool-result"
+      chars += "${e["text"] ?? ""}".length
+  { "toolCalls": calls, "handReads": hand, "repeatedReads": repeated, "resultChars": chars }
 
 // Two usages as one (a step or an answer of several calls): the counts added, a count null only when neither has it,
 // the provider and model the last one named.
@@ -68,7 +97,7 @@ sumUsage(a: <string, any>?, b: <string, any>) <string, any>
   if a == null
     return dict(b)
   both: <string, any> = dict(a!)
-  for key in ["inTokens", "outTokens", "ms"]
+  for key in USAGE_COUNTS
     addTokens(both, key, b[key])
   spent: double = both["costUsd"] ?? 0.0
   more: double = b["costUsd"] ?? 0.0
@@ -225,7 +254,8 @@ runAdapter(adapter: (role: Role, station: string, work: Work, emit: (e: <string,
     if not isinstance(e, RuntimeError) and not isinstance(e, OSError) and not isinstance(e, ValueError)
       throw e
     out = Outcome(false, "", {}, changedFiles(before, snapshot(work.root)), 0, [], "${e}")
-  out.usage = usageOf(out, provider, work.model, ((time.monotonic() - started) * 1000).round())
+  // what the factory itself sends (the role and the station's prompt): the agent's own harness adds to it
+  out.usage = usageOf(out, provider, work.model, ((time.monotonic() - started) * 1000).round(), role.text().length + stationPrompt(role, station, work, false).length)
   out
 
 // ---------- the prompt every provider gets ----------
@@ -318,7 +348,7 @@ agentOutcome(name: string, ran: <string, any>, found: <string, any>, events: <st
   code: int = ran["code"]!
   failed = code != 0 or found["failed"] == true
   why = code == -9 ? "${name} timed out (killed)" : "${name} ended with ${code}: ${ran["stderr"] ?? ""} ${failed ? text : ""}".trim()
-  Outcome(not failed, text, collectDocuments(work, text), [], cost, events, failed ? why : "", {}, { "inTokens": found["inTokens"], "outTokens": found["outTokens"], "model": found["model"] ?? "" })
+  Outcome(not failed, text, collectDocuments(work, text), [], cost, events, failed ? why : "", {}, { "inTokens": found["inTokens"], "outTokens": found["outTokens"], "model": found["model"] ?? "", "turns": found["turns"] })
 
 // Parses one line of JSON, or null when it is not.
 jsonLine(line: string) <string, any>?

@@ -745,25 +745,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.5fdc0c",
-   "type": "readme",
-   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
-   "body": [
-    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |",
-    "| `usage.nuc`, `metrics.nuc` | the reports (spec 017): the factory's ledger (`~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl`, one line per step, run and chat answer across projects; the lines of a write; the runs of before copied once) and `metrics … --json` (the tool `metrics`): the bill, throughput, cycle, burndown, flow, waiting, quality, people, indicators |",
-    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md; `--informs`: only `INFORM_TOOLS`, Nuclear Atlas's) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/AGENTS.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.6b2315",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
@@ -910,6 +891,25 @@
     "| `src/settings.ts`, `src/l10n.ts` | the Builder's settings (`nuclear.builder.*`); the Builder page's texts |",
     "| `test/compat.test.ts` | the editors' backward compatibility (`npm run test:compat`): the earlier engines' run files on the page, the moved settings, the saved projects of before 0.63.0 |",
     "| `test/editors.test.ts`, `test/vscode-stub.ts` | the editors' tests (node:test, `vscode` stubbed): the money, the moved settings, the teams' calls, a run's process against a stub command, the workbench (the specs' tree, the runs' accordion, the log, *who*, a step's tree, a team's work and logo, the specs' layout), the retries, the tools' `PATH`, the connections (the Smart Graph, no local service), Nuclear Atlas's templates, no local kind in the pickers (ADR-platform-0013), the Spanish texts |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.e9ccf4",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |",
+    "| `usage.nuc`, `metrics.nuc` | the reports (spec 017): the factory's ledger (`~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl`, one line per step, run and chat answer across projects; the lines of a write; the runs of before copied once) and `metrics … --json` (the tool `metrics`): the bill, throughput, cycle, burndown, flow, waiting, quality, people, indicators, context (spec 025: each step's turns, tool calls, reads by hand and repeated, results' characters, the prompt the factory sent) |",
+    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md; `--informs`: only `INFORM_TOOLS`, Nuclear Atlas's) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -3791,11 +3791,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-reports-metrics-nuc.b95544",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-reports-metrics-nuc.815a93",
    "type": "context",
    "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The reports (`metrics.nuc`)",
    "summary": "The reports (`metrics.nuc`)",
-   "body": "| `indicators` | cost per delivered spec, tokens per useful line (the tokens of the delivered runs' steps over the lines added by their passed steps), the local share of the tokens, the local and paid money, retries per station |",
+   "body": [
+    "| `context` | per station (`chat` for the answers), provider and model: the steps and the distribution of `turns`, `promptChars`, `toolCalls`, `handReads`, `repeatedReads`, `resultChars` and `inTokens` over those that reported them (spec 025) |",
+    "| `indicators` | cost per delivered spec, tokens per useful line (the tokens of the delivered runs' steps over the lines added by their passed steps), the local share of the tokens, the local and paid money, retries per station |"
+   ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
    ],
@@ -3870,19 +3873,24 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.4e50dd",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.a5e138",
    "type": "context",
    "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
    "summary": "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported.",
    "body": [
-    "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds",
-    "to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported.",
+    "| Provider | Tokens in | Tokens out | Model |",
+    "|---|---|---|---|",
+    "| `claude-code` | the result's `usage`: `input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens` | `output_tokens` | the `system`/`init` line's `model` |",
+    "| `opencode` | each `step_finish`'s `tokens.input` + `cache.read` + `cache.write`, summed | `tokens.output` + `tokens.reasoning` | asked |",
+    "| `codex` | each `turn.completed`'s `usage.input_tokens`, summed | `output_tokens` | asked |",
+    "| `gemini-cli` | the result's `stats.input_tokens` | `stats.output_tokens` | asked |",
+    "| `cursor` | not reported (its `stream-json` has no tokens) | not reported | the `system`/`init` line's `model` |",
+    "| `grok` | not reported (its `streaming-json` is not documented) | not reported | asked |",
+    "| the APIs | each turn's tokens (the loop of `adapter_api.nuc`), summed | each turn's, summed | asked |",
+    "| `nuclear-developer` | the reply's `usage.inTokens` (Ollama's `prompt_eval_count`, summed over the request's model calls) | `usage.outTokens` (`eval_count`) | `usage.model` |",
     "",
-    "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from",
-    "the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line",
-    "neither). A gate keeps its times in `run.gates` (`{id, kind, station, opened, answered, answer}`). A chat's answer sums",
-    "its provider's calls the same way. A run file without these fields (an earlier version) still loads: its steps have no",
-    "usage nor lines, and the reports say so."
+    "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds",
+    "to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
@@ -3894,7 +3902,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.7988d3",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.b0e1b4",
    "type": "context",
    "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
    "summary": "Every provider's call gives its `Outcome.usage`: `{inTokens, outTokens, costUsd, ms, provider, model}`.",
@@ -3903,16 +3911,33 @@
     "stamps the time, the provider and the model (the one the provider said, else the one asked for); each adapter gives",
     "the tokens its provider reports. A count the provider did not report is `null` (\"not reported\"), never a guess.",
     "",
-    "| Provider | Tokens in | Tokens out | Model |",
-    "|---|---|---|---|",
-    "| `claude-code` | the result's `usage`: `input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens` | `output_tokens` | the `system`/`init` line's `model` |",
-    "| `opencode` | each `step_finish`'s `tokens.input` + `cache.read` + `cache.write`, summed | `tokens.output` + `tokens.reasoning` | asked |",
-    "| `codex` | each `turn.completed`'s `usage.input_tokens`, summed | `output_tokens` | asked |",
-    "| `gemini-cli` | the result's `stats.input_tokens` | `stats.output_tokens` | asked |",
-    "| `cursor` | not reported (its `stream-json` has no tokens) | not reported | the `system`/`init` line's `model` |",
-    "| `grok` | not reported (its `streaming-json` is not documented) | not reported | asked |",
-    "| the APIs | each turn's tokens (the loop of `adapter_api.nuc`), summed | each turn's, summed | asked |",
-    "| `nuclear-developer` | the reply's `usage.inTokens` (Ollama's `prompt_eval_count`, summed over the request's model calls) | `usage.outTokens` (`eval_count`) | `usage.model` |"
+    "The usage also says the context of the call (spec 025), from its events: `turns` (the model's turns: OpenCode's",
+    "`step_finish`es, Claude Code's distinct assistant messages, the API loop's turns; `null` for the others),",
+    "`toolCalls`, `handReads` (the calls of the tools that find their way file by file: `read`, `glob`, `grep`, `list`…),",
+    "`repeatedReads` (one of those again with the same input), `resultChars` (the tools' results as the adapter kept them,",
+    "each at most 20 000) and `promptChars` (what the factory sent: the role and the station's prompt; the agent's own",
+    "harness adds to it)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.f302c8",
+   "type": "context",
+   "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
+   "summary": "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line neither).",
+   "body": [
+    "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from",
+    "the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line",
+    "neither). A gate keeps its times in `run.gates` (`{id, kind, station, opened, answered, answer}`). A chat's answer sums",
+    "its provider's calls the same way. A run file without these fields (an earlier version) still loads: its steps have no",
+    "usage nor lines, and the reports say so."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"

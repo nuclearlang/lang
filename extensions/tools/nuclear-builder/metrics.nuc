@@ -7,7 +7,10 @@ use pathlib{ Path }
 // over the factory's work (specs as issues, runs as their work) and the bill of tokens and money. Measured, never
 // estimated: a count the provider did not report stays out of the sums and is counted as `notReported`.
 
-VIEWS = ["bill", "throughput", "cycle", "burndown", "flow", "waiting", "quality", "people", "indicators"]
+VIEWS = ["bill", "throughput", "cycle", "burndown", "flow", "waiting", "quality", "people", "indicators", "context"]
+
+// The counts of a call's context (spec 025) the `context` view gives per step or answer, by what reported them.
+CONTEXT_COUNTS = ["turns", "promptChars", "toolCalls", "handReads", "repeatedReads", "resultChars", "inTokens"]
 
 // The longest series a burndown or a flow draws.
 MAX_PERIODS = 400
@@ -224,6 +227,34 @@ distribution(values: int[]) <string, any>
   all = values.sorted()
   at = (p: double) => all[Math.min(all.length - 1, (p * (all.length - 1)).round())]
   { "count": all.length, "min": all[0], "median": at(0.5), "p85": at(0.85), "max": all.last }
+
+// The context of the work (spec 025): per station (a chat answer: `chat`), provider and model, how many steps, and
+// each count's distribution over the steps that reported it (a count never reported is left out, not taken as 0).
+context(lines: Lines) <string, any>
+  groups: <string, <string, any>> = {}
+  for e in [...lines.steps, ...lines.answers]
+    u = usageIn(e)
+    if u.isEmpty
+      continue
+    station = e["kind"] == "chat" ? "chat" : "${e["station"] ?? ""}"
+    key = "${station}|${u["provider"] ?? ""}|${u["model"] ?? ""}"
+    if not (key in groups)
+      seed: <string, any> = { "station": station, "provider": "${u["provider"] ?? ""}", "model": "${u["model"] ?? ""}", "steps": 0 }
+      for c in CONTEXT_COUNTS
+        seed[c] = [] as int[]
+      groups[key] = seed
+    g = groups[key]!
+    g["steps"] = (g["steps"] as int) + 1
+    for c in CONTEXT_COUNTS
+      if reported(u[c])
+        (g[c] as int[]).add(num(u[c]).round())
+  found: <string, any>[] = []
+  for g in groups.values
+    shown: <string, any> = { "station": g["station"], "provider": g["provider"], "model": g["model"], "steps": g["steps"] }
+    for c in CONTEXT_COUNTS
+      shown[c] = distribution(g[c] as int[])
+    found.add(shown)
+  { "groups": found.sortedBy((g) => "${g["station"]}|${g["provider"]}|${g["model"]}") }
 
 // Cycle time: each spec from its run's start to its delivery (or its stop), its distribution, the time per station.
 cycle(lines: Lines, f: Filter) <string, any>
@@ -454,6 +485,7 @@ metricsOf(all: <string, any>[], f: Filter, view: string = "", now: int? = null, 
       "waiting" -> waiting(lines, f, at, known)
       "quality" -> quality(lines, f)
       "people" -> people(lines)
+      "context" -> context(lines)
       _ -> indicators(lines, f)
     found[v] = shown
   found
@@ -512,3 +544,8 @@ printMetrics(found: <string, any>) void
   if p != null
     for m in (p!["members"] ?? []) as <string, any>[]
       print("${m["team"]} · ${m["member"]} (${m["role"]}): ${m["steps"]} steps, ${m["answers"]} answers, +${m["added"]}/-${m["removed"]} lines, ${m["passed"]} passed, ${m["failed"]} failed, ${usd(m["costUsd"])}")
+  cx: <string, any>? = found["context"]
+  if cx != null
+    median = (d: any) => d == null or d["median"] == null ? "—" : "${d["median"]}"
+    for g in (cx!["groups"] ?? []) as <string, any>[]
+      print("Context ${g["station"]} · ${g["provider"]} ${g["model"]}: ${g["steps"]} steps, median ${median(g["turns"])} turns, ${median(g["toolCalls"])} calls, ${median(g["handReads"])} by hand (${median(g["repeatedReads"])} repeated), ${median(g["inTokens"])} tokens in")

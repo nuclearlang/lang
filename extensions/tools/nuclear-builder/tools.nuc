@@ -256,7 +256,7 @@ BuilderTools(root: string)
   // The factory's reports from its ledger, every project of this machine (spec 017): the bill (tokens in and out
   // and USD by period, provider and model, team, member and project; local against paid; the budget each run used),
   // throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for the user, quality, each
-  // member's work (people) and the indicators. `view` is one of them (all when empty); `project` a name or folder,
+  // member's work (people), the indicators and the context of the work (turns, tool calls, reads by hand, spec 025). `view` is one of them (all when empty); `project` a name or folder,
   // `team` an id, `member` a member's id; `since` and `until` dates YYYY-MM-DD; `by` day or week. A token count a
   // provider did not report is null, never guessed (`notReported`).
   metricsTool(view: string = "", project: string = "", team: string = "", member: string = "", since: string = "", until: string = "", by: string = "day") string

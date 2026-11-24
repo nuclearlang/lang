@@ -1002,7 +1002,8 @@ WorkTools(runner: any = runCommand)
     ~builderRun(["connections", ...(team.isEmpty ? [] as string[] : ["--team", team]), "--json"], "${root}")
 
   // The factory's reports from its ledger, every project of this machine: view one of bill, throughput, cycle,
-  // burndown, flow, waiting, quality, people, indicators (empty: all); project a name or folder, team and member ids;
+  // burndown, flow, waiting, quality, people, indicators, context (each step's turns, tool calls and reads by hand)
+  // (empty: all); project a name or folder, team and member ids;
   // since and until dates YYYY-MM-DD; by day or week.
   metrics(view: string = "", project: string = "", team: string = "", member: string = "", since: string = "", until: string = "", by: string = "day") string
     flags: <string, string> = { "--view": view, "--project": project, "--team": team, "--member": member, "--from": since, "--to": until, "--by": by }

@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-19
+updated: 2026-11-24
 related: [../../../../../docs/04-specs/017-productivity-reports/design.md, providers.md, engine.md, actions.md]
 ---
 # The reports: the usage, the factory's ledger, `metrics` (spec 017)
@@ -15,6 +15,13 @@ Three parts, one way: the usage is measured at the source, appended to the facto
 Every provider's call gives its `Outcome.usage`: `{inTokens, outTokens, costUsd, ms, provider, model}`. `runAdapter`
 stamps the time, the provider and the model (the one the provider said, else the one asked for); each adapter gives
 the tokens its provider reports. A count the provider did not report is `null` ("not reported"), never a guess.
+
+The usage also says the context of the call (spec 025), from its events: `turns` (the model's turns: OpenCode's
+`step_finish`es, Claude Code's distinct assistant messages, the API loop's turns; `null` for the others),
+`toolCalls`, `handReads` (the calls of the tools that find their way file by file: `read`, `glob`, `grep`, `list`…),
+`repeatedReads` (one of those again with the same input), `resultChars` (the tools' results as the adapter kept them,
+each at most 20 000) and `promptChars` (what the factory sent: the role and the station's prompt; the agent's own
+harness adds to it).
 
 | Provider | Tokens in | Tokens out | Model |
 |---|---|---|---|
@@ -68,6 +75,7 @@ editors' storage, never sent anywhere.
 | `waiting` | the gates open now (the run files of every project the ledger names, and the asked one) and how long; the answered ones' distribution, by station |
 | `quality` | per station: steps, passed, failed, retried (the same kind of step again in a run's station), the first-try pass rate (a station that passed with no failed step, in a run never retried) |
 | `people` | per member (`<team>-<member>`): steps, answers, lines added and removed, passed, failed, pass rate, tokens, money; `members` by cost and `byResult` |
+| `context` | per station (`chat` for the answers), provider and model: the steps and the distribution of `turns`, `promptChars`, `toolCalls`, `handReads`, `repeatedReads`, `resultChars` and `inTokens` over those that reported them (spec 025) |
 | `indicators` | cost per delivered spec, tokens per useful line (the tokens of the delivered runs' steps over the lines added by their passed steps), the local share of the tokens, the local and paid money, retries per station |
 
 ## The page (VS Code)

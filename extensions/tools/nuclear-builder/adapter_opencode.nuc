@@ -41,6 +41,8 @@ openCodeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string
       emit({ "type": "tool-result", "id": part["callID"] ?? part["id"], "ok": state["status"] == "completed", "text": "${state["output"] ?? state["error"] ?? ""}".substring(0, 20000) })
   else if kind == "step_finish" or kind == "step-finish"
     cost: double = part["cost"] ?? 0
+    // one step of OpenCode is one turn of the model
+    addTokens(found, "turns", 1)
     found["cost"] = (found["cost"] as double) + cost
     // its tokens: the input with the cache's, the output with the reasoning's
     tokens: <string, any> = part["tokens"] ?? ({} as <string, any>)

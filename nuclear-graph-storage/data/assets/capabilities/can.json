@@ -1268,7 +1268,7 @@
    "title": "Can: read what the factory spent and made (nuclear-builder metrics, the Reports page)",
    "summary": "Every Builder step and Nuclear Chat answer is a line of the factory's ledger (`~/.config/nuclearlang/factory/ledger/`, every project, on the machine only): who, where, the tokens and money the provider reported, the time, the lines added and removed, the result. `nuclear-builder metrics` and the MCP tool `metrics` read it as a bill and Jira-like reports; VS Code's *Reports* tool (Ctrl+Alt+K) draws them.",
    "body": [
-    "- The views: `bill` (tokens in and out, USD, local against paid, by period, provider and model, team, member, project; the budget each run used), `throughput` (specs delivered, velocity by team), `cycle` (cycle time and time per station), `burndown`, `flow` (cumulative flow), `waiting` (the gates open now and how long), `quality` (failures, retries, first-try pass rate per station), `people` (each member's steps, answers, lines, passes, fails, tokens, money), `indicators` (cost per delivered spec, tokens per useful line, the local share).",
+    "- The views: `bill` (tokens in and out, USD, local against paid, by period, provider and model, team, member, project; the budget each run used), `throughput` (specs delivered, velocity by team), `cycle` (cycle time and time per station), `burndown`, `flow` (cumulative flow), `waiting` (the gates open now and how long), `quality` (failures, retries, first-try pass rate per station), `people` (each member's steps, answers, lines, passes, fails, tokens, money), `indicators` (cost per delivered spec, tokens per useful line, the local share), `context` (per station, provider and model: each step's turns, tool calls, reads by hand and repeated, results' characters, the prompt the factory sent, tokens in; spec 025).",
     "- `nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view <view>] --json`; the MCP tool takes `since` and `until` for the dates.",
     "- Measured at the source, never estimated: Claude Code's usage, OpenCode's steps, Codex's and Gemini CLI's turns, the APIs' usage; a provider that reports none is counted as not reported.",
     "- A member's numbers are also in their panel's Summary on *Your software company*; the runs of before are copied into the ledger once, with what their files had."
@@ -1289,7 +1289,8 @@
     "which member costs the most",
     "what is waiting for me in the builder",
     "cuánto gastó el equipo",
-    "show the burndown of the factory"
+    "show the burndown of the factory",
+    "how many turns does a step take"
    ],
    "links": [
     {
