@@ -8,6 +8,8 @@ title_es = "Cada test nuevo falla antes del código, por la razón correcta"
 station = "tests"
 on = true
 by = "role"
+# it runs the project (its commands, its build): in the project, after the station's other checks, alone
+parallel = false
 # the project compiles and its new tests fail because the code they need is absent: at this station red is the
 # expected result, so `nuclear test` is read by the role, never run as a pass/fail command (the green of
 # `nuclear test` is developer.tests-pass, at the code station).

@@ -3,6 +3,7 @@ use re
 use json
 use time
 use shutil
+use queue
 use threading
 use subprocess
 use pathlib{ Path }
@@ -82,7 +83,9 @@ worthRetrying(why: string) boolean
   not NOT_WORTH_RETRYING.any((p) => p in why)
 
 Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (question: <string, any>) => <string, any>?, emit: (e: <string, any>) => void, options: <string, any> = {})
-  lock: threading.Lock = threading.Lock()
+  // one lock for the run's state: the checks of a station run at the same time (`checksTogether`), each a thread that
+  // writes its step; every change of the run, its save and its events are made under it (reentrant: `save` inside)
+  lock: threading.RLock = threading.RLock()
   phaseNow: string = ""
   beating: threading.Event = threading.Event()
   // the stations this process repaired already (`spec/station`, once per repair): past `retries.station` the run waits
@@ -98,9 +101,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     lock.acquire()
     try
       saveRun(run)
+      emit({ "type": "change", "status": run["status"] })
     finally
       lock.release()
-    emit({ "type": "change", "status": run["status"] })
 
   stages() <string, any>[]
     run["stages"]!
@@ -123,6 +126,13 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // their language (`step.<key>` of their dictionaries, each argument at its place); the English `title` stays the
   // journal's and an older screen's. A step named by a path or a command has no key.
   step(st: <string, any>, title: string, actor: string, role: string = "", key: string = "", args: string[] = []) <string, any>
+    lock.acquire()
+    try
+      return newStep(st, title, actor, role, key, args)
+    finally
+      lock.release()
+
+  newStep(st: <string, any>, title: string, actor: string, role: string, key: string, args: string[]) <string, any>
     steps: <string, any>[] = st["steps"]!
     // the next number of the station: a step kept from an earlier attempt and a new one never share an id
     last = steps.map((x) => "${x["id"]}".split("-").last.toInt() ?? 0).reduce(0, (a: int, b: int) => Math.max(a, b))
@@ -144,14 +154,18 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     s
 
   end(s: <string, any>, status: string, summary: string) void
-    s["status"] = status
-    s["summary"] = summary
-    s["ended"] = nowMs()
-    s["lines"] = stepLines(run, "${s["id"]}")
-    traceEvent(run, status, summary, s["id"]!)
-    save()
-    // the factory's ledger (usage.nuc): the step, who did it, its usage and its lines, across projects
-    ledgerAppend(stepEntry(run, s))
+    lock.acquire()
+    try
+      s["status"] = status
+      s["summary"] = summary
+      s["ended"] = nowMs()
+      s["lines"] = stepLines(run, "${s["id"]}")
+      traceEvent(run, status, summary, s["id"]!)
+      save()
+      // the factory's ledger (usage.nuc): the step, who did it, its usage and its lines, across projects
+      ledgerAppend(stepEntry(run, s))
+    finally
+      lock.release()
 
   decide(s: <string, any>, what: string, why: string) void
     decisions: <string, any>[] = s["decisions"]!
@@ -165,6 +179,13 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // A retry as it happens: in the run's `retries` (the level, the attempt, why; the page says it in its language), the
   // step's trace and the run's events and log.
   retried(level: string, station: string, s: <string, any>, attempt: int, of: int, why: string) void
+    lock.acquire()
+    try
+      retryTold(level, station, s, attempt, of, why)
+    finally
+      lock.release()
+
+  retryTold(level: string, station: string, s: <string, any>, attempt: int, of: int, why: string) void
     first = why.trim().split("\n")[0]
     short = first.substring(0, Math.min(300, first.length))
     list: <string, any>[] = run["retries"] ?? []
@@ -590,6 +611,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     if name in done
       return true
     phaseNow = name
+    if name != "checks"
+      // the work the checks judged runs again: every check judges it again
+      st["checksPassed"] = [] as string[]
     steps: <string, any>[] = st["steps"]!
     seen = steps.length
     ok = body()
@@ -672,8 +696,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     found
 
   // A provider's call as a step: the files it changed go to the ledger, its events to the step's trace, its cost to
-  // the run's.
-  provider(role: Role, station: string, s: <string, any>, task: string, writes: string[], budget: double, inputs: <string, any> = {}) Outcome
+  // the run's. `at`: the folder it works in instead of the project (a check's own copy, `checksTogether`), whose
+  // changes the ledger gets when they are merged back.
+  provider(role: Role, station: string, s: <string, any>, task: string, writes: string[], budget: double, inputs: <string, any> = {}, at: string? = null) Outcome
     a = assigned(role.id)
     adapter = ADAPTERS["${a["provider"]}"]
     if adapter == null
@@ -681,23 +706,30 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     given: <string, any> = { "platform": run["platform"], "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": watchOf() }
     for k, v in inputs
       given[k] = v
-    Path(specDir()).mkdir(parents = true, existOk = true)
+    place = at ?? root()
+    docs = at == null ? specDir() : "${Path(at!, specPathOf(run))}"
+    Path(docs).mkdir(parents = true, existOk = true)
     told = task
     spent = 0.0
     attempt = 1
     // a call that fails is called again in place (a process's retry): its files stay, the failure is told; the local
     // Developer's adapter retries its own calls
     while true
-      w = Work(root(), specDir(), told, documentsBefore(), writes, "${a["model"] ?? ""}", budget - spent, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
-      before = contents(root())
+      w = Work(place, docs, told, documentsBefore(), writes, "${a["model"] ?? ""}", budget - spent, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
+      before = at == null ? contents(root()) : ({} as <string, string>)
       out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e), "${a["provider"]}")
-      s["files"] = [...((s["files"] ?? []) as string[]), ...ledger(run, "${s["id"]}", before)].unique()
-      s["usage"] = sumUsage(s["usage"], out.usage)
-      s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
-      run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
+      lock.acquire()
+      try
+        if at == null
+          s["files"] = [...((s["files"] ?? []) as string[]), ...ledger(run, "${s["id"]}", before)].unique()
+        s["usage"] = sumUsage(s["usage"], out.usage)
+        s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
+        run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
+        s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))
+        save()
+      finally
+        lock.release()
       spent = spent + out.costUsd
-      s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))
-      save()
       paidOut = a["kind"] != "local" and (budgetLeft() <= 0 or budget - spent <= 0)
       if out.ok or attempt > bound("process") or onDeveloper(a) or not worthRetrying(out.error) or paidOut
         return out
@@ -710,13 +742,17 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }
 
   onEvent(s: <string, any>, e: <string, any>) void
-    trace: <string, any>[] = s["trace"]!
-    kind = "${e["type"]}"
-    if kind == "tool"
-      trace.add({ "step": "${e["tool"]}", "detail": "${e["input"] ?? ""}".substring(0, 300), "kind": "tool" })
-    else if kind == "retry" or kind == "trace"
-      trace.add({ "step": "${e["step"] ?? kind}", "detail": "${e["detail"] ?? ""}" })
-    emit({ "type": "event", "step": s["id"], "event": e })
+    lock.acquire()
+    try
+      trace: <string, any>[] = s["trace"]!
+      kind = "${e["type"]}"
+      if kind == "tool"
+        trace.add({ "step": "${e["tool"]}", "detail": "${e["input"] ?? ""}".substring(0, 300), "kind": "tool" })
+      else if kind == "retry" or kind == "trace"
+        trace.add({ "step": "${e["step"] ?? kind}", "detail": "${e["detail"] ?? ""}" })
+      emit({ "type": "event", "step": s["id"], "event": e })
+    finally
+      lock.release()
 
   // The documents a provider answered are written into `specs/<id>/` (an agent wrote its own already).
   keepDocuments(out: Outcome, s: <string, any>) void
@@ -1424,39 +1460,208 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     s["log"] = log.substring(Math.max(0, log.length - 60000))
 
   // The checks of a station that its role runs: a command of the line by its name, or a prompt for the role's
-  // provider. They run each time the station runs (a station run again judges its work again: a result of an earlier
-  // attempt never stays); the user's own checks keep what the user marked.
+  // provider. They run each time the station's work runs (a station run again judges its work again: a result of an
+  // earlier attempt never stays), but a check that passed is not run again while the work it judged stays: a retry of
+  // the station's checks (the node's, the user's in place) runs only those that did not pass (`st.checksPassed`,
+  // cleared when a part before the checks runs again). The user's own checks keep what the user marked. In order: the
+  // checks by command, one at a time in the project (they share its build); the checks by prompt together, up to the
+  // line's `parallelChecks` at a time, each in its own copy of the project (`checksTogether`); then those of
+  // `parallel = false` (they run the project, or read what the others fixed), one at a time in the project.
   runChecks(st: <string, any>, role: Role) boolean
     checks = loadChecks(root(), "${run["id"]}")
-    mine = checks.filter((c) => c["station"] == st["id"] and c["on"] == true and c["by"] == "role")
+    kept: string[] = st["checksPassed"] ?? []
+    mine = checks.filter((c) => c["station"] == st["id"] and c["on"] == true and c["by"] == "role" and not ("${c["id"]}" in kept))
     // what the user must decide is what this attempt found: an earlier attempt's questions never pile up
-    st["needsYou"] = [] as string[]
+    if kept.isEmpty
+      st["needsYou"] = [] as string[]
+    most: int = line["parallelChecks"] ?? PARALLEL_CHECKS
+    together = onDeveloper(assigned(role.id)) or most < 2 ? ([] as <string, any>[]) : mine.filter((c) => c["command"] == null and c["parallel"] != false)
+    if together.length < 2
+      together = [] as <string, any>[]
+    ids = together.map((c) => "${c["id"]}")
     ok = true
-    for c in mine
-      s = step(st, "Check: ${c["title"]}", role.id, role.id, "check", ["${c["id"]}", "${c["title"]}", "${c["title_es"] ?? c["title"]}"])
-      if c["command"] == null and onDeveloper(assigned(role.id))
-        // the local agents answer their own routes, not a check's prompt
-        c["state"] = "skipped"
-        c["note"] = "a check by prompt needs an agent or an API model for the ${role.title}"
-        end(s, "skipped", "${c["note"]}")
-        continue
-      // `expect = "fail"`: the project compiles, and the command fails (the tests before their code)
-      passed = if c["command"] != null and c["expect"] == "fail"
-        commands(st, commandsOf(line, "check")) and commands(st, commandsOf(line, "${c["command"]}"), false, true)
-      else if c["command"] != null
-        commands(st, commandsOf(line, "${c["command"]}"))
-      else
-        out: Outcome = provider(role, "${st["id"]}", s, CHECK_TASK.replace("{check}", "${c["prompt"] ?? c["title"]}"), [], budgetLeft())
-        // what only the user can decide waits for the station's gate (`NEEDS YOU:` lines), never fails the check
-        for asked in out.text.split("\n").map((l: string) => l.trim()).filter((l: string) => l.startsWith("NEEDS YOU:"))
-          youDecide(st, asked.substring(10).trim())
-        out.ok and not verdictOf(out.text).startsWith("FAILED")
-      c["state"] = passed ? "passed" : "failed"
-      c["note"] = "${s["id"]}"
-      end(s, passed ? "passed" : "failed", passed ? "passed" : "failed: see the step")
-      ok = ok and passed
+    for c in mine.filter((c) => c["command"] != null)
+      ok = checkOne(st, role, c) and ok
+    ok = checksTogether(st, role, together, most) and ok
+    for c in mine.filter((c) => c["command"] == null and not ("${c["id"]}" in ids))
+      ok = checkOne(st, role, c) and ok
     saveChecks(root(), "${run["id"]}", checks)
     ok
+
+  // A check's step, named for the screens in their language.
+  checkStep(st: <string, any>, role: Role, c: <string, any>) <string, any>
+    step(st, "Check: ${c["title"]}", role.id, role.id, "check", ["${c["id"]}", "${c["title"]}", "${c["title_es"] ?? c["title"]}"])
+
+  checkTask(c: <string, any>) string
+    CHECK_TASK.replace("{check}", "${c["prompt"] ?? c["title"]}")
+
+  // A check by prompt's verdict: PASSED unless the call failed or it says FAILED; what only the user can decide waits
+  // for the station's gate (`NEEDS YOU:` lines), never fails the check. Over the run's budget it fails.
+  judged(st: <string, any>, out: Outcome) boolean
+    for asked in out.text.split("\n").map((l: string) => l.trim()).filter((l: string) => l.startsWith("NEEDS YOU:"))
+      youDecide(st, asked.substring(10).trim())
+    out.ok and not verdictOf(out.text).startsWith("FAILED") and budgetLeft() >= 0
+
+  checkEnded(st: <string, any>, c: <string, any>, s: <string, any>, passed: boolean) void
+    c["state"] = passed ? "passed" : "failed"
+    c["note"] = "${s["id"]}"
+    if passed
+      st["checksPassed"] = [...((st["checksPassed"] ?? []) as string[]), "${c["id"]}"].unique()
+    end(s, passed ? "passed" : "failed", passed ? "passed" : budgetLeft() < 0 ? "failed: over the run's budget (${(run["costUsd"] as double).toFixed(2)} USD)" : "failed: see the step")
+
+  // One check, in the project.
+  checkOne(st: <string, any>, role: Role, c: <string, any>) boolean
+    s = checkStep(st, role, c)
+    if c["command"] == null and onDeveloper(assigned(role.id))
+      // the local agents answer their own routes, not a check's prompt
+      c["state"] = "skipped"
+      c["note"] = "a check by prompt needs an agent or an API model for the ${role.title}"
+      end(s, "skipped", "${c["note"]}")
+      return true
+    // `expect = "fail"`: the project compiles, and the command fails (the tests before their code)
+    passed = if c["command"] != null and c["expect"] == "fail"
+      commands(st, commandsOf(line, "check")) and commands(st, commandsOf(line, "${c["command"]}"), false, true)
+    else if c["command"] != null
+      commands(st, commandsOf(line, "${c["command"]}"))
+    else
+      judged(st, provider(role, "${st["id"]}", s, checkTask(c), [], budgetLeft()))
+    checkEnded(st, c, s, passed)
+    passed
+
+  // The checks by prompt of a station at the same time, at most `bound` at once, each its own agent's session in its
+  // own copy of the project (a check fixes what it finds: two never write the same file at once), its step, trace and
+  // cost its own. Each starts with its share of what the budget has left, reserved (what is left, less what the
+  // running ones hold, over the checks still to start): together they never spend more than the run has; with nothing
+  // left, no check starts (it fails, said). As each ends, what it changed in its copy comes back to the project (a
+  // file the project changed since meanwhile is merged, `git merge-file`), in the ledger as its step's; a change that
+  // does not merge is set aside (`setAside`) and the check runs again in the project, after the others.
+  checksTogether(st: <string, any>, role: Role, list: <string, any>[], bound: int) boolean
+    if list.isEmpty
+      return true
+    results = queue.Queue()
+    waiting = list.copy()
+    running: <string, <string, any>> = {}
+    again: <string, any>[] = []
+    ok = true
+    try
+      while not waiting.isEmpty or not running.isEmpty
+        while not waiting.isEmpty and running.length < bound
+          c = waiting.removeAt(0)
+          s = checkStep(st, role, c)
+          s["parallel"] = true
+          share: double = (budgetLeft() - held(running)) / (waiting.length + 1)
+          if share <= 0
+            c["state"] = "failed"
+            c["note"] = "${s["id"]}"
+            end(s, "failed", "the run's budget is spent (${(run["costUsd"] as double).toFixed(2)} USD): the check did not start")
+            ok = false
+            continue
+          copy = projectCopy()
+          running["${s["id"]}"] = { "check": c, "step": s, "copy": copy, "base": contents(copy), "share": share }
+          startCheck(role, "${st["id"]}", s, checkTask(c), share, copy, results)
+        if running.isEmpty
+          break
+        got: any[] = results.get()
+        entry: <string, any> = running.remove("${got[0]}")!
+        c: <string, any> = entry["check"]!
+        s: <string, any> = entry["step"]!
+        clash = mergeBack(s, "${entry["copy"]}", entry["base"]!)
+        if clash.isEmpty
+          passed = judged(st, got[1] as Outcome)
+          checkEnded(st, c, s, passed)
+          ok = ok and passed
+        else
+          folder = setAsideCopy("${entry["copy"]}", clash, "a check's fix of a file another check changed too: the check runs again in the project")
+          end(s, "skipped", "its fix of ${clash.join(", ")} does not merge with another check's: it runs again in the project; its version is in ${folder}/")
+          again.add(c)
+        dropRenderDir(Path("${entry["copy"]}").parent)
+    finally
+      for id, e in running
+        dropRenderDir(Path("${e["copy"]}").parent)
+    for c in again
+      ok = checkOne(st, role, c) and ok
+    ok
+
+  // What the running checks still hold of their shares: each its share less what it spent already (its spending is in
+  // the run's cost, which `budgetLeft` takes off).
+  held(running: <string, <string, any>>) double
+    lock.acquire()
+    try
+      return running.values.map((e) => Math.max(0.0, (e["share"] as double) - ((e["step"] as <string, any>)["costUsd"] ?? 0.0) as double)).reduce(0.0, (a: double, b: double) => a + b)
+    finally
+      lock.release()
+
+  // A check's agent in a thread of its own; its outcome goes to `results` with its step's id, a failure too.
+  startCheck(role: Role, station: string, s: <string, any>, task: string, budget: double, at: string, results: queue.Queue) void
+    go = () =>
+      out = Outcome(false, "", {}, [], 0, [], "the check's thread stopped")
+      try
+        out = provider(role, station, s, task, [], budget, {}, at)
+      catch e
+        out = Outcome(false, "", {}, [], 0, [], "${e}")
+      results.put(["${s["id"]}", out])
+    threading.Thread(target = go, daemon = true).start()
+
+  // A copy of the project for one check (a temporary folder): its files but the folders the ledger skips, with its
+  // `.nuclear/` (the line, the project's card) but the Builder's runs and chat.
+  projectCopy() string
+    at = renderDir("check").joinpath("project")
+    shutil.copytree(root(), at, ignore = copyIgnored, symlinks = true)
+    "${at}"
+
+  // What a check changed in its copy, into the project: a file the project has as the copy had it takes the check's
+  // version; one the project changed meanwhile (another check's fix) is merged; the files that do not merge are
+  // given back, untouched in the project. The ledger names what came back as the check's step's.
+  mergeBack(s: <string, any>, copy: string, base: <string, string>) string[]
+    now = contents(copy)
+    lock.acquire()
+    try
+      before = contents(root())
+      clash: string[] = []
+      for f in [...now.keys.filter((k) => base[k] != now[k]), ...base.keys.filter((k) => not (k in now))]
+        theirs: string? = now[f]
+        was: string? = base[f]
+        real: string? = before[f]
+        if real == theirs
+          continue
+        file = Path(root(), f)
+        if real == was
+          if theirs == null
+            file.unlink(missingOk = true)
+          else
+            file.parent.mkdir(parents = true, existOk = true)
+            writeAtomic(file, theirs!)
+          continue
+        merged = was != null and theirs != null and real != null ? mergeText(real!, was!, theirs!) : null
+        if merged == null
+          clash.add(f)
+        else
+          writeAtomic(file, merged!)
+      s["files"] = [...((s["files"] ?? []) as string[]), ...ledger(run, "${s["id"]}", before)].unique()
+      save()
+      return clash
+    finally
+      lock.release()
+
+  // A check's version of the files that did not merge, kept for the user: `<id>.set-aside/<ms>/<path>`, in `setAside`.
+  setAsideCopy(copy: string, files: string[], why: string) string
+    at = nowMs()
+    folder = "${RUNS_DIR}/${run["id"]}.set-aside/${at}"
+    for f in files
+      mine = Path(copy, f)
+      if mine.isFile()
+        to = Path(root(), folder, f)
+        to.parent.mkdir(parents = true, existOk = true)
+        shutil.copyfile(mine, to)
+    lock.acquire()
+    try
+      kept: <string, any>[] = run["setAside"] ?? []
+      kept.add({ "at": at, "folder": folder, "files": files, "why": why })
+      run["setAside"] = kept
+      save()
+    finally
+      lock.release()
+    folder
 
   // A station its diagnosis says it cannot fix alone (a contradiction between a criterion and a contract, a decision
   // of the architect's): the run waits with the diagnosis as its question. Asking for a change with the user's decision
@@ -1595,6 +1800,28 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     body = Path(specDir(), "pr.md").isFile() ? "${specPathOf(run)}/pr.md" : "${specPathOf(run)}/spec.md"
     git = ["git switch -c ${shellWord(branch)} || git switch ${shellWord(branch)}", "git add -- ${files.map((f) => shellWord(f)).join(" ")}", "git commit -m ${shellWord(title)} -m ${shellWord("Made by NuclearLang's software factory (run ${run["id"]}).")}", "git push -u origin ${shellWord(branch)}", "gh pr create --title ${shellWord(title)} --body-file ${shellWord(body)} --head ${shellWord(branch)}"]
     commands(st, git)
+
+// What a check's copy of the project leaves out (`projectCopy`): the folders the ledger skips, but `.nuclear/` itself,
+// whose Builder's runs and chat stay out.
+copyIgnored(dir: string, names: string[]) string[]
+  names.filter((n: string) => (n in SKIPPED_DIRS and n != ".nuclear") or (n == "builder" and Path(dir).name == ".nuclear"))
+
+// A three-way merge of a text (`git merge-file`): `ours` and `theirs` both changed `base`; null when they change the
+// same lines, or git is not there.
+mergeText(ours: string, base: string, theirs: string) string?
+  git = shutil.which("git")
+  if git == null
+    return null
+  at = renderDir("merge")
+  try
+    names = ["ours", "base", "theirs"]
+    texts = [ours, base, theirs]
+    for i in 0..3
+      at.joinpath(names[i]).writeText(texts[i], encoding = "utf-8")
+    out = subprocess.run([git!, "merge-file", "-p", "${at.joinpath("ours")}", "${at.joinpath("base")}", "${at.joinpath("theirs")}"], captureOutput = true, text = true, timeout = 60)
+    return out.returncode == 0 ? out.stdout : null
+  finally
+    dropRenderDir(at)
 
 // The last `n` lines of a text.
 tail(text: string, n: int) string

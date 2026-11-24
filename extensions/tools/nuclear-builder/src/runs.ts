@@ -59,6 +59,8 @@ export interface Step {
   model?: string;
   costUsd?: number;
   phase?: string;
+  /** A check that ran at the same time as the station's other checks, in its own copy of the project. */
+  parallel?: boolean;
   /** An older run's fields. */
   code?: string;
   input?: string;

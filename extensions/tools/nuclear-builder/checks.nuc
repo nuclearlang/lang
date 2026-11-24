@@ -4,7 +4,7 @@ use pathlib{ Path }
 // The checks of a run (design.md "A run", 3): one list, `checks.json` in the spec's folder (`specs/<component>/[<layer>/]<id>/`), made from every role's
 // `checks.toml` and the team's tasks, with the user's own. Each check: `id`, `title`, `station`, `on`, `by` (`role`:
 // the role runs it; `user`: the user runs it and marks it), `role`, a `command` of `.nuclear/builder.json` or a
-// `prompt`, its `state` (`pending`, `passed`, `failed`, `skipped`) and a `note`.
+// `prompt`, `parallel` (false: never at the same time as another), its `state` (`pending`, `passed`, `failed`, `skipped`) and a `note`.
 
 CHECK_STATES = ["pending", "passed", "failed", "skipped"]
 
@@ -36,6 +36,10 @@ seedChecks(root: string, id: string, roles: Role[], team: <string, any>) <string
       // `gate = true`: a check of the user's that the station's gate answers (their yes there marks it)
       if c["gate"] == true
         check["gate"] = true
+      // `parallel = false`: a check by prompt that runs the project's commands or reads what the others fixed runs in
+      // the project, after the station's other checks, one at a time (factory.nuc `runChecks`)
+      if c["parallel"] == false
+        check["parallel"] = false
       // the title in Spanish beside the English (checks.toml's `title_es`): the screens show the one of their language
       if c["title_es"] != null
         check["title_es"] = c["title_es"]
@@ -44,6 +48,9 @@ seedChecks(root: string, id: string, roles: Role[], team: <string, any>) <string
       if not (check["id"] in known)
         have.add(check)
         known.add(check["id"]!)
+      else if check["parallel"] == false
+        // a list seeded before `parallel` existed: the role's data says it runs alone
+        findCheck(have, "${check["id"]}")["parallel"] = false
   saveChecks(root, id, have)
   have
 

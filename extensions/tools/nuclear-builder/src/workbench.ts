@@ -23,7 +23,7 @@ export interface RunLite {
   created: number;
   specPath?: string;
   spec: { title: string; useCase?: string };
-  stages: { id: string; title: string; status: string; role?: string; steps: { id: string; title: string; status: string; actor: string; started?: number; summary?: string; trace?: { step: string; detail: string; kind?: string }[] }[] }[];
+  stages: { id: string; title: string; status: string; role?: string; steps: { id: string; title: string; status: string; actor: string; started?: number; ended?: number; parallel?: boolean; summary?: string; trace?: { step: string; detail: string; kind?: string }[] }[] }[];
 }
 
 export interface SpecNode extends SpecEntry {
@@ -80,13 +80,15 @@ export function specTree(specs: SpecEntry[], runs: RunLite[]): SpecGroup[] {
 
 /** A run as the accordion draws it: how many stations ended of how many, the step working now, each station with its
  * steps. */
-export function runOutline(run: RunLite): { done: number; total: number; now: { stage: string; step: string; title: string; actor: string } | null; stations: { id: string; title: string; status: string; role: string | null; steps: { id: string; title: string; status: string; actor: string }[] }[] } {
+export function runOutline(run: RunLite): { done: number; total: number; now: { stage: string; step: string; title: string; actor: string } | null; working: number; stations: { id: string; title: string; status: string; role: string | null; steps: { id: string; title: string; status: string; actor: string }[] }[] } {
   let now: { stage: string; step: string; title: string; actor: string } | null = null;
   for (const s of run.stages) for (const x of s.steps) if (!now && x.status === 'running') now = { stage: s.id, step: x.id, title: x.title, actor: x.actor };
   return {
     done: run.stages.filter((s) => s.status === 'passed' || s.status === 'skipped').length,
     total: run.stages.length,
     now,
+    // the steps working now: several when a station's checks run at the same time
+    working: run.stages.reduce((n, s) => n + s.steps.filter((x) => x.status === 'running').length, 0),
     stations: run.stages.map((s) => ({ id: s.id, title: s.title, status: s.status, role: s.role ?? null, steps: s.steps.map((x) => ({ id: x.id, title: x.title, status: x.status, actor: x.actor })) })),
   };
 }
@@ -107,8 +109,10 @@ export interface LogEntry {
  * it what its agent followed and the tools it called. The last `limit`, when one is given. */
 export function teamLog(run: RunLite, limit = 0): LogEntry[] {
   const steps = run.stages.flatMap((s) => s.steps.map((x, i) => ({ s, x, i })));
-  // by when each started; a step that never started keeps its place in the line
-  steps.sort((a, b) => (a.x.started ?? Infinity) - (b.x.started ?? Infinity) || run.stages.indexOf(a.s) - run.stages.indexOf(b.s) || a.i - b.i);
+  // by when each started, the checks that ran at the same time by when each ended (those still working last: none
+  // after them started before they all ended); a step that never started keeps its place in the line
+  const at = (x: (typeof steps)[number]['x']) => (x.parallel ? x.ended ?? Infinity : x.started ?? Infinity);
+  steps.sort((a, b) => at(a.x) - at(b.x) || run.stages.indexOf(a.s) - run.stages.indexOf(b.s) || a.i - b.i);
   const out: LogEntry[] = [];
   for (const { s, x } of steps) {
     if (x.status === 'pending' && !x.started) continue;

@@ -52,8 +52,9 @@ source, `- Component:`, `- Layer:`, the shape `run.nuc`'s `parseSpec` reads); it
 id never one in use. *Pipeline settings* writes its defaults with `nuclear-builder line set`. With a
 `nuclear-builder` that has no `spec` yet, the page places it itself in the same layout (`writeSpec`, `specPathOf`).
 Everything else is the engine's (engine.md): the run file and its log, the station's documents in the spec's folder (`specs/<component>/[<layer>/]<id>/`), the
-checks (`checks.json` there, changed only through `nuclear-builder checks`), the exported CI file (`nuclear-builder
-export`). Jira's site, email and API token are in VS Code's secret storage (`nuclear.builder.jira`).
+checks (`checks.json` there, changed only through `nuclear-builder checks`; a station's checks by prompt run at the
+same time, each in its own temporary copy of the project, what they fix merged back: engine.md, *The checks at the
+same time*), the exported CI file (`nuclear-builder export`). Jira's site, email and API token are in VS Code's secret storage (`nuclear.builder.jira`).
 
 The page reads the specs again by itself when a `spec.md` of the project's `specs/` is created, changed or deleted (a
 `FileSystemWatcher` on the active project, 300 ms after a burst, disposed with the page): a spec written by the MCP
@@ -85,7 +86,8 @@ when a step of its own or a local agent's ran).
   there; with nothing open, the start (the six stations, *New spec*, *Ask the chat*).
 - **Under the diagram, always there: Nuclear Chat**, mounted on the team's channel (below).
 - **Right, above: the node, a debugger's tree** (requirement 23). Nothing picked: the run's stations, each a row
-  (status, title, who, time) that opens to its steps; then, folded, its checks' console, criteria, documents and
+  (status, title, who, time) that opens to its steps (a station's checks at the same time: a row and a spinner each,
+  and *Now · N checks at the same time* above the run); then, folded, its checks' console, criteria, documents and
   attempts. A station picked: its head (who, *Run <station> again*, *Inside the step*, *‹ The run*) over its steps by
   title. A step opens to its inner process (`stepTree`): its outcome, what its agent followed and each tool call in
   the order they came (a call opens to its input and output), its decisions (each to its reason), the files it wrote

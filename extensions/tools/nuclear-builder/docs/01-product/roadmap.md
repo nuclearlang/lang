@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-19
+updated: 2026-11-23
 related: [../02-architecture/engine.md, ../../../../vscode/docs/01-product/roadmap.md, ../../../../jetbrains/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Builder
@@ -93,6 +93,13 @@ What the agents, the strategies and the generators still lack is in their own pr
   `nuclear-builder run` read it).
 
 ## Untested
+
+- **The checks of a station at the same time (2026-11-23)**: tested in Nuclear with a fake Claude Code that sleeps
+  (overlap, the bound, a check retried alone, the budget's shares, ordered checks, fixes merged and a clash set aside)
+  and the page's helpers with node:test; never with a real agent nor seen in a running VS Code: how long a real copy
+  of a large project takes, whether a real agent's fixes of the same document merge, the MCP servers on a copy, and
+  several spinners on the page. Claude Code's `--max-budget-usd` is given with two decimals, so a share under half a
+  cent is rounded (as a single call's budget was).
 
 - **Several specs in one run and the repair of a failure (spec 024, 0.88)**: tested in Nuclear with a fake Claude Code
   (a check that fails once, a FIXABLE and a NOT FIXABLE diagnosis, two specs through two stations); never with a real

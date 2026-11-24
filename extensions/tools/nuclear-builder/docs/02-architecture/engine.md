@@ -58,7 +58,7 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
 `{{title}}`, `{{date}}`, `{{platform}}`, `{{project}}` and `{{assignee}}` filled in. The line (`readLine`,
 `.nuclear/builder.json` over the defaults): `commands`, `branches`, `gates` (`["analysis", "design", "delivery"]`),
 `stations` (all six), `forceConfirm`, `minFreeMb`, `commandTimeoutMs`, `callTimeoutMs`, `stallSeconds` (90), `mcpCommand`,
-`prices`, and optionally `developerUrl` and `ollamaUrl`.
+`prices`, `retries`, `parallelChecks` (4), and optionally `developerUrl` and `ollamaUrl`.
 
 - **A role's step** (`work`) goes through its provider's adapter (providers.md) with the station's task, the spec,
   the documents before it and the client's answer at a gate. A station of the Nuclear Developer (`localStation`)
@@ -140,6 +140,36 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
   user goes on with every check of theirs that is on, of the stations up to Quality, marked (`checks <id> mark
   <check> passed|failed`); a check of the user's with `gate = true` (*the user approves the analysis*, the design, QA's
   plan, the push) is marked by the user's yes at its station's gate, never asked twice.
+- **The checks at the same time** (the user, 2026-11-23: a check is an agent's session of 1 to 6 minutes, and a
+  station's ran one after another; Design took 17.7 min): `runChecks` runs a station's checks in three groups, in
+  order. (1) The checks by `command`, one at a time in the project: they share its build and its dependencies.
+  (2) The checks by `prompt` (not `parallel = false`, the role not local), when there are two or more and the line's
+  `parallelChecks` is 2 or more (1 to 16, 4 by default; 1: one after another, as before): together, at most
+  `parallelChecks` at once (`checksTogether`), each its own agent's session, step (`"parallel": true`), trace, cost
+  and line of the ledger. A check fixes what it finds, so each works in its own copy of the project (a temporary
+  folder: the project but the folders the ledger skips and `.nuclear/builder/`; `--root` of the Builder's MCP server
+  is the copy); as each ends, what it changed comes back to the project: a file the project still has as the copy had
+  it takes the check's version, one another check changed meanwhile is merged (`git merge-file`), and a change that
+  does not merge is set aside (`setAside`, the copy's version) while the check runs again in the project after the
+  others; what came back is in the ledger as that check's step's. Only text files up to 1 MB come back (what the
+  ledger sees); a check writes the station's documents. (3) The checks of `parallel = false`, one at a time in the
+  project, after the others: those that run the project (`developer.tests-fail-first`, `qa.edge-cases`,
+  `devops.pipeline`: its commands, its build, its dependencies, which a copy does not have) or read what the others
+  fixed. Which checks are independent is data (`parallel` in a role's `checks.toml`, a team's task or the run's
+  `checks.json`; a list seeded before it takes it from the role's data), never a name in the code; the user's checks,
+  the gates, QA's plan and the delivery are parts of their own, never among them. **The money**: each check starts
+  with its share of what is left (the run's budget less its cost, less what the running checks still hold of their
+  shares, over the checks still to start), its provider's budget: together they never spend more than the run has;
+  with nothing left a check does not start (it fails, *the check did not start*, a failure no retry fixes alone), and
+  one that ends over the budget fails. The station waits for all of them, then decides as before. **Their retries**
+  are the same levels: a call of one check again in its step (`process`); the part `checks` again (`node`) and the
+  user's retry in place run only the checks that did not pass: those that passed stay passed while the work they
+  judged stays (`st.checksPassed`, emptied when a part before the checks runs again, as a station's repair does);
+  the station's repair runs them all. Every change of the run (a step, its end, a retry, an event, the save) is made
+  under one lock (`Factory.lock`, reentrant), so the run file, its journal and the events stay whole. The page shows
+  the checks working at once, each its row and its spinner, and *Now · N checks at the same time*; the journal and
+  the page's log tell them in the order they ended. Measured with stubbed agents of 1 s each, six checks: 6.1 s one
+  after another, 2.0 s with `parallelChecks` 4 (`testTheChecksOfAStationRunAtTheSameTimeUpToTheBound`).
 - **Delivery**, approved: `git switch -c factory/<id>`, `git add` of the files the run wrote and the spec's folder,
   `git commit` with git's own identity (the user's; no other author), `git push -u origin`, `gh pr create
   --body-file <the spec's folder>/pr.md`. Never a merge.
@@ -270,7 +300,8 @@ for the chat and the notifications: `gate` and `gateQuestions` [station], `qaPla
 `analysis`, `acceptance`, `diagnosis`, a step's `agent` (a failure told in Nuclear), `input`, `file` and `code`, the
 actor `diagnoser`, `interrupted[].stepId` and `previous[].step`; `specPath`, the spec's folder (a run without it:
 `specs/<id>`); `specs` (a run of several specs) and `repairs`, `repairing` (above); `setAside` (what the undos took back, kept);
-`retries`, `retrying` and `failing` (the retries, above). A run file of before the retries has none of them and is
+`retries`, `retrying` and `failing` (the retries, above); a station's `checksPassed` and a check's step `parallel`
+(the checks at the same time, above). A run file of before the retries has none of them and is
 retried in place the same way (a fixture test, `test_compat.nuc`). A run is read as the
 project's where its file is (`root` given on read): one made before the project's folder moved works there. A run of the TypeScript
 engine (`engine` 2) is only restarted (`restart`): its files are undone and today's stations run. A run again keeps

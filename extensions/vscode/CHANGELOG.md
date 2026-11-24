@@ -4,6 +4,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- **Nuclear Builder runs a station's checks at the same time**: four at once by default (`parallelChecks` in `.nuclear/builder.json`, 1 to 16), each its own agent's session, step, trace and cost, in its own copy of the project with its fixes merged back; the page shows each with its spinner and *Now · N checks at the same time*, the log in the order they ended (English and Spanish). Six checks of a stubbed second each: 6.1 s before, 2.0 s now.
+
 - ▷ Serve of a backend or web app becomes ■ Stop (in *Actions* and in the editor title) while its `nuclear run` runs, and ■ Stop ends it; ▷ Serve or `Ctrl+Alt+R` on a project that already serves shows its terminal instead of starting a second server.
 - Fix: switching between the Devices tool and the workspace deformed the editor: the device's locked group stayed standing when parked, the next device spanned the whole editor, that width was remembered as the user's and the device came back at half. Parked devices now close their groups before the code closes, the Devices tool keeps the device at its width, and only a width chosen beside code is remembered.
 - Fix: on a machine whose folder is a Nuclear workspace (its apps in subfolders) the Synapsis device was never registered with Flutter, and a run on it was refused; it is registered at the first run on a device.

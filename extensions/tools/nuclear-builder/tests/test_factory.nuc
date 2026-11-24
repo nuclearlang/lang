@@ -962,3 +962,141 @@ testTheEscalationReachesTheStationOnlyAfterTheNodesAttempts(tmpPath: Path, monke
   no: <string, any>[] = [{ "answer": "no" }]
   ended = Factory(loadRun(root2, "count-books")!, team, readLine(root2, "backend"), (q: <string, any>) => nextAnswer(no, q), (e: <string, any>) => null, { "preflight": false }).start()
   expect(ended["status"] == "failed" and ended["failing"] == null)
+
+// ---------- the checks of a station at the same time ----------
+
+// A fake Claude Code for the checks: the design work answers design.md (A, 1, B, 2, C); a check `probe-<n>` follows its entry
+// of `cfg.json` (`sleep` seconds, `fails` times FAILED first, `line`/`text`: a line of design.md it rewrites where it
+// runs) and notes in `log.jsonl` when it started and ended, where it ran and the budget it was given; with `spendAll` a
+// check spends all of it.
+checksClaude(home: Path, monkeypatch: any, cfg: <string, any>) void
+  bin = home.joinpath("bin")
+  bin.mkdir(parents = true, existOk = true)
+  home.joinpath("cfg.json").writeText(json.dumps(cfg))
+  tool = bin.joinpath("claude")
+  script = ["#!/usr/bin/env python3", "import json, os, sys, time", "args = sys.argv", "prompt = args[args.index('-p') + 1]", "home = os.environ['CHECKS_STUB']", "cfg = json.load(open(os.path.join(home, 'cfg.json')))", "budget = args[args.index('--max-budget-usd') + 1] if '--max-budget-usd' in args else ''", "said = '--- document: design.md ---' + chr(10) + chr(10).join(['A', '1', 'B', '2', 'C'])", "cost = 0.01", "if 'PASSED or FAILED' in prompt and 'probe-' in prompt:", "    k = 'probe-' + prompt.split('probe-')[1][0]", "    c = cfg.get(k, {})", "    t0 = time.time()", "    time.sleep(c.get('sleep', 0))", "    seen = os.path.join(home, k + '.seen')", "    n = open(seen).read().count('x') if os.path.exists(seen) else 0", "    open(seen, 'a').write('x')", "    if 'line' in c:", "        f = os.path.join(os.getcwd(), 'specs', 'count-books', 'design.md')", "        lines = open(f).read().split(chr(10))", "        lines[c['line']] = c['text']", "        open(f, 'w').write(chr(10).join(lines))", "    said = 'FAILED' + chr(10) + 'not yet' if n < c.get('fails', 0) else 'PASSED'", "    cost = float(budget) if cfg.get('spendAll') and budget else 0.01", "    with open(os.path.join(home, 'log.jsonl'), 'a') as out:", "        out.write(json.dumps({'check': k, 'start': t0, 'end': time.time(), 'budget': budget, 'cwd': os.getcwd()}) + chr(10))", "print(json.dumps({'type': 'result', 'result': said, 'total_cost_usd': cost, 'is_error': False}))"]
+  tool.writeText(script.join("\n") + "\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  monkeypatch.setenv("CHECKS_STUB", "${home}")
+
+// A design station of Claude Code's Architect with the checks `tasks` (each a probe), run in its own project under `home`.
+checksRun(home: Path, monkeypatch: any, tasks: <string, any>[], cfg: <string, any>, more: <string, any> = {}, budget: double = 5.0) <string, any>
+  line: <string, any> = { "stations": ["design"] }
+  for k, v in more
+    line[k] = v
+  root = lineProject(home, monkeypatch, [], line)
+  checksClaude(home, monkeypatch, cfg)
+  team = crew("Claude", ["architect"], ROSTERLESS)
+  team["budgetUsd"] = budget
+  memberFor(team, "architect")!["tasks"] = tasks
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).start()
+
+probes(n: int) <string, any>[]
+  (1..n + 1).map((i) => { "id": "p${i}", "title": "probe-${i}", "station": "design", "on": true } as <string, any>)
+
+checksLog(home: Path) <string, any>[]
+  file = home.joinpath("log.jsonl")
+  file.isFile() ? file.readText().split("\n").filter((l) => l.length > 0).map((l) => json.loads(l) as <string, any>) : ([] as <string, any>[])
+
+// The most checks that were running at one time, from their start and end.
+mostAtOnce(log: <string, any>[]) int
+  most = 0
+  for e in log
+    at: double = e["start"]!
+    most = Math.max(most, log.count((x) => (x["start"] as double) <= at and at < (x["end"] as double)))
+  most
+
+testTheChecksOfAStationRunAtTheSameTimeUpToTheBound(tmpPath: Path, monkeypatch: any) void
+  cfg: <string, any> = {}
+  for i in 1..7
+    cfg["probe-${i}"] = { "sleep": 1 }
+  times: double[] = []
+  for most in [1, 4]
+    home = tmpPath.joinpath("bound-${most}")
+    done = checksRun(home, monkeypatch, probes(6), cfg, { "parallelChecks": most })
+    expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+    log = checksLog(home)
+    expect(log.length == 6 and mostAtOnce(log) == most, "${most}: ${mostAtOnce(log)} at once")
+    took = log.map((e) => e["end"] as double).max()! - log.map((e) => e["start"] as double).min()!
+    times.add(took)
+    print("parallelChecks ${most}: 6 checks of 1 s took ${took.toFixed(2)} s")
+    checks = stepsOf(done).filter((s) => s["key"] == "check")
+    // each its own step, its own cost; at the same time, each worked in a copy of the project, never in it
+    expect(checks.length == 6 and checks.all((s) => s["status"] == "passed" and s["costUsd"] == 0.01))
+    expect(most == 1 ? log.all((e) => e["cwd"] == done["root"]) : log.all((e) => e["cwd"] != done["root"]))
+    expect(most == 1 or checks.all((s) => s["parallel"] == true))
+  expect(times[0] >= 6.0 and times[1] < 3.0, json.dumps(times))
+
+// A check that fails is retried alone: the node's retry and the user's retry in place run only the checks that did not
+// pass.
+testAFailedCheckIsRetriedAloneTheOthersKept(tmpPath: Path, monkeypatch: any) void
+  cfg: <string, any> = { "probe-2": { "fails": 1 } }
+  done = checksRun(tmpPath.joinpath("node"), monkeypatch, probes(3), cfg)
+  expect(done["status"] == "passed" and (done["retries"] as <string, any>[]).map((r) => "${r["level"]}") == ["node"], json.dumps(done["retries"]))
+  ran = checksLog(tmpPath.joinpath("node")).map((e) => "${e["check"]}")
+  expect(ran.count((k) => k == "probe-2") == 2 and ran.count((k) => k == "probe-1") == 1 and ran.count((k) => k == "probe-3") == 1, json.dumps(ran))
+  // no retry by itself: the run waits for the user; the user's retry runs again only the check that failed
+  home = tmpPath.joinpath("you")
+  waited = checksRun(home, monkeypatch, probes(3), cfg, { "retries": { "node": 0, "station": 0 } })
+  expect(waited["status"] == "waiting" and (waited["waiting"] as <string, any>)["kind"] == "retry", json.dumps(waited["waiting"]))
+  yes: <string, any>[] = [{ "answer": "yes" }]
+  root = "${waited["root"]}"
+  team = crew("Claude", ["architect"], ROSTERLESS)
+  memberFor(team, "architect")!["tasks"] = probes(3)
+  again = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(yes, q), (e: <string, any>) => null, { "preflight": false }).start()
+  expect(again["status"] == "passed")
+  told = checksLog(home).map((e) => "${e["check"]}")
+  expect(told == ["probe-1", "probe-2", "probe-3", "probe-2"] or (told.length == 4 and told.last == "probe-2" and told.count((k) => k == "probe-2") == 2), json.dumps(told))
+
+// The budget under the checks at the same time: each starts with its share of what is left, reserved, so together they
+// never spend more than the run has; with nothing left none starts.
+testTheChecksAtTheSameTimeNeverSpendMoreThanTheBudget(tmpPath: Path, monkeypatch: any) void
+  home = tmpPath.joinpath("share")
+  done = checksRun(home, monkeypatch, probes(6), { "spendAll": true }, {}, 0.08)
+  expect(done["status"] == "passed" and (done["costUsd"] as double) <= 0.08, json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"], s["costUsd"]])))
+  given = checksLog(home).map((e) => "${e["budget"]}".toDouble() ?? 1.0)
+  expect(given.length == 6 and given.all((b) => b <= 0.0117), json.dumps(given))
+  // the design spent the whole budget: no check starts, each says why, and the run waits for the user
+  spent = tmpPath.joinpath("spent")
+  waited = checksRun(spent, monkeypatch, probes(3), {}, {}, 0.01)
+  checks = stepsOf(waited).filter((s) => s["key"] == "check")
+  expect(checksLog(spent).isEmpty and checks.length == 3 and checks.all((s) => s["status"] == "failed" and "did not start" in "${s["summary"]}"), json.dumps(checks.map((s) => s["summary"])))
+  expect(waited["status"] == "waiting" and (waited["costUsd"] as double) <= 0.01)
+
+// The checks that must be ordered stay so: the station's commands first, one at a time; a check of `parallel = false`
+// after the others, in the project.
+testOrderedChecksStayOrdered(tmpPath: Path, monkeypatch: any) void
+  home = tmpPath.joinpath("ordered")
+  tasks = [...probes(3), { "id": "p4", "title": "probe-4", "station": "design", "on": true, "parallel": false }, { "id": "compiles", "title": "The project compiles", "station": "design", "on": true, "command": "check" }]
+  cfg: <string, any> = { "probe-1": { "sleep": 0.5 }, "probe-2": { "sleep": 0.5 }, "probe-3": { "sleep": 0.5 }, "probe-4": { "sleep": 0.1 } }
+  done = checksRun(home, monkeypatch, tasks, cfg)
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+  log = checksLog(home)
+  last = log.find((e) => e["check"] == "probe-4")!
+  expect(log.filter((e) => e["check"] != "probe-4").all((e) => (e["end"] as double) <= (last["start"] as double)) and last["cwd"] == done["root"])
+  steps = stepsOf(done)
+  command = steps.find((s) => s["title"] == "echo checked")!
+  expect(steps.filter((s) => s["parallel"] == true).all((s) => (s["started"] as int) >= (command["ended"] as int)))
+  expect(steps.filter((s) => s["parallel"] == true).length == 3 and mostAtOnce(log) == 3)
+
+// What the checks fix in their copies comes back to the project: edits of other lines merge; the same line changed by
+// two is set aside for the second, which runs again in the project. The journal tells them in the order they ended.
+testWhatTheChecksFixComesBackMergedAndAClashIsSetAside(tmpPath: Path, monkeypatch: any) void
+  home = tmpPath.joinpath("merge")
+  cfg: <string, any> = { "probe-1": { "sleep": 0.4, "line": 0, "text": "A1" }, "probe-2": { "sleep": 0.4, "line": 4, "text": "C2" }, "probe-3": { "sleep": 0.1, "line": 2, "text": "B3" }, "probe-4": { "sleep": 0.8, "line": 2, "text": "B4" } }
+  done = checksRun(home, monkeypatch, probes(4), cfg)
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["status"], s["summary"]])))
+  root = "${done["root"]}"
+  expect(Path(root, "specs", "count-books", "design.md").readText() == "A1\n1\nB4\n2\nC2\n", Path(root, "specs", "count-books", "design.md").readText())
+  kept: <string, any>[] = done["setAside"]!
+  expect(kept.length == 1 and kept[0]["files"] == ["specs/count-books/design.md"] and Path(root, "${kept[0]["folder"]}", "specs", "count-books", "design.md").readText() == "A\n1\nB4\n2\nC\n", json.dumps(kept))
+  ran = checksLog(home).map((e) => "${e["check"]}")
+  expect(ran.count((k) => k == "probe-4") == 2 and checksLog(home).last["cwd"] == root)
+  // each fix in the ledger as its own check's step
+  checks = stepsOf(done).filter((s) => s["key"] == "check")
+  writes = (done["writes"] as <string, any>[]).filter((w) => w["path"] == "specs/count-books/design.md").map((w) => "${w["step"]}")
+  expect(["probe-1", "probe-2", "probe-3"].all((p) => checks.any((s) => "${s["title"]}" == "Check: ${p}" and "${s["id"]}" in writes)))
+  journal: string = Path(root, ".nuclear", "builder", "runs", "count-books.md").readText()
+  expect(journal.indexOf("### Check: probe-3") < journal.indexOf("### Check: probe-1"))

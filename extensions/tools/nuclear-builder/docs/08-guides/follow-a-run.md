@@ -49,6 +49,14 @@ Nuclear icon tell you):
   amount and the providers. *Settings and integrations → Spending* can turn them off, unless you or the project
   (`"forceConfirm": true` in `.nuclear/builder.json`) force them.
 
+A station's checks by prompt (*Every fact names its source*, *Every acceptance criterion is covered by a piece*…) run
+at the same time, four at once by default (`nuclear-builder line set parallelChecks=<1 to 16>`; 1: one after
+another): the node shows each with its own spinner, the run's head *N checks at the same time*, and the log and the
+journal tell them in the order they ended. Each check works in its own copy of the project; what it fixes comes back
+to the project when it ends (a fix that clashes with another check's is set aside, named in the journal, and that
+check runs again on the project). The checks by command, and those that run the project, go one at a time. A check
+that fails is retried alone: the ones that passed stay passed.
+
 *Later*, or closing VS Code, leaves the run waiting; your answer later goes on from there (*Go on* asks again). In a
 terminal: `nuclear-builder run --resume <id>`.
 

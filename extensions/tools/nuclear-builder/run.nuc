@@ -194,7 +194,7 @@ journalMarkdown(run: <string, any>) string
     out.addAll(["", "## Acceptance criteria", "", ...acceptance.map((a) => "- [${a["met"] == true ? "x" : " "}] ${a["criterion"]} — ${a["evidence"]}")])
   for st in stations
     out.addAll(["", "## ${st["title"]} — ${st["status"]}"])
-    for s in st["steps"] as <string, any>[]
+    for s in inOrderTold(st["steps"] as <string, any>[])
       who = s["provider"] == null ? "${s["actor"]}" : "${s["role"]} · ${s["provider"]}${"${s["model"] ?? ""}".isEmpty ? "" : " ${s["model"]}"}"
       out.addAll(["", "### ${s["title"]} (${who}, ${s["status"]})", ""])
       if not "${s["summary"] ?? ""}".isEmpty
@@ -212,6 +212,21 @@ journalMarkdown(run: <string, any>) string
       if not "${s["log"] ?? ""}".isEmpty and s["status"] == "failed"
         out.addAll(["Log:", "", "```", clip("${s["log"]}", 40), "```", ""])
   out.join("\n").replaceAll(Regex(r"\n{3,}"), "\n\n") + "\n"
+
+// A station's steps as the journal tells them: in the order they started, but the checks that ran at the same time
+// (`parallel`) in the order they ended (those still running last).
+inOrderTold(steps: <string, any>[]) <string, any>[]
+  out: <string, any>[] = []
+  batch: <string, any>[] = []
+  for s in steps
+    if s["parallel"] == true
+      batch.add(s)
+      continue
+    out.addAll(batch.sortedBy((x) => (x["ended"] ?? 9_000_000_000_000) as int))
+    batch = []
+    out.add(s)
+  out.addAll(batch.sortedBy((x) => (x["ended"] ?? 9_000_000_000_000) as int))
+  out
 
 // The folder of the spec of a run id: the run's `specPath`, the spec's folder, else the flat layout.
 specHome(root: string, id: string) string

@@ -301,7 +301,7 @@ test('a spec is written in the shape the engine reads; a run whose process died 
 // ---------- the workbench: the specs' tree, the runs' accordion, the team's log, the chat ----------
 
 /** A run file as the page gets it, with only what the workbench reads. */
-const runOf = (id: string, status: string, specPath: string | undefined, stages: { id: string; status: string; role?: string; steps?: { id: string; title: string; status: string; actor: string; started?: number; summary?: string; trace?: { step: string; detail: string; kind?: string }[] }[] }[]) =>
+const runOf = (id: string, status: string, specPath: string | undefined, stages: { id: string; status: string; role?: string; steps?: { id: string; title: string; status: string; actor: string; started?: number; ended?: number; parallel?: boolean; summary?: string; trace?: { step: string; detail: string; kind?: string }[] }[] }[]) =>
   ({ id, status, created: 1, specPath, spec: { title: id.replace(/-/g, ' '), useCase: 'feature' }, stages: stages.map((s) => ({ title: s.id, steps: [], ...s })) });
 
 test('the specs are a tree by business component and layer; the whole project and the unsorted ones last; a spec only a run names is in it', () => {
@@ -343,6 +343,24 @@ test('a run is an accordion of its stations and their steps, and the log tells w
   assert.deepEqual(log.map((e) => [e.actor, e.kind, e.text]), [['analyst', 'step', 'Read the spec'], ['analyst', 'trace', 'read'], ['developer', 'step', 'Write Loans'], ['developer', 'tool', 'nuclear_check']]);
   assert.equal(log[0].detail, 'three criteria');
   assert.equal(teamLog(r, 1).length, 1);
+});
+
+test('a station\'s checks at the same time: each its own row, all working at once, the log in the order they ended', async () => {
+  const r = runOf('loans', 'running', undefined, [
+    { id: 'design', status: 'running', role: 'architect', steps: [
+      { id: 'design-1', title: 'Architect: Design', status: 'passed', actor: 'architect', started: 10, ended: 20 },
+      { id: 'design-2', title: 'Check: one', status: 'passed', actor: 'architect', started: 21, ended: 90, parallel: true },
+      { id: 'design-3', title: 'Check: two', status: 'passed', actor: 'architect', started: 22, ended: 40, parallel: true },
+      { id: 'design-4', title: 'Check: three', status: 'running', actor: 'architect', started: 23, parallel: true },
+      { id: 'design-5', title: 'Check: four', status: 'running', actor: 'architect', started: 24, parallel: true },
+    ] },
+  ]);
+  const o = runOutline(r);
+  assert.equal(o.working, 2);
+  assert.deepEqual(o.stations[0].steps.map((x) => x.status), ['passed', 'passed', 'passed', 'running', 'running']);
+  assert.deepEqual(teamLog(r).map((e) => e.text), ['Architect: Design', 'Check: two', 'Check: one', 'Check: three', 'Check: four']);
+  const { BUILDER } = await import('../src/l10n');
+  assert.equal((BUILDER.es as Record<string, string>)['prog.together'], '{0} comprobaciones a la vez');
 });
 
 test('the page\'s helpers are inlined self-contained: their source alone builds the tree', () => {

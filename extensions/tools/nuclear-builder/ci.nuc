@@ -21,9 +21,13 @@ defaultCommands(platform: string) <string, string[]>
 // failure told; `station`, the diagnosis and one more attempt of a station that failed. Then the run waits for the user.
 RETRIES: <string, int> = { "process": 2, "node": 1, "station": 1 }
 
+// How many checks of a station its role runs at the same time (`.nuclear/builder.json` "parallelChecks", 1 to 16; 1:
+// one after another): each agent's session takes minutes, and the checks of a station judge the same work apart.
+PARALLEL_CHECKS = 4
+
 // The line of a project: the defaults under the project's `.nuclear/builder.json` (shared with CI).
 readLine(root: string, platform: string) <string, any>
-  line: <string, any> = { "commands": defaultCommands(platform), "branches": ["main", "feature/**"], "gates": ["analysis", "design", "delivery"], "stations": STATIONS, "forceConfirm": false, "minFreeMb": 500, "commandTimeoutMs": 1_200_000, "callTimeoutMs": 900_000, "stallSeconds": 90, "mcpCommand": "nuclear-mcp", "prices": {} as <string, any>, "retries": dict(RETRIES) }
+  line: <string, any> = { "commands": defaultCommands(platform), "branches": ["main", "feature/**"], "gates": ["analysis", "design", "delivery"], "stations": STATIONS, "forceConfirm": false, "minFreeMb": 500, "commandTimeoutMs": 1_200_000, "callTimeoutMs": 900_000, "stallSeconds": 90, "mcpCommand": "nuclear-mcp", "prices": {} as <string, any>, "retries": dict(RETRIES), "parallelChecks": PARALLEL_CHECKS }
   file = Path(root, ".nuclear", "builder.json")
   if file.isFile()
     own = json.loads(file.readText(encoding = "utf-8"))
@@ -93,7 +97,7 @@ ciFile(provider: string, line: <string, any>, platform: string) <string, string>
 // ---------- the line's file: read and set ----------
 
 // The keys of `.nuclear/builder.json` a command may set, and what each holds.
-LINE_KEYS: <string, string> = { "team": "the id of the team that runs the project's specs", "stations": "the stations a run goes through, in order (a subset of analysis, design, tests, code, quality, delivery)", "gates": "the stations a run stops after for the user's approval", "branches": "the branches the exported CI runs on", "commands": "the project's commands by name (check, build, test, security, artifacts, seed, integration, deploy): lists of shell commands", "forceConfirm": "true: the spending is always confirmed twice by the user, never by --confirm-spending", "minFreeMb": "the free disk a run needs", "commandTimeoutMs": "how long a command may take", "callTimeoutMs": "how long a provider's call may take", "stallSeconds": "how long a local model may say nothing", "mcpCommand": "the Nuclear MCP server's command", "prices": "the USD per million tokens of a model: { \"<provider>/<model>\": [input, output] }", "developerUrl": "the Nuclear Developer's address", "ollamaUrl": "Ollama's address", "retries": "how many times a level is tried again by itself before the next: { \"process\": 2, \"node\": 1, \"station\": 1 }" }
+LINE_KEYS: <string, string> = { "team": "the id of the team that runs the project's specs", "stations": "the stations a run goes through, in order (a subset of analysis, design, tests, code, quality, delivery)", "gates": "the stations a run stops after for the user's approval", "branches": "the branches the exported CI runs on", "commands": "the project's commands by name (check, build, test, security, artifacts, seed, integration, deploy): lists of shell commands", "forceConfirm": "true: the spending is always confirmed twice by the user, never by --confirm-spending", "minFreeMb": "the free disk a run needs", "commandTimeoutMs": "how long a command may take", "callTimeoutMs": "how long a provider's call may take", "stallSeconds": "how long a local model may say nothing", "mcpCommand": "the Nuclear MCP server's command", "prices": "the USD per million tokens of a model: { \"<provider>/<model>\": [input, output] }", "developerUrl": "the Nuclear Developer's address", "ollamaUrl": "Ollama's address", "retries": "how many times a level is tried again by itself before the next: { \"process\": 2, \"node\": 1, \"station\": 1 }", "parallelChecks": "how many checks of a station its role runs at the same time (1 to 16; 1: one after another)" }
 
 // A value of the line, checked before it is kept: a wrong one is said, never written.
 validLineValue(key: string, value: any) any
@@ -116,6 +120,8 @@ validLineValue(key: string, value: any) any
     throw ValueError("${key} is a whole number of 0 or more")
   if key == "retries" and not (isinstance(value, dict) and (value as <string, any>).keys.all((k) => k in RETRIES) and (value as <string, any>).values.all((n) => isinstance(n, int) and not isinstance(n, bool) and (n as int) >= 0 and (n as int) <= 5))
     throw ValueError("retries is { ${RETRIES.keys.map((k) => "\"${k}\"").join(", ")} } with whole numbers from 0 to 5")
+  if key == "parallelChecks" and not (isinstance(value, int) and not isinstance(value, bool) and (value as int) >= 1 and (value as int) <= 16)
+    throw ValueError("parallelChecks is a whole number from 1 to 16")
   if key in ["mcpCommand", "developerUrl", "ollamaUrl"] and not isinstance(value, str)
     throw ValueError("${key} is a text")
   if key == "prices" and not isinstance(value, dict)

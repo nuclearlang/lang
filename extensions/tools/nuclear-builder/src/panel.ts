@@ -1632,12 +1632,15 @@ function progress(r) {
   }).join('');
   const now = r.stages.find((s) => s.status === 'running' || s.status === 'waiting') ?? null;
   const step = now ? [...now.steps].reverse().find((x) => x.status === 'running') ?? [...now.steps].reverse().find((x) => x.status !== 'pending') : null;
+  // a station's checks at the same time: one line each, each with its spinner
+  const working = now ? now.steps.filter((x) => x.status === 'running') : [];
   const bad = failedStep(r);
   const next = r.stages.find((s) => s.status === 'pending');
   let doing;
   if (r.waiting) doing = '<div class="pnow wait"><b>❗ ' + esc(t('prog.waits')) + '</b><p>' + esc(r.waiting.question ?? '') + '</p><button class="primary" data-act="showAsk">' + esc(t('prog.answer')) + '</button></div>';
   else if (r.status === 'passed') doing = '<div class="pnow ok"><b>✓ ' + esc(t('prog.done')) + '</b></div>';
   else if (bad) doing = '<div class="pnow bad"><b>✕ ' + esc(t('prog.failed')) + ' · ' + esc(T['station.' + bad.st.id] ?? bad.st.title) + '</b><p>' + esc(bad.x.summary || W.stepTitle(bad.x, T)) + '</p></div>';
+  else if (now && working.length > 1) doing = '<div class="pnow"><b>' + esc(t('prog.now')) + ' · ' + esc(nameOf(working[0].actor)) + ' · ' + esc(t('prog.together', String(working.length))) + '</b>' + working.map((x) => '<p><span class="dot st-running"></span> ' + esc(W.stepTitle(x, T)) + '</p>').join('') + '</div>';
   else if (now && step) doing = '<div class="pnow"><b>' + esc(t('prog.now')) + ' · ' + esc(nameOf(step.actor)) + '</b><p>' + esc(W.stepTitle(step, T)) + (step.summary ? ' — ' + esc(step.summary) : '') + '</p></div>';
   else doing = '<div class="pnow"><b>' + esc(live(r) ? t('prog.next', next ? T['station.' + next.id] ?? next.title : '') : t('prog.stopped')) + '</b></div>';
   const sp = r.spec ?? {};

@@ -28,6 +28,8 @@ title_es = "Los casos límite de cada acción nueva responden como se planificó
 station = "quality"
 on = true
 by = "role"
+# it runs the project (its commands, its build): in the project, after the station's other checks, alone
+parallel = false
 prompt = "Run each edge case of specs/{{id}}/test-plan.md (the skill find-the-edge-cases) and record the input, the answer and whether it is the planned one."
 
 [[check]]
