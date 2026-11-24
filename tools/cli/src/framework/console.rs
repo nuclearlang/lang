@@ -2,7 +2,11 @@
 //! `nuclear run` and by the editor's devices), as what it is doing now (`state`) and its lines by kind: each request
 //! of a backend (`<time> <METHOD> <path> <status> <ms>ms`), each error with its stack (the backend's
 //! `<time> ERROR <METHOD> <path> <cause>` and the indented lines under it), the steps, the reloads, the app's own
-//! output. The editor's Monitor and the agents (MCP `project_monitor`) read the same lines.
+//! output. A browser's app (the editor's devices write its console: spec 015 phase 2) has the same lines:
+//! each request with its address (`GET http://127.0.0.1:8000/films 200 12ms`), a request that never got an answer
+//! (`ERROR GET http://… net::ERR_CONNECTION_REFUSED`), an error of the page (`ERROR Uncaught TypeError: …` and its
+//! stack), its `console.log` as output. The editor's Monitor and the agents (MCP `project_monitor`) read the same
+//! lines.
 
 use serde_json::{Value, json};
 use std::net::{TcpStream, ToSocketAddrs};
@@ -53,7 +57,7 @@ fn request(text: &str) -> Option<Value> {
     // whole milliseconds stay whole: `3ms` is 3, not 3.0
     let ms = if ms.fract() == 0.0 && ms < 1e15 { json!(ms as u64) } else { json!(ms) };
     let status: u16 = status.parse().ok().filter(|s| (100..600).contains(s))?;
-    (METHODS.contains(&method) && path.starts_with('/'))
+    (METHODS.contains(&method) && is_path(path))
         .then(|| json!({ "kind": "request", "method": method, "path": path, "status": status, "ms": ms }))
 }
 
@@ -62,14 +66,30 @@ fn cause(text: &str) -> Option<Value> {
     let rest = split_time(text).1.strip_prefix("ERROR ")?;
     let mut words = rest.splitn(3, ' ');
     let (method, path, why) = (words.next()?, words.next()?, words.next().unwrap_or_default());
-    (METHODS.contains(&method) && path.starts_with('/'))
+    (METHODS.contains(&method) && is_path(path))
         .then(|| json!({ "kind": "error", "method": method, "path": path, "text": why, "stack": [] }))
 }
 
-/// An error that is not a request's: a build's, Flutter's, a crash's.
+/// A request's target: a server's path, or the address a browser's app called.
+fn is_path(p: &str) -> bool {
+    p.starts_with('/') || p.starts_with("http://") || p.starts_with("https://")
+}
+
+/// A frame of a stack printed without indentation: Dart's (`package:app/x.dart 29:9  name`, `dart-sdk/...`, `#0 ...`).
+fn is_frame(text: &str) -> bool {
+    let t = text.trim_start();
+    let dart = ["package:", "dart-sdk/", "dart:", "lib/", "packages/", "org-dartlang-"].iter().any(|p| t.starts_with(p))
+        && t.split_whitespace().nth(1).is_some_and(|w| w.split(':').all(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit())));
+    dart || (t.starts_with('#') && t[1..].starts_with(|c: char| c.is_ascii_digit()) && t.contains(" ("))
+}
+
+/// An error that is not a request's: a build's, Flutter's, a crash's, a page's (`DartError: …`, `TypeError: …`).
 fn looks_failed(text: &str) -> bool {
     let t = text.trim_start();
-    t.starts_with("error")
+    let first = t.split_whitespace().next().unwrap_or_default();
+    first.ends_with("Error:")
+        || first.ends_with("Exception:")
+        || t.starts_with("error")
         || t.starts_with("Error")
         || t.starts_with("ERROR")
         || t.starts_with("Traceback")
@@ -126,8 +146,13 @@ pub fn session(text: &str, now: SystemTime, answers: &dyn Fn(&str) -> bool) -> V
         } else if let Some(c) = cause(text) {
             errors += 1;
             Some(c)
-        } else if text.starts_with(char::is_whitespace)
-            && let Some(last) = lines.last_mut().filter(|l| l["kind"] == "error")
+        } else if let Some(last) = lines.last_mut().filter(|l| {
+            // a frame of the error above, or the last line of a Python traceback (`KeyError: 'x'`)
+            l["kind"] == "error"
+                && (text.starts_with(char::is_whitespace)
+                    || is_frame(text)
+                    || (l["text"].as_str().is_some_and(|t| t.starts_with("Traceback")) && looks_failed(text)))
+        })
         {
             // a line of the error's stack
             if let Some(stack) = last["stack"].as_array_mut() {
@@ -136,7 +161,8 @@ pub fn session(text: &str, now: SystemTime, answers: &dyn Fn(&str) -> bool) -> V
             None
         } else if looks_failed(text) {
             errors += 1;
-            Some(json!({ "kind": "error", "text": text.trim(), "stack": [] }))
+            let t = text.trim();
+            Some(json!({ "kind": "error", "text": t.strip_prefix("ERROR ").unwrap_or(t), "stack": [] }))
         } else if reloaded(text) {
             Some(json!({ "kind": "reload", "text": text }))
         } else {
@@ -294,6 +320,39 @@ mod tests {
         // only the last run counts
         let two = format!("{failed}{LOG}");
         assert_eq!(session(&two, at("2026-11-23T20:00:06.000Z"), &|_| true)["why"], Value::Null);
+    }
+
+    #[test]
+    fn a_browsers_requests_errors_and_console_are_read_as_a_servers() {
+        let log = "\
+2026-11-23T20:00:00.000Z --- launch on the web device
+2026-11-23T20:00:00.000Z step: live
+2026-11-23T20:00:01.000Z GET http://127.0.0.1:8000/films 200 12ms
+2026-11-23T20:00:02.000Z ERROR GET http://127.0.0.1:8001/films net::ERR_CONNECTION_REFUSED
+2026-11-23T20:00:03.000Z films loaded 22
+2026-11-23T20:00:04.000Z ERROR Uncaught TypeError: Cannot read properties of undefined (reading 'title')
+2026-11-23T20:00:04.000Z     at FilmCard (src/components/film_card.ts:12:5)
+2026-11-23T20:00:05.000Z DartError: the people list failed
+2026-11-23T20:00:05.000Z dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
+2026-11-23T20:00:05.000Z package:app/components/people/domain/usecases/list_people.dart 29:9               <fn>
+2026-11-23T20:00:05.000Z films asked again
+";
+        let c = session(log, at("2026-11-23T20:00:05.000Z"), &|_| true);
+        assert_eq!((c["requests"].as_u64(), c["errors"].as_u64()), (Some(1), Some(3)));
+        let l = c["lines"].as_array().unwrap();
+        assert_eq!((l[1]["kind"].as_str(), l[1]["path"].as_str(), l[1]["status"].as_u64()), (Some("request"), Some("http://127.0.0.1:8000/films"), Some(200)));
+        assert_eq!((l[2]["kind"].as_str(), l[2]["text"].as_str()), (Some("error"), Some("net::ERR_CONNECTION_REFUSED")));
+        assert_eq!(l[3]["kind"], "output");
+        assert_eq!(l[4]["text"], "Uncaught TypeError: Cannot read properties of undefined (reading 'title')");
+        assert_eq!(l[4]["stack"].as_array().unwrap().len(), 1);
+        // Flutter's web errors: their frames are not indented
+        assert_eq!((l[5]["kind"].as_str(), l[5]["text"].as_str()), (Some("error"), Some("DartError: the people list failed")));
+        assert_eq!(l[5]["stack"].as_array().unwrap().len(), 2);
+        assert_eq!(l[6]["kind"], "output");
+        // a Python traceback stays one error, its last line in it
+        let py = "2026-11-23T20:00:00.000Z Traceback (most recent call last):\n2026-11-23T20:00:00.000Z   File \"a.py\", line 1, in <module>\n2026-11-23T20:00:00.000Z KeyError: 'x'\n";
+        let c = session(py, at("2026-11-23T20:00:01.000Z"), &|_| true);
+        assert_eq!((c["errors"].as_u64(), c["lines"][0]["stack"].as_array().unwrap().len()), (Some(1), 2));
     }
 
     #[test]

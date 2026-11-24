@@ -11,6 +11,8 @@ import { isInstalled, readCard } from '../../../vscode/src/card';
 import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
 import { WEB_DEVICE } from './l10n';
 import { appendLog, Launch, logFile, reason, WEB_STALL_MS, WebStep } from './launch-log';
+import { follow } from './browser-log';
+import { allowOrigin, isCollector } from '../../nuclear-monitor/src/collector';
 import { ConsoleEntry, NetworkEntry, WEB_PRESETS, WebSession, WebView } from './web-session';
 
 const STATE_KEY = 'nuclear.webDevice.view';
@@ -110,6 +112,12 @@ export class WebDevicePanel {
         else launch.out(line);
       },
       step: (step) => launch.to(step),
+      // the page's console, requests and errors to the project's log (the Monitor's console), and its reports
+      // to the editor's collector
+      page: (cdp, origin) => {
+        allowOrigin(this.app.root, origin);
+        follow(cdp, () => origin, (lines) => appendLog(this.app.root, lines.join('\n')), { console: true, skip: isCollector });
+      },
     }));
     try {
       await s.start(this.view, this.density);
@@ -136,6 +144,8 @@ export class WebDevicePanel {
   }
 
   stop(disposed: boolean): void {
+    // a page that was live ends its run in the log: the Monitor shows it stopped
+    if (this.session && !this.session.stopped && this.launch?.step === 'live') appendLog(this.app.root, 'exited: 0');
     this.launch?.end();
     this.launch = undefined;
     if (this.debugging) void vscode.debug.stopDebugging(this.debugging);

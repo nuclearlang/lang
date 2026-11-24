@@ -45,7 +45,7 @@ The extensions talk to the server only through LSP and these requests.
 | `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |
 | `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |
 | `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |
-| `<output>/<sources>/nuclear/monitor.<ext>` (`Manifest.monitor`, `--monitor`) | `project::build`, from the dialect's `monitor_runtime` | the generated files that measure; it writes `<project>/.nuclear/monitor/report.json` (`nuclear monitor`, the editors, the MCP server) |
+| `<output>/<sources>/nuclear/monitor.<ext>` (`Manifest.monitor`, `--monitor`; `monitor_web.<ext>` from `monitor_runtime_web`) | `project::build`, from the dialect's `monitor_runtime` | the generated files that measure; it writes `<project>/.nuclear/monitor/report.json`, or posts it to the collector of `Manifest.monitor_url` from a browser (`nuclear monitor`, the editors, the MCP server) |
 
 The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).
 The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.

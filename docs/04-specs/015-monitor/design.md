@@ -1,7 +1,7 @@
 ---
 status: in-progress
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-24
 related: [requirements.md, tasks.md]
 ---
 # Spec 015: Nuclear Monitor — Design
@@ -20,7 +20,9 @@ per call and runs with the app at full speed. The debugger keeps its job (ADR-00
 | What a template knows | the compiler, generic | `monitor` (flag) and `site` (`label`, `path`, `line`, `component`, `kind`) in the `function` and `method` templates |
 | The runtime | the dialect's `monitor_runtime` template | written once to `nuclear/monitor.<ext>` of a project (like the `Result` runtime), inline in a file built alone; imported as `NuclearMonitor` by each file that measures |
 | The wrapper | the dialect's `function` / `method` templates | `{{#monitor}}...{{/monitor}}`: TypeScript and Dart wrap the body in `try/finally`, Python writes the decorator `@NuclearMonitor.wrap(...)` |
-| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else `.nuclear/monitor/report.json` of the working folder |
+| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else the collector the build was given (an app without the project's files), else `.nuclear/monitor/report.json` of the working folder |
+| The collector | the editor's Monitor; `nuclear run --monitor` without the editor | §8: receives the report of an app in a browser or on a phone and writes it to the project |
+| The browser's part | the dialect's optional `monitor_runtime_web` | written beside the runtime to `nuclear/monitor_web` where the target cannot import the browser's API everywhere (Dart: a conditional import) |
 | The switch kept | `.nuclear/monitor/on` | `nuclear monitor --on` / `--off`: every build, watch and run of the project measured until it is removed |
 | The tree as text | `nuclear monitor` | reads the report, prints the tree and the hot spots |
 | The view | `extensions/tools/nuclear-monitor/` | the VS Code panel: the console of the last run (`console` of `nuclear monitor --json`, read from the run log) and the measurements |
@@ -39,6 +41,7 @@ async flow where the target can do it cheaply:
 | Browser | a variable (concurrent async calls may land on another parent) | `performance.now()` | `performance.memory` (Chromium) | `fetch`, `XMLHttpRequest.open`, `WebSocket` |
 | Python | `contextvars.ContextVar` | `time.perf_counter_ns()` | `tracemalloc` (slows allocation: documented in the report) | `socket.socket.connect` |
 | Dart | a variable (as the browser) | `Stopwatch` | `ProcessInfo.currentRss` | `IOOverrides.socketConnect` / `socketStartConnect` |
+| Dart in a browser | a variable | `Stopwatch` | `performance.memory` (Chromium) | `fetch`, `XMLHttpRequest.open` |
 
 Memory is the heap grown during the calls (net: garbage not yet collected counts); a connection is a new socket
 (a pooled connection reused counts once).
@@ -83,3 +86,18 @@ log (`extensions/tools/nuclear-monitor/docs/02-architecture/overview.md`).
 `project_monitor` calls it; `nuclear monitor
 --remember` stores the hot spots as a card of the project in the Smart Graph (`graph_remember`), so the next agent
 knows where the app was slow and on which `.nuc` lines.
+
+## 8. An app without the project's files
+
+An app in a browser (a web app; a mobile app on the Synapsis device, which is Flutter web) or on a phone cannot write
+`report.json`. Its runtime posts the report every two seconds, with the page's own `fetch` (not counted), to a
+collector at `http://127.0.0.1:<port>/<token>/<key>`: `NUCLEAR_MONITOR_URL` (`http://127.0.0.1:<port>/<token>`,
+given by the editor to every process of its window, or by `nuclear run --monitor` that starts one) plus the
+project's key (FNV-1a, 64 bits, of the project's canonical folder, in hex), written by a measured build into the
+runtime (`Manifest.monitor_url`, the template variable `url`; an address that is not of 127.0.0.1 or holds a
+character a string would need to escape is not written). The collector takes a POST only with its token, for a
+project it knows by its key, and from the app's origin (a device's page, or the project's port of the registry on
+`127.0.0.1`, `localhost` or `[::1]`; a request without an origin is not a browser's: a phone's app); CORS answers that
+origin only; a body that is not a report (`format`, `roots`) is 400, over 8 MB 413; the report is written whole to
+`<project>/.nuclear/monitor/report.json`. The console of such an app is its page's: the devices write its requests,
+prints and errors into the run log (`extensions/tools/nuclear-monitor/docs/02-architecture/overview.md`).

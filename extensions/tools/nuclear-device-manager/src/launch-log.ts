@@ -53,7 +53,9 @@ export function appendLog(root: string | undefined, text: string): void {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const at = new Date().toISOString();
-    const lines = text.replace(/\r/g, '').split('\n').filter((l) => l.trim() !== '');
+    // without colors: a dev server colors its output even through a pipe
+    // eslint-disable-next-line no-control-regex
+    const lines = text.replace(/\r/g, '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').split('\n').filter((l) => l.trim() !== '');
     if (!lines.length) return;
     fs.appendFileSync(file, lines.map((l) => `${at} ${l}`).join('\n') + '\n');
     if (fs.statSync(file).size > 1 << 20) {

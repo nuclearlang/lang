@@ -723,6 +723,7 @@ impl Dialect {
             "project_import",
             "monitor_body",
             "monitor_runtime",
+            "monitor_runtime_web",
             "result_runtime",
             "result_ok",
             "result_err",

@@ -86,14 +86,37 @@ test('each state has its card, in English and Spanish, with no path or command i
   assert.match(parts(cases[1][0], ctx, TEXTS.en).details, /nuclear run --monitor/);
 });
 
-test('the header picks among the workspace apps; a phone app cannot be measured yet', () => {
+test('the header picks among the workspace apps; a phone or a browser app is measured too', () => {
   const p = parts(live, ctx, TEXTS.en);
   assert.match(p.bar, /<select id="project"><option value="\/home\/user\/ghibli\/api" selected>api<\/option><option value="\/home\/user\/ghibli\/app">app/);
-  const mobile = parts(withConsole({ state: 'running', lines: [{ kind: 'output', at: 'a', text: 'Flutter run key commands.' }] }), { ...ctx, platform: 'mobile', name: 'app' }, TEXTS.en);
+  const mobile = parts(withConsole({ state: 'running', lines: [{ kind: 'output', at: 'a', text: 'Flutter run key commands.' }] }, true), { ...ctx, platform: 'mobile', name: 'app' }, TEXTS.en);
   assert.equal(mobile.state, 'data');
-  assert.match(mobile.bar, /id="measuring" disabled/);
-  assert.match(mobile.measure, /cannot be measured yet/);
+  assert.match(mobile.bar, /id="measuring" checked>/);
+  assert.doesNotMatch(mobile.bar, /disabled/);
+  assert.match(mobile.measure, /on its device/);
+  assert.match(parts(withConsole({ state: 'running' }, true), { ...ctx, platform: 'web', name: 'web' }, TEXTS.es).measure, /en su dispositivo/);
   assert.match(mobile.console, /Flutter run key commands/);
+  // a browser's console: its requests with their address, a request with no answer, an error with its stack
+  const web = parts(
+    withConsole({
+      state: 'running',
+      requests: 1,
+      errors: 2,
+      lines: [
+        { kind: 'request', at: 'a', method: 'GET', path: 'http://127.0.0.1:8000/films', status: 200, ms: 12 },
+        { kind: 'error', at: 'b', method: 'GET', path: 'http://127.0.0.1:8001/films', text: 'net::ERR_CONNECTION_REFUSED', stack: [] },
+        { kind: 'output', at: 'c', text: 'films loaded 22' },
+        { kind: 'error', at: 'd', text: 'Uncaught TypeError: x is undefined', stack: ['    at FilmCard (src/components/film_card.ts:12:5)'] },
+      ],
+    }),
+    { ...ctx, platform: 'web', name: 'web' },
+    TEXTS.en,
+  );
+  assert.equal(web.state, 'data');
+  assert.match(web.console, /http:\/\/127\.0\.0\.1:8000\/films/);
+  assert.match(web.console, /net::ERR_CONNECTION_REFUSED/);
+  assert.match(web.console, /films loaded 22/);
+  assert.match(web.console, /film_card\.ts:12:5/);
 });
 
 test('an old report (0.96, without a console) still draws its measurements', () => {

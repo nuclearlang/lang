@@ -254,8 +254,10 @@ The templates of `Result<E, T>` (nuclear-base.md §3.2) are optional: `result_ru
 The templates of the monitor (`--monitor`) are optional too: `monitor_body` (the body of a function or method
 measured: `body`, `label` the Nuclear name, `Owner.name` for a method, `path` its `.nuc` file, `line`, `async`)
 and `monitor_runtime` (the class `NuclearMonitor`, written once to `nuclear/monitor` of a project built with
-`--monitor`; `app` the project's name). A dialect without them builds without measuring. A generator gets no
-`monitor_body`. Example: `nuclearlang/dialects/typescript/templates/monitor.tpl`.
+`--monitor`; `app` the project's name, `url` the collector an app without the project's files posts its report to,
+empty without one). The optional `monitor_runtime_web` (the same variables) is written beside it to
+`nuclear/monitor_web`: the part a browser runs, for a target that can import it only there. A dialect without them
+builds without measuring. A generator gets no `monitor_body`. Example: `nuclearlang/dialects/typescript/templates/monitor.tpl`.
 
 ## 5. Shortcuts: code compression
 

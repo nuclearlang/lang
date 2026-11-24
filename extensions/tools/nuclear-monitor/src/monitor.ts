@@ -185,7 +185,7 @@ export interface Texts {
   endedBad: string;
   measuring: string;
   measureOff: string;
-  measureNotHere: string;
+  measuringDevice: string;
   nothing: string;
   detailRows: Record<'project' | 'log' | 'report' | 'address' | 'why' | 'message', string>;
 }
@@ -232,7 +232,7 @@ export const TEXTS: Record<'en' | 'es', Texts> = {
     endedBad: 'Stopped with an error',
     measuring: 'Measuring: use the app, and each function it runs appears here with its time.',
     measureOff: 'Turn on “Measure the app” and use it: each function it runs appears here with its time, calls, connections and memory.',
-    measureNotHere: 'An app on a phone or in a browser cannot be measured yet. Its console works.',
+    measuringDevice: 'Measuring: use the app on its device, and each function it runs appears here within two seconds. An app on a real phone or an emulator does not send its measurements yet.',
     nothing: 'Nothing here yet.',
     detailRows: { project: 'Project folder', log: 'Run log', report: 'Measurements file', address: 'Address', why: 'Reason', message: 'Message' },
   },
@@ -277,7 +277,7 @@ export const TEXTS: Record<'en' | 'es', Texts> = {
     endedBad: 'Detenida con un error',
     measuring: 'Midiendo: usa la app, y cada función que ejecuta aparece aquí con su tiempo.',
     measureOff: 'Activa «Medir la app» y úsala: cada función que ejecuta aparece aquí con su tiempo, llamadas, conexiones y memoria.',
-    measureNotHere: 'Una app en un teléfono o en un navegador aún no se puede medir. Su consola funciona.',
+    measuringDevice: 'Midiendo: usa la app en su dispositivo, y cada función que ejecuta aparece aquí en dos segundos. Una app en un teléfono real o en un emulador aún no envía sus mediciones.',
     nothing: 'Aún no hay nada.',
     detailRows: { project: 'Carpeta del proyecto', log: 'Registro de ejecución', report: 'Archivo de mediciones', address: 'Dirección', why: 'Motivo', message: 'Mensaje' },
   },
@@ -343,8 +343,8 @@ export function stateOf(view: MonitorView | string | undefined, platform: string
   return c.requests === 0 && c.errors === 0 && platform !== 'mobile' ? 'quiet' : 'data';
 }
 
-/** A phone's or a browser's app writes no measurements yet (spec 015 phase 2). */
-export const measurable = (platform: string | null): boolean => platform !== 'mobile' && platform !== 'web';
+/** An app in a browser or on a phone: its measurements come through the editor's collector (spec 015 phase 2). */
+const onDevice = (platform: string | null): boolean => platform === 'mobile' || platform === 'web';
 
 /** The key of each line, stable while the log grows: its time and its place among the lines of that time. */
 export function lineKeys(lines: ConsoleLine[]): string[] {
@@ -460,8 +460,8 @@ export function consolePart(view: MonitorView | string | undefined, t: Texts): s
 export function measurePart(view: MonitorView | string | undefined, platform: string | null, t: Texts): string {
   if (typeof view !== 'object') return `<p class="hint">${escape(t.nothing)}</p>`;
   if (!view.roots.length) {
-    const text = !measurable(platform) ? t.measureNotHere : view.measuring ? t.measuring : t.measureOff;
-    return `<p class="hint">${view.measuring && measurable(platform) ? '<span class="pulse"></span>' : ''}${escape(text)}</p>`;
+    const text = view.measuring ? (onDevice(platform) ? t.measuringDevice : t.measuring) : t.measureOff;
+    return `<p class="hint">${view.measuring ? '<span class="pulse"></span>' : ''}${escape(text)}</p>`;
   }
   const scale = Math.max(0, ...view.roots.map((r) => r.total_ms));
   const spots = view.hot_spots.length
@@ -500,10 +500,9 @@ export function barPart(view: MonitorView | string | undefined, ctx: PageContext
       ? `<label class="pick"><span>${escape(t.project)}</span><select id="project">${ctx.projects.map((p) => `<option value="${escape(p.root)}"${p.root === ctx.root ? ' selected' : ''}>${escape(p.name)}</option>`).join('')}</select></label>`
       : `<span class="proj">${escape(ctx.name)}</span>`
     : '';
-  const can = measurable(ctx?.platform ?? null);
   const measuring = typeof view === 'object' && !!view.measuring;
   const toggle = ctx
-    ? `<label class="toggle${can ? '' : ' off'}" title="${escape(can ? t.measureTip : t.measureNotHere)}"><input type="checkbox" id="measuring"${measuring && can ? ' checked' : ''}${can ? '' : ' disabled'}><span class="track"></span>${escape(t.measure)}</label>`
+    ? `<label class="toggle" title="${escape(t.measureTip)}"><input type="checkbox" id="measuring"${measuring ? ' checked' : ''}><span class="track"></span>${escape(t.measure)}</label>`
     : '';
   return `${pick}${pill}<span class="spacer"></span>${toggle}`;
 }

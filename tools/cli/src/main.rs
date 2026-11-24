@@ -235,8 +235,29 @@ pub(crate) fn monitored(root: &std::path::Path, mut manifest: nuclear_transpile:
     if std::env::var_os("NUCLEAR_MONITOR").is_some() || root.join(".nuclear/monitor/on").is_file() {
         manifest.monitor = true;
         report_to(root);
+        if let Ok(url) = std::env::var("NUCLEAR_MONITOR_URL") {
+            manifest.monitor_url = collector_url(&url, root).unwrap_or_default();
+        }
     }
     manifest
+}
+
+/// The address an app without the project's files (a browser's, a phone's) posts its report to: the collector
+/// `NUCLEAR_MONITOR_URL` names (`http://127.0.0.1:<port>/<token>`, the editor's or `nuclear run`'s) and the
+/// project's key, by which the collector finds the project. None for an address that is not of this machine or
+/// holds a character a string of the generated code would need to escape.
+pub(crate) fn collector_url(base: &str, root: &std::path::Path) -> Option<String> {
+    let rest = base.strip_prefix("http://127.0.0.1:")?;
+    let safe = rest.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '/' | ':' | '-' | '_'));
+    safe.then(|| format!("{}/{}", base.trim_end_matches('/'), project_key(root)))
+}
+
+/// The key of a project for the monitor's collector: FNV-1a (64 bits) of its canonical folder, in hex; the editor
+/// computes the same (`extensions/tools/nuclear-monitor/src/collector.ts`).
+pub(crate) fn project_key(root: &std::path::Path) -> String {
+    let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let hash = root.to_string_lossy().bytes().fold(0xcbf2_9ce4_8422_2325u64, |h, b| (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3));
+    format!("{hash:016x}")
 }
 
 /// `NUCLEAR_MONITOR_FILE` set to the project's report, unless given: the app `nuclear run` starts writes it there

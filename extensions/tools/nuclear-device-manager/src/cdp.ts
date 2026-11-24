@@ -22,7 +22,7 @@ const CALL_MS = 30_000;
 export class Cdp {
   private id = 0;
   private readonly pending = new Map<number, (r: { result?: unknown; error?: { message: string } }) => void>();
-  private readonly listeners = new Map<string, (params: Record<string, unknown>) => void>();
+  private readonly listeners = new Map<string, ((params: Record<string, unknown>) => void)[]>();
   private closed?: () => void;
   private constructor(private readonly ws: Ws) {
     ws.onclose = () => {
@@ -35,7 +35,7 @@ export class Cdp {
       if (d.id !== undefined) {
         this.pending.get(d.id)?.(d);
         this.pending.delete(d.id);
-      } else if (d.method) this.listeners.get(d.method)?.(d.params);
+      } else if (d.method) for (const f of this.listeners.get(d.method) ?? []) f(d.params);
     };
   }
 
@@ -62,8 +62,9 @@ export class Cdp {
     });
   }
 
+  /** Every listener of `event` hears it (the device's panel and the run log alike). */
   on(event: string, f: (params: Record<string, unknown>) => void): void {
-    this.listeners.set(event, f);
+    this.listeners.set(event, [...(this.listeners.get(event) ?? []), f]);
   }
 
   set onclose(f: () => void) {

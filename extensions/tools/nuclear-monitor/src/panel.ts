@@ -6,7 +6,9 @@
 import * as crypto from 'crypto';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { explainPlace, lineKeys, measurable, MonitorView, nuclear, page, PageContext, parts, projectAt, projectInfo, readMonitor, TEXTS } from './monitor';
+import * as os from 'os';
+import { Collector, projectKey, setCollector } from './collector';
+import { explainPlace, lineKeys, MonitorView, nuclear, page, PageContext, parts, projectAt, projectInfo, readMonitor, TEXTS } from './monitor';
 import { lang, onDidChangeLang } from '../../../vscode/src/i18n';
 
 type App = { root: string; name: string; platform: string | null };
@@ -18,6 +20,8 @@ export class MonitorPanel {
   static selected: (() => string | undefined) | undefined;
   static select: ((root: string) => void) | undefined;
   static runMobile: ((root: string) => Thenable<unknown> | void) | undefined;
+  /** The window's collector: the reports of the apps in a browser or on a phone (`activateMonitor`). */
+  static collector: Collector | undefined;
   /** The projects started by the page in this window: each one once on its own, after that only by its button. */
   private static started = new Set<string>();
 
@@ -47,6 +51,7 @@ export class MonitorPanel {
       const panel = vscode.window.createWebviewPanel('nuclear.monitor', texts().title, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
       MonitorPanel.current = new MonitorPanel(panel, root);
     }
+    if (root) MonitorPanel.collector?.allow(root);
     void MonitorPanel.current.refresh(true);
   }
 
@@ -80,14 +85,19 @@ export class MonitorPanel {
     if (m.type === 'run') return this.run();
     if (m.type === 'project' && m.root) {
       this.root = m.root;
+      MonitorPanel.collector?.allow(m.root);
       MonitorPanel.select?.(m.root);
       return this.refresh(true);
     }
     if (!root) return;
     if (m.type === 'measure') {
       await nuclear(root, ['monitor', m.on ? '--on' : '--off', '--project', root]);
-      // a running server reloads on its build: measured (or no longer) from now on
-      if (typeof this.view === 'object' && this.view.console?.state === 'running' && this.ctx?.platform === 'backend') await nuclear(root, ['build']);
+      // a running app is built again (a server reloads, a page's dev server reloads it; a phone's app restarts):
+      // measured, or no longer, from now on
+      if (typeof this.view === 'object' && this.view.console?.state === 'running') {
+        await nuclear(root, ['build']);
+        if (this.ctx?.platform === 'mobile') void vscode.commands.executeCommand('flutter.hotRestart').then(undefined, () => undefined);
+      }
       return this.refresh();
     }
     if (m.type === 'open' && m.path) return open(path.join(root, m.path), m.line ?? 1);
@@ -100,8 +110,9 @@ export class MonitorPanel {
     }
   }
 
-  /** Runs the project and watches it: a running one is only shown; else the terminal `<project> · monitor` (measured
-   * when its platform can be), or a device for a mobile app. */
+  /** Runs the project and watches it, measured: a running one is only shown; else a device for a mobile app (the
+   * workspace's ▷ Run) or a web app (the web device, whose page's console reaches the log), the terminal
+   * `<project> · monitor` for a backend. */
   private async run(): Promise<void> {
     const root = this.root;
     const ctx = this.ctx;
@@ -114,6 +125,11 @@ export class MonitorPanel {
       terminal?.show(true);
       return;
     }
+    if (ctx.platform === 'mobile' || ctx.platform === 'web') await nuclear(root, ['monitor', '--on', '--project', root]);
+    if (ctx.platform === 'web') {
+      await vscode.commands.executeCommand('nuclear.webDevice.open', root);
+      return;
+    }
     if (ctx.platform === 'mobile') {
       if (MonitorPanel.runMobile) await MonitorPanel.runMobile(root);
       else await vscode.commands.executeCommand('nuclear.run', root);
@@ -122,7 +138,7 @@ export class MonitorPanel {
     const t = vscode.window.terminals.find((x) => x.name === name) ?? vscode.window.createTerminal({ name, cwd: root });
     t.show(true);
     // `nuclear run` installs the packages itself when the app has none yet
-    t.sendText(measurable(ctx.platform) ? 'nuclear monitor --on && nuclear run' : 'nuclear run');
+    t.sendText('nuclear monitor --on && nuclear run');
     setTimeout(() => void this.refresh(), 800);
   }
 }
@@ -145,9 +161,31 @@ export function activateMonitor(context: vscode.ExtensionContext): void {
     if (timer) clearTimeout(timer);
     timer = setTimeout(MonitorPanel.changed, 300);
   };
+  void startCollector(context);
   context.subscriptions.push(
     ...watchers,
     ...watchers.flatMap((w) => [w.onDidChange(later), w.onDidCreate(later)]),
     vscode.commands.registerCommand('nuclear.monitor.open', (root?: unknown) => MonitorPanel.show(typeof root === 'string' ? root : undefined)),
   );
+}
+
+/** The window's collector, its address given to every build (`NUCLEAR_MONITOR_URL`: this window's own processes and
+ * its terminals); a project it was not told of is found in the registry of projects (`nuclear projects --json`). */
+async function startCollector(context: vscode.ExtensionContext): Promise<void> {
+  const c = new Collector(async (key) => {
+    const r = await nuclear(os.homedir(), ['projects', '--json']);
+    const list = r.ok ? ((JSON.parse(r.out) as { projects?: { root: string; port?: number }[] }).projects ?? []) : [];
+    return list.find((p) => projectKey(p.root) === key);
+  });
+  try {
+    const url = await c.start();
+    MonitorPanel.collector = c;
+    setCollector(c);
+    process.env.NUCLEAR_MONITOR_URL = url;
+    const env = context.environmentVariableCollection;
+    env.replace('NUCLEAR_MONITOR_URL', url);
+    context.subscriptions.push({ dispose: () => (c.stop(), setCollector(undefined)) });
+  } catch {
+    // shortcut: no collector (no free port): a browser's or a phone's app is not measured in this window, its console still is
+  }
 }

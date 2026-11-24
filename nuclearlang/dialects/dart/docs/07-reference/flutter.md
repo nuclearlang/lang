@@ -2694,7 +2694,7 @@ nuclear test [--integration] [-- <flutter test arguments>]
 nuclear analyze | check [--json] | clean
 nuclear repair                             # when the build or the app fails: repairs in steps (see below)
 nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
-nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)
+nuclear run --monitor                      # each Nuclear function and method measured (the app sends its report)
 nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)
 nuclear projects [--json]                  # every Nuclear project of this machine and its development address
 nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring

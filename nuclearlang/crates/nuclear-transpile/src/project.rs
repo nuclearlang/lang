@@ -46,6 +46,9 @@ pub struct Manifest {
     /// Built with `--monitor` (spec 015): each function and method measured. Set by the tool that builds, never by
     /// the manifest's file.
     pub monitor: bool,
+    /// Where a measured app without the project's file system (a browser's, a phone's) posts its report: a
+    /// collector's address with its token (spec 015). Set by the tool that builds, never by the manifest's file.
+    pub monitor_url: String,
     /// `[project] lazy_imports` of `nuclear.toml` (ADR-lang-0012): an import whose names only function bodies use is
     /// written in the block that uses it, where the dialect can (`[syntax] local_import`).
     pub lazy_imports: bool,
@@ -95,6 +98,7 @@ impl Manifest {
             test_env: BTreeMap::new(),
             package: None,
             monitor: false,
+            monitor_url: String::new(),
             lazy_imports: false,
             env: BTreeMap::new(),
         }
@@ -214,6 +218,7 @@ impl Manifest {
             test_env: BTreeMap::new(),
             package,
             monitor: false,
+            monitor_url: String::new(),
             lazy_imports: p.get("lazy_imports").and_then(|v| v.as_bool()).unwrap_or(false),
             env: BTreeMap::new(),
         })
@@ -907,8 +912,13 @@ fn build_with(
     }
     if uses_monitor && let Some(t) = dialect.syntax("monitor_runtime") {
         let prelude = dialect.syntax("file_prelude").map(|p| format!("{}\n\n", p.render(&Ctx::new().into_value()).trim_end()));
-        let runtime = t.render(&Ctx::new().set("app", &manifest.name).into_value());
-        generated.push((out_path(MONITOR_PATH), format!("{}{}\n", prelude.unwrap_or_default(), runtime.trim_end())));
+        let ctx = Ctx::new().set("app", &manifest.name).set("url", &manifest.monitor_url).into_value();
+        let prelude = prelude.unwrap_or_default();
+        generated.push((out_path(MONITOR_PATH), format!("{prelude}{}\n", t.render(&ctx).trim_end())));
+        // the part of the runtime a browser runs (a target that cannot import the other part there)
+        if let Some(web) = dialect.syntax("monitor_runtime_web") {
+            generated.push((out_path(&format!("{MONITOR_PATH}_web")), format!("{prelude}{}\n", web.render(&ctx).trim_end())));
+        }
     }
     // uses.<Name>: the generated code of the project writes that name (a template asks only for what is used)
     let uses: BTreeMap<String, Value> =

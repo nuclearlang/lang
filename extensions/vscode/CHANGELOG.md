@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- **Nuclear Monitor watches and measures web and mobile apps**: *Measure the app* works for every app; *Run and watch* opens a web app on the web device and a mobile app on the device picked, measured. Their console is the page's (prints, errors with their stack and *Open in the code*, each request with its address and status, a request with no answer with its reason: what was "No connection to the server"), and their measurements arrive through the window's collector (127.0.0.1, a token, the app's origin only). The web device's log has no terminal colours any more; the devices write how a run ended.
 - **Nuclear Builder runs a station's checks at the same time**: four at once by default (`parallelChecks` in `.nuclear/builder.json`, 1 to 16), each its own agent's session, step, trace and cost, in its own copy of the project with its fixes merged back; the page shows each with its spinner and *Now · N checks at the same time*, the log in the order they ended (English and Spanish). Six checks of a stubbed second each: 6.1 s before, 2.0 s now.
 
 - ▷ Serve of a backend or web app becomes ■ Stop (in *Actions* and in the editor title) while its `nuclear run` runs, and ■ Stop ends it; ▷ Serve or `Ctrl+Alt+R` on a project that already serves shows its terminal instead of starting a second server.

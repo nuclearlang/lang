@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-24
 related: [overview.md, ../01-product/roadmap.md, ../../../../vscode/docs/02-architecture/client.md]
 ---
 # The Synapsis device (`mobile-device.ts`)
@@ -60,6 +60,11 @@ Flutter's `web-server` device is rejected: its debug service has no breakpoints.
   screen).
 - **Input**: `Input.dispatchTouchEvent` / `MouseEvent` / `KeyEvent`.
 - It reconnects (`cdp.onclose`, 10 tries) and emulates again when a frame's size differs (every 2 s at most).
+- **The Monitor**: `Network.enable` and `browser-log.ts` write each request the app makes to a server (dio's XHR:
+  method, address, status, time; no answer: `ERROR GET <url> net::ERR_CONNECTION_REFUSED`) into the project's run
+  log, leaving out Flutter's fonts, CanvasKit and assets; the prints and errors are already there (Flutter's
+  output). The page's origin is given to the Monitor's collector, where a measured app posts its report (the Dart
+  runtime's `monitor_web.dart`). An app that was live writes `exited: 0` when it ends.
 - `closeBrowser` at the end.
 
 ## The panel

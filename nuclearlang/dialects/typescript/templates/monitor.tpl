@@ -1,6 +1,7 @@
 // Nuclear Monitor (spec 015): the time, calls, connections and memory of each Nuclear function and method of
 // {{app}}. Written by `nuclear build --monitor`; the report goes to NUCLEAR_MONITOR_FILE, else
-// .nuclear/monitor/report.json of the working folder. In a browser it is `globalThis.nuclearMonitor.report()`.
+// .nuclear/monitor/report.json of the working folder. In a browser it is `globalThis.nuclearMonitor.report()`, posted
+// every two seconds to the collector the build was given (the page's own fetch, not counted).
 
 interface MonitorNode {
   label: string;
@@ -54,6 +55,7 @@ const fs = builtin('node:fs');
 const AsyncStore = builtin('node:async_hooks')?.AsyncLocalStorage;
 // Node.js: the node follows the async flow; a browser: a variable (concurrent async calls may land on another parent)
 const store: MonitorStore | undefined = AsyncStore ? new AsyncStore() : undefined;
+const collector = '{{url}}';
 let current = root;
 let connections = 0;
 let dirty = false;
@@ -65,6 +67,7 @@ function memory(): number {
 
 // a connection is a new socket (Node.js) or a request the page opens (a browser)
 const net = builtin('node:net');
+let post: ((body: string) => Promise<unknown>) | undefined;
 if (net) {
   const connect = net.Socket.prototype.connect;
   net.Socket.prototype.connect = function (this: unknown, ...args: unknown[]) {
@@ -75,6 +78,7 @@ if (net) {
   const page = globalThis as unknown as Record<string, Builtin>;
   if (page.fetch) {
     const fetch = page.fetch;
+    post = (body: string) => fetch.call(globalThis, collector, { method: 'POST', body }).catch(() => undefined);
     page.fetch = (...args: unknown[]) => {
       connections++;
       return fetch(...args);
@@ -184,6 +188,12 @@ function write(): void {
 if (fs && host.process) {
   (setInterval(write, 2000) as unknown as { unref?: () => void }).unref?.();
   host.process.on('exit', write);
+} else if (post && collector) {
+  setInterval(() => {
+    if (!dirty) return;
+    dirty = false;
+    void post?.(JSON.stringify(report()));
+  }, 2000);
 }
 host.nuclearMonitor = { report };
 

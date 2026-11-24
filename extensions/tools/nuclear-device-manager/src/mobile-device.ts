@@ -12,6 +12,8 @@
 //   user agent, touch): Flutter then behaves as on iOS or Android, and every input lands where it is drawn.
 
 import { appendLog, Launch, logFile, reason, Step, STEPS } from './launch-log';
+import { follow } from './browser-log';
+import { allowOrigin, isCollector } from '../../nuclear-monitor/src/collector';
 import { browserPage, Cdp, freePort } from './cdp';
 import { execFile, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -397,7 +399,13 @@ async function attach(r: Running, tries?: number): Promise<void> {
   };
   // a new document (the app opened, a reload) stops the screencast: start it again
   cdp.on('Page.loadEventFired', () => void screencast(r).catch(() => undefined));
+  // the app's requests to the project's log (its prints and errors come with Flutter's output), and its
+  // reports to the editor's collector (spec 015)
+  const origin = `http://${HOST}:${r.appPort}`;
+  allowOrigin(r.root, origin);
+  follow(cdp, () => origin, (lines) => appendLog(r.root, lines.join('\n')), { console: false, skip: isCollector });
   await cdp.call('Page.enable');
+  await cdp.call('Network.enable');
   await emulate(r, r.view ?? { preset: 'Responsive', width: 400, height: 800, landscape: false });
 }
 
@@ -498,6 +506,8 @@ async function input(r: Running, i: Input): Promise<void> {
 function endRunning(r: Running): void {
   if (r.ended) return;
   r.ended = true;
+  // an app that was live ends its run in the log: the Monitor shows it stopped
+  if (r.launch?.step === 'live') appendLog(r.root, 'exited: 0');
   r.launch?.end();
   const i = parked.indexOf(r);
   if (i >= 0) parked.splice(i, 1);

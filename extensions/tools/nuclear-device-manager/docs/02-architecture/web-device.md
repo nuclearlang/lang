@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-24
 related: [overview.md, ../01-product/roadmap.md, ../../../../vscode/docs/02-architecture/debugging.md]
 ---
 # The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`)
@@ -27,7 +27,11 @@ No `vscode` import. It:
   - the screencast at the panel's density (zoom × `devicePixelRatio`);
   - input: the mouse on desktop presets, touch otherwise;
   - history, `captureScreenshot`, the url of the DevTools frontend;
-- reports `Runtime.consoleAPICalled`, `exceptionThrown`, `Log.entryAdded` and the `Network.*` events.
+- reports `Runtime.consoleAPICalled`, `exceptionThrown`, `Log.entryAdded` and the `Network.*` events, and gives its
+  page to others (`page`): the panel follows it with `browser-log.ts`, which writes the page's console, its errors
+  with their stack (the app's files relative to the app) and its requests to servers into the project's run log,
+  the Nuclear Monitor's console; the page's origin is given to the Monitor's collector, which takes the measured
+  app's reports from it. `cdp.ts` lets every listener of an event hear it.
 
 ## The panel (`web-device.ts`)
 
@@ -38,6 +42,7 @@ No `vscode` import. It:
 - A dock, filtered: the page's **Console** (errors counted; a line's source opens the generated file) and
   **Network** (method, status, address, type, size, time).
 - A screenshot into `build/screenshots/`.
+- Closing it, or a new start, writes `exited: 0` to the run log when the page was live.
 
 ## The debugger
 

@@ -1,11 +1,14 @@
 // Nuclear Monitor (spec 015): the time, calls, connections and memory of each Nuclear function and method of
-// {{app}}. Written by `nuclear build --monitor`; the report goes to NUCLEAR_MONITOR_FILE, else
-// .nuclear/monitor/report.json of the working folder.
+// {{app}}. Written by `nuclear build --monitor`; the report goes to NUCLEAR_MONITOR_FILE, else to the collector the
+// build was given (an app without the project's files: a browser's, a phone's), else .nuclear/monitor/report.json of
+// the working folder. In a browser the host is monitor_web.dart; elsewhere this file is its own host.
 // ignore_for_file: avoid_classes_with_only_static_members
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
+import 'monitor.dart' if (dart.library.js_interop) 'monitor_web.dart' as host;
 
 class MonitorNode {
   MonitorNode(this.label, this.path, this.line, this.isAsync);
@@ -40,7 +43,9 @@ const Symbol _zoneKey = #nuclearMonitor;
 // the node of the synchronous call running now, and the zone it runs in; an async body has a zone of its own
 MonitorNode? _current;
 Zone? _currentZone;
-int _connections = 0;
+const String _collector = '{{url}}';
+int _ioConnections = 0;
+bool _posting = false;
 bool _dirty = false;
 bool _running = false;
 int _lastWrite = 0;
@@ -51,21 +56,63 @@ final class _CountedSockets extends IOOverrides {
   @override
   Future<Socket> socketConnect(dynamic host, int port,
       {dynamic sourceAddress, int sourcePort = 0, Duration? timeout}) {
-    _connections++;
+    if (!_posting) _ioConnections++;
     return super.socketConnect(host, port, sourceAddress: sourceAddress, sourcePort: sourcePort, timeout: timeout);
   }
 
   @override
   Future<ConnectionTask<Socket>> socketStartConnect(dynamic host, int port,
       {dynamic sourceAddress, int sourcePort = 0}) {
-    _connections++;
+    if (!_posting) _ioConnections++;
     return super.socketStartConnect(host, port, sourceAddress: sourceAddress, sourcePort: sourcePort);
+  }
+}
+
+// the host of a program with dart:io (a server, a desktop, a phone): its sockets, its resident set, its files
+const bool hostIsBrowser = false;
+void hostStart() => IOOverrides.global = _CountedSockets();
+int hostConnections() => _ioConnections;
+int hostMemory() => ProcessInfo.currentRss;
+
+void hostSave(String report, String collector) {
+  final file = Platform.environment['NUCLEAR_MONITOR_FILE'];
+  if (file == null && collector.isNotEmpty) {
+    _post(report, collector);
+    return;
+  }
+  final path = file ?? '${Directory.current.path}/.nuclear/monitor/report.json';
+  try {
+    final target = File(path);
+    target.parent.createSync(recursive: true);
+    File('$path.tmp')
+      ..writeAsStringSync(report)
+      ..renameSync(target.path);
+  } on FileSystemException {
+    // the report is best effort: the app never fails because of it
+  }
+}
+
+// a phone's app: to the collector, its own connection not counted
+Future<void> _post(String report, String collector) async {
+  _posting = true;
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 2);
+  try {
+    final request = await client.postUrl(Uri.parse(collector));
+    _posting = false;
+    request.headers.contentType = ContentType.text;
+    request.write(report);
+    await (await request.close()).drain<void>();
+  } on Object {
+    // no collector listening: the report is best effort
+  } finally {
+    _posting = false;
+    client.close();
   }
 }
 
 void _start() {
   _running = true;
-  IOOverrides.global = _CountedSockets();
+  host.hostStart();
 }
 
 MonitorNode _parent() {
@@ -77,7 +124,7 @@ MonitorSpan _open(String label, String path, int line, bool isAsync) {
   if (!_running) _start();
   final parent = _parent();
   final node = parent.children.putIfAbsent('$path:$line', () => MonitorNode(label, path, line, isAsync));
-  return MonitorSpan(node, _current, _currentZone, _clock.elapsedMicroseconds, ProcessInfo.currentRss, _connections);
+  return MonitorSpan(node, _current, _currentZone, _clock.elapsedMicroseconds, host.hostMemory(), host.hostConnections());
 }
 
 void _close(MonitorSpan span) {
@@ -86,8 +133,8 @@ void _close(MonitorSpan span) {
   node.calls++;
   node.totalUs += us;
   if (us > node.maxUs) node.maxUs = us;
-  node.connections += _connections - span.connections;
-  final grown = ProcessInfo.currentRss - span.memory;
+  node.connections += host.hostConnections() - span.connections;
+  final grown = host.hostMemory() - span.memory;
   if (grown > 0) node.memoryBytes += grown;
   _dirty = true;
   _schedule();
@@ -118,11 +165,15 @@ Map<String, Object> _toReport(MonitorNode node) {
 Map<String, Object> _report() => {
       'format': 1,
       'app': '{{app}}',
-      'runtime': 'dart',
+      'runtime': host.hostIsBrowser ? 'dart-web' : 'dart',
       'started': _started.toIso8601String(),
       'updated': DateTime.now().toUtc().toIso8601String(),
       'wall_ms': _ms(_clock.elapsedMicroseconds),
-      'notes': ['memory is the resident set grown during the calls; async calls run in zones of their own'],
+      'notes': [
+        host.hostIsBrowser
+            ? 'memory is the JavaScript heap grown during the calls (Chromium); a connection is a request the page opens'
+            : 'memory is the resident set grown during the calls; async calls run in zones of their own',
+      ],
       'roots': _toReport(_root)['children']!,
     };
 
@@ -138,15 +189,7 @@ void _write() {
   if (!_dirty) return;
   _dirty = false;
   _lastWrite = _clock.elapsedMicroseconds;
-  final path = Platform.environment['NUCLEAR_MONITOR_FILE'] ?? '${Directory.current.path}/.nuclear/monitor/report.json';
-  try {
-    final file = File(path);
-    file.parent.createSync(recursive: true);
-    final tmp = File('$path.tmp')..writeAsStringSync(const JsonEncoder.withIndent(' ').convert(_report()));
-    tmp.renameSync(file.path);
-  } on FileSystemException {
-    // the report is best effort: the app never fails because of it
-  }
+  host.hostSave(const JsonEncoder.withIndent(' ').convert(_report()), _collector);
 }
 
 class NuclearMonitor {

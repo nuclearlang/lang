@@ -311,7 +311,16 @@ pub const SYNTAX: &[TemplateSpec] = &[
         &["body", "label", "path", "line", "async"],
         "optional: the body of a function or method measured by the monitor (label: `Owner.name` or `name`; path: the `.nuc` file; line: its line)",
     ),
-    t("monitor_runtime", &["app"], "optional: the monitor's runtime `NuclearMonitor`, written once to `nuclear/monitor` of a project built with `--monitor`"),
+    t(
+        "monitor_runtime",
+        &["app", "url"],
+        "optional: the monitor's runtime `NuclearMonitor`, written once to `nuclear/monitor` of a project built with `--monitor` (url: the collector a browser's or a phone's app posts its report to; empty: none)",
+    ),
+    t(
+        "monitor_runtime_web",
+        &["app", "url"],
+        "optional: the part of the monitor's runtime a browser runs, written beside it to `nuclear/monitor_web`",
+    ),
     // Result<T, E> (all optional: a dialect without them cannot transpile code that uses Result)
     t(
         "result_runtime",

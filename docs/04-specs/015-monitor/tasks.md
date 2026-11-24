@@ -1,7 +1,7 @@
 ---
 status: in-progress
 owner: Julian Molina
-updated: 2026-11-23
+updated: 2026-11-24
 related: [requirements.md, design.md]
 ---
 # Spec 015: Nuclear Monitor — Tasks
@@ -22,10 +22,24 @@ Left:
 - [ ] The installed `nuclear` and the extension: the next release (`installer/install.sh`).
 - [ ] The dialects' references (`docs/07-reference/<dialect>.md`) show no `--monitor` equivalence yet.
 
-## Phase 2
+## Phase 2: an app in a browser or on a phone
 
-- [ ] The report of an app on a phone (Flutter: the VM service's `postEvent`) and in a browser tab (a route of the
-      dev server); the Dart runtime without `dart:io` on the web.
+Done (2026-11-24, "Monitor for everything"): the report of an app in a browser through a **collector** (the
+editor's, `extensions/tools/nuclear-monitor/src/collector.ts`; `nuclear run --monitor`'s own without the editor,
+`tools/cli/src/framework/collector.rs`), not a route of the dev server: 127.0.0.1, a random port, a token, the
+project's key, CORS only for the app's origin, the report written to the project, so `nuclear monitor --json` stays
+the only source of hot spots. Its address reaches the build as `NUCLEAR_MONITOR_URL` → `Manifest.monitor_url` → the
+runtime's `url` (rebuilds on save keep it). The Dart runtime is its own host where dart:io works and imports
+`monitor_web.dart` (the optional template `monitor_runtime_web`, a second generated file) in a browser, with a
+conditional import of itself; the TypeScript runtime posts from its browser branch. The console of a page (the web
+device: console, errors with their stack, requests; the Synapsis device: requests) in the run log
+(`extensions/tools/nuclear-device-manager/src/browser-log.ts`), Flutter's web errors read with their frames. The
+Monitor's toggle and *Run and watch* for web and mobile apps. Proven in a live VS Code on a copy of a real workspace
+(fastapi, react on the web device, flutter on the Synapsis device).
+
+- [ ] A phone app on a real device or an emulator: its dart:io runtime posts to the collector, but the phone does not
+      reach 127.0.0.1 (`adb reverse` for Android; the VM service's `postEvent` for iOS):
+      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`.
 - [ ] The Monitor in Android Studio / IntelliJ.
 
 ## Phase 3: the automatic Monitor (the user, 2026-11-19 and 2026-11-23)
@@ -36,5 +50,3 @@ watch* (the terminal `<project> · monitor`, a device for a mobile app; once by 
 (`.nuclear/monitor/on`, honoured by build, watch and run; `nuclear run` always gives the app the project's report
 file), the MCP tool `project_monitor` with the console.
 
-- [ ] The report of a phone's or a browser's app through a collector of the extension (phase 2):
-      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`.

@@ -18,8 +18,10 @@ In this folder; the VS Code extension compiles and bundles `src/` (`extensions/v
 | `src/web-device.ts` | the web device's panel and its commands |
 | `src/web-session.ts` | the web device's engine; no `vscode` import |
 | `src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |
-| `src/launch-log.ts` | a launch's steps, the stall limit of each, the reason of a failure and the project's log `.nuclear/logs/run.log`; no `vscode` import |
+| `src/launch-log.ts` | a launch's steps, the stall limit of each, the reason of a failure and the project's log `.nuclear/logs/run.log` (without colors); no `vscode` import |
+| `src/browser-log.ts` | a page's console, errors with their stack and requests to servers as lines of the run log, the Nuclear Monitor's console (spec 015 phase 2); no `vscode` import |
 | `test/launch-log.test.ts` | the log, the reason, the stall (node:test) |
+| `test/browser-log.test.ts` | a page's requests (a server's, none of its files or fonts), its console (format strings), its errors with their frames (node:test) |
 
 ## Stack
 - TypeScript; CDP over node's WebSocket; a headless Chromium (Chrome, Chromium, Brave, Edge, Vivaldi)
@@ -27,7 +29,7 @@ In this folder; the VS Code extension compiles and bundles `src/` (`extensions/v
 - The Dart and Flutter extensions of VS Code, for the debug session
 
 ## Commands
-Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`). The panels have no test; the web device's engine can be run
+Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`, `test/browser-log.test.ts`). The panels have no test; the web device's engine can be run
 with node without the editor ([testing](../../vscode/docs/05-standards/testing.md)).
 
 ## Rules
@@ -35,7 +37,10 @@ with node without the editor ([testing](../../vscode/docs/05-standards/testing.m
 - An app lives on its own: closing a device's tab only hides it. A run never replaces a running device.
 - The devices belong to the mobile workspaces and the Devices tool; elsewhere they are parked, not ended.
 - A frame matches the device's on-screen pixels 1:1: nothing is upscaled.
-- `web-session.ts`, `cdp.ts` and `launch-log.ts` never import `vscode`.
+- `web-session.ts`, `cdp.ts`, `launch-log.ts` and `browser-log.ts` never import `vscode`.
+- A device's page is the Monitor's: its requests (and on the web device its console and errors) go to the project's
+  run log, its origin is given to the Monitor's collector (`allowOrigin`), and a device that stops writes
+  `exited: 0`.
 - A launch never fails in silence: every step is shown on the device, a step without news past its limit is a
   failure, and every failure says why (its error lines), offers *Try again* and *Show the log*, and is written to
   the project's `.nuclear/logs/run.log`.

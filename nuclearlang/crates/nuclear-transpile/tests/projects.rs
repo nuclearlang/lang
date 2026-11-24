@@ -1047,10 +1047,19 @@ fn the_monitor_measures_each_function_only_when_asked() {
         assert!(off.files.iter().all(|f| !f.code.contains("NuclearMonitor")), "{dialect}: measured without --monitor");
         assert!(off.generated.iter().all(|(p, _)| !p.contains("nuclear/monitor")), "{dialect}: a runtime without --monitor");
         manifest.monitor = true;
+        manifest.monitor_url = "http://127.0.0.1:4100/token/key".into();
         let on = project::build(&root, &manifest, &d);
         let runtime: Vec<_> = on.generated.iter().filter(|(p, _)| p.contains("nuclear/monitor")).collect();
-        assert_eq!(runtime.len(), 1, "{dialect}: {:?}", on.generated.iter().map(|(p, _)| p).collect::<Vec<_>>());
+        // Dart's browser part is a file of its own (its import exists only there); the others branch inside
+        let parts = if dialect == "dart" { 2 } else { 1 };
+        assert_eq!(runtime.len(), parts, "{dialect}: {:?}", on.generated.iter().map(|(p, _)| p).collect::<Vec<_>>());
         assert!(runtime[0].1.contains("class NuclearMonitor"), "{dialect}: {}", runtime[0].1);
+        if dialect != "python" {
+            assert!(runtime[0].1.contains("'http://127.0.0.1:4100/token/key'"), "{dialect}: the collector's address");
+        }
+        if dialect == "dart" {
+            assert!(runtime[1].0.ends_with("nuclear/monitor_web.dart") && runtime[1].1.contains("dart:js_interop"));
+        }
         let store = on.files.iter().find(|f| f.source_path.ends_with("users/user_store.nuc")).unwrap();
         let site = ["'UserStore.find', 'users/user_store.nuc', 7", "\"UserStore.find\", \"users/user_store.nuc\", 7"];
         assert!(site.iter().any(|s| store.code.contains(s)), "{dialect}:\n{}", store.code);

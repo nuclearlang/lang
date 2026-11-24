@@ -95,6 +95,7 @@ export interface WebEvents {
   address(url: string, canBack: boolean, canForward: boolean): void;
   log(line: string): void; // the dev server's and the browser's own output
   step?(step: 'browser'): void; // the dev server answers: the browser starts
+  page?(cdp: Cdp, origin: string): void; // the page is connected: others follow it too (the run log)
 }
 
 /** The browser to drive: `CHROME_EXECUTABLE`, then the Chromium browsers usually installed. */
@@ -192,6 +193,7 @@ export class WebSession {
     this.pipe(this.browser, 'browser');
     const cdp = (this.cdp = await browserPage(this.cdpPort, 60));
     cdp.onclose = () => this.stop();
+    this.events.page?.(cdp, new URL(this.url).origin);
     cdp.on('Page.screencastFrame', (p) => {
       void cdp.call('Page.screencastFrameAck', { sessionId: p.sessionId }).catch(() => undefined);
       this.events.frame(String(p.data));

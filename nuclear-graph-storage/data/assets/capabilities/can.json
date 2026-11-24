@@ -1466,13 +1466,13 @@
    "id": "can:watch-the-app",
    "type": "can",
    "title": "Can: watch what the app is doing, live (Nuclear Monitor)",
-   "summary": "The editor's Monitor follows the workspace's selected app and shows its run as a console: every request with its status and time, every error with its cause, its stack and its .nuc line, reloads; it starts the app when it is not running, and with measuring on it shows each Nuclear function's time, calls and memory.",
+   "summary": "The editor's Monitor follows the workspace's selected app (a backend, a web app or a mobile app) and shows its run as a console: every request with its status and time, every error with its cause, its stack and its .nuc line, reloads; it starts the app when it is not running, and with measuring on it shows each Nuclear function's time, calls and memory, also for an app in a browser.",
    "body": [
-    "- VS Code: the strip's *Monitor* (or *Nuclear: Open Monitor*) opens on the selected app of the workspace; *Run and watch* starts it in the terminal `<app> · monitor` when it is not running.",
-    "- The console reads the app's last run (`.nuclear/logs/run.log`, written by `nuclear run`): filters All / Requests / Errors, counts, a 500 with its stack and *Open in the code* (the `.nuc` line, through `nuclear explain`).",
-    "- Measuring: `nuclear monitor --on` (or the page's *Measure the app*) keeps the app measured on every build, watch and run; the *Measurements* tab shows the hot spots and each function's time, own time, calls, connections and memory. `nuclear monitor --off` stops it.",
+    "- VS Code: the strip's *Monitor* (or *Nuclear: Open Monitor*) opens on the selected app of the workspace; *Run and watch* starts it measured when it is not running: a backend in the terminal `<app> · monitor`, a web app on the web device, a mobile app on the device picked (the Synapsis device).",
+    "- The console reads the app's last run (`.nuclear/logs/run.log`, written by `nuclear run` and by the devices): filters All / Requests / Errors, counts, a 500 with its stack and *Open in the code* (the `.nuc` line, through `nuclear explain`). For a web or mobile app on a device it is the page's console: its prints, its errors with their stack, each request to a server with its full address, and a request with no answer as an error with its reason (`net::ERR_CONNECTION_REFUSED`: the cause of \"No connection to the server\").",
+    "- Measuring: `nuclear monitor --on` (or the page's *Measure the app*) keeps the app measured on every build, watch and run; the *Measurements* tab shows the hot spots and each function's time, own time, calls, connections and memory. An app in a browser posts its measurements to the editor's collector (or to the one `nuclear run --monitor` starts without the editor), which writes the project's report. `nuclear monitor --off` stops it.",
     "- In a terminal or for an agent: `nuclear monitor [--json]` gives the app's state (running, starting, stopped, failed), its console and the report; the MCP's `project_monitor` returns the same.",
-    "- Limits: a mobile app's console comes from a run on a device from the workspace (a `nuclear run` in a terminal logs only its steps); a web app's console has the dev server's lines, not the browser's `console.log`; mobile and web apps cannot be measured yet."
+    "- Limits: an app on a real phone or an emulator is not measured yet (its console comes from a run from the workspace); a mobile app run with `nuclear run` in a terminal logs only its steps; a web app opened in the person's own browser is measured but its page's console is only captured on the web device."
    ],
    "keys": [
     "monitor",
@@ -1485,14 +1485,20 @@
     "profiling",
     "performance",
     "hot spots",
-    "measure"
+    "measure",
+    "browser console",
+    "network errors",
+    "No connection to the server"
    ],
    "asks": [
     "how do I see what my app is doing",
     "where are the logs of my app",
     "how do I see the errors of my backend",
     "how do I measure which function is slow",
-    "the monitor says no report.json"
+    "the monitor says no report.json",
+    "how do I see the console of my web app",
+    "why does my app say No connection to the server",
+    "how do I measure my mobile app"
    ],
    "platforms": [
     "backend",
@@ -1512,7 +1518,9 @@
    "sources": [
     "extensions/tools/nuclear-monitor/docs/08-guides/README.md",
     "tools/cli/src/framework/console.rs",
-    "docs/04-specs/015-monitor/design.md"
+    "docs/04-specs/015-monitor/design.md",
+    "extensions/tools/nuclear-monitor/src/collector.ts",
+    "extensions/tools/nuclear-device-manager/src/browser-log.ts"
    ],
    "meta": {
     "area": "editors",

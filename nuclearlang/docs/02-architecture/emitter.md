@@ -149,6 +149,7 @@ function and method of its `.nuc`: `Emitter::monitored` renders the dialect's `m
 the `function` or `method` template sees it, so every kind's own method template gets it too. Its `label` is the
 Nuclear name (`ProjectCtx.source_names` undoes the dialect's renaming), `path` and `line` the place in the `.nuc`.
 A file that measures imports `NuclearMonitor` from `nuclear/monitor` (`MONITOR_PATH`), which `project::build`
-writes once from `monitor_runtime`, as it does the `Result` runtime. Generators, empty bodies, files built alone and
+writes once from `monitor_runtime` (and `nuclear/monitor_web` from the optional `monitor_runtime_web`, with the same
+`app` and `url`: `Manifest.monitor_url`, the collector of an app in a browser), as it does the `Result` runtime. Generators, empty bodies, files built alone and
 dialects without the two templates are left as they are: without `--monitor` the output does not change (the
 goldens). Test: `the_monitor_measures_each_function_only_when_asked` (`tests/projects.rs`).

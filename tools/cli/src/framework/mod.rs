@@ -10,6 +10,7 @@ use nuclear_codegen::{generate, scaffold};
 use nuclear_devices as device;
 
 mod assets;
+mod collector;
 mod console;
 mod dependencies;
 mod doctor;
@@ -46,6 +47,8 @@ project
                                              transpile, pub get and build_runner (and flutter build <target>)
   run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)
   build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json
+                                             (a web or mobile app posts it to the editor's collector, NUCLEAR_MONITOR_URL,
+                                             or to one run --monitor starts)
   device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,
                                              iphone14pro, ipadair...; several at once: device 1, 2, 3)
   device list                                the running devices and the devices it can be
@@ -354,9 +357,19 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
         "run" => with_root(project_dir, |root| {
             crate::report_to(root);
             let log = runlog::RunLog::start(root, "nuclear run");
+            // a measured app in a browser or on a phone posts its report: a collector of this run, without the editor's
+            let port = || projects::here(root).and_then(|e| e["port"].as_u64()).and_then(|p| u16::try_from(p).ok());
             let result = match non_mobile_manifest(root) {
-                Ok(Some(m)) => run_backend(root, &m, &rest, &log),
-                Ok(None) => run_mobile(root, &rest, &log),
+                Ok(Some(m)) => {
+                    if m.platform.as_deref() == Some("web") {
+                        collector::for_run(root, port());
+                    }
+                    run_backend(root, &m, &rest, &log)
+                }
+                Ok(None) => {
+                    collector::for_run(root, port());
+                    run_mobile(root, &rest, &log)
+                }
                 Err(e) => Err(e),
             };
             // a server that ended has its `exited:` line already; anything else says why it stopped
