@@ -94,6 +94,21 @@ sandbox): 37 steps, 245 turns, 426 tool calls, 245 by hand, 15 094 070 tokens in
 opens the files it reviews on its own. It ended asking the user (a title's longest length, pages for the list, a
 private API) and with two checks of style failed: the work of QA, not of the factory's context.
 
+### Phase 2's first part against phase 1 and the baseline (Haiku; the oracle's note, the documents' paths, the generated folders denied)
+
+This run stopped at the Tests on the same platform question (`""` under `@required`), so the three are compared on
+the stations they all ran:
+
+| Analysis to Tests | Baseline | Phase 1 | Phase 2 | Phase 2 against the baseline |
+|---|---|---|---|---|
+| Turns | 124 | 95 | 91 | −27 % |
+| Tool calls | 197 | 138 | 114 | −42 % |
+| By hand | 85 | 60 | 34 | −60 % |
+| Tokens in | 8 822 587 | 5 641 860 | 4 990 301 | −43 % |
+| Minutes | 18.4 | 10.2 | 9.4 | −49 % |
+
+The note took the reads by hand down 43 % from phase 1. One run each: what holds is the direction, not the digit.
+
 ## Phase 2 — The oracle answers more per call
 
 - [ ] T2.1 agent: the project's map in `project_inspect`.
