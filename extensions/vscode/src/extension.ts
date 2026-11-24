@@ -31,6 +31,9 @@ import {
 } from 'vscode-languageclient/node';
 
 const GENERATED_SCHEME = 'nuclear-generated';
+// the library of the helpers (`chunk`, `uniqBy`), read-only: the server embeds it and gives its files
+// (`nuclear-helper:/array.nuc`) to go to definition of a helper
+const HELPER_SCHEME = 'nuclear-helper';
 
 let client: LanguageClient | undefined;
 let statusItem: vscode.StatusBarItem;
@@ -59,6 +62,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(GENERATED_SCHEME, generated),
+    vscode.workspace.registerTextDocumentContentProvider(HELPER_SCHEME, { provideTextDocumentContent: helperSource }),
     vscode.commands.registerCommand('nuclear.showGeneratedCode', showGeneratedCode),
     vscode.commands.registerCommand('nuclear.selectDialect', selectDialect),
     vscode.commands.registerCommand('nuclear.showCodeMetricsCodeLensInfo', showCodeMetricsDetails),
@@ -541,6 +545,13 @@ async function startClient(context: vscode.ExtensionContext): Promise<void> {
   };
 
   client = new LanguageClient('nuclear', 'Nuclear Language Server', serverOptions, clientOptions);
+  // this client shows the documents of HELPER_SCHEME: the server answers the definition of a helper with one
+  client.registerFeature({
+    fillClientCapabilities: (c) => { c.experimental = { ...c.experimental, nuclearHelperSource: true }; },
+    initialize: () => {},
+    getState: () => ({ kind: 'static' }),
+    clear: () => {},
+  });
   await client.start();
   metricsDecoration.reset();
 }
@@ -629,6 +640,16 @@ interface TranspileResult {
 const languageOfExtension: Record<string, string> = { dart: 'dart', ts: 'typescript', js: 'javascript' };
 
 /** Read-only documents `nuclear-generated:/<path>.dart?<source uri>` with the transpiled code. */
+/** A file of the helpers' library, as the server embeds it. */
+async function helperSource(uri: vscode.Uri): Promise<string> {
+  try {
+    const text = await client?.sendRequest<string | null>('nuclear/helperSource', { uri: uri.toString() });
+    return text ?? `// ${l10n.t('Nuclear: the language server is not running.')}`;
+  } catch (e) {
+    return `// Nuclear: ${e instanceof Error ? e.message : String(e)}`;
+  }
+}
+
 class GeneratedCodeProvider implements vscode.TextDocumentContentProvider {
   private readonly emitter = new vscode.EventEmitter<vscode.Uri>();
   readonly onDidChange = this.emitter.event;

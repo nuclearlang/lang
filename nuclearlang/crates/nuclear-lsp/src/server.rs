@@ -110,6 +110,9 @@ struct Config {
     semantic_tokens_refresh: bool,
     /// The server runs `SHOW_DETAILS` itself (Zed has no client-side commands; VS Code and JetBrains do).
     show_details: bool,
+    /// The client shows the read-only documents of the helpers (`experimental.nuclearHelperSource`): go to
+    /// definition of a helper answers one (`features::HELPER_SCHEME`).
+    helper_source: bool,
 }
 
 /// Commands the server runs (`workspace/executeCommand`).
@@ -190,6 +193,9 @@ impl<W: Write> Server<W> {
         if method == "nuclear/codeMetrics" {
             return Ok(self.code_metrics(p["textDocument"]["uri"].as_str().unwrap_or_default()));
         }
+        if method == "nuclear/helperSource" {
+            return Ok(features::helper_source(p["uri"].as_str().unwrap_or_default()).map_or(Value::Null, Value::from));
+        }
         if method == "workspace/executeCommand" {
             return self.execute_command(p);
         }
@@ -206,7 +212,7 @@ impl<W: Write> Server<W> {
             "textDocument/hover" => features::hover(doc, d, p),
             "textDocument/completion" => features::completion(doc, d, p),
             "textDocument/signatureHelp" => features::signature_help(doc, d, p),
-            "textDocument/definition" => features::definition(doc, p),
+            "textDocument/definition" => features::definition(doc, d, self.config.helper_source, p),
             "textDocument/references" => features::references(doc, p),
             "textDocument/documentHighlight" => features::highlights(doc, p),
             "textDocument/prepareRename" => features::prepare_rename(doc, p),
@@ -297,6 +303,7 @@ impl<W: Write> Server<W> {
         self.config.code_lens_refresh = caps["codeLens"]["refreshSupport"].as_bool().unwrap_or(false);
         self.config.semantic_tokens_refresh = caps["semanticTokens"]["refreshSupport"].as_bool().unwrap_or(false);
         self.config.show_details = p["clientInfo"]["name"].as_str().is_some_and(|n| n.starts_with("Zed"));
+        self.config.helper_source = p["capabilities"]["experimental"]["nuclearHelperSource"].as_bool().unwrap_or(false);
         let opts = &p["initializationOptions"];
         if opts.is_object() {
             self.apply_settings(opts);

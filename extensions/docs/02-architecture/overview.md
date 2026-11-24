@@ -30,7 +30,8 @@ flowchart LR
 | The tools | [`tools/`](../../AGENTS.md) | one project per tool, with its code: `src/` bundled by the VS Code extension, `jetbrains/src/` compiled with the plugin |
 
 An extension never reads the compiler's crates: it starts `nuclear-lsp` and talks to it through LSP and the
-`nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics). How each
+`nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics,
+`nuclear/helperSource` a file of the helpers' library). How each
 one finds the binary: [language-server.md](language-server.md).
 
 ## What the three share

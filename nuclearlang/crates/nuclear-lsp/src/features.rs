@@ -31,6 +31,33 @@ fn helpers() -> &'static BTreeMap<&'static str, (&'static str, Index, usize)> {
     })
 }
 
+/// The scheme of the read-only documents that hold the library of the helpers (`nuclear-helper:/array.nuc`): the
+/// compiler embeds it, so an installed machine has no file of it.
+pub const HELPER_SCHEME: &str = "nuclear-helper";
+
+/// Where each helper is declared: its file of the library and the range of its name there.
+fn helper_places() -> &'static BTreeMap<String, (&'static str, Value)> {
+    static PLACES: OnceLock<BTreeMap<String, (&'static str, Value)>> = OnceLock::new();
+    PLACES.get_or_init(|| {
+        let mut out = BTreeMap::new();
+        for (file, src) in nuclear_transpile::helpers::files() {
+            let lines = crate::text::LineIndex::new(src);
+            for item in nuclear_syntax::parse(src).file.items {
+                if let nuclear_syntax::ast::Item::Decl(d) = item {
+                    out.insert(d.name.name, (file, lines.range(src, d.name.span)));
+                }
+            }
+        }
+        out
+    })
+}
+
+/// The source of a document of the helpers (`nuclear-helper:/array.nuc`), as the compiler embeds it.
+pub fn helper_source(uri: &str) -> Option<&'static str> {
+    let file = uri.strip_prefix(HELPER_SCHEME)?.strip_prefix(":/")?;
+    nuclear_transpile::helpers::files().find(|(name, _)| *name == file).map(|(_, src)| src)
+}
+
 /// Does the dialect have that name? Then it is the dialect's, never a helper (as the compiler decides).
 fn dialect_has(dialect: Option<&Dialect>, name: &str) -> bool {
     dialect.is_some_and(|d| {
@@ -1241,18 +1268,27 @@ fn external_signature(doc: &Doc, c: &Callable, paren: usize, at: usize) -> Value
 
 // ---------------------------------------------------------------- navigation
 
-pub fn definition(doc: &Doc, p: &Value) -> Value {
+/// `helpers`: the client shows the documents of `HELPER_SCHEME`, so a helper is answered there.
+pub fn definition(doc: &Doc, dialect: Option<&Dialect>, helpers: bool, p: &Value) -> Value {
     let at = offset(doc, p);
     if let Some(b) = doc.index.binding_at(at) {
         return location(doc, doc.index.bindings[b].span);
     }
-    // a declaration of another file of the project
+    // a declaration of another file of the project, or else a helper of the language
     let Some(o) = doc.index.occurrence_at(at) else { return Value::Null };
     if object_before(&doc.text, o.span.start).is_some() {
         return Value::Null;
     }
-    match doc.project_name(&doc.text[o.span.start..o.span.end]) {
-        Some(n) => json!({ "uri": n.uri, "range": n.range }),
+    let word = &doc.text[o.span.start..o.span.end];
+    if let Some(n) = doc.project_name(word) {
+        return json!({ "uri": n.uri, "range": n.range });
+    }
+    // a key or a named argument (`size = 2`) is never the helper of that name; a name of the dialect neither
+    if !helpers || !matches!(o.target, Target::None) || matches!(o.tok, Tok::Property | Tok::Parameter) {
+        return Value::Null;
+    }
+    match outer_decl(doc, dialect, word).and(helper_places().get(word)) {
+        Some((file, range)) => json!({ "uri": format!("{HELPER_SCHEME}:/{file}"), "range": range }),
         None => Value::Null,
     }
 }

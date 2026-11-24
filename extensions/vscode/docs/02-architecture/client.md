@@ -14,6 +14,9 @@ related: [overview.md, debugging.md, ../../../docs/02-architecture/language-serv
   `.nuclear/project.json` (`projectCard`). A file outside a project shows `nuclear.dialect`, and a click opens the
   picker of dialects.
 - **Show Generated Code**: the code the file generates, beside it (`nuclear/transpile`).
+- **The helpers' library**: the client declares `experimental.nuclearHelperSource`, so go to definition of a helper
+  (`chunk`) answers `nuclear-helper:/array.nuc`; a content provider of that scheme fills it, read-only, with
+  `nuclear/helperSource`.
 - `watchIdle`: stops the server 5 minutes after the last `.nuc` closes.
 
 `card.ts` reads the card (`readCard(root)`, `projectCard(file)`, `appDir`, `isInstalled`): the platform, the

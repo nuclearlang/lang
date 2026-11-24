@@ -12,13 +12,14 @@ use std::sync::OnceLock;
 /// The file of a project that holds the helpers it uses (no extension: the dialect's).
 pub const PATH: &str = "nuclear_helpers";
 
-const SOURCES: [&str; 6] = [
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/array.nuc"),
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/collection.nuc"),
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/math.nuc"),
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/string.nuc"),
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/object.nuc"),
-    include_str!("../../../../nuclear-synapsis-framework/lodash/src/function.nuc"),
+/// Each file of the library by its name, as the compiler embeds it.
+const SOURCES: [(&str, &str); 6] = [
+    ("array.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/array.nuc")),
+    ("collection.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/collection.nuc")),
+    ("math.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/math.nuc")),
+    ("string.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/string.nuc")),
+    ("object.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/object.nuc")),
+    ("function.nuc", include_str!("../../../../nuclear-synapsis-framework/lodash/src/function.nuc")),
 ];
 
 /// What the helpers use among themselves: a program cannot call them (the name stays free for it).
@@ -37,7 +38,7 @@ fn registry() -> &'static HashMap<String, Helper> {
     static REGISTRY: OnceLock<HashMap<String, Helper>> = OnceLock::new();
     REGISTRY.get_or_init(|| {
         let mut out: HashMap<String, Helper> = HashMap::new();
-        for src in SOURCES {
+        for (_, src) in SOURCES {
             let parsed = nuclear_syntax::parse(src);
             for item in &parsed.file.items {
                 let Item::Decl(d) = item else { continue };
@@ -72,6 +73,12 @@ fn registry() -> &'static HashMap<String, Helper> {
 /// offers and explains them like the declarations of a project).
 pub fn public() -> impl Iterator<Item = (&'static str, &'static str)> {
     registry().iter().filter(|(n, _)| !INTERNAL.contains(&n.as_str())).map(|(n, h)| (n.as_str(), h.text.as_str()))
+}
+
+/// The files of the library as the compiler embeds them (`array.nuc` and its source): the editor shows a helper in
+/// its own file, beside its neighbours.
+pub fn files() -> impl Iterator<Item = (&'static str, &'static str)> {
+    SOURCES.into_iter()
 }
 
 /// Every identifier of the tokens (also inside the interpolations of a text), with the token before and after it.

@@ -56,10 +56,18 @@ impl Session {
     }
 
     fn open_uri(uri: &str, text: &str, dialect: &str) -> Session {
+        Session::open_with(uri, text, dialect, json!({}))
+    }
+
+    /// A client that declares `capabilities`.
+    fn open_with(uri: &str, text: &str, dialect: &str, capabilities: Value) -> Session {
         let out = Buf::default();
         let mut s =
             Session { server: Server::new(out.clone()), out, text: text.to_string(), uri: uri.into(), next_id: 1 };
-        s.request("initialize", json!({ "rootUri": null, "initializationOptions": { "dialect": dialect } }));
+        s.request(
+            "initialize",
+            json!({ "rootUri": null, "capabilities": capabilities, "initializationOptions": { "dialect": dialect } }),
+        );
         s.notify("initialized", json!({}));
         s.notify(
             "textDocument/didOpen",
@@ -327,7 +335,7 @@ fn every_prefix_of_every_example_is_safe() {
             features::completion(&doc, Some(&flutter), &p);
             features::hover(&doc, Some(&flutter), &p);
             features::signature_help(&doc, Some(&flutter), &p);
-            features::definition(&doc, &p);
+            features::definition(&doc, None, true, &p);
             features::references(&doc, &p);
             // without catch_unwind: a panic here fails the test
             metrics::compute(src, &doc.lines, &doc.ast, &metrics::Config::default());
@@ -918,7 +926,43 @@ fn hover_and_signature_help_of_a_helper() {
         // a key of a map is not the helper of that name (`tail`)
         let hover = s.at("textDocument/hover", "tail:", 0, 1);
         assert!(!hover.to_string().contains("helper"), "{dialect}: {hover}");
-        // the helpers are the compiler's: there is no file to go to
+        // a client that cannot show the documents of the helpers gets no definition
         assert!(s.at("textDocument/definition", "uniqBy(", 0, 1).is_null(), "{dialect}");
     }
+}
+
+fn helper_client() -> Value {
+    json!({ "experimental": { "nuclearHelperSource": true } })
+}
+
+#[test]
+fn definition_of_a_helper_opens_its_file_of_the_library() {
+    let src = "main() void\n  groups = chunk([1, 2, 3], 2)\n  print({ chunk: 2 })\n";
+    for dialect in ["base", "flutter"] {
+        let mut s = Session::open_with(URI, src, dialect, helper_client());
+        let loc = s.at("textDocument/definition", "chunk(", 0, 1);
+        assert_eq!(loc["uri"], "nuclear-helper:/array.nuc", "{dialect}: {loc}");
+        let text = s.request("nuclear/helperSource", json!({ "uri": loc["uri"] }));
+        let text = text.as_str().unwrap();
+        // the range is the helper's name in the whole file, which holds its neighbours too
+        let start = &loc["range"]["start"];
+        let line = text.lines().nth(start["line"].as_u64().unwrap() as usize).unwrap();
+        assert!(line.starts_with("chunk<T>(") && start["character"] == 0, "{dialect}: {line} {loc}");
+        assert_eq!(loc["range"]["end"]["character"], 5, "{dialect}: {loc}");
+        assert!(text.contains("\nuniqBy<T>("), "{dialect}");
+        // a key of a map is not the helper
+        assert!(s.at("textDocument/definition", "chunk:", 0, 1).is_null(), "{dialect}");
+    }
+    // only the files of the library are documents of the helpers
+    let mut s = Session::open_with(URI, src, "base", helper_client());
+    assert!(s.request("nuclear/helperSource", json!({ "uri": "nuclear-helper:/../Cargo.toml" })).is_null());
+}
+
+#[test]
+fn definition_of_a_name_of_the_file_never_goes_to_the_helper() {
+    let src = "chunk(text: string) string\n  text\n\nmain() void\n  print(chunk('a'))\n";
+    let mut s = Session::open_with(URI, src, "base", helper_client());
+    let loc = s.at("textDocument/definition", "chunk('a')", 0, 1);
+    assert_eq!(loc["uri"], URI, "{loc}");
+    assert_eq!(loc["range"]["start"], json!({ "line": 0, "character": 0 }), "{loc}");
 }

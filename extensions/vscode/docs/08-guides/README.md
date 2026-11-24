@@ -34,7 +34,8 @@ The extension starts when you open a `.nuc` file or a folder that has one. The c
 - **Completion**, **hover** and **signature help** come from the dialect of the file's project and its type
   definitions.
 - **Go to definition** (F12), **find references**, **rename** (F2), the **outline** and **folding** work across
-  the files of a project.
+  the files of a project. On a helper of the language (`chunk`, `uniqBy`), F12 and peek open its file of the
+  library, read-only.
 - **Semantic colors** are on for `.nuc` files. The extension also sets, for `[nuclear]`: tab size 2, spaces,
   indentation guides and format on type.
 - **Comments**: Enter inside a `//` comment continues it with ` * `; Enter on an empty ` *` line ends it. There is

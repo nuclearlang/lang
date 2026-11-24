@@ -16,6 +16,11 @@ What is common to the three editors, also what was never tried in a running Zed:
 
 ## Pending
 
+- **Go to definition of a helper** (`chunk`, `uniqBy`; VS Code has it): the server answers it with a read-only
+  document `nuclear-helper:/array.nuc` only to a client that declares `experimental.nuclearHelperSource`. Zed's
+  client opens only files and its extension API has no provider of documents, so Zed does not declare it: F12 on a
+  helper finds nothing, and hover shows the helper's declaration and doc comment.
+
 - `extension.toml` reads the grammar from a commit of the repository `nuclearlang/nuclear-zed`
   (`[grammars.nuclear]`: `repository`, `path = "grammar"`, `rev`). The grammar is now a folder of this tree, with no
   git of its own: a published extension needs a repository and a commit that hold it.

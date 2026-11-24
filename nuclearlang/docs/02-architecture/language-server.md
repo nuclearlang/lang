@@ -85,7 +85,12 @@ through it, so a helper is shown as a function of the project is.
   documentation, the label `helper`), after the file's and the project's.
 - A name of the file, of its project or of the dialect (`dialect_has`) is never the helper; a key or a named
   argument of that name (`{ tail: 2 }`) neither.
-- No go to definition: a helper is inside the compiler, there is no file to open on an installed machine.
+- Go to definition opens the helper in its file of the library, read-only: the compiler embeds the files
+  (`nuclear_transpile::helpers::files`), so the server answers the document `nuclear-helper:/array.nuc` (the
+  whole file, the helper and its neighbours; `features::HELPER_SCHEME`) at the helper's name, and the request
+  `nuclear/helperSource` `{ uri }` gives its text (`null` for any other). Only a client that declares
+  `capabilities.experimental.nuclearHelperSource` gets it (VS Code, a content provider of the scheme); the others
+  get no definition, as before. Nothing names a path of the source tree or of the machine.
 
 ## Bundles
 

@@ -19,6 +19,13 @@ What is common to the three editors: [the editors' roadmap](../../../docs/01-pro
 
 ## Pending
 
+- **Go to definition of a helper** (`chunk`, `uniqBy`; VS Code has it): the server answers it with a read-only
+  document `nuclear-helper:/array.nuc` only to a client that declares `experimental.nuclearHelperSource`. The
+  plugin does not declare it yet: F12 on a helper finds nothing, and hover shows the helper's declaration and doc
+  comment. Wanted: the capability in the descriptor's client capabilities, and `findFileByUri` of
+  `NuclearLspServerDescriptor` answering the scheme with a read-only `LightVirtualFile` of the `.nuc` file type
+  whose text comes from `nuclear/helperSource`; it needs a running IDE to prove it.
+
 - **The Nuclear workspaces** (spec 022, VS Code has them since 2026-11-20): the recent workspaces kept by the IDE (not
   by its project), the workspace's apps (`nuclear workspace show --json`) as the projects the tool windows act on,
   refreshed when `.workspace/workspace.nuc` changes, the empty state (why, the recent ones, open, create), the actions
