@@ -18,7 +18,9 @@ backend or web project is not built here: [overview.md](overview.md), "Backend a
 2. Transpiles the project; writes only what changed and deletes orphans (`.dart_tool/nuclear_files`).
 3. `ensure_packages` (Synapsis's own; with `@splash` also `flutter_native_splash`, detected by the line prefix
    `name:`), copies `out.copies`, `assets::write`.
-4. `pub get` when `.dart_tool/package_config.json` is missing (after `flutter clean`) or the pubspec is newer than
+4. `pub get` when the last one was made by another version of the platform (`.dart_tool/nuclear_pub_get` holds the
+   version: the runtime package `synapsis` comes with the platform and may need new packages, as 0.100's needs
+   `decimal`), when `.dart_tool/package_config.json` is missing (after `flutter clean`) or the pubspec is newer than
    the lock AND than `.dart_tool/nuclear_pub_get` (`pub get` does not touch an unchanged lock).
 5. `build_runner --delete-conflicting-outputs` only if a file with `part` changed since
    `.dart_tool/nuclear_build_runner` (`.g.dart` dates are useless: unchanged ones are not rewritten).

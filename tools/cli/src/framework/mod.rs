@@ -1540,21 +1540,25 @@ fn build(root: &Path) -> Result<PathBuf, String> {
 
 const CODE_ERRORS: &str = "the project has errors; nothing was written";
 
-/// No lock, no package config (`flutter clean` deletes `.dart_tool`), or a pubspec changed since the last
-/// `pub get`. The lock's date is not enough: `pub get` leaves it untouched when nothing changes, so a pubspec
-/// rewritten with the same packages would ask for `pub get` on every build.
+/// No lock, no package config (`flutter clean` deletes `.dart_tool`), a pubspec changed since the last `pub get`, or
+/// the last `pub get` was made by another version of the platform: the runtime packages (`synapsis`, a path
+/// dependency) come with it and may need new packages (0.100's `synapsis` needs `decimal`: an app fetched by 0.99
+/// failed with "Couldn't resolve the package 'decimal'"). The lock's date is not enough: `pub get` leaves it
+/// untouched when nothing changes, so a pubspec rewritten with the same packages would ask for `pub get` on every build.
 fn needs_pub_get(app: &Path) -> bool {
     let lock = app.join("pubspec.lock");
     let config = app.join(".dart_tool/package_config.json");
-    let last = modified(&lock).max(modified(&app.join(PUB_GET_MARK)));
-    !lock.is_file() || !config.is_file() || modified(&app.join("pubspec.yaml")) > last
+    let mark = app.join(PUB_GET_MARK);
+    let last = modified(&lock).max(modified(&mark));
+    let by = std::fs::read_to_string(&mark).unwrap_or_default();
+    !lock.is_file() || !config.is_file() || modified(&app.join("pubspec.yaml")) > last || by.trim() != env!("CARGO_PKG_VERSION")
 }
 
 const PUB_GET_MARK: &str = ".dart_tool/nuclear_pub_get";
 
 fn pub_get(app: &Path) -> Result<(), String> {
     flutter(app, &["pub", "get"])?;
-    std::fs::write(app.join(PUB_GET_MARK), "").map_err(|e| e.to_string())
+    std::fs::write(app.join(PUB_GET_MARK), env!("CARGO_PKG_VERSION")).map_err(|e| e.to_string())
 }
 
 /// `nuclear explain`: reads the error from stdin.
@@ -2302,6 +2306,26 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+
+    /// An app whose packages another version of the platform fetched gets `pub get` again: the runtime packages come
+    /// with the platform (0.100's `synapsis` needs `decimal`).
+    #[test]
+    fn an_app_fetched_by_another_version_gets_pub_get_again() {
+        let app = std::env::temp_dir().join(format!("nuclear-pubget-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&app);
+        std::fs::create_dir_all(app.join(".dart_tool")).unwrap();
+        std::fs::write(app.join("pubspec.yaml"), "name: x\n").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::fs::write(app.join("pubspec.lock"), "").unwrap();
+        std::fs::write(app.join(".dart_tool/package_config.json"), "{}").unwrap();
+        std::fs::write(app.join(PUB_GET_MARK), "").unwrap();
+        assert!(needs_pub_get(&app), "a mark without a version (before 0.100)");
+        std::fs::write(app.join(PUB_GET_MARK), "0.99.0").unwrap();
+        assert!(needs_pub_get(&app), "another version");
+        std::fs::write(app.join(PUB_GET_MARK), env!("CARGO_PKG_VERSION")).unwrap();
+        assert!(!needs_pub_get(&app), "this version, nothing changed");
+        let _ = std::fs::remove_dir_all(&app);
+    }
 
     /// A generator never writes a folder with an ugly or a reserved name: `_global`, `users_`, `if`, `global` (Python).
     #[test]
