@@ -23,6 +23,8 @@ pub const SECRETS_FILE: &str = ".nuclear/secrets.json";
 pub const KEY_FILE: &str = ".nuclear/env-key";
 pub const DEFAULT: &str = "development";
 pub const TEST: &str = "test";
+/// The variable of a web or mobile app's backend (`Http(baseUrl = env("API_URL", ...))`).
+pub const API_URL: &str = "API_URL";
 
 // ---------- the format ----------
 
@@ -463,14 +465,23 @@ pub struct ForBuild {
 }
 
 /// Before a build of a platform project (`None` for any other): the environment's values, and for a web or mobile app
-/// the ones its build carries (`Manifest::env`, with the process environment, never a secret).
+/// the ones its build carries (`Manifest::env`, with the process environment, never a secret). In `development`, a
+/// client of a workspace that gives no `API_URL` calls the workspace's backend at its address of the registry of
+/// projects (`nuclear projects`).
 pub fn prepare(root: &Path, manifest: &mut nuclear_transpile::project::Manifest) -> Result<Option<ForBuild>, String> {
     if manifest.platform.is_none() {
         return Ok(None);
     }
     let client = matches!(manifest.platform.as_deref(), Some("web" | "mobile"));
     let environment = chosen(root, DEFAULT);
-    let values = resolve(root, &manifest.name, &environment, client)?;
+    let mut values = resolve(root, &manifest.name, &environment, client)?;
+    if client
+        && environment == DEFAULT
+        && !values.contains_key(API_URL)
+        && let Some(url) = crate::framework::projects::workspace_backend(root)
+    {
+        values.insert(API_URL.into(), Resolved { value: format!("{url}/"), source: "projects".into(), secret: false });
+    }
     if client {
         manifest.env = client_values(&values);
     }

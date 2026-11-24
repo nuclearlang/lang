@@ -11,6 +11,8 @@ import { IsOptional, IsString } from 'class-validator';
 import { WebSocket } from 'ws';
 import { AppConfig, BoolPipe, Connection, DoublePipe, IntPipe, IsWhole, RequiredPipe, TextPipe, Token, configureApp } from '../src/index.js';
 import { WebSocketServer } from '../src/sockets.js';
+import { edge } from '../src/edge.js';
+import { createServer } from 'node:http';
 
 class Config extends AppConfig {
   readonly connections: Connection[] = [new WebSocketServer({ path: 'ws' })];
@@ -120,6 +122,32 @@ describe('the edge of every request', () => {
     const r = await fetch(`http://${base}/notes`, { headers: { origin: 'http://localhost:5173' } });
     assert.equal(r.headers.get('access-control-allow-origin'), 'http://localhost:5173');
     for (const h of ['x-powered-by', 'server', 'etag']) assert.equal(r.headers.get(h), null, h);
+    // out of development, an address of this machine is one more origin: only the listed ones
+    assert.equal((await preflight('http://127.0.0.1:49152')).status, 403);
+  });
+
+  it('CORS in development: this machine and the registry may call', async () => {
+    process.env.NUCLEAR_DEV_ORIGINS = 'http://192.168.1.20:8080,http://127.0.0.1:8001';
+    const server = createServer((req, res) => edge(['http://localhost:5173'], true)(req, res, () => res.end('ok')));
+    await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
+    const at = `http://127.0.0.1:${(server.address() as AddressInfo).port}/notes`;
+    const preflight = (origin: string) => fetch(at, { method: 'OPTIONS', headers: { origin, 'access-control-request-method': 'GET' } });
+    try {
+      for (const origin of ['http://localhost:5173', 'http://127.0.0.1:49152', 'http://localhost:8081', 'http://[::1]:3000', 'http://localhost', 'https://127.0.0.1:8443', 'http://192.168.1.20:8080']) {
+        const r = await preflight(origin);
+        assert.deepEqual([r.status, r.headers.get('access-control-allow-origin')], [200, origin], origin);
+        assert.equal((await fetch(at, { headers: { origin } })).headers.get('access-control-allow-origin'), origin, origin);
+      }
+      for (const origin of ['https://evil.example', 'http://localhost.evil.example', 'http://127.0.0.1.evil.example:80', 'http://127.0.0.1:80/x', 'null', 'http://192.168.1.21:8080']) {
+        assert.equal((await preflight(origin)).status, 403, origin);
+        assert.equal((await fetch(at, { headers: { origin } })).headers.get('access-control-allow-origin'), null, origin);
+      }
+      // never credentials, in any environment
+      assert.equal((await preflight('http://127.0.0.1:49152')).headers.get('access-control-allow-credentials'), null);
+    } finally {
+      delete process.env.NUCLEAR_DEV_ORIGINS;
+      server.close();
+    }
   });
 
   const frames = (sent: (string | Buffer)[], path = '/ws') =>

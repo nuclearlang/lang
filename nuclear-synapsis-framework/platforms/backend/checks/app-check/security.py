@@ -6,6 +6,7 @@ error shows what it must not (a stack, SQL, a path, the name of what runs undern
 The apps (check.sh starts them, production mode):
   store on SQLite      store_api with the probe routes, no `origins`: SQL injection, what CORS allows by default
   store on PostgreSQL  the same with `origins = ["http://localhost:5173"]`: SQL injection, errors, bodies, CORS
+  store in development the PostgreSQL one with NUCLEAR_ENV=development and NUCLEAR_DEV_ORIGINS: CORS of development
   tasks on SQLite      tasks_api: the guards `NoOrigin` and `Token`, a controller's guard, the WebSocket
 
 Run: python security.py <work folder> <tasks token> <owner token>     (appends its findings to <work>/findings)
@@ -264,18 +265,32 @@ def bodies(bases: dict[str, str]) -> None:
 def cors(bases: dict[str, str], listed: bool) -> None:
     """What a browser on another origin is allowed: nothing without `origins`, only the listed origins with it."""
     t = "listed" if listed else "default"
+    # production: an address of this machine on another port is one more unlisted origin
+    cors_of(bases, t, ("http://localhost:5173", "http://127.0.0.1:49152", "https://evil.example", "null"), {"http://localhost:5173"} if listed else set())
 
+
+def cors_development(bases: dict[str, str]) -> None:
+    """In development (`NUCLEAR_ENV=development`): also the registry's addresses (`NUCLEAR_DEV_ORIGINS`) and any port
+    of `localhost`, `127.0.0.1` and `[::1]`; never a look-alike, another host or credentials."""
+    good = ("http://localhost:5173", "http://127.0.0.1:49152", "http://localhost:8081", "http://[::1]:3000", "http://192.168.1.20:8080")
+    bad = ("https://evil.example", "http://localhost.evil.example", "http://127.0.0.1.evil.example", "http://192.168.1.21:8080", "null")
+    cors_of(bases, "development", good + bad, set(good))
+
+
+def cors_of(bases: dict[str, str], t: str, origins: tuple[str, ...], allowed: set[str]) -> None:
     def allows(a: Answer) -> str:
         return a[1].get("access-control-allow-origin", "")
 
-    for origin in ("http://localhost:5173", "https://evil.example", "null"):
+    for origin in origins:
         for name, method, headers in (
             ("get", "GET", [("Origin", origin)]),
             ("preflight", "OPTIONS", [("Origin", origin), ("Access-Control-Request-Method", "DELETE"), ("Access-Control-Request-Headers", "authorization, content-type")]),
         ):
             got = probe(f"cors.{t}.{name}.{origin}", bases, method, "/customers/page?page=1&size=1", headers=headers, same=False)
             given = {d: allows(a) for d, a in got.items()}
-            should = origin if listed and origin == "http://localhost:5173" else ""
+            should = origin if origin in allowed else ""
+            if name == "preflight" and any(a[0] != (200 if should else 403) for a in got.values()):
+                finding(f"cors.{t}.preflight.{origin}.status", f"the preflight should answer {200 if should else 403}: {dict((d, a[0]) for d, a in got.items())}")
             if any(v != should for v in given.values()):
                 finding(f"cors.{t}.{name}.{origin}.allowed", f"Access-Control-Allow-Origin should be {should!r}: {given}")
             if name == "preflight" and (got["fastapi"][0] != got["nestjs"][0] or any("access-control-allow-credentials" in a[1] for a in got.values())):
@@ -489,6 +504,7 @@ def main() -> int:
     errors(pg)
     bodies(pg)
     cors(pg, listed=True)
+    cors_development(apps("dev"))
     guards(tasks)
     sockets(tasks)
     binding("store", pg)

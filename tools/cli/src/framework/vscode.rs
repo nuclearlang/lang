@@ -100,11 +100,13 @@ pub fn write(
         tasks.push(task("nuclear: analyze", &["analyze"], json!("none"), None));
     }
     tasks.push(task("nuclear: check", &["check"], json!("none"), None));
+    // the project's own address of the registry of projects (`nuclear run` serves there), else the dialect's
+    let own = super::projects::of(root).unwrap_or_default();
     let vars = [
         ("name", m.name.clone()),
         ("app", app_folder.clone()),
-        ("url", dialect.tool("url").unwrap_or_default().to_string()),
-        ("port", url_port(dialect).unwrap_or_default()),
+        ("url", own["url"].as_str().or(dialect.tool("url")).unwrap_or_default().to_string()),
+        ("port", own["port"].as_u64().map(|p| p.to_string()).or_else(|| url_port(dialect)).unwrap_or_default()),
     ];
     let launches: Vec<Value> = dialect
         .launches

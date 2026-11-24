@@ -4,11 +4,17 @@ use serde_json::Value;
 use std::path::Path;
 use std::process::Command;
 
+fn registry() -> std::path::PathBuf {
+    std::env::temp_dir().join(format!("nuclear-projects-workspace-test-{}.json", std::process::id()))
+}
+
 fn nuclear(dir: &Path, args: &[&str]) -> (bool, Value) {
     let out = Command::new(env!("CARGO_BIN_EXE_nuclear"))
         .args(args)
         .current_dir(dir)
         .env("NUCLEAR_NO_UPDATE_CHECK", "1")
+        // never the user's registry of projects
+        .env("NUCLEAR_PROJECTS", registry())
         .env("NO_COLOR", "1")
         .output()
         .unwrap();
@@ -36,10 +42,22 @@ fn a_workspace_with_a_backend_and_a_web_app() {
         .args(["new", "citofony_web", "-p", "web", "-d", "react"])
         .current_dir(root.join("citofony_api"))
         .env("NUCLEAR_NO_UPDATE_CHECK", "1")
+        // never the user's registry of projects
+        .env("NUCLEAR_PROJECTS", registry())
         .output()
         .unwrap();
     assert!(made.status.success(), "{}", String::from_utf8_lossy(&made.stderr));
     assert!(root.join("citofony_web/config.nuc").is_file());
+
+    // both are in the registry of projects with their own ports, and the web app calls the workspace's backend there
+    let (ok, all) = nuclear(&dir, &["projects", "--json"]);
+    assert!(ok, "{all}");
+    let of = |name: &str| all["projects"].as_array().unwrap().iter().find(|p| p["name"] == name).cloned().unwrap_or_else(|| panic!("{name}: {all}"));
+    let (api, web) = (of("citofony_api"), of("citofony_web"));
+    assert_eq!((api["url"].as_str(), api["workspace"]["name"].as_str()), (Some("http://127.0.0.1:8000"), Some("citofony")));
+    assert_eq!((web["url"].as_str(), web["platform"].as_str()), (Some("http://localhost:5173"), Some("web")));
+    let env = std::fs::read_to_string(root.join("citofony_web/.env")).unwrap();
+    assert!(env.contains("\nAPI_URL=http://127.0.0.1:8000/\n"), "{env}");
 
     let (ok, ws) = nuclear(&root.join("citofony_web"), &["workspace", "list", "--json"]);
     assert!(ok);
@@ -67,4 +85,5 @@ fn a_workspace_with_a_backend_and_a_web_app() {
     let (ok, ws) = nuclear(&dir, &["workspace", "find", "--json"]);
     assert!(ok && ws.is_null());
     let _ = std::fs::remove_dir_all(&dir);
+    let _ = std::fs::remove_file(registry());
 }

@@ -1059,3 +1059,21 @@ expect = ["concept:why-a-team"]
 [[question]]
 ask = "does each team channel keep its own memory of what was asked"
 expect = ["can:workplace-chat", "concept:why-a-team"]
+
+# ---- where projects run, CORS in development ----
+
+[[question]]
+ask = "my flutter web app says no connection to the server"
+expect = ["can:backend-cors", "can:project-registry"]
+
+[[question]]
+ask = "cors error in development"
+expect = ["can:backend-cors"]
+
+[[question]]
+ask = "which port does my backend use"
+expect = ["can:project-registry", "mcp:projects_list", "tool:nuclear.projects"]
+
+[[question]]
+ask = "mi app de flutter en chrome dice sin conexion al servidor"
+expect = ["can:backend-cors", "can:project-registry"]

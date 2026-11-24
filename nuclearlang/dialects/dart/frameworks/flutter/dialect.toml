@@ -248,6 +248,9 @@ template = { file = "templates/event.tpl" }
 # extensions run the app of build/app; saving a .nuc transpiles it and hot reloads (task `synapsis: watch`).
 [toolchain]
 installed = ".dart_tool"
+# where `nuclear run` serves the app when it runs as a web page (Chrome, web-server): the default of the registry of
+# projects, which gives each project its own port (`nuclear projects`)
+web_url = "http://127.0.0.1:8080"
 extensions = ["Dart-Code.flutter", "Dart-Code.dart-code"]
 
 [toolchain.settings]

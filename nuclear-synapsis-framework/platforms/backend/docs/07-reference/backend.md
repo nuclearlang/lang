@@ -500,6 +500,29 @@ appConfig ProjectConfig
   origins: string[] = ["http://localhost:5173"]
 ```
 
+In development the allowed origins are more: an app that runs in the environment `development` (`NUCLEAR_ENV`,
+which `nuclear run` gives the server: spec 021) also allows every development address of the machine's registry of
+projects (`nuclear projects`: every Nuclear project of the machine, whatever its workspace, given to the server by
+`nuclear run` in `NUCLEAR_DEV_ORIGINS`, read when it starts) and any origin `http://` or `https://` with the host
+`localhost`, `127.0.0.1` or `[::1]` and any port or none. Nothing else changes: the preflight of any other origin
+answers 403 and credentials are never allowed. In any other environment, and in a server started without
+`NUCLEAR_ENV` (a deployment), only `origins` apply. A browser that is refused never shows the answer to the app: its
+request fails as one that found no server ("no connection"), so a web app whose origin is not allowed seems to have
+no backend.
+
+#### Where it runs in development
+
+Each project has its own development port, recorded in the machine's registry of projects the first time it is
+made, built or run, and kept: the dialect's port when no other project of the registry has it, else the next one
+that none has (`nuclear projects` shows them; two backends of one machine never share a port). `nuclear run` serves
+on it, on `127.0.0.1` (`HOST` changes the address; a `PORT` of the command's environment is used instead of the
+registry's for that run). A web or mobile app of a
+workspace built in `development` without an `API_URL` calls the workspace's first backend at its address of the
+registry (`http://127.0.0.1:<port>/`): an app written with `env("API_URL", "http://127.0.0.1:8000/")` follows its
+backend's port. The address is `127.0.0.1`, never `localhost`, which may be `::1` first where the server listens on
+IPv4 only. The Android emulator reaches the machine at `10.0.2.2`: its `API_URL` is
+`http://10.0.2.2:<port>/` (`nuclear env set API_URL http://10.0.2.2:8000/ --local`).
+
 #### Migrations of the database (ADR-backend-0001, ADR-backend-0002)
 
 `createTables` is for development and tests: when the app starts it makes the tables of the entities the database

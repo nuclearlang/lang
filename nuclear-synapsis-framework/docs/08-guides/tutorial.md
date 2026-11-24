@@ -52,7 +52,9 @@ nuclear workspace add my_store --platform mobile # nuclear new inside the worksp
 cd my_store
 ```
 
-`nuclear workspace list` shows the apps; `nuclear help workspace` has every command (rename, remove, edit). A
+`nuclear workspace list` shows the apps; `nuclear help workspace` has every command (rename, remove, edit);
+`nuclear projects` shows every project of the machine and its own development port (a backend in development lets
+them all call it from a browser). A
 `nuclear new my_store` run anywhere inside a workspace does the same as `workspace add`.
 
 It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.nuc` and a `home` component with

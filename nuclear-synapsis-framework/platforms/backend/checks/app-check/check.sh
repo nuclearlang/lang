@@ -186,6 +186,12 @@ security_apps() { # security_apps <sqlite|postgres>: the two store apps on that 
     fi
     echo "$d http://127.0.0.1:$http $app_pid $url" >>"$work/urls-$1"
     eval "sec_pid_${d}_$1=$app_pid"
+    [ "$1" = postgres ] || continue
+    # the same app in development, as `nuclear run` starts it: its environment and the registry's addresses
+    start_app "$d" prod "$logs/$d/security-dev.log" "DATABASE_URL=$url" NUCLEAR_ENV=development \
+      "NUCLEAR_DEV_ORIGINS=http://192.168.1.20:8080,http://127.0.0.1:8001" || return 1
+    echo "$d http://127.0.0.1:$http $app_pid $url" >>"$work/urls-dev"
+    eval "sec_pid_${d}_dev=$app_pid"
   done
 }
 tasks_apps() { # the two tasks_api (guards, WebSocket), on SQLite; writes $work/urls-tasks
@@ -203,16 +209,17 @@ tasks_apps() { # the two tasks_api (guards, WebSocket), on SQLite; writes $work/
 security_stage() {
   for d in $dialects; do mkdir -p "$logs/$d"; done
   tasks_apps || { fail - security "the tasks apps did not start"; return 1; }
+  : >"$work/urls-dev"
   for database in sqlite postgres; do
     security_apps "$database" || { fail - security "the store apps did not start on $database"; return 1; }
   done
   if [ -n "$SERVE" ]; then
-    echo "serving: $work (urls-sqlite, urls-postgres, urls-tasks); touch $work/stop to end"
+    echo "serving: $work (urls-sqlite, urls-postgres, urls-dev, urls-tasks); touch $work/stop to end"
     until [ -f "$work/stop" ]; do sleep 1; done
   fi
   "$py" "$self/security.py" "$work" "$tasks_token" "$owner_token" && report ok - security "the same probes sent to both dialects" || failed=1
   for d in $dialects; do
-    for database in sqlite postgres; do eval "stop_app \$sec_pid_${d}_$database"; done
+    for database in sqlite postgres dev; do eval "stop_app \$sec_pid_${d}_$database"; done
     eval "stop_app \$tasks_pid_$d"
   done
   "$py" "$self/audit.py" "$work" "$root" && report ok - advisories "the advisories of the dependencies read" || failed=1

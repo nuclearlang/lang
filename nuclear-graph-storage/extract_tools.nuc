@@ -131,9 +131,11 @@ ExtractTools
           rows.add(ExtractTools.toolRow("nuclear", name, found, src))
       topics = "documentation:${rest.split("\ndialects:")[0]}"
       options: string[][] = by["options"] ?? []
+      // every command is named: the introduction gives up what the list needs of the summary's 420 characters
+      commands = by.keys.filter((n) => n != "options").sorted().join(", ")
       rows.add({
         "id": "tool:nuclear", "type": "cli", "title": "`nuclear` — the command line of NuclearLang",
-        "summary": "${clip(linesOf(text)[0], 300)} Commands: ${by.keys.filter((n) => n != "options").sorted().join(", ")}.",
+        "summary": "${clip(linesOf(text)[0], Math.min(300, 420 - 12 - commands.length))} Commands: ${commands}.",
         "body": "```text\n${options.flatten().join("\n")}\n```\n\nEvery command has its own row (`nuclear build`, `nuclear new`, `nuclear gen resource`...). The documentation it prints:\n\n```text\n${topics.trim()}\n```",
         "keys": ["nuclear cli", "nuclear command"], "sources": src, "meta": { "tool": "nuclear", "name": "" },
       })

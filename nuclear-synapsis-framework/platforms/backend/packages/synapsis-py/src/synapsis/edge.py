@@ -6,12 +6,16 @@
   its code, never its parameters);
 - a body larger than `max_body_size` answers 413; a body that is not JSON in UTF-8 answers 415;
 - an encoded `/` or `\\` in the path matches no route (404);
-- CORS: a preflight from a listed origin answers 200 with what it may send, from any other origin 403; a listed
-  origin's request is answered with `Access-Control-Allow-Origin`.
+- CORS: a preflight from an allowed origin answers 200 with what it may send, from any other origin 403; an allowed
+  origin's request is answered with `Access-Control-Allow-Origin`. The allowed origins are the configured ones; in
+  development (`NUCLEAR_ENV=development`, which `nuclear run` gives) also every address of the machine's registry of
+  projects (`NUCLEAR_DEV_ORIGINS`, which `nuclear run` gives) and any port of `localhost`, `127.0.0.1` and `[::1]`.
 """
 
 from __future__ import annotations
 
+import os
+import re
 import sys
 import time
 import traceback
@@ -23,7 +27,7 @@ from .errors import error_body
 from .models import wire_date
 from .wire import is_json
 
-__all__ = ["Edge", "log_request", "log_cause", "said"]
+__all__ = ["Edge", "development", "log_request", "log_cause", "said"]
 
 Scope = MutableMapping[str, Any]
 Message = MutableMapping[str, Any]
@@ -31,6 +35,13 @@ Receive = Callable[[], Awaitable[Message]]
 Send = Callable[[Message], Awaitable[None]]
 
 METHODS = "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"
+# an address of this machine on any port: what a development server (vite, Flutter web, a device) serves on
+LOOPBACK = re.compile(r"https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]{1,5})?")
+
+
+def development() -> bool:
+    """Whether the app runs in the environment `development` (spec 021: `nuclear run` gives `NUCLEAR_ENV`)."""
+    return os.environ.get("NUCLEAR_ENV") == "development"
 
 
 def _now() -> str:
@@ -84,10 +95,17 @@ def _json(status: int, body: Any, headers: list[tuple[bytes, bytes]] | None = No
 class Edge:
     """The ASGI middleware of every Synapsis app (`create_app` adds it)."""
 
-    def __init__(self, app: Callable[[Scope, Receive, Send], Awaitable[None]], max_body_size: int, origins: list[str]) -> None:
+    def __init__(self, app: Callable[[Scope, Receive, Send], Awaitable[None]], max_body_size: int, origins: list[str], development: bool = False) -> None:
         self.app = app
         self.max = max_body_size
         self.origins = set(origins)
+        self.development = development
+        if development:
+            self.origins |= {o for o in os.environ.get("NUCLEAR_DEV_ORIGINS", "").split(",") if o}
+
+    def allows(self, origin: str) -> bool:
+        """The configured origins; in development also the registry's and any port of this machine's addresses."""
+        return origin in self.origins or (self.development and LOOPBACK.fullmatch(origin) is not None)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -100,7 +118,7 @@ class Edge:
         headers = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope["headers"]}
         status = 0
         origin = headers.get("origin")
-        allowed = origin is not None and origin in self.origins
+        allowed = origin is not None and self.allows(origin)
 
         async def sending(message: Message) -> None:
             nonlocal status
@@ -137,7 +155,7 @@ class Edge:
         if "%2f" in lower or "%5c" in lower:
             return _json(404, error_body(404, "not found")), receive
         if method == "OPTIONS" and "origin" in headers and "access-control-request-method" in headers:
-            if headers["origin"] not in self.origins:
+            if not self.allows(headers["origin"]):
                 return _json(403, error_body(403, "origin not allowed")), receive
             out = [
                 (b"access-control-allow-origin", headers["origin"].encode()),

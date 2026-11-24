@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import AppConfig, ComponentConfig, Connection
-from .edge import Edge
+from .edge import Edge, development
 from .errors import IntegrityViolation, error_body, reasons_of
 from .guards import refusal
 from .inject import inject
@@ -81,7 +81,7 @@ def create_app(
     # the limits of the configuration (the reference, §2.8), read by the Edge, the WebSocket and `paginate`
     LIMITS.body = int(getattr(config, "max_body_size", MAX_BODY_SIZE))
     LIMITS.page = int(getattr(config, "max_page_size", MAX_PAGE_SIZE))
-    app.add_middleware(Edge, max_body_size=LIMITS.body, origins=list(getattr(config, "origins", [])))
+    app.add_middleware(Edge, max_body_size=LIMITS.body, origins=list(getattr(config, "origins", [])), development=development())
     _quiet_server()
     # what `python -m synapsis.migrate` reads to find the database
     app.state.synapsis_config = config

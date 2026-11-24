@@ -5,8 +5,10 @@
 // - a body larger than `maxBodySize` answers 413; a body that is not JSON in UTF-8 answers 415;
 // - an encoded `/` or `\` in the path matches no route (404); an encoded letter, digit, `-`, `.`, `_` or `~` is
 //   the character itself;
-// - CORS: a preflight from a listed origin answers 200 with what it may send, from any other origin 403; a listed
-//   origin's request is answered with `Access-Control-Allow-Origin`.
+// - CORS: a preflight from an allowed origin answers 200 with what it may send, from any other origin 403; an allowed
+//   origin's request is answered with `Access-Control-Allow-Origin`. The allowed origins are the configured ones; in
+//   development (`NUCLEAR_ENV=development`, which `nuclear run` gives) also every address of the machine's registry
+//   of projects (`NUCLEAR_DEV_ORIGINS`, which `nuclear run` gives) and any port of `localhost`, `127.0.0.1`, `[::1]`.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { performance } from 'node:perf_hooks';
 import { errorBody, reason, type Reason } from './errors.js';
@@ -112,9 +114,19 @@ function send(res: ServerResponse, status: number, body: unknown, headers: Recor
 // %41 → A: an encoded unreserved character is that character (RFC 3986 §6.2.2.2)
 const UNRESERVED = /%(4[1-9A-F]|5[0-9A]|6[1-9A-F]|7[0-9A]|3[0-9]|2D|2E|5F|7E)/gi;
 
-/** The middleware of every Synapsis app (configureApp adds it before the routes). */
-export function edge(origins: readonly string[]) {
-  const listed = new Set(origins);
+// an address of this machine on any port: what a development server (vite, Flutter web, a device) serves on
+const LOOPBACK = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:[0-9]{1,5})?$/;
+
+/** Whether the app runs in the environment `development` (spec 021: `nuclear run` gives `NUCLEAR_ENV`). */
+export function development(): boolean {
+  return process.env.NUCLEAR_ENV === 'development';
+}
+
+/** The middleware of every Synapsis app (configureApp adds it before the routes). In `development` it also lets the
+ * registry's addresses (`NUCLEAR_DEV_ORIGINS`) and any port of this machine's addresses call the app. */
+export function edge(origins: readonly string[], dev: boolean = development()) {
+  const configured = new Set(dev ? [...origins, ...(process.env.NUCLEAR_DEV_ORIGINS ?? '').split(',').filter((o) => o)] : origins);
+  const listed = { has: (origin: string) => configured.has(origin) || (dev && LOOPBACK.test(origin)) };
   return (req: Request, res: ServerResponse, next: (e?: unknown) => void): void => {
     const started = performance.now();
     const url = req.url ?? '/';

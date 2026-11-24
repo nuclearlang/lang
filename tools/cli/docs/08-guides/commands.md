@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-20
+updated: 2026-11-23
 related: [tools/cli/src/main.rs, tools/cli/src/framework/mod.rs, tools/cli/docs/08-guides/README.md]
 ---
 # Every command of `nuclear`
@@ -124,6 +124,13 @@ nuclear help workspace)
                                              object {root, name, description, apps: [{name, folder, platform,
                                              dialect, exists}]} (find: or null), {error} when it fails
   check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
+
+projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project made, built or run)
+  projects [--json]                          each project, its platform, dialect, workspace and development address;
+                                             its port is its own (the dialect's when free, else the next free one):
+                                             run serves there, a backend in development lets every address of the
+                                             registry and any localhost / 127.0.0.1 / [::1] port call it (CORS), an
+                                             app of a workspace calls the workspace's backend there (API_URL)
 
 environments (spec 021: every env("NAME", "default") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)

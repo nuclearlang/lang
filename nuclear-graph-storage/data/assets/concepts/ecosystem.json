@@ -333,7 +333,8 @@
     "- Each app is a Synapsis project in its own folder of the workspace (its `config.nuc`); its folder is the snake_case project name. `nuclear new` run inside a workspace makes the app in the workspace's root and adds it.",
     "- `nuclear check` in the workspace's root checks every app; `nuclear doctor` shows the workspace and a missing app's folder.",
     "- An agent: `workspace_show` first, then `workspace_create` / `app_add` (never a loose folder); every change is asked first.",
-    "- The editor remembers the workspaces (recent ones) and shows the open one's apps as the projects of the Nuclear workspace."
+    "- The editor remembers the workspaces (recent ones) and shows the open one's apps as the projects of the Nuclear workspace.",
+    "- Every app is also in the machine's registry of projects (`nuclear projects`, MCP `projects_list`) with its own development port; a web or mobile app built in `development` without an `API_URL` calls the workspace's backend there, and that backend, run in development, lets every local address call it from a browser (CORS)."
    ],
    "keys": [
     "workspace",
@@ -360,6 +361,10 @@
     {
      "rel": "agents-use",
      "to": "concept:mcp"
+    },
+    {
+     "rel": "can",
+     "to": "can:project-registry"
     }
    ],
    "sources": [
@@ -463,7 +468,7 @@
     "```nuclear",
     "// config/project_config.nuc",
     "appConfig ProjectConfig",
-    "  connections: Connection[] = [Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))]",
+    "  connections: Connection[] = [Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))]",
     "  guards: Guard[] = [Token(value = env(\"API_TOKEN\"))]   // required: no default",
     "```",
     "",
@@ -472,7 +477,8 @@
     "- `nuclear env list [--env e] [--json]`, `nuclear env set NAME value [--env e] [--local]`, `nuclear env set NAME --secret --env e` (the value from stdin, kept in the keyring; without one in `.env.<env>.local`), `nuclear env unset`, `nuclear env envs`, `nuclear env use e`. An agent uses the MCP tool `nuclear_env` (it never sets a secret: the user does, in a terminal).",
     "- A backend: `nuclear run` passes the values to the app and refuses to start while a required one has no value (N0312 lists where it is used); `nuclear build --env e` writes the non-secret values into the app's `.env`, which the runtime loads without replacing the process's.",
     "- Web and mobile: the build writes only the variables the code reads (`src/nuclear_env.ts`, `lib/nuclear_env.dart`); a secret read by a client is N0311. A name or default that is not a text literal is N0310.",
-    "- Every variable is listed in `.nuclear/contract.json` (`env`). In VS Code the Environments page (`Ctrl+Alt+Y`) edits them without opening a file."
+    "- Every variable is listed in `.nuclear/contract.json` (`env`). In VS Code the Environments page (`Ctrl+Alt+Y`) edits them without opening a file.",
+    "- `development` also opens a backend's CORS to this machine (any port of `localhost`, `127.0.0.1`, `[::1]` and every address of `nuclear projects`): `nuclear run` gives the server `NUCLEAR_ENV`; a deployment that sets none, or another environment, allows only `origins`. A client of a workspace in `development` without `API_URL` gets its backend's address."
    ],
    "keys": [
     "env",

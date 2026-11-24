@@ -868,6 +868,10 @@ fn project_command(args: &Args, cmd: &str, path: &str) -> ExitCode {
         eprintln!("{e}");
         return ExitCode::from(2);
     }
+    // the project's own build (not a check's or another dialect's): the registry of projects knows where it runs
+    if args.out.is_none() && args.dialect.is_none() {
+        framework::projects::record(&root, &manifest, &dialect);
+    }
     if !args.json {
         eprintln!("{}: {} files → {}", manifest.name, out.files.len() + out.generated.len(), out_dir.display());
     }

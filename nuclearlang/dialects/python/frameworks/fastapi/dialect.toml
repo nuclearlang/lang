@@ -213,8 +213,9 @@ install_local = ".venv/bin/pip install -q --no-deps --force-reinstall {{path}}"
 # the runtime's server (synapsis.server): HOST (default 127.0.0.1) and PORT, the request lines the app's own, no `Server` header
 run = ".venv/bin/python -m synapsis.server --reload --port {{port}}"
 test = ".venv/bin/python -m pytest -q"
-# where the server answers (the editor's debugger and HTTP tool), what exists once installed, its ready line
-url = "http://localhost:8000"
+# where the server answers (the default of the registry of projects, which gives each project its own port; the
+# editor's debugger and HTTP tool), what exists once installed, its ready line
+url = "http://127.0.0.1:8000"
 installed = ".venv"
 ready = "Uvicorn running"
 # `nuclear add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the

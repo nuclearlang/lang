@@ -109,6 +109,24 @@ def test_cors_only_the_listed_origins_and_answers_do_not_name_the_server() -> No
             assert h not in r.headers, h
         assert c.get("/docs").status_code == 404
         assert c.get("/redoc").status_code == 404
+        # out of development, an address of this machine is one more origin: only the listed ones
+        assert preflight("http://127.0.0.1:49152").status_code == 403
+
+
+def test_cors_in_development_lets_this_machine_and_the_registry_call(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NUCLEAR_ENV", "development")
+    monkeypatch.setenv("NUCLEAR_DEV_ORIGINS", "http://192.168.1.20:8080,http://127.0.0.1:8001")
+    with app() as c:
+        preflight = lambda origin: c.options("/notes", headers={"origin": origin, "access-control-request-method": "GET"})  # noqa: E731
+        for origin in ("http://localhost:5173", "http://127.0.0.1:49152", "http://localhost:8081", "http://[::1]:3000", "http://localhost", "https://127.0.0.1:8443", "http://192.168.1.20:8080"):
+            r = preflight(origin)
+            assert (r.status_code, r.headers.get("access-control-allow-origin")) == (200, origin), origin
+            assert c.get("/notes", headers={"origin": origin}).headers.get("access-control-allow-origin") == origin
+        for origin in ("https://evil.example", "http://localhost.evil.example", "http://127.0.0.1.evil.example:80", "http://127.0.0.1:80/x", "null", "http://192.168.1.21:8080"):
+            assert preflight(origin).status_code == 403, origin
+            assert "access-control-allow-origin" not in c.get("/notes", headers={"origin": origin}).headers, origin
+        # never credentials, in any environment
+        assert "access-control-allow-credentials" not in preflight("http://127.0.0.1:49152").headers
 
 
 def frames(c: TestClient, sent: list[str | bytes], path: str = "/ws") -> str:

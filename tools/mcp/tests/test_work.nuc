@@ -120,6 +120,14 @@ FakeTests(code: int, out: string, explained: string = "{}")
     calls.add([args, cwd, stdin])
     args[1] == "explain" ? Ran(0, explained) : Ran(code, out)
 
+// Every project of the machine and its address: `nuclear projects --json`, as it printed it.
+testProjectsListIsTheRegistryOfTheMachine() void
+  listed = "{\"projects\": [{\"name\": \"api\", \"platform\": \"backend\", \"url\": \"http://127.0.0.1:8000\", \"port\": 8000}]}"
+  runner = Runner(listed)
+  got = said(asyncio.run(WorkTools(runner.run).projectsList()))
+  expect(got["projects"][0]["port"] == 8000)
+  expect(runner.calls == [[["nuclear", "projects", "--json"], null, ""]])
+
 // The tests of a project: the same answer whatever the dialect's runner prints.
 testTheTestsOfAProjectAnswerTheSameInEveryDialect(tmpPath: Path) void
   project = tmpPath.joinpath("shop_api")

@@ -17,7 +17,7 @@ Environments: `env("NAME", "default")` (`env("NAME")`: required) reads a variabl
 `.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.
 `nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value
 from stdin); `nuclear run|build|test|check --env <name>`. They are constants of the build: a secret read by the app is N0311; the backend's url is
-`Http(baseUrl = env("API_URL", "http://localhost:8000/"))`.
+`Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))`.
 
 ## Layout and kinds (the folder gives the kind of a declaration without a header word)
 

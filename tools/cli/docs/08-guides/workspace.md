@@ -44,6 +44,16 @@ folder inside a workspace does the same: the project is made in the workspace's 
 written into the marker. An app's name is a project's name: letters, digits and `_` (`citofony-api` becomes
 `citofony_api`), so it is always a plain folder of the workspace.
 
+## Where its apps run
+
+Every app is also in the registry of projects of the machine (`nuclear projects [--json]`, MCP `projects_list`),
+with its own development port, chosen once and kept (the dialect's when no other project has it, else the next
+one): `nuclear run` serves there. A web or mobile app built in `development` without an `API_URL` calls the
+workspace's first backend at its address (`http://127.0.0.1:<port>/`), and a backend run in `development` lets every
+address of the registry, and any port of `localhost`, `127.0.0.1` and `[::1]`, call it from a browser (CORS): a
+web app or a Flutter app run on Chrome reaches its backend without listing its origin. In production only the
+backend's `origins` apply (the backend's reference, §2.8).
+
 ## Change it
 
 | Command | What it does |

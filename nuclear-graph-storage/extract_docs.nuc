@@ -111,7 +111,8 @@ ExtractDocs
         parts = rel.split("/")
         if PRIVATE.any((p) => rel.startsWith(p)) or not (path.suffix in [".md", ".ebnf"])
           continue
-        repo: string = prefix.length > 0 ? "website" : (parts.length > 1 and root.joinpath(parts[0], ".git").exists() ? parts[0] : root.name)
+        // the tree is the repository `nuclearlang` whatever its folder is called (a clone, a git worktree)
+        repo: string = prefix.length > 0 ? "website" : (parts.length > 1 and root.joinpath(parts[0], ".git").exists() ? parts[0] : "nuclearlang")
         out.add(Document("${prefix}${rel}", repo, path))
     out
 

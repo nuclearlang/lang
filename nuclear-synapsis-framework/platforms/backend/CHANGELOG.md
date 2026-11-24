@@ -4,6 +4,14 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **CORS in development** (reference §2.8), the same in `fastapi` and `nestjs`: an app whose `NUCLEAR_ENV` is
+  `development` (what `nuclear run` gives it) also allows the origins of `NUCLEAR_DEV_ORIGINS` (every address of the
+  machine's registry of projects, given by `nuclear run`) and any `http://` or `https://` origin of `localhost`,
+  `127.0.0.1` or `[::1]`, on any port. Out of development (and with no `NUCLEAR_ENV`, a deployment) only `origins`
+  apply, as before: a preflight of any other origin answers 403, credentials are never allowed. The app check probes
+  both (an unlisted local port is refused in production; the development app allows the machine and the registry,
+  never a look-alike host). A backend project's development port is its own (`nuclear projects`); the dialects'
+  default address is `127.0.0.1`.
 - **Three decisions of 2026-11-23, the same in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB**
   (reference §2.1, §2.2, §2.3):
   - new repository words `contains(text)` and `icontains(text)`: the rows whose column holds the text as it is,

@@ -17,6 +17,7 @@ mod explain;
 mod landing;
 mod monitor;
 mod packages;
+pub mod projects;
 mod runlog;
 mod setup;
 mod toolchain;
@@ -95,6 +96,13 @@ nuclear help workspace)
                                              object {root, name, description, apps: [{name, folder, platform,
                                              dialect, exists}]} (find: or null), {error} when it fails
   check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
+
+projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project made, built or run)
+  projects [--json]                          each project, its platform, dialect, workspace and development address;
+                                             its port is its own (the dialect's when free, else the next free one):
+                                             run serves there, a backend in development lets every address of the
+                                             registry and any localhost / 127.0.0.1 / [::1] port call it (CORS), an
+                                             app of a workspace calls the workspace's backend there (API_URL)
 
 environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)
@@ -188,7 +196,7 @@ const OWN: &[&str] = &[
     "new", "n", "make", "g", "gen", "run", "test", "install", "migrate", "add", "remove", "device", "dv", "devices",
     "terminal-device", "td", "watch", "code", "analyze", "clean", "repair", "explain", "pub", "flutter", "emulators",
     "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "intro", "monitor", "env",
-    "workspace",
+    "workspace", "projects",
 ];
 /// What `build` takes in a project of the framework instead of a path: a target of the platform's own tool.
 const TARGETS: &[&str] = &["apk", "appbundle", "ios", "ipa", "web", "macos", "linux", "windows"];
@@ -281,6 +289,7 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             workspace::command(rest)
         }
         "env" => with_root(project_dir, |root| env_command(root, &rest)),
+        "projects" => projects::command(&rest),
         "make" | "g" => with_root(project_dir, |root| make(root, rest)),
         "gen" => with_root(project_dir, |root| gen_command(root, rest)),
         "check" => {
@@ -910,17 +919,45 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
     let given: Vec<(String, String)> =
         values.into_iter().filter(|(_, r)| r.source != "process").map(|(k, r)| (k, r.value)).collect();
     log.step(&format!("environment {environment}"));
-    let command = toolchain_command(root, "run", m, &dialect, rest, &[])?;
-    match dialect.tool("url") {
-        Some(url) => log.step(&format!("serve {}", fill_command(&dialect, url, &[])?)),
+    // the project's own port of the registry of projects (`nuclear projects`): two servers never share one
+    // (a `PORT` of the process is the person's choice for this run, as before the registry)
+    let mut own = projects::of(root).or_else(|| projects::record(root, m, &dialect)).unwrap_or_default();
+    if let (Ok(port), Some(scheme), Some(host)) = (
+        std::env::var("PORT").map_err(|_| ()).and_then(|p| p.parse::<u16>().map_err(|_| ())),
+        own["scheme"].as_str().map(str::to_string),
+        own["host"].as_str().map(str::to_string),
+    ) {
+        own["port"] = serde_json::json!(port);
+        own["url"] = serde_json::json!(format!("{scheme}://{host}:{port}"));
+    }
+    let place: Vec<(&str, String)> = ["url", "port"]
+        .into_iter()
+        .filter_map(|k| own[k].as_str().map(str::to_string).or_else(|| own[k].as_u64().map(|p| p.to_string())).map(|v| (k, v)))
+        .collect();
+    let command = toolchain_command(root, "run", m, &dialect, rest, &place)?;
+    match own["url"].as_str().or(dialect.tool("url")) {
+        Some(url) => log.step(&format!("serve {url}")),
         None => log.step("serve"),
     }
+    // the runtime's environment (`development`: its CORS lets every address of the registry and of this machine
+    // call it, the backend's reference §2.8) and its port (`PORT`, read by a server whose command names none)
+    let runtime: Vec<(&str, String)> = [("NUCLEAR_ENV", environment.clone()), ("NUCLEAR_DEV_ORIGINS", projects::origins())]
+        .into_iter()
+        .chain(place.iter().filter(|(k, _)| *k == "port").map(|(_, p)| ("PORT", p.clone())))
+        .collect();
     let (program, flag) = if cfg!(windows) { ("cmd", "/C") } else { ("sh", "-c") };
     eprintln!("{} {}", landing::dim("$"), landing::cmd(&command));
     log.line(&format!("$ {command}"));
     // Python prints as it goes, not when the buffer of a pipe fills
     let status = log
-        .tee(Command::new(program).args([flag, command.as_str()]).current_dir(&out).envs(given).env("PYTHONUNBUFFERED", "1"))
+        .tee(
+            Command::new(program)
+                .args([flag, command.as_str()])
+                .current_dir(&out)
+                .envs(given)
+                .envs(runtime)
+                .env("PYTHONUNBUFFERED", "1"),
+        )
         .map_err(|e| format!("cannot run {program}: {e}"))?;
     log.line(&format!("exited: {}", status.code().map_or("signal".into(), |c| c.to_string())));
     if status.success() { Ok(()) } else { Err(SERVER_ENDED.into()) }
@@ -936,9 +973,19 @@ fn run_mobile(root: &Path, rest: &[String], log: &runlog::RunLog) -> Result<(), 
     let environment = crate::env::chosen(root, crate::env::DEFAULT);
     let values = crate::env::resolve(root, &m.name, &environment, true)?;
     crate::env::refuse_missing(&environment, &crate::env::missing(&crate::env::declared(root), &values))?;
+    // run as a web page (Chrome, web-server): on the project's own address of the registry of projects, unless the
+    // command line gives one (Flutter takes these flags for any device and uses them only for the web)
+    let mut args: Vec<String> = vec!["run".into(), "--no-pub".into()];
+    let given = passthrough(rest);
+    if let Some((host, port)) = projects::of(root).and_then(|e| Some((e["host"].as_str()?.to_string(), e["port"].as_u64()?)))
+        && !given.iter().any(|a| a.starts_with("--web-port") || a.starts_with("--web-hostname"))
+    {
+        args.extend(["--web-port".into(), port.to_string(), "--web-hostname".into(), host]);
+    }
     log.step("flutter");
     // build already resolved the packages: flutter run would do it again
-    let result = flutter(&app, &[&["run", "--no-pub"][..], &passthrough(rest)].concat());
+    let args: Vec<&str> = args.iter().map(String::as_str).chain(given).collect();
+    let result = flutter(&app, &args);
     log.line(&format!("exited: {}", if result.is_ok() { "0" } else { "1" }));
     result.map_err(|e| if e.is_empty() { SERVER_ENDED.into() } else { e })
 }
@@ -974,11 +1021,16 @@ fn fill_command(dialect: &Dialect, command: &str, vars: &[(&str, String)]) -> Re
             .replace("{{packages}}", &install.join("packages").display().to_string())
             .replace("{{tools}}", &install.join("tools").display().to_string());
     }
+    // `url` and `port` in `vars`: the project's own address (the registry of projects), else the dialect's
+    let own = |k: &str| vars.iter().find(|(n, _)| *n == k).map(|(_, v)| v.clone());
     let command = command
-        .replace("{{url}}", dialect.tool("url").unwrap_or_default())
-        .replace("{{port}}", &vscode::url_port(dialect).unwrap_or_default())
+        .replace("{{url}}", &own("url").unwrap_or_else(|| dialect.tool("url").unwrap_or_default().to_string()))
+        .replace("{{port}}", &own("port").unwrap_or_else(|| vscode::url_port(dialect).unwrap_or_default()))
         .replace("{{host}}", "localhost");
-    Ok(vars.iter().fold(command, |c, (k, v)| c.replace(&format!("{{{{{k}}}}}"), &shell_quote(v))))
+    Ok(vars
+        .iter()
+        .filter(|(k, _)| !matches!(*k, "url" | "port"))
+        .fold(command, |c, (k, v)| c.replace(&format!("{{{{{k}}}}}"), &shell_quote(v))))
 }
 
 /// `nuclear add|remove <package>...` (ADR-lang-0008): a package of the target, with the dialect's package manager.
@@ -1236,15 +1288,24 @@ fn new_project_in(rest: Vec<String>, workspace: Option<&Path>) -> Result<(), Str
         return Err(format!("unexpected argument '{extra}' ({})\n{usage}", hint_for(extra)));
     }
     let root = workspace.map_or_else(|| PathBuf::from(&name), |w| w.join(&name));
-    let register = || match workspace {
-        Some(w) => workspace::register(w, &name, &platform).map(|_| eprintln!("  {} {} ({})", landing::ok("added"), name, w.join(workspace::MARKER).display())),
-        None => Ok(()),
-    };
     if root.join(packages::CONFIG).exists() {
         return Err(format!("{} already has a config.nuc", root.display()));
     }
     let (d, _) = loader().load(&dialect);
     let d = d.ok_or_else(|| format!("unknown dialect '{dialect}' (nuclear dialect list)"))?;
+    // into the workspace's marker, then into the registry of projects (its development port)
+    let register = || {
+        if let Some(w) = workspace {
+            workspace::register(w, &name, &platform)?;
+            eprintln!("  {} {} ({})", landing::ok("added"), name, w.join(workspace::MARKER).display());
+        }
+        if let Some(e) = Manifest::read(&root).ok().and_then(|m| projects::record(&root, &m, &d))
+            && let Some(url) = e["url"].as_str()
+        {
+            eprintln!("  {} {} runs at {url} in development (nuclear projects)", landing::ok("port"), name);
+        }
+        Ok::<(), String>(())
+    };
     if d.platform.as_deref() != Some(platform.as_str()) {
         return Err(format!(
             "'{dialect}' is a dialect of the {} platform, not of '{platform}'",
@@ -1258,10 +1319,12 @@ fn new_project_in(rest: Vec<String>, workspace: Option<&Path>) -> Result<(), Str
         return Err("--token is a backend's guard: a web app sends its token through its connection's headers or the host".into());
     }
     if platform == "web" {
-        // where a new backend answers: the url of the backend platform's default dialect
+        // where its backend answers: the workspace's backend in the registry of projects, else the url of the backend
+        // platform's default dialect
         let l = loader();
-        let backend = l.default_dialect("backend").and_then(|b| l.load(&b).0).and_then(|b| b.tool("url").map(str::to_string));
-        let backend = backend.unwrap_or_else(|| "http://localhost".into());
+        let backend = projects::workspace_backend(&root)
+            .or_else(|| l.default_dialect("backend").and_then(|b| l.load(&b).0).and_then(|b| b.tool("url").map(str::to_string)));
+        let backend = backend.unwrap_or_else(|| "http://127.0.0.1".into());
         let report = scaffold::write(&root, &scaffold::web_project(&name, &dialect, &backend, &options)).map_err(|e| e.to_string())?;
         eprintln!("{}", written(&report));
         register()?;
@@ -1369,6 +1432,7 @@ fn build(root: &Path) -> Result<PathBuf, String> {
         packages::load_defs(root, &app, &c, &loader, &mut d, true)?;
     }
     let mut m = crate::monitored(root, m);
+    projects::record(root, &m, &d);
     // spec 021: the values of the environment the app is built for, constants of the build
     let environment = crate::env::prepare(root, &mut m)?;
     let mut out = project::build(root, &m, &d);

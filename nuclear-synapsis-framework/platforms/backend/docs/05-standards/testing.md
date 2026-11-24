@@ -196,7 +196,10 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
      `/.nuclear/*`, `/.env`, other methods, long paths and headers;
    - **bodies**: fields the model does not list (`id`, `createdAt`, a relation, `__proto__`), 200 KB to 30 MB,
      50 000 levels deep, numbers beyond every range, invalid UTF-8, a body on a GET, seven content types;
-   - **CORS**: without `origins` and with one, a request and a preflight from the listed origin, another and `null`;
+   - **CORS**: without `origins` and with one, a request and a preflight from the listed origin, an unlisted port of
+     `127.0.0.1`, another and `null` (production); the PostgreSQL app again with `NUCLEAR_ENV=development` and
+     `NUCLEAR_DEV_ORIGINS`: any port of `localhost`, `127.0.0.1`, `[::1]` and the registry's origin allowed, a look-alike
+     host, another host and `null` refused, never credentials;
    - **guards**: `Token` and `NoOrigin` (no token, a wrong, shorter, longer, empty, repeated one, the header's and
      the value's case, in the query, every method, a path in another case or encoded, the documents), a
      controller's guard over the app's;

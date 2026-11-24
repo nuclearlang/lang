@@ -130,7 +130,7 @@
     "nuclear run                                 # build, install the first time, then serve (Ctrl+C stops it)",
     "```",
     "",
-    "- A backend answers at its URL (fastapi: `http://localhost:8000`, its API at `/docs`); saving a `.nuc` rebuilds and the server reloads. A project that uses the `ollama` plugin needs Ollama running with a model pulled.",
+    "- A backend answers at its own address of `nuclear projects` (fastapi: `http://127.0.0.1:8000` when no other project has that port; its contract at `/.nuclear/contract.json`); saving a `.nuc` rebuilds and the server reloads. A project that uses the `ollama` plugin needs Ollama running with a model pulled.",
     "- In the editor: `Ctrl+Alt+N` opens the Nuclear workspace; select the project's tab (`Ctrl+Alt+O` opens one) and use the buttons under its name: ▷ Serve (`Ctrl+Alt+R`, a terminal with `nuclear run`), ◉ Debug (`Ctrl+Alt+G`, breakpoints in the `.nuc`), ✓ Test, ⚒ Build, ☑ Check, and ⇄ API for a backend. Cursor hides an extension's buttons in the editor title bar: the workspace's are always there.",
     "- A backend's scripts, like npm's: the explorer's **Nuclear Scripts** view has a ▷ for run, test, build, check, install (and migrate once there is a `migrations/` folder); *Terminal → Run Task…* lists them as `nuclear: <project>: <script>`, before the first build too.",
     "- No play and no tasks usually means the project does not build: `nuclear check` names the errors. Run and Debug build a never-built project first and say why it fails."

@@ -50,6 +50,10 @@ never search the disk for Nuclear's source code or its documents, and never gues
    `--from-spec <spec.md>`) for a model and what is done with it; `nuclear make <kind> ...` for each other piece.
 4. Write what is left, following the brief and the style of the generated files.
 5. Validate: `nuclear check --json`, `nuclear test`, `nuclear build` (mobile: `nuclear analyze`, `nuclear run`).
+   Each project runs on its own port: `nuclear projects` (MCP `projects_list`) shows every project of the machine
+   and its address. A browser app (web, Flutter on Chrome) that says "no connection to the server" is refused by
+   CORS: run its backend with `nuclear run` (development lets every local address call it) or list its origin in
+   the backend's `origins` for production.
 
 ## The tools
 

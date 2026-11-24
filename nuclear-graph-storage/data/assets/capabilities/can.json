@@ -973,12 +973,15 @@
    "id": "can:backend-cors",
    "type": "can",
    "title": "Can: let a web app on another origin call a backend (CORS)",
-   "summary": "`origins: string[]` in the backend's `appConfig` lists the web origins whose browsers may call the API (a web app served on another port or host): their requests are answered with `Access-Control-Allow-Origin`; any other origin's browser is blocked. The same in every backend dialect.",
+   "summary": "`origins: string[]` in the backend's `appConfig` lists the web origins whose browsers may call the API; any other origin is refused. In development (`nuclear run`) the backend also allows every address of `nuclear projects` and any port of `localhost`, `127.0.0.1` and `[::1]`; in production only `origins`. The same in every backend dialect.",
    "body": [
-    "- `origins: string[] = [env(\"WEB_ORIGIN\", \"http://localhost:5173\")]` in `config/project_config.nuc`, beside `connections`.",
-    "- Without `origins`, no browser on another origin can call the API: a web app that reads the backend fails with a CORS error in its console.",
+    "- `origins: string[] = [env(\"WEB_ORIGIN\", \"https://shop.example\")]` in `config/project_config.nuc`, beside `connections`: the origins of production.",
+    "- Without `origins`, no browser on another origin can call the API in production: a web app that reads the backend fails with a CORS error in its console.",
+    "- In development the allowed origins are more, with nothing to write: a backend whose `NUCLEAR_ENV` is `development` (what `nuclear run` gives it) also allows every development address of the machine's registry of projects (`nuclear projects`, any workspace; `nuclear run` passes them in `NUCLEAR_DEV_ORIGINS`, read at start) and any `http://` or `https://` origin whose host is `localhost`, `127.0.0.1` or `[::1]`, on any port (vite, Flutter web on Chrome, a test device).",
+    "- In any other environment, and in a server started without `NUCLEAR_ENV` (a deployment: `python -m synapsis.server`, `npm start`), only `origins` apply.",
+    "- A refused browser never gives the answer to the app: the request fails as if there were no server. A Flutter app run on Chrome says \"No connection to the server\" (its HTTP client reports a connection error), a web app shows `TypeError: Failed to fetch` and a CORS error in the browser's console. Run the backend with `nuclear run` (development), or add the app's origin to `origins` for production.",
     "- `NoOrigin()` (a guard) does the opposite: it refuses every request from a web page.",
-    "- A preflight from a listed origin answers 200 (the methods, the requested headers, max-age 1800); from any other origin 403 `origin not allowed`; credentials are never allowed."
+    "- A preflight from an allowed origin answers 200 (the methods, the requested headers, max-age 1800); from any other origin 403 `origin not allowed`; credentials are never allowed, in any environment."
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
@@ -989,12 +992,23 @@
     "access-control-allow-origin",
     "web app",
     "blocked by cors policy",
-    "another origin"
+    "another origin",
+    "development cors",
+    "no connection to the server",
+    "failed to fetch",
+    "nuclear_env",
+    "nuclear_dev_origins",
+    "flutter web",
+    "localhost any port"
    ],
    "asks": [
     "how does my web app call my backend on another port",
     "the browser blocks my API call with a CORS error",
-    "how do I allow an origin in synapsis"
+    "how do I allow an origin in synapsis",
+    "my flutter web app says no connection to the server",
+    "cors error in development",
+    "my web app cannot reach the backend running on my machine",
+    "which origins does my backend allow in production"
    ],
    "platforms": [
     "backend",
@@ -1008,10 +1022,80 @@
     {
      "rel": "can",
      "to": "can:backend-guards"
+    },
+    {
+     "rel": "can",
+     "to": "can:project-registry"
     }
    ],
    "meta": {
     "area": "backend",
+    "status": "done"
+   }
+  },
+  {
+   "id": "can:project-registry",
+   "type": "can",
+   "title": "Can: know every Nuclear project of the machine and the port it runs on (`nuclear projects`)",
+   "summary": "A registry of the machine's Nuclear projects (`projects.json` in the user's data folder) lists every project made, built or run, whatever its workspace: its name, folder, platform, dialect, workspace and development address. Each project has its own port, chosen once and kept; `nuclear run` serves there. `nuclear projects [--json]` and the MCP tool `projects_list` show it.",
+   "body": [
+    "```sh",
+    "nuclear projects            # name, platform, dialect, address, folder, workspace",
+    "nuclear projects --json     # {file, projects: [{name, root, platform, dialect, workspace: {name, root} | null, url, scheme, host, port}]}",
+    "```",
+    "",
+    "- Where: `$XDG_DATA_HOME/nuclearlang/projects.json`, else `~/.local/share/nuclearlang/projects.json`; `%LOCALAPPDATA%\\nuclearlang\\projects.json` on Windows. `NUCLEAR_PROJECTS` names another file.",
+    "- Written by `nuclear new`, `nuclear build` (the project's own build) and `nuclear run`; a project whose folder is gone (no `config.nuc`) leaves it.",
+    "- The port: chosen the first time, the platform's default when no other project of the registry has it (a backend 8000 or 3000 by its dialect, a web app 5173, a mobile app run as a web page 8080), else the next one no project has; then kept. Two projects never share one.",
+    "- `nuclear run` uses it: a backend gets it as its port (`PORT`) on `127.0.0.1`, a web app's dev server `--port`, a mobile app `--web-port <port> --web-hostname 127.0.0.1` when it runs as a web page (Chrome). A port another program holds makes the run fail (address in use).",
+    "- A web or mobile app of a workspace built in `development` without an `API_URL` calls the workspace's backend at its address (`http://127.0.0.1:<port>/`); `nuclear new` of a web app in a workspace writes it in its `.env`.",
+    "- A backend in development lets every address of the registry call it from a browser (CORS); in production only its `origins`.",
+    "- `127.0.0.1`, not `localhost`: the backend listens on IPv4, and `localhost` may resolve to `::1` first. The Android emulator reaches the machine at `10.0.2.2`: `nuclear env set API_URL http://10.0.2.2:8000/ --local` in the app."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md",
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ],
+   "keys": [
+    "nuclear projects",
+    "projects_list",
+    "projects.json",
+    "registry of projects",
+    "development port",
+    "web-port",
+    "address already in use",
+    "127.0.0.1",
+    "10.0.2.2"
+   ],
+   "asks": [
+    "which port does my backend use",
+    "list every nuclear project on this machine",
+    "two backends on the same port",
+    "where does my flutter web app run",
+    "localhost or 127.0.0.1 for the api url",
+    "the android emulator cannot reach my backend"
+   ],
+   "platforms": [
+    "backend",
+    "web",
+    "mobile"
+   ],
+   "links": [
+    {
+     "rel": "can",
+     "to": "can:backend-cors"
+    },
+    {
+     "rel": "concept",
+     "to": "concept:workspace"
+    },
+    {
+     "rel": "concept",
+     "to": "concept:environments"
+    }
+   ],
+   "meta": {
+    "area": "cli",
     "status": "done"
    }
   },
