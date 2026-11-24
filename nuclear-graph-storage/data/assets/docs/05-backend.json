@@ -5,7 +5,7 @@
  "about": "The backend platform: its project, contracts and context",
  "rows": [
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#commands.3ecb25",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#commands.a8854d",
    "type": "readme",
    "title": "The backend platform — Commands",
    "summary": "cargo test # the examples with both dialects, the goldens sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh # pyright --strict, pytest, migrations, a live run sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh # tsc --strict, node:test,…",
@@ -14,7 +14,7 @@
     "cargo test                                   # the examples with both dialects, the goldens",
     "sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, migrations, a live run",
     "sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, migrations, a live run",
-    "sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite",
+    "sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh --parallel  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite, every pair at once",
     "sh nuclear-synapsis-framework/platforms/backend/checks/app-check/check.sh       # needs Docker: the logs, the security and the performance of an app in both dialects",
     "UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff",
     "installer/install.sh                         # the user runs the installed copy: install after a change",
@@ -2713,6 +2713,33 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.3df9c6",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "`nuclear migrate` per pair; `nestjs` compiles its TypeScript on each).",
+   "body": [
+    "- **One pair after another** (no option): about 50 minutes, the `migrations` stage most of it (87 runs of",
+    "  `nuclear migrate` per pair; `nestjs` compiles its TypeScript on each).",
+    "- **`--parallel`**: the eight pairs at the same time, each a run of its own (its folder, containers and ports), after",
+    "  the shared preparation (the `nestjs` runtime, `cargo build`) is done once; then the comparisons over all of them.",
+    "  The delivery gate runs it (`installer/release/delivery.sh`, step `databases`).",
+    "- **`OUT=<dir>`** also keeps the run's answers and schemas in `<dir>`; **`--compare <dir>`** makes only the",
+    "  comparisons over what several runs kept, and fails when a pair asked for left nothing. The CI runs one job per pair",
+    "  (`platform-backend.yml`, job `databases`) and the job `compare` over all of them."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.417d92",
    "type": "context",
    "title": "Testing — Running the checks",
@@ -2854,43 +2881,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.a370d4",
-   "type": "context",
-   "title": "Testing — Running the checks",
-   "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
-   "body": [
-    "**`nestjs-check/check.sh`**, in order:",
-    "",
-    "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules`",
-    "   (`npm install --no-save --install-links`). npm keeps an old copy of the same version, so the script removes it",
-    "   first; a `--no-save` install also prunes the other runtime installed the same way, so the web platform's check",
-    "   installs its own again.",
-    "2. Builds `examples/examples-backend/tasks_api` and links `node_modules` into its `build/`.",
-    "3. `tsc --strict`, then the project's tests (`node --test \"dist/test/**/*.js\"`).",
-    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`SYNAPSIS_DATABASE=memory`), validation (400 with two",
-    "   messages), the errors of a `Result` (409, 404).",
-    "5. **Migrations**: with `DATABASE` set to a fresh SQLite file, `migrate make \"first\"`, `up`, then `make \"again\"`",
-    "   must answer \"no changes\".",
-    "6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).",
-    "",
-    "**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twenty minutes). It proves that",
-    "one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those",
-    "dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one",
-    "`ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.a632d4",
    "type": "context",
    "title": "Testing — Running the checks",
@@ -2909,6 +2899,43 @@
     "   - no log holds the database's password, a guard's token or the body of the request;",
     "   - what a request leaves in each dialect's log is compared: a line per request in the one format of the",
     "     reference (§2.8: time, method, path without its query, status, milliseconds), the cause of a 500 (its head"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.bed84e",
+   "type": "context",
+   "title": "Testing — Running the checks",
+   "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
+   "body": [
+    "**`nestjs-check/check.sh`**, in order:",
+    "",
+    "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules`",
+    "   (`npm install --no-save --install-links`). npm keeps an old copy of the same version, so the script removes it",
+    "   first; a `--no-save` install also prunes the other runtime installed the same way, so the web platform's check",
+    "   installs its own again.",
+    "2. Builds `examples/examples-backend/tasks_api` and links `node_modules` into its `build/`.",
+    "3. `tsc --strict`, then the project's tests (`node --test \"dist/test/**/*.js\"`).",
+    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`SYNAPSIS_DATABASE=memory`), validation (400 with two",
+    "   messages), the errors of a `Result` (409, 404).",
+    "5. **Migrations**: with `DATABASE` set to a fresh SQLite file, `migrate make \"first\"`, `up`, then `make \"again\"`",
+    "   must answer \"no changes\".",
+    "6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).",
+    "",
+    "**`database-check/check.sh`** (needs Docker running, besides the set-up above). It proves that one Nuclear project",
+    "behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those dialects and",
+    "databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one `ok` / `FAIL`",
+    "line per dialect, database and stage, goes on after a failure and exits 1 if any failed."
    ],
    "platforms": [
     "backend"

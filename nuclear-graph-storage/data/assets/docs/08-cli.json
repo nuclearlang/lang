@@ -1487,24 +1487,22 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.25d62d",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.21f328",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "`PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`.",
+   "summary": "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); both backend dialects on the four databases in Docker, every pair at the same time (`database-check/check.sh --parallel`; Docker must be running); the website exactly as…",
    "body": [
-    "`PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs",
-    "   some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a",
-    "   website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,",
-    "   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link,",
-    "   `nuclear run` failing on every backend project 0.95 had installed (`No module named synapsis.server`).",
-    "3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
-    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
-    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
-    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
-    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
-    "   by hand (`workflow_dispatch`).",
-    "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
-    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no"
+    "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); both backend dialects on the four databases in",
+    "   Docker, every pair at the same time (`database-check/check.sh --parallel`; Docker must be running); the website",
+    "   exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding",
+    "   example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);",
+    "   `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,",
+    "   what the user reads (the installer in a pseudo-terminal of 80 and 60 columns with colors, rendered by",
+    "   `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every",
+    "   box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an",
+    "   update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear",
+    "   update`), and `PRJ1`, the projects that release made: a `fastapi` and a `nestjs` backend and a `react` app (when",
+    "   Node.js is there), each with a generated resource, installed and tested by the previous release, then, after the"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1567,12 +1565,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4da865",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.663aa6",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher nuclearlang/nuclearlang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace with *Publishing only*, is used instead only while it exists).",
+   "summary": "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token; the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no environment) and on Open VSX (namespace `nuclearlang`, verified:…",
    "body": [
-    "environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher",
+    "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
+    "   environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher",
     "   nuclearlang/nuclearlang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace",
     "   with *Publishing only*, is used instead only while it exists). The stores read the `version` of",
     "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
@@ -1620,23 +1620,16 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.6a81d8",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.d79559",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding example that is no longer what `nuclear new` writes fails here, then…",
+   "summary": "that never had NuclearLang, again on the same machine, and an update over the previous release; after each, `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each answering on the port of `ai.env`, the MCP server in an AI client, the…",
    "body": [
-    "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website",
-    "   exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding",
-    "   example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);",
-    "   `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,",
-    "   what the user reads (the installer in a pseudo-terminal of 80 and 60 columns with colors, rendered by",
-    "   `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every",
-    "   box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an",
-    "   update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear",
-    "   update`), and `PRJ1`, the projects that release made: a `fastapi` and a `nestjs` backend and a `react` app (when",
-    "   Node.js is there), each with a generated resource, installed and tested by the previous release, then, after the",
-    "   update, `nuclear check`, `build`, `test` and `nuclear run` with the new `nuclear` until a route of the resource",
-    "   answers 200 (about 1.5 minutes, 350 MB in `TMPDIR` while it runs; pip and npm use the user's caches). `UPD1` and"
+    "that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
+    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each",
+    "   answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
+    "",
+    "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md))."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1648,16 +1641,24 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.d79559",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.f9fb22",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "that never had NuclearLang, again on the same machine, and an update over the previous release; after each, `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each answering on the port of `ai.env`, the MCP server in an AI client, the…",
+   "summary": "update, `nuclear check`, `build`, `test` and `nuclear run` with the new `nuclear` until a route of the resource answers 200 (about 1.5 minutes, 350 MB in `TMPDIR` while it runs; pip and npm use the user's caches).",
    "body": [
-    "that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
-    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each",
-    "   answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
-    "",
-    "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md))."
+    "update, `nuclear check`, `build`, `test` and `nuclear run` with the new `nuclear` until a route of the resource",
+    "   answers 200 (about 1.5 minutes, 350 MB in `TMPDIR` while it runs; pip and npm use the user's caches). `UPD1` and",
+    "   `PRJ1` need the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs",
+    "   some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a",
+    "   website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,",
+    "   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link,",
+    "   `nuclear run` failing on every backend project 0.95 had installed (`No module named synapsis.server`).",
+    "3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
+    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
+    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
+    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
+    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
+    "   by hand (`workflow_dispatch`)."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
