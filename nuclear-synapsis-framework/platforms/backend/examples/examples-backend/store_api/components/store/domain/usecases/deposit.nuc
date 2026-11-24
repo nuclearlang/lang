@@ -1,0 +1,6 @@
+// Adds to a balance: exact, 0.1 and 0.2 make 0.3; NotFound (404) when there is none.
+usecase Deposit(repository: BalanceRepository)
+  exec(id: int, amount: bigdouble) Result<Error, Balance>
+    found: Balance = ~repository.find(id)
+    found.amount = found.amount + amount
+    Ok(~repository.save(found))

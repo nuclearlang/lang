@@ -1,0 +1,6 @@
+// Removes a balance; NotFound (404) when there is none.
+usecase DeleteBalance(repository: BalanceRepository)
+  exec(id: int) Result<Error, boolean>
+    found = ~repository.find(id)
+    ~repository.remove(found.id)
+    Ok(true)

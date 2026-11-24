@@ -79,6 +79,11 @@ repository CharacterRepository
 A search box's text goes to `icontains(text)` (or `contains`, in the database's case): its `%` and `_` are
 characters. `like` and `ilike` take a pattern written by the program (`like("Rick%")`).
 
+Money and identifiers of 64 bits are exact numbers: `serial: bigint` is a `BIGINT`, `@column(precision = 20, scale = 2)
+price: bigdouble` a `NUMERIC(20, 2)` (30 and 10 by default). A client sends and receives them as JSON texts
+(`"price": "19.99"`); a value the column cannot hold answers 409, never rounded.
+In Python they are an `int` and a `Decimal` (the runtime's `BigInt` and `BigDouble`).
+
 ### Relations, pages and transactions
 
 Relations are TypeORM's decorators; the related entity is the field's type. A relation field is optional: it is only

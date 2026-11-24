@@ -265,12 +265,12 @@ pub fn sample_of(model: &str, models: &[&Model], depth: usize) -> String {
 }
 
 /// The types a field can name without a model: `gen` checks every other one is declared.
-pub const BASIC: [&str; 6] = ["int", "double", "boolean", "string", "any", "DateTime"];
+pub const BASIC: [&str; 8] = ["int", "double", "bigint", "bigdouble", "boolean", "string", "any", "DateTime"];
 
 fn sample(ty: &str, name: &str) -> String {
     match ty {
-        "int" => "1".into(),
-        "double" => "1.5".into(),
+        "int" | "bigint" => "1".into(),
+        "double" | "bigdouble" => "1.5".into(),
         "boolean" => "true".into(),
         "string" => format!("\"{name}\""),
         t if t.ends_with("[]") => "[]".into(),

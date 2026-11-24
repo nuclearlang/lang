@@ -1,0 +1,10 @@
+// What a balance is: a row of the table balances: exact numbers (a whole number of 64 bits, decimals that add up).
+@entity("balances")
+Balance()
+  @primary(generated = true)
+  id: int
+  serial: bigint
+  amount: bigdouble
+  // many decimals: 20 before the point and 20 after it
+  @column(precision = 40, scale = 20)
+  rate: bigdouble

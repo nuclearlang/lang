@@ -29,7 +29,7 @@ answers: list[dict[str, Any]] = []
 # what differs by database or by run and is not compared: said in the stage's line
 notes: list[str] = []
 # real id → the order its row was made in, per table
-ids: dict[str, dict[int, int]] = {"customer": {}, "order": {}, "tag": {}, "coupon": {}}
+ids: dict[str, dict[int, int]] = {"customer": {}, "order": {}, "tag": {}, "coupon": {}, "balance": {}}
 STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$")
 # every @created / @updated the app answered
 stamps: list[str] = []
@@ -50,7 +50,7 @@ def call(method: str, path: str, body: Any = None) -> tuple[int, Any]:
 
 
 def kind_of(row: dict[str, Any]) -> str:
-    return "customer" if "email" in row else "tag" if "label" in row else "coupon" if "code" in row else "order"
+    return "customer" if "email" in row else "tag" if "label" in row else "coupon" if "code" in row else "balance" if "serial" in row else "order"
 
 
 def alias(kind: str, real: Any) -> Any:
@@ -127,7 +127,7 @@ def same(name: str, got: Any, expected: Any) -> None:
 def main() -> None:
     q = urllib.parse.quote
     # the rows the migrations' check left
-    db.execute(database, "DELETE FROM coupons", "DELETE FROM orders", "DELETE FROM customers")
+    db.execute(database, "DELETE FROM coupons", "DELETE FROM orders", "DELETE FROM customers", "DELETE FROM balances")
 
     # --- CRUD, the defaults, values the databases treat differently
     unicode_name = "Ana María Ñandú 日本語 😀 'quoted' \"double\" \\ %_"
@@ -294,6 +294,30 @@ def main() -> None:
     wide = step("a text of its column's length, whatever bytes it takes", "POST", "/coupons", {"customerId": keeper["id"], "codes": ["日😀" * 10]}, 201)
     same("20 characters kept", wide[0]["code"], "日😀" * 10)
     same("the customer and the coupons are still there", (sql("SELECT COUNT(*) FROM coupons"), sql("SELECT COUNT(*) FROM customers WHERE email = 'coupons@example.com'")), (3, 1))
+
+    # --- the exact numbers (ADR-lang-0015): texts in JSON both ways, the same values on every database
+    edge = step("a bigint of 2^63 - 1, a bigdouble of many decimals", "POST", "/balances",
+                {"serial": "9223372036854775807", "amount": "0.1", "rate": "12345678901234567890.12345678901234567891"}, 201)
+    same("the bigint and the decimals came back as they went", (edge["serial"], edge["amount"], edge["rate"]),
+         ("9223372036854775807", "0.1", "12345678901234567890.12345678901234567891"))
+    added = step("0.1 + 0.2, added by the app", "PUT", f"/balances/{edge['id']}/deposit/0.2")
+    same("0.1 + 0.2 is 0.3", added["amount"], "0.3")
+    same("read back from the database", step("the balance", "GET", f"/balances/{edge['id']}")["amount"], "0.3")
+    same("the database keeps 0.3, not a binary number", str(sql(f"SELECT amount FROM balances WHERE id = {edge['id']}")).rstrip("0"), "0.3")
+    for amount in ("-12.5", "100", "9.75", "-0.25"):
+        step(f"a balance of {amount}", "POST", "/balances", {"serial": "-9223372036854775808", "amount": amount, "rate": "0"}, 201)
+    sorted_ = step("from -0.25 up, the largest first: by value", "GET", "/balances/at-least/-0.25")
+    same("sorted by value", [b["amount"] for b in sorted_], ["100.0", "9.75", "0.3", "-0.25"])
+    exact_refused = [
+        step("a bigint beyond 2^63 - 1", "POST", "/balances", {"serial": "9223372036854775808", "amount": "1", "rate": "0"}, 409),
+        step("more decimals than the column has", "POST", "/balances", {"serial": "1", "amount": "0.00000000001", "rate": "0"}, 409),
+        step("more digits than the column has", "POST", "/balances", {"serial": "1", "amount": "1", "rate": "123456789012345678901"}, 409),
+    ]
+    for body in exact_refused:
+        same("the body of a value the column cannot hold", body, {"status": 409, "message": "conflict"})
+    step("an exact number is a text, never a JSON number", "POST", "/balances", {"serial": 5, "amount": 0.3, "rate": "0"}, 400)
+    step("a text that is no number", "PUT", f"/balances/{edge['id']}/deposit/0.1x", expect=400)
+    same("the refused balances were not kept", sql("SELECT COUNT(*) FROM balances"), 5)
 
     # --- delete: the row, its orders by the foreign key, then nothing
     step("delete an order", "DELETE", f"/orders/{first['id']}")

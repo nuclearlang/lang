@@ -1561,6 +1561,18 @@ fn an_operation_the_exact_numbers_do_not_have_is_reported() {
 }
 
 #[test]
+fn a_literal_given_for_an_exact_field_takes_its_type() {
+    // the named arguments that build a class (`Price(amount = 1.5)`) and the decorators of an exact field
+    let src = "Price\n  amount: bigdouble\n  code: bigint = 1\n\nf() void\n  p = Price(amount = 1.5, code = 12345678901234567890)\n  print(p.amount)\n";
+    let py = build(src, "python");
+    assert!(py.contains("amount=Decimal(\"1.5\"), code=12345678901234567890"), "{py}");
+    let out = ts(src);
+    assert!(out.contains("amount: BigDouble.of('1.5')") && out.contains("code: 12345678901234567890n"), "{out}");
+    // a decimal literal for a bigint field is N0119, as anywhere a bigint goes
+    assert!(codes("Price\n  code: bigint = 1\n\nf() void\n  print(Price(code = 1.5).code)\n", "typescript").contains(&"N0119"));
+}
+
+#[test]
 fn exact_collections_and_arguments_compare_values() {
     // a literal argument of compareTo takes the receiver's exact type; another number is N0119
     let src = "f(big: bigint, n: int) void\n  print(big.compareTo(5))\n";

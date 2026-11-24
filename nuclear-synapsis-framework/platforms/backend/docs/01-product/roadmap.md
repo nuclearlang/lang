@@ -30,6 +30,12 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   events consumed for the sockets: a `shortcut:` comment in both `events` modules); topics with wildcards; the
   OpenAPI document does not list the guards' headers (the contract does).
 
+- **The exact numbers** (ADR-backend-0003). Done in both dialects on the four databases: the columns, migrations,
+  JSON, parameters, `@min` / `@max`, comparisons and the sort by value. Left: an exact key (`@primary` of a `bigint`,
+  refused with N0308 today); a `bigint` or `bigdouble` answered alone by a route is written as each framework writes
+  a text alone (FastAPI's JSON text, NestJS's text without quotes: the same for every `string` answer today); a value
+  written into SQLite by SQL, not the app, must be the column's text until the next migration writes it again.
+
 ## Untested
 
 - An HTTP repository in a project's tests: an `Http` connection takes no fake transport and `nuclear test` starts no

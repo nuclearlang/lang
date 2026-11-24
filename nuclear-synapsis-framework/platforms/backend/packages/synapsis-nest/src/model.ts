@@ -5,6 +5,7 @@ import { IsDate, ValidateBy, ValidationOptions, ValidationTypes, getMetadataStor
 import { Model as Row } from 'sequelize';
 import { INT_MAX, INT_MIN } from './edge.js';
 import { Invalidity, Reason, errorBody, reasonsOf } from './errors.js';
+import { isBigDouble } from './exact.js';
 
 /** A `DateTime` field of a model: a text in JSON, read as a Date; a value of another JSON type is refused, and so is
  * a text that is not a date. */
@@ -67,6 +68,10 @@ function optionalOf(model: Function): string[] {
  * platform's reference, §2.3), in a model, a model inside it, the items of a list and of a page. A row of the
  * database is already its columns with `null` and is not walked; what needs no change is answered as it is. */
 export function answerOf(value: unknown): unknown {
+  // an exact whole number is a text (the app's JSON replacer writes the ones inside a value)
+  if (typeof value === 'bigint') return value.toString();
+  // an exact decimal writes its own text (toJSON)
+  if (isBigDouble(value)) return value;
   if (Array.isArray(value)) {
     let out: unknown[] | undefined;
     value.forEach((v, i) => {

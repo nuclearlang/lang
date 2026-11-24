@@ -1,0 +1,8 @@
+// Changes a balance; NotFound (404) when there is none.
+usecase UpdateBalance(repository: BalanceRepository)
+  exec(id: int, input: NewBalance) Result<Error, Balance>
+    found = ~repository.find(id)
+    found.serial = input.serial
+    found.amount = input.amount
+    found.rate = input.rate
+    Ok(~repository.save(found))

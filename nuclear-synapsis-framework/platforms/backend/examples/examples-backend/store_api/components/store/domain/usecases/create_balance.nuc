@@ -1,0 +1,4 @@
+// Adds a balance.
+usecase CreateBalance(repository: BalanceRepository)
+  exec(input: NewBalance) Result<Error, Balance>
+    Ok(~repository.save(Balance(serial = input.serial, amount = input.amount, rate = input.rate)))

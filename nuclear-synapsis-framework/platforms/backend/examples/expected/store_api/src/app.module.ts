@@ -6,27 +6,35 @@ import { Global, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { AppConfig, Connections, databaseOf } from 'synapsis-nest';
 import { ProjectConfig } from './config/project_config.js';
+import { Balance } from './components/store/data/entities/balance.js';
 import { Coupon } from './components/store/data/entities/coupon.js';
 import { Customer } from './components/store/data/entities/customer.js';
 import { Order } from './components/store/data/entities/order.js';
 import { Tag } from './components/store/data/entities/tag.js';
+import { BalanceRepository } from './components/store/data/repositories/balance_repository.js';
 import { CouponRepository } from './components/store/data/repositories/coupon_repository.js';
 import { CustomerRepository } from './components/store/data/repositories/customer_repository.js';
 import { OrderRepository } from './components/store/data/repositories/order_repository.js';
 import { TagRepository } from './components/store/data/repositories/tag_repository.js';
+import { BalancesAtLeast } from './components/store/domain/usecases/balances_at_least.js';
 import { Checkout } from './components/store/domain/usecases/checkout.js';
 import { ClearCoupon } from './components/store/domain/usecases/clear_coupon.js';
+import { CreateBalance } from './components/store/domain/usecases/create_balance.js';
 import { CreateCustomer } from './components/store/domain/usecases/create_customer.js';
 import { CreateOrder } from './components/store/domain/usecases/create_order.js';
 import { CreateTag } from './components/store/domain/usecases/create_tag.js';
 import { CustomerOrders } from './components/store/domain/usecases/customer_orders.js';
+import { DeleteBalance } from './components/store/domain/usecases/delete_balance.js';
 import { DeleteCustomer } from './components/store/domain/usecases/delete_customer.js';
 import { DeleteOrder } from './components/store/domain/usecases/delete_order.js';
+import { Deposit } from './components/store/domain/usecases/deposit.js';
 import { DraftCustomer } from './components/store/domain/usecases/draft_customer.js';
 import { FullOrder } from './components/store/domain/usecases/full_order.js';
+import { GetBalance } from './components/store/domain/usecases/get_balance.js';
 import { GetCustomer } from './components/store/domain/usecases/get_customer.js';
 import { GetOrder } from './components/store/domain/usecases/get_order.js';
 import { GiveCoupons } from './components/store/domain/usecases/give_coupons.js';
+import { ListBalances } from './components/store/domain/usecases/list_balances.js';
 import { ListCustomers } from './components/store/domain/usecases/list_customers.js';
 import { ListOrders } from './components/store/domain/usecases/list_orders.js';
 import { ListTags } from './components/store/domain/usecases/list_tags.js';
@@ -36,10 +44,12 @@ import { PayOrders } from './components/store/domain/usecases/pay_orders.js';
 import { SearchCustomers } from './components/store/domain/usecases/search_customers.js';
 import { TagOrder } from './components/store/domain/usecases/tag_order.js';
 import { UnnotedOrders } from './components/store/domain/usecases/unnoted_orders.js';
+import { UpdateBalance } from './components/store/domain/usecases/update_balance.js';
 import { UpdateCustomer } from './components/store/domain/usecases/update_customer.js';
 import { UpdateOrder } from './components/store/domain/usecases/update_order.js';
 import { VipCustomers } from './components/store/domain/usecases/vip_customers.js';
 import { StoreAppComponent } from './components/store/store_appcomponent.js';
+import { BalancesController } from './components/store/api/balances_controller.js';
 import { CouponsController } from './components/store/api/coupons_controller.js';
 import { CustomersController } from './components/store/api/customers_controller.js';
 import { OrdersController } from './components/store/api/orders_controller.js';
@@ -47,14 +57,14 @@ import { TagsController } from './components/store/api/tags_controller.js';
 
 export const config = new ProjectConfig();
 // every table of the app, for `nuclear migrate` (synapsis-nest-migrate reads them with the config)
-export const entities = [Coupon, Customer, Order, Tag];
+export const entities = [Balance, Coupon, Customer, Order, Tag];
 
 // the store component: other components see its appcomponent (the module is global, so they need no import)
 @Global()
 @Module({
-  imports: [SequelizeModule.forFeature([Coupon, Customer, Order, Tag])],
-  controllers: [CouponsController, CustomersController, OrdersController, TagsController],
-  providers: [CouponRepository, CustomerRepository, OrderRepository, TagRepository, Checkout, ClearCoupon, CreateCustomer, CreateOrder, CreateTag, CustomerOrders, DeleteCustomer, DeleteOrder, DraftCustomer, FullOrder, GetCustomer, GetOrder, GiveCoupons, ListCustomers, ListOrders, ListTags, OrdersOfCustomer, PageCustomers, PayOrders, SearchCustomers, TagOrder, UnnotedOrders, UpdateCustomer, UpdateOrder, VipCustomers, StoreAppComponent],
+  imports: [SequelizeModule.forFeature([Balance, Coupon, Customer, Order, Tag])],
+  controllers: [BalancesController, CouponsController, CustomersController, OrdersController, TagsController],
+  providers: [BalanceRepository, CouponRepository, CustomerRepository, OrderRepository, TagRepository, BalancesAtLeast, Checkout, ClearCoupon, CreateBalance, CreateCustomer, CreateOrder, CreateTag, CustomerOrders, DeleteBalance, DeleteCustomer, DeleteOrder, Deposit, DraftCustomer, FullOrder, GetBalance, GetCustomer, GetOrder, GiveCoupons, ListBalances, ListCustomers, ListOrders, ListTags, OrdersOfCustomer, PageCustomers, PayOrders, SearchCustomers, TagOrder, UnnotedOrders, UpdateBalance, UpdateCustomer, UpdateOrder, VipCustomers, StoreAppComponent],
   exports: [StoreAppComponent],
 })
 export class StoreModule {}

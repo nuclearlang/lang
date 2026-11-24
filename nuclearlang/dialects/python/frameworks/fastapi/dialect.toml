@@ -38,9 +38,13 @@ builtin_result = false
 [types]
 # a use case fails with an AppError (NotFound, Invalid, Conflict...): its status is the HTTP answer
 Error = "AppError"
+# the exact numbers (ADR-lang-0015) are the language's `int` and `Decimal`, typed so a model reads and writes them as
+# JSON texts and an entity keeps them exactly (synapsis.exact)
+bigint = "BigInt"
+bigdouble = "BigDouble"
 
 [names]
-written = ["Result", "Ok", "Err", "AppError", "Model", "Awaitable", "Annotated", "MinLen", "MaxLen", "Ge", "Le",
+written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "Awaitable", "Annotated", "MinLen", "MaxLen", "Ge", "Le",
   "AfterValidator", "Field", "AliasChoices", "is_email", "is_url", "Repository", "Mapped", "BaseModel", "TypedDict", "AppConfig", "ComponentConfig"]
 
 [auto_imports]
@@ -52,7 +56,7 @@ written = ["Result", "Ok", "Err", "AppError", "Model", "Awaitable", "Annotated",
   "many_to_one", "one_to_many", "many_to_many", "one_to_one", "transactional", "Page",
   "Repository", "gt", "gte", "lt", "lte", "ne", "like", "ilike", "contains", "icontains", "one_of", "is_null", "between",
   "controller", "get", "post", "put", "patch", "delete", "status", "untraced",
-  "Guard", "Token", "NoOrigin", "Model",
+  "Guard", "Token", "NoOrigin", "Model", "BigInt", "BigDouble",
 ]
 # the optional parts of the runtime: only a project that enables their plugin imports them
 "synapsis.ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chat_model", "vector_store", "text_of"]

@@ -100,6 +100,35 @@ A text longer than `n` characters is never written, on any database: the write i
 `length` is a migration (§2.8). A long text is not a key nor a unique column: MySQL and MariaDB refuse a unique
 over a text type.
 
+**An exact number** (ADR-backend-0003) keeps its value exactly on every database. A `bigint` column is a `BIGINT`: a
+whole number from −2^63 to 2^63 − 1. A `bigdouble` column is a `NUMERIC(p, s)`: `@column(precision = p, scale = s)`,
+30 and 10 without them; `p` from 1 to 65, `s` from 0 to 30 and at most `p` (`precision` and `scale` are only a
+`bigdouble`'s, N0308). SQLite has no exact number: there the column keeps the value's text (`EXACT TEXT`, and
+`EXACT TEXT(p,s)` with exactly `s` decimals), and `where` and `orderBy` compare it by value as the other databases do.
+A value the column cannot hold (beyond 64 bits; more decimals than `s` or more digits before the point than `p − s`) is
+never written, rounded or cut: the write is refused with 409 `conflict`. A key (`@primary`) is an `int` or a `string`.
+
+| Field | PostgreSQL | MySQL, MariaDB | SQLite |
+|---|---|---|---|
+| `bigint` | `BIGINT` | `BIGINT` | `EXACT TEXT` |
+| `bigdouble` | `NUMERIC(30, 10)` | `DECIMAL(30, 10)` | `EXACT TEXT(30,10)` |
+| `@column(precision = 40, scale = 20)` `bigdouble` | `NUMERIC(40, 20)` | `DECIMAL(40, 20)` | `EXACT TEXT(40,20)` |
+
+A changed precision or scale is a migration (§2.8): the databases round the values to the new scale, half away from
+zero, and refuse one with more digits than the column takes (the migration fails). A row written by SQL into SQLite
+writes the column's text (`'0.3000000000'`).
+
+```nuclear
+@entity("balances")
+Balance()
+  @primary(generated = true)
+  id: int
+  serial: bigint
+  @column(precision = 40, scale = 20)
+  rate: bigdouble
+  amount: bigdouble = 0.0
+```
+
 ```nuclear
 @entity("tasks")
 Task()
@@ -161,7 +190,8 @@ query, created for that call: `where({...})` (equality, or `gt`, `gte`, `lt`, `l
 `contains`, `icontains`, `oneOf`, `isNull`, `between`), `orderBy(field, desc = true)`, `limit(n)`, `offset(n)`, `relations(...)` (the
 relations to load); the last line runs it: `getOne()` (`Result`), `getMany()`, `paginate(page, size)` (`Page<T>`:
 `items`, `page` from 1, `size`, `total`, `pages`; the same on the mobile local tables), `count()`, `exists()`,
-`update({...})`, `delete()`. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is
+`update({...})`, `delete()`. An exact column (`bigint`, `bigdouble`) is compared and sorted by its value on every
+database. A page holds at most `maxPageSize` rows (§2.8, 100 by default): a larger `size` is
 answered with that many, and the page's `size` says so. `where` and `orderBy` take only the entity's columns: another
 name (a relation, a field that is none) is an error of the program, answered 500. The caller awaits it:
 `~tasks.byTitle(title)`. The same chain works outside the repository: `~tasks.where({ "title": t }).exists()`.
@@ -232,6 +262,8 @@ Nuclear type, and any other is refused with the rule `type`:
 | `double` | a finite number (`1.5`, `30`) | a text (`"1.5"`), `true` / `false`, one too large to be finite (`1e999`) |
 | `boolean` | `true` / `false` | a text (`"true"`), a number (`1`) |
 | `DateTime` | a text that is a date and time (`"2026-03-04T05:06:07Z"`) | a number, a text that is no date |
+| `bigint` | a text of `text.toBigInt()`: a sign and digits (`"12345678901234567890123"`) | a number (`5`), another text (`"5.0"`), more than 1000 digits |
+| `bigdouble` | a text of `text.toBigDouble()`: decimals, an exponent (`"0.1"`, `"-2.5e3"`) | a number (`0.1`), another text (`"1."`), more than 1000 digits written without the exponent |
 | `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |
 
 `null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the
@@ -245,10 +277,16 @@ one that is not an object is `type`.
 
 **A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks
 around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`
-a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`.
+a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`; a
+`bigint` and a `bigdouble` the texts of a body (`?min=0.1`).
 Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the
 method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when
 any is refused, the answer has the reason of each refused one, and the body is read only after they pass.
+
+**An exact number is a text in JSON** (`"price": "0.3"`): its answer is what `toString()` writes (`"0.3"`, `"2.0"`),
+never a number a client would round. In the OpenAPI document it is a `string` with the `pattern` of its text.
+`@min(n)` and `@max(n)` of an exact field compare exactly; `n` is a literal of the field's type (`@min(0.01)`,
+`@max(12345678901234567890123)`).
 
 **A model built in code is checked like a body.** `NewTask(title = "")` breaks `@minLength(1)` and throws; a use
 case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).

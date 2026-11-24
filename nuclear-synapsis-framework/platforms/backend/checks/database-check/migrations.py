@@ -112,6 +112,8 @@ expect(migrate("up"), "the database is up to date")
 expect(migrate("status"), f"applied  {first}")
 expect(migrate("make", "again"), "no changes: the entities match the last migration")
 db.check_schema(url)
+if wrong := db.exact_types(schema(), database):
+    fail("the first migration made an exact column of another type: " + "; ".join(wrong))
 expect(migrate("down"), f"reverted {first}")
 if schema():
     fail(f"reverting the first migration left the tables {sorted(schema())}")
@@ -465,5 +467,28 @@ if db.scalar(url, "SELECT COUNT(*) FROM orders") != 1:
     fail("changing the length of a text lost the rows")
 expect(migrate("make", "again"), "no changes: the entities match the last migration")
 done(f"a text of 100000 characters is a {db.LONG_TEXT[100000][database]} and one of 5000000 a {db.LONG_TEXT[5000000][database]}: a changed length is a migration, up and down, the text kept")
+
+# --- 12. an exact column whose scale changes: every database keeps the value, rounded half away from zero
+db.execute(url, "DELETE FROM balances", "INSERT INTO balances (serial, amount, rate) VALUES (9223372036854775807, 0.3, 1.123456789)")
+edit("balance.nuc", "  @column(precision = 40, scale = 20)\n", "  @column(precision = 40, scale = 4)\n")
+made(migrate("make", "fewer decimals of a rate"))
+migrate("up")
+rate = schema("14-exact-scale")["balances"]["columns"]["rate"]["sql"]
+if rate != db.EXACT["rate"][database].replace("40, 20", "40, 4").replace("40,20", "40,4"):
+    fail(f"balances.rate of scale 4 is a {rate}")
+if (str(db.scalar(url, "SELECT rate FROM balances")), str(db.scalar(url, "SELECT serial FROM balances"))) != ("1.1235", "9223372036854775807"):
+    fail(f"the exact values changed with the scale: {db.scalar(url, 'SELECT rate FROM balances')}, {db.scalar(url, 'SELECT serial FROM balances')}")
+migrate("down")
+if wrong := db.exact_types(schema(), database):
+    fail("down did not bring the exact column back: " + "; ".join(wrong))
+migrate("up")
+edit("balance.nuc", "  @column(precision = 40, scale = 4)\n", "  @column(precision = 40, scale = 20)\n")
+made(migrate("make", "the decimals of a rate again"))
+migrate("up")
+if wrong := db.exact_types(schema(), database):
+    fail("the exact column did not come back: " + "; ".join(wrong))
+expect(migrate("make", "again"), "no changes: the entities match the last migration")
+db.execute(url, "DELETE FROM balances")
+done(f"an exact column of another scale is a migration, up and down: {db.EXACT['rate'][database]}, the values rounded, a bigint of 64 bits kept")
 
 print(f"{len(names())} migrations, {sum(1 for _ in open(log.name))} scenarios: every change applied and reverted with `nuclear migrate`, the real schema and the rows read back after each")

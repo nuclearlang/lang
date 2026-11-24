@@ -90,6 +90,38 @@ export class Task extends Entity {
 }
 ```
 
+The exact numbers (ADR-backend-0003): a `bigint` column is `DataType.BIGINT`, a `bigdouble` one `DataType.DECIMAL(p, s)`
+(30 and 10 by default; on SQLite the value's text, `EXACT TEXT(p,s)`). The runtime's `exactColumn` gives the field its
+getter and setter: the value is read back as a `bigint` or a `BigDouble` (the class the dialect writes in the file) and
+kept as its text with the column's decimals; the repository compares and sorts it by value, and `save` and `update`
+refuse with `Conflict` (409) a value the column cannot hold.
+
+```nuclear
+@entity("balances")
+entity Balance()
+  @primary(generated = true)
+  id: int
+  serial: bigint
+  @column(precision = 40, scale = 20)
+  rate: bigdouble
+  amount: bigdouble = 0.0
+```
+
+```typescript
+export class Balance extends Entity {
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
+  @Column({ type: DataType.BIGINT, allowNull: false, ...exactColumn('serial') })
+  declare serial: bigint;
+  @Column({ type: DataType.DECIMAL(40, 20), allowNull: false, ...exactColumn('rate', 40, 20) })
+  declare rate: BigDouble;
+  @Column({ type: DataType.DECIMAL(30, 10), allowNull: false, defaultValue: exactText(BigDouble.of('0.0'), 10), ...exactColumn('amount', 30, 10) })
+  declare amount: BigDouble;
+}
+```
+
 #### Relations (ADR-backend-0001)
 
 TypeORM's decorators; the related entity is the field's type. `@manyToOne x?: T` keeps its column in the field `xId`
@@ -364,6 +396,32 @@ export class NewTask {
 }
 ```
 
+A `bigint` or `bigdouble` field is `@IsBigInt()` / `@IsBigDouble()` (the runtime's: a JSON text read with the language's
+rules, a JSON number refused); `@min` and `@max` of one are `MinExact` / `MaxExact`, compared exactly. The app writes a
+`bigint` of an answer as its text (Express's `json replacer`), a `BigDouble` writes its own (`toJSON`):
+
+```nuclear
+model NewBalance
+  @max(12345678901234567890123)
+  serial: bigint
+  @min(0.01)
+  amount: bigdouble
+  rates: bigdouble[] = []
+```
+
+```typescript
+export class NewBalance {
+  @IsBigInt()
+  @MaxExact(12345678901234567890123n)
+  serial!: bigint;
+  @IsBigDouble()
+  @MinExact(BigDouble.of('0.01'))
+  amount!: BigDouble;
+  @IsBigDouble({ each: true })
+  @IsArray()
+  rates: BigDouble[] = [];
+```
+
 ### 2.4 Use case
 
 One business operation (`@Injectable`): its dependencies are constructor parameters, injected by Nest; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409). What the database refuses for integrity (Sequelize's `ValidationError`, `UniqueConstraintError` and `ForeignKeyConstraintError`, or the database's own integrity error: a unique, a foreign key, a required column) is answered by `ErrorFilter` with 409 `conflict`, and so is a text longer than its column, which `Repository.save` and `update` refuse before it is written; inside `@transactional` the transaction is rolled back. `x = ~repo.find(id)` unwraps the `Ok` and returns the `Err` by itself.
@@ -563,6 +621,23 @@ export class TasksController {
     return text ?? '';
   }
 }
+```
+
+An exact parameter is read by `BigIntPipe` / `BigDoublePipe`, with the texts of a body:
+
+```nuclear
+@controller("balances")
+controller BalancesController()
+  @get("{serial}")
+  one(serial: bigint, min: bigdouble = 0.5) bigdouble
+    min
+```
+
+```typescript
+  @Get(':serial')
+  one(@Param('serial', RequiredPipe, BigIntPipe) serial: bigint, @Query('min', BigDoublePipe) min: BigDouble = BigDouble.of('0.5')): BigDouble {
+    return min;
+  }
 ```
 
 ### 2.7 Configuration

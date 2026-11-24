@@ -1,0 +1,15 @@
+// The tests of balances: the database is in memory and empty in each test.
+tests BalancesTest
+  @test("adds a balance and finds it")
+  addsAndFinds() void
+    app = inject<StoreAppComponent>()
+    made = ~app.createBalance(NewBalance(serial = 1, amount = 1.5, rate = 1.5))
+    expect(made.isOk)
+    found = ~app.getBalance(made.value.id)
+    expect(found.isOk)
+
+  @test("a missing balance is not found")
+  missing() void
+    app = inject<StoreAppComponent>()
+    found = ~app.getBalance(999)
+    expect(found.error.status == 404)

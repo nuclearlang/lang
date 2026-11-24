@@ -16,7 +16,7 @@ file goes: `nuclear help layout --platform backend`.
 
 | Where | Kind | What it is |
 |---|---|---|
-| `data/entities/` | entity | a table: `@entity("t")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`); `@created()` / `@updated()` timestamps, with milliseconds |
+| `data/entities/` | entity | a table: `@entity("t")`, fields with `@primary(generated = true)`, `@column(length = 100, unique = true)`, relations `@manyToOne` (+ `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn` (optional fields, loaded by `relations(...)`); `@created()` / `@updated()` timestamps, with milliseconds; exact numbers: `code: bigint` (64 bits), `@column(precision = 40, scale = 20) rate: bigdouble` (30, 10 by default); a value the column cannot hold is 409, never rounded |
 | `data/repositories/` | `repository NameRepository` | CRUD (`find`, `findAll`, `save`, `remove`) + methods whose lines build one query: `where({...})` (a client's search text: `icontains(text)`, never a `like` pattern), `orderBy`, `limit`, `relations("tasks")`, then `getOne()` / `getMany()` / `paginate(page, size)` (`Page<T>`) / `count()` / `exists()` |
 | `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r"...")`; a value of another JSON type is refused (`"30"` is not an `int`); built in code (`NewTask(title = "")`) it is checked too and throws; an optional field left empty answers `null` |
 | `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |
@@ -30,7 +30,8 @@ file goes: `nuclear help layout --platform backend`.
 | `test/` | `tests Name` | `@test("...")` methods, `inject<X>()`, `expect(cond)` |
 
 What a request carries: a body is JSON (`application/json`, UTF-8; 415 otherwise, 413 beyond `maxBodySize`); an `int`
-is 64 bits, a `double` finite, a text without U+0000; a parameter of the path or the query is exactly its type
+is 64 bits, a `double` finite, a text without U+0000, a `bigint` / `bigdouble` a JSON text (`"0.3"`, read as
+`text.toBigDouble()` reads it; a JSON number is refused) and answered as its `toString()`; a parameter of the path or the query is exactly its type
 (`?page=2`, `true` / `false`; not `0x1`, `1`, `NaN`), given once, and a missing one takes its default or is
 `required`; a larger `size` gives a page of `maxPageSize` rows. A path is matched as written (no redirect for a last
 `/`); another method of a path answers 405. The app listens on 127.0.0.1 (`HOST`, `PORT` change it), logs one line

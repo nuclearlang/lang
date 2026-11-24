@@ -44,6 +44,9 @@ oneToMany = { optional = true, list = true, target = "entity", inverse = "invers
 manyToMany = { optional = true, list = true, target = "entity", inverse = "inverse", with = "joinTable" }
 oneToOne = { optional = true, list = false, target = "entity", inverse = "inverse", with = "joinColumn" }
 joinColumn = { sibling = "{name}Id" }
+# a key is a whole number or a text; `precision` and `scale` are the digits of an exact decimal (backend.md §2.1)
+primary = { types = ["int", "string"] }
+column = { args_for = { precision = ["bigdouble"], scale = ["bigdouble"] } }
 
 # N0309: a removed decorator and what replaces it
 [decorators.replaced]

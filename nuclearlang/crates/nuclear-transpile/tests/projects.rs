@@ -282,6 +282,66 @@ fn relation_decorators_have_rules() {
     }
 }
 
+/// ADR-lang-0015 on the backend: an exact field is an exact column (`@column(precision, scale)` only on a `bigdouble`, a
+/// key is never one), its validation bounds take its type, and the OpenAPI document gives it as a text with a pattern.
+#[test]
+fn exact_fields_are_exact_columns_and_texts_in_json() {
+    let example = tree("examples/examples-backend/tasks_api");
+    for dialect in ["nestjs", "fastapi"] {
+        let tmp = std::env::temp_dir().join(format!("nuclear-exact-{dialect}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        copy_tree(&example, &tmp);
+        let entity = tmp.join("components/tasks/data/entities/price.nuc");
+        let model = tmp.join("components/tasks/domain/models/new_price.nuc");
+        let config = tmp.join("config.nuc");
+        std::fs::write(&config, std::fs::read_to_string(&config).unwrap().replace("dialect = \"nestjs\"", &format!("dialect = \"{dialect}\""))).unwrap();
+        std::fs::write(&entity, "@entity(\"prices\")\nPrice()\n  @primary(generated = true)\n  id: int\n  code: bigint = 5\n  @column(precision = 20, scale = 4)\n  amount: bigdouble\n").unwrap();
+        std::fs::write(&model, "NewPrice\n  @max(12345678901234567890123)\n  code: bigint\n  @min(0.1)\n  amount: bigdouble\n").unwrap();
+        let (d, _) = loader(None).load(dialect);
+        let d = d.unwrap();
+        let manifest = Manifest::read(&tmp).unwrap();
+        let out = project::build(&tmp, &manifest, &d);
+        let errors: Vec<String> = out.files.iter().flat_map(|f| f.diagnostics.iter().filter(|x| x.is_error()).map(|x| x.message.clone())).collect();
+        assert!(errors.is_empty(), "{dialect}: {errors:#?}");
+        let code = |name: &str| out.files.iter().find(|f| f.out_path.ends_with(name)).map(|f| f.code.clone()).unwrap();
+        let ext = if dialect == "nestjs" { "ts" } else { "py" };
+        let (price, new_price) = (code(&format!("/price.{ext}")), code(&format!("/new_price.{ext}")));
+        let wants: &[(&str, &str)] = if dialect == "nestjs" {
+            &[
+                (&price, "DataType.DECIMAL(20, 4), allowNull: false, ...exactColumn('amount', 20, 4)"),
+                (&price, "DataType.BIGINT, allowNull: false, defaultValue: exactText(5n), ...exactColumn('code')"),
+                (&new_price, "@MaxExact(12345678901234567890123n)"),
+                (&new_price, "@MinExact(BigDouble.of('0.1'))"),
+            ]
+        } else {
+            &[
+                (&price, "amount: Mapped[BigDouble] = column(precision=20, scale=4)"),
+                (&price, "code: Mapped[BigInt] = column(default=5)"),
+                (&new_price, "code: Annotated[BigInt, Le(12345678901234567890123)]"),
+                (&new_price, "amount: Annotated[BigDouble, Ge(Decimal(\"0.1\"))]"),
+            ]
+        };
+        for (text, want) in wants {
+            assert!(text.contains(want), "{dialect}: no {want} in\n{text}");
+        }
+        // the OpenAPI document: a text with the pattern of its type, its default its text
+        project::write_metadata(&tmp, &manifest, &d).unwrap();
+        let openapi: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(tmp.join(".nuclear/openapi.json")).unwrap()).unwrap();
+        let schemas = &openapi["components"]["schemas"];
+        assert_eq!(schemas["Price"]["properties"]["code"], serde_json::json!({ "type": "string", "pattern": "^[+-]?[0-9]+$", "default": "5" }), "{schemas}");
+        assert_eq!(schemas["NewPrice"]["properties"]["amount"]["pattern"], "^[+-]?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$");
+        assert!(schemas["NewPrice"]["properties"]["amount"].get("minimum").is_none(), "{schemas}");
+        // N0308: precision and scale are a bigdouble's; a key is a whole number or a text
+        std::fs::write(&entity, "@entity(\"prices\")\nPrice()\n  @primary(generated = true)\n  id: bigint\n  @column(scale = 2)\n  name: string\n").unwrap();
+        let out = project::build(&tmp, &manifest, &d);
+        let found: Vec<String> = out.files.iter().flat_map(|f| f.diagnostics.iter().filter(|x| x.code.id == "N0308").map(|x| x.message.clone())).collect();
+        for want in ["`scale` is for a field of type bigdouble", "the field's type is one of int, string"] {
+            assert!(found.iter().any(|m| m.contains(want)), "{dialect}: no '{want}' in {found:#?}");
+        }
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+}
+
 /// Copies a project's sources (not its `build/`).
 fn copy_tree(from: &std::path::Path, to: &std::path::Path) {
     std::fs::create_dir_all(to).unwrap();

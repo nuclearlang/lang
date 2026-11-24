@@ -1,0 +1,4 @@
+// What BalanceRepository.atLeast answers, for the rest of store.
+usecase BalancesAtLeast(repository: BalanceRepository)
+  exec(amount: bigdouble) Result<Error, Balance[]>
+    Ok(~repository.atLeast(amount))

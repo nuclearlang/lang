@@ -13,6 +13,7 @@ import {
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
 import { limits } from './edge.js';
+import { BIGINT_MAX, BIGINT_MIN, BigDouble, columnText, fitsBigDouble, isBigDouble } from './exact.js';
 import { Conflict, NotFound } from './errors.js';
 import { Err, Ok, Result } from './result.js';
 
@@ -28,6 +29,13 @@ export class Entity extends Model {
     for (const name of Object.keys(associations)) {
       if (name in values) (this as unknown as Record<string, unknown>)[name] = values[name];
     }
+  }
+
+  /** The row as JSON, its columns in the entity's order (Sequelize puts a column with a getter, an exact one, first). */
+  override toJSON<T extends object>(): T {
+    const plain = super.toJSON() as Record<string, unknown>;
+    const order = Object.keys((this.constructor as ModelCtor<Model>).getAttributes());
+    return Object.fromEntries([...order.filter((k) => k in plain).map((k) => [k, plain[k]]), ...Object.entries(plain).filter(([k]) => !order.includes(k))]) as T;
   }
 }
 
@@ -140,6 +148,67 @@ export const between = (low: unknown, high: unknown) => new Operator({ [Op.betwe
 
 type Conditions = Record<string, unknown>;
 
+/** An exact column (ADR-lang-0015): a `bigint` is a BIGINT; a `bigdouble` a DECIMAL with its scale. */
+function exactOf(model: ModelCtor<Model>, field: string): { scale?: number; precision?: number } | undefined {
+  const { key, options } = (model.getAttributes()[field]?.type ?? {}) as { key?: string; options?: { precision?: number; scale?: number } };
+  if (key === 'BIGINT') return {};
+  if (key === 'DECIMAL') return { scale: options?.scale ?? 0, precision: options?.precision ?? 0 };
+  return undefined;
+}
+
+const exactValue = (v: unknown): v is bigint | BigDouble => typeof v === 'bigint' || isBigDouble(v);
+
+/** A value compared with an exact column: its text, as SQL's number (PostgreSQL, MySQL and MariaDB compare a quoted
+ * text with a DECIMAL as a double) or, on SQLite, as the text the column keeps. The text is only digits, a sign and a
+ * point (columnText). */
+function exactSql(v: unknown, exact: { scale?: number }, lite: boolean): unknown {
+  if (!exactValue(v)) return v;
+  const text = columnText(v, exact.scale);
+  return lite ? text : literal(text);
+}
+
+/** SQLite: `column <op> value` of an exact column, by value. The column keeps the value's text with its scale's
+ * decimals: of the same sign and the same digits before the point, the texts sort as the values (a negative one the
+ * other way); the digits before the point decide the rest (the same SQL as synapsis.orm's). */
+function liteCompare(column: string, op: symbol, v: bigint | BigDouble, exact: { scale?: number }, escape: (s: string) => string): string {
+  const text = columnText(v, exact.scale);
+  const negative = text.startsWith('-');
+  const digits = text.replace(/^-/, '').split('.')[0]!.length;
+  const key = negative ? -digits : digits;
+  const ops: Record<symbol, string> = { [Op.gt]: '>', [Op.gte]: '>=', [Op.lt]: '<', [Op.lte]: '<=' };
+  const flip: Record<string, string> = { '>': '<', '>=': '<=', '<': '>', '<=': '>=' };
+  const sign = ops[op]!;
+  const strict = sign.replace('=', '');
+  return `(${liteSize(column, exact)} ${strict} ${key} OR (${liteSize(column, exact)} = ${key} AND ${column} ${negative ? flip[sign] : sign} ${escape(text)}))`;
+}
+
+/** SQLite: the digits before the point of an exact column's text, negative for a negative value. */
+function liteSize(column: string, exact: { scale?: number }): string {
+  const after = exact.scale ? exact.scale + 1 : 0;
+  return `CASE WHEN (substr(${column}, 1, 1) = '-') THEN ${1 + after} - length(${column}) ELSE length(${column}) - ${after} END`;
+}
+
+/** SQLite: the terms of `orderBy` of an exact column, by value. */
+function liteOrder(column: string, exact: { scale?: number }, desc: boolean): [ReturnType<typeof literal>, string][] {
+  const negative = `substr(${column}, 1, 1) = '-'`;
+  const [up, down] = desc ? ['DESC', 'ASC'] : ['ASC', 'DESC'];
+  return [
+    [literal(liteSize(column, exact)), up],
+    [literal(`CASE WHEN (${negative}) THEN NULL ELSE ${column} END`), up],
+    [literal(`CASE WHEN (${negative}) THEN ${column} END`), down],
+  ];
+}
+
+/** `values` of a write with each exact value as the text its column keeps (what the field's setter writes). */
+function exactValues(model: ModelCtor<Model>, values: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...values };
+  for (const [k, v] of Object.entries(values)) {
+    const exact = exactOf(model, k);
+    if (exact && exactValue(v)) out[k] = columnText(v, exact.scale);
+  }
+  return out;
+}
+
 /** A field of `where` or `orderBy` that is not a column of the entity: the program's error, a 500 that says it. */
 export class InvalidField extends Error {
   override name = 'InvalidField';
@@ -157,7 +226,10 @@ function column(model: ModelCtor<Model>, field: string): string {
 function toWhere(model: ModelCtor<Model>, conditions: Conditions[], aliased: boolean): WhereOptions {
   const all: WhereOptions[] = [];
   for (const [k, v] of conditions.flatMap((c) => Object.entries(c))) {
-    if (v instanceof Contains) {
+    const exact = exactOf(model, k);
+    if (exact) {
+      all.push(exactWhere(model, k, v, exact, aliased));
+    } else if (v instanceof Contains) {
       const name = model.getAttributes()[k]?.field ?? k;
       const target = col(aliased ? `${model.name}.${name}` : name);
       // the value is quoted by sequelize's own escape, as it quotes every value of a where
@@ -178,13 +250,48 @@ function toWhere(model: ModelCtor<Model>, conditions: Conditions[], aliased: boo
   return all.length ? { [Op.and]: all } : {};
 }
 
+/** One condition of an exact column, by value on every database. */
+function exactWhere(model: ModelCtor<Model>, k: string, v: unknown, exact: { scale?: number }, aliased: boolean): WhereOptions {
+  const s = model.sequelize!;
+  const lite = s.getDialect() === 'sqlite';
+  if (!(v instanceof Operator)) return { [k]: exactSql(v, exact, lite) };
+  const parts: WhereOptions[] = [];
+  const generator = s.getQueryInterface().queryGenerator as unknown as { quoteIdentifier(n: string): string };
+  const name = model.getAttributes()[k]?.field ?? k;
+  const column = (aliased ? `${generator.quoteIdentifier(model.name)}.` : '') + generator.quoteIdentifier(name);
+  for (const op of Object.getOwnPropertySymbols(v.value)) {
+    const value = v.value[op];
+    const ordered = op === Op.gt || op === Op.gte || op === Op.lt || op === Op.lte;
+    if (lite && ordered && exactValue(value)) {
+      parts.push(literal(liteCompare(column, op, value, exact, (t) => s.escape(t))));
+    } else if (lite && op === Op.between && Array.isArray(value) && value.every(exactValue)) {
+      parts.push(literal(liteCompare(column, Op.gte, value[0], exact, (t) => s.escape(t))));
+      parts.push(literal(liteCompare(column, Op.lte, value[1], exact, (t) => s.escape(t))));
+    } else {
+      const written = Array.isArray(value) ? value.map((x) => exactSql(x, exact, lite)) : exactSql(value, exact, lite);
+      parts.push({ [k]: { [op]: written } });
+    }
+  }
+  return parts.length === 1 ? parts[0]! : { [Op.and]: parts };
+}
+
 /** A text longer than its column (`@column(length = n)`; 255 without one) is refused before it is written, with the
  * 409 of what a database refuses for integrity: PostgreSQL, MySQL and MariaDB refuse it in a VARCHAR, SQLite and a
  * text type would keep it. The length is counted in characters (code points), as the databases count it. */
 function fits(model: ModelCtor<Model>, values: Record<string, unknown>): void {
   for (const [name, a] of Object.entries(model.getAttributes())) {
     const v = values[name];
-    const { key, options } = a.type as { key?: string; options?: { length?: number } };
+    const { key, options } = a.type as { key?: string; options?: { length?: number; precision?: number; scale?: number } };
+    // an exact number the column cannot hold (beyond 64 bits; more digits or decimals than it has): never rounded
+    if (key === 'BIGINT' && (typeof v === 'string' || typeof v === 'bigint')) {
+      const n = BigInt(v);
+      if (n < BIGINT_MIN || n > BIGINT_MAX) throw new Conflict();
+      continue;
+    }
+    if (key === 'DECIMAL' && (typeof v === 'string' || isBigDouble(v))) {
+      if (!fitsBigDouble(isBigDouble(v) ? v : BigDouble.of(v), options?.precision ?? 0, options?.scale ?? 0)) throw new Conflict();
+      continue;
+    }
     if (key !== 'STRING' || typeof v !== 'string') continue;
     const max = options?.length ?? 255;
     // a text has at most as many characters as UTF-16 units: only a longer one is counted
@@ -285,7 +392,7 @@ export class Repository<T extends Model> {
 /** One query of a repository: where / orderBy / limit / offset add to it; the others run it. */
 export class Query<T extends Model> {
   private conditions: Conditions[] = [];
-  private orders: [string, string][] = [];
+  private orders: ([string, string] | [ReturnType<typeof literal>, string])[] = [];
   private max?: number;
   private skip?: number;
   private loads: string[] = [];
@@ -300,6 +407,15 @@ export class Query<T extends Model> {
 
   orderBy(field: string, order: SortOrder = {}): Query<T> {
     const desc = typeof order === 'boolean' ? order : order.desc === true;
+    const model = this.repo.model as ModelCtor<Model>;
+    const exact = exactOf(model, column(model, field));
+    if (exact && model.sequelize?.getDialect() === 'sqlite') {
+      // an exact column sorts by value (its text does not)
+      const generator = model.sequelize.getQueryInterface().queryGenerator as unknown as { quoteIdentifier(n: string): string };
+      const name = generator.quoteIdentifier(model.name) + '.' + generator.quoteIdentifier(model.getAttributes()[field]?.field ?? field);
+      this.orders.push(...liteOrder(name, exact, desc));
+      return this;
+    }
     this.orders.push([column(this.repo.model, field), desc ? 'DESC' : 'ASC']);
     return this;
   }
@@ -365,6 +481,7 @@ export class Query<T extends Model> {
   }
 
   async update(values: Record<string, unknown>): Promise<number> {
+    values = exactValues(this.repo.model as ModelCtor<Model>, values);
     fits(this.repo.model as ModelCtor<Model>, values);
     const [n] = await this.repo.model.update(values as never, { where: this.filter(false), ...inTransaction() });
     return n;

@@ -460,3 +460,42 @@ def test_create_tables_makes_the_tables_of_the_first_migration(tmp_path: Path) -
     assert shape(p) == created
     assert p.sql("SELECT name, due FROM projects") == [("home", "2026-03-04 05:06:07.089000")]
     assert "no changes" in p.migrate("make", "nothing")
+
+
+def test_an_exact_column_is_made_and_changed_by_its_precision_and_scale(tmp_path: Path) -> None:
+    """A `bigint` is BIGINT, a `bigdouble` NUMERIC(p, s); SQLite keeps their text, in a type that says so (the same
+    names as test/migrate.test.ts)."""
+    from sqlalchemy.dialects import mysql, postgresql, sqlite
+    from synapsis.orm import ExactDecimal, ExactInteger
+
+    made = [str(ExactDecimal(20, 4).compile(dialect=d.dialect())) for d in (sqlite, postgresql, mysql)]
+    assert made == ["EXACT TEXT(20,4)", "NUMERIC(20, 4)", "NUMERIC(20, 4)"]
+    assert [str(ExactInteger().compile(dialect=d.dialect())) for d in (sqlite, postgresql, mysql)] == ["EXACT TEXT", "BIGINT", "BIGINT"]
+    prices = (
+        "from decimal import Decimal\n"
+        "from synapsis import AppConfig, BigDouble, BigInt, Entity, Mapped, SQLite, column, create_app, primary\n\n\n"
+        "class ProjectConfig(AppConfig):\n    connections = [SQLite(file=\"app.sqlite\")]\n\n\n"
+        "class Price(Entity):\n    __tablename__ = \"prices\"\n    id: Mapped[int] = primary(generated=True)\n"
+        "    code: Mapped[BigInt] = column()\n"
+        "    amount: Mapped[BigDouble] = column({amount}){more}\n\n\napp = create_app(ProjectConfig(), entities=[Price])\n"
+    )
+    p = Project(tmp_path)
+
+    def kinds() -> list[str]:
+        return [str(r[0]) for r in p.sql("SELECT type FROM pragma_table_info('prices') ORDER BY cid")]
+
+    p.app(prices.format(amount="", more=""))
+    first = p.made("prices")
+    assert "ExactInteger()" in first.read_text() and "ExactDecimal(30, 10)" in first.read_text()
+    p.migrate("up")
+    assert kinds() == ["INTEGER", "EXACT TEXT", "EXACT TEXT(30,10)"]
+    assert "no changes" in p.migrate("make", "again")
+    p.sql("INSERT INTO prices (code, amount) VALUES ('12345678901234567', '0.3000000000')")
+    p.app(prices.format(amount="precision=20, scale=4", more="\n    rate: Mapped[BigDouble] = column(default=Decimal(\"1.5\"))"))
+    p.made("scale")
+    p.migrate("up")
+    assert kinds() == ["INTEGER", "EXACT TEXT", "EXACT TEXT(20,4)", "EXACT TEXT(30,10)"]
+    assert p.sql("SELECT code, amount, rate FROM prices") == [("12345678901234567", "0.3000", "1.5000000000")]
+    assert "no changes" in p.migrate("make", "again")
+    p.migrate("down")
+    assert kinds() == ["INTEGER", "EXACT TEXT", "EXACT TEXT(30,10)"]

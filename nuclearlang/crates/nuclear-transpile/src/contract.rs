@@ -23,8 +23,12 @@ pub const CONTRACTS_DIR: &str = "contracts";
 
 const VERBS: [&str; 5] = ["get", "post", "put", "patch", "delete"];
 const RULES: [&str; 8] = ["required", "email", "url", "minLength", "maxLength", "min", "max", "pattern"];
-const PRIMITIVES: [&str; 11] =
-    ["string", "int", "double", "number", "boolean", "bool", "void", "any", "dynamic", "DateTime", "Duration"];
+const PRIMITIVES: [&str; 13] = [
+    "string", "int", "double", "number", "boolean", "bool", "void", "any", "dynamic", "DateTime", "Duration", "bigint", "bigdouble",
+];
+/// The JSON text of an exact number (ADR-lang-0015): what `text.toBigInt()` and `text.toBigDouble()` read.
+const BIGINT_PATTERN: &str = "^[+-]?[0-9]+$";
+const BIGDOUBLE_PATTERN: &str = "^[+-]?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$";
 
 // ---------- the contract of a project ----------
 
@@ -352,7 +356,8 @@ fn model(d: &Decl, lines: &Lines) -> Value {
             if f.optional {
                 field.insert("optional".into(), true.into());
             }
-            if let Some(v) = f.default.as_ref().and_then(literal) {
+            let exact = exact_name(f.ty.as_ref());
+            if let Some(v) = f.default.as_ref().and_then(|e| exact_literal(e, exact).or_else(|| literal(e))) {
                 field.insert("default".into(), v);
             }
             if let Some(k) = f.decorators.iter().find(|x| x.name == "key").and_then(|x| first_str(x.args.as_deref())) {
@@ -361,7 +366,8 @@ fn model(d: &Decl, lines: &Lines) -> Value {
             let mut rules = Map::new();
             for x in &f.decorators {
                 if RULES.contains(&x.name.as_str()) {
-                    let v = x.args.as_deref().and_then(|a| a.first()).and_then(|a| literal(&a.value)).unwrap_or(Value::Bool(true));
+                    let first = x.args.as_deref().and_then(|a| a.first());
+                    let v = first.and_then(|a| exact_literal(&a.value, exact).or_else(|| literal(&a.value))).unwrap_or(Value::Bool(true));
                     rules.insert(x.name.clone(), v);
                 }
                 if x.name == "primary" || x.name == "generated" {
@@ -516,6 +522,35 @@ pub fn type_text(t: Option<&Type>) -> String {
 }
 
 /// A literal as JSON (a default, a decorator argument); `None` for an expression.
+/// `bigint` or `bigdouble` when the field's type is one (`bigdouble?` too).
+fn exact_name(t: Option<&Type>) -> Option<&'static str> {
+    match t.map(|t| &t.kind) {
+        Some(TypeKind::Named { name, .. }) if name == "bigint" => Some("bigint"),
+        Some(TypeKind::Named { name, .. }) if name == "bigdouble" => Some("bigdouble"),
+        Some(TypeKind::Nullable(inner)) => exact_name(Some(inner)),
+        _ => None,
+    }
+}
+
+/// A number literal of an exact field as its JSON: the text of its value (`"5"`, `"1.5"`, `"2.0"`), as `toString()`
+/// writes it; a bigdouble written without a fraction gets `.0`.
+fn exact_literal(e: &Expr, exact: Option<&str>) -> Option<Value> {
+    let exact = exact?;
+    let (neg, n) = match &e.kind {
+        ExprKind::Number(n) => (false, n),
+        ExprKind::Unary { op: nuclear_syntax::ast::UnaryOp::Neg, expr } => match &expr.kind {
+            ExprKind::Number(n) => (true, n),
+            _ => return None,
+        },
+        _ => return None,
+    };
+    let mut text = n.text.replace('_', "");
+    if exact == "bigdouble" && !text.contains(['.', 'e', 'E']) {
+        text.push_str(".0");
+    }
+    Some(Value::String(if neg { format!("-{text}") } else { text }))
+}
+
 fn literal(e: &Expr) -> Option<Value> {
     match &e.kind {
         ExprKind::Str(pieces) => {
@@ -725,6 +760,8 @@ fn schema_of_model(m: &Value) -> Value {
         for (rule, v) in f["rules"].as_object().into_iter().flatten() {
             match rule.as_str() {
                 "minLength" | "maxLength" | "pattern" => s[rule] = v.clone(),
+                // JSON Schema's bounds are of numbers: an exact field's text keeps only its pattern
+                "min" | "max" if s["type"] == "string" => {}
                 "min" => s["minimum"] = v.clone(),
                 "max" => s["maximum"] = v.clone(),
                 "email" => s["format"] = "email".into(),
@@ -764,6 +801,9 @@ fn schema_of_type(t: &str) -> Value {
     }
     match t {
         "int" => json!({ "type": "integer" }),
+        // an exact number is a text in JSON (ADR-lang-0015): its pattern is what the language reads
+        "bigint" => json!({ "type": "string", "pattern": BIGINT_PATTERN }),
+        "bigdouble" => json!({ "type": "string", "pattern": BIGDOUBLE_PATTERN }),
         "double" | "number" => json!({ "type": "number" }),
         "string" => json!({ "type": "string" }),
         "boolean" | "bool" => json!({ "type": "boolean" }),

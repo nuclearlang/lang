@@ -4,6 +4,11 @@
 export * from './result.js';
 export * from './errors.js';
 export * from './model.js';
+// (not the class BigDouble: the generated code writes its own in each file that uses it)
+export {
+  BIGINT_MAX, BIGINT_MIN, IsBigDouble, IsBigInt, MaxExact, MinExact, PRECISION, SCALE, columnText, exactColumn, exactText, fitsBigDouble,
+  isBigDouble, parseBigDouble, parseBigInt, type Decimalish,
+} from './exact.js';
 export * from './config.js';
 export * from './repository.js';
 export * from './http.js';

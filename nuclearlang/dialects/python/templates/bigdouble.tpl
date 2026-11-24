@@ -59,3 +59,7 @@ def _dec_text(d: Decimal) -> str:
 
 def _dec_text_or_null(d: Decimal | None) -> str:
     return "null" if d is None else _dec_text(d)
+
+
+# the runtime of the type, whatever members of it this file uses (pyright --strict would call one unused)
+_BIGDOUBLE = (_dec_scale, _dec_div, _dec_pow, _dec_round, _dec_fixed, _dec_from, _to_bigdouble, _dec_text, _dec_text_or_null)

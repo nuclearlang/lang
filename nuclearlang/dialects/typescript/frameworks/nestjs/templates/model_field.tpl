@@ -7,6 +7,12 @@
 {{#tinfo.is.int}}
 @IsWhole({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.int}}
+{{#tinfo.is.bigint}}
+@IsBigInt({{#tinfo.list}}{ each: true }{{/tinfo.list}})
+{{/tinfo.is.bigint}}
+{{#tinfo.is.bigdouble}}
+@IsBigDouble({{#tinfo.list}}{ each: true }{{/tinfo.list}})
+{{/tinfo.is.bigdouble}}
 {{#tinfo.is.double}}
 @IsNumber({{#tinfo.list}}{ each: true }{{/tinfo.list}})
 {{/tinfo.is.double}}
@@ -42,10 +48,10 @@
 @MaxLength({{decor.maxLength.arg}})
 {{/decor.maxLength}}
 {{#decor.min}}
-@Min({{decor.min.arg}})
+{{#tinfo.is.bigint or tinfo.is.bigdouble}}@MinExact({{decor.min.arg}}){{/tinfo.is.bigint or tinfo.is.bigdouble}}{{^tinfo.is.bigint or tinfo.is.bigdouble}}@Min({{decor.min.arg}}){{/tinfo.is.bigint or tinfo.is.bigdouble}}
 {{/decor.min}}
 {{#decor.max}}
-@Max({{decor.max.arg}})
+{{#tinfo.is.bigint or tinfo.is.bigdouble}}@MaxExact({{decor.max.arg}}){{/tinfo.is.bigint or tinfo.is.bigdouble}}{{^tinfo.is.bigint or tinfo.is.bigdouble}}@Max({{decor.max.arg}}){{/tinfo.is.bigint or tinfo.is.bigdouble}}
 {{/decor.max}}
 {{#decor.key}}
 @Expose({ name: {{decor.key.arg}} })

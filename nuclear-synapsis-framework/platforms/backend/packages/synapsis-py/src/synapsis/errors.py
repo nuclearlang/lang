@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+import re
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any
 
 
@@ -78,6 +80,12 @@ def reason(field: str, rule: str, value: object = None) -> dict[str, str]:
 def _number(value: object) -> str:
     if isinstance(value, float) and value.is_integer():
         return str(int(value))
+    # the bound of a `bigdouble` field (the validator gives its repr): its text as Nuclear writes it
+    exact = re.fullmatch(r"Decimal\('([^']*)'\)", value) if isinstance(value, str) else None
+    if exact is not None or isinstance(value, Decimal):
+        from .exact import bigdouble_text
+
+        return bigdouble_text(Decimal(exact.group(1)) if exact is not None else value)  # pyright: ignore[reportArgumentType]
     return str(value)
 
 
@@ -100,6 +108,8 @@ _TYPES = {
     "str": "a text",
     "int": "a whole number",
     "float": "a number",
+    "bigint": "a whole number in a text",
+    "bigdouble": "a decimal number in a text",
     "decimal": "a number",
     "bool": "true or false",
     "list": "a list",

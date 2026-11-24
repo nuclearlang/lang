@@ -1,0 +1,11 @@
+// The balances of the database: find, findAll, save and remove come with it.
+repository BalanceRepository
+  page(page: int, size: int = 20) Page<Balance>
+    orderBy("id")
+    paginate(page, size)
+
+  // from an amount up, the largest first: compared and sorted by value
+  atLeast(amount: bigdouble) Balance[]
+    where({ "amount": gte(amount) })
+    orderBy("amount", desc = true)
+    getMany()

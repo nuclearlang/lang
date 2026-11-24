@@ -37,7 +37,7 @@ from typing import Any, Literal
 
 from sqlalchemy import DateTime
 
-from .orm import FRACTION, Entity, UtcDateTime
+from .orm import FRACTION, Entity, ExactDecimal, ExactInteger, UtcDateTime
 
 __all__ = ["make", "up", "down", "status", "rename_column", "MigrateError", "run_env"]
 
@@ -57,7 +57,7 @@ drop and an add unless make is told: --rename <table>=<new table>, --rename <tab
 from alembic import op
 import sqlalchemy as sa
 from synapsis.migrate import rename_column
-from synapsis.orm import UtcDateTime
+from synapsis.orm import ExactDecimal, ExactInteger, UtcDateTime
 
 
 def upgrade() -> None:
@@ -121,6 +121,24 @@ def _precise(bind: Any, table: str, column: str) -> bool:
     return str(declared).upper() == f"DATETIME({FRACTION})"
 
 
+def _declared(bind: Any, table: str, column: str) -> str:
+    """SQLite: the words a column's type was made with (it keeps them)."""
+    declared = bind.exec_driver_sql("SELECT type FROM pragma_table_info(?) WHERE name = ?", (table, column)).scalar()
+    return str(declared or "").upper().replace(" ", "")
+
+
+def _exact_of(declared: str) -> Any:
+    """SQLite: the exact column whose words these are (`EXACT TEXT`, `EXACT TEXT(p,s)`, synapsis.orm), or None."""
+    if declared == "EXACTTEXT":
+        return ExactInteger()
+    m = re.fullmatch(r"EXACTTEXT\((\d+),(\d+)\)", declared)
+    return ExactDecimal(int(m.group(1)), int(m.group(2))) if m else None
+
+
+def _lite_words(kind: Any) -> str:
+    return "EXACTTEXT" if isinstance(kind, ExactInteger) else f"EXACTTEXT({kind.precision},{kind.scale})"
+
+
 def _reflected(inspector: Any, table: Any, column: dict[str, Any]) -> None:
     """SQLite: Alembic makes a table again from what it reads in the database. Three things are not read there and are
     said here: AUTOINCREMENT (a key is never given twice, as on the other databases), the name of a unique or a
@@ -129,7 +147,11 @@ def _reflected(inspector: Any, table: Any, column: dict[str, Any]) -> None:
     bind = inspector.bind
     if bind.dialect.name != "sqlite":
         return
-    if _precise(bind, table.name, column["name"]):
+    exact = _exact_of(_declared(bind, table.name, column["name"]))
+    if exact is not None:
+        # an exact number keeps its text there: its type, with its precision and scale, is said by its words
+        column["type"] = exact
+    elif _precise(bind, table.name, column["name"]):
         column["type"] = UtcDateTime()
     elif isinstance(column["type"], DateTime):
         # made without its fraction (before 0.94): the type that migration wrote, which every database has (a
@@ -168,6 +190,10 @@ def _drop_constraint(operations: Any, operation: Any) -> None:
 def _render(kind: str, item: Any, autogen: Any) -> str | Literal[False]:
     # a `DateTime` column is the runtime's type (FILE imports it): each database names it with its fraction
     del autogen
+    if kind == "type" and isinstance(item, ExactInteger):
+        return "ExactInteger()"
+    if kind == "type" and isinstance(item, ExactDecimal):
+        return f"ExactDecimal({item.precision}, {item.scale})"
     return "UtcDateTime()" if kind == "type" and isinstance(item, UtcDateTime) else False
 
 
@@ -175,6 +201,8 @@ def _compare_type(context: Any, inspected: Any, column: Any, inspected_type: Any
     """Whether a column's type changed, where Alembic cannot tell: a `DateTime` made without its fraction (a migration
     of before 0.94). `make` compares on SQLite, which keeps the words of the type."""
     del inspected_type
+    if isinstance(type_, ExactInteger | ExactDecimal) and context.dialect.name == "sqlite":
+        return _declared(context.bind, column.table.name, inspected.name) != _lite_words(type_)
     if isinstance(type_, UtcDateTime) and context.dialect.name == "sqlite":
         return not _precise(context.bind, column.table.name, inspected.name)
     return None
@@ -200,6 +228,37 @@ def _apply(connection: Any, module: Any, direction: Literal["up", "down"]) -> No
 
     with Operations.context(_context(connection)):
         (module.upgrade if direction == "up" else module.downgrade)()
+    if connection.dialect.name == "sqlite":
+        _exact_texts(connection)
+
+
+def _exact_texts(connection: Any) -> None:
+    """SQLite: every exact column holds its value's text with the column's decimals (synapsis.orm), as the other
+    databases convert a column whose scale changed: the decimals rounded half away from zero, and a value with more
+    digits than the column takes refused (the migration fails, as PostgreSQL's numeric field overflow)."""
+    from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+
+    from .exact import column_text, fits_bigdouble
+
+    tables = [r[0] for r in connection.exec_driver_sql("SELECT name FROM sqlite_master WHERE type = 'table'")]
+    for table in tables:
+        for name, declared in connection.exec_driver_sql("SELECT name, type FROM pragma_table_info(?)", (table,)):
+            kind = _exact_of(str(declared).upper().replace(" ", ""))
+            if not isinstance(kind, ExactDecimal):
+                continue
+            scale = kind.scale or 0
+            quoted = connection.dialect.identifier_preparer.quote
+            rows = connection.exec_driver_sql(f"SELECT rowid, {quoted(name)} FROM {quoted(table)} WHERE {quoted(name)} IS NOT NULL").all()
+            for rowid, value in rows:
+                try:
+                    d = Decimal(str(value)).quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)
+                except InvalidOperation:
+                    raise MigrateError(f"{table}.{name} holds {value!r}, which is not a number") from None
+                if not fits_bigdouble(d, kind.precision or 0, scale):
+                    raise MigrateError(f"{table}.{name} holds a value with more digits than NUMERIC({kind.precision}, {scale}) takes")
+                text = column_text(d, scale)
+                if text != value:
+                    connection.exec_driver_sql(f"UPDATE {quoted(table)} SET {quoted(name)} = ? WHERE rowid = ?", (text, rowid))
 
 
 # --- make

@@ -1,0 +1,5 @@
+// One page of balances.
+usecase ListBalances(repository: BalanceRepository)
+  exec(page: int) Result<Error, Balance[]>
+    found = ~repository.page(page, 20)
+    Ok(found.items)

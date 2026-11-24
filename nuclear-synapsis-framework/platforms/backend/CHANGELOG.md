@@ -4,6 +4,15 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`
+  on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`
+  (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,
+  compared and sorted by value); migrations make and change them; a value the column cannot hold (beyond 64 bits,
+  more decimals or digits than it has) is 409 `conflict`, never rounded. In JSON, in a body and in a parameter they
+  are the language's texts (`"0.3"`; a JSON number is 400 `type`), answered as `toString()`; the OpenAPI document
+  gives a `string` with a `pattern`; `@min` / `@max` compare them exactly. `nuclear gen resource --fields
+  "price:bigdouble"` takes them. N0308: a key is an `int` or a `string`, `precision` and `scale` are a `bigdouble`'s.
+
 - **CORS in development** (reference §2.8), the same in `fastapi` and `nestjs`: an app whose `NUCLEAR_ENV` is
   `development` (what `nuclear run` gives it) also allows the origins of `NUCLEAR_DEV_ORIGINS` (every address of the
   machine's registry of projects, given by `nuclear run`) and any `http://` or `https://` origin of `localhost`,

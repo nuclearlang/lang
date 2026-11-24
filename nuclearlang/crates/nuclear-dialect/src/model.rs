@@ -438,6 +438,10 @@ pub struct FieldRule {
     pub inverse: Option<String>,
     /// The decorator needs another decorator on the same field, or on the field named by `inverse` (`joinColumn`).
     pub with: Option<String>,
+    /// The field's type (without `?`) is one of these (`types = ["int", "string"]`); empty: any.
+    pub types: Vec<String>,
+    /// A named argument the decorator takes only on a field of these types (`args_for = { scale = ["bigdouble"] }`).
+    pub args_for: BTreeMap<String, Vec<String>>,
 }
 
 /// One file a generator writes (`[[generators.<what>]]` of a platform, ADR-codegen-0001).
@@ -1516,7 +1520,17 @@ fn field_rule(v: &toml::Value) -> FieldRule {
         sibling: s("sibling"),
         inverse: s("inverse"),
         with: s("with"),
+        types: strings(v.get("types")),
+        args_for: v
+            .get("args_for")
+            .and_then(|x| x.as_table())
+            .map(|t| t.iter().map(|(k, x)| (k.clone(), strings(Some(x)))).collect())
+            .unwrap_or_default(),
     }
+}
+
+fn strings(v: Option<&toml::Value>) -> Vec<String> {
+    v.and_then(|x| x.as_array()).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
 fn has_toml(dir: &Path) -> bool {

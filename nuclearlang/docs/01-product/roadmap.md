@@ -25,14 +25,14 @@ The pending work of the language, the compiler and the language server. A done i
 
 - **The exact numbers, step two** (ADR-lang-0015): the language part is done (`bigint`, `bigdouble`, their
   operators, members, text and parsing). Left, refused today with N0120 so no target differs:
-  - The platforms (`nuclear-synapsis-framework`, the framework dialects): a model field `bigint` / `bigdouble` is a
-    column `BIGINT` (or `NUMERIC(p, 0)` beyond 64 bits) / `NUMERIC(p, s)` (TypeORM migrations; SQLAlchemy `BigInteger`
-    / `Numeric(asdecimal=True)`, Sequelize `BIGINT` / `DECIMAL` read as strings, drift `BigIntColumn` / a text column
-    for `Decimal`); its JSON is the text of `toString()` both ways (a model's `toJson` writes it, `fromJson` reads it
-    with `toBigInt()` / `toBigDouble()` and refuses another text with the platform's validation error); the
-    validation decorators (`@min`, `@max`, a scale) take exact values; route and query parameters parse with the same
-    texts as `toBigInt()` / `toBigDouble()`. A Dart app's `pubspec.yaml` gets `decimal` (the dialect imports
-    `package:decimal/decimal.dart`).
+  - The mobile and web platforms (the backend has them: ADR-backend-0003): a model field `bigint` / `bigdouble` of
+    `flutter` and `react` (its JSON the text of `toString()` both ways, drift's `BigIntColumn` and a text column for
+    `Decimal`), and a client generated from a backend's contract with an exact field. A Dart app's `pubspec.yaml`
+    gets `decimal` (the dialect imports `package:decimal/decimal.dart`).
+  - The type of a value a runtime's method gives is not known to the compiler (`found = ~repository.find(id)` of a
+    backend): `found.amount + amount` with an exact `amount` is N0119 until the name is declared
+    (`found: Balance = ~repository.find(id)`). The runtimes' generic methods (`find`, `getOne`) need their type from
+    the repository's entity.
   - `Json.encode` of an `any` value that holds an exact number: TypeScript and Dart throw, Python writes a `bigint` as
     a JSON number (an exact whole number is a plain `int` there, so it cannot be told apart at run time).
   - The list members that compare or add exact elements (`sum`, `min`, `max`; for `bigdouble` `sorted`, `sort`,

@@ -46,7 +46,8 @@ DateTime = "Date"
 written = ["Result", "Ok", "Err", "AppError", "Injectable", "Controller", "Model", "Entity", "Table", "Column", "DataType",
   "BelongsTo", "HasMany", "HasOne", "BelongsToMany", "joinTable", "Related", "Page",
   "PrimaryKey", "AutoIncrement", "CreatedAt", "UpdatedAt", "InjectModel", "Repository", "Param", "Body", "Query",
-  "IntPipe", "BoolPipe", "DoublePipe", "TextPipe", "RequiredPipe", "IsWhole", "Get", "Post", "Put", "Patch", "Delete", "HttpCode",
+  "IntPipe", "BoolPipe", "DoublePipe", "TextPipe", "RequiredPipe", "IsWhole", "BigIntPipe", "BigDoublePipe", "IsBigInt",
+  "IsBigDouble", "MinExact", "MaxExact", "exactColumn", "exactText", "Get", "Post", "Put", "Patch", "Delete", "HttpCode",
   "IsString", "IsInt", "IsNumber", "IsBoolean", "IsOptional", "IsNotEmpty", "IsEmail", "IsUrl", "MinLength",
   "MaxLength", "Min", "Max", "Matches", "IsArray", "ValidateNested", "Type", "Expose", "IsDate", "IsDateTime", "checkModel", "AppConfig", "ComponentConfig",
   "startTestApp", "stopTestApp", "INestApplication", "describe", "it", "beforeEach", "afterEach",
@@ -389,7 +390,8 @@ config = "@nestjs/config"
 [auto_imports]
 # the definitions give every other name; these choose the module when two packages export the same name
 "class-transformer" = ["Transform", "Type", "Expose"]
-"synapsis-nest" = ["IsDateTime", "checkModel", "IntPipe", "DoublePipe", "BoolPipe", "Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
+"synapsis-nest" = ["IsDateTime", "checkModel", "IntPipe", "DoublePipe", "BoolPipe", "BigIntPipe", "BigDoublePipe", "IsBigInt",
+  "IsBigDouble", "MinExact", "MaxExact", "exactColumn", "exactText", "Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository", "Guard", "Token", "NoOrigin", "guardedBy"]
 # the optional parts of the runtime: only a project that enables their plugin imports them
 "synapsis-nest/events" = ["publish", "Redis", "Kafka", "Listener", "consumer", "cacheGet", "cacheSet"]
 "synapsis-nest/sockets" = ["WebSocketServer"]

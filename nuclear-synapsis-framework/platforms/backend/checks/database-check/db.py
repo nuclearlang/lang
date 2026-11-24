@@ -155,7 +155,7 @@ def read_schema(url: str, names: bool = False) -> dict[str, Any]:
                         "type": family(c["type"]),
                         # the type as the database names it (SQLite keeps the words it was written with)
                         # (and MySQL's fraction of a second is not in the name SQLAlchemy prints)
-                        "sql": declared.get(c["name"], str(c["type"])).upper() + (f"({c['type'].fsp})" if getattr(c["type"], "fsp", None) else ""),
+                        "sql": (declared[c["name"]] if c["name"] in declared else str(c["type"])).upper() + (f"({c['type'].fsp})" if getattr(c["type"], "fsp", None) else ""),
                         "length": getattr(c["type"], "length", None),
                         # SQLite says a key may be null (it never is)
                         "nullable": bool(c["nullable"]) and c["name"] not in key,
@@ -186,6 +186,7 @@ EXPECTED: dict[str, dict[str, bool | None]] = {
     "tags": {"id": False, "label": False},
     "orders_tags": {"order_id": False, "tag_id": False},
     "coupons": {"id": False, "code": False, "customer_id": False},
+    "balances": {"id": False, "serial": False, "amount": False, "rate": False},
 }
 TYPES = {
     ("customers", "id"): "int", ("customers", "email"): "str", ("customers", "vip"): "bool", ("customers", "credit"): "float",
@@ -252,6 +253,21 @@ def same(now: dict[str, Any], before: dict[str, Any], what: str) -> None:
             if a.get(part) != b.get(part):
                 lines.append(f"{table} {part}: {b.get(part)}, was {a.get(part)}")
     raise SystemExit(f"{what}: the schema is not the one before:\n  " + "\n  ".join(lines))
+
+
+# the exact numbers (ADR-lang-0015, the reference §2.1): a `bigint` is the database's BIGINT and a `bigdouble` its
+# NUMERIC(p, s); SQLite has neither, and keeps the value's text in a type that says so
+EXACT = {
+    "serial": {"sqlite": "EXACT TEXT", "postgres": "BIGINT", "mysql": "BIGINT", "mariadb": "BIGINT"},
+    "amount": {"sqlite": "EXACT TEXT(30,10)", "postgres": "NUMERIC(30, 10)", "mysql": "DECIMAL(30, 10)", "mariadb": "DECIMAL(30, 10)"},
+    "rate": {"sqlite": "EXACT TEXT(40,20)", "postgres": "NUMERIC(40, 20)", "mysql": "DECIMAL(40, 20)", "mariadb": "DECIMAL(40, 20)"},
+}
+
+
+def exact_types(schema: dict[str, Any], database: str) -> list[str]:
+    """What is wrong with the exact columns of `schema` (the columns of balances) on `database`."""
+    columns = schema["balances"]["columns"]
+    return [f"balances.{n}: {columns[n]['sql']}, expected {want[database]}" for n, want in EXACT.items() if columns[n]["sql"] != want[database]]
 
 
 # `@column(length = n)`: the VARCHAR of that length while the database's holds it, then its text type that does (the

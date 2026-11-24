@@ -32,6 +32,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `telemetry` (optional) | `Telemetry`, `Otlp`, `Datadog`, `NewRelic`, `Grafana` (OTLP/HTTP), `Metric`, `traced` (the span the dialect writes on each use case's `exec`). Its own providers, not OpenTelemetry's global ones (a process may set those only once): without an open connection `traced` and `Metric` do nothing. A sampler drops the traces of the `@untraced` routes and keeps `sample` of the rest |
 | `testing` | `running`, `client`, `FakeModel`, `memory_database` |
 | `validators` | `is_email`, `is_url` |
+| `exact` | the exact numbers (ADR-backend-0003): `BigInt`, `BigDouble` (an `int` and a `Decimal` annotated with their JSON: a text both ways), `parse_bigint` / `parse_bigdouble` (the language's texts, at most `MAX_DIGITS`), `bigdouble_text`, `fits_bigint` / `fits_bigdouble`, `column_text` (SQLite's text of a value), `JsonInt` |
 | `migrate` | the migrations (below) |
 
 Behaviour worth knowing:
@@ -94,6 +95,15 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 - **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),
   so a non-null column can be added to a table that has rows.
 
+- **Exact numbers** (`orm.ExactInteger`, `orm.ExactDecimal`): `BIGINT` and `NUMERIC(p, s)`, on SQLite `_LiteExact`
+  (`EXACT TEXT`, `EXACT TEXT(p,s)`: the value's text with `s` decimals). Their comparator writes `gt`, `gte`, `lt`,
+  `lte`, `between` and `orderBy` as `_ExactCompare` / `_ExactOrder`, compiled for each database: a plain comparison,
+  or on SQLite the size of the text (the digits before the point, negative for a negative value) and then the text
+  (the other way for a negative value), the same SQL as the other runtime. `repository._fits` refuses a value the
+  column cannot hold (409). A body's JSON numbers are `exact.JsonInt` (`wire.read_json`), so a `bigint` field refuses
+  them and still takes an `int` of the program; `web` reads an exact parameter by its annotation
+  (`get_type_hints(include_extras=True)`).
+
 ## Migrations
 
 What the database refuses for integrity answers 409 `conflict` (the platform's reference §2.4; Spring Data REST's
@@ -102,6 +112,13 @@ a foreign key, a required column, on the four databases) and `errors.IntegrityVi
 raises from `save` and `update` for a text longer than its column (counted with `len`: code points). The exception
 leaves `@transactional` through its `session.begin()`, which rolls back. Test:
 `test_what_the_database_refuses_for_integrity_is_a_409` (the same cases as `data.test.ts`).
+
+An exact column is `ExactInteger()` / `ExactDecimal(p, s)` in a migration (`_render`; the file imports them). SQLite
+keeps their words (`EXACT TEXT(p,s)`): `_reflected` reads them back as the exact types and `_compare_type` compares
+them, so `make` sees a changed precision or scale; after each migration applied on SQLite, `_exact_texts` writes the
+texts of every `EXACT TEXT(p,s)` column again with its decimals (rounded half away from zero, as the other databases
+convert the column; a value with more digits than the column takes fails the migration). Test:
+`test_an_exact_column_is_made_and_changed_by_its_precision_and_scale`.
 
 A text column is `String(n)` (`orm.TEXT_LENGTH` = 255 without `length`). `orm.text_type(dialect, n)` is the one
 rule of its type (the same as `textType` of synapsis-nest), and `orm._text` compiles every `String(n)` with it on
@@ -166,7 +183,7 @@ codes as the TypeScript runtime. How this one keeps them:
 ## Tests and type definitions
 
 - `tests/test_runtime.py`, `test_data.py` (the same cases as the TypeScript runtime's `data.test.ts`),
-  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`), `test_types.py` (the same cases as `types.test.ts`); pytest with `asyncio_mode = "auto"`. The fastapi check runs them
+  `test_http.py`, `test_migrate.py` (the same cases as `migrate.test.ts`), `test_types.py` (the same cases as `types.test.ts`), `test_exact.py` (the same cases as `exact.test.ts`); pytest with `asyncio_mode = "auto"`. The fastapi check runs them
   ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,

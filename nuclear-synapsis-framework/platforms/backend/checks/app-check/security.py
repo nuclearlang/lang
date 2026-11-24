@@ -174,6 +174,18 @@ def injection(bases: dict[str, str], db: str) -> None:
     probe(f"text.nul{t}", bases, "POST", "/customers", {"email": "nul@example.com", "name": "a\u0000b"}, want=(201, 400))
     probe(f"int.beyond32{t}", bases, "POST", "/orders", {"customerId": 1, "total": 1, "quantity": 2147483648}, want=(201, 400))
     probe(f"int.beyond64{t}", bases, "POST", "/orders", {"customerId": 1, "total": 1, "quantity": 99999999999999999999}, want=400)
+    # the exact numbers (ADR-backend-0003): a text of the language or 400 `type`; what the column cannot hold 409; a
+    # text of a billion digits (an exponent) is refused before it is made
+    for name, sent in (
+        ("number", {"serial": 1, "amount": "1", "rate": "0"}), ("text", {"serial": "1", "amount": "1.", "rate": "0"}),
+        ("exponent", {"serial": "1", "amount": "1e999999999", "rate": "0"}), ("digits", {"serial": "9" * 1001, "amount": "1", "rate": "0"}),
+        ("blank", {"serial": "1", "amount": " ", "rate": "0"}), ("sql", {"serial": "1", "amount": "1; DROP TABLE balances", "rate": "0"}),
+        ("hex", {"serial": "0x10", "amount": "1", "rate": "0"}), ("nan", {"serial": "1", "amount": "NaN", "rate": "0"}),
+    ):
+        probe(f"exact.{name}{t}", bases, "POST", "/balances", sent, want=400)
+    probe(f"exact.beyond{t}", bases, "POST", "/balances", {"serial": "9223372036854775808", "amount": "1", "rate": "0"}, want=409)
+    probe(f"exact.param{t}", bases, "GET", "/balances/at-least/1e999999999", want=400)
+    probe(f"exact.param.sql{t}", bases, "GET", "/balances/at-least/0%20OR%201%3D1", want=400)
     # after all of it the table is there, with the rows that were made and no other
     left = probe(f"inject.survived{t}", bases, "GET", "/customers/page?page=1&size=1", want=200)
     totals = {d: json.loads(a[2]).get("total") for d, a in left.items() if a[0] == 200}

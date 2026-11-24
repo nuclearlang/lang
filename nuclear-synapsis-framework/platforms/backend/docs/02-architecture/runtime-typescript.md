@@ -90,6 +90,15 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
   length.
 - **Types**: `Related<T>` types a single relation, so the decorator metadata never reads the other class (two ES
   modules that import each other).
+- **Exact numbers** (`exact.ts`, ADR-backend-0003): `BigDouble` is the class the dialect writes in each file that uses
+  the type (`templates/bigdouble.tpl`; `exact.test.ts` holds them the same), not exported: the runtime reads one and
+  takes one of any file by its members (`isBigDouble`). `exactColumn` gives an entity's field its getter (the
+  database's text or number read back as a `bigint` / `BigDouble`) and setter (`columnText`: the text with the
+  column's decimals); the repository finds an exact column by its type (`BIGINT`, `DECIMAL`), writes a value as a
+  number literal (MySQL compares a quoted text with a DECIMAL as a double) and on SQLite compares and sorts the text
+  by value (`liteCompare`, `liteOrder`: the same SQL as the other runtime); `fits` refuses what the column cannot
+  hold. `IsBigInt` / `IsBigDouble` / `MinExact` / `MaxExact` are the model's; `BigIntPipe` / `BigDoublePipe` the
+  parameters'; the app's `json replacer` writes a `bigint`, `Entity.toJSON` keeps the columns in their order.
 - **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It
   opens on the database of the last repository made ([roadmap](../01-product/roadmap.md)).
 
@@ -152,6 +161,10 @@ codes as the Python runtime. How this one keeps them:
     `foreign_key_list`), makes it again with the change, copies the rows and renames it. Sequelize's own rebuild
     loses `AUTOINCREMENT`, the constraints' rules and, with the foreign keys on, the rows of the tables that point
     to the table (their `ON DELETE CASCADE` runs when it is dropped).
+- An exact column is `BIGINT` / `DECIMAL({precision, scale})` in a migration; on SQLite `sqlOf` names it `EXACT TEXT` /
+  `EXACT TEXT(p,s)`, and after each migration applied there `exactTexts` writes the texts of every `EXACT TEXT(p,s)`
+  column again with its decimals (the same rule as synapsis.migrate). The default of a `bigint` is its number
+  (`{ literal }`), of a `bigdouble` its text, as the other runtime writes them.
 - `createTables(sequelize)` makes the tables the database does not have from `schemaFrom(sequelize)` (the schema
   a migration file holds) through `migrator(...).createTable`: the code of the first migration, so the tables are
   the same. `Database.sequelize()` gives it to Sequelize as a `beforeBulkSync` hook with `synchronize: true`:
@@ -164,7 +177,7 @@ codes as the Python runtime. How this one keeps them:
 ## Tests and type definitions
 
 - `test/runtime.test.ts`, `data.test.ts` (the same cases as the Python runtime's `test_data.py`),
-  `migrate.test.ts` (the same cases as `test_migrate.py`), `types.test.ts` (the same cases as `test_types.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
+  `migrate.test.ts` (the same cases as `test_migrate.py`), `types.test.ts` (the same cases as `test_types.py`), `exact.test.ts` (the same cases as `test_exact.py`); `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs
   them ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,

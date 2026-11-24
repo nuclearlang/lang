@@ -14,17 +14,26 @@ from typing import Any, ClassVar, cast
 from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, GetCoreSchemaHandler, SerializationInfo, SerializerFunctionWrapHandler, create_model, model_serializer
 from pydantic_core import core_schema
-from sqlalchemy import VARCHAR, Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, inspect, text
+from decimal import Decimal
+
+from sqlalchemy import (
+    VARCHAR, BigInteger, Column, DateTime, ForeignKey, ForeignKeyConstraint, Numeric, String, Table, Text, and_, case, func,
+    inspect, literal, or_, text, type_coerce,
+)
 from sqlalchemy.dialects import mysql, sqlite
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy.sql import operators
+from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.types import Boolean, TypeDecorator, UserDefinedType
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, RelationshipProperty, mapped_column, relationship
 
+from .exact import MAX_PRECISION, MAX_SCALE, PRECISION, SCALE, BigDouble, BigInt, column_text
 from .models import WIRE, typed, wire_dates
 
 __all__ = [
-    "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of", "wire_of", "UtcDateTime",
+    "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of", "wire_of", "UtcDateTime", "ExactInteger",
+    "ExactDecimal",
     "many_to_one", "one_to_many", "many_to_many", "one_to_one",
 ]
 
@@ -112,10 +121,185 @@ class UtcDateTime(TypeDecorator[datetime]):
         return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
+# --- the exact numbers (ADR-lang-0015, synapsis.exact): a `bigint` column is the database's BIGINT, a `bigdouble` one
+# its NUMERIC(p, s). SQLite would keep a REAL (and lose digits): there both keep the value's text, in a type whose name
+# says it (`EXACT TEXT`, `EXACT TEXT(p,s)`: TEXT affinity), compared and sorted by value (`_ExactCompare`, `_ExactOrder`).
+
+
+class _LiteExact(UserDefinedType[str]):
+    """SQLite's column of an exact number: the value's text."""
+
+    cache_ok = True
+
+    def __init__(self, scale: int | None = None, precision: int | None = None) -> None:
+        self.scale, self.precision = scale, precision
+
+    def get_col_spec(self, **kw: Any) -> str:
+        del kw
+        return "EXACT TEXT" if self.scale is None else f"EXACT TEXT({self.precision},{self.scale})"
+
+
+class _Exact(TypeDecorator[Any]):
+    impl = Numeric
+    cache_ok = True
+    scale: int | None = None
+    precision: int | None = None
+
+    class comparator_factory(TypeDecorator.Comparator[Any]):  # noqa: N801 (SQLAlchemy's name)
+        """By value on every database: on SQLite the text is compared by its sign, its length and its digits."""
+
+        def operate(self, op: Any, *other: Any, **kw: Any) -> Any:
+            kind = self.type
+            if op in (operators.gt, operators.ge, operators.lt, operators.le) and other and other[0] is not None:
+                return _ExactCompare(self.expr, op, other[0], kind)
+            if op is operators.between_op:
+                low, high = other[0], other[1]
+                return and_(_ExactCompare(self.expr, operators.ge, low, kind), _ExactCompare(self.expr, operators.le, high, kind))
+            if op in (operators.asc_op, operators.desc_op):
+                return _ExactOrder(self.expr, op is operators.desc_op, kind)
+            return super().operate(op, *other, **kw)
+
+    def load_dialect_impl(self, dialect: Any) -> Any:
+        if dialect.name == "sqlite":
+            return dialect.type_descriptor(_LiteExact(self.scale, self.precision))
+        return dialect.type_descriptor(self.plain())
+
+    def plain(self) -> Any:
+        """The database's own type (BIGINT, NUMERIC(p, s))."""
+        raise NotImplementedError
+
+    def process_bind_param(self, value: Any, dialect: Any) -> Any:
+        if value is None:
+            return None
+        return column_text(value, self.scale) if dialect.name == "sqlite" else self.value_of(value)
+
+    def process_result_value(self, value: Any, dialect: Any) -> Any:
+        del dialect
+        return None if value is None else self.value_of(value)
+
+    def value_of(self, value: Any) -> Any:
+        raise NotImplementedError
+
+
+class ExactInteger(_Exact):
+    """A `bigint` column: BIGINT (on SQLite its text)."""
+
+    impl = BigInteger
+    cache_ok = True
+
+    @property
+    def python_type(self) -> type:
+        return int
+
+    def plain(self) -> Any:
+        return BigInteger()
+
+    def value_of(self, value: Any) -> int:
+        return int(value)
+
+
+class ExactDecimal(_Exact):
+    """A `bigdouble` column: NUMERIC(precision, scale), DECIMAL on MySQL and MariaDB (on SQLite its text with `scale`
+    decimals)."""
+
+    impl = Numeric
+    cache_ok = True
+
+    def __init__(self, precision: int = PRECISION, scale: int = SCALE) -> None:
+        if not 1 <= precision <= MAX_PRECISION or not 0 <= scale <= min(MAX_SCALE, precision):
+            raise ValueError(
+                f"a bigdouble column has a precision from 1 to {MAX_PRECISION} and a scale from 0 to {MAX_SCALE}, at most the precision"
+                f" (precision = {precision}, scale = {scale})"
+            )
+        super().__init__(precision, scale, asdecimal=True)
+        self.precision, self.scale = precision, scale
+
+    @property
+    def python_type(self) -> type:
+        return Decimal
+
+    def plain(self) -> Any:
+        return Numeric(self.precision, self.scale, asdecimal=True)
+
+    def value_of(self, value: Any) -> Decimal:
+        return value if isinstance(value, Decimal) else Decimal(str(value))
+
+
+def _lite_parts(column: Any, kind: _Exact) -> tuple[Any, Any, Any]:
+    """SQLite: the text of the column, whether it is negative, and its key by size: the digits before the point,
+    negative for a negative value (`-12.50` → -2), so that only values of the same sign and size compare by text."""
+    t = type_coerce(column, Text())
+    after = 0 if not kind.scale else kind.scale + 1
+    negative = func.substr(t, 1, 1) == "-"
+    size = case((negative, (1 + after) - func.length(t)), else_=func.length(t) - after)
+    return t, negative, size
+
+
+class _ExactCompare(ColumnElement[bool]):
+    """`column <op> value` of an exact column, by value."""
+
+    inherit_cache = False
+    type = Boolean()
+
+    def __init__(self, column: Any, op: Any, value: Any, kind: _Exact) -> None:
+        self.column, self.op, self.value, self.kind = column, op, value, kind
+
+
+@compiles(_ExactCompare)
+def _compare(element: _ExactCompare, compiler: Any, **kw: Any) -> str:
+    plain = element.kind.plain()
+    return "(" + str(compiler.process(element.op(type_coerce(element.column, plain), literal(element.kind.value_of(element.value), plain)), **kw)) + ")"
+
+
+@compiles(_ExactCompare, "sqlite")
+def _compare_lite(element: _ExactCompare, compiler: Any, **kw: Any) -> str:
+    t, _, size = _lite_parts(element.column, element.kind)
+    value = element.kind.value_of(element.value)
+    written = column_text(value, element.kind.scale)
+    negative = written.startswith("-")
+    digits = len(written.lstrip("-").split(".")[0])
+    key = -digits if negative else digits
+    op = element.op
+    # of the same sign and size the texts sort as the values; a negative one the other way
+    if negative:
+        op = {operators.gt: operators.lt, operators.ge: operators.le, operators.lt: operators.gt, operators.le: operators.ge}[op]
+    strict = {operators.ge: operators.gt, operators.le: operators.lt}.get(element.op, element.op)
+    by_text = op(t, literal(written, Text()))
+    # (in parentheses: the statement may AND it, or compare it with true)
+    return "(" + str(compiler.process(or_(strict(size, key), and_(size == key, by_text)), **kw)) + ")"
+
+
+class _ExactOrder(ColumnElement[Any]):
+    """`orderBy` of an exact column, by value."""
+
+    inherit_cache = False
+
+    def __init__(self, column: Any, desc: bool, kind: _Exact) -> None:
+        self.column, self.desc, self.kind = column, desc, kind
+        self.type = kind
+
+
+@compiles(_ExactOrder)
+def _order(element: _ExactOrder, compiler: Any, **kw: Any) -> str:
+    c = type_coerce(element.column, element.kind.plain())
+    return str(compiler.process(c.desc() if element.desc else c.asc(), **kw))
+
+
+@compiles(_ExactOrder, "sqlite")
+def _order_lite(element: _ExactOrder, compiler: Any, **kw: Any) -> str:
+    t, negative, size = _lite_parts(element.column, element.kind)
+    positive_text = case((negative, None), else_=t)
+    negative_text = case((negative, t), else_=None)
+    keys = [size.asc(), positive_text.asc(), negative_text.desc()]
+    if element.desc:
+        keys = [size.desc(), positive_text.desc(), negative_text.asc()]
+    return ", ".join(str(compiler.process(k, **kw)) for k in keys)
+
+
 class Entity(AsyncAttrs, DeclarativeBase):
     """The base of every entity (a table). `entity.to_dict()` gives its columns and its loaded relations."""
 
-    type_annotation_map = {datetime: UtcDateTime(), str: String(TEXT_LENGTH)}
+    type_annotation_map = {datetime: UtcDateTime(), str: String(TEXT_LENGTH), BigInt: ExactInteger(), BigDouble: ExactDecimal()}
     # what the database writes (a default, @created, @updated) is read back with the write: the row an use case
     # answers is complete on every database, with or without RETURNING
     __mapper_args__ = {"eager_defaults": True}
@@ -173,17 +357,22 @@ def column(
     index: bool = False,
     default: Any = None,
     name: str | None = None,
+    precision: int | None = None,
+    scale: int | None = None,
 ) -> Any:
-    """A column. Its SQL type comes from the field's type (str, int, float, bool, datetime...)."""
+    """A column. Its SQL type comes from the field's type (str, int, float, bool, datetime...); a `bigdouble` takes
+    `precision` and `scale` (30 and 10 by default)."""
     args: list[Any] = [name] if name else []
     if length:
         args.append(String(length))
+    if precision is not None or scale is not None:
+        args.append(ExactDecimal(PRECISION if precision is None else precision, SCALE if scale is None else scale))
     kw: dict[str, Any] = {"unique": unique, "index": index}
     if nullable is not None:
         kw["nullable"] = nullable
     if default is not None:
         kw["default"] = default
-        sql = _sql_literal(default)
+        sql = _sql_literal(default if not isinstance(default, Decimal) else Decimal(column_text(default, SCALE if scale is None else scale)))
         if sql is not None:
             # also the database's default: a migration that adds the column to a table with rows needs it
             kw["server_default"] = text(sql)
@@ -196,6 +385,9 @@ def _sql_literal(value: Any) -> str | None:
         return "true" if value else "false"
     if isinstance(value, int | float):
         return repr(value)
+    if isinstance(value, Decimal):
+        # an exact decimal as its text: every database reads it as the column's number, SQLite keeps it as it is
+        return "'" + format(value, "f") + "'"
     if isinstance(value, str):
         return "'" + value.replace("'", "''") + "'"
     return None
@@ -337,6 +529,11 @@ def schema_of(entity: type[Entity], create: bool = False) -> type[BaseModel]:
                 py: Any = col.type.python_type
             except NotImplementedError:
                 py = Any
+            # an exact column is a text in JSON (synapsis.exact)
+            if isinstance(col.type, ExactInteger):
+                py = BigInt
+            elif isinstance(col.type, ExactDecimal):
+                py = BigDouble
             if py is datetime and server_filled:
                 py = datetime | None
             optional = col.nullable and not col.primary_key

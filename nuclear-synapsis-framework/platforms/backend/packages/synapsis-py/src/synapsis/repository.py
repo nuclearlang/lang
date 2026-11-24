@@ -27,7 +27,8 @@ from pydantic.alias_generators import to_camel
 from sqlalchemy.orm import selectinload
 
 from .errors import IntegrityViolation, NotFound
-from .orm import PENDING, Entity
+from .exact import fits_bigdouble, fits_bigint
+from .orm import PENDING, Entity, ExactDecimal, ExactInteger, _Exact  # pyright: ignore[reportPrivateUsage]
 from .result import Err, Ok, Result
 
 __all__ = [
@@ -157,6 +158,11 @@ def _fits(entity: type[Entity], values: Mapping[str, Any]) -> None:
         value, kind = values.get(attribute.key), attribute.columns[0].type
         if isinstance(value, str) and isinstance(kind, String) and kind.length and len(value) > kind.length:
             raise IntegrityViolation(f"{entity.__name__}.{attribute.key} holds {kind.length} characters")
+        # an exact number the column cannot hold (beyond 64 bits; more digits or decimals than it has): never rounded
+        if isinstance(kind, ExactInteger) and isinstance(value, int) and not fits_bigint(value):
+            raise IntegrityViolation(f"{entity.__name__}.{attribute.key} holds 64 bits")
+        if isinstance(kind, ExactDecimal) and value is not None and not fits_bigdouble(value, kind.precision or 0, kind.scale or 0):
+            raise IntegrityViolation(f"{entity.__name__}.{attribute.key} holds {kind.precision} digits, {kind.scale} decimals")
 
 
 class Repository[T: Entity]:
@@ -297,7 +303,8 @@ class Query[T: Entity]:
 
     def order_by(self, field: str, desc: bool = False) -> Query[T]:
         col = self._col(field)
-        self.orders.append(col.desc() if desc else col)
+        # an exact column sorts by value on every database (synapsis.orm)
+        self.orders.append(col.desc() if desc else col.asc() if isinstance(col.type, _Exact) else col)
         return self
 
     def limit(self, n: int) -> Query[T]:

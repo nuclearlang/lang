@@ -2304,6 +2304,10 @@ mod tests {
             assert!(planets.contains("  search(name: string)"), "{dialect}: {planets}");
             if db {
                 gen_command(&root, args(&["resource", "catalog", "Book", "--fields", "title:string year:int", "--source", "db"])).unwrap();
+                // the exact numbers are basic types: a column and a model field of their own (ADR-lang-0015)
+                gen_command(&root, args(&["resource", "catalog", "Price", "--fields", "code:bigint amount:bigdouble", "--source", "db"])).unwrap();
+                let price = std::fs::read_to_string(root.join(d.layout["entity"].replace("{component}", "catalog").replace("{file}", "price"))).unwrap();
+                assert!(price.contains("  code: bigint\n  amount: bigdouble\n"), "{dialect}: {price}");
                 // which column a stored resource is searched by is not the generator's to choose
                 let search = gen_command(&root, args(&["resource", "catalog", "Book", "--fields", "title:string year:int", "--source", "db", "--actions", "search"]));
                 assert!(search.is_err_and(|e| e.contains("no generated search") && e.contains("gen usecase catalog SearchBooks --calls BookRepository.<method>")), "{dialect}");

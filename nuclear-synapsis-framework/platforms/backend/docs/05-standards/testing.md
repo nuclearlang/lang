@@ -118,6 +118,9 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      13. A text longer than a `VARCHAR` holds: the note of an order made 100000 characters long (`MEDIUMTEXT` on
          MySQL and MariaDB, `VARCHAR(100000)` on the others), then 5000000 (`LONGTEXT`), a text of 100000
          characters kept through `up` and `down`, then 2000 again: the schema of step 3.
+     14. An exact column of another scale (`rate: bigdouble` from `NUMERIC(40, 20)` to `NUMERIC(40, 4)` and back,
+         each database's names checked by `db.EXACT`): the value rounded half away from zero (`1.123456789` →
+         `1.1235`, SQLite's text written again), a `bigint` of 2^63 − 1 kept, `down` and a migration back.
    - **integration**: the built app started on that database and driven by `scenario.py`, the same requests for
      every dialect and database: CRUD, defaults, the unique email (409), invalid bodies (400), missing rows (404),
      pages, search in any case (`icontains`: a `%`, a `_`, the escape `/` and a backslash in the text are characters), filters and order, unicode and emoji, a text of 2000 characters, the limits of an
@@ -130,7 +133,11 @@ dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`,
      whose use cases check nothing: a repeated unique value, the same value twice in one transaction, a foreign
      key that points at nothing, a null in a required column, a row others point to, a text longer than its
      column: each 409 `conflict`, the transaction rolled back, a text of the column's length in characters
-     kept), the cascade of a delete.
+     kept), the cascade of a delete; the exact numbers (the balances): a `bigint` of 2^63 − 1 and a `bigdouble` of
+     40 digits as JSON texts, `0.1 + 0.2` added by the app stored and read back as `0.3` (and `0.3` in the database
+     itself), a search with `gte` sorted by value with negative values, and what the columns cannot hold refused
+     with 409 (2^63, more decimals or more digits than the column has) while a JSON number or a text that is no
+     number is 400.
    - **tests**: the project's `test/*_test.nuc` with the dialect's runner (their database is in memory).
    - **tables** (`tables.py`): the same project built with `createTables = true` on an empty database of its own
      (`made_<dialect>`) and the note of an order 100000 characters long (the text type of each database); the app
@@ -226,7 +233,8 @@ Each known finding is in the [roadmap](../01-product/roadmap.md) with its fix.
   dialect runs with its own runner; a behaviour of the runtimes has the same test in both
   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`: `contains`, `@created` /
   `@updated` to the millisecond; `tests/test_types.py`, `test/types.test.ts`: an optional field `null` in every
-  answer; the migrations:
+  answer; `tests/test_exact.py`, `test/exact.test.ts`: the exact numbers as texts, compared and sorted by value on
+  SQLite, refused with 409 beyond their column; the migrations:
   `tests/test_migrate.py`, `test/migrate.test.ts`).
 - **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An
   expected file the build no longer produces is a failure too.

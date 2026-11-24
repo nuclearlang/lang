@@ -28,6 +28,7 @@ import { pathToFileURL } from 'node:url';
 import { DataTypes, literal, type ModelAttributeColumnOptions, type QueryInterface } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { type AppConfig, databaseOf } from './config.js';
+import { BigDouble, columnText, fitsBigDouble } from './exact.js';
 
 /** A column as a migration writes it: Sequelize's attribute, reduced to what reaches the database. */
 export interface ColumnSchema {
@@ -95,6 +96,8 @@ export function schemaFrom(s: Sequelize): Schema {
         c.references = { model: typeof r.model === 'string' ? r.model : String((r.model as { tableName?: string }).tableName ?? r.model), key: r.key ?? 'id' };
       }
       if (stamps.includes(key)) c.defaultValue = { literal: CLOCK };
+      // a `bigint`'s default is its number in SQL, as the fastapi dialect writes it (its field keeps the text)
+      if (c.type === 'BIGINT' && typeof c.defaultValue === 'string') c.defaultValue = { literal: c.defaultValue };
       // a foreign key does nothing unless the relation says so: no rule is NO ACTION, and Nuclear has no word for
       // what a changed key does (Sequelize would write ON UPDATE CASCADE by itself)
       if (a.onDelete && a.onDelete.toUpperCase() !== 'NO ACTION') c.onDelete = a.onDelete.toUpperCase();
@@ -496,6 +499,9 @@ export function migrator(q: QueryInterface): QueryInterface {
     // fraction of a DateTime as MySQL and MariaDB name it (Sequelize writes none for SQLite)
     const { key, options } = rest.type as { key?: string; options?: { length?: number } };
     const fraction = key === 'DATE' && options?.length;
+    // an exact number keeps its text on SQLite, in a type that says so (TEXT affinity; the same as synapsis.orm)
+    if (lite && key === 'BIGINT') return sql.replace(/^BIGINT/, 'EXACT TEXT');
+    if (lite && key === 'DECIMAL') return sql.replace(/^DECIMAL\((\d+),\s*(\d+)\)/, 'EXACT TEXT($1,$2)');
     return sql.replace(/^TINYINT\(1\)/, 'BOOLEAN').replace(/^DOUBLE PRECISION/, 'DOUBLE').replace(/^DATETIME(?!\()/, fraction ? `DATETIME(${fraction})` : 'DATETIME');
   };
 
@@ -573,6 +579,31 @@ export function migrator(q: QueryInterface): QueryInterface {
   return Object.assign(Object.create(q) as QueryInterface, own);
 }
 
+/** SQLite: every exact column holds its value's text with the column's decimals, as the other databases convert a
+ * column whose scale changed: the decimals rounded half away from zero, and a value with more digits than the column
+ * takes refused (the migration fails, as PostgreSQL's numeric field overflow). The same as synapsis.migrate. */
+async function exactTexts(s: Sequelize): Promise<void> {
+  const rows = <T>(sql: string): Promise<T[]> => s.query(sql, { type: 'SELECT' }) as unknown as Promise<T[]>;
+  const q = s.getQueryInterface();
+  for (const { name: table } of await rows<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'table'`)) {
+    for (const { name, type } of await rows<{ name: string; type: string }>(`SELECT name, type FROM pragma_table_info(${s.escape(table)})`)) {
+      const m = /^EXACT TEXT\((\d+),(\d+)\)$/i.exec(type.trim());
+      if (!m) continue;
+      const [precision, scale] = [Number(m[1]), Number(m[2])];
+      const t = q.quoteIdentifier(table);
+      const c = q.quoteIdentifier(name);
+      for (const r of await rows<{ id: number; v: string }>(`SELECT rowid AS id, ${c} AS v FROM ${t} WHERE ${c} IS NOT NULL`)) {
+        const d = BigDouble.tryParse(String(r.v));
+        if (!d) throw new Error(`${table}.${name} holds a value that is not a number`);
+        const rounded = d.roundTo(scale);
+        if (!fitsBigDouble(rounded, precision, scale)) throw new Error(`${table}.${name} holds a value with more digits than NUMERIC(${precision}, ${scale}) takes`);
+        const text = columnText(rounded, scale);
+        if (text !== String(r.v)) await s.query(`UPDATE ${t} SET ${c} = ${s.escape(text)} WHERE rowid = ${r.id}`);
+      }
+    }
+  }
+}
+
 const HISTORY = 'migrations';
 export type Transaction = 'all' | 'each' | 'none';
 
@@ -630,6 +661,7 @@ async function execute(
       if (transaction === 'each') await begin();
       if (!fake) {
         await m[direction](migrator(q), Sequelize);
+        if (lite) await exactTexts(sequelize);
         if (lite) {
           const broken = (await sequelize.query('PRAGMA foreign_key_check', { type: 'SELECT' })) as { table: string; parent: string }[];
           if (broken.length) throw new Error(`rows of ${broken[0].table} point to rows of ${broken[0].parent} that do not exist`);

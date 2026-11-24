@@ -99,6 +99,8 @@ const CONSTRAINTS: Record<string, [string, string?]> = {
   isNotEmpty: ['required'],
   isString: ['type', 'a text'],
   isInt: ['type', 'a whole number'],
+  isBigInt: ['type', 'a whole number in a text'],
+  isBigDouble: ['type', 'a decimal number in a text'],
   isNumber: ['type', 'a number'],
   isBoolean: ['type', 'true or false'],
   isArray: ['type', 'a list'],
@@ -123,6 +125,8 @@ const ITEM: Record<string, (v: unknown) => boolean> = {
   isNumber: (v) => typeof v === 'number' && Number.isFinite(v),
   isBoolean: (v) => typeof v === 'boolean',
   isDate: (v) => v instanceof Date && !Number.isNaN(v.getTime()),
+  isBigInt: (v) => typeof v === 'bigint',
+  isBigDouble: (v) => typeof v === 'object' && v !== null && typeof (v as { m?: unknown }).m === 'bigint',
 };
 
 /** What the validator reports for one property (class-validator's `ValidationError`). */

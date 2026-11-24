@@ -61,6 +61,8 @@ created = schema()
 db.check_schema(url)
 if created["orders"]["columns"]["note"]["sql"] != db.LONG_TEXT[100000][database]:
     fail(f"createTables should make the note of 100000 characters a {db.LONG_TEXT[100000][database]}: {created['orders']['columns']['note']}")
+if wrong := db.exact_types(created, database):
+    fail("createTables made an exact column of another type: " + "; ".join(wrong))
 (out / f"schema-{dialect}-{database}-0-create-tables.json").write_text(json.dumps(created, indent=1, sort_keys=True))
 stamps = [c for t in created.values() for c in t["columns"].values() if c["type"] == "datetime"]
 if database != "postgres" and any(c["sql"] != "DATETIME(6)" for c in stamps):

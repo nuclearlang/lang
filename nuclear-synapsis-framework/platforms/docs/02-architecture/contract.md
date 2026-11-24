@@ -17,7 +17,7 @@ or `tools/` start at the root of the tree.
 |---|---|---|
 | `[platform]` | `name` (must be the folder's and the one the dialect names), `description`, `default_dialect` (what `nuclear new -p <platform>` uses without `-d`), `kinds`, `decorators`, `plugins` | the loader's check (below) |
 | `[decorators.args]` | decorator → its named arguments (`!` = required), the same in every dialect; a dialect's own entry wins | N0217 |
-| `[decorators.fields]` | decorator → the rule a field with it must meet: `optional`, `list`, `target`, `sibling`, `inverse`, `with` | N0308 |
+| `[decorators.fields]` | decorator → the rule a field with it must meet: `optional`, `list`, `target`, `sibling`, `inverse`, `with`, `types` (the field's type is one of these: `primary = { types = ["int", "string"] }`), `args_for` (a named argument only on a field of these types: `column = { args_for = { scale = ["bigdouble"] } }`) | N0308 |
 | `[decorators.replaced]` | a removed decorator → what replaces it | N0309 |
 | `[layout]` | kind → the path of its file, with `{component}`, `{screen}` and `{file}` (the name in snake_case) | `nuclear help layout --dialect <d>`, `nuclear make`, `nuclear gen`, agents |
 `decorators` is the list of the `@words` a project may write: one in lower case that is not in it is N0309 in a

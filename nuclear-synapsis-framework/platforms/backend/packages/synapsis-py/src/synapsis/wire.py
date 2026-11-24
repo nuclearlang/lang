@@ -5,7 +5,7 @@ or frame, and the parameters of the path and the query.
   finite (refused as its field's type); a value nested deeper than `MAX_DEPTH` levels is not read; a text never holds
   the character U+0000 (PostgreSQL cannot keep it: every database refuses it the same way).
 - A parameter is a text converted to its type: an `int` is `[+-]digits` within 64 bits, a `double` a finite decimal
-  number, a `boolean` exactly `true` or `false`; blanks around it are ignored, and an empty one is not given.
+  number, a `boolean` exactly `true` or `false`, a `bigint` and a `bigdouble` the texts of the language (synapsis.exact); blanks around it are ignored, and an empty one is not given.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .errors import reason
+from .exact import JsonInt, parse_bigdouble, parse_bigint
 from .models import INT_MAX, INT_MIN
 
 __all__ = ["LIMITS", "MAX_BODY_SIZE", "MAX_PAGE_SIZE", "MAX_DEPTH", "INT_MIN", "INT_MAX", "Unreadable", "read_json", "is_json", "parse_param"]
@@ -40,7 +41,10 @@ LIMITS = Limits()
 
 _INT = re.compile(r"[+-]?\d+")
 _DOUBLE = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?")
-_TYPES = {"int": "a whole number", "float": "a number", "bool": "true or false", "str": "a text"}
+_TYPES = {
+    "int": "a whole number", "float": "a number", "bool": "true or false", "str": "a text",
+    "bigint": "a whole number in a text", "bigdouble": "a decimal number in a text",
+}
 
 
 class Unreadable(ValueError):
@@ -57,7 +61,8 @@ def _constant(_: str) -> Any:
 
 def _whole(text: str) -> int | float:
     # a number of thousands of digits is past every range: infinite, so its field refuses it by its type
-    return int(text) if len(text) <= 40 else float(text)
+    # (an exact field refuses it: JSON's numbers are never a `bigint`, synapsis.exact)
+    return JsonInt(text) if len(text) <= 40 else float(text)
 
 
 def read_json(raw: bytes | str) -> Any:
@@ -102,7 +107,7 @@ def is_json(content_type: str) -> bool:
 
 
 def parse_param(name: str, values: list[str], kind: str) -> tuple[Any, dict[str, str] | None]:
-    """A parameter of the path or the query as its type (`kind`: int, float, bool, str): (value, None), or (None, the
+    """A parameter of the path or the query as its type (`kind`: int, float, bool, str, bigint, bigdouble): (value, None), or (None, the
     reason it is refused). No value, or only blanks: (None, None), the caller decides (a default, None, required)."""
     if len(values) > 1:
         return None, reason(name, "type", _TYPES.get(kind, "a text"))
@@ -120,6 +125,9 @@ def parse_param(name: str, values: list[str], kind: str) -> tuple[Any, dict[str,
         if _DOUBLE.fullmatch(text) and math.isfinite(f := float(text)):
             return f, None
         return None, reason(name, "type", _TYPES["float"])
+    if kind in ("bigint", "bigdouble"):
+        exact = parse_bigint(text) if kind == "bigint" else parse_bigdouble(text)
+        return (exact, None) if exact is not None else (None, reason(name, "type", _TYPES[kind]))
     if kind == "bool":
         if text in ("true", "false"):
             return text == "true", None

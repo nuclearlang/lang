@@ -22,6 +22,7 @@ from pydantic import BaseModel, create_model
 from pydantic.alias_generators import to_camel
 
 from .errors import AppError
+from .exact import BigDouble, BigInt
 from .guards import Guard, refusal
 from .orm import Entity, schema_of, wire_of
 from .repository import Page
@@ -221,12 +222,14 @@ class _JsonRoute(APIRoute):
         return read
 
 
-_KINDS = {int: "int", float: "float", bool: "bool", str: "str"}
+_KINDS: dict[Any, str] = {int: "int", float: "float", bool: "bool", str: "str", BigInt: "bigint", BigDouble: "bigdouble"}
 
 
 def _scalar(t: Any) -> tuple[str | None, bool]:
-    """The kind of a parameter of the path or the query (int, float, bool, str; None for another type), and
-    whether it may be None."""
+    """The kind of a parameter of the path or the query (int, float, bool, str, bigint, bigdouble; None for another
+    type), and whether it may be None. `t` keeps its `Annotated` (an exact number is one)."""
+    if get_origin(t) is Annotated:
+        return _KINDS.get(t), False
     args = [a for a in get_args(t) if a is not type(None)]
     optional = len(args) < len(get_args(t))
     base = args[0] if optional and len(args) == 1 else t
@@ -262,6 +265,8 @@ def _endpoint(fn: Callable[..., Any], path: str = "") -> Callable[..., Any]:
     """The bound method as FastAPI sees it: a body is a model (real types, entities as schemas), read by FastAPI; the
     parameters of the path and the query are read by the platform's rules, in one dependency; Result unwrapped."""
     hints = typing.get_type_hints(fn)
+    # (with Annotated: a `bigint` parameter is BigInt, not a plain int)
+    extras = typing.get_type_hints(fn, include_extras=True)
     sig = inspect.signature(fn)
     in_path = set(re.findall(r"\{(\w+)\}", path))
     entities: dict[str, type[Entity]] = {}
@@ -277,7 +282,7 @@ def _endpoint(fn: Callable[..., Any], path: str = "") -> Callable[..., Any]:
             params.append(p.replace(annotation=t))
             continue
         public = _public(p.name) or p.name
-        kind, optional = _scalar(t)
+        kind, optional = _scalar(extras.get(p.name, t))
         specs.append((p.name, public, "path" if p.name in in_path else "query", kind, optional, p.default))
     params.append(inspect.Parameter("synapsis_params", inspect.Parameter.KEYWORD_ONLY, default=_reader(specs), annotation=dict[str, Any]))
 
@@ -298,7 +303,7 @@ def _endpoint(fn: Callable[..., Any], path: str = "") -> Callable[..., Any]:
             value = r.value
         return _out(value)
 
-    call.__signature__ = sig.replace(parameters=params, return_annotation=_answer_type(hints.get("return")))  # type: ignore[attr-defined]
+    call.__signature__ = sig.replace(parameters=params, return_annotation=_answer_type(extras.get("return")))  # type: ignore[attr-defined]
     return call
 
 

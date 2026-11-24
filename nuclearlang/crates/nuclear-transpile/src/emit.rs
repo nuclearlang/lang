@@ -66,6 +66,14 @@ impl NumKind {
     }
 }
 
+/// An exact number, or a list or a map of them (`bigdouble?`, `bigint[]`).
+fn holds_exact(t: &Type) -> bool {
+    match &strip_nullable(t.clone()).kind {
+        TypeKind::List(x) | TypeKind::Map(_, x) => holds_exact(x),
+        _ => num_kind_of(&strip_nullable(t.clone())).is_some_and(|k| k.is_big()),
+    }
+}
+
 fn num_kind_of(t: &Type) -> Option<NumKind> {
     match &t.kind {
         TypeKind::Named { name, .. } if name == "int" => Some(NumKind::Int),
@@ -440,6 +448,12 @@ pub struct Emitter<'a> {
     exact_args: Option<NumKind>,
     /// The values of the map literal being written, where a map of exact numbers goes (`<string, bigdouble>`).
     exact_values: Option<NumKind>,
+    /// The exact fields of the class being constructed (`Price(amount = 1.5)`): a named argument's literal takes the
+    /// field's type, as for a parameter.
+    ctor_exact_fields: HashMap<String, Type>,
+    /// The exact type of the field whose decorators are read (`@min(0.5) price: bigdouble`): a number literal given as
+    /// a decorator's argument takes it.
+    decor_exact: Option<NumKind>,
     /// The names declared inside each loop being written (its variables, its locals): a lambda made there that uses
     /// them gets them bound where the target binds a closure late (Python's `bound_param`).
     loop_names: Vec<HashSet<String>>,
@@ -719,6 +733,8 @@ impl<'a> Emitter<'a> {
             member_only: HashSet::new(),
             exact_args: None,
             exact_values: None,
+            ctor_exact_fields: HashMap::new(),
+            decor_exact: None,
             loop_names: Vec::new(),
             default_inits: Vec::new(),
             callee_takes_props: false,
@@ -2235,6 +2251,17 @@ impl<'a> Emitter<'a> {
             if rule.optional && !f.optional {
                 errs.push(format!("{at}: the field is optional (it is there only when loaded): `{}?: ...`", f.name.name));
             }
+            if !rule.types.is_empty() && (is_list || !rule.types.contains(&item)) {
+                errs.push(format!("{at}: the field's type is one of {} (`{item}` is not)", rule.types.join(", ")));
+            }
+            for a in dec.args.iter().flatten() {
+                let Some(n) = &a.name else { continue };
+                if let Some(types) = rule.args_for.get(&n.name)
+                    && (is_list || !types.contains(&item))
+                {
+                    errs.push(format!("{at}: `{}` is for a field of type {} (`{item}` is not)", n.name, types.join(", ")));
+                }
+            }
             match rule.list {
                 Some(true) if !is_list => errs.push(format!("{at}: the field is a list: `{}?: {item}[]`", f.name.name)),
                 Some(false) if is_list => errs.push(format!("{at}: the field is one value, not a list")),
@@ -2397,7 +2424,10 @@ impl<'a> Emitter<'a> {
                             merged.insert(n.name.clone(), value);
                         }
                         None => {
-                            let text = self.expr(&a.value).0;
+                            let text = match (self.decor_exact, number_literal(&a.value)) {
+                                (Some(big), Some(n)) => self.big_literal(&a.value, n, big).0,
+                                _ => self.expr(&a.value).0,
+                            };
                             if !m.contains_key("arg") {
                                 m.insert("arg".into(), Value::str(&text));
                                 if let ExprKind::List(items) = &a.value.kind {
@@ -3285,7 +3315,9 @@ impl<'a> Emitter<'a> {
                         continue; // the constructor parameter declares it
                     }
                     let mods = self.modifiers(&f.words, false);
+                    self.decor_exact = f.ty.as_ref().map(|t| strip_nullable(t.clone())).as_ref().and_then(num_kind_of).filter(|k| k.is_big());
                     let decorators = self.decorators(&f.decorators, false);
+                    let decor_exact = self.decor_exact.take();
                     let ty = f.ty.as_ref().map(|t| self.ty(t));
                     let type_nullable =
                         ty.clone().and_then(|t| self.type_tpl("nullable", Ctx::new().set("type", t), f.span));
@@ -3311,7 +3343,9 @@ impl<'a> Emitter<'a> {
                     }
                     let uninitialized = f.default.is_none() && !f.optional && !ctor_param_names.contains(&f.name.name);
                     let tinfo = self.type_info(f.ty.as_ref());
+                    self.decor_exact = decor_exact;
                     let (decor, _) = self.decor(&f.decorators);
+                    self.decor_exact = None;
                     self.check_field_rules(f, &field_names);
                     // `@Name` without parentheses and PascalCase names a class (Dart: a JSON converter)
                     let class_decorator = f
@@ -7859,6 +7893,14 @@ impl<'a> Emitter<'a> {
             },
             _ => HashMap::new(),
         };
+        // a class of the project built with its fields named: an exact field is the place of its argument's literal
+        if construct
+            && let ExprKind::Name(n) = &callee.kind
+            && let Some(info) = self.decl_info(n)
+        {
+            self.ctor_exact_fields =
+                info.field_types.iter().filter(|(_, t)| holds_exact(t)).map(|(k, t)| (k.clone(), t.clone())).collect();
+        }
         let mut a = self.args(args, params.as_deref(), span, c.len());
         if !type_names.is_empty() {
             // Python: inject<Repo>() → inject(Repo)
@@ -7931,6 +7973,7 @@ impl<'a> Emitter<'a> {
         let has_named = args.iter().any(|a| a.name.is_some());
         let bound = std::mem::take(&mut self.callee_bound);
         let props = std::mem::take(&mut self.callee_takes_props);
+        let exact_fields = std::mem::take(&mut self.ctor_exact_fields);
         let ordered: Option<Vec<Arg>> = match (has_named, params) {
             (true, Some(ps)) => reorder(args, ps, self.d.options.named_args_native, props),
             _ => None,
@@ -7945,6 +7988,7 @@ impl<'a> Emitter<'a> {
                 Some(n) => ps.iter().find(|p| p.name.name == n.name),
                 None => ps.get(i),
             });
+            let field = if param.is_none() { a.name.as_ref().and_then(|n| exact_fields.get(&n.name)) } else { None };
             if param.and_then(|p| p.ty.as_ref()).is_some_and(|t| self.result_type(t).is_some()) {
                 self.keep_next = true;
             }
@@ -7971,10 +8015,11 @@ impl<'a> Emitter<'a> {
             {
                 self.item_hints = wanted.iter().filter_map(|w| w.ty.as_ref().map(|t| subst_type(t, &bound))).collect();
             }
-            if let Some(t) = param.and_then(|p| p.ty.as_ref()) {
+            let want = param.and_then(|p| p.ty.as_ref()).or(field);
+            if let Some(t) = want {
                 self.check_big_value(t, &a.value);
             }
-            let v = self.expr_as(&a.value, param.and_then(|p| p.ty.as_ref()));
+            let v = self.expr_as(&a.value, want);
             self.lambda_hints.clear();
             self.item_hints.clear();
             self.slot_list = false;

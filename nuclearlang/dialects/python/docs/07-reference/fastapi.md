@@ -86,6 +86,33 @@ class Character(Entity):
     species: Mapped[str | None] = column(nullable=True)
 ```
 
+The exact numbers (ADR-backend-0003): a `bigint` is the runtime's `BigInt` (an `int` annotated so its JSON is a text) and
+a `bigdouble` its `BigDouble` (a `Decimal`); their columns are `ExactInteger` (`BIGINT`) and `ExactDecimal(precision,
+scale)` (`NUMERIC`, 30 and 10 by default; on SQLite the value's text, `EXACT TEXT(p,s)`), compared and sorted by value
+by the runtime's comparator. `Repository.save` and `update` refuse a value the column cannot hold (`IntegrityViolation`,
+409).
+
+```nuclear
+@entity("balances")
+entity Balance()
+  @primary(generated = true)
+  id: int
+  serial: bigint
+  @column(precision = 40, scale = 20)
+  rate: bigdouble
+  amount: bigdouble = 0.0
+```
+
+```python
+class Balance(Entity):
+    __tablename__ = "balances"
+
+    id: Mapped[int] = primary(generated=True)
+    serial: Mapped[BigInt] = column()
+    rate: Mapped[BigDouble] = column(precision=40, scale=20)
+    amount: Mapped[BigDouble] = column(default=Decimal("0.0"))
+```
+
 #### Relations (ADR-backend-0001)
 
 TypeORM's decorators; the related entity is the field's type. `@manyToOne x?: T` keeps its column in the field `xId`
@@ -311,6 +338,26 @@ class NewCharacter(Model):
     contact: Annotated[str | None, AfterValidator(is_email)] = None
 ```
 
+A `bigint` or `bigdouble` field reads a JSON text with the language's rules (`synapsis.exact`) and refuses a JSON number
+(the reader marks JSON's whole numbers, `JsonInt`); it writes its `toString()`. `@min` and `@max` of one are bounds of
+its type, compared exactly:
+
+```nuclear
+model NewBalance
+  @max(12345678901234567890123)
+  serial: bigint
+  @min(0.01)
+  amount: bigdouble
+  rates: bigdouble[] = []
+```
+
+```python
+class NewBalance(Model):
+    serial: Annotated[BigInt, Le(12345678901234567890123)]
+    amount: Annotated[BigDouble, Ge(Decimal("0.01"))]
+    rates: list[BigDouble] = []
+```
+
 ### 2.4 Use case
 
 One business operation: its dependencies are injected by type; `exec` returns `Result<E, T>`. `Error` is `AppError`; the runtime has `NotFound` (404), `Invalid` (400), `Unauthorized` (401), `Forbidden` (403) and `Conflict` (409). What the database refuses for integrity (SQLAlchemy's `IntegrityError`: a unique, a foreign key, a required column) is answered by the app with 409 `conflict`; inside `@transactional` the transaction is rolled back.
@@ -452,6 +499,26 @@ class CharactersController:
     @post()
     async def create(self, input: NewCharacter) -> Result[AppError, Character]:
         return await self.characters.create(input)
+```
+
+An exact parameter of the path or the query is read with the texts of a body (`BigInt`, `BigDouble`: the runtime's
+reader sees the annotation):
+
+```nuclear
+@controller("balances")
+controller BalancesController()
+  @get("{serial}")
+  one(serial: bigint, min: bigdouble = 0.5) bigdouble
+    min
+```
+
+```python
+@controller("balances")
+class BalancesController:
+    @get("{serial}")
+    @_public_names(min_="min")
+    def one(self, serial: BigInt, min_: BigDouble = Decimal("0.5")) -> BigDouble:
+        return min_
 ```
 
 ### 2.7 Configuration

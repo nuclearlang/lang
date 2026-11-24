@@ -7,7 +7,8 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, PrimaryKey, Sequelize, Table, UpdatedAt } from 'sequelize-typescript';
-import { Entity, SQLite, joinTable } from '../src/index.js';
+import { Entity, SQLite, exactColumn, exactText, joinTable } from '../src/index.js';
+import { BigDouble } from '../src/exact.js';
 import { createTables, down, make, status, textType, up } from '../src/migrate.js';
 
 const rejected = (work: Promise<unknown>): Promise<string> => work.then(() => assert.fail('it did not fail'), (e: Error) => e.message);
@@ -98,6 +99,27 @@ function essays(length: number): unknown[] {
     declare body: string;
   }
   return [Essay];
+}
+
+// exact numbers: a bigint, a bigdouble of a precision and a scale, and a second one with a default
+function prices(precision: number, scale: number, rate: boolean): unknown[] {
+  @Table({ tableName: 'prices', underscored: true, timestamps: false })
+  class Price extends Entity {
+    @PrimaryKey
+    @AutoIncrement
+    @Column(DataType.INTEGER)
+    declare id: number;
+    @Column({ type: DataType.BIGINT, allowNull: false, ...exactColumn('code') })
+    declare code: bigint;
+    @Column({ type: DataType.DECIMAL(precision, scale), allowNull: false, ...exactColumn('amount', precision, scale) })
+    declare amount: BigDouble;
+  }
+  @Table({ tableName: 'prices', underscored: true, timestamps: false })
+  class PriceWithRate extends Price {
+    @Column({ type: DataType.DECIMAL(30, 10), allowNull: false, defaultValue: exactText(BigDouble.of('1.5'), 10), ...exactColumn('rate', 30, 10) })
+    declare rate: BigDouble;
+  }
+  return [rate ? PriceWithRate : Price];
 }
 
 // another key
@@ -331,6 +353,24 @@ describe('migrations', () => {
       await down(dir, db);
       assert.equal(await type(), 'VARCHAR(100)');
       assert.deepEqual(await sql('SELECT body FROM essays'), [{ body: 'kept' }]);
+    }));
+
+  it('an exact column is made and changed by its precision and scale', () =>
+    project(async ({ dir, db, made, sql }) => {
+      // a bigint is BIGINT, a bigdouble DECIMAL(p, s); SQLite keeps their text, in a type that says so (the same names as
+      // tests/test_migrate.py)
+      const kinds = async (): Promise<string[]> => (await sql<{ type: string }>("SELECT type FROM pragma_table_info('prices') ORDER BY cid")).map((r) => r.type);
+      const first = await made('prices', prices(30, 10, false));
+      assert.match(readFileSync(join(dir, `${first}.js`), 'utf8'), /DECIMAL\(\{precision: 30, scale: 10\}\)/);
+      await up(dir, db);
+      assert.deepEqual(await kinds(), ['INTEGER', 'EXACT TEXT', 'EXACT TEXT(30,10)']);
+      await sql("INSERT INTO prices (code, amount) VALUES ('12345678901234567', '0.3000000000')");
+      await made('scale', prices(20, 4, true));
+      await up(dir, db);
+      assert.deepEqual(await kinds(), ['INTEGER', 'EXACT TEXT', 'EXACT TEXT(20,4)', 'EXACT TEXT(30,10)']);
+      assert.deepEqual(await sql('SELECT code, amount, rate FROM prices'), [{ code: '12345678901234567', amount: '0.3000', rate: '1.5000000000' }]);
+      await down(dir, db);
+      assert.deepEqual(await kinds(), ['INTEGER', 'EXACT TEXT', 'EXACT TEXT(30,10)']);
     }));
 
   it('a failed migration is not applied', () =>

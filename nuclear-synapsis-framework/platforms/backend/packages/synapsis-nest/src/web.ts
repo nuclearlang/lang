@@ -24,6 +24,7 @@ import { INT_MAX, INT_MIN, MAX_BODY_SIZE, MAX_PAGE_SIZE, RawBody, Unreadable, ed
 import { AppError, InvalidInput, Invalidity, Reason, errorBody, reason, reasonsOf } from './errors.js';
 import { Guard, GuardsOf, Headers, headersOf, refusal } from './guards.js';
 import { answerOf } from './model.js';
+import { type BigDouble, parseBigDouble, parseBigInt } from './exact.js';
 import { Result } from './result.js';
 
 @Injectable()
@@ -159,6 +160,24 @@ export class DoublePipe extends ParamPipe<number> {
   }
 }
 
+/** A `bigint` parameter: the texts of `text.toBigInt()`. */
+@Injectable()
+export class BigIntPipe extends ParamPipe<bigint> {
+  protected readonly type = 'a whole number in a text';
+  protected parse(text: string): bigint | undefined {
+    return parseBigInt(text) ?? undefined;
+  }
+}
+
+/** A `bigdouble` parameter: the texts of `text.toBigDouble()`. */
+@Injectable()
+export class BigDoublePipe extends ParamPipe<BigDouble> {
+  protected readonly type = 'a decimal number in a text';
+  protected parse(text: string): BigDouble | undefined {
+    return parseBigDouble(text) ?? undefined;
+  }
+}
+
 @Injectable()
 export class BoolPipe extends ParamPipe<boolean> {
   protected readonly type = 'true or false';
@@ -226,6 +245,8 @@ export function configureApp(app: INestApplication): INestApplication {
   const server = app.getHttpAdapter().getInstance() as { set?: (k: string, v: unknown) => void; router?: { caseSensitive?: boolean; strict?: boolean } };
   server.set?.('x-powered-by', false);
   server.set?.('etag', false);
+  // an exact whole number is a text in JSON (a BigDouble writes its own, toJSON), as in every dialect
+  server.set?.('json replacer', (_: string, v: unknown) => (typeof v === 'bigint' ? v.toString() : v));
   // the router exists already: the routes Nest adds next are matched by its own options
   if (server.router) Object.assign(server.router, { caseSensitive: true, strict: true });
   app.use(edge(config?.origins ?? []));

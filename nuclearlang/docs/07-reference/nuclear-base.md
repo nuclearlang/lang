@@ -807,8 +807,9 @@ print(price * 3, price / 3)      // 59.97 6.66333333333333333333
 ```
 
 - **A literal takes the exact type of its place**: a name, a parameter or a return declared exact, a list declared of
-  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the
-  argument of `compareTo`. It is the exact value of its text. A decimal
+  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`), the
+  argument of `compareTo`, a field named where its class is built (`Price(amount = 0.5)`) or the argument of a
+  decorator of an exact field (`@min(0.01) amount: bigdouble`). It is the exact value of its text. A decimal
   literal where a `bigint` goes is error `N0119`, and so is a whole literal beyond 2^53 − 1 in any other place.
 - **Nothing converts silently**: an exact number never meets an `int`, a `double` or the other exact type in an
   operation, a declaration, an argument or a return (`N0119`). The conversions are written: `n.toBigInt()`,

@@ -1,0 +1,30 @@
+// The routes of balances.
+@controller("balances")
+controller BalancesController(app: StoreAppComponent)
+  @get
+  list(page: int = 1) Result<Error, Balance[]>
+    ~app.listBalances(page)
+
+  @get("{id}")
+  one(id: int) Result<Error, Balance>
+    ~app.getBalance(id)
+
+  @post
+  create(input: NewBalance) Result<Error, Balance>
+    ~app.createBalance(input)
+
+  @put("{id}")
+  update(id: int, input: NewBalance) Result<Error, Balance>
+    ~app.updateBalance(id, input)
+
+  @delete("{id}")
+  remove(id: int) Result<Error, boolean>
+    ~app.deleteBalance(id)
+
+  @get("at-least/{amount}")
+  balancesAtLeast(amount: bigdouble) Result<Error, Balance[]>
+    ~app.balancesAtLeast(amount)
+
+  @put("{id}/deposit/{amount}")
+  deposit(id: int, amount: bigdouble) Result<Error, Balance>
+    ~app.deposit(id, amount)
