@@ -98,6 +98,8 @@ export interface Endpoint {
   socketPath?: string;
   /** The headers the backend's token guards read, with the value to fill (`Bearer {{token}}` in `Authorization`). */
   guardHeaders?: [string, string][];
+  /** A backend route: the client projects that call it (their calls are not listed again under them). */
+  usedBy?: string[];
 }
 
 export type { Environment, Environments } from './request';
@@ -196,10 +198,13 @@ export class HttpModel {
 
   tree(): TreeNode[] {
     const out: TreeNode[] = [];
+    this.ours = oursOf(this.projects);
     for (const [platform, label] of Object.entries(PLATFORMS)) {
       const projects = this.projects.filter((p) => p.platform === platform);
-      if (!projects.length) continue;
-      out.push({ id: `platform:${platform}`, label, icon: platform, color: 'platform', children: projects.map((p) => this.projectNode(p)) });
+      // a client whose every call goes to one of our backends shows nothing of its own: its calls are the backend's routes
+      const nodes = projects.map((p) => this.projectNode(p)).filter((n): n is TreeNode => n !== undefined);
+      if (!nodes.length) continue;
+      out.push({ id: `platform:${platform}`, label, icon: platform, color: 'platform', children: nodes });
     }
     const docs: TreeNode = {
       id: 'openapi',
@@ -244,7 +249,10 @@ export class HttpModel {
     if (a.type === 'addSocket') void this.addSocket();
   }
 
-  private projectNode(p: Project): TreeNode {
+  /** Which backend route each client call of our own backends is (`ours.calls`) and who calls each route (`ours.users`). */
+  private ours: Ours = { calls: new Set(), users: new Map() };
+
+  private projectNode(p: Project): TreeNode | undefined {
     const children: TreeNode[] = [];
     if (p.contracts.length) {
       children.push({
@@ -268,7 +276,12 @@ export class HttpModel {
     const byComponent = new Map<string, Endpoint[]>();
     for (const [owner, api] of apis) {
       const key = api.component || 'shared';
-      byComponent.set(key, [...(byComponent.get(key) ?? []), ...api.routes.map((route) => endpointOf(p, owner, api, route))]);
+      const endpoints = api.routes
+        .map((route) => endpointOf(p, owner, api, route))
+        // a call to one of our backends is that backend's route: listed there once, with who calls it
+        .filter((e) => !(e.kind === 'call' && this.ours.calls.has(callKey(p, e))))
+        .map((e) => (e.kind === 'route' ? { ...e, usedBy: this.ours.users.get(routeKey(e.verb, e.path, p.name)) } : e));
+      if (endpoints.length) byComponent.set(key, [...(byComponent.get(key) ?? []), ...endpoints]);
     }
     // the topics the app publishes, under the component that publishes them (a backend with a WebSocket)
     const socketPath = socketPathOf(p.contract);
@@ -294,6 +307,7 @@ export class HttpModel {
     for (const [name, endpoints] of [...byComponent.entries()].sort(([a], [b]) => a.localeCompare(b))) {
       children.push({ id: `component:${p.root}:${name}`, label: name, icon: 'component', color: 'component', children: endpoints.map((e) => endpointNode(e)) });
     }
+    if (p.platform !== 'backend' && apis.length && !byComponent.size && !p.contracts.length) return undefined;
     if (!apis.length && !p.contracts.length) {
       children.push({ id: `empty:${p.root}`, label: l10n.t('no endpoints'), desc: l10n.t('no controller or repository with http methods in the contract'), icon: 'info' });
     }
@@ -464,7 +478,12 @@ function endpointNode(e: Endpoint): TreeNode {
     badge,
     id: `endpoint:${componentKey(e)}:${e.verb} ${e.path} ${e.owner}`,
     label: `${e.verb.toUpperCase()} ${e.path}`,
-    desc: e.kind === 'event' ? (e.description ? `${e.returns} ${e.description}` : e.returns) : e.kind === 'call' ? `${e.owner} · ${e.connection ?? ''}`.replace(/ · $/, '') : e.owner,
+    desc:
+      e.kind === 'event'
+        ? e.description ? `${e.returns} ${e.description}` : e.returns
+        : e.kind === 'call'
+          ? `${e.owner} · ${e.connection || l10n.t('external')}`
+          : e.usedBy?.length ? `${e.owner} · ${e.usedBy.join(', ')}` : e.owner,
     tooltip: `${e.verb.toUpperCase()} ${e.path}\n${e.description ?? ''}\n${l10n.t('returns {0}', e.returns)}` + (e.params.length ? '\n' + e.params.map((p) => `${p.name}: ${p.type} (${p.in})`).join('\n') : ''),
     icon: e.kind === 'socket' ? 'ws' : e.verb.toLowerCase(),
     color: e.kind === 'socket' ? 'ws' : e.verb.toLowerCase(),
@@ -651,4 +670,55 @@ export function run(bin: string, args: string[], cwd: string): Promise<string> {
       else resolve(`${stdout}${stderr}`);
     });
   });
+}
+
+// ---------- our own backends ----------
+
+export interface Ours {
+  /** The client calls that are a route of one of our backends (`callKey`). */
+  calls: Set<string>;
+  /** Each route of our backends (`routeKey`) and the client projects that call it. */
+  users: Map<string, string[]>;
+}
+
+/** A backend route's key: its verb, its path with every parameter alike (`/films/{id}` = `/films/{name}`), its project. */
+export function routeKey(verb: string, path: string, project: string): string {
+  return `${verb.toLowerCase()} ${path.replace(/\{[^}]*\}/g, '{}').replace(/\/+$/, '') || '/'} ${project}`;
+}
+
+function callKey(p: Project, e: Endpoint): string {
+  return `${p.root} ${e.verb.toLowerCase()} ${e.path} ${e.owner}`;
+}
+
+/** The calls of the client projects that go to one of our backends: through the client's default connection (the
+ * backend's address, `API_URL`), to a route a backend project of the window serves with the same verb and path. A call
+ * through another connection (a weather API, a payment service) is never ours, even when its path matches. */
+export function oursOf(projects: Project[]): Ours {
+  const routes = new Map<string, string>(); // verb and path (without project) → the backend's routeKey
+  for (const b of projects.filter((p) => p.platform === 'backend')) {
+    for (const [owner, api] of Object.entries(b.contract?.controllers ?? {})) {
+      for (const route of api.routes) {
+        const e = endpointOf(b, owner, api, route);
+        const key = routeKey(e.verb, e.path, b.name);
+        routes.set(key.slice(0, key.lastIndexOf(' ')), key);
+      }
+    }
+  }
+  const ours: Ours = { calls: new Set(), users: new Map() };
+  for (const c of projects.filter((p) => p.platform !== 'backend')) {
+    for (const [owner, api] of Object.entries(c.contract?.repositories ?? {})) {
+      if (api.connection) continue; // a named connection: another service
+      for (const route of api.routes) {
+        const e = endpointOf(c, owner, api, route);
+        const key = routeKey(e.verb, e.path, '');
+        const backend = routes.get(key.slice(0, key.lastIndexOf(' ')));
+        if (!backend) continue;
+        ours.calls.add(callKey(c, e));
+        const users = ours.users.get(backend) ?? [];
+        if (!users.includes(c.name)) users.push(c.name);
+        ours.users.set(backend, users);
+      }
+    }
+  }
+  return ours;
 }

@@ -18,6 +18,13 @@ its `controllers` (what a backend exposes) and its `repositories` (what a mobile
 component with its routes (verb, path, params in path / query / body, what it returns)
 ([projects §1.2](../../../../../nuclearlang/docs/07-reference/projects.md)).
 
+A call of a mobile or web app to one of the window's own backends is not listed twice (`oursOf`): when it goes
+through the app's default connection (the backend's address, `API_URL`) and a backend project serves the same verb and
+path (a parameter's name aside: `:id` = `{name}`), it is that backend's route, shown once under the backend with the
+apps that call it in its description (`api · app, web`). A call through a named connection (a weather API, a payment
+service) is never ours and stays under the app, marked with its connection; a call to the default connection that no
+backend serves stays too, marked *external*. An app with nothing of its own left is not shown.
+
 ## The contract it reads for WebSockets
 
 A backend's contract says what its WebSocket serves (ADR-synapsis-0008, ADR-synapsis-0007; the format:

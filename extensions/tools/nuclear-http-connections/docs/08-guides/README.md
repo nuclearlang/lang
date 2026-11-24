@@ -24,7 +24,8 @@ the workspace count too. For each project it reads `.nuclear/contract.json`, whi
 `nuclear build` write next to the project card:
 
 - a **backend**'s `controllers`: the routes it exposes;
-- a **mobile or web** app's `repositories`: the calls it makes;
+- a **mobile or web** app's `repositories`: the calls it makes to other services (a weather API...). A call to your own
+  backend is not repeated: it is the backend's route, which says which apps call it (`api · app, web`);
 - for each endpoint: the verb, the path, the path, query and body parameters, and what it returns;
 - whether a backend serves it over WebSockets too, and the events each component pushes.
 

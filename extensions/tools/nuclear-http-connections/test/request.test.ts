@@ -291,3 +291,22 @@ test('the request page: its script parses, in English and in Spanish; no text ke
   }
   (vscode.env as { language: string }).language = 'en';
 });
+
+// A client's calls to one of our backends are that backend's routes: listed once, under the backend, with who calls them;
+// a call through another connection (a weather API) stays under the client.
+test('the calls of a client to our own backend are not listed twice', async () => {
+  const { oursOf, routeKey } = await import('../src/httpConnections');
+  const api = (component: string, path: string, routes: { verb: string; path: string }[], connection = '') =>
+    ({ component, path, connection, description: '', routes: routes.map((r) => ({ name: r.verb + r.path, verb: r.verb, path: r.path, params: [], returns: '' })) }) as never;
+  const backend = { root: '/w/api', name: 'api', platform: 'backend', dialect: 'fastapi', contracts: [],
+    contract: { controllers: { FilmsController: api('films', 'films', [{ verb: 'get', path: '' }, { verb: 'get', path: '{id}' }]) }, repositories: {} } } as never;
+  const app = { root: '/w/app', name: 'app', platform: 'mobile', dialect: 'flutter', contracts: [],
+    contract: { controllers: {}, repositories: {
+      FilmRepository: api('films', 'films', [{ verb: 'get', path: '' }, { verb: 'get', path: ':id' }]),
+      WeatherRepository: api('weather', 'forecast', [{ verb: 'get', path: '' }], 'weather'),
+    } } } as never;
+  const ours = oursOf([backend, app]);
+  assert.equal(ours.calls.size, 2, 'both film calls are the backend\'s routes; the weather call is not');
+  assert.deepEqual(ours.users.get(routeKey('get', '/films/{id}', 'api')), ['app']);
+  assert.equal(routeKey('GET', '/films/{name}/', 'api'), routeKey('get', '/films/{id}', 'api'));
+});
