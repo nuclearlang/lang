@@ -94,7 +94,7 @@ testOpenCodeGetsItsOwnAgentFileTheMcpServerAndNoShell(tmpPath: Path, monkeypatch
   files = Path("${log}.files").readText()
   expect("agent/analyst.md" in files and "bash: deny" in files and "\"nuclear-mcp\"" in files and "Be brief." in files)
   // spec 025: never the user's own agent files, none of OpenCode's tools the factory does not use, each tool once
-  expect("claude files off: 1" in files and "\"skill\": \"deny\"" in files and "\"websearch\": \"deny\"" in files and "\"--skip\"" in files, files)
+  expect("claude files off: 1" in files and "\"skill\": \"deny\"" in files and "\"websearch\": \"deny\"" in files and "\"--skip\"" in files and "\"build/**\": \"deny\"" in files, files)
   expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "cost", "cost"])
   expect(out.text == "Written." and (out.costUsd - 0.005).abs() < 0.000001)
 

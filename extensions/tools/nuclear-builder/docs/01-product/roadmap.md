@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-23
+updated: 2026-11-24
 related: [../02-architecture/engine.md, ../../../../vscode/docs/01-product/roadmap.md, ../../../../jetbrains/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Builder
@@ -10,6 +10,12 @@ What the agents, the strategies and the generators still lack is in their own pr
 (`nuclear-agents/nuclear_developer/`, `nuclear-graph-storage/`, `tools/code_generator/`).
 
 ## Half done
+
+- **Spec 025, the MCP server as the oracle** (root `docs/04-specs/025-mcp-the-oracle/`): phase 1 done (each tool
+  once, OpenCode isolated, Anthropic's cache, a local model's window); phase 2 started (the oracle's note and the
+  documents' paths in `stationPrompt`, generated folders denied in OpenCode), its comparison run not made yet; the
+  project's map, compact `test`/`check`, `verify`, the profiles per station and the project documents left. Its
+  tasks are in the spec.
 
 - **Local models on standby, ADR-platform-0013** (the engine and the set-up): `localModels` false in `setup.json`;
   the set-up offers only `remote` (the Smart Graph and Nuclear Chat) and its step `standby` takes away what was local;

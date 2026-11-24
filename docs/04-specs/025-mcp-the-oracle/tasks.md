@@ -88,12 +88,20 @@ Stopped by its 90-minute limit in the Tests (the minutes add up the steps that r
 The Code passed (the baseline stopped there twice) and the run reached the Quality. One run a side: the guard's
 comparison holds only with more runs (spec 020's harness).
 
+The same run on to the Quality (the user's approvals of the analysis and the design marked skipped: no gate in a
+sandbox): 37 steps, 245 turns, 426 tool calls, 245 by hand, 15 094 070 tokens in (61 608 per turn), 26.6 minutes.
+**The Quality alone was 18 steps, 104 turns, 147 reads by hand and 6 705 733 tokens in**: each check by prompt
+opens the files it reviews on its own. It ended asking the user (a title's longest length, pages for the list, a
+private API) and with two checks of style failed: the work of QA, not of the factory's context.
+
 ## Phase 2 — The oracle answers more per call
 
 - [ ] T2.1 agent: the project's map in `project_inspect`.
 - [ ] T2.2 agent: compact `test` and `check`; `verify`; several files per read.
-- [ ] T2.3 agent: the station prompt (the documents are in it, the map is one call away, the oracle first) and the
-      denied paths (`build/`, `node_modules`, `dist`).
+- [ ] T2.3 agent (half done): `ORACLE_NOTE` in `stationPrompt` and each document with its path; OpenCode denies
+      reading and changing `build/`, `node_modules`, `dist` (checked with a local model: a denied read is refused, and
+      a weak model asks it again, so the prompt says it first). Left: the comparison run, and the same paths denied
+      in the other agents (Claude Code `Read(build/**)`, Codex, Gemini CLI).
 
 ## Phase 3 — A small catalog
 

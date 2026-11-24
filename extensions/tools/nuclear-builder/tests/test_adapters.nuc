@@ -128,3 +128,12 @@ testTheLocalOpenCodeRunsOnlyOllamasModels() void
   expect(localOpenCodeModel("", ["ollama/qwen2.5-coder:3b", "ollama/gemma4:e2b"]) == "ollama/qwen2.5-coder:3b")
   expect(localOpenCodeModel("gemma4:e2b", []) == "ollama/gemma4:e2b" and localOpenCodeModel("ollama/gemma4:e2b", []) == "ollama/gemma4:e2b")
   expect(localOpenCodeModel("", []) == "" and ADAPTERS["opencode-local"] == localOpenCodeAdapter)
+
+// Spec 025: a step's prompt sends the agent to the oracle first, and says each document of the stations before is
+// the file of the spec's folder as it is now, already in the prompt.
+testAStepsPromptSaysTheOracleFirstAndWhereEachDocumentIs(tmpPath: Path) void
+  root = tmpPath.joinpath("app")
+  work = Work("${root}", "${root.joinpath("specs", "books", "b1")}", "Count the books", { "analysis.md": "# Analysis" }, [], "", 0.0)
+  prompt = stationPrompt(composeRole("architect", {}, tmpPath), "design", work, false)
+  expect(ORACLE_NOTE in prompt and "`project_inspect`" in prompt, prompt)
+  expect("## analysis.md (from the stations before: `specs/books/b1/analysis.md` as it is now, already here)\n\n# Analysis" in prompt, prompt)

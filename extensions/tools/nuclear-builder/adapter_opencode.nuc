@@ -8,16 +8,28 @@ use pathlib{ Path }
 // login; the cost and the tokens are the sums of what its steps report. The lines of `--format json` were read from OpenCode's
 // documentation, not yet from a real run (no paid call was made).
 
+// The folders of a project an agent of the factory never reads nor changes: what the transpiler and the target's
+// tools write.
+GENERATED_DIRS = ["build", "node_modules", "dist"]
+
+// A permission of OpenCode by path: `rest` for the project, deny for the generated folders.
+notGenerated(rest: string) <string, string>
+  found: <string, string> = { "*": rest }
+  for dir in GENERATED_DIRS
+    found["${dir}/**"] = "deny"
+  found
+
 // What an agent of the factory may do in OpenCode: no shell (commands are data), its edits; and none of OpenCode's own
 // tools the factory does not use (spec 025: each one is in every request): its skills (the role's are in its text),
 // the web (the MCP server's `web_search` and `web_read` are the oracle's), images, subagents and questions (the
-// factory asks the user itself).
-OPENCODE_PERMISSION: <string, string> = { "bash": "deny", "edit": "allow", "skill": "deny", "websearch": "deny", "webfetch": "deny", "experimental_image_generate": "deny", "subagent": "deny", "question": "deny" }
+// factory asks the user itself). The generated code and the target's packages are never read nor changed (root rule
+// 13): the station's prompt says so first, this is the net (a weak model asks a denied read again).
+OPENCODE_PERMISSION: <string, any> = { "bash": "deny", "edit": notGenerated("allow"), "read": notGenerated("allow"), "skill": "deny", "websearch": "deny", "webfetch": "deny", "experimental_image_generate": "deny", "subagent": "deny", "question": "deny" }
 
 renderOpenCode(role: Role, work: Work, at: Path) <string, string>
   dir = at.joinpath(".opencode")
   dir.joinpath("agent").mkdir(parents = true)
-  dir.joinpath("agent", "${role.id}.md").writeText("---\ndescription: The ${role.title} of the software factory\nmode: primary\npermission:\n  bash: deny\n  edit: allow\n---\n\n${role.text()}\n")
+  dir.joinpath("agent", "${role.id}.md").writeText("---\ndescription: The ${role.title} of the software factory\nmode: primary\npermission:\n  bash: deny\n---\n\n${role.text()}\n")
   config = at.joinpath("opencode.json")
   config.writeText(json.dumps({ "$schema": "https://opencode.ai/config.json", "mcp": { "nuclear": { "type": "local", "command": [work.mcpCommand, ...nuclearMcpArgs(work)], "enabled": true }, "nuclear_builder": { "type": "local", "command": [builderMcpCommand(), ...builderMcpArgs(work)], "enabled": true } }, "permission": OPENCODE_PERMISSION }, indent = 2))
   env = toolEnv()

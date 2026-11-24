@@ -260,11 +260,17 @@ runAdapter(adapter: (role: Role, station: string, work: Work, emit: (e: <string,
 
 // ---------- the prompt every provider gets ----------
 
+// How an agent finds what it needs (spec 025): the oracle first, the files it already has never read again, a file
+// opened only to change it. Measured in the factory's runs: half the tool calls were files read by hand, a quarter of
+// them documents the prompt already held.
+ORACLE_NOTE = "## How to find what you need\n\nThe Nuclear MCP server is your oracle: ask it before you open a file. The project's map (its components, their pieces by kind and file, the generators) is `project_inspect`; Nuclear's rules, kinds and words are `nuclear_doc` and `nuclear_help`. The spec and the documents of the stations before are in this prompt, below the task, as their files are now: never read them again. Open a file of the project only to change it or when no tool answers what you need; never the generated code (`build/`) nor NuclearLang's installed files."
+
 // The task of a station as one prompt: the work, the documents before it, the templates of the documents to write.
 stationPrompt(role: Role, station: string, work: Work, inline: boolean) string
-  parts = ["You are the ${role.title} of the software factory, at the station ${station}. Make the product with NuclearLang's tools (the Nuclear MCP server): never write target code by hand.", "## The task\n\n${work.task.trim()}"]
+  parts = ["You are the ${role.title} of the software factory, at the station ${station}. Make the product with NuclearLang's tools (the Nuclear MCP server): never write target code by hand.", "## The task\n\n${work.task.trim()}", ORACLE_NOTE]
+  docs = Path(work.specDir).isRelativeTo(work.root) ? Path(work.specDir).relativeTo(work.root) : Path(work.specDir)
   for name, body in work.documents
-    parts.add("## ${name} (from the stations before)\n\n${body.trim()}")
+    parts.add("## ${name} (from the stations before: `${docs}/${name}` as it is now, already here)\n\n${body.trim()}")
   if not work.writes.isEmpty
     templates: string[] = []
     for name in work.writes

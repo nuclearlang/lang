@@ -3398,6 +3398,34 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.0ba197",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
+   "summary": "retries, an httpx transport in tests, a key, the project's prices).",
+   "body": [
+    "retries, an httpx transport in tests, a key, the project's prices).",
+    "- `Outcome`: ok, the last text, the documents (written into the spec's folder by an agent, else found in the answer",
+    "  after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed",
+    "  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error,",
+    "  and the `usage` (`{inTokens, outTokens, costUsd, ms, provider, model}`, stamped by `runAdapter`; a count the provider",
+    "  does not report is null; each provider's source: [reports.md](reports.md)).",
+    "- Events, one shape for every provider: `text`, `tool` (`id`, `tool`, `input`), `tool-result` (`id`, `ok`,",
+    "  `text`), `cost` (`usd`), `tokens`, `retry`, `trace`.",
+    "- `runAdapter` turns an exception into a failed outcome. `stationPrompt` is the task every provider gets: the role",
+    "  and station, the task, how to find what it needs (`ORACLE_NOTE`, spec 025: the MCP server first, the documents it",
+    "  already holds never read again, a file opened only to change it, never `build/` nor NuclearLang's installed files),",
+    "  the documents before (each with its path in the spec's folder), the templates of the documents to write."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.39d699",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
@@ -3414,32 +3442,6 @@
     "  that says so. `role.text()` is the whole role as one text.",
     "- `Work`: the project, the spec's folder (`specs/<component>/[<layer>/]<id>/`), the task, the documents of the stations before, the documents to write, the",
     "  model, the step's budget (USD), the MCP server's command, the timeout, and `inputs` (the platform, a route, the"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.63e84d",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
-   "summary": "retries, an httpx transport in tests, a key, the project's prices).",
-   "body": [
-    "retries, an httpx transport in tests, a key, the project's prices).",
-    "- `Outcome`: ok, the last text, the documents (written into the spec's folder by an agent, else found in the answer",
-    "  after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed",
-    "  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error,",
-    "  and the `usage` (`{inTokens, outTokens, costUsd, ms, provider, model}`, stamped by `runAdapter`; a count the provider",
-    "  does not report is null; each provider's source: [reports.md](reports.md)).",
-    "- Events, one shape for every provider: `text`, `tool` (`id`, `tool`, `input`), `tool-result` (`id`, `ok`,",
-    "  `text`), `cost` (`usd`), `tokens`, `retry`, `trace`.",
-    "- `runAdapter` turns an exception into a failed outcome. `stationPrompt` is the task every provider gets: the role",
-    "  and station, the documents before, the templates of the documents to write."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3604,6 +3606,25 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.4330e6",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "Who does a role",
+   "body": [
+    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`); `OPENCODE_DISABLE_CLAUDE_CODE=1`: never the user's `~/.claude/CLAUDE.md` nor skills | `.opencode/agent/<role>.md` (shell denied; and OpenCode's skills, web, images, subagents and questions, and reading or changing `build/`, `node_modules/`, `dist/`: `OPENCODE_PERMISSION`, spec 025) | the sum of `step_finish` costs |",
+    "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
+    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.666a1e",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
@@ -3698,25 +3719,6 @@
     "  an agent when its command is on the tools' PATH (Claude Code's models are its aliases `haiku`, `sonnet`, `opus`;",
     "  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's, Gemini CLI's, Cursor's and Grok Build's their",
     "  own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.e6a4c2",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "Who does a role",
-   "body": [
-    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`); `OPENCODE_DISABLE_CLAUDE_CODE=1`: never the user's `~/.claude/CLAUDE.md` nor skills | `.opencode/agent/<role>.md` (shell denied; and OpenCode's skills, web, images, subagents and questions: `OPENCODE_PERMISSION`, spec 025) | the sum of `step_finish` costs |",
-    "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
-    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
