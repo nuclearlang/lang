@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-23
+updated: 2026-11-24
 related: [../02-architecture/nestjs.md, ../02-architecture/react.md, ../05-standards/testing.md]
 ---
 # Roadmap of the `typescript` dialect
@@ -12,7 +12,6 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 
 ## Untested
 
-- **`nestjs` database drivers.** MySQL, MariaDB and Postgres never ran; only SQLite did.
 - **`nestjs` with OpenAI.** Only Ollama ran.
 - **The `nestjs` `ilike`.** It is Sequelize's `Op.iLike`, which is PostgreSQL only: with MySQL, MariaDB or SQLite
   it is not case-insensitive everywhere. Only SQLite ran, with `like`.
@@ -39,3 +38,7 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 - **Vector stores (Chroma) for LangChain.js**, like the `Chroma` connection of the `fastapi` dialect.
   TODO(human): `frameworks/nestjs/dialect.toml` already has the plugin `chroma` (`chromadb`) and imports `Chroma`
   and `vectorStore` from `synapsis-nest/ai`. What is still missing, or can this item be deleted?
+- **Every `nuclear migrate` of a nestjs project compiles the whole project again** (`npx tsc -p tsconfig.json` in
+  each `migrate*` line of `[toolchain]`): the database check's 87 migrations take 9–10 minutes per database with
+  nestjs, 5–7 with fastapi (2026-11-24). Wanted: `tsc --incremental` (a `.tsbuildinfo` in `build/`), with every
+  test set run first (root rule 16).
