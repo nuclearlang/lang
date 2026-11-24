@@ -1983,30 +1983,6 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.5f35f2",
-   "type": "rule",
-   "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
-   "summary": "at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).",
-   "body": [
-    "- **Text**: `print`, `\"${x}\"` and `toString()` write a `bigint`'s digits and a `bigdouble`'s shortest exact text with",
-    "  at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).",
-    "- **JSON** has no exact number: an exact number goes as the text of `toString()` (`{ \"id\": id.toString() }`) and comes",
-    "  back with `toBigInt()` / `toBigDouble()`. `Json.encode` of a value known to hold one is `N0120`.",
-    "- Lists and maps of exact numbers compare their values (`==`, `!=`, `x in xs`), as every list does; a `Set` of",
-    "  `bigdouble` is not in the library yet (`N0120`).",
-    "- `x is bigint` and `x is bigdouble` do not exist (`N0120`): an exact number is kept in values of its own type.",
-    "",
-    "Maps:",
-    "- The type is written `<Key, Value>` in any position: variable (`users: <string, User>`), parameter",
-    "  (`f(scores: <string, int>)`), return (`get(name: string) <string, string>`), list (`<string, int>[]`) and",
-    "  nullable (`<string, int>?`).",
-    "- The value always goes between `{ }`: `{\"name\": \"julian\", \"last\": \"molina\"}`. Empty map: `{}`."
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/nuclear-base.md"
-   ]
-  },
-  {
    "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.84392e",
    "type": "rule",
    "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
@@ -2028,14 +2004,40 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.b1be08",
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.abf5fe",
    "type": "rule",
    "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
-   "summary": "them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the argument of `compareTo`.",
+   "summary": "The bitwise operators are not theirs (`N0120`).",
+   "body": [
+    "The bitwise operators are not theirs (`N0120`).",
+    "- **Text**: `print`, `\"${x}\"` and `toString()` write a `bigint`'s digits and a `bigdouble`'s shortest exact text with",
+    "  at least one decimal and no exponent (`0.3`, `2.0`, `-1.25`).",
+    "- **JSON** has no exact number: an exact number goes as the text of `toString()` (`{ \"id\": id.toString() }`) and comes",
+    "  back with `toBigInt()` / `toBigDouble()`. `Json.encode` of a value known to hold one is `N0120`.",
+    "- Lists and maps of exact numbers compare their values (`==`, `!=`, `x in xs`), as every list does; a `Set` of",
+    "  `bigdouble` is not in the library yet (`N0120`).",
+    "- `x is bigint` and `x is bigdouble` do not exist (`N0120`): an exact number is kept in values of its own type.",
+    "",
+    "Maps:",
+    "- The type is written `<Key, Value>` in any position: variable (`users: <string, User>`), parameter",
+    "  (`f(scores: <string, int>)`), return (`get(name: string) <string, string>`), list (`<string, int>[]`) and",
+    "  nullable (`<string, int>?`).",
+    "- The value always goes between `{ }`: `{\"name\": \"julian\", \"last\": \"molina\"}`. Empty map: `{}`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#5-types-5-1-exact-numbers-bigint-and-bigdouble.e7fc28",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 5.1 Exact numbers: `bigint` and `bigdouble`",
+   "summary": "them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`), the argument of `compareTo`, a field named where its class is built (`Price(amount = 0.5)`) or the argument of a decorator of an exact field (`@min(0.01) amount: bigdouble`).",
    "body": [
     "- **A literal takes the exact type of its place**: a name, a parameter or a return declared exact, a list declared of",
-    "  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`) or the",
-    "  argument of `compareTo`. It is the exact value of its text. A decimal",
+    "  them, a map declared of them, the other side of an operator (`big + 1`, `price > 0.5`, `0.5 in prices`), the",
+    "  argument of `compareTo`, a field named where its class is built (`Price(amount = 0.5)`) or the argument of a",
+    "  decorator of an exact field (`@min(0.01) amount: bigdouble`). It is the exact value of its text. A decimal",
     "  literal where a `bigint` goes is error `N0119`, and so is a whole literal beyond 2^53 − 1 in any other place.",
     "- **Nothing converts silently**: an exact number never meets an `int`, a `double` or the other exact type in an",
     "  operation, a declaration, an argument or a return (`N0119`). The conversions are written: `n.toBigInt()`,",
@@ -2044,8 +2046,7 @@
     "- **Operators**: `+`, `-`, `*`, `%`, `**`, `~/`, the comparisons and `==`. `%` is the remainder of `~/` (it has the",
     "  dividend's sign); `~/` drops the decimals toward zero and gives a `bigint`. `bigint / bigint` does not exist (write",
     "  `~/`, or convert both to `bigdouble`); `bigdouble / bigdouble` is rounded half away from zero to the larger of 20",
-    "  and the decimals of each side. The exponent of `**` is an `int` ≥ 0 (a negative one is an error when it runs).",
-    "  The bitwise operators are not theirs (`N0120`)."
+    "  and the decimals of each side. The exponent of `**` is an `int` ≥ 0 (a negative one is an error when it runs)."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/nuclear-base.md"

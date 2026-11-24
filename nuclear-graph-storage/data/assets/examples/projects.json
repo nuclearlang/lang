@@ -9545,7 +9545,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.98.1\")",
+    "app(name = \"nuclear_chat\", description = \"Nuclear Chat: the factory's workplace, its channels, members, threads, reactions and GIFs, as a local service.\", version = \"0.99.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend): the events a component publishes, and the app's",
     "// WebSocket, which serves the same controllers and pushes the events to the clients subscribed to them.",
@@ -10715,7 +10715,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
     "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.98.1\")",
+    "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.99.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend).",
     "plugins(ai = true, ollama = true)",
@@ -12639,6 +12639,59 @@
    }
   },
   {
+   "id": "example:store_api/components/store/api/balances_controller",
+   "type": "file",
+   "title": "`controller` BalancesController — the example project store_api (backend)",
+   "summary": "The routes of balances.",
+   "body": [
+    "`components/store/api/balances_controller.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The routes of balances.",
+    "@controller(\"balances\")",
+    "controller BalancesController(app: StoreAppComponent)",
+    "  @get",
+    "  list(page: int = 1) Result<Error, Balance[]>",
+    "    ~app.listBalances(page)",
+    "",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Balance>",
+    "    ~app.getBalance(id)",
+    "",
+    "  @post",
+    "  create(input: NewBalance) Result<Error, Balance>",
+    "    ~app.createBalance(input)",
+    "",
+    "  @put(\"{id}\")",
+    "  update(id: int, input: NewBalance) Result<Error, Balance>",
+    "    ~app.updateBalance(id, input)",
+    "",
+    "  @delete(\"{id}\")",
+    "  remove(id: int) Result<Error, boolean>",
+    "    ~app.deleteBalance(id)",
+    "",
+    "  @get(\"at-least/{amount}\")",
+    "  balancesAtLeast(amount: bigdouble) Result<Error, Balance[]>",
+    "    ~app.balancesAtLeast(amount)",
+    "",
+    "  @put(\"{id}/deposit/{amount}\")",
+    "  deposit(id: int, amount: bigdouble) Result<Error, Balance>",
+    "    ~app.deposit(id, amount)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/api/balances_controller.nuc"
+   ],
+   "meta": {
+    "kind": "controller",
+    "name": "BalancesController",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/api/coupons_controller",
    "type": "file",
    "title": "`controller` CouponsController — the example project store_api (backend)",
@@ -12839,6 +12892,34 @@
    }
   },
   {
+   "id": "example:store_api/components/store/domain/models/new_balance",
+   "type": "file",
+   "title": "`model` NewBalance — the example project store_api (backend)",
+   "summary": "What it takes to add or change a balance.",
+   "body": [
+    "`components/store/domain/models/new_balance.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What it takes to add or change a balance.",
+    "NewBalance",
+    "  serial: bigint",
+    "  amount: bigdouble",
+    "  rate: bigdouble",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/models/new_balance.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "NewBalance",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/domain/models/new_coupons",
    "type": "file",
    "title": "`model` NewCoupons — the example project store_api (backend)",
@@ -13012,6 +13093,33 @@
    }
   },
   {
+   "id": "example:store_api/components/store/domain/usecases/balances_at_least",
+   "type": "file",
+   "title": "`usecase` BalancesAtLeast — the example project store_api (backend)",
+   "summary": "What BalanceRepository.atLeast answers, for the rest of store.",
+   "body": [
+    "`components/store/domain/usecases/balances_at_least.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// What BalanceRepository.atLeast answers, for the rest of store.",
+    "usecase BalancesAtLeast(repository: BalanceRepository)",
+    "  exec(amount: bigdouble) Result<Error, Balance[]>",
+    "    Ok(~repository.atLeast(amount))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/balances_at_least.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "BalancesAtLeast",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/domain/usecases/checkout",
    "type": "file",
    "title": "`usecase` Checkout — the example project store_api (backend)",
@@ -13071,6 +13179,33 @@
    "meta": {
     "kind": "usecase",
     "name": "ClearCoupon",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/create_balance",
+   "type": "file",
+   "title": "`usecase` CreateBalance — the example project store_api (backend)",
+   "summary": "Adds a balance.",
+   "body": [
+    "`components/store/domain/usecases/create_balance.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Adds a balance.",
+    "usecase CreateBalance(repository: BalanceRepository)",
+    "  exec(input: NewBalance) Result<Error, Balance>",
+    "    Ok(~repository.save(Balance(serial = input.serial, amount = input.amount, rate = input.rate)))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/create_balance.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CreateBalance",
     "project": "store_api"
    }
   },
@@ -13187,6 +13322,35 @@
    }
   },
   {
+   "id": "example:store_api/components/store/domain/usecases/delete_balance",
+   "type": "file",
+   "title": "`usecase` DeleteBalance — the example project store_api (backend)",
+   "summary": "Removes a balance; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/delete_balance.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Removes a balance; NotFound (404) when there is none.",
+    "usecase DeleteBalance(repository: BalanceRepository)",
+    "  exec(id: int) Result<Error, boolean>",
+    "    found = ~repository.find(id)",
+    "    ~repository.remove(found.id)",
+    "    Ok(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/delete_balance.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "DeleteBalance",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/domain/usecases/delete_customer",
    "type": "file",
    "title": "`usecase` DeleteCustomer — the example project store_api (backend)",
@@ -13245,6 +13409,35 @@
    }
   },
   {
+   "id": "example:store_api/components/store/domain/usecases/deposit",
+   "type": "file",
+   "title": "`usecase` Deposit — the example project store_api (backend)",
+   "summary": "Adds to a balance: exact, 0.1 and 0.2 make 0.3; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/deposit.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Adds to a balance: exact, 0.1 and 0.2 make 0.3; NotFound (404) when there is none.",
+    "usecase Deposit(repository: BalanceRepository)",
+    "  exec(id: int, amount: bigdouble) Result<Error, Balance>",
+    "    found: Balance = ~repository.find(id)",
+    "    found.amount = found.amount + amount",
+    "    Ok(~repository.save(found))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/deposit.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "Deposit",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/domain/usecases/draft_customer",
    "type": "file",
    "title": "`usecase` DraftCustomer — the example project store_api (backend)",
@@ -13295,6 +13488,33 @@
    "meta": {
     "kind": "usecase",
     "name": "FullOrder",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/get_balance",
+   "type": "file",
+   "title": "`usecase` GetBalance — the example project store_api (backend)",
+   "summary": "One balance by its id; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/get_balance.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One balance by its id; NotFound (404) when there is none.",
+    "usecase GetBalance(repository: BalanceRepository)",
+    "  exec(id: int) Result<Error, Balance>",
+    "    ~repository.find(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/get_balance.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetBalance",
     "project": "store_api"
    }
   },
@@ -13382,6 +13602,34 @@
    "meta": {
     "kind": "usecase",
     "name": "GiveCoupons",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/components/store/domain/usecases/list_balances",
+   "type": "file",
+   "title": "`usecase` ListBalances — the example project store_api (backend)",
+   "summary": "One page of balances.",
+   "body": [
+    "`components/store/domain/usecases/list_balances.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// One page of balances.",
+    "usecase ListBalances(repository: BalanceRepository)",
+    "  exec(page: int) Result<Error, Balance[]>",
+    "    found = ~repository.page(page, 20)",
+    "    Ok(found.items)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/list_balances.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListBalances",
     "project": "store_api"
    }
   },
@@ -13650,6 +13898,37 @@
    }
   },
   {
+   "id": "example:store_api/components/store/domain/usecases/update_balance",
+   "type": "file",
+   "title": "`usecase` UpdateBalance — the example project store_api (backend)",
+   "summary": "Changes a balance; NotFound (404) when there is none.",
+   "body": [
+    "`components/store/domain/usecases/update_balance.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// Changes a balance; NotFound (404) when there is none.",
+    "usecase UpdateBalance(repository: BalanceRepository)",
+    "  exec(id: int, input: NewBalance) Result<Error, Balance>",
+    "    found = ~repository.find(id)",
+    "    found.serial = input.serial",
+    "    found.amount = input.amount",
+    "    found.rate = input.rate",
+    "    Ok(~repository.save(found))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/components/store/domain/usecases/update_balance.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "UpdateBalance",
+    "project": "store_api"
+   }
+  },
+  {
    "id": "example:store_api/components/store/domain/usecases/update_customer",
    "type": "file",
    "title": "`usecase` UpdateCustomer — the example project store_api (backend)",
@@ -13780,6 +14059,13 @@
     "  draftCustomer() = DraftCustomer.exec",
     "  giveCoupons() = GiveCoupons.exec",
     "  clearCoupon() = ClearCoupon.exec",
+    "  listBalances() = ListBalances.exec",
+    "  getBalance() = GetBalance.exec",
+    "  createBalance() = CreateBalance.exec",
+    "  updateBalance() = UpdateBalance.exec",
+    "  deleteBalance() = DeleteBalance.exec",
+    "  balancesAtLeast() = BalancesAtLeast.exec",
+    "  deposit() = Deposit.exec",
     "```"
    ],
    "platforms": [
@@ -13879,6 +14165,44 @@
    "meta": {
     "kind": "tests",
     "name": "App",
+    "project": "store_api"
+   }
+  },
+  {
+   "id": "example:store_api/test/balances_test",
+   "type": "file",
+   "title": "`tests` BalancesTest — the example project store_api (backend)",
+   "summary": "The tests of balances: the database is in memory and empty in each test.",
+   "body": [
+    "`test/balances_test.nuc` of `store_api`:",
+    "",
+    "```nuclear",
+    "// The tests of balances: the database is in memory and empty in each test.",
+    "tests BalancesTest",
+    "  @test(\"adds a balance and finds it\")",
+    "  addsAndFinds() void",
+    "    app = inject<StoreAppComponent>()",
+    "    made = ~app.createBalance(NewBalance(serial = 1, amount = 1.5, rate = 1.5))",
+    "    expect(made.isOk)",
+    "    found = ~app.getBalance(made.value.id)",
+    "    expect(found.isOk)",
+    "",
+    "  @test(\"a missing balance is not found\")",
+    "  missing() void",
+    "    app = inject<StoreAppComponent>()",
+    "    found = ~app.getBalance(999)",
+    "    expect(found.error.status == 404)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/examples-backend/store_api/test/balances_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "BalancesTest",
     "project": "store_api"
    }
   },
@@ -17443,7 +17767,7 @@
     "appConfig ProjectConfig",
     "  connections: Connection[] = [",
     "    Http(connectionName = \"todos\", baseUrl = \"https://jsonplaceholder.typicode.com\"),",
-    "    Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"), timeout = 5000),",
+    "    Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"), timeout = 5000),",
     "  ]",
     "```"
    ],
@@ -21148,7 +21472,7 @@
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
     "synapsis(platform = \"web\", dialect = \"react\")",
-    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.98.1\")",
+    "app(name = \"nuclear_chat_ui\", title = \"Nuclear Chat\", description = \"Nuclear Chat's page: Slack's shape over the chat service, mounted in a host's page.\", version = \"0.99.0\")",
     "",
     "// The chat service (../nuclear_chat): its models and a repository per controller are generated into contracts/.",
     "contracts(nuclear_chat = \"../nuclear_chat\")",

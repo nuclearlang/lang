@@ -177,7 +177,8 @@
     "Each tool has its row: `mcp:generate_resource`, `mcp:graph_search`... and the whole server is `mcp:server`.",
     "",
     "The local developer is on standby (ADR-platform-0013, `limit:remote-agents-only`): the server registers no `developer_*` tool on any machine, and tells the model to write what the generators do not.",
-    "- `project_monitor` returns what the app is doing: its state, the console of its last run (requests, errors) and, when measured, the hot spots (can:watch-the-app)."
+    "- `project_monitor` returns what the app is doing: its state, the console of its last run (requests, errors) and, when measured, the hot spots (can:watch-the-app).",
+    "- `projects_list`: every Nuclear project of this machine, whichever workspace, with its platform and its development address and port (`nuclear projects --json`; can:project-registry)."
    ],
    "keys": [
     "mcp",

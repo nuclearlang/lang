@@ -187,7 +187,7 @@
     "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
     "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
     "from stdin); `nuclear run|build|test|check --env <name>`. They are constants of the build: a secret read by the app is N0311; the backend's url is",
-    "`Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`."
+    "`Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))` (in development, an app of a workspace whose `API_URL` is not chosen calls the workspace's backend at the port it serves on: the dialect's, or its `PORT`)."
    ],
    "platforms": [
     "web"
@@ -370,7 +370,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-2-configuration.3c1c3f",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-2-configuration.3bcd55",
    "type": "spec",
    "title": "The `web` platform of Synapsis — 3.2 Configuration",
    "summary": "`appConfig` (one per project) and `config` (per component) list `connections` and `globals`, as in the mobile platform.",
@@ -392,10 +392,7 @@
     "  connections: Connection[] = [",
     "    WebSocket(url = \"ws://localhost:3000/ws\", timeout = 5000),",
     "  ]",
-    "```",
-    "",
-    "Environments (spec 021, ADR-platform-0012): the backend of each environment is a variable,",
-    "`Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`."
+    "```"
    ],
    "platforms": [
     "web"
@@ -405,11 +402,17 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-2-configuration.da7ba9",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-2-configuration.8839ed",
    "type": "spec",
    "title": "The `web` platform of Synapsis — 3.2 Configuration",
-   "summary": "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required.",
+   "summary": "Environments (spec 021, ADR-platform-0012): the backend of each environment is a variable, `Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))`.",
    "body": [
+    "Environments (spec 021, ADR-platform-0012): the backend of each environment is a variable,",
+    "`Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))`. In `development`, an app of a workspace whose",
+    "`API_URL` is not chosen (not given, or its `.env` only repeats the code's default) calls the workspace's backend at",
+    "the address it serves on (the backend's reference, §2.8), and `nuclear run` serves the app on its own port (the",
+    "dialect's, or the `PORT` the project sets), an origin a backend in development allows.",
+    "",
     "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required. The",
     "compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it",
     "is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by",

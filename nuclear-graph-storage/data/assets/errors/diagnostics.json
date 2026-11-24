@@ -3448,17 +3448,17 @@
    "id": "error:N0308",
    "type": "diagnostic",
    "title": "N0308 — a field decorator's rule is not met",
-   "summary": "A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`",
+   "summary": "A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`; the field's type is one the…",
    "body": [
     "`N0308` · projects and architecture · error",
     "",
-    "**What it is.** A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`",
+    "**What it is.** A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`; the field's type is one the rule names (a `@primary` is an `int` or a `string`); an argument is only for the types its rule names (`precision`, `scale` of `@column`: a `bigdouble`, ADR-backend-0003)",
     "",
     "**Why.** A decorator of a field has rules of its platform ([decorators.fields] of platform.toml): the field is optional, its type is a list or not, its type is a declaration with a decorator (an @entity), a sibling field exists (`projectId` for `@manyToOne project`), an argument names a field of the field's type (`inverse`). The message says which rule and the fix.",
     "",
-    "**Example.** `@manyToOne project: Project` (not optional, no `projectId`)",
+    "**Example.** `@manyToOne project: Project` (not optional, no `projectId`); `@column(scale = 2) name: string`",
     "",
-    "**Fix.** `@manyToOne project?: Project` + `projectId: int`",
+    "**Fix.** `@manyToOne project?: Project` + `projectId: int`; `@column(scale = 2) price: bigdouble`",
     "",
     "**Right.** A relation field is optional, its type is an entity, and a `@manyToOne` keeps its column in a field of its own:",
     "",
@@ -3500,9 +3500,9 @@
    "data": {
     "stage": "projects and architecture",
     "title": "a field decorator's rule is not met",
-    "what": "A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`",
-    "fix": "`@manyToOne project?: Project` + `projectId: int`",
-    "example": "`@manyToOne project: Project` (not optional, no `projectId`)"
+    "what": "A field decorator's rule is not met (`[decorators.fields]` of the platform, ADR-backend-0001): a relation field is optional, its type is an entity (a list for `@oneToMany`/`@manyToMany`), `@manyToOne` needs its column `<name>Id`, `inverse` names a field of the related entity, one side of a `@manyToMany` has `@joinTable` and one side of a `@oneToOne` has `@joinColumn`; the field's type is one the rule names (a `@primary` is an `int` or a `string`); an argument is only for the types its rule names (`precision`, `scale` of `@column`: a `bigdouble`, ADR-backend-0003)",
+    "fix": "`@manyToOne project?: Project` + `projectId: int`; `@column(scale = 2) price: bigdouble`",
+    "example": "`@manyToOne project: Project` (not optional, no `projectId`); `@column(scale = 2) name: string`"
    },
    "links": [
     {

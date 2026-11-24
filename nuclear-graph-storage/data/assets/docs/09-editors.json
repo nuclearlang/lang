@@ -2421,10 +2421,14 @@
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-panel",
    "type": "context",
    "title": "The Synapsis device (`mobile-device.ts`) — The panel",
-   "summary": "540).",
+   "summary": "540), only while code sits beside it (a device alone spans the editor: that width is not the user's).",
    "body": [
     "- Its width is saved per screen width (`nuclear.device.widths`; by default 20 % of the screen, between 340 and",
-    "  540).",
+    "  540), only while code sits beside it (a device alone spans the editor: that width is not the user's). A saved",
+    "  width over 75 % of the editor (kept by earlier versions that way) gives way to the default.",
+    "- The Synapsis device is registered with Flutter (`ensureDevice`: `FLUTTER_CUSTOM_DEVICES`, `flutter custom-devices",
+    "  add`) at activation when the folder is a project, else at the first run on a device (a Nuclear workspace's folder",
+    "  holds its apps in subfolders); a Dart extension that is not started yet reads it when it starts.",
     "- *Fit* goes up to zoom 1.5.",
     "- `lockDeviceGroup` locks its editor group, and only it: VS Code locks the active group, so the device is revealed and",
     "  the lock waits (up to a second) until the device's group is the active one; never the user's editor group.",
@@ -2489,22 +2493,37 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md#hiding-parking-ending",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md#hiding-parking-ending.70b959",
    "type": "context",
    "title": "Architecture of the devices — Hiding, parking, ending",
    "summary": "`watchdog()` runs every `WATCH_MS` (one minute): it ends the idle devices and, with `pgrep -af` by marker, reaps the keys no app owns.",
    "body": [
+    "`watchdog()` runs every `WATCH_MS` (one minute): it ends the idle devices and, with `pgrep -af` by marker, reaps",
+    "the keys no app owns."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md#hiding-parking-ending.a9d9c6",
+   "type": "context",
+   "title": "Architecture of the devices — Hiding, parking, ending",
+   "summary": "Hiding, parking, ending",
+   "body": [
     "| What happens | Effect |",
     "|---|---|",
     "| The user closes a device's tab | the disposed panel parks its app: it goes on, hidden; the Devices pane lists it (`hidden:<key>` ids) and `revealDevice` adopts it again |",
-    "| The workspace switches tab (`Workspace.switchTabs`) | `nuclear.parkDevices` → `DevicePanel.park()`: the panels close, the apps go on with their sessions (`parked`) |",
-    "| A mobile workspace or the Devices tool is entered | `nuclear.unparkDevices` → `unpark()`, after the code is reopened: each device gets a fresh locked editor group to the right of the code (`lockDeviceGroup`), never merged into the code's group |",
+    "| The workspace switches tab (`Workspace.switchTabs`) | `nuclear.parkDevices` → `DevicePanel.park()`, before the code closes: the panels close, the apps go on with their sessions (`parked`), and their emptied groups are closed too (a locked group stays standing when it empties; left alone it became the only group and the next device spanned the editor) |",
+    "| A mobile workspace or the Devices tool is entered | `nuclear.unparkDevices` → `unpark()`, after the code is reopened: each device gets a fresh locked editor group to the right of the code (`lockDeviceGroup`), never merged into the code's group. In the Devices tool the code's group is empty and the only one: VS Code would put a device \"beside\" it into it, so `showTool` makes an empty group to its right first and the device goes there, at its width |",
     "| ✕ of the Devices pane (`nuclear.closeDevice(id)`), the panel's ■, the end of its session | `endRunning`: the session, the CDP connection, the browser and `reap` |",
     "| A parked app's session ends | cleaned by `endRunning` |",
-    "| Nobody looked at a device for `IDLE_LIMIT` (30 minutes: hidden, or its panel not visible) | the watchdog ends it |",
-    "",
-    "`watchdog()` runs every `WATCH_MS` (one minute): it ends the idle devices and, with `pgrep -af` by marker, reaps",
-    "the keys no app owns."
+    "| Nobody looked at a device for `IDLE_LIMIT` (30 minutes: hidden, or its panel not visible) | the watchdog ends it |"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md"
@@ -5529,6 +5548,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5323f6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw.",
+    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.53f8c9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5625,24 +5662,6 @@
     "- The welcome's installation shows the new first step of an older installation, *Removing the local models (on standby)* / *Quitando los modelos locales (en standby)*, with its lines (the last one says what it freed), and every step of the remote set-up has its title in both languages: the Smart Graph and the MCP server, the AI clients, the graph's model (with its name and size), the graph's service, the knowledge base and Nuclear Chat's service.",
     "- Nuclear Builder has no chat of its own any more: a member or a team (in the Builder and in *Your software company*: a member's face, *💬 Talk*, a team's *💬 Channel*) opens Nuclear Atlas on that conversation, the member's direct message or the team's channel (`nuclear.atlas.open`). A built team shows only its members: the catalogue of candidates appears in the new-team wizard, and under a team only while you add members (a role's *+ Add*, closed with *Done*).",
     "- The actions of a project (▷ Run or Serve, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check, ⇄ API) no longer sit as a row of buttons above the file tree: they are in the editor title bar and, for Cursor (which hides those), in an *Actions* section at the bottom of the workspace's files pane, collapsed by default like VS Code's npm scripts."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.8931b1",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Fix: a file clicked in the workspace's tree opened beside the device instead of in the main editor group: the device locked the user's editor group when the focus was still there. The device's lock now waits until its own group is active, and the tree opens files in the main (leftmost) group, lifting a lock left on it.",
-    "- **Nuclear Monitor shows what your app is doing, live, with no command to type**: the strip's *Monitor* opens on the workspace's selected app (it opened on the workspace's folder and showed the raw error \"no .nuclear/monitor/report.json in … or above\"), switches among its apps, and runs the app when it is not running, visibly in the terminal `<app> · monitor` (a phone app: the device pick), once by itself and then by *Run and watch*. Its **console** holds the last run: every request (method, path, status, time), every error with its cause and its stack (your code's frames stand out; *Open in the code* goes to the `.nuc` line), the app's own lines, the build, reloads and the stop, filtered by *All*, *Requests* and *Errors*. *Measure the app* keeps the app measured through saves and reloads (the accordion of each function's time). Designed states (starting, running without traffic, could not start with *Try again* and *Details*, no project) in English and Spanish; paths and commands only in *Details*. Reports of earlier versions still draw."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5997,6 +6016,21 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d28cf4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -6034,13 +6068,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ef1fa3",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.e48d03",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
-    "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+    "- ▷ Serve of a backend or web app becomes ■ Stop (in *Actions* and in the editor title) while its `nuclear run` runs, and ■ Stop ends it; ▷ Serve or `Ctrl+Alt+R` on a project that already serves shows its terminal instead of starting a second server.",
+    "- Fix: switching between the Devices tool and the workspace deformed the editor: the device's locked group stayed standing when parked, the next device spanned the whole editor, that width was remembered as the user's and the device came back at half. Parked devices now close their groups before the code closes, the Devices tool keeps the device at its width, and only a width chosen beside code is remembered.",
+    "- Fix: on a machine whose folder is a Nuclear workspace (its apps in subfolders) the Synapsis device was never registered with Flutter, and a run on it was refused; it is registered at the first run on a device.",
+    "- Fix: a file clicked in the workspace's tree opened beside the device instead of in the main editor group: the device locked the user's editor group when the focus was still there. The device's lock now waits until its own group is active, and the tree opens files in the main (leftmost) group, lifting a lock left on it."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6052,13 +6088,13 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f207c6",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ef1fa3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- Fix: the workspace's *Actions* list drew each key over its action's name (`Ctrl+Alt+R` over `▷ Serve`): the name comes first and its key at the right, dimmed, as VS Code's menus show it.",
-    "- **Every node of a Nuclear Builder run can be retried, smallest first, and a failure never throws the agents' work away**: an agent's call or a command that fails (a timeout, a crash, a broken pipe, a flaky test) is tried again in its step, then the station's part is worked again told what failed, then the station is diagnosed and repaired, and only then the run waits for you (*Retry*, *End as failed*, *Later*) instead of ending failed; every attempt goes on from the files the one before wrote (nothing taken back on a failure, a stop or a crash). A failure no retry can fix (the budget, a missing key, a tool not installed) is asked at once. The bounds are the line's `retries` (`process` 2, `node` 1, `station` 1). By hand: *↻ Retry \"<step>\"* on the run, *↻* on every step and failed attempt in the node's tree, a station, the whole run (`nuclear-builder retry <id> [--step|--from]`, `run_retry`); each retry is shown as it happens, in English and Spanish, and run files of earlier versions are retried in place too."
+    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
+    "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -7748,35 +7784,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.1110bf",
-   "type": "context",
-   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The actions of a project",
-   "summary": "`nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
-   "body": [
-    "- Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →",
-    "  `nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
-    "- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,",
-    "  `test`, `check`); `nuclear install` goes first for a test when the app has no packages (`nuclear run` installs",
-    "  them itself, as a step of its log).",
-    "- ▷ Serve is followed (`followRun`): a progress notification reads the lines `nuclear run` appends to the project's",
-    "  `.nuclear/logs/run.log` (`RunFollower` of `launch-log.ts`): building, installing, starting the server, ready when its",
-    "  address answers; `failed:`, `exited:` or a step silent past its limit (`RUN_STALL_MS`) shows why with *Show the log*",
-    "  and *Try again*.",
-    "- A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global",
-    "  state, adds the folder and reloads; `activateWorkspace` resumes it.",
-    "- `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the",
-    "  Devices pane runs a mobile project only."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/workspace.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.127ceb",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The actions of a project",
@@ -7793,6 +7800,58 @@
     "| mobile | ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, ⚒ Build, ✓ Test, ☑ Check |",
     "| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ API |",
     "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.50f820",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The actions of a project",
+   "summary": "`nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
+   "body": [
+    "- Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →",
+    "  `nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
+    "- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,",
+    "  `test`, `check`); `nuclear install` goes first for a test when the app has no packages (`nuclear run` installs",
+    "  them itself, as a step of its log).",
+    "- ▷ Serve is followed (`followRun`): a progress notification reads the lines `nuclear run` appends to the project's",
+    "  `.nuclear/logs/run.log` (`RunFollower` of `launch-log.ts`): building, installing, starting the server, ready when its",
+    "  address answers; `failed:`, `exited:` or a step silent past its limit (`RUN_STALL_MS`) shows why with *Show the log*",
+    "  and *Try again*.",
+    "- ▷ Serve of a backend or web app becomes ■ Stop while its `nuclear run` runs (`Workspace.checkServing`: the shell",
+    "  of the terminal `<project> · run` has a `nuclear` child, `pgrep -P`; on Windows an open terminal counts), followed on",
+    "  the terminals' open and close and every 2 s while such a terminal exists. The context key `nuclear.serving` swaps",
+    "  the editor title's `nuclear.action.serve` for `nuclear.action.stop`; the column's actions get `■ Stop` in place of",
+    "  ▷ Serve. ■ Stop sends Ctrl+C to the terminal and closes it if the server still runs 5 s later. ▷ Serve (its"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.a56eb5",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`) — The actions of a project",
+   "summary": "button or `Ctrl+Alt+R`) of a project that already serves never starts a second server: it shows the terminal and offers ■ Stop.",
+   "body": [
+    "button or `Ctrl+Alt+R`) of a project that already serves never starts a second server: it shows the terminal and",
+    "  offers ■ Stop.",
+    "- A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global",
+    "  state, adds the folder and reloads; `activateWorkspace` resumes it.",
+    "- `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the",
+    "  Devices pane runs a mobile project only."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -8951,7 +9010,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.c1aa74",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.4ee1f8",
    "type": "guide",
    "title": "The Nuclear workspace — The actions of a project",
    "summary": "use: a Synapsis device (shown or hidden), a new one, *Other Flutter device…* or the Devices workspace.",
@@ -8962,7 +9021,29 @@
     "  inside it. So ▷ Run, ◉ Debug and ▭ Device add the folder first: the window reloads once, then the action goes on.",
     "- Backend and web ▷ Serve, ⚒ Build, ✓ Test and ☑ Check run in a terminal named `<project> · <action>` (`nuclear",
     "  run`, `build`, `test`, `check`). When the app has no packages yet, `nuclear install` runs first.",
-    "- Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md).",
+    "- While a backend or web app serves, its ▷ Serve becomes ■ Stop (in *Actions* and in the editor title), which ends",
+    "  the server. ▷ Serve again, or `Ctrl+Alt+R`, never starts a second server: it shows the running terminal. The server",
+    "  answers on the app's own port (the dialect's, or `nuclear env set PORT <port>`); a port another program holds is",
+    "  said in the terminal, never replaced by another.",
+    "- Going to the Devices tool and back keeps the editor's sizes: a device keeps the width you gave it beside the code",
+    "  (in the Devices tool, an empty group stays at its left).",
+    "- Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md)."
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.c4e6a9",
+   "type": "guide",
+   "title": "The Nuclear workspace — The actions of a project",
+   "summary": "How a run and a debug session work: run, debug and tasks.",
+   "body": [
     "- Backend ⇄ opens the project's routes in HTTP Connections.",
     "",
     "How a run and a debug session work: [run, debug and tasks](run-and-debug.md)."

@@ -2115,11 +2115,69 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.39a5d5",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.218b75",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear remove <package>... # out of config.nuc and the app (the definitions stay in the cache) nuclear flutter add <package>[:version]... [--dev] # the same, as Flutter writes it (--dev: devDependencies) nuclear flutter remove <package>... nuclear pub get|upgrade|outdated # pub add|remove =…",
+   "summary": "nuclear run [-- -d <device>] # as a web page (-d chrome): on its own port (the dialect's, or its PORT) nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear…",
    "body": [
+    "nuclear run [-- -d <device>]               # as a web page (-d chrome): on its own port (the dialect's, or its PORT)",
+    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
+    "nuclear device list                        # the open devices and the devices it can be",
+    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
+    "nuclear test [--integration] [-- <flutter test arguments>]",
+    "nuclear analyze | check [--json] | clean",
+    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
+    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
+    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
+    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
+    "nuclear projects [--json]                  # every Nuclear project of this machine and its development address",
+    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
+    "nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.2dd538",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` (mobile.md §2, Generators; ADR-codegen-0001).",
+   "body": [
+    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
+    "",
+    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3e09ee",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear monitor --on | --off # keep the app measured on every build, watch and run, or stop nuclear add <package>[@version]... # into config.nuc and the app, and generates its definitions nuclear remove <package>... # out of config.nuc and the app (the definitions stay in the cache) nuclear…",
+   "body": [
+    "nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop",
+    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
     "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
     "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
     "nuclear flutter remove <package>...",
@@ -2130,11 +2188,7 @@
     "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
     "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
     "nuclear flutter <any other flutter command>   # runs flutter inside the app",
-    "```",
-    "",
-    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
-    "",
-    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
+    "```"
    ],
    "platforms": [
     "mobile"
@@ -2185,24 +2239,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.6a988c",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.731d65",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
+   "summary": "2. `flutter pub get`, `build_runner` and the splash from scratch, `build` and `analyze`; 3. `flutter clean`, `build` (with `pub get`, `build_runner` and splash again) and `analyze`.",
    "body": [
-    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
-    "nuclear device list                        # the open devices and the devices it can be",
-    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
-    "nuclear test [--integration] [-- <flutter test arguments>]",
-    "nuclear analyze | check [--json] | clean",
-    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
-    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
-    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
-    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
-    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
-    "nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory",
-    "nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop",
-    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions"
+    "2. `flutter pub get`, `build_runner` and the splash from scratch, `build` and `analyze`;",
+    "  3. `flutter clean`, `build` (with `pub get`, `build_runner` and splash again) and `analyze`."
    ],
    "platforms": [
     "mobile"
@@ -2218,13 +2261,25 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.731d65",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.74d6cb",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "2. `flutter pub get`, `build_runner` and the splash from scratch, `build` and `analyze`; 3. `flutter clean`, `build` (with `pub get`, `build_runner` and splash again) and `analyze`.",
+   "summary": "nuclear # landing page (the first time, with an animation) nuclear credits | author # the full animation, the author and the repository nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example] nuclear code # opens the project in VS Code nuclear watch #…",
    "body": [
-    "2. `flutter pub get`, `build_runner` and the splash from scratch, `build` and `analyze`;",
-    "  3. `flutter clean`, `build` (with `pub get`, `build_runner` and splash again) and `analyze`."
+    "```sh",
+    "nuclear                                     # landing page (the first time, with an animation)",
+    "nuclear credits | author                   # the full animation, the author and the repository",
+    "                                             # the other commands start with a line with the logos",
+    "nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example]",
+    "                                            # (n) new project of a platform (ADR-synapsis-0002): mobile/flutter gets its",
+    "                                            #     Flutter app in build/app; backend/fastapi|nestjs and web/react",
+    "                                            #     only their .nuc, built with `nuclear build .` and the dialect's",
+    "                                            #     [toolchain] (install/run/test); `check` delegates to `nuclear check .`;",
+    "                                            #     `-d` alone gives its platform (-d nestjs is backend), `-p` alone its",
+    "                                            #     default dialect; a stray word or an option glued to the name is refused",
+    "nuclear code                               # opens the project in VS Code",
+    "nuclear watch                              # transpiles every time a .nuc changes",
+    "nuclear build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build arguments>]"
    ],
    "platforms": [
     "mobile"
@@ -2309,41 +2364,6 @@
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
    "summary": "The CLI is the `nuclear` command (the framework's commands: `tools/cli/src/framework/`).",
    "body": "The CLI is the `nuclear` command (the framework's commands: `tools/cli/src/framework/`). Names are written in any form (`user_profile`, `UserProfile`) and normalized.",
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.b03d39",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear # landing page (the first time, with an animation) nuclear credits | author # the full animation, the author and the repository nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example] nuclear code # opens the project in VS Code nuclear watch #…",
-   "body": [
-    "```sh",
-    "nuclear                                     # landing page (the first time, with an animation)",
-    "nuclear credits | author                   # the full animation, the author and the repository",
-    "                                             # the other commands start with a line with the logos",
-    "nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example]",
-    "                                            # (n) new project of a platform (ADR-synapsis-0002): mobile/flutter gets its",
-    "                                            #     Flutter app in build/app; backend/fastapi|nestjs and web/react",
-    "                                            #     only their .nuc, built with `nuclear build .` and the dialect's",
-    "                                            #     [toolchain] (install/run/test); `check` delegates to `nuclear check .`;",
-    "                                            #     `-d` alone gives its platform (-d nestjs is backend), `-p` alone its",
-    "                                            #     default dialect; a stray word or an option glued to the name is refused",
-    "nuclear code                               # opens the project in VS Code",
-    "nuclear watch                              # transpiles every time a .nuc changes",
-    "nuclear build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build arguments>]",
-    "nuclear run [-- -d <device>]"
-   ],
    "platforms": [
     "mobile"
    ],

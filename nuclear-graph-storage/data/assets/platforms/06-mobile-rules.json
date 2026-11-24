@@ -226,13 +226,32 @@
     "`.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.",
     "`nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value",
     "from stdin); `nuclear run|build|test|check --env <name>`. They are constants of the build: a secret read by the app is N0311; the backend's url is",
-    "`Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`."
+    "`Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))`."
    ],
    "platforms": [
     "mobile"
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#1-project-1-1-environments-spec-021-adr-platform-0012.69fb77",
+   "type": "spec",
+   "title": "The `mobile` platform of Synapsis — 1.1 Environments (spec 021, ADR-platform-0012)",
+   "summary": "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))`.",
+   "body": [
+    "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://127.0.0.1:8000/\"))`. In",
+    "`development`, an app of a workspace whose `API_URL` is not chosen calls the workspace's backend at the address it",
+    "serves on (the backend's reference, §2.8). Run as a web page, `nuclear run` serves the app on its own port (the",
+    "dialect's, or the `PORT` the project sets; `--web-port`, on `127.0.0.1`), an origin a backend in development",
+    "allows. The Android emulator reaches the machine at `10.0.2.2`: `nuclear env set API_URL http://10.0.2.2:8000/ --local`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
    ]
   },
   {
@@ -258,13 +277,11 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#1-project-1-1-environments-spec-021-adr-platform-0012.f91bdf",
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#1-project-1-1-environments-spec-021-adr-platform-0012.da7ba9",
    "type": "spec",
    "title": "The `mobile` platform of Synapsis — 1.1 Environments (spec 021, ADR-platform-0012)",
-   "summary": "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`.",
+   "summary": "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required.",
    "body": [
-    "The backend of each environment is a variable: `Http(baseUrl = env(\"API_URL\", \"http://localhost:8000/\"))`.",
-    "",
     "`env(\"NAME\", \"default\")` is a variable of the project; `env(\"NAME\")`, without a default, is required. The",
     "compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it",
     "is used); the name and the default are texts written as they are (N0310). Its values live beside `config.nuc`, by",

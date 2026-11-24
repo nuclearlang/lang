@@ -2848,6 +2848,39 @@
    }
   },
   {
+   "id": "mcp:projects_list",
+   "type": "mcp",
+   "title": "`projects_list` — a tool of the Nuclear MCP server",
+   "summary": "Every Nuclear project of this machine and where it runs in development, whatever its workspace (`nuclear projects --json`): {file, projects: [{name, root, platform, dialect, workspace: {name, root} | null, url, scheme, host, port}]}, only the user's projects.",
+   "body": "Every Nuclear project of this machine and where it runs in development, whatever its workspace (`nuclear projects --json`): {file, projects: [{name, root, platform, dialect, workspace: {name, root} | null, url, scheme, host, port}]}, only the user's projects. A project's port never moves by itself (its dialect's, or the PORT the project sets) and is the one `nuclear run` uses; a backend run in development lets every one of these addresses, and any port of localhost, 127.0.0.1 and [::1], call it from a browser (CORS); a web or mobile app of a workspace calls the workspace's backend at its address. Read it to know which port a backend uses, or why a browser app says it has no connection to its server.",
+   "keys": [
+    "projects_list",
+    "projects list"
+   ],
+   "asks": [
+    "what does projects_list do",
+    "que hace projects_list"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "projects_list"
+   },
+   "data": {
+    "group": "projects",
+    "runs": "",
+    "params": []
+   }
+  },
+  {
    "id": "mcp:run_answer",
    "type": "mcp",
    "title": "`run_answer` — a tool of the Nuclear MCP server",
@@ -3419,13 +3452,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 90 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 91 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
     "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `project_migrate`, `project_test`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove`, `project_migrate`, `project_test`, `projects_list`, `spec_create`, `spec_list`, `spec_show`, `spec_edit`, `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set`, `spec_move`, `spec_migrate`, `spec_delete`, `spec_accept`, `spec_discard`, `run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`, `checks`, `check_switch`, `check_add`, `check_mark`, `team_duplicate`, `team_default`, `team_export`, `team_import`, `team_logo`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_roster`, `team_temperaments`, `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `line_show`, `line_set`, `ci_export`, `connections_check`, `metrics`, `agents_list`, `models_list`."
    ],
    "keys": [
     "mcp",

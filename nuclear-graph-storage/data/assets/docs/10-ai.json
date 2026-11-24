@@ -20185,26 +20185,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.0b0d36",
-   "type": "doc",
-   "title": "NuclearLang — 3. Look up instead of guessing",
-   "summary": "`nuclear env list` (the MCP tool `nuclear_env`).",
-   "body": [
-    "`nuclear env list` (the MCP tool `nuclear_env`). A secret is set by the user (`nuclear env set NAME --secret`): never",
-    "  ask for it, never write it into a file or a `.nuc`.",
-    "- A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line)."
-   ],
-   "sources": [
-    "tools/cli/agent-files/skills/nuclear/SKILL.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.98ac4f",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.6515b0",
    "type": "doc",
    "title": "NuclearLang — 3. Look up instead of guessing",
    "summary": "`nuclear defs show <Name> --dialect flutter` (or `<Name.member>`); `nuclear defs search <text> --dialect flutter`.",
@@ -20218,9 +20199,31 @@
     "  install a package by hand inside `build/`. A package's default export is one name (`dayjs()`, `lodash.chunk(...)`).",
     "- A kind, decorator or header word of the dialect (what it generates, its rules, an example):",
     "  `nuclear help <word> --dialect <d>` (`repository`, `@screen`...); every word: `nuclear help words --dialect <d>`; where a kind's file goes: `nuclear help layout --dialect <d>`.",
+    "- Where a project runs and every project of the machine: `nuclear projects --json` (MCP `projects_list`). A port never moves by itself: the dialect's, or the project's `PORT` (`nuclear env set PORT <port>`); `nuclear run` says which process holds a busy one.",
+    "  A browser app (web, Flutter on Chrome) that says \"no connection to the server\" is refused by its backend's CORS:"
+   ],
+   "sources": [
+    "tools/cli/agent-files/skills/nuclear/SKILL.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#3-look-up-instead-of-guessing.a1d1e2",
+   "type": "doc",
+   "title": "NuclearLang — 3. Look up instead of guessing",
+   "summary": "run the backend with `nuclear run` (development allows every local address) or list the origin in `origins`.",
+   "body": [
+    "run the backend with `nuclear run` (development allows every local address) or list the origin in `origins`.",
     "- A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `synapsis`, `tutorial`...).",
     "- A setting that changes per environment (an url, a model, a token): `env(\"NAME\", \"default\")` in the code (`env(\"NAME\")`",
-    "  is required), never a constant to edit; its values with `nuclear env set NAME value --env <environment>` and"
+    "  is required), never a constant to edit; its values with `nuclear env set NAME value --env <environment>` and",
+    "  `nuclear env list` (the MCP tool `nuclear_env`). A secret is set by the user (`nuclear env set NAME --secret`): never",
+    "  ask for it, never write it into a file or a `.nuc`.",
+    "- A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line)."
    ],
    "sources": [
     "tools/cli/agent-files/skills/nuclear/SKILL.md"
@@ -20379,25 +20382,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/start.md#the-work-cycle.460d91",
-   "type": "doc",
-   "title": "Start here: NuclearLang for an agent with no context — The work cycle",
-   "summary": "`--from-spec <spec.md>`) for a model and what is done with it; `nuclear make <kind> ...` for each other piece.",
-   "body": [
-    "`--from-spec <spec.md>`) for a model and what is done with it; `nuclear make <kind> ...` for each other piece.",
-    "4. Write what is left, following the brief and the style of the generated files.",
-    "5. Validate: `nuclear check --json`, `nuclear test`, `nuclear build` (mobile: `nuclear analyze`, `nuclear run`)."
-   ],
-   "sources": [
-    "tools/cli/agent-files/start.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/agent-files/start.md#the-work-cycle.ab248b",
    "type": "doc",
    "title": "Start here: NuclearLang for an agent with no context — The work cycle",
@@ -20416,6 +20400,30 @@
     "   (`onboarding-mobile`, `onboarding-backend`, `onboarding-web`) and `nuclear help layout --dialect <dialect>` (where",
     "   each kind's file goes).",
     "3. Generate: `nuclear gen resource <component> <Name> --fields \"id:int name:string\"` (or `--from-json <url|file>`,"
+   ],
+   "sources": [
+    "tools/cli/agent-files/start.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/agent-files/start.md#the-work-cycle.e593eb",
+   "type": "doc",
+   "title": "Start here: NuclearLang for an agent with no context — The work cycle",
+   "summary": "`--from-spec <spec.md>`) for a model and what is done with it; `nuclear make <kind> ...` for each other piece.",
+   "body": [
+    "`--from-spec <spec.md>`) for a model and what is done with it; `nuclear make <kind> ...` for each other piece.",
+    "4. Write what is left, following the brief and the style of the generated files.",
+    "5. Validate: `nuclear check --json`, `nuclear test`, `nuclear build` (mobile: `nuclear analyze`, `nuclear run`).",
+    "   Each project runs on its dialect's port, or the `PORT` it sets (`nuclear env set PORT <port>`); a port never",
+    "   moves by itself, and `nuclear run` says which process holds a busy one. `nuclear projects` (MCP `projects_list`)",
+    "   shows every project of the machine and its address. A browser app (web, Flutter on Chrome) that says \"no connection to the server\" is refused by",
+    "   CORS: run its backend with `nuclear run` (development lets every local address call it) or list its origin in",
+    "   the backend's `origins` for production."
    ],
    "sources": [
     "tools/cli/agent-files/start.md"
@@ -21550,14 +21558,29 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.3c2c27",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.23b501",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
-   "summary": "s data.",
+   "summary": "The compiler and the command line",
    "body": [
-    "s data. Answers `{ok, action, output}` |",
-    "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |"
+    "| `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |",
+    "| `projects_list()` | every Nuclear project of this machine, whatever its workspace, and where it runs in development (`nuclear projects --json`): `{file, projects: [{name, root, platform, dialect, workspace, url, scheme, host, port}]}`. A project's port never moves by itself (the dialect's, or the project's `PORT`) and is the one `nuclear run` uses; only the user's projects are listed (no temporary folder, no project of Nuclear's own); a backend run in development lets these addresses and any port of `localhost`, `127.0.0.1`, `[::1]` call it from a browser (CORS). Read it to know which port a backend uses, or why a browser app says it has no connection to its server |"
    ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.54b387",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — The compiler and the command line",
+   "summary": "The compiler and the command line",
+   "body": "| `project_migrate(project, action, message, to, confirm, fake, transaction, rename)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop; `rename`: the tables and columns that were renamed, each `<table>=<new table>` or `<table>.<column>=<new column>` in the database's names, written as a rename that keeps the rows), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration); `fake` (`up`, `down`): only the history changes and nothing runs (a database that already has its tables is brought under the migrations); `transaction` (`up`, `down`): `all` (the default), `each` or `none`. `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with its data. Answers `{ok, action, output}` |",
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
    ],
@@ -21595,14 +21618,11 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.efcd68",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.bae693",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
-   "body": [
-    "| `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |",
-    "| `project_migrate(project, action, message, to, confirm, fake, transaction, rename)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop; `rename`: the tables and columns that were renamed, each `<table>=<new table>` or `<table>.<column>=<new column>` in the database's names, written as a rename that keeps the rows), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration); `fake` (`up`, `down`): only the history changes and nothing runs (a database that already has its tables is brought under the migrations); `transaction` (`up`, `down`): `all` (the default), `each` or `none`. `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with it"
-   ],
+   "body": "| `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |",
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
    ],

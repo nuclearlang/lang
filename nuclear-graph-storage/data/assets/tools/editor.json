@@ -8,7 +8,7 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 87 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 88 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
     "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
@@ -54,6 +54,7 @@
     "- %command.nuclear.debug.openPlace% (`nuclear.debug.openPlace`)",
     "- %command.nuclear.action.run% — `ctrl+alt+r` (`nuclear.action.run`)",
     "- %command.nuclear.action.serve% — `ctrl+alt+r` (`nuclear.action.serve`)",
+    "- %command.nuclear.action.stop% (`nuclear.action.stop`)",
     "- %command.nuclear.action.debug% — `ctrl+alt+g` (`nuclear.action.debug`)",
     "- %command.nuclear.action.reload% — `ctrl+alt+l` (`nuclear.action.reload`)",
     "- %command.nuclear.action.device% (`nuclear.action.device`)",
@@ -331,6 +332,11 @@
       "title": "%command.nuclear.action.serve%",
       "command": "nuclear.action.serve",
       "keys": "ctrl+alt+r"
+     },
+     {
+      "title": "%command.nuclear.action.stop%",
+      "command": "nuclear.action.stop",
+      "keys": ""
      },
      {
       "title": "%command.nuclear.action.debug%",

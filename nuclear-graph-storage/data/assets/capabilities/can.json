@@ -17,7 +17,8 @@
     "- The build serves `/.nuclear/contract.json` and `/.nuclear/openapi.json`.",
     "- The same Nuclear builds as a Python service (`fastapi`) or a TypeScript one (`nestjs`).",
     "- The edge, the same in every dialect: a body is JSON in UTF-8 (anything else, a form too, answers 415), at most 1 MB (413; `maxBodySize: int` in the `appConfig`), nested 512 levels at most; an `int` is 64-bit signed and a `double` finite; a path or query parameter is exactly its type (`true`/`false`, no `0x1`), given once; a method a route lacks answers 405 with `Allow`, HEAD like GET, OPTIONS with `Allow`; paths match as written (no redirect for a last `/`). No `/docs` nor `/redoc`; `/openapi.json` stays. The app listens on 127.0.0.1 (`HOST` and `PORT` change it); no `Server` nor `X-Powered-By` header.",
-    "- An optional field of a model left empty is in the answer as `null`, in every dialect."
+    "- An optional field of a model left empty is in the answer as `null`, in every dialect.",
+    "- An exact field (`bigint`, `bigdouble`) travels as a JSON text; a JSON number or a bad text answers 400 rule `type` (can:exact-numbers)."
    ],
    "keys": [
     "rest api",
@@ -79,7 +80,8 @@
     "",
     "Both dialects are checked on SQLite, PostgreSQL 16, MySQL 8.0 and MariaDB 11 in Docker (`platforms/backend/checks/database-check`): the same answers, byte for byte.",
     "- A page has at most 100 rows: a larger `size` is clamped to 100 and the answer's `size` says so (`maxPageSize: int` in the `appConfig`). `orderBy` and `where` take only columns. Known limits: an `int` column is 32-bit on PostgreSQL, MySQL and MariaDB (2^31 answers 500), and `%` and `_` in a text given to `like` are wildcards.",
-    "- A client's search text goes to `contains(text)` / `icontains(text)`: matched as written (`%` and `_` are characters), the same on the four databases; `like` / `ilike` are patterns the program writes. `@created` / `@updated` are the app's clock to the millisecond, one instant for a new row's two."
+    "- A client's search text goes to `contains(text)` / `icontains(text)`: matched as written (`%` and `_` are characters), the same on the four databases; `like` / `ilike` are patterns the program writes. `@created` / `@updated` are the app's clock to the millisecond, one instant for a new row's two.",
+    "- Exact fields: an entity's `bigint` is a `BIGINT` column and a `bigdouble` a `NUMERIC`/`DECIMAL` with `@column(precision = p, scale = s)`; values out of the column answer 409 (can:exact-numbers)."
    ],
    "keys": [
     "database",
@@ -1038,7 +1040,7 @@
    "id": "can:project-registry",
    "type": "can",
    "title": "Can: know every Nuclear project of the machine and the port it runs on (`nuclear projects`)",
-   "summary": "A registry of the person's Nuclear projects on the machine (`projects.json` in the user's data folder) lists every project made, built or run, whatever its workspace: its name, folder, platform, dialect, workspace and development address. A project's port never moves by itself: the dialect's, or the `PORT` the project sets (`nuclear env set PORT <port>`); the registry only records it, and `nuclear run` serves there or says which process holds it. `nuclear projects [--json]` and the MCP tool `projects_list` show it.",
+   "summary": "`nuclear projects` (and the MCP's `projects_list`) lists every Nuclear project of this machine, whichever workspace, with its platform and development address. A project's port never moves by itself: it is the dialect's default or the project's `PORT` (`nuclear env set PORT 8090`); a busy port is refused naming who holds it. In development a backend allows any localhost origin and every listed project.",
    "body": [
     "```sh",
     "nuclear projects            # name, platform, dialect, address, folder, workspace",
@@ -1528,7 +1530,7 @@
     "- Mixing with `int` or `double` is N0119 (the fix names the conversion); what they lack is N0120: `bigint / bigint`, bitwise operators, `is bigint`, `Math`, a `Set` of `bigdouble`, list members that sort or sum.",
     "- In JSON an exact number is its text (`\"0.3\"`), read back with `toBigInt()` / `toBigDouble()`.",
     "- Targets: TypeScript `bigint` and a small exact decimal written once per file; Dart `BigInt` and `package:decimal`; Python `int` and `decimal.Decimal` with no rounding.",
-    "- Backend columns, models and validation of exact fields: in progress (the platforms' part)."
+    "- Backend (both dialects, the four databases): an entity's `bigint` is a `BIGINT` column (−2^63 … 2^63−1; beyond it the write answers 409), a `bigdouble` a `NUMERIC`/`DECIMAL` with `@column(precision = p, scale = s)` (default 30, 10; more decimals or digits than the column holds answers 409, never rounded); SQLite stores their exact text. In a body, an answer, a path or a query an exact field is a JSON text (a JSON number or a bad text answers 400 rule `type`); the OpenAPI document types it as a `string` with a pattern; `@min`/`@max`, `where` and `orderBy` compare by value. `nuclear gen resource ... --fields \"price:bigdouble\"` writes them. Not yet: an exact key, and the mobile and web platforms reading an exact field of a contract."
    ],
    "keys": [
     "bigint",
@@ -1560,7 +1562,7 @@
    ],
    "meta": {
     "area": "language",
-    "status": "in-progress"
+    "status": "done"
    }
   }
  ]

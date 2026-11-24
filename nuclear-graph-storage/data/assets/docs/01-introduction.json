@@ -561,6 +561,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.789192",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A backend's search takes a client's text as it is**: new repository words `contains(text)` and `icontains(text)` (`where({ \"name\": icontains(text) })`) match the rows whose column holds the text, its `%`, `_` and `/` characters, never wildcards, in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB (`ilike(\"%${text}%\")` with the text `%` matched every row; `like` and `ilike` stay patterns). An optional field of a model left empty is `null` in every answer of both dialects (**`nestjs` left it out: Breaking** for a `nestjs` client that tells an absent field from `null`). `@created` / `@updated` carry their milliseconds in both (`fastapi` had whole seconds on SQLite and MySQL). The database check compares the three between the dialects.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.79fbdb",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -727,6 +742,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.b70ee4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The checks after a tag stop what their fake installs left running (a detached `nuclear update --when-idle` wrote the work folder again after it was removed) and turn the automatic update off there: their work folders no longer stay on /tmp.",
+    "- **Exact numbers in a backend** (ADR-backend-0003): an entity's `bigint` is a `BIGINT` column and a `bigdouble` a `NUMERIC(p, s)` (`@column(precision = 40, scale = 20)`; 30 and 10 by default), in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB, with migrations; SQLite keeps their text and the runtimes compare and sort it by value; a value the column cannot hold is 409, never rounded. A model's exact field, a body and a parameter read the language's texts (`\"price\": \"0.3\"`; a JSON number is 400) and answer `toString()`; `@min` / `@max` of one are exact; the OpenAPI document gives a `string` with its `pattern`. `nuclear gen resource --fields \"price:bigdouble\"` takes them. Language: a literal given for an exact field of a class built with its fields (`Price(amount = 0.5)`) or as a decorator's argument on one (`@min(0.01)`) takes the field's type. N0308 has two more rules of the contract: `types` (a key is an `int` or a `string`) and `args_for` (`precision` and `scale` only on a `bigdouble`). Fix: a Python file that uses `bigdouble` no longer fails pyright --strict for the helpers it does not call."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.bb001c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -735,6 +768,36 @@
     "- Fix: a file clicked in the workspace's tree opened beside the device instead of in the main editor group: the device locked the user's editor group when the focus was still there. The device's lock now waits until its own group is active, and the tree opens files in the main (leftmost) group, lifting a lock left on it.",
     "- **Exact numbers: `bigint` and `bigdouble`** (ADR-lang-0015): a whole number of any size and an exact decimal (`0.1 + 0.2 == 0.3`), the same value and the same text in TypeScript, Dart and Python. A literal takes the exact type of its place (`id: bigint = 12345678901234567890`, `big + 1`, `price: bigdouble = 19.99`); nothing converts silently (N0119: `n.toBigInt()`, `big.toInt()` gives `int?`); `+ - * % ** ~/`, comparisons and `==`; `bigdouble /` rounds half away from zero to at least 20 decimals; the check functions `text.toBigInt()` / `text.toBigDouble()` give `null` for any other text; members `abs`, `sign`, `round`, `floor`, `ceil`, `truncate`, `roundTo`, `toFixed`, `toInt`, `toDouble`, `toBigInt`, `toBigDouble`, `compareTo` (`-1`, `0`, `1`; a literal argument is exact); lists and maps of them compare values (`==`, `in`). In JSON an exact number travels as the text of `toString()`; what is not theirs yet is N0120 (`bigint / bigint`, bitwise, `is bigint`, `Math`, `Json.encode` of one, a `Set` of `bigdouble`, `sum`/`min`/`max` of a list of them). Fix: a name"
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.bcb73c",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A workspace's apps reach their backend again, in every way they run** (the user's workspace: the api moved to 8008 by the registry of projects while its app and web app called 8000, \"No connection to the server\", \"Failed to fetch\"): a project's port never moves by itself. It is the dialect's (8000, 3000, 5173, 8080) or the `PORT` the project sets (`nuclear env set PORT 8010`); the registry only records it, and holds only the person's projects (no temporary folder, no project of Nuclear's installation or source tree; the existing file is cleaned when read). When another process holds the port, `nuclear run` stops and says which process and which Nuclear project hold it, and how to choose another. A web or mobile app of a workspace built in development calls the workspace's backend at the address it really serves on (read from the backend's own files), also when its `.env` only repeats the code's default (what `nuclear new` writes). In the editor: ▷ Serve of a backend or web app becomes ■ Stop while it runs and never starts a second server; the Synapsis device is registered with Flutter on a fresh machine whose folder is a workspace (it refused to launch); switching between the Devices tool and the workspace keeps the device's width (it spanned the whole editor, then came back at half).",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.c19efc",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **A browser app reaches its backend in development, and every project's address is known** (found in a workspace whose Flutter app, run on Chrome, said \"No connection to the server\" on every request: the backend's `origins` did not list Flutter's random port, the browser dropped every answer). A registry of the machine's Nuclear projects (`~/.local/share/nuclearlang/projects.json`; `%LOCALAPPDATA%` on Windows), written by `nuclear new`, `build` and `run`: each project's name, folder, platform, dialect, workspace and development address, with its own port (the dialect's, or its `PORT`: the entry above). `nuclear projects [--json]` and the MCP tool `projects_list` show it. `nuclear run` serves on that port (a backend's `PORT`, vite's `--port`, Flutter's `--web-port` on `127.0.0.1`), and a backend run in `development` also lets every address of the registry and any port of `localhost`, `127.0.0.1` and `[::1]` call it from a browser, the same in `fastapi` and `nestjs`; in any other environment only `origins` apply (403, never credentials). A web or mobile app of a workspace built in `development` without an `API_URL` calls the workspace's backend at its address; the backends' default address is `127.0.0.1`, which they listen on (`localhost` may be `::1` first).",
    "sources": [
     "CHANGELOG.md"
    ],

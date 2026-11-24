@@ -1494,6 +1494,28 @@
    }
   },
   {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.431a70",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "Before step 1 (the user, 2026-11-23): a release carries a batch, never one fix; one large change at a time, each finished and proved end to end before the next starts; and the user validates first: the batch is installed on the developer's machine (`installer/install.sh --ai`, the `.vsix` into the…",
+   "body": [
+    "Before step 1 (the user, 2026-11-23): a release carries a batch, never one fix; **one large change at a time**, each",
+    "finished and proved end to end before the next starts; and **the user validates first**: the batch is installed on",
+    "the developer's machine (`installer/install.sh --ai`, the `.vsix` into the editor), the user is told what to try, and",
+    "the release starts only after the user says it works. Every change is also proved in the real editor on a real",
+    "workspace (backend, web, mobile on the Synapsis device: the data shows, Serve and Stop work, the layout holds) before it",
+    "is called done; that check is being built into the delivery gate (`installer/docs/01-product/roadmap.md`)."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4d5e97",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
@@ -2753,17 +2775,11 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.2c0852",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.84a8c8",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": [
-    "- Fix: `nuclear build` of a nestjs project installed by an earlier release installs its packages again before compiling (it compiled against the old runtime: `no exported member 'RequiredPipe'`); found by the new upgrade check of the delivery gate.",
-    "- Fix: `nuclear run` installs a project's packages again when another version of the platform installed them (`build/.nuclear-installed`): a backend project installed before 0.96 failed with `No module named synapsis.server`, since its runtime stayed the old one.",
-    "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
-    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
-    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there."
-   ],
+   "body": "- A project's development port never moves by itself: the dialect's, or the `PORT` of the project's `.env` files (`nuclear env set PORT <port>`); the registry of projects records it and never assigns another (it moved a workspace's backend to 8008 while its apps called 8000). `nuclear run` refuses a port another process holds and says which one (`lsof`) and which project of the registry has it. The registry holds only the person's projects: a temporary folder, Nuclear's installation and the folders of Nuclear's source tree stay out, and are pruned from an existing file on read. A web or mobile app of a workspace gets its backend's address from the backend's own files (not the registry), also when its `.env` value equals the code's default.",
    "sources": [
     "tools/cli/CHANGELOG.md"
    ],
@@ -2797,6 +2813,24 @@
    }
   },
   {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.8dacbf",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- `nuclear projects [--json]`: every Nuclear project of the machine, whatever its workspace, and its development address, from the registry `projects.json` of the user's data folder (`NUCLEAR_PROJECTS` names another file), written by `new`, `build` and `run`; a project whose folder is gone leaves it. Each project's address is the dialect's `url` / `web_url` with its own `PORT` (the entry above): `nuclear run` fills `{{url}}`/`{{port}}` with it and gives a backend `PORT`, `NUCLEAR_ENV` and `NUCLEAR_DEV_ORIGINS` (its CORS in development), a mobile app `--web-port <port> --web-hostname 127.0.0.1` (unless given), the editor's launches the same address. A web or mobile app of a workspace built in `development` without an `API_URL` gets the workspace's backend address; `nuclear new` of a web app in a workspace writes it in its `.env`. The flutter dialect has `web_url` (127.0.0.1:8080); fastapi and nestjs answer at `127.0.0.1`.",
+    "- Fix: `nuclear build` of a nestjs project installed by an earlier release installs its packages again before compiling (it compiled against the old runtime: `no exported member 'RequiredPipe'`); found by the new upgrade check of the delivery gate."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/CHANGELOG.md#unreleased.991cb0",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -2805,6 +2839,26 @@
     "panel is `editor-workspace`.",
     "",
     "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.9c9052",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Fix: `nuclear run` installs a project's packages again when another version of the platform installed them (`build/.nuclear-installed`): a backend project installed before 0.96 failed with `No module named synapsis.server`, since its runtime stayed the old one.",
+    "- `nuclear dialect check` (and the bundle check) warn of a plugin the dialect does not bring yet (N0305); a build no longer prints that warning on every project, and a project that enables such a plugin gets an error instead.",
+    "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`).",
+    "- `nuclear migrate make \"<message>\" --rename <table>=<new table>` and `--rename <table>.<column>=<new column>` (any number, the database's names): the migration renames in place and keeps the rows, where `make` would write a drop and an add. The command checks the shape of each rename; the dialect's tool refuses one that is not there."
    ],
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -3623,20 +3677,31 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.36c474",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.11bd6d",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
+   "summary": "` value equal to the code's default) its backend's address (`workspace_backend`, read from the backend's own files, not the registry); `vscode.rs` fills the launches with it.",
    "body": [
-    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
-    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
-    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
-    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |",
-    "",
-    "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
-    "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
-    "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
-    "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
+    "` value equal to the code's default) its backend's address (`workspace_backend`, read from the backend's own files, not the registry); `vscode.rs` fills the launches with it. `nuclear projects [--json]` (MCP `projects_list`) | [workspace guide](../08-guides/workspace.md) |",
+    "| `monitor.rs` | `nuclear monitor [--json] [--on\\|--off]` (spec 015 of the platform): the project (the folder of `main.nuc`, `config.nuc` or `nuclear.toml`; a workspace's own folder is none), the report of its measured run (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree, `measuring` and the `console` of `console.rs`; without a report the same keys, empty. `--on` / `--off` write or remove `.nuclear/monitor/on`. `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`); `monitored` measures a build when it or the flag is there, and `report_to` sets `NUCLEAR_MONITOR_FILE` to the project's report (`nuclear run` always does, so the app it starts writes there, also when measuring is turned on while it runs) | [build.md](build.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.192e6c",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "/workspace.md) |",
+   "body": [
+    "/workspace.md) |",
+    "| `projects.rs` | the machine's registry of projects, `projects.json` in `$XDG_DATA_HOME/nuclearlang/` (else `~/.local/share/nuclearlang/`; `%LOCALAPPDATA%\\nuclearlang\\` on Windows; `NUCLEAR_PROJECTS` names another file, the tests' own): `{projects: [{name, root, platform, dialect, workspace: {name, root} \\| null, url, scheme, host, port}]}`, sorted by root, written whole and renamed over the old file. `address` is a project's development address: the dialect's `url` / `web_url` with the `PORT` of the project's `.env` files (`env::file_value`), never another port; `record` (the project's own `nuclear build` without `-o`/`--dialect`, the mobile build, `new`, `run`) writes it, except for a project that stays out (`excluded`: a temporary folder, unless `NUCLEAR_PROJECTS` names the file; Nuclear's installation; a folder of Nuclear's source tree); an entry whose folder lost its `config.nuc`, or one of those, is dropped on every read. `run` gives a backend `{{url}}`/`{{port}}`, `PORT`, `NUCLEAR_ENV` and `NUCLEAR_DEV_ORIGINS` (every address of the registry), first refusing a port another process holds (`port_free`: the holder through `lsof`, the project of the registry with that port, `nuclear env set PORT`), and a mobile app `--web-port`/`--web-hostname`; `env::prepare` gives a client of a workspace in `development` whose `API_URL` is not chosen (absent, or the `.env"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3668,16 +3733,19 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.d5148e",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.be7db3",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "Code map of `src/framework/`",
    "body": [
-    "| `runlog.rs` | the project's run log `.nuclear/logs/run.log` of `nuclear run`: an ISO time per line, ANSI stripped, kept under 1 MB, never stopping the run when it cannot be written; `step: build|install|serve <url>|flutter`, the build's and the server's output (tee'd: stdin inherited, stdout/stderr piped to the terminal and the log, colours kept on a terminal), `failed: <why>`, `exited: <code>`; a mobile run logs only its steps (Flutter keeps the terminal). The editor follows it (▷ Serve) and the MCP tool `project_run_log` reads it | — |",
     "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |",
     "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
     "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
-    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |"
+    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |",
+    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
+    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
+    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
+    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3689,14 +3757,33 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.e6af7f",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.caaac0",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "/workspace.md) |",
+   "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
    "body": [
-    "/workspace.md) |",
-    "| `monitor.rs` | `nuclear monitor [--json] [--on\\|--off]` (spec 015 of the platform): the project (the folder of `main.nuc`, `config.nuc` or `nuclear.toml`; a workspace's own folder is none), the report of its measured run (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree, `measuring` and the `console` of `console.rs`; without a report the same keys, empty. `--on` / `--off` write or remove `.nuclear/monitor/on`. `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`); `monitored` measures a build when it or the flag is there, and `report_to` sets `NUCLEAR_MONITOR_FILE` to the project's report (`nuclear run` always does, so the app it starts writes there, also when measuring is turned on while it runs) | [build.md](build.md) |",
-    "| `console.rs` | the console of `nuclear monitor`: the last run of the run log (`runlog.rs`, from its last `--- ` line) read as its `state` (`none`, `starting`, `running` while its address answers, `stopped`, `failed`), its step, address and reason, and its lines by kind: `request` (`<METHOD> <path> <status> <ms>ms`, the backend's log line), `error` (`ERROR <METHOD> <path> <cause>` with the indented lines under it as its stack, or a build's or a crash's error), `step`, `reload`, `end`, `failed`, `output`; the newest 1000 | [build.md](build.md) |"
+    "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
+    "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
+    "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
+    "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.d3bc1b",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "Code map of `src/framework/`",
+   "body": [
+    "| `console.rs` | the console of `nuclear monitor`: the last run of the run log (`runlog.rs`, from its last `--- ` line) read as its `state` (`none`, `starting`, `running` while its address answers, `stopped`, `failed`), its step, address and reason, and its lines by kind: `request` (`<METHOD> <path> <status> <ms>ms`, the backend's log line), `error` (`ERROR <METHOD> <path> <cause>` with the indented lines under it as its stack, or a build's or a crash's error), `step`, `reload`, `end`, `failed`, `output`; the newest 1000 | [build.md](build.md) |",
+    "| `runlog.rs` | the project's run log `.nuclear/logs/run.log` of `nuclear run`: an ISO time per line, ANSI stripped, kept under 1 MB, never stopping the run when it cannot be written; `step: build|install|serve <url>|flutter`, the build's and the server's output (tee'd: stdin inherited, stdout/stderr piped to the terminal and the log, colours kept on a terminal), `failed: <why>`, `exited: <code>`; a mobile run logs only its steps (Flutter keeps the terminal). The editor follows it (▷ Serve) and the MCP tool `project_run_log` reads it | — |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -4547,6 +4634,33 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.38add5",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "check (in a workspace's folder) checks every app in turn (--json: run it in one app) projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project of yours made, built or run; never a temporary folder nor Nuclear's own projects) projects [--json] each project, its…",
+   "body": [
+    "check (in a workspace's folder)            checks every app in turn (--json: run it in one app)",
+    "",
+    "projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project of yours made,",
+    "built or run; never a temporary folder nor Nuclear's own projects)",
+    "  projects [--json]                          each project, its platform, dialect, workspace and development address;",
+    "                                             its port never moves by itself: the dialect's, or the PORT the project",
+    "                                             sets (nuclear env set PORT <port>); run serves there and, when another",
+    "                                             process holds it, says which one; a backend in development lets every",
+    "                                             address of the registry and any localhost / 127.0.0.1 / [::1] port call",
+    "                                             it (CORS), an app of a workspace calls the workspace's backend there",
+    "                                             (API_URL)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.66e983",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4704,37 +4818,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.982176",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "check (in a workspace's folder) checks every app in turn (--json: run it in one app) environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local, .env.<env>.local, the system's keyring, the process: the later wins) env list [--env <name>] [--json] every…",
-   "body": [
-    "check (in a workspace's folder)            checks every app in turn (--json: run it in one app)",
-    "",
-    "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,",
-    ".env.<env>.local, the system's keyring, the process: the later wins)",
-    "  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment",
-    "  env set <NAME> [<value>] [--env <name>] [--local] [--secret]",
-    "                                             a value in .env (--env: .env.<name>; --local: the .local file);",
-    "                                             --secret: the system's keyring (without a value: read from stdin)",
-    "  env unset <NAME> [--env <name>] [--local] [--secret]",
-    "  env envs [--json]                          the environments and the active one",
-    "  env use <name>                             the project's active environment (.nuclear/env)",
-    "  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,",
-    "                                             else development; test: test). run refuses a required variable without",
-    "                                             a value; build writes build/.env (backend) or the values of the code",
-    "                                             (web, mobile; a secret is refused); check --env reports the missing ones"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.99e95b",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4778,6 +4861,35 @@
     "  integration <name>                    (it) an integration test in integration_test/",
     "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
     "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.a9e167",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local, .env.<env>.local, the system's keyring, the process: the later wins) env list [--env <name>] [--json] every variable (the code's and the files') × every environment env set <NAME> [<value>]…",
+   "body": [
+    "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,",
+    ".env.<env>.local, the system's keyring, the process: the later wins)",
+    "  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment",
+    "  env set <NAME> [<value>] [--env <name>] [--local] [--secret]",
+    "                                             a value in .env (--env: .env.<name>; --local: the .local file);",
+    "                                             --secret: the system's keyring (without a value: read from stdin)",
+    "  env unset <NAME> [--env <name>] [--local] [--secret]",
+    "  env envs [--json]                          the environments and the active one",
+    "  env use <name>                             the project's active environment (.nuclear/env)",
+    "  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,",
+    "                                             else development; test: test). run refuses a required variable without",
+    "                                             a value; build writes build/.env (backend) or the values of the code",
+    "                                             (web, mobile; a secret is refused); check --env reports the missing ones"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4914,6 +5026,33 @@
     "folder inside a workspace does the same: the project is made in the workspace's folder, not in the current one, and",
     "written into the marker. An app's name is a project's name: letters, digits and `_` (`citofony-api` becomes",
     "`citofony_api`), so it is always a plain folder of the workspace."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/workspace.md#where-its-apps-run",
+   "type": "guide",
+   "title": "Workspaces — Where its apps run",
+   "summary": "Every app is also in the registry of projects of the machine (`nuclear projects [--json]`, MCP `projects_list`), with its development address.",
+   "body": [
+    "Every app is also in the registry of projects of the machine (`nuclear projects [--json]`, MCP `projects_list`),",
+    "with its development address. Its port never moves by itself: the dialect's (8000 for fastapi, 3000 for nestjs,",
+    "5173 for react), or the one the app sets (`nuclear env set PORT 8010` in its folder); `nuclear run` serves there,",
+    "and when another process holds that port it stops and says which one (and which Nuclear project) instead of taking",
+    "another. The registry only records: it holds only your projects, never a temporary folder nor Nuclear's own",
+    "services. A web or mobile app built in `development` whose `API_URL` is not chosen (not given, or its `.env` only",
+    "repeats the code's default) calls the workspace's first backend at the address that backend serves on",
+    "(`http://127.0.0.1:<port>/`, following its `PORT`), and a backend run in `development` lets every",
+    "address of the registry, and any port of `localhost`, `127.0.0.1` and `[::1]`, call it from a browser (CORS): a",
+    "web app or a Flutter app run on Chrome reaches its backend without listing its origin. In production only the",
+    "backend's `origins` apply (the backend's reference, §2.8)."
    ],
    "sources": [
     "tools/cli/docs/08-guides/workspace.md"
