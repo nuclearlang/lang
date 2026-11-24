@@ -128,7 +128,23 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.9c6fc5",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.6e462b",
+   "type": "spec",
+   "title": "Platform `web` brief: Synapsis web apps — Pieces",
+   "summary": "expect = [...])`, `@widget` with `renderScreen(Screen())` and `~screen.findByText(\"...\")`.",
+   "body": [
+    "- Tests (`test/`, no word): `@mock([Repo])`, `when(Repo.method).thenReturn(Ok(x))`, `@test`, `@states(\"...\",",
+    "  expect = [...])`, `@widget` with `renderScreen(Screen())` and `~screen.findByText(\"...\")`."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.8982b2",
    "type": "spec",
    "title": "Platform `web` brief: Synapsis web apps — Pieces",
    "summary": "text, an element or a list.",
@@ -141,12 +157,12 @@
     "- The same build also mounts in a host's page: `mount(element, { bridge, path })` (`npm run build:embed`).",
     "- Navigation by screen, never by address: `goTo(Screen, id = 7)`, `goBack()`. Inside a screen,",
     "  `Manager.method()` calls its provider; elsewhere `inject<CharactersComponent>()`.",
+    "- Exact fields of a model (`price: bigdouble`, `code: bigint`) are JSON texts both ways (`\"0.3\"`); a JSON number",
+    "  there fails the call. A client of a contract gets them as their type.",
     "- A statemanager has no generics (`statemanager M<S>` is N0218): the state model goes in `@stateModel(S)`.",
     "- Events: `event Name` + fields; `Events.publish(Name(...))`; `useEvent(Name)` in `build`. Access: `guard` with",
     "  `canActivate()`, `@screen(acl = {...})`, `@acl(...)` on a use case. Not in this version: forms, translations,",
-    "  the local database, plugins.",
-    "- Tests (`test/`, no word): `@mock([Repo])`, `when(Repo.method).thenReturn(Ok(x))`, `@test`, `@states(\"...\",",
-    "  expect = [...])`, `@widget` with `renderScreen(Screen())` and `~screen.findByText(\"...\")`."
+    "  the local database, plugins."
    ],
    "platforms": [
     "web"
@@ -452,7 +468,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-3-data",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-3-data.3ff9bf",
    "type": "spec",
    "title": "The `web` platform of Synapsis — 3.3 Data",
    "summary": "A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform (flutter.md §6.3): the path under the connection's `baseUrl`, `:name` from a parameter, the rest to the query (GET, DELETE) or the JSON body; a `Result` method answers `Err(E(message =…",
@@ -460,8 +476,37 @@
     "A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform",
     "([flutter.md](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) §6.3): the path under the connection's `baseUrl`, `:name` from a parameter, the rest to",
     "the query (GET, DELETE) or the JSON body; a `Result` method answers `Err(E(message = ...))`; `cache`/`ttl`/`retry`.",
-    "A model is its fields; it gets `fromJson`, `toJson` and `copyWith`; `@key` names a field in the JSON.",
+    "A model is its fields; it gets `fromJson`, `toJson` and `copyWith`; `@key` names a field in the JSON. A request's",
+    "body is the JSON of its model (`toJson`: the names of `@key`).",
     "",
+    "**Exact numbers are exact in the browser** (`bigint`, `bigdouble`: ADR-lang-0015, the backend's rule",
+    "ADR-backend-0003). A model field of an exact type is a JSON text both ways, the language's `toString()` (`\"0.3\"`,",
+    "`\"2.0\"`, `\"12345678901234567890123\"`): an answer whose exact field is a JSON number, another text or more than 1000",
+    "digits is a decoding error, and the call fails with it (it is not the `Err` of a `Result` method), as on the mobile",
+    "platform. A client of a contract (`contracts(...)`) or of `nuclear gen resource --fields \"price:bigdouble\"` gets the",
+    "exact fields as their type, never as a `string`.",
+    "",
+    "```nuclear",
+    "// domain/models/: its JSON is {\"price\": \"0.3\", \"code\": \"12345678901234567890123\"}",
+    "Product",
+    "  id: int",
+    "  price: bigdouble",
+    "  code: bigint",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-3-data.852914",
+   "type": "spec",
+   "title": "The `web` platform of Synapsis — 3.3 Data",
+   "summary": "What the server pushes is a method without a body with `@on(\"topic\")` that returns `Stream<T>` (`T` a model, or a map): the events of that topic, read as `T`, over a connection that can push (`WebSocket`, or the host's bridge); over `Http`, listening to it is an error.",
+   "body": [
     "What the server pushes is a method without a body with `@on(\"topic\")` that returns `Stream<T>` (`T` a model, or a",
     "map): the events of that topic, read as `T`, over a connection that can push (`WebSocket`, or the host's bridge);",
     "over `Http`, listening to it is an error. `stream.listen((value) => ...)` gives back the function that stops. The",

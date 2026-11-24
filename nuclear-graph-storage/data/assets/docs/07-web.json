@@ -261,12 +261,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.0d7907",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.8f765c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "manager follows one with `listen(stream, ...)`.",
+   "summary": "`@on(\"topic\")` methods return `Stream<T>` of what the server pushes; a use case may return a `Stream`; a state manager follows one with `listen(stream, ...)`.",
    "body": [
-    "manager follows one with `listen(stream, ...)`. `nuclear gen usecase --calls` writes a use case over a stream method.",
+    "`@on(\"topic\")` methods return `Stream<T>` of what the server pushes; a use case may return a `Stream`; a state",
+    "  manager follows one with `listen(stream, ...)`. `nuclear gen usecase --calls` writes a use case over a stream method.",
     "- The embedded mode (ADR-synapsis-0009): every build also writes `src/embed.ts` (`mount(element, host)`) and",
     "  `vite.embed.config.ts` (`npm run build:embed` → `dist-embed/embed.js`): a shadow root with the stylesheet, the",
     "  host's CSS variables, an in-memory router, and the host's bridge for every call.",
@@ -291,11 +292,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.972cac",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.99b242",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example `characters` reads `API_URL`.",
+   "summary": "JSON number or another text is a `TypeError`); a request's body is its model's `toJson()` (`wire`).",
    "body": [
+    "- Exact numbers (ADR-lang-0015): a model's `bigint` / `bigdouble` fields are a JSON text both ways (`exactText`; a",
+    "  JSON number or another text is a `TypeError`); a request's body is its model's `toJson()` (`wire`).",
     "- Environments (spec 021): `env(\"NAME\", \"default\")` in a web app reads the values of the environment it was built",
     "  for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example",
     "  `characters` reads `API_URL`.",
@@ -306,8 +309,7 @@
     "  parameters; a screen gets the query's parameters; a manager method named `close` (and the runtime's other members)",
     "  is N0223; `thenReturn` of a `Stream` method answers the stream; `nuclear make screen|statemanager|widget|component|guard`.",
     "- Real time (ADR-synapsis-0008): `WebSocket(url, headers, timeout, interceptors)` is a connection beside `Http`; a",
-    "  repository bound to it is written as it is and its calls travel over the socket (reconnecting by itself);",
-    "  `@on(\"topic\")` methods return `Stream<T>` of what the server pushes; a use case may return a `Stream`; a state"
+    "  repository bound to it is written as it is and its calls travel over the socket (reconnecting by itself);"
    ],
    "platforms": [
     "web"
@@ -893,24 +895,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.54ca03",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.3ac4e5",
    "type": "context",
    "title": "The runtime: `synapsis-web` — Entry points and modules",
-   "summary": "Entry points and modules",
+   "summary": "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`).",
    "body": [
-    "| Import | Module | Holds |",
-    "|---|---|---|",
-    "| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |",
-    "| | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |",
-    "| | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, `Transport` (what a repository's calls travel over), the `Http` connection and `HttpInterceptor` |",
-    "| | `sockets` | the platform's frames (`Frames`), the `WebSocket` connection, the host's `Bridge` and `BridgeTransport`, `Stream` (ADR-synapsis-0008) |",
-    "| | `embed` | `mountApp`, `Host`: the embedded mode (ADR-synapsis-0009) |",
-    "| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector; `transport`, `embed`) |",
-    "| | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |",
-    "| | `state` | `StateManager` |",
     "| | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |",
-    "| | `html` | the HTML functions (`div`, `ul`, `button`, `input`...), `el`, `fragment` |"
+    "| | `html` | the HTML functions (`div`, `ul`, `button`, `input`...), `el`, `fragment` |",
+    "| | `events` | `AppEvent`, `Events` (publish / subscribe), `useEvent` |",
+    "| | `session` | `SessionManager`, `SessionStarted`, `SessionEnded`, `Acl`, `Guard`, `Guards`, `NetworkManager` |",
+    "| | `router` | `buildRouter`, `goTo`, `pushTo`, `goBack`, `pathTo`, `RouterProvider` |",
+    "| | `log` | `Log` |",
+    "| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
+    "",
+    "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,",
+    "`useMemo`, `useRef`, `useCallback`)."
    ],
    "platforms": [
     "web"
@@ -925,19 +924,23 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.be4303",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.b301cf",
    "type": "context",
    "title": "The runtime: `synapsis-web` — Entry points and modules",
-   "summary": "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`).",
+   "summary": "Entry points and modules",
    "body": [
-    "| | `events` | `AppEvent`, `Events` (publish / subscribe), `useEvent` |",
-    "| | `session` | `SessionManager`, `SessionStarted`, `SessionEnded`, `Acl`, `Guard`, `Guards`, `NetworkManager` |",
-    "| | `router` | `buildRouter`, `goTo`, `pushTo`, `goBack`, `pathTo`, `RouterProvider` |",
-    "| | `log` | `Log` |",
-    "| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
-    "",
-    "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,",
-    "`useMemo`, `useRef`, `useCallback`)."
+    "| Import | Module | Holds |",
+    "|---|---|---|",
+    "| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |",
+    "| | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |",
+    "| | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, `Transport` (what a repository's calls travel over), the `Http` connection and `HttpInterceptor` |",
+    "| | `sockets` | the platform's frames (`Frames`), the `WebSocket` connection, the host's `Bridge` and `BridgeTransport`, `Stream` (ADR-synapsis-0008) |",
+    "| | `embed` | `mountApp`, `Host`: the embedded mode (ADR-synapsis-0009) |",
+    "| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector; `transport`, `embed`) |",
+    "| | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |",
+    "| | `exact` | the exact numbers in JSON (ADR-lang-0015): `exactText` (the checked text of a `bigint` / `bigdouble` of an answer, else a `TypeError`), `wire` (the replacer of a request body: a model as its `toJson()`, a `bigint` as its text), `MAX_DIGITS` |",
+    "| | `state` | `StateManager` |"
    ],
    "platforms": [
     "web"
@@ -975,12 +978,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.04f2e7",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.8fd1f5",
    "type": "context",
    "title": "The runtime: `synapsis-web` — How the pieces work",
    "summary": "registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library; `statesOf` collects the states a manager emits.",
    "body": [
-    "registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
+    "- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any",
+    "  registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
     "  `statesOf` collects the states a manager emits."
    ],
    "platforms": [
@@ -1029,7 +1033,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.cdc856",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.f35671",
    "type": "context",
    "title": "The runtime: `synapsis-web` — How the pieces work",
    "summary": "or the JSON body; a cache by key with a ttl; retries on transient failures.",
@@ -1037,7 +1041,8 @@
     "or the JSON body; a cache by key with a ttl; retries on transient failures. The adapter is the `Transport` the",
     "  repository is bound to (`Synapsis.transport(name)`): `Http` (fetch), `WebSocket` (a request frame and its answer)",
     "  or, mounted with a bridge, the host's `BridgeTransport` for every repository; the connection's interceptors run",
-    "  around it either way. `stream(topic, decode)` gives a `Stream` of what the transport receives on a topic.",
+    "  around it either way. `stream(topic, decode)` gives a `Stream` of what the transport receives on a topic. A body is",
+    "  `JSON.stringify(body, wire)`: a model travels as its `toJson()` (its `@key` names, its exact fields as texts).",
     "- **Mounted in a host.** `mountApp` calls `Synapsis.embed(host)` (the in-memory router at `host.path`, the bridge),",
     "  starts the app once, renders it in a shadow root of the element with the stylesheet as a `<style>`.",
     "- **Router.** One route per `@screen(route = \"/path/:id\")`, built by the transpiler; navigation is by screen",
@@ -1046,8 +1051,7 @@
     "  `Guards` runs the checks a use case asks for (`@requires(session = true)`, `@acl(roles = [...])`).",
     "  `Guards.verify` is asynchronous.",
     "- **Logs.** `Log` writes with the place it is called from; the transpiler passes it (component › kind ›",
-    "  Class.method · file:line).",
-    "- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any"
+    "  Class.method · file:line)."
    ],
    "platforms": [
     "web"
@@ -1065,10 +1069,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#tests-and-type-definitions",
    "type": "context",
    "title": "The runtime: `synapsis-web` — Tests and type definitions",
-   "summary": "(`vitest.config.ts`).",
+   "summary": "(`vitest.config.ts`); `test/exact.test.ts`: the exact numbers' texts, a body as the model's JSON, a JSON number refused.",
    "body": [
     "- `test/runtime.test.ts`: 7 vitest tests (repository, cache, mocks, states, views, events), in jsdom",
-    "  (`vitest.config.ts`). The check runs them ([testing](../05-standards/testing.md)).",
+    "  (`vitest.config.ts`); `test/exact.test.ts`: the exact numbers' texts, a body as the model's JSON, a JSON number",
+    "  refused. The check runs them ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
     "  `nuclearlang/dialects/typescript/defs/synapsis-web/<version>/` (modules `synapsis-web`,",
     "  `synapsis-web/testing`): regenerated after a change of the public API",

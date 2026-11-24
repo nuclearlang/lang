@@ -1577,7 +1577,7 @@
    "id": "tool:nuclear.build",
    "type": "cli",
    "title": "`nuclear build` — Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml);…",
-   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml); Transpile, pub get and build_runner (and flutter build <target>); Each Nuclear function and method measured: .nuclear/monitor/report.json; Transpile (nuclear build .)",
+   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml); Transpile, pub get and build_runner (and flutter build <target>); Each Nuclear function and method measured: .nuclear/monitor/report.json (a web or mobile app posts it to the editor's collector, NUCLEAR_MONITOR_URL, or to one run --monitor starts); Transpile (nuclear build .)",
    "body": [
     "```text",
     "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
@@ -1585,6 +1585,8 @@
     "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
     "                                             transpile, pub get and build_runner (and flutter build <target>)",
     "  build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json",
+    "                                             (a web or mobile app posts it to the editor's collector, NUCLEAR_MONITOR_URL,",
+    "                                             or to one run --monitor starts)",
     "  build                                      transpile (nuclear build .)",
     "```"
    ],
@@ -1628,7 +1630,7 @@
       "usage": "nuclear build --monitor, run --monitor",
       "alias": "",
       "note": "",
-      "does": "Each Nuclear function and method measured: .nuclear/monitor/report.json"
+      "does": "Each Nuclear function and method measured: .nuclear/monitor/report.json (a web or mobile app posts it to the editor's collector, NUCLEAR_MONITOR_URL, or to one run --monitor starts)"
      },
      {
       "what": "build",

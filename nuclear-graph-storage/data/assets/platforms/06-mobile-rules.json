@@ -33,6 +33,58 @@
    ]
   },
   {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md#pieces.0e4c13",
+   "type": "spec",
+   "title": "Platform `mobile` brief: Synapsis apps — Pieces",
+   "summary": "// model (domain/models/): only fields; fromJson/toJson/== generated (exact fields: JSON texts).",
+   "body": [
+    "```nuclear",
+    "// model (domain/models/): only fields; fromJson/toJson/== generated (exact fields: JSON texts). @key(\"json_name\"), @DateConverter",
+    "Character",
+    "  id: int",
+    "  name: string",
+    "  status: string",
+    "",
+    "// repository (data/): each method is an HTTP call; :id goes to the path, other params to the query/body",
+    "@repository(path = \"character\")",
+    "repository CharacterRepository",
+    "  @get(path = \":id\")",
+    "  getOne(id: int) Result<CharacterError, Character>",
+    "",
+    "  @get(cache = true, ttl = Duration(minutes = 10))",
+    "  getPage(page: int, name: string = \"\") Result<CharacterError, Page<Character>>",
+    "",
+    "// usecase (domain/usecases/): one method exec, returns Result; dependencies in the constructor line",
+    "usecase GetPageUseCase",
+    "  (repository: CharacterRepository)",
+    "",
+    "  @requires(internet = true)",
+    "  exec(page: int) Result<CharacterError, Character[]>",
+    "    data = ~repository.getPage(page)",
+    "    Ok(data.results)",
+    "",
+    "// appcomponent (<c>_component.nuc): aliases to the use cases",
+    "appcomponent CharactersComponent",
+    "  getPage() = GetPageUseCase.exec",
+    "",
+    "// state model (state_models/): each field is a state of the screen; a boolean is a state without data",
+    "CharactersState",
+    "  (full: Character[], error: CharacterError, loading: boolean)",
+    "",
+    "// statemanager (managers/): @state(M.x) emits that state with the value; an Err emits `error`",
+    "@stateModel(CharactersState)",
+    "statemanager CharactersManager",
+    "  (characters: CharactersComponent)",
+    "    loadPage(1)"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
+   ]
+  },
+  {
    "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md#pieces.63d5a8",
    "type": "spec",
    "title": "Platform `mobile` brief: Synapsis apps — Pieces",
@@ -111,58 +163,6 @@
     "      ),",
     "    )",
     "```"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md#pieces.c401dd",
-   "type": "spec",
-   "title": "Platform `mobile` brief: Synapsis apps — Pieces",
-   "summary": "// model (domain/models/): only fields; fromJson/toJson/== are generated.",
-   "body": [
-    "```nuclear",
-    "// model (domain/models/): only fields; fromJson/toJson/== are generated. @key(\"json_name\"), @DateConverter",
-    "Character",
-    "  id: int",
-    "  name: string",
-    "  status: string",
-    "",
-    "// repository (data/): each method is an HTTP call; :id goes to the path, other params to the query/body",
-    "@repository(path = \"character\")",
-    "repository CharacterRepository",
-    "  @get(path = \":id\")",
-    "  getOne(id: int) Result<CharacterError, Character>",
-    "",
-    "  @get(cache = true, ttl = Duration(minutes = 10))",
-    "  getPage(page: int, name: string = \"\") Result<CharacterError, Page<Character>>",
-    "",
-    "// usecase (domain/usecases/): one method exec, returns Result; dependencies in the constructor line",
-    "usecase GetPageUseCase",
-    "  (repository: CharacterRepository)",
-    "",
-    "  @requires(internet = true)",
-    "  exec(page: int) Result<CharacterError, Character[]>",
-    "    data = ~repository.getPage(page)",
-    "    Ok(data.results)",
-    "",
-    "// appcomponent (<c>_component.nuc): aliases to the use cases",
-    "appcomponent CharactersComponent",
-    "  getPage() = GetPageUseCase.exec",
-    "",
-    "// state model (state_models/): each field is a state of the screen; a boolean is a state without data",
-    "CharactersState",
-    "  (full: Character[], error: CharacterError, loading: boolean)",
-    "",
-    "// statemanager (managers/): @state(M.x) emits that state with the value; an Err emits `error`",
-    "@stateModel(CharactersState)",
-    "statemanager CharactersManager",
-    "  (characters: CharactersComponent)",
-    "    loadPage(1)"
    ],
    "platforms": [
     "mobile"
@@ -453,24 +453,6 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#3-rules.1be26e",
-   "type": "spec",
-   "title": "The `mobile` platform of Synapsis — 3. Rules",
-   "summary": "the same on every platform the toolkit builds for (phones, desktops, web); `@repository(saveLocal = true)` keeps what its GET methods answer and gives each one a `<method>AsLocal()` twin; the queries (`where`, `orderBy`, `limit`, `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`,…",
-   "body": [
-    "the same on every platform the toolkit builds for (phones, desktops, web); `@repository(saveLocal = true)` keeps what",
-    "   its GET methods answer and gives each one a `<method>AsLocal()` twin; the queries (`where`, `orderBy`, `limit`,",
-    "   `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`, `exists`, `update`, `delete`) are the backend's. The Nuclear never names",
-    "   the storage engine."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
-   ]
-  },
-  {
    "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#3-rules.60bfff",
    "type": "spec",
    "title": "The `mobile` platform of Synapsis — 3. Rules",
@@ -489,6 +471,55 @@
     "6. **The local database is the backend's ORM on the device** (ADR-mobile-0006): a model with `@primary` (`@primary(generated = true)`,",
     "   `@created`, `@updated` as in a backend entity; `@entity(\"table\")` names the table) has a table, encrypted unless the",
     "   project's or the component's config says otherwise (`local: LocalDatabase = LocalDatabase(encrypted = false)`),"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#3-rules.821872",
+   "type": "spec",
+   "title": "The `mobile` platform of Synapsis — 3. Rules",
+   "summary": "// domain/models/: a model with exact fields; its JSON is {\"price\": \"0.3\", \"code\": \"12345678901234567890123\"} Product @primary id: int price: bigdouble code: bigint",
+   "body": [
+    "```nuclear",
+    "// domain/models/: a model with exact fields; its JSON is {\"price\": \"0.3\", \"code\": \"12345678901234567890123\"}",
+    "Product",
+    "  @primary",
+    "  id: int",
+    "  price: bigdouble",
+    "  code: bigint",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md#3-rules.8cd0f3",
+   "type": "spec",
+   "title": "The `mobile` platform of Synapsis — 3. Rules",
+   "summary": "the same on every platform the toolkit builds for (phones, desktops, web); `@repository(saveLocal = true)` keeps what its GET methods answer and gives each one a `<method>AsLocal()` twin; the queries (`where`, `orderBy`, `limit`, `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`,…",
+   "body": [
+    "the same on every platform the toolkit builds for (phones, desktops, web); `@repository(saveLocal = true)` keeps what",
+    "   its GET methods answer and gives each one a `<method>AsLocal()` twin; the queries (`where`, `orderBy`, `limit`,",
+    "   `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`, `exists`, `update`, `delete`) are the backend's. The Nuclear never names",
+    "   the storage engine.",
+    "7. **Exact numbers are exact on the device** (`bigint`, `bigdouble`: ADR-lang-0015, the backend's rule",
+    "   ADR-backend-0003). A model field of an exact type is a JSON text both ways, the language's `toString()`",
+    "   (`\"0.3\"`, `\"2.0\"`, `\"12345678901234567890123\"`): an answer whose exact field is a JSON number, another text or more",
+    "   than 1000 digits is a decoding error, and the call fails with it (it is not the `Err` of a `Result` method). A",
+    "   client of a contract (`contracts(...)`) or of `nuclear gen resource --fields \"price:bigdouble\"` gets the exact",
+    "   fields as their type, never as a `string`. A local table keeps an exact field's text and its queries (`where`",
+    "   with equality, `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`, and `orderBy`) compare it by value; `update`",
+    "   takes exact values. A form field of an exact type takes the text of its type (`text.toBigInt()`,",
+    "   `text.toBigDouble()`), and its `@min` / `@max` compare exactly (`@min(0.1) price: bigdouble`)."
    ],
    "platforms": [
     "mobile"

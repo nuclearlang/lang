@@ -23,7 +23,7 @@
     "From this folder:",
     "",
     "```sh",
-    "(cd packages/synapsis && flutter pub get && flutter test && flutter analyze)    # the runtime: 64 tests",
+    "(cd packages/synapsis && flutter pub get && flutter test && flutter analyze)    # the runtime: 69 tests",
     "(cd examples/examples-flutter-dialect/tasks_app && nuclear build && nuclear test)",
     "```",
     "",
@@ -276,11 +276,15 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#unreleased.12a523",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#unreleased.0e76e9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example `clean-flutter-project` reads `API_URL`.",
+   "summary": "`BigDoubleJson`; a JSON number or another text is a `FormatException`); a local table compares and sorts their text by value (`LocalTable(exact:)`); a form validates their text (`Rules.bigint`, `Rules.bigdouble`) and its `@min` / `@max` compare exactly (`Rules.minExact`, `Rules.maxExact`); the…",
    "body": [
+    "- Exact numbers (ADR-lang-0015): a model's `bigint` / `bigdouble` fields are a JSON text both ways (`BigIntJson`,",
+    "  `BigDoubleJson`; a JSON number or another text is a `FormatException`); a local table compares and sorts their text",
+    "  by value (`LocalTable(exact:)`); a form validates their text (`Rules.bigint`, `Rules.bigdouble`) and its `@min` /",
+    "  `@max` compare exactly (`Rules.minExact`, `Rules.maxExact`); the runtime depends on `decimal`.",
     "- Environments (spec 021): `env(\"NAME\", \"default\")` in a mobile app reads the values of the environment it was built",
     "  for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example",
     "  `clean-flutter-project` reads `API_URL`.",
@@ -290,9 +294,7 @@
     "- `examples/onboarding/todos_app` and the guide `onboarding-mobile.md`: a todos app made only by the tools.",
     "- `nuclear add|remove <package>` is `flutter add|remove` (ADR-lang-0008); adding a package no longer fails in an app",
     "  without the AI plugin.",
-    "- First public version.",
-    "- `[[generators]]` in the platform: `nuclear gen` writes a resource's models, repository, use cases, screen with its state manager and tests (ADR-codegen-0001).",
-    "- `[[generators.usecase]]`: `nuclear gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001)."
+    "- First public version."
    ],
    "platforms": [
     "mobile"
@@ -307,11 +309,15 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#unreleased.91d161",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#unreleased.653c2a",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": "- `[[generators.resource]]`: the repository is merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001).",
+   "body": [
+    "- `[[generators]]` in the platform: `nuclear gen` writes a resource's models, repository, use cases, screen with its state manager and tests (ADR-codegen-0001).",
+    "- `[[generators.usecase]]`: `nuclear gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001).",
+    "- `[[generators.resource]]`: the repository is merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
+   ],
    "platforms": [
     "mobile"
    ],
@@ -739,6 +745,7 @@
     "| Session and the key of the local database | `flutter_secure_storage` |",
     "| Local database | `hive_ce` |",
     "| Models' JSON | `json_annotation` |",
+    "| Exact numbers (`bigdouble`) | `decimal` |",
     "| Translations | `flutter_localizations` (SDK), `path_provider`, `web` |",
     "| `Result` and test helpers (`testing.dart`) | `fpdart` (`Result` is its `Either`), `mocktail`, `flutter_test` (SDK) |",
     "",
@@ -765,7 +772,7 @@
     "The dialect adds these to every generated app; a project never lists them in `config.nuc`",
     "([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)): `synapsis`, `flutter_bloc`, `fpdart`,",
     "`go_router`, `json_annotation`; to generate code and for tests `build_runner`, `json_serializable`, `mocktail`,",
-    "`bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`. The full list of an app is its",
+    "`bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`; `decimal` when the code uses a `bigdouble`. The full list of an app is its",
     "`build/app/pubspec.yaml`. The list itself is the dialect's",
     "([flutter reference §3.1](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md))."
    ],
@@ -956,13 +963,51 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#in-the-runtime",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#in-the-runtime.61218f",
    "type": "context",
    "title": "The local database — In the runtime",
    "summary": "`packages/synapsis/lib/src/local/local.dart`.",
+   "body": "`packages/synapsis/lib/src/local/local.dart`.",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#in-the-runtime.791631",
+   "type": "context",
+   "title": "The local database — In the runtime",
+   "summary": "names the engine, so it can change in the package without touching the transpiler or any `.nuc`.",
    "body": [
-    "`packages/synapsis/lib/src/local/local.dart`.",
-    "",
+    "- `Synapsis.reset` closes the database; `SynapsisTest.start` sets `memory`.",
+    "- The dialect writes the table in the model and registers it with its component at startup; nothing generated",
+    "  names the engine, so it can change in the package without touching the transpiler or any `.nuc`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#in-the-runtime.9bffa6",
+   "type": "context",
+   "title": "The local database — In the runtime",
+   "summary": "Android, iOS, Linux, macOS and Windows; IndexedDB on web).",
+   "body": [
     "- `Local`: the registry and the storage. One box per table, the same engine on every platform (a file per box on",
     "  Android, iOS, Linux, macOS and Windows; IndexedDB on web). `LocalDatabase(encrypted)` comes from the configs'",
     "  `local`, per component (`configure` / `settings`, the table's `component`). The AES key is made at the first",
@@ -972,11 +1017,12 @@
     "  intact); the box is `synapsis_<name>`. `putRow` stamps `created` / `updated` (ISO-8601 texts) and gives",
     "  `generated` keys.",
     "- `LocalQuery<T>` and the operators as top-level functions.",
+    "- An exact field (`bigint`, `bigdouble`): the row keeps its JSON text; the table's `exact` names those fields and",
+    "  `valueOf` reads them as a `Decimal`, so `where` (equality, `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`) and",
+    "  `orderBy` compare by value, as the backend's SQLite does (ADR-backend-0003). The dialect writes `exact:` in the",
+    "  model's table.",
     "- `NotFound`: a `RepositoryError`, like `HttpError`; `attempt` catches both.",
-    "- `Repository.send(local:)`, `recall`, `target`, `local<T>()`, `saveLocal`.",
-    "- `Synapsis.reset` closes the database; `SynapsisTest.start` sets `memory`.",
-    "- The dialect writes the table in the model and registers it with its component at startup; nothing generated",
-    "  names the engine, so it can change in the package without touching the transpiler or any `.nuc`."
+    "- `Repository.send(local:)`, `recall`, `target`, `local<T>()`, `saveLocal`."
    ],
    "platforms": [
     "mobile"
@@ -1561,16 +1607,68 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.0a3191",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.0ed0da",
    "type": "context",
    "title": "The runtime packages — `packages/synapsis`",
    "summary": "`packages/synapsis`",
    "body": [
+    "| Network | `network/` | `NetworkManager` (connection and quality; it probes only when connectivity changes; on web it trusts the browser), `NetworkManager.fixed`, `NetworkWrapper`, `NetworkBuilder` |",
+    "| Logs | `log/log.dart` | below |",
     "| Forms (ADR-synapsis-0005) | `forms/` | format validation in presentation, business validation in the domain (`@validate`). `Rules`, `FormManager` with `checkOf` and debounce, `SynapsisForm`, `FormTextField`, `FormCheckbox`, `FormInput<T>`, `FormSubmit`, `Validators`; bound by the field's name |",
     "| Dialogs | `popups/` | `SynapsisDialog` header / body / footer (`.info / .success / .warning / .danger`, `size`, `autoClose`, `onClose`, `onCloseButton`, `onAccept`); `Popups.toast / snackbar / alert / confirm`, `PopupTheme` |",
     "| Translations (ADR-synapsis-0005) | `i18n/` | `assets/i18n/<locale>/<component>.json` + `shared.json`; `\"key\".tr({...})`; `Translations(locales, fallback, remote)`; `RemoteDictionaries` by version (files, or localStorage on web). No third-party library |",
     "| Device text layer | `device/probe_web.dart` | in debug the package exposes `__synapsisTextLayer` for the terminal device |",
     "| Test helpers | `lib/testing.dart` | `SynapsisTest.start / respondWith / requests / replace / startSession`, `pumpScreen / pumpRouter / closeScreen`, `isOk / isErr`, `thenReturnAsync`; `start` keeps the local database in memory |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.26f2ed",
+   "type": "context",
+   "title": "The runtime packages — `packages/synapsis`",
+   "summary": "`packages/synapsis`",
+   "body": [
+    "| Session (ADR-synapsis-0005) | `session/` | `session.start(data, token, roles, permissions, expiresAt)`, `get<T>()`, `set / value / remove`, `destroy()`; kept in the secure storage, it survives restarts. `start` publishes `SessionStarted<T>`; `destroy` publishes `SessionEnded` and purges the cache. `SessionInterceptor` adds the token, ends the session on a 401 and never sends an expired token |",
+    "| ACL (ADR-synapsis-0005) | `acl/` | Phalcon style (`Acl(inherits, permissions)`, deny by default) plus NestJS guards. The access map per screen is computed once per session. `canActivate` is `FutureOr<bool>`: the router (async `redirect` only then), `AclBuilder`, `Acl.check` and `Guards.verify` (async use cases) wait; `Acl.can`, `canOpen` and `Guards.check` stay sync and throw on an async guard |",
+    "| Routes | `router/router.dart` | go_router from views only; `AppRoute`, `goTo / pushTo / goBack`, typed path and query parameters, deep links, `shell` tabs, `notFound`, a `ScreenTransition` per screen; a route is nested by its path prefix, so back returns to the parent |",
+    "| Splash | `router/splash.dart` | `SplashScreen(next, child, minDuration = 3 s, onLoad, onError)`; then `goTo(next)`; `onError` with retry. `onLoad` has no timeout. The native splash is `@splash` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.325416",
+   "type": "context",
+   "title": "The runtime packages — `packages/synapsis`",
+   "summary": "`packages/synapsis`",
+   "body": [
+    "| Service | `lib/src/` | Behaviour |",
+    "|---|---|---|",
+    "| Startup, injector | `core.dart` | `Synapsis.start(config)`, `addConfig(config, component:)`, one injector, `Synapsis.reset` stops the services and closes the local database |",
+    "| Http | `http/` | `Http` gives dio its `baseUrl` with a final `/` (dio joins it to a relative path as text, so `https://host` + `todos` would be the host `hosttodos`); `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |",
+    "| Local database | `local/local.dart` | [local-database.md](local-database.md) |",
+    "| Exact numbers (ADR-lang-0015) | `exact.dart` | `Exact` (the language's texts of `bigint` / `bigdouble`, at most 1000 digits), the converters `BigIntJson` and `BigDoubleJson` the models' exact fields use (a JSON text both ways; anything else a `FormatException`); `Decimal` is `package:decimal`'s |",
+    "| State | `state/` | `StateManager<S>` never emits after it is closed |",
+    "| Events (ADR-synapsis-0005) | `events/` | below |"
    ],
    "platforms": [
     "mobile"
@@ -1607,65 +1705,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.81fb21",
-   "type": "context",
-   "title": "The runtime packages — `packages/synapsis`",
-   "summary": "`packages/synapsis`",
-   "body": [
-    "| Service | `lib/src/` | Behaviour |",
-    "|---|---|---|",
-    "| Startup, injector | `core.dart` | `Synapsis.start(config)`, `addConfig(config, component:)`, one injector, `Synapsis.reset` stops the services and closes the local database |",
-    "| Http | `http/` | `Http` gives dio its `baseUrl` with a final `/` (dio joins it to a relative path as text, so `https://host` + `todos` would be the host `hosttodos`); `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |",
-    "| Local database | `local/local.dart` | [local-database.md](local-database.md) |",
-    "| State | `state/` | `StateManager<S>` never emits after it is closed |",
-    "| Events (ADR-synapsis-0005) | `events/` | below |",
-    "| Session (ADR-synapsis-0005) | `session/` | `session.start(data, token, roles, permissions, expiresAt)`, `get<T>()`, `set / value / remove`, `destroy()`; kept in the secure storage, it survives restarts. `start` publishes `SessionStarted<T>`; `destroy` publishes `SessionEnded` and purges the cache. `SessionInterceptor` adds the token, ends the session on a 401 and never sends an expired token |"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
-   ],
-   "meta": {
-    "section": "06-mobile",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.c1a4aa",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.f78c6d",
    "type": "context",
    "title": "The runtime packages — `packages/synapsis`",
    "summary": "What the UI toolkit lacks.",
    "body": [
     "What the UI toolkit lacks. Independent and publishable: README and CHANGELOG for pub.dev, `example/`. The entry",
     "points are `lib/synapsis.dart` and `lib/testing.dart`; a service is one folder of `lib/src/`. A global service is",
-    "a `Global`: `register`, `init` at startup, `dispose`. 64 tests in `test/`."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
-   ],
-   "meta": {
-    "section": "06-mobile",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.d73699",
-   "type": "context",
-   "title": "The runtime packages — `packages/synapsis`",
-   "summary": "`packages/synapsis`",
-   "body": [
-    "| ACL (ADR-synapsis-0005) | `acl/` | Phalcon style (`Acl(inherits, permissions)`, deny by default) plus NestJS guards. The access map per screen is computed once per session. `canActivate` is `FutureOr<bool>`: the router (async `redirect` only then), `AclBuilder`, `Acl.check` and `Guards.verify` (async use cases) wait; `Acl.can`, `canOpen` and `Guards.check` stay sync and throw on an async guard |",
-    "| Routes | `router/router.dart` | go_router from views only; `AppRoute`, `goTo / pushTo / goBack`, typed path and query parameters, deep links, `shell` tabs, `notFound`, a `ScreenTransition` per screen; a route is nested by its path prefix, so back returns to the parent |",
-    "| Splash | `router/splash.dart` | `SplashScreen(next, child, minDuration = 3 s, onLoad, onError)`; then `goTo(next)`; `onError` with retry. `onLoad` has no timeout. The native splash is `@splash` |",
-    "| Network | `network/` | `NetworkManager` (connection and quality; it probes only when connectivity changes; on web it trusts the browser), `NetworkManager.fixed`, `NetworkWrapper`, `NetworkBuilder` |",
-    "| Logs | `log/log.dart` | below |"
+    "a `Global`: `register`, `init` at startup, `dispose`. 69 tests in `test/`."
    ],
    "platforms": [
     "mobile"
@@ -2042,7 +2089,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#what-each-check-covers.055594",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#what-each-check-covers.93e6bb",
    "type": "context",
    "title": "Testing — What each check covers",
    "summary": "What each check covers",
@@ -2054,7 +2101,7 @@
     "| `cargo test`: the contract of a backend | `tasks_app` built from the contract of `tasks_api`; a change in the backend breaks the client's build with the field's name | `tests/projects.rs`, `a_client_builds_from_the_backend_contract_and_sees_drift` |",
     "| `cargo test`: the reference shows the real output | the Synapsis blocks of the flutter reference | `tests/projects.rs`, `synapsis_spec_shows_the_real_output` |",
     "| `checks/spec-check-synapsis.py` | the same blocks, 27 today, and `--fix` to rewrite them | below |",
-    "| `flutter test` in `packages/synapsis` | the runtime: 64 tests (`synapsis_test`, `framework_test`, `local_test`, `testing_test`, `ui_test`) | `packages/synapsis/test/` |",
+    "| `flutter test` in `packages/synapsis` | the runtime: 69 tests (`synapsis_test`, `framework_test`, `local_test`, `exact_test`, `testing_test`, `ui_test`) | `packages/synapsis/test/` |",
     "| `flutter analyze` in `packages/synapsis` | `flutter_lints`, nothing reported | `packages/synapsis/analysis_options.yaml` |"
    ],
    "platforms": [

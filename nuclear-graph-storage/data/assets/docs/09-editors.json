@@ -649,13 +649,14 @@
    }
   },
   {
-   "id": "doc:extensions/docs/02-architecture/overview.md#the-parts.4e929d",
+   "id": "doc:extensions/docs/02-architecture/overview.md#the-parts.a99be6",
    "type": "context",
    "title": "Architecture of the editor tooling — The parts",
-   "summary": "An extension never reads the compiler's crates: it starts `nuclear-lsp` and talks to it through LSP and the `nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics).",
+   "summary": "An extension never reads the compiler's crates: it starts `nuclear-lsp` and talks to it through LSP and the `nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics, `nuclear/helperSource` a file of the helpers' library).",
    "body": [
     "An extension never reads the compiler's crates: it starts `nuclear-lsp` and talks to it through LSP and the",
-    "`nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics). How each",
+    "`nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics,",
+    "`nuclear/helperSource` a file of the helpers' library). How each",
     "one finds the binary: [language-server.md](language-server.md)."
    ],
    "sources": [
@@ -2049,9 +2050,9 @@
    "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#commands",
    "type": "readme",
    "title": "nuclear-device-manager — Commands",
-   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`).",
+   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`, `test/browser-log.test.ts`).",
    "body": [
-    "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`). The panels have no test; the web device's engine can be run",
+    "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`, `test/browser-log.test.ts`). The panels have no test; the web device's engine can be run",
     "with node without the editor ([testing](../../vscode/docs/05-standards/testing.md))."
    ],
    "sources": [
@@ -2116,13 +2117,16 @@
    "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#rules",
    "type": "readme",
    "title": "nuclear-device-manager — Rules",
-   "summary": "failure, and every failure says why (its error lines), offers *Try again* and *Show the log*, and is written to the project's `.nuclear/logs/run.log`.",
+   "summary": "run log, its origin is given to the Monitor's collector (`allowOrigin`), and a device that stops writes `exited: 0`.",
    "body": [
     "- Nothing stays alive when VS Code closes: every process a device starts carries the window's marker and is reaped.",
     "- An app lives on its own: closing a device's tab only hides it. A run never replaces a running device.",
     "- The devices belong to the mobile workspaces and the Devices tool; elsewhere they are parked, not ended.",
     "- A frame matches the device's on-screen pixels 1:1: nothing is upscaled.",
-    "- `web-session.ts`, `cdp.ts` and `launch-log.ts` never import `vscode`.",
+    "- `web-session.ts`, `cdp.ts`, `launch-log.ts` and `browser-log.ts` never import `vscode`.",
+    "- A device's page is the Monitor's: its requests (and on the web device its console and errors) go to the project's",
+    "  run log, its origin is given to the Monitor's collector (`allowOrigin`), and a device that stops writes",
+    "  `exited: 0`.",
     "- A launch never fails in silence: every step is shown on the device, a step without news past its limit is a",
     "  failure, and every failure says why (its error lines), offers *Try again* and *Show the log*, and is written to",
     "  the project's `.nuclear/logs/run.log`.",
@@ -2170,8 +2174,10 @@
     "| `src/web-device.ts` | the web device's panel and its commands |",
     "| `src/web-session.ts` | the web device's engine; no `vscode` import |",
     "| `src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |",
-    "| `src/launch-log.ts` | a launch's steps, the stall limit of each, the reason of a failure and the project's log `.nuclear/logs/run.log`; no `vscode` import |",
-    "| `test/launch-log.test.ts` | the log, the reason, the stall (node:test) |"
+    "| `src/launch-log.ts` | a launch's steps, the stall limit of each, the reason of a failure and the project's log `.nuclear/logs/run.log` (without colors); no `vscode` import |",
+    "| `src/browser-log.ts` | a page's console, errors with their stack and requests to servers as lines of the run log, the Nuclear Monitor's console (spec 015 phase 2); no `vscode` import |",
+    "| `test/launch-log.test.ts` | the log, the reason, the stall (node:test) |",
+    "| `test/browser-log.test.ts` | a page's requests (a server's, none of its files or fonts), its console (format strings), its errors with their frames (node:test) |"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -2385,13 +2391,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-page-in-the-panel",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-page-in-the-panel.475951",
    "type": "context",
    "title": "The Synapsis device (`mobile-device.ts`) — The page in the panel",
-   "summary": "`attach` opens the extension's own CDP connection (over node's WebSocket): input lands where it is drawn.",
+   "summary": "input lands where it is drawn.",
    "body": [
-    "`attach` opens the extension's own CDP connection (over node's WebSocket):",
-    "",
     "- **`emulate`**: metrics, touch and user agent of the preset, so Flutter behaves as on iOS or Android and every",
     "  input lands where it is drawn. The first time it is a `Page.navigate` already emulated; later a `Page.reload`,",
     "  only if the platform changes.",
@@ -2403,6 +2407,48 @@
     "  screen).",
     "- **Input**: `Input.dispatchTouchEvent` / `MouseEvent` / `KeyEvent`.",
     "- It reconnects (`cdp.onclose`, 10 tries) and emulates again when a frame's size differs (every 2 s at most).",
+    "- **The Monitor**: `Network.enable` and `browser-log.ts` write each request the app makes to a server (dio's XHR:",
+    "  method, address, status, time; no answer: `ERROR GET <url> net::ERR_CONNECTION_REFUSED`) into the project's run",
+    "  log, leaving out Flutter's fonts, CanvasKit and assets; the prints and errors are already there (Flutter's"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-page-in-the-panel.d4204e",
+   "type": "context",
+   "title": "The Synapsis device (`mobile-device.ts`) — The page in the panel",
+   "summary": "`attach` opens the extension's own CDP connection (over node's WebSocket):",
+   "body": "`attach` opens the extension's own CDP connection (over node's WebSocket):",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-page-in-the-panel.efc6ce",
+   "type": "context",
+   "title": "The Synapsis device (`mobile-device.ts`) — The page in the panel",
+   "summary": "output).",
+   "body": [
+    "output). The page's origin is given to the Monitor's collector, where a measured app posts its report (the Dart",
+    "  runtime's `monitor_web.dart`). An app that was live writes `exited: 0` when it ends.",
     "- `closeBrowser` at the end."
    ],
    "platforms": [
@@ -2685,7 +2731,11 @@
     "  - the screencast at the panel's density (zoom × `devicePixelRatio`);",
     "  - input: the mouse on desktop presets, touch otherwise;",
     "  - history, `captureScreenshot`, the url of the DevTools frontend;",
-    "- reports `Runtime.consoleAPICalled`, `exceptionThrown`, `Log.entryAdded` and the `Network.*` events."
+    "- reports `Runtime.consoleAPICalled`, `exceptionThrown`, `Log.entryAdded` and the `Network.*` events, and gives its",
+    "  page to others (`page`): the panel follows it with `browser-log.ts`, which writes the page's console, its errors",
+    "  with their stack (the app's files relative to the app) and its requests to servers into the project's run log,",
+    "  the Nuclear Monitor's console; the page's origin is given to the Monitor's collector, which takes the measured",
+    "  app's reports from it. `cdp.ts` lets every listener of an event hear it."
    ],
    "platforms": [
     "web"
@@ -2711,7 +2761,8 @@
     "  *Responsive* with any size, zoom (always sharp); the color scheme, the network throttling, no cache.",
     "- A dock, filtered: the page's **Console** (errors counted; a line's source opens the generated file) and",
     "  **Network** (method, status, address, type, size, time).",
-    "- A screenshot into `build/screenshots/`."
+    "- A screenshot into `build/screenshots/`.",
+    "- Closing it, or a new start, writes `exited: 0` to the run log when the page was live."
    ],
    "platforms": [
     "web"
@@ -4039,7 +4090,14 @@
     "so the language server's `Project::build` produces it): the app, its version, platform and dialect, its `models`,",
     "its `controllers` (what a backend exposes) and its `repositories` (what a mobile or web app calls), each a",
     "component with its routes (verb, path, params in path / query / body, what it returns)",
-    "([projects §1.2](../../../../../nuclearlang/docs/07-reference/projects.md))."
+    "([projects §1.2](../../../../../nuclearlang/docs/07-reference/projects.md)).",
+    "",
+    "A call of a mobile or web app to one of the window's own backends is not listed twice (`oursOf`): when it goes",
+    "through the app's default connection (the backend's address, `API_URL`) and a backend project serves the same verb and",
+    "path (a parameter's name aside: `:id` = `{name}`), it is that backend's route, shown once under the backend with the",
+    "apps that call it in its description (`api · app, web`). A call through a named connection (a weather API, a payment",
+    "service) is never ours and stays under the app, marked with its connection; a call to the default connection that no",
+    "backend serves stays too, marked *external*. An app with nothing of its own left is not shown."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/docs/02-architecture/overview.md"
@@ -4388,7 +4446,8 @@
     "`nuclear build` write next to the project card:",
     "",
     "- a **backend**'s `controllers`: the routes it exposes;",
-    "- a **mobile or web** app's `repositories`: the calls it makes;",
+    "- a **mobile or web** app's `repositories`: the calls it makes to other services (a weather API...). A call to your own",
+    "  backend is not repeated: it is the backend's route, which says which apps call it (`api · app, web`);",
     "- for each endpoint: the verb, the path, the path, query and body parameters, and what it returns;",
     "- whether a backend serves it over WebSockets too, and the events each component pushes.",
     "",
@@ -4408,8 +4467,8 @@
    "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#commands",
    "type": "readme",
    "title": "nuclear-monitor — Commands",
-   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-monitor/test/monitor.test.ts`).",
-   "body": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-monitor/test/monitor.test.ts`).",
+   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-monitor/test/monitor.test.ts`, `collector.test.ts`).",
+   "body": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-monitor/test/monitor.test.ts`, `collector.test.ts`).",
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
    ],
@@ -4442,7 +4501,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#nuclear-monitor",
+   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#nuclear-monitor.0c918c",
    "type": "readme",
    "title": "nuclear-monitor",
    "summary": "selected project is doing while it runs.",
@@ -4452,14 +4511,33 @@
     "status and time; every error with its cause and its stack, a click opening the `.nuc` line; the app's own output;",
     "start, reload, stop), filterable (all, requests, errors), and, when the project is measured, the **measurements**:",
     "each Nuclear function and method with its time, own time, calls, connections and memory as an accordion of bars,",
-    "the hot spots marked. Not running, the page runs it itself, visibly (the terminal `<project> · monitor`, or a device",
-    "for a mobile app). VS Code only: the workspace strip's tool (`Ctrl+Alt+F`) and the command `nuclear.monitor.open",
-    "[root]` (*Nuclear: Open Monitor*).",
-    "",
+    "the hot spots marked, for a backend, a web app and a mobile app alike. Not running, the page runs it itself,",
+    "visibly (the terminal `<project> · monitor` for a backend, the web device for a web app, the device picked for a",
+    "mobile app). VS Code only: the workspace strip's tool (`Ctrl+Alt+F`) and the command `nuclear.monitor.open",
+    "[root]` (*Nuclear: Open Monitor*)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#nuclear-monitor.5394f7",
+   "type": "readme",
+   "title": "nuclear-monitor",
+   "summary": "What it reads is not here: the run log `nuclear run` and the editor's devices write (`<project>/.nuclear/logs/run.log`), read by `nuclear monitor --json` (`tools/cli/src/framework/console.rs`: the state of the run and its lines by kind) with the report an app built with the monitor writes…",
+   "body": [
     "What it reads is not here: the run log `nuclear run` and the editor's devices write (`<project>/.nuclear/logs/run.log`),",
     "read by `nuclear monitor --json` (`tools/cli/src/framework/console.rs`: the state of the run and its lines by kind)",
     "with the report an app built with the monitor writes (`.nuclear/monitor/report.json`: the transpiler's wrapper, each",
-    "dialect's `templates/monitor.tpl`, the hot spots of `monitor.rs`). This tool only draws what that command prints."
+    "dialect's `templates/monitor.tpl`, the hot spots of `monitor.rs`). An app in a browser or on a phone has no project",
+    "files: it posts its report to this tool's **collector** (`src/collector.ts`), which writes that file, and the devices",
+    "write the page's console into the run log (`../nuclear-device-manager/src/browser-log.ts`). This tool only draws what",
+    "that command prints."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
@@ -4483,8 +4561,11 @@
     "  workspace's own folder nor the first folder of VS Code.",
     "- The page runs the app itself when it is not running (the user, 2026-11-23, overruling \"the page never runs the",
     "  app\"), always visibly: once on its own per project and window, after that only by *Run and watch* / *Try again*;",
-    "  a running one is only shown. Measuring is turned on with it (`nuclear monitor --on`) where the platform can be",
-    "  measured (not a phone's or a browser's app yet).",
+    "  a running one is only shown. Measuring is turned on with it (`nuclear monitor --on`), for every platform: a web app",
+    "  runs on the web device (its page's console reaches the log), a mobile app on the device picked.",
+    "- The collector writes only `<project>/.nuclear/monitor/report.json` of a project it knows (told by the page or a",
+    "  device, or found in the registry of projects by its key), only with the window's token, only from the app's own",
+    "  origin (or none: a phone's app); it is never reachable from another machine.",
     "- The page's own words never hold a path, a command, a backtick or a file name: those are only in *Details*. The",
     "  console shows the app's output as it is."
    ],
@@ -4516,20 +4597,49 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#where-the-code-is",
+   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#where-the-code-is.4e3057",
    "type": "readme",
    "title": "nuclear-monitor — Where the code is",
    "summary": "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
+   "body": "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
+   "sources": [
+    "extensions/tools/nuclear-monitor/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#where-the-code-is.70c127",
+   "type": "readme",
+   "title": "nuclear-monitor — Where the code is",
+   "summary": "Where the code is",
    "body": [
-    "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
-    "",
     "| File | What it is |",
     "|---|---|",
     "| `src/monitor.ts` | `readMonitor` (runs `nuclear monitor --json`), `explainPlace` (an error's `.nuc` line: the one it names, else `nuclear explain --json`), `projectAt`, the texts in English and Spanish, the page's states (`stateOf`) and HTML (`page`, `parts`, `consoleLine`, `rows`); no `vscode` import |",
-    "| `src/panel.ts` | the page (`MonitorPanel`: the project followed, the redraws, *Run and watch*, the toggle), the command and the watchers of the run logs and reports (`activateMonitor`) |",
-    "| `test/monitor.test.ts` | each state of the page in both languages (no path or command in its words), the console of a real run, the measurements, an old report (node:test) |",
-    "| `test/fixtures/` | `running-backend.json` (`nuclear monitor --json` of a real backend run: requests, 404s, a 500 with its stack, a measured report), `report-0.96.json` (what 0.96 printed: no console) |"
+    "| `src/panel.ts` | the page (`MonitorPanel`: the project followed, the redraws, *Run and watch*, the toggle), the command, the watchers of the run logs and reports and the window's collector (`activateMonitor`, `NUCLEAR_MONITOR_URL`) |",
+    "| `src/collector.ts` | the collector (spec 015 phase 2): 127.0.0.1, a random port, a token of the window, the project's key (`projectKey`, the CLI's), CORS only for the app's origin (`allowOrigin`, the devices'), the report written whole; no `vscode` import |",
+    "| `test/monitor.test.ts` | each state of the page in both languages (no path or command in its words), the console of a real run, a browser's console, the measurements, an old report (node:test) |",
+    "| `test/collector.test.ts` | the collector: the token, the project's key against the CLI's, the origins, a body that is not a report, a project of the registry (node:test) |"
    ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/AGENTS.md#where-the-code-is.c6bebd",
+   "type": "readme",
+   "title": "nuclear-monitor — Where the code is",
+   "summary": "Where the code is",
+   "body": "| `test/fixtures/` | `running-backend.json` (`nuclear monitor --json` of a real backend run: requests, 404s, a 500 with its stack, a measured report), `report-0.96.json` (what 0.96 printed: no console) |",
    "sources": [
     "extensions/tools/nuclear-monitor/AGENTS.md"
    ],
@@ -4621,6 +4731,54 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.04c846",
+   "type": "context",
+   "title": "How the run log and the report reach the page",
+   "summary": "a build error), else the innermost frame of `nuclear explain --json` (the build's line map); a click on a name of the measurements opens `<project>/<path>` at its line.",
+   "body": [
+    "a build error), else the innermost frame of `nuclear explain --json` (the build's line map); a click on a name of",
+    "  the measurements opens `<project>/<path>` at its line.",
+    "- The measurements tree: one `<details>` per node, open for the first two levels and for every flagged node; the",
+    "  bar's length is the node's time against the longest root, its darker part the own time."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.3aa5a4",
+   "type": "context",
+   "title": "How the run log and the report reach the page",
+   "summary": "nuclear run (terminal) ─┐ each step, the build's errors, the server's output (a line per request, the cause and the editor's devices ─┴► stack of each 500), exited:/failed: ──► <project>/.nuclear/logs/run.log the web device, the Synapsis device ─► the page's requests, prints and errors (CDP:…",
+   "body": [
+    "```",
+    "nuclear run (terminal)  ─┐  each step, the build's errors, the server's output (a line per request, the cause and",
+    "the editor's devices    ─┴► stack of each 500), exited:/failed:  ──►  <project>/.nuclear/logs/run.log",
+    "the web device, the Synapsis device ─► the page's requests, prints and errors (CDP: browser-log.ts) ──► run.log",
+    "nuclear run --monitor, or nuclear monitor --on (.nuclear/monitor/on, honoured by build, watch and run)",
+    "        └► the app measured ──► NuclearMonitor writes <project>/.nuclear/monitor/report.json every 2 s and at exit",
+    "           an app in a browser (or on a phone) ──POST every 2 s──► the collector (collector.ts; nuclear run's",
+    "           own without the editor) ──► <project>/.nuclear/monitor/report.json",
+    "",
+    "FileSystemWatcher **/.nuclear/logs/run.log, **/.nuclear/monitor/report.json (debounced 300 ms) + every 2 s while",
+    "visible ──► MonitorPanel.refresh ──► nuclear monitor --json --project <project> ──► page() once, then parts()",
+    "```"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.3af90d",
    "type": "context",
    "title": "How the run log and the report reach the page",
@@ -4649,83 +4807,55 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.478b4e",
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.7bf7ba",
+   "type": "context",
+   "title": "How the run log and the report reach the page",
+   "summary": "runtime (`http://127.0.0.1:<port>/<token>/<key>`), so a rebuild on save keeps it.",
+   "body": [
+    "runtime (`http://127.0.0.1:<port>/<token>/<key>`), so a rebuild on save keeps it. A browser's runtime posts its",
+    "  report there with the page's own `fetch` (not counted); the collector checks the token, finds the project by its",
+    "  key (told by the page or a device with `allow`, else the registry `nuclear projects --json`), takes a request only",
+    "  from the app's origin (a device's page, or the registry's port on this machine; a phone's app sends none),",
+    "  answers CORS for that origin only, and writes the report whole. Without the editor, `nuclear run --monitor` of a",
+    "  web or mobile app runs a collector of its own (`tools/cli/src/framework/collector.rs`).",
+    "- **A device's console**: the web device follows its page (console, exceptions, `Network.*`), the Synapsis device",
+    "  only the requests (Flutter's output already carries the prints and errors); `browser-log.ts` writes them as the",
+    "  run log's lines (`GET http://… 200 12ms`, `ERROR GET http://… net::ERR_CONNECTION_REFUSED`, `ERROR Uncaught",
+    "  TypeError: …` with its frames relative to the app), leaving out the page's own files, a framework's fonts and",
+    "  assets, and the collector's posts. A device that stops writes `exited: 0`.",
+    "- **A click** on an error's *Open in the code* opens the `.nuc` line the error names (`--> components/a.nuc:11:9` of"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.df2127",
    "type": "context",
    "title": "How the run log and the report reach the page",
    "summary": "bottom are kept.",
    "body": [
     "*Show details*). The parts are redrawn by a message: the open errors, the filter, the tab and the scroll at the",
     "  bottom are kept.",
-    "- **Run and watch**: a running or starting project is only shown. Otherwise a backend or web app runs in the",
-    "  terminal `<project> · monitor` (`nuclear monitor --on && nuclear run`; `nuclear run` installs the packages itself);",
-    "  a mobile app goes to the workspace's ▷ Run (the pick of a device; outside a workspace, `nuclear.run`). The page",
-    "  does it once by itself per project and window when it opens on a project that is not running (not for a mobile",
-    "  app: the device is a choice).",
-    "- **The toggle** runs `nuclear monitor --on|--off`; a running backend is built again so its reload is measured (or no",
-    "  longer). Disabled for a mobile or web app: a phone's or a browser's app cannot write the report yet.",
-    "- **A click** on an error's *Open in the code* opens the `.nuc` line the error names (`--> components/a.nuc:11:9` of",
-    "  a build error), else the innermost frame of `nuclear explain --json` (the build's line map); a click on a name of",
-    "  the measurements opens `<project>/<path>` at its line.",
-    "- The measurements tree: one `<details>` per node, open for the first two levels and for every flagged node; the",
-    "  bar's length is the node's time against the longest root, its darker part the own time."
+    "- **Run and watch**: a running or starting project is only shown. Otherwise a backend runs in the terminal",
+    "  `<project> · monitor` (`nuclear monitor --on && nuclear run`; `nuclear run` installs the packages itself); a web",
+    "  app is measured (`nuclear monitor --on`) and opened on the web device (`nuclear.webDevice.open`), whose page's",
+    "  console reaches the log; a mobile app is measured and goes to the workspace's ▷ Run (the pick of a device; outside",
+    "  a workspace, `nuclear.run`). The page does it once by itself per project and window when it opens on a project",
+    "  that is not running (not for a mobile app: the device is a choice).",
+    "- **The toggle** runs `nuclear monitor --on|--off`; a running app is built again so its reload is measured (or no",
+    "  longer): a server reloads, a web app's dev server reloads the page, a phone app is hot-restarted.",
+    "- **The collector** (spec 015 phase 2): `activateMonitor` starts one per window (127.0.0.1, a random port, a token)",
+    "  and gives its address to every process of the window and its terminals as `NUCLEAR_MONITOR_URL`; a measured build",
+    "  writes it, with the project's key (FNV-1a of its folder, `projectKey` = the CLI's `project_key`), into the"
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/02-architecture/overview.md#how-the-run-log-and-the-report-reach-the-page.82dac2",
-   "type": "context",
-   "title": "How the run log and the report reach the page",
-   "summary": "nuclear run (terminal) ─┐ each step, the build's errors, the server's output (a line per request, the cause and the editor's devices ─┴► stack of each 500), exited:/failed: ──► <project>/.nuclear/logs/run.log nuclear run --monitor, or nuclear monitor --on (.nuclear/monitor/on, honoured by build,…",
-   "body": [
-    "```",
-    "nuclear run (terminal)  ─┐  each step, the build's errors, the server's output (a line per request, the cause and",
-    "the editor's devices    ─┴► stack of each 500), exited:/failed:  ──►  <project>/.nuclear/logs/run.log",
-    "nuclear run --monitor, or nuclear monitor --on (.nuclear/monitor/on, honoured by build, watch and run)",
-    "        └► the app measured ──► NuclearMonitor writes <project>/.nuclear/monitor/report.json every 2 s and at exit",
-    "",
-    "FileSystemWatcher **/.nuclear/logs/run.log, **/.nuclear/monitor/report.json (debounced 300 ms) + every 2 s while",
-    "visible ──► MonitorPanel.refresh ──► nuclear monitor --json --project <project> ──► page() once, then parts()",
-    "```"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.3c5921",
-   "type": "readme",
-   "title": "Nuclear Monitor",
-   "summary": "1. In the Nuclear workspace choose the app, then the strip's Monitor (`Ctrl+Alt+F`).",
-   "body": [
-    "1. In the Nuclear workspace choose the app, then the strip's **Monitor** (`Ctrl+Alt+F`). From the command palette:",
-    "   *Nuclear: Open Monitor* (the app of the open `.nuc`, else the workspace's app). With several apps, the header's",
-    "   *Project* switches between them.",
-    "2. If the app is not running, the Monitor starts it in a terminal named `<app> · monitor` (a phone app: you pick",
-    "   the device). It never starts one twice: a running app is only shown. *Run and watch* starts it again later.",
-    "3. **Console**: the lines of the run, newest at the bottom. A request shows its method, path, status (green, amber",
-    "   for 4xx, red for 5xx) and time; an error is red, with its cause; open it to read its stack (your code's lines",
-    "   stand out), and *Open in the code* goes to the `.nuc` line. *All*, *Requests* and *Errors* filter the lines.",
-    "4. **Measurements**: with *Measure the app* on (the Monitor turns it on when it runs the app; in a terminal",
-    "   `nuclear monitor --on`, or `nuclear run --monitor`), use the app, then read the **hot spots** first:",
-    "   - `slow`: its own time is a fifth or more of the whole call;",
-    "   - `async calls in a loop`: an async call made five or more times, one after another, inside one call of its",
-    "     parent: start them together (`~awaitAll([...])`);",
-    "   - `many connections`: ten or more new connections per call (a client or a pool made per call);"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
    ],
    "meta": {
     "section": "09-editors",
@@ -4752,12 +4882,17 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.fae2f8",
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.7e9944",
    "type": "readme",
    "title": "Nuclear Monitor",
-   "summary": "Under them, each row is a function with its time (the bar; its own time darker), calls, connections and memory.",
+   "summary": "`nuclear monitor --on`, or `nuclear run --monitor`), use the app, then read the hot spots first: parent: start them together (`~awaitAll([...])`); Under them, each row is a function with its time (the bar; its own time darker), calls, connections and memory.",
    "body": [
-    "- `much memory`: 10 MB or more grown per call.",
+    "`nuclear monitor --on`, or `nuclear run --monitor`), use the app, then read the **hot spots** first:",
+    "   - `slow`: its own time is a fifth or more of the whole call;",
+    "   - `async calls in a loop`: an async call made five or more times, one after another, inside one call of its",
+    "     parent: start them together (`~awaitAll([...])`);",
+    "   - `many connections`: ten or more new connections per call (a client or a pool made per call);",
+    "   - `much memory`: 10 MB or more grown per call.",
     "   Under them, each row is a function with its time (the bar; its own time darker), calls, connections and memory.",
     "   Click a name to open its `.nuc` at the line. Measuring stays on through saves and reloads until you turn it off.",
     "5. If the app could not start, the Monitor says where (the build, the packages, the server, the device): fix it and",
@@ -4769,9 +4904,58 @@
     "Turn measuring off before you ship (`nuclear monitor --off`): the monitor is for finding the problem, not for",
     "production.",
     "",
-    "What it cannot do yet: measure an app on a phone or in a browser (its console works); show the lines of a phone app",
-    "started with `nuclear run` in a terminal (Flutter keeps that terminal: run it from the workspace instead). See the",
-    "[roadmap](../01-product/roadmap.md)."
+    "`nuclear run --monitor` of a web or phone app in a terminal, with no editor open, measures it too: the command",
+    "receives the app's measurements itself while it runs."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.bd3cd9",
+   "type": "readme",
+   "title": "Nuclear Monitor",
+   "summary": "1. In the Nuclear workspace choose the app, then the strip's Monitor (`Ctrl+Alt+F`).",
+   "body": [
+    "1. In the Nuclear workspace choose the app, then the strip's **Monitor** (`Ctrl+Alt+F`). From the command palette:",
+    "   *Nuclear: Open Monitor* (the app of the open `.nuc`, else the workspace's app). With several apps, the header's",
+    "   *Project* switches between them.",
+    "2. If the app is not running, the Monitor starts it, measured: a backend in a terminal named `<app> · monitor`, a",
+    "   web app on the web device beside your code, a phone app on the device you pick (the Synapsis device). It never",
+    "   starts one twice: a running app is only shown. *Run and watch* starts it again later.",
+    "3. **Console**: the lines of the run, newest at the bottom. A request shows its method, path, status (green, amber",
+    "   for 4xx, red for 5xx) and time; an error is red, with its cause; open it to read its stack (your code's lines",
+    "   stand out), and *Open in the code* goes to the `.nuc` line. *All*, *Requests* and *Errors* filter the lines.",
+    "   For a web or phone app on a device the console is the page's: what it prints, its errors with their stack, and",
+    "   each request it makes to a server with its full address; a request with no answer is an error with the reason",
+    "   (`net::ERR_CONNECTION_REFUSED`: the server is not running there), the cause behind \"No connection to the",
+    "   server\".",
+    "4. **Measurements**: with *Measure the app* on (the Monitor turns it on when it runs the app; in a terminal"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-monitor/docs/08-guides/README.md#nuclear-monitor.cddd1a",
+   "type": "readme",
+   "title": "Nuclear Monitor",
+   "summary": "What it cannot do yet: measure an app on a real phone or an emulator (its console works when run from the workspace); show the page's own console of a web app opened in your own browser (run it on the web device); show the lines of a phone app started with `nuclear run` in a terminal (Flutter…",
+   "body": [
+    "What it cannot do yet: measure an app on a real phone or an emulator (its console works when run from the",
+    "workspace); show the page's own console of a web app opened in your own browser (run it on the web device); show the",
+    "lines of a phone app started with `nuclear run` in a terminal (Flutter keeps that terminal: run it from the",
+    "workspace instead). See the [roadmap](../01-product/roadmap.md)."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/08-guides/README.md"
@@ -5330,6 +5514,25 @@
     "- Fix: in a workspace's own channel, a message is answered by the tech lead of the team assigned to it (nobody answered: the channel did not name its team).",
     "- **Nuclear Builder shows a run as its progress**: the stations in a line with who works each, what is being done now (or what waits for your answer, with *Answer*), and the spec it works on with its criteria; *Technical diagram* shows the detailed one. A run the team starts from the chat appears by itself: the open Builder moves to it, a notice says so, and opening the Builder shows the run being worked on.",
     "- Fix: a spec and its run asked in a workspace's channel go to the app they are for (the tech lead says which); they went to the workspace's folder, where the Builder never showed them and the code would not have been written in the app."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.15f1c0",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- HTTP Connections no longer repeats an endpoint: a mobile or web app's call to the window's own backend is that backend's route, shown once with the apps that call it (`api · app, web`); a call to another service (a weather API) stays under the app. The HTTP Connections request tests, never run before, now run with the extension's tests.",
+    "- **Nuclear Monitor watches and measures web and mobile apps**: *Measure the app* works for every app; *Run and watch* opens a web app on the web device and a mobile app on the device picked, measured. Their console is the page's (prints, errors with their stack and *Open in the code*, each request with its address and status, a request with no answer with its reason: what was \"No connection to the server\"), and their measurements arrive through the window's collector (127.0.0.1, a token, the app's origin only). The web device's log has no terminal colours any more; the devices write how a run ended.",
+    "- **Nuclear Builder runs a station's checks at the same time**: four at once by default (`parallelChecks` in `.nuclear/builder.json`, 1 to 16), each its own agent's session, step, trace and cost, in its own copy of the project with its fixes merged back; the page shows each with its spinner and *Now · N checks at the same time*, the log in the order they ended (English and Spanish). Six checks of a stubbed second each: 6.1 s before, 2.0 s now."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -7086,7 +7289,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/client.md#the-client.215edc",
+   "id": "doc:extensions/vscode/docs/02-architecture/client.md#the-client.0708c9",
    "type": "context",
    "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — The client",
    "summary": "`extension.ts` starts the server (where it finds it) and adds: `.nuclear/project.json` (`projectCard`).",
@@ -7097,16 +7300,14 @@
     "  `.nuclear/project.json` (`projectCard`). A file outside a project shows `nuclear.dialect`, and a click opens the",
     "  picker of dialects.",
     "- **Show Generated Code**: the code the file generates, beside it (`nuclear/transpile`).",
+    "- **The helpers' library**: the client declares `experimental.nuclearHelperSource`, so go to definition of a helper",
+    "  (`chunk`) answers `nuclear-helper:/array.nuc`; a content provider of that scheme fills it, read-only, with",
+    "  `nuclear/helperSource`.",
     "- `watchIdle`: stops the server 5 minutes after the last `.nuc` closes.",
     "",
     "`card.ts` reads the card (`readCard(root)`, `projectCard(file)`, `appDir`, `isInstalled`): the platform, the",
     "dialect, the output folder and the toolchain of a project, so the client never assumes a path, a port or a command",
-    "of a dialect.",
-    "",
-    "The toolchains' settings (`nuclear.toolchains.*`) are in the environment of every process the extension starts and",
-    "every terminal: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`/`FLUTTER`, which `nuclear` reads before its own and",
-    "the PATH ([ai-services.md](ai-services.md#the-toolchains-toolchainsts-toolchainhostts)); with no Flutter setting and no",
-    "Flutter variable, the Dart extension's `dart.flutterSdkPath` (or `dart.flutterSdkPaths`) is `FLUTTER_ROOT`."
+    "of a dialect."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/client.md"
@@ -7118,11 +7319,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/client.md#the-client.ab1ed1",
+   "id": "doc:extensions/vscode/docs/02-architecture/client.md#the-client.0f7a10",
    "type": "context",
    "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — The client",
-   "summary": "The language server (`serverCandidates`, `toolchains.ts`): `nuclear.server.path`, else the installer's `<installation>/bin/nuclear-lsp` (this system's own build), the PATH, the build bundled in `server/` (a Linux x86_64 build: only on Linux x86_64), a build of the repository.",
+   "summary": "The toolchains' settings (`nuclear.toolchains.*`) are in the environment of every process the extension starts and every terminal: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`/`FLUTTER`, which `nuclear` reads before its own and the PATH (ai-services.md); with no Flutter setting and no Flutter…",
    "body": [
+    "The toolchains' settings (`nuclear.toolchains.*`) are in the environment of every process the extension starts and",
+    "every terminal: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`/`FLUTTER`, which `nuclear` reads before its own and",
+    "the PATH ([ai-services.md](ai-services.md#the-toolchains-toolchainsts-toolchainhostts)); with no Flutter setting and no",
+    "Flutter variable, the Dart extension's `dart.flutterSdkPath` (or `dart.flutterSdkPaths`) is `FLUTTER_ROOT`.",
+    "",
     "The language server (`serverCandidates`, `toolchains.ts`): `nuclear.server.path`, else the installer's",
     "`<installation>/bin/nuclear-lsp` (this system's own build), the PATH, the build bundled in `server/` (a Linux x86_64",
     "build: only on Linux x86_64), a build of the repository.",
@@ -8742,7 +8948,8 @@
     "- **Completion**, **hover** and **signature help** come from the dialect of the file's project and its type",
     "  definitions.",
     "- **Go to definition** (F12), **find references**, **rename** (F2), the **outline** and **folding** work across",
-    "  the files of a project.",
+    "  the files of a project. On a helper of the language (`chunk`, `uniqBy`), F12 and peek open its file of the",
+    "  library, read-only.",
     "- **Semantic colors** are on for `.nuc` files. The extension also sets, for `[nuclear]`: tab size 2, spaces,",
     "  indentation guides and format on type.",
     "- **Comments**: Enter inside a `//` comment continues it with ` * `; Enter on an empty ` *` line ends it. There is",
@@ -9520,7 +9727,8 @@
     "- `library.toml`: Nuclear's standard library written in Dart (one template per member).",
     "- `docs.toml`: what the editor shows for each kind and header word.",
     "- `templates/`: `extension.tpl`, `mixin.tpl`, `data.tpl`, `doc_comment.tpl`, `monitor.tpl` (the monitor's runtime of a",
-    "  project built with `--monitor`; `dart:io`: not for the web yet).",
+    "  project built with `--monitor`, its own host where `dart:io` works) and `monitor_web.tpl` (its host in a browser,",
+    "  `dart:js_interop`, imported conditionally: the report posted to the editor's collector).",
     "- `frameworks/flutter/`: the framework dialect (`dialect.toml`, `docs.toml`, `templates/`).",
     "- `defs/<package>/<version>/`: type definitions. Generated.",
     "- `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and",

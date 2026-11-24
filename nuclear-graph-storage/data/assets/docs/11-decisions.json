@@ -6035,11 +6035,21 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.89bdba",
+   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.3e07a9",
    "type": "spec",
    "title": "Spec 015: Nuclear Monitor — Design — 2. Who does what (root rule 2)",
-   "summary": "Generators (a body with `yield`) and abstract methods get no wrapper.",
-   "body": "Generators (a body with `yield`) and abstract methods get no wrapper.",
+   "summary": "2. Who does what (root rule 2)",
+   "body": [
+    "| Part | Where | What |",
+    "|---|---|---|",
+    "| The switch | `Manifest.monitor` (project), `transpile_monitored` (one file) | set by the CLI's `--monitor` |",
+    "| What a template knows | the compiler, generic | `monitor` (flag) and `site` (`label`, `path`, `line`, `component`, `kind`) in the `function` and `method` templates |",
+    "| The runtime | the dialect's `monitor_runtime` template | written once to `nuclear/monitor.<ext>` of a project (like the `Result` runtime), inline in a file built alone; imported as `NuclearMonitor` by each file that measures |",
+    "| The wrapper | the dialect's `function` / `method` templates | `{{#monitor}}...{{/monitor}}`: TypeScript and Dart wrap the body in `try/finally`, Python writes the decorator `@NuclearMonitor.wrap(...)` |",
+    "| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else the collector the build was given (an app without the project's files), else `.nuclear/monitor/report.json` of the working folder |",
+    "| The collector | the editor's Monitor; `nuclear run --monitor` without the editor | §8: receives the report of an app in a browser or on a phone and writes it to the project |",
+    "| The browser's part | the dialect's optional `monitor_runtime_web` | written beside the runtime to `nuclear/monitor_web` where the target cannot import the browser's API everywhere (Dart: a conditional import) |"
+   ],
    "agents": false,
    "sources": [
     "docs/04-specs/015-monitor/design.md"
@@ -6051,21 +6061,16 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.dfbb9d",
+   "id": "doc:docs/04-specs/015-monitor/design.md#2-who-does-what-root-rule-2.6b6b96",
    "type": "spec",
    "title": "Spec 015: Nuclear Monitor — Design — 2. Who does what (root rule 2)",
-   "summary": "2. Who does what (root rule 2)",
+   "summary": "Generators (a body with `yield`) and abstract methods get no wrapper.",
    "body": [
-    "| Part | Where | What |",
-    "|---|---|---|",
-    "| The switch | `Manifest.monitor` (project), `transpile_monitored` (one file) | set by the CLI's `--monitor` |",
-    "| What a template knows | the compiler, generic | `monitor` (flag) and `site` (`label`, `path`, `line`, `component`, `kind`) in the `function` and `method` templates |",
-    "| The runtime | the dialect's `monitor_runtime` template | written once to `nuclear/monitor.<ext>` of a project (like the `Result` runtime), inline in a file built alone; imported as `NuclearMonitor` by each file that measures |",
-    "| The wrapper | the dialect's `function` / `method` templates | `{{#monitor}}...{{/monitor}}`: TypeScript and Dart wrap the body in `try/finally`, Python writes the decorator `@NuclearMonitor.wrap(...)` |",
-    "| The report | the runtime | `NUCLEAR_MONITOR_FILE` (set by `nuclear run`, `--monitor` or not, and by a measured build), else `.nuclear/monitor/report.json` of the working folder |",
     "| The switch kept | `.nuclear/monitor/on` | `nuclear monitor --on` / `--off`: every build, watch and run of the project measured until it is removed |",
     "| The tree as text | `nuclear monitor` | reads the report, prints the tree and the hot spots |",
-    "| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel: the console of the last run (`console` of `nuclear monitor --json`, read from the run log) and the measurements |"
+    "| The view | `extensions/tools/nuclear-monitor/` | the VS Code panel: the console of the last run (`console` of `nuclear monitor --json`, read from the run log) and the measurements |",
+    "",
+    "Generators (a body with `yield`) and abstract methods get no wrapper."
    ],
    "agents": false,
    "sources": [
@@ -6093,6 +6098,7 @@
     "| Browser | a variable (concurrent async calls may land on another parent) | `performance.now()` | `performance.memory` (Chromium) | `fetch`, `XMLHttpRequest.open`, `WebSocket` |",
     "| Python | `contextvars.ContextVar` | `time.perf_counter_ns()` | `tracemalloc` (slows allocation: documented in the report) | `socket.socket.connect` |",
     "| Dart | a variable (as the browser) | `Stopwatch` | `ProcessInfo.currentRss` | `IOOverrides.socketConnect` / `socketStartConnect` |",
+    "| Dart in a browser | a variable | `Stopwatch` | `performance.memory` (Chromium) | `fetch`, `XMLHttpRequest.open` |",
     "",
     "Memory is the heap grown during the calls (net: garbage not yet collected counts); a connection is a new socket",
     "(a pooled connection reused counts once)."
@@ -6193,6 +6199,35 @@
     "`project_monitor` calls it; `nuclear monitor",
     "--remember` stores the hot spots as a card of the project in the Smart Graph (`graph_remember`), so the next agent",
     "knows where the app was slow and on which `.nuc` lines."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/015-monitor/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/015-monitor/design.md#8-an-app-without-the-project-s-files",
+   "type": "spec",
+   "title": "Spec 015: Nuclear Monitor — Design — 8. An app without the project's files",
+   "summary": "An app in a browser (a web app; a mobile app on the Synapsis device, which is Flutter web) or on a phone cannot write `report.json`.",
+   "body": [
+    "An app in a browser (a web app; a mobile app on the Synapsis device, which is Flutter web) or on a phone cannot write",
+    "`report.json`. Its runtime posts the report every two seconds, with the page's own `fetch` (not counted), to a",
+    "collector at `http://127.0.0.1:<port>/<token>/<key>`: `NUCLEAR_MONITOR_URL` (`http://127.0.0.1:<port>/<token>`,",
+    "given by the editor to every process of its window, or by `nuclear run --monitor` that starts one) plus the",
+    "project's key (FNV-1a, 64 bits, of the project's canonical folder, in hex), written by a measured build into the",
+    "runtime (`Manifest.monitor_url`, the template variable `url`; an address that is not of 127.0.0.1 or holds a",
+    "character a string would need to escape is not written). The collector takes a POST only with its token, for a",
+    "project it knows by its key, and from the app's origin (a device's page, or the project's port of the registry on",
+    "`127.0.0.1`, `localhost` or `[::1]`; a request without an origin is not a browser's: a phone's app); CORS answers that",
+    "origin only; a body that is not a report (`format`, `roots`) is 400, over 8 MB 413; the report is written whole to",
+    "`<project>/.nuclear/monitor/report.json`. The console of such an app is its page's: the devices write its requests,",
+    "prints and errors into the run log (`extensions/tools/nuclear-monitor/docs/02-architecture/overview.md`)."
    ],
    "agents": false,
    "sources": [
@@ -6362,14 +6397,44 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-2",
+   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-2-an-app-in-a-browser-or-on-a-phone.7259ee",
    "type": "spec",
-   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 2",
-   "summary": "dev server); the Dart runtime without `dart:io` on the web.",
+   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 2: an app in a browser or on a phone",
+   "summary": "reach 127.0.0.1 (`adb reverse` for Android; the VM service's `postEvent` for iOS): `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`.",
    "body": [
-    "- [ ] The report of an app on a phone (Flutter: the VM service's `postEvent`) and in a browser tab (a route of the",
-    "      dev server); the Dart runtime without `dart:io` on the web.",
+    "- [ ] A phone app on a real device or an emulator: its dart:io runtime posts to the collector, but the phone does not",
+    "      reach 127.0.0.1 (`adb reverse` for Android; the VM service's `postEvent` for iOS):",
+    "      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`.",
     "- [ ] The Monitor in Android Studio / IntelliJ."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/015-monitor/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-2-an-app-in-a-browser-or-on-a-phone.a35587",
+   "type": "spec",
+   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 2: an app in a browser or on a phone",
+   "summary": "Done (2026-11-24, \"Monitor for everything\"): the report of an app in a browser through a collector (the editor's, `extensions/tools/nuclear-monitor/src/collector.ts`; `nuclear run --monitor`'s own without the editor, `tools/cli/src/framework/collector.rs`), not a route of the dev server:…",
+   "body": [
+    "Done (2026-11-24, \"Monitor for everything\"): the report of an app in a browser through a **collector** (the",
+    "editor's, `extensions/tools/nuclear-monitor/src/collector.ts`; `nuclear run --monitor`'s own without the editor,",
+    "`tools/cli/src/framework/collector.rs`), not a route of the dev server: 127.0.0.1, a random port, a token, the",
+    "project's key, CORS only for the app's origin, the report written to the project, so `nuclear monitor --json` stays",
+    "the only source of hot spots. Its address reaches the build as `NUCLEAR_MONITOR_URL` → `Manifest.monitor_url` → the",
+    "runtime's `url` (rebuilds on save keep it). The Dart runtime is its own host where dart:io works and imports",
+    "`monitor_web.dart` (the optional template `monitor_runtime_web`, a second generated file) in a browser, with a",
+    "conditional import of itself; the TypeScript runtime posts from its browser branch. The console of a page (the web",
+    "device: console, errors with their stack, requests; the Synapsis device: requests) in the run log",
+    "(`extensions/tools/nuclear-device-manager/src/browser-log.ts`), Flutter's web errors read with their frames. The",
+    "Monitor's toggle and *Run and watch* for web and mobile apps. Proven in a live VS Code on a copy of a real workspace",
+    "(fastapi, react on the web device, flutter on the Synapsis device)."
    ],
    "agents": false,
    "sources": [
@@ -6391,10 +6456,7 @@
     "their stack, output), the page on the workspace's selected project with designed states for an end user, *Run and",
     "watch* (the terminal `<project> · monitor`, a device for a mobile app; once by itself), `nuclear monitor --on|--off`",
     "(`.nuclear/monitor/on`, honoured by build, watch and run; `nuclear run` always gives the app the project's report",
-    "file), the MCP tool `project_monitor` with the console.",
-    "",
-    "- [ ] The report of a phone's or a browser's app through a collector of the extension (phase 2):",
-    "      `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md`."
+    "file), the MCP tool `project_monitor` with the console."
    ],
    "agents": false,
    "sources": [

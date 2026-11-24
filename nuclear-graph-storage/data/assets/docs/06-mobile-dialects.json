@@ -20,6 +20,7 @@
     "| `flutter_secure_storage` | `SessionManager` stores the session in the Keychain / Keystore; `Local` keeps the key of the local database there |",
     "| `hive_ce` | `Local` / `LocalTable`: the local database (one box per table, on Android, iOS, Linux, macOS, Windows; IndexedDB on web), encrypted as `LocalDatabase` says |",
     "| `json_annotation` | the generated models (json_serializable) |",
+    "| `decimal` | `Decimal`, the value of a `bigdouble`: `Exact`, `BigDoubleJson`, the comparisons of `LocalTable` and the exact form rules |",
     "| `flutter_localizations` (SDK) | `Translations.delegates`: the texts of Flutter's widgets |",
     "| `path_provider`, `web` | `Translations` stores the remote dictionaries (files; `localStorage` on web) |",
     "| `fpdart`, `mocktail`, `flutter_test` | `package:synapsis/testing.dart` |",
@@ -71,34 +72,6 @@
     "| `Synapsis.connection<T>(name)`, `Synapsis.connections` | the connections; `''` is the one without `connectionName`; two with the same name are an error |",
     "| `Global` | an app-wide service: `register(di)`, `init()` (at startup), `dispose()` |",
     "| `Synapsis.reset()` | stops the services and empties the injector, connections, cache and the local database |"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network",
-   "type": "spec",
-   "title": "`synapsis` (Dart package) — 3. Network",
-   "summary": "3. Network",
-   "body": [
-    "| API | What it does |",
-    "|---|---|",
-    "| `Http(connectionName, baseUrl, connectTimeout, receiveTimeout, sendTimeout, headers, queryParameters, contentType, responseType, followRedirects, maxRedirects, persistentConnection, validateStatus, interceptors)` | a dio connection. `contentType` only when another one than dio's is wanted (JSON for maps and lists in requests with a body): a `Content-Type` on every request makes the browser send a CORS preflight before each GET |",
-    "| `WebSocket(connectionName, uri, headers, protocols, pingInterval, interceptors)` | `connect()` gives the messages, `send`, `close`; outside development, `wss://` |",
-    "| `HttpInterceptor` | override `onRequest(RequestOptions)`, `onResponse(Response)` or `onError(HttpError)`, without handlers |",
-    "| `SessionInterceptor`, `HttpLogInterceptor` | the session token (and ending the session on a 401); logs of each request |",
-    "| `EventInterceptor(header, events)` | a response (or an error) with the `header` header (`x-app-event`) publishes the event its value names in `events` |",
-    "| `HttpError` | `message`, `statusCode`, `data`, `headers`, `timeout`, `offline`, `transient` (timeout, no connection, 5xx). A `RepositoryError`, as `NotFound` of the local database |"
    ],
    "platforms": [
     "mobile"
@@ -180,34 +153,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network-3-2-local-database-local-localtable.56bb5e",
-   "type": "spec",
-   "title": "`synapsis` (Dart package) — 3.2 Local database (`Local`, `LocalTable`)",
-   "summary": "3.2 Local database (`Local`, `LocalTable`)",
-   "body": [
-    "| API | What it does |",
-    "|---|---|",
-    "| `LocalDatabase({encrypted = true})` | `local` of `AppConfig` / `ComponentConfig`: how the tables are kept; `encrypted` is AES-256 with a key generated once in the secure storage (Keychain, Keystore, libsecret, DPAPI, WebCrypto); a component's config applies to the tables of its models |",
-    "| `LocalTable<T>(name, fromJson, {key, generated, created, updated})` | the table of a model: rows as JSON (`toJson`/`fromJson`) in the box `synapsis_<name>` (`name` from `@entity` or the model's name in snake_case), by the JSON field `key`; `generated`: a null key gets the next number; `created`/`updated`: JSON fields the table stamps (ISO-8601) |",
-    "| `find(id)`, `findAll()`, `save(x)`, `saveAll(xs)`, `remove(id)`, `clear()` | CRUD; `find` is `Either<NotFound, T>`, `save` returns the row as saved |",
-    "| `where({...})`, `orderBy(field, desc:)`, `limit(n)`, `offset(n)` | a `LocalQuery<T>`; `where` takes equality or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `between` (top-level functions); a plain `null` is \"is null\" |",
-    "| `getOne()`, `getMany()`, `count()`, `exists()`, `update({...})`, `delete()` | run the query (`count` ignores limit and offset) |",
-    "| `Local.register(table, {component})`, `Local.table<T>()`, `Local.tables` | the registry by model type (`table.component` picks its settings); a model without a table is a `StateError` that names the fix |"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network-3-2-local-database-local-localtable.64a7e2",
    "type": "spec",
    "title": "`synapsis` (Dart package) — 3.2 Local database (`Local`, `LocalTable`)",
@@ -235,17 +180,95 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network-3-2-local-database-local-localtable.88f398",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network-3-2-local-database-local-localtable.ab12da",
+   "type": "spec",
+   "title": "`synapsis` (Dart package) — 3.2 Local database (`Local`, `LocalTable`)",
+   "summary": "3.2 Local database (`Local`, `LocalTable`)",
+   "body": [
+    "| API | What it does |",
+    "|---|---|",
+    "| `LocalDatabase({encrypted = true})` | `local` of `AppConfig` / `ComponentConfig`: how the tables are kept; `encrypted` is AES-256 with a key generated once in the secure storage (Keychain, Keystore, libsecret, DPAPI, WebCrypto); a component's config applies to the tables of its models |",
+    "| `LocalTable<T>(name, fromJson, {key, generated, created, updated, exact})` | the table of a model: rows as JSON (`toJson`/`fromJson`) in the box `synapsis_<name>` (`name` from `@entity` or the model's name in snake_case), by the JSON field `key`; `generated`: a null key gets the next number; `created`/`updated`: JSON fields the table stamps (ISO-8601); `exact`: the JSON fields of an exact type, whose text `where`, `orderBy` and `valueOf(row, field)` compare by value |",
+    "| `find(id)`, `findAll()`, `save(x)`, `saveAll(xs)`, `remove(id)`, `clear()` | CRUD; `find` is `Either<NotFound, T>`, `save` returns the row as saved |",
+    "| `where({...})`, `orderBy(field, desc:)`, `limit(n)`, `offset(n)` | a `LocalQuery<T>`; `where` takes equality or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `between` (top-level functions); a plain `null` is \"is null\" |",
+    "| `getOne()`, `getMany()`, `count()`, `exists()`, `update({...})`, `delete()` | run the query (`count` ignores limit and offset) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network-3-2-local-database-local-localtable.f327b3",
    "type": "spec",
    "title": "`synapsis` (Dart package) — 3.2 Local database (`Local`, `LocalTable`)",
    "summary": "Every table is loaded in memory by hive (`Box`): it is for what a phone shows, not for millions of rows.",
    "body": [
+    "| `Local.register(table, {component})`, `Local.table<T>()`, `Local.tables` | the registry by model type (`table.component` picks its settings); a model without a table is a `StateError` that names the fix |",
     "| `Local.configure(db, {component})`, `Local.settings([component])` | what `Synapsis.start` / `addConfig` pass from the configs' `local`; `settings` is the component's, else the project's, else encrypted |",
     "| `Local.store(call, value)`, `Local.recall(call)` | what `Repository.send(local:)` and `recall` use: the rows of a model or a list go to their table and the box `synapsis_calls` remembers their keys under `call` (`name|url?query`) |",
     "| `Local.start()`, `Local.open(name, {component})`, `Local.reset()`, `Local.memory`, `Local.storage`, `Local.keyName` | opens hive in the app's support folder (not on web); `open` applies the component's settings (the AES key, `synapsis.local.key` in the secure storage, is made at the first encrypted box); `memory = true` (tests: `SynapsisTest.start`) keeps the boxes in memory, unencrypted; `reset` closes everything and forgets the settings |",
     "| `NotFound` | a `RepositoryError`: `find`/`getOne`'s `Left`, thrown by `recall` |",
     "",
     "Every table is loaded in memory by hive (`Box`): it is for what a phone shows, not for millions of rows."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network.8702d8",
+   "type": "spec",
+   "title": "`synapsis` (Dart package) — 3. Network",
+   "summary": "3. Network",
+   "body": [
+    "| API | What it does |",
+    "|---|---|",
+    "| `Http(connectionName, baseUrl, connectTimeout, receiveTimeout, sendTimeout, headers, queryParameters, contentType, responseType, followRedirects, maxRedirects, persistentConnection, validateStatus, interceptors)` | a dio connection. `contentType` only when another one than dio's is wanted (JSON for maps and lists in requests with a body): a `Content-Type` on every request makes the browser send a CORS preflight before each GET |",
+    "| `WebSocket(connectionName, uri, headers, protocols, pingInterval, interceptors)` | `connect()` gives the messages, `send`, `close`; outside development, `wss://` |",
+    "| `HttpInterceptor` | override `onRequest(RequestOptions)`, `onResponse(Response)` or `onError(HttpError)`, without handlers |",
+    "| `SessionInterceptor`, `HttpLogInterceptor` | the session token (and ending the session on a 401); logs of each request |",
+    "| `EventInterceptor(header, events)` | a response (or an error) with the `header` header (`x-app-event`) publishes the event its value names in `events` |",
+    "| `HttpError` | `message`, `statusCode`, `data`, `headers`, `timeout`, `offline`, `transient` (timeout, no connection, 5xx). A `RepositoryError`, as `NotFound` of the local database |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#3-network.8b6a49",
+   "type": "spec",
+   "title": "`synapsis` (Dart package) — 3. Network",
+   "summary": "3. Network",
+   "body": [
+    "| `BigIntJson`, `BigDoubleJson` | the `JsonConverter`s of a model's `bigint` (`BigInt`) and `bigdouble` (`Decimal`) fields: a JSON text both ways (ADR-lang-0015); a JSON number, another text or more than 1000 digits throw a `FormatException` |",
+    "| `Exact` | `parseBigInt`, `parseBigDouble` (the language's `text.toBigInt()` / `toBigDouble()`, at most `maxDigits` = 1000 digits), `text(Decimal)` (`toString()` of a `bigdouble`: `2.0`), `bigint(json)` / `bigdouble(json)` (or a `FormatException`), `of(v)` (the `Decimal` of an exact value or its text), `encodable` (what `jsonEncode` writes for a row) |"
    ],
    "platforms": [
     "mobile"
@@ -445,12 +468,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#6-routes-logs-forms-popups-and-translations.aa6ca1",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md#6-routes-logs-forms-popups-and-translations.970213",
    "type": "spec",
    "title": "`synapsis` (Dart package) — 6. Routes, logs, forms, popups and translations",
    "summary": "6. Routes, logs, forms, popups and translations",
    "body": [
-    "| `Rules.required/email/url/number/minLength/maxLength/min/max/pattern/matches(..., message)`, `Rules.asInt/asDouble` | the rules of a field (`Rule`: `(value, values) → message or null`); the message is a translation key or the text |",
+    "| `Rules.required/email/url/number/bigint/bigdouble/minLength/maxLength/min/max/minExact/maxExact/pattern/matches(..., message)`, `Rules.asInt/asDouble/asBigInt/asBigDouble` | the rules of a field (`Rule`: `(value, values) → message or null`); the message is a translation key or the text |",
     "| `FormManager<F>(rules, initial, fromValues)` | the state of a form (Cubit of `FormValues`: `values`, `errors`, `errorOf`, `touched`, `checking`, `attempted`, `status`): `change`, `touch`, `submit(onValid)`, `reset`, `form`; `checkOf(field)` gives its remote validation (`FieldCheck`), with `debounce` (400 ms) and no stale responses |",
     "| `SynapsisForm(manager, onSubmit, child)`, `FormTextField(name, ...)`, `FormCheckbox`, `FormInput<T>(name, builder)`, `FormSubmit(child)` | the form widgets, bound by the field name; each one rebuilds only when its own part changes |",
     "| `Validators.required/email/minLength/maxLength/pattern/all` | the same messages for a plain `TextFormField` |",
@@ -1151,6 +1174,29 @@
     "  close), `Popups.alert/confirm/show/loading/toast/snackbar`, `PopupTheme`.",
     "- `Translations`: JSON dictionaries per component and locale, `String.tr`, remote dictionaries saved per",
     "  version."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/packages/synapsis/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/packages/synapsis/CHANGELOG.md#unreleased",
+   "type": "changelog",
+   "title": "CHANGELOG — Unreleased",
+   "summary": "compares and sorts their text by value; `Rules.bigint`, `Rules.bigdouble`, `Rules.minExact`, `Rules.maxExact`, `Rules.asBigInt`, `Rules.asBigDouble`.",
+   "body": [
+    "- `Exact`, `BigIntJson`, `BigDoubleJson`: Nuclear's exact numbers in JSON (texts both ways); `LocalTable(exact:)`",
+    "  compares and sorts their text by value; `Rules.bigint`, `Rules.bigdouble`, `Rules.minExact`, `Rules.maxExact`,",
+    "  `Rules.asBigInt`, `Rules.asBigDouble`. Depends on `decimal`."
    ],
    "platforms": [
     "mobile"
@@ -2092,14 +2138,24 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.112354",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.088b82",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "11. The `nuclear` CLI",
+   "summary": "nuclear run [-- -d <device>] # as a web page (-d chrome): on its own port (the dialect's, or its PORT) nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear…",
    "body": [
-    "| `make global <name>` | `g gl` | `shared/components/<name>_component.nuc` (`@on` an event) + its event |",
-    "| `make page <name> [--route /x\\|--not-found]` | `g pg` | `shared/screens/<name>_screen.nuc` (a screen owned by no component) |",
-    "| `make integration <name>` | `g it` | `integration_test/<name>_test.nuc` |"
+    "nuclear run [-- -d <device>]               # as a web page (-d chrome): on its own port (the dialect's, or its PORT)",
+    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
+    "nuclear device list                        # the open devices and the devices it can be",
+    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
+    "nuclear test [--integration] [-- <flutter test arguments>]",
+    "nuclear analyze | check [--json] | clean",
+    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
+    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
+    "nuclear run --monitor                      # each Nuclear function and method measured (the app sends its report)",
+    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
+    "nuclear projects [--json]                  # every Nuclear project of this machine and its development address",
+    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
+    "nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory"
    ],
    "platforms": [
     "mobile"
@@ -2115,24 +2171,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.218b75",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.112354",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear run [-- -d <device>] # as a web page (-d chrome): on its own port (the dialect's, or its PORT) nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear…",
+   "summary": "11. The `nuclear` CLI",
    "body": [
-    "nuclear run [-- -d <device>]               # as a web page (-d chrome): on its own port (the dialect's, or its PORT)",
-    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
-    "nuclear device list                        # the open devices and the devices it can be",
-    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
-    "nuclear test [--integration] [-- <flutter test arguments>]",
-    "nuclear analyze | check [--json] | clean",
-    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
-    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
-    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
-    "nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)",
-    "nuclear projects [--json]                  # every Nuclear project of this machine and its development address",
-    "nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring",
-    "nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory"
+    "| `make global <name>` | `g gl` | `shared/components/<name>_component.nuc` (`@on` an event) + its event |",
+    "| `make page <name> [--route /x\\|--not-found]` | `g pg` | `shared/screens/<name>_screen.nuc` (a screen owned by no component) |",
+    "| `make integration <name>` | `g it` | `integration_test/<name>_test.nuc` |"
    ],
    "platforms": [
     "mobile"
@@ -2716,7 +2762,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#3-structure-of-a-project-3-1-config-nuc.da9910",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#3-structure-of-a-project-3-1-config-nuc.a2752f",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 3.1 `config.nuc`",
    "summary": "convention (§3.2).",
@@ -2728,7 +2774,8 @@
     "  `app(...)`.",
     "- Only the project's own packages are written. Synapsis adds its own: `synapsis`, `flutter_bloc`, `fpdart`,",
     "  `go_router`, `json_annotation`; `build_runner`, `json_serializable`, `mocktail`, `bloc_test` and",
-    "  `integration_test` to generate code and for tests; `flutter_native_splash` with `@splash`. The full list is",
+    "  `integration_test` to generate code and for tests; `flutter_native_splash` with `@splash`; `decimal` when the code",
+    "  uses a `bigdouble`. The full list is",
     "  in `build/app/pubspec.yaml`.",
     "- **Only third-party packages the framework does not use.** A package of the dialect (those of `defs`: dio,",
     "  go_router, flutter_bloc, get_it...) or of Synapsis (`[project.manifest] reserved`: fpdart, build_runner,",
@@ -3766,62 +3813,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.05a80e",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
-   "summary": "// the user must be a character of the show @validate(\"user\") knownUser(value: string) string?",
-   "body": [
-    "// the user must be a character of the show",
-    "  @validate(\"user\")",
-    "  knownUser(value: string) string?",
-    "    match ~characters.search(value)",
-    "      Ok(found) -> null",
-    "      Err(e) -> \"session.login.unknownUser\"",
-    "```",
-    "",
-    "Output (`lib/components/session/presentation/login/managers/login_form_manager.dart`):",
-    "",
-    "```dart",
-    "/// The state of the login form: only validations, no business logic (that is LoginManager).",
-    "/// @validate(\"user\") is a remote validation: it runs when the field rules pass, 400 ms after",
-    "/// the last keystroke, and calls the component like any state manager.",
-    "class LoginFormManager extends FormManager<LoginForm> {",
-    "  LoginFormManager(this.characters) : super(LoginForm.rules, LoginForm.initial, LoginForm.fromValues);",
-    "",
-    "  final CharactersComponent characters;",
-    "",
-    "  @override",
-    "  FieldCheck? checkOf(String field) => switch (field) {",
-    "        'user' => (v) => knownUser(v as String),",
-    "        _ => null,",
-    "      };",
-    "",
-    "  /// the user must be a character of the show",
-    "  Future<String?> knownUser(String value) async {",
-    "    final searchResult = await characters.search(value);",
-    "    if (searchResult.isRight()) {",
-    "      return null;",
-    "    } else {",
-    "      return 'session.login.unknownUser';",
-    "    }",
-    "  }",
-    "}",
-    "```"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.20192c",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
@@ -3921,11 +3912,23 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.4fe03c",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.7f4a2a",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
-   "summary": "On the screen, the form manager goes in `providers` like any manager.",
+   "summary": "/// the user must be a character of the show Future<String?> knownUser(String value) async { final searchResult = await characters.search(value); if (searchResult.isRight()) { return null; } else { return 'session.login.unknownUser'; } } } On the screen, the form manager goes in `providers` like…",
    "body": [
+    "/// the user must be a character of the show",
+    "  Future<String?> knownUser(String value) async {",
+    "    final searchResult = await characters.search(value);",
+    "    if (searchResult.isRight()) {",
+    "      return null;",
+    "    } else {",
+    "      return 'session.login.unknownUser';",
+    "    }",
+    "  }",
+    "}",
+    "```",
+    "",
     "On the screen, the form manager goes in `providers` like any manager. `SynapsisForm(manager = X)` finds its",
     "fields by name: `FormTextField(\"field\", label, obscureText, keyboardType, textInputAction, autofillHints,",
     "decoration...)`, `FormCheckbox(\"field\", label = ...)`, `FormInput<T>(\"field\", builder = (context, value,",
@@ -3983,57 +3986,43 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.aafc30",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.9f70cb",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
-   "summary": "final String user; final String pass; /// The rules of each field, in the order they are checked.",
+   "summary": "// The state of the login form: only validations, no business logic (that is LoginManager).",
    "body": [
-    "final String user;",
-    "  final String pass;",
-    "",
-    "  /// The rules of each field, in the order they are checked.",
-    "  static final Map<String, List<Rule>> rules = {",
-    "    'user': [",
-    "      Rules.required(),",
-    "      Rules.minLength(3),",
-    "    ],",
-    "    'pass': [",
-    "      Rules.required(),",
-    "      Rules.minLength(5, message: 'session.login.shortPass'),",
-    "    ],",
-    "  };",
-    "",
-    "  /// The values of a new form.",
-    "  static const Map<String, Object?> initial = {",
-    "    'user': ''",
-    ",",
-    "    'pass': ''",
-    ",",
-    "  };",
-    "",
-    "  static LoginForm fromValues(Map<String, Object?> v) => LoginForm(",
-    "        user:",
-    "",
-    "v['user'] as String,",
-    "        pass:",
-    "",
-    "v['pass'] as String,",
-    "      );",
-    "}",
-    "```",
-    "",
-    "`@form(F)` joins the form manager with its form model. A method with `@validate(\"field\")` is a remote",
-    "validation (an interceptor of the field): it runs when the field's rules pass, 400 ms after the last key (and",
-    "on submit, without waiting), gets the value and returns the error message or `null`. The name must be a field",
-    "of the form model (a generated test checks it, §8.1).",
-    "",
     "```nuclear",
     "// The state of the login form: only validations, no business logic (that is LoginManager).",
     "// @validate(\"user\") is a remote validation: it runs when the field rules pass, 400 ms after",
     "// the last keystroke, and calls the component like any state manager.",
     "@form(LoginForm)",
     "formmanager LoginFormManager",
-    "  (characters: CharactersComponent)"
+    "  (characters: CharactersComponent)",
+    "",
+    "  // the user must be a character of the show",
+    "  @validate(\"user\")",
+    "  knownUser(value: string) string?",
+    "    match ~characters.search(value)",
+    "      Ok(found) -> null",
+    "      Err(e) -> \"session.login.unknownUser\"",
+    "```",
+    "",
+    "Output (`lib/components/session/presentation/login/managers/login_form_manager.dart`):",
+    "",
+    "```dart",
+    "/// The state of the login form: only validations, no business logic (that is LoginManager).",
+    "/// @validate(\"user\") is a remote validation: it runs when the field rules pass, 400 ms after",
+    "/// the last keystroke, and calls the component like any state manager.",
+    "class LoginFormManager extends FormManager<LoginForm> {",
+    "  LoginFormManager(this.characters) : super(LoginForm.rules, LoginForm.initial, LoginForm.fromValues);",
+    "",
+    "  final CharactersComponent characters;",
+    "",
+    "  @override",
+    "  FieldCheck? checkOf(String field) => switch (field) {",
+    "        'user' => (v) => knownUser(v as String),",
+    "        _ => null,",
+    "      };"
    ],
    "platforms": [
     "mobile"
@@ -4049,21 +4038,22 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.afb37d",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.a8b6c0",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
-   "summary": "An `int` or `double` field also validates that it is a number; an empty optional one (`field?: T`) passes every rule except `@required`.",
+   "summary": "An `int` or `double` field also validates that it is a number, a `bigint` or `bigdouble` field that it is the text of its type (`Rules.bigint()`, `Rules.bigdouble()`; `fromValues` reads it with `Rules.asBigInt` / `asBigDouble`); an empty optional one (`field?: T`) passes every rule except…",
    "body": [
     "| Decorator | Validates |",
     "|---|---|",
     "| `@required` | not empty (a `boolean` must be `true`: accepting the terms) |",
     "| `@email`, `@url` | format |",
     "| `@minLength(n)`, `@maxLength(n)` | length of the text |",
-    "| `@min(n)`, `@max(n)` | value of a number |",
+    "| `@min(n)`, `@max(n)` | value of a number; of a `bigint` / `bigdouble` field, compared exactly (`Rules.minExact`, `Rules.maxExact`; `n` a literal of the field's type) |",
     "| `@pattern(\"regex\")` | regular expression (`\\\\d` is written with two backslashes) |",
     "| `@matches(\"other\")` | equal to the field `other` (repeating the password) |",
     "",
-    "An `int` or `double` field also validates that it is a number; an empty optional one (`field?: T`) passes every",
+    "An `int` or `double` field also validates that it is a number, a `bigint` or `bigdouble` field that it is the text of",
+    "its type (`Rules.bigint()`, `Rules.bigdouble()`; `fromValues` reads it with `Rules.asBigInt` / `asBigDouble`); an empty optional one (`field?: T`) passes every",
     "rule except `@required`. A `message` is a key of the dictionary (§6.16) or the text; without `message`,",
     "Synapsis's text in the app's language. A field's error shows when the user leaves it or when the form is sent.",
     "",
@@ -4078,15 +4068,7 @@
     "  @required",
     "  @minLength(5, message = \"session.login.shortPass\")",
     "  pass: string",
-    "```",
-    "",
-    "Output (`lib/components/session/presentation/login/forms/login_form.dart`):",
-    "",
-    "```dart",
-    "/// Form model: the login fields and their rules. Each form field (FormTextField(\"user\"))",
-    "/// is bound by its name; the messages are dictionary keys or the text itself.",
-    "class LoginForm {",
-    "  const LoginForm({required this.user, required this.pass});"
+    "```"
    ],
    "platforms": [
     "mobile"
@@ -4139,6 +4121,72 @@
     "  });",
     "}",
     "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-14-forms-form-and-formmanager.e9dc17",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.14 Forms: `form` and `formmanager`",
+   "summary": "Output (`lib/components/session/presentation/login/forms/login_form.dart`): /// Form model: the login fields and their rules.",
+   "body": [
+    "Output (`lib/components/session/presentation/login/forms/login_form.dart`):",
+    "",
+    "```dart",
+    "/// Form model: the login fields and their rules. Each form field (FormTextField(\"user\"))",
+    "/// is bound by its name; the messages are dictionary keys or the text itself.",
+    "class LoginForm {",
+    "  const LoginForm({required this.user, required this.pass});",
+    "",
+    "  final String user;",
+    "  final String pass;",
+    "",
+    "  /// The rules of each field, in the order they are checked.",
+    "  static final Map<String, List<Rule>> rules = {",
+    "    'user': [",
+    "      Rules.required(),",
+    "      Rules.minLength(3),",
+    "    ],",
+    "    'pass': [",
+    "      Rules.required(),",
+    "      Rules.minLength(5, message: 'session.login.shortPass'),",
+    "    ],",
+    "  };",
+    "",
+    "  /// The values of a new form.",
+    "  static const Map<String, Object?> initial = {",
+    "    'user': ''",
+    ",",
+    "    'pass': ''",
+    ",",
+    "  };",
+    "",
+    "  static LoginForm fromValues(Map<String, Object?> v) => LoginForm(",
+    "        user:",
+    "",
+    "v['user'] as String,",
+    "        pass:",
+    "",
+    "v['pass'] as String,",
+    "      );",
+    "}",
+    "```",
+    "",
+    "`@form(F)` joins the form manager with its form model. A method with `@validate(\"field\")` is a remote",
+    "validation (an interceptor of the field): it runs when the field's rules pass, 400 ms after the last key (and",
+    "on submit, without waiting), gets the value and returns the error message or `null`. The name must be a field",
+    "of the form model (a generated test checks it, §8.1)."
    ],
    "platforms": [
     "mobile"
@@ -4700,46 +4748,168 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.012cf7",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.0a2808",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
-   "summary": "@override int get hashCode => Object.hashAll([count, pages, next, prev]); } @JsonSerializable(explicitToJson: true, genericArgumentFactories: true) class Page<T> { const Page({required this.info, required this.results}); factory Page.fromJson(Map<String, dynamic> json, T Function(Object?",
+   "summary": "// A page of an API list: always info + results; only the model of each result changes // (Page<Character>, Page<Episode>...).",
    "body": [
-    "@override",
+    "```nuclear",
+    "// A page of an API list: always info + results; only the model of each result changes",
+    "// (Page<Character>, Page<Episode>...). It lives in shared/: every component uses it.",
+    "PageInfo",
+    "  count: int",
+    "  pages: int",
+    "  next?: string",
+    "  prev?: string",
+    "",
+    "Page<T>",
+    "  info: PageInfo",
+    "  results: T[]",
+    "```",
+    "",
+    "Output (`lib/shared/models/page.dart`):",
+    "",
+    "```dart",
+    "part 'page.g.dart';",
+    "",
+    "/// A page of an API list: always info + results; only the model of each result changes",
+    "/// (Page<Character>, Page<Episode>...). It lives in shared/: every component uses it.",
+    "@JsonSerializable(explicitToJson: true)",
+    "class PageInfo {",
+    "  const PageInfo({required this.count, required this.pages, this.next, this.prev});",
+    "",
+    "  factory PageInfo.fromJson(Map<String, dynamic> json) => _$PageInfoFromJson(json);",
+    "",
+    "  final int count;",
+    "  final int pages;",
+    "  final String? next;",
+    "  final String? prev;",
+    "",
+    "  Map<String, dynamic> toJson() => _$PageInfoToJson(this);",
+    "",
+    "  @override",
+    "  bool operator ==(Object other) =>",
+    "      identical(this, other) ||",
+    "      other is PageInfo &&",
+    "          count == other.count &&",
+    "          pages == other.pages &&",
+    "          next == other.next &&",
+    "          prev == other.prev;",
+    "",
+    "  @override",
     "  int get hashCode => Object.hashAll([count, pages, next, prev]);",
     "}",
     "",
     "@JsonSerializable(explicitToJson: true, genericArgumentFactories: true)",
     "class Page<T> {",
-    "  const Page({required this.info, required this.results});",
+    "  const Page({required this.info, required this.results});"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.5adb50",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
+   "summary": "`bigdouble` one a `Decimal` (`package:decimal`, which `nuclear build` adds to the app's `pubspec.yaml` when the code uses it).",
+   "body": [
+    "**Exact numbers** (ADR-lang-0015, the backend's rule ADR-backend-0003). A `bigint` field is a `BigInt` and a",
+    "`bigdouble` one a `Decimal` (`package:decimal`, which `nuclear build` adds to the app's `pubspec.yaml` when the code",
+    "uses it). Their JSON is a text both ways: synapsis's converters `BigIntJson` and `BigDoubleJson` read the language's",
+    "texts (a JSON number, another text or more than 1000 digits throw a `FormatException`, a decoding error) and write",
+    "`toString()` (`\"2.0\"` for a whole `bigdouble`). A local table keeps their text and compares and sorts it by value",
+    "(`exact:`):",
     "",
-    "  factory Page.fromJson(Map<String, dynamic> json, T Function(Object? json) fromJsonT) =>",
-    "      _$PageFromJson(json, fromJsonT);",
+    "```nuclear",
+    "model Price",
+    "  @primary",
+    "  id: int",
+    "  amount: bigdouble",
+    "  code?: bigint",
+    "```",
     "",
-    "  final PageInfo info;",
-    "  final List<T> results;",
+    "```dart",
+    "  final int id;",
+    "  @BigDoubleJson()",
+    "  final Decimal amount;",
+    "  @BigIntJson()",
+    "  final BigInt? code;",
     "",
-    "  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>",
-    "      _$PageToJson(this, toJsonT);",
+    "  Map<String, dynamic> toJson() => _$PriceToJson(this);",
+    "",
+    "  /// The local table of Price (`@primary`): its rows by `id`, CRUD and queries on the device.",
+    "  static final LocalTable<Price> table = LocalTable<Price>(",
+    "    'price',",
+    "    Price.fromJson,",
+    "    key: 'id',",
+    "    exact: {",
+    "      'amount',",
+    "      'code',",
+    "    },",
+    "  );",
+    "```",
+    "",
+    "**Generic models.** A shape that repeats with another model inside (an API page) is declared once with a type",
+    "parameter and each use says which one: `Page<Character>`, `Page<Episode>`. It goes in `shared/models/` so every",
+    "component sees it."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.5d6495",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
+   "summary": "Output (`lib/shared/converters/date_converter.dart`): class DateConverter implements JsonConverter<DateTime, String> { const DateConverter(); @override DateTime fromJson(String json) { return DateTime.tryParse(json)!; } @override String toJson(DateTime value) { return value.toIso8601String(); } }…",
+   "body": [
+    "Output (`lib/shared/converters/date_converter.dart`):",
+    "",
+    "```dart",
+    "class DateConverter implements JsonConverter<DateTime, String> {",
+    "  const DateConverter();",
     "",
     "  @override",
-    "  bool operator ==(Object other) =>",
-    "      identical(this, other) ||",
-    "      other is Page &&",
-    "          info == other.info &&",
-    "          listEquals(results, other.results);",
+    "  DateTime fromJson(String json) {",
+    "    return DateTime.tryParse(json)!;",
+    "  }",
     "",
     "  @override",
-    "  int get hashCode => Object.hashAll([info, Object.hashAll(results)]);",
+    "  String toJson(DateTime value) {",
+    "    return value.toIso8601String();",
+    "  }",
     "}",
     "```",
     "",
-    "The repository reads each result with the `fromJson` of the parameter's model, without writing anything else:",
-    "`getPage(page: int) Result<CharacterError, Page<Character>>` decodes with",
-    "`Page<Character>.fromJson(json, (o) => Character.fromJson(...))`. A model field can also be generic",
-    "(`page: Page<Character>`), and a model can implement interfaces (`ApiFailure > Exception` gives",
-    "`class ApiFailure implements Exception`). A kind that does not write the declaration's generics or interfaces",
-    "(`event Box<T>`) is error `N0218`, instead of losing them."
+    "A `converter` has only `fromJson(json: J) T` and `toJson(value: T) J`; the types of `JsonConverter<T, J>` come",
+    "from the signature of `fromJson`. It can be in any folder and the models of every component use it. Generated",
+    "tests ask a field with a converter for its JSON through that converter",
+    "(`const DateConverter().toJson(DateTime(2000))`). For a type the tests cannot invent (not a basic type nor",
+    "`DateTime`), the converter gives its own value with `sample() T`",
+    "(`const UriConverter().toJson(const UriConverter().sample())`); without it, the field gets `null`.",
+    "",
+    "`Result<E, T>` is written in Dart as fpdart's `Either<E, T>` (`Ok` → `Right`, `Err` → `Left`), so the",
+    "generated code and your own Dart code (for example tests) use the same API: `match`, `fold`, `map`,",
+    "`flatMap`, `mapLeft`, `getOrElse`."
    ],
    "platforms": [
     "mobile"
@@ -4813,51 +4983,41 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.cc4889",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.84ed7c",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
-   "summary": "@override bool operator ==(Object other) => identical(this, other) || other is Episode && id == other.id && name == other.name && episode == other.episode && airDate == other.airDate && created == other.created && url == other.url; @override int get hashCode => Object.hashAll([id, name, episode,…",
+   "summary": "factory Page.fromJson(Map<String, dynamic> json, T Function(Object?",
    "body": [
-    "@override",
+    "factory Page.fromJson(Map<String, dynamic> json, T Function(Object? json) fromJsonT) =>",
+    "      _$PageFromJson(json, fromJsonT);",
+    "",
+    "  final PageInfo info;",
+    "  final List<T> results;",
+    "",
+    "  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>",
+    "      _$PageToJson(this, toJsonT);",
+    "",
+    "  @override",
     "  bool operator ==(Object other) =>",
     "      identical(this, other) ||",
-    "      other is Episode &&",
-    "          id == other.id &&",
-    "          name == other.name &&",
-    "          episode == other.episode &&",
-    "          airDate == other.airDate &&",
-    "          created == other.created &&",
-    "          url == other.url;",
+    "      other is Page &&",
+    "          info == other.info &&",
+    "          listEquals(results, other.results);",
     "",
     "  @override",
-    "  int get hashCode => Object.hashAll([id, name, episode, airDate, created, url]);",
+    "  int get hashCode => Object.hashAll([info, Object.hashAll(results)]);",
     "}",
     "```",
     "",
-    "Output (`lib/shared/converters/date_converter.dart`):",
+    "The repository reads each result with the `fromJson` of the parameter's model, without writing anything else:",
+    "`getPage(page: int) Result<CharacterError, Page<Character>>` decodes with",
+    "`Page<Character>.fromJson(json, (o) => Character.fromJson(...))`. A model field can also be generic",
+    "(`page: Page<Character>`), and a model can implement interfaces (`ApiFailure > Exception` gives",
+    "`class ApiFailure implements Exception`). A kind that does not write the declaration's generics or interfaces",
+    "(`event Box<T>`) is error `N0218`, instead of losing them.",
     "",
-    "```dart",
-    "class DateConverter implements JsonConverter<DateTime, String> {",
-    "  const DateConverter();",
-    "",
-    "  @override",
-    "  DateTime fromJson(String json) {",
-    "    return DateTime.tryParse(json)!;",
-    "  }",
-    "",
-    "  @override",
-    "  String toJson(DateTime value) {",
-    "    return value.toIso8601String();",
-    "  }",
-    "}",
-    "```",
-    "",
-    "A `converter` has only `fromJson(json: J) T` and `toJson(value: T) J`; the types of `JsonConverter<T, J>` come",
-    "from the signature of `fromJson`. It can be in any folder and the models of every component use it. Generated",
-    "tests ask a field with a converter for its JSON through that converter",
-    "(`const DateConverter().toJson(DateTime(2000))`). For a type the tests cannot invent (not a basic type nor",
-    "`DateTime`), the converter gives its own value with `sample() T`",
-    "(`const UriConverter().toJson(const UriConverter().sample())`); without it, the field gets `null`."
+    "A field can have another name in the JSON (`@key(\"json_name\")`) and its own converter (`@Converter`, a",
+    "`converter` of the project) for types the JSON does not bring as they are:"
    ],
    "platforms": [
     "mobile"
@@ -4873,14 +5033,11 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.d6063c",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.8e0d3b",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
-   "summary": "A field can have another name in the JSON (`@key(\"json_name\")`) and its own converter (`@Converter`, a `converter` of the project) for types the JSON does not bring as they are: Episode id: int name: string episode: string @key(\"air_date\") airDate: string @DateConverter created: DateTime Episode…",
+   "summary": "Episode id: int name: string episode: string @key(\"air_date\") airDate: string @DateConverter created: DateTime Episode id: int name: string episode: string @key(\"air_date\") airDate: string @DateConverter created: DateTime @UriConverter url: Uri Output…",
    "body": [
-    "A field can have another name in the JSON (`@key(\"json_name\")`) and its own converter (`@Converter`, a",
-    "`converter` of the project) for types the JSON does not bring as they are:",
-    "",
     "```nuclear",
     "Episode",
     "  id: int",
@@ -4926,7 +5083,23 @@
     "  @UriConverter()",
     "  final Uri url;",
     "",
-    "  Map<String, dynamic> toJson() => _$EpisodeToJson(this);"
+    "  Map<String, dynamic> toJson() => _$EpisodeToJson(this);",
+    "",
+    "  @override",
+    "  bool operator ==(Object other) =>",
+    "      identical(this, other) ||",
+    "      other is Episode &&",
+    "          id == other.id &&",
+    "          name == other.name &&",
+    "          episode == other.episode &&",
+    "          airDate == other.airDate &&",
+    "          created == other.created &&",
+    "          url == other.url;",
+    "",
+    "  @override",
+    "  int get hashCode => Object.hashAll([id, name, episode, airDate, created, url]);",
+    "}",
+    "```"
    ],
    "platforms": [
     "mobile"
@@ -4942,15 +5115,11 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.d68ceb",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.9dd08f",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
-   "summary": "`Result<E, T>` is written in Dart as fpdart's `Either<E, T>` (`Ok` → `Right`, `Err` → `Left`), so the generated code and your own Dart code (for example tests) use the same API: `match`, `fold`, `map`, `flatMap`, `mapLeft`, `getOrElse`.",
+   "summary": "gives when a row is saved with it null, the field is `T?`) gives the model a table in the app's local database, with the same words as a backend entity; `@created` and `@updated` (a `DateTime?` or `string?`) are stamped by the table.",
    "body": [
-    "`Result<E, T>` is written in Dart as fpdart's `Either<E, T>` (`Ok` → `Right`, `Err` → `Left`), so the",
-    "generated code and your own Dart code (for example tests) use the same API: `match`, `fold`, `map`,",
-    "`flatMap`, `mapLeft`, `getOrElse`.",
-    "",
     "**A model with a key has a local table** (ADR-mobile-0006). `@primary` on a field (`@primary(generated = true)`: a key the table",
     "gives when a row is saved with it null, the field is `T?`) gives the model a table in the app's local database,",
     "with the same words as a backend entity; `@created` and `@updated` (a `DateTime?` or `string?`) are stamped by",
@@ -4968,72 +5137,6 @@
     "  id: int",
     "  name: string",
     "```"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#6-architecture-kinds-6-2-models.fc641a",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 6.2 Models",
-   "summary": "parameter and each use says which one: `Page<Character>`, `Page<Episode>`.",
-   "body": [
-    "**Generic models.** A shape that repeats with another model inside (an API page) is declared once with a type",
-    "parameter and each use says which one: `Page<Character>`, `Page<Episode>`. It goes in `shared/models/` so every",
-    "component sees it.",
-    "",
-    "```nuclear",
-    "// A page of an API list: always info + results; only the model of each result changes",
-    "// (Page<Character>, Page<Episode>...). It lives in shared/: every component uses it.",
-    "PageInfo",
-    "  count: int",
-    "  pages: int",
-    "  next?: string",
-    "  prev?: string",
-    "",
-    "Page<T>",
-    "  info: PageInfo",
-    "  results: T[]",
-    "```",
-    "",
-    "Output (`lib/shared/models/page.dart`):",
-    "",
-    "```dart",
-    "part 'page.g.dart';",
-    "",
-    "/// A page of an API list: always info + results; only the model of each result changes",
-    "/// (Page<Character>, Page<Episode>...). It lives in shared/: every component uses it.",
-    "@JsonSerializable(explicitToJson: true)",
-    "class PageInfo {",
-    "  const PageInfo({required this.count, required this.pages, this.next, this.prev});",
-    "",
-    "  factory PageInfo.fromJson(Map<String, dynamic> json) => _$PageInfoFromJson(json);",
-    "",
-    "  final int count;",
-    "  final int pages;",
-    "  final String? next;",
-    "  final String? prev;",
-    "",
-    "  Map<String, dynamic> toJson() => _$PageInfoToJson(this);",
-    "",
-    "  @override",
-    "  bool operator ==(Object other) =>",
-    "      identical(this, other) ||",
-    "      other is PageInfo &&",
-    "          count == other.count &&",
-    "          pages == other.pages &&",
-    "          next == other.next &&",
-    "          prev == other.prev;"
    ],
    "platforms": [
     "mobile"

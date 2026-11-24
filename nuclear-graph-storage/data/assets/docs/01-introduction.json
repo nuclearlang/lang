@@ -361,6 +361,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.1a4e48",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "h its reason (`ERROR GET http://127.0.0.1:8000/films net::ERR_CONNECTION_REFUSED`), the cause behind \"No connection to the server\".",
+   "body": [
+    "h its reason (`ERROR GET http://127.0.0.1:8000/films net::ERR_CONNECTION_REFUSED`), the cause behind \"No connection to the server\". `nuclear monitor` reads a browser's requests with their address, a page's errors, and Flutter's web errors with their frames (`DartError: …` was plain output; *Open in the code* now lands on the `.nuc` line). A device that stops ends its run in the log (the Monitor said *Running* after it closed). Not yet: an app on a real phone or an emulator (it cannot reach the editor's 127.0.0.1).",
+    "- **Nuclear Builder runs a station's checks at the same time** (a check is an agent's session of minutes, and a station's ran one after another: Design took 17.7 min on the user's run): the checks by prompt of a station run together, at most `parallelChecks` at once (`.nuclear/builder.json`, 4 by default, 1 to 16; 1 is the earlier one after another), each its own session, step, trace, journal line and cost, in its own temporary copy of the project; what each fixes comes back merged (`git merge-file`), a clash set aside and that check run again on the project. The checks by command and those of `parallel = false` (the role's data: the ones that run the project) go one at a time, in the project. Each check starts with its share of what the budget has left, so together they never overspend; with nothing left none starts. A check that fails is retried alone (process, node"
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.235e5e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -406,6 +424,24 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.3a0b17",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "s it really serves on (read from the backend's own files), also when its `.env` only repeats the code's default (what `nuclear new` writes).",
+   "body": [
+    "s it really serves on (read from the backend's own files), also when its `.env` only repeats the code's default (what `nuclear new` writes). In the editor: ▷ Serve of a backend or web app becomes ■ Stop while it runs and never starts a second server; the Synapsis device is registered with Flutter on a fresh machine whose folder is a workspace (it refused to launch); switching between the Devices tool and the workspace keeps the device's width (it spanned the whole editor, then came back at half).",
+    "- The checks after a tag stop what their fake installs left running (a detached `nuclear update --when-idle` wrote the work folder again after it was removed) and turn the automatic update off there: their work folders no longer stay on /tmp."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.3ccce3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -417,6 +453,21 @@
     "- The decisions that frame the language's stability and the dialects' parity are one record: ADR-platform-0014 (root rule 16).",
     "- The MCP server makes and applies migrations: `project_migrate(project, action)` with `status`, `make` (`message`), `up` and `down` (`to`: up to, or back to, a migration), the same in every backend dialect. `make`, `up` and `down` ask the user first (a question, or a preview and its token): `up` and `down` change the database of the project's active environment. `nuclear_project` no longer runs `migrate`, which asked nothing."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.3f9a5a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Exact numbers in a backend** (ADR-backend-0003): an entity's `bigint` is a `BIGINT` column and a `bigdouble` a `NUMERIC(p, s)` (`@column(precision = 40, scale = 20)`; 30 and 10 by default), in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB, with migrations; SQLite keeps their text and the runtimes compare and sort it by value; a value the column cannot hold is 409, never rounded. A model's exact field, a body and a parameter read the language's texts (`\"price\": \"0.3\"`; a JSON number is 400) and answer `toString()`; `@min` / `@max` of one are exact; the OpenAPI document gives a `string` with its `pattern`. `nuclear gen resource --fields \"price:bigdouble\"` takes them. Language: a literal given for an exact field of a class built with its fields (`Price(amount = 0.5)`) or as a decorator's argument on one (`@min(0.01)`) takes the field's type. N0308 has two more rules of the contract: `types` (a key is an `int` or a `string`) and `args_for` (`precision` and `scale` only on a `bigdouble`). Fix: a Python file that uses `bigdouble` no longer fails pyright --strict for the helpers it does not call.",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -512,6 +563,39 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- **Three decisions on the backend, the same in every dialect and on SQLite, PostgreSQL, MySQL and MariaDB**: what the database refuses for integrity (a repeated unique value, a foreign key that points at nothing, a row others point to, a null in a required column, a text longer than its column) answers 409 `{ \"status\": 409, \"message\": \"conflict\" }`, as Spring Data REST answers Spring's `DataIntegrityViolationException` (**it answered 500**: of 16 requests at once for one email, one answers 201 and the other fifteen 409 now); a long text is `@column(length = n)`, whose column is the database's `VARCHAR(n)` or, above what it holds, its text type (`@column(length = 100000)` failed on MySQL and MariaDB), and a text longer than its column is refused before it is written on every database (**SQLite kept it**); a rename in a migration is an option of the command, `nuclear migrate make \"<message>\" --rename <table>=<new table> --rename <table>.<column>=<new column>`, which writes a rename that keeps the rows in the migration of whichever dialect (it was edited by hand in each dialect's migration language). The MCP server's `project_migrate` takes `rename`; the OpenAPI document says the statuses an error may have.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.6ecc6f",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "ouble`, never `string`; `nuclear gen resource --fields \"price:bigdouble\"` takes them on both platforms.",
+   "body": "ouble`, never `string`; `nuclear gen resource --fields \"price:bigdouble\"` takes them on both platforms. A mobile local table keeps an exact field's text and its queries compare and sort it by value (`where` with `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`, equality, and `orderBy`); a mobile form validates the text of an exact field, and its `@min` / `@max` compare exactly. A route that answers a single exact number is read from its text. The web runtime sends a request's body as its model's `toJson()` (`@key` names were sent as the field's name). A lambda given to a state builder for one of its states takes that state's type (`full = (items) => ...`, the state model in any file), so a `bigdouble` it shows is written `2.0` in every dialect (Dart wrote `2`). Fix: a mobile repository method that answers a `boolean` or another plain value inside a `Result` (a backend's generated `remove`) built Dart that `flutter analyze` refused (`Decode.value` could not infer its type).",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.6ffd72",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- **Go to definition of a helper** (`chunk`, `uniqBy`, `Pair`): in VS Code, F12 and peek on a helper open its file of the library (`array.nuc`, with the helpers around it), read-only and colored as Nuclear, at its declaration. The language server embeds the library and gives it as a document of its own (`nuclear-helper:/array.nuc`, request `nuclear/helperSource`), so nothing names a file of the machine; a name of the file, of its project or of the dialect still goes to that name. JetBrains and Zed keep the hover of a helper (its declaration and doc comment) and find no definition yet.",
+    "- **A workspace's apps reach their backend again, in every way they run** (the user's workspace: the api moved to 8008 by the registry of projects while its app and web app called 8000, \"No connection to the server\", \"Failed to fetch\"): a project's port never moves by itself. It is the dialect's (8000, 3000, 5173, 8080) or the `PORT` the project sets (`nuclear env set PORT 8010`); the registry only records it, and holds only the person's projects (no temporary folder, no project of Nuclear's installation or source tree; the existing file is cleaned when read). When another process holds the port, `nuclear run` stops and says which process and which Nuclear project hold it, and how to choose another. A web or mobile app of a workspace built in development calls the workspace's backend at the addres"
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -650,6 +734,25 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.961202",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- HTTP Connections no longer repeats an endpoint: a mobile or web app's call to the window's own backend is that backend's route, shown once with the apps that call it (`api · app, web`); a call to another service (a weather API) stays under the app. The HTTP Connections request tests, never run before, now run with the extension's tests.",
+    "- Fix: a mobile app whose packages an earlier release fetched failed with `Couldn't resolve the package 'decimal'` (the `synapsis` runtime of 0.100 needs it, and `pub get` ran again only when the app's own pubspec changed): `nuclear build` runs `pub get` again when another version of the platform made the last one.",
+    "- **Exact numbers in mobile and web apps** (ADR-lang-0015, the backend's rule ADR-backend-0003): a model's `bigint` and `bigdouble` fields are exact in `flutter` (`BigInt`, `Decimal` of `package:decimal`, which `nuclear build` adds to the app's `pubspec.yaml` when the code uses it) and `react` (`bigint`, the dialect's decimal). Their JSON is a text both ways, the language's `toString()` (`\"0.3\"`, `\"2.0\"`); an answer whose exact field is a JSON number, another text or more than 1000 digits is a decoding error that fails the call (a `FormatException` on mobile, a `TypeError` on the web), never a rounded value. A client generated from a backend's contract (`contracts(...)`) gets its exact fields, bounds and defaults as `bigint` / `bigd"
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.a0dea1",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -742,24 +845,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.b70ee4",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- The checks after a tag stop what their fake installs left running (a detached `nuclear update --when-idle` wrote the work folder again after it was removed) and turn the automatic update off there: their work folders no longer stay on /tmp.",
-    "- **Exact numbers in a backend** (ADR-backend-0003): an entity's `bigint` is a `BIGINT` column and a `bigdouble` a `NUMERIC(p, s)` (`@column(precision = 40, scale = 20)`; 30 and 10 by default), in `fastapi` and `nestjs` on SQLite, PostgreSQL, MySQL and MariaDB, with migrations; SQLite keeps their text and the runtimes compare and sort it by value; a value the column cannot hold is 409, never rounded. A model's exact field, a body and a parameter read the language's texts (`\"price\": \"0.3\"`; a JSON number is 400) and answer `toString()`; `@min` / `@max` of one are exact; the OpenAPI document gives a `string` with its `pattern`. `nuclear gen resource --fields \"price:bigdouble\"` takes them. Language: a literal given for an exact field of a class built with its fields (`Price(amount = 0.5)`) or as a decorator's argument on one (`@min(0.01)`) takes the field's type. N0308 has two more rules of the contract: `types` (a key is an `int` or a `string`) and `args_for` (`precision` and `scale` only on a `bigdouble`). Fix: a Python file that uses `bigdouble` no longer fails pyright --strict for the helpers it does not call."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.bb001c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -768,21 +853,6 @@
     "- Fix: a file clicked in the workspace's tree opened beside the device instead of in the main editor group: the device locked the user's editor group when the focus was still there. The device's lock now waits until its own group is active, and the tree opens files in the main (leftmost) group, lifting a lock left on it.",
     "- **Exact numbers: `bigint` and `bigdouble`** (ADR-lang-0015): a whole number of any size and an exact decimal (`0.1 + 0.2 == 0.3`), the same value and the same text in TypeScript, Dart and Python. A literal takes the exact type of its place (`id: bigint = 12345678901234567890`, `big + 1`, `price: bigdouble = 19.99`); nothing converts silently (N0119: `n.toBigInt()`, `big.toInt()` gives `int?`); `+ - * % ** ~/`, comparisons and `==`; `bigdouble /` rounds half away from zero to at least 20 decimals; the check functions `text.toBigInt()` / `text.toBigDouble()` give `null` for any other text; members `abs`, `sign`, `round`, `floor`, `ceil`, `truncate`, `roundTo`, `toFixed`, `toInt`, `toDouble`, `toBigInt`, `toBigDouble`, `compareTo` (`-1`, `0`, `1`; a literal argument is exact); lists and maps of them compare values (`==`, `in`). In JSON an exact number travels as the text of `toString()`; what is not theirs yet is N0120 (`bigint / bigint`, bitwise, `is bigint`, `Math`, `Json.encode` of one, a `Set` of `bigdouble`, `sum`/`min`/`max` of a list of them). Fix: a name"
    ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.bcb73c",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- **A workspace's apps reach their backend again, in every way they run** (the user's workspace: the api moved to 8008 by the registry of projects while its app and web app called 8000, \"No connection to the server\", \"Failed to fetch\"): a project's port never moves by itself. It is the dialect's (8000, 3000, 5173, 8080) or the `PORT` the project sets (`nuclear env set PORT 8010`); the registry only records it, and holds only the person's projects (no temporary folder, no project of Nuclear's installation or source tree; the existing file is cleaned when read). When another process holds the port, `nuclear run` stops and says which process and which Nuclear project hold it, and how to choose another. A web or mobile app of a workspace built in development calls the workspace's backend at the address it really serves on (read from the backend's own files), also when its `.env` only repeats the code's default (what `nuclear new` writes). In the editor: ▷ Serve of a backend or web app becomes ■ Stop while it runs and never starts a second server; the Synapsis device is registered with Flutter on a fresh machine whose folder is a workspace (it refused to launch); switching between the Devices tool and the workspace keeps the device's width (it spanned the whole editor, then came back at half).",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -898,6 +968,21 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.d030e6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": ", the user's retry in place): those that passed stay passed while the work they judged stays.",
+   "body": ", the user's retry in place): those that passed stay passed while the work they judged stays. The page shows each with its spinner, *Now · N checks at the same time*, the log and the journal in the order they ended. Measured with stubbed agents of 1 s, six checks: 6.1 s before, 2.0 s with 4 at once. Older run files and check lists load and retry as before.",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.d28cf4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -920,6 +1005,24 @@
    "body": [
     "e database check runs 11 migration scenarios through the real command on SQLite, PostgreSQL, MySQL and MariaDB.",
     "- **The helpers of lodash are part of the language** (ADR-lang-0013): `chunk`, `uniqBy`, `partition`, `orderBy`, `camelCase`, `pick`, `get`, `merge`, `memoize` and the rest (117, `nuclear help helpers`) are called with no `use`, in every dialect of every platform. The transpiler writes only the helpers a program calls, with the ones they call: into the file itself when it is built alone, into one generated file of the project (`nuclear_helpers`) that each file imports from by name. A program that calls none is exactly what it was. A local, a member, a declaration of the project or a name imported with `use` is always the program's own; a helper wins over a function a target has under the same name."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.da0e6c",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(a backend's generated `remove`) built Dart that `flutter analyze` refused (`Decode.value` could not infer its type).",
+   "body": [
+    "(a backend's generated `remove`) built Dart that `flutter analyze` refused (`Decode.value` could not infer its type).",
+    "- **Nuclear Monitor for every app: a web app and a mobile app are watched and measured too** (the user: \"Monitor for everything\"). A measured app in a browser (a `react` app; a `flutter` app on the Synapsis device, which is Flutter web) posts its report every two seconds to a **collector** (the editor's, one per window; `nuclear run --monitor`'s own without the editor) on 127.0.0.1, with a random port, a token and the project's key, taken only from the app's own origin, and written to the project's `.nuclear/monitor/report.json`, so `nuclear monitor --json` stays the only source of hot spots. The address reaches the build as `NUCLEAR_MONITOR_URL` (rebuilds on save keep it). The Dart runtime no longer touches `dart:io` in a browser: its host there is a second generated file, `nuclear/monitor_web.dart` (the dialects' new optional template `monitor_runtime_web`), imported conditionally; the TypeScript runtime posts from its browser branch with the page's own `fetch` (not counted). The **console** of such an app is its page's: the web device writes the page's prints, its errors with their stack and each request to a server into the run log, the Synapsis device the requests (Flutter's output already has the prints and errors): a request with no answer is an error wit"
    ],
    "sources": [
     "CHANGELOG.md"
@@ -964,6 +1067,21 @@
     "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
     "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.eb52c8",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Exact numbers in mobile and web apps** (ADR-lang-0015, the backend's rule ADR-backend-0003): a model's `bigint` and `bigdouble` fields are exact in `flutter` (`BigInt`, `Decimal` of `package:decimal`, which `nuclear build` adds to the app's `pubspec.yaml` when the code uses it) and `react` (`bigint`, the dialect's decimal). Their JSON is a text both ways, the language's `toString()` (`\"0.3\"`, `\"2.0\"`); an answer whose exact field is a JSON number, another text or more than 1000 digits is a decoding error that fails the call (a `FormatException` on mobile, a `TypeError` on the web), never a rounded value. A client generated from a backend's contract (`contracts(...)`) gets its exact fields, bounds and defaults as `bigint` / `bigdouble`, never `string`; `nuclear gen resource --fields \"price:bigdouble\"` takes them on both platforms. A mobile local table keeps an exact field's text and its queries compare and sort it by value (`where` with `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`, equality, and `orderBy`); a mobile form validates the text of an exact field, and its `@min` / `@max` compare exactly. A route that answers a single exact number is read from its text. The web runtime sends a request's body as its model's `toJson()` (`@key` names were sent as the field's name). Fix: a mobile repository method that answers a `boolean` or another plain value inside a `Result`",
    "sources": [
     "CHANGELOG.md"
    ],
