@@ -95,3 +95,4 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Pending
 - The delivery gate does not build and try the AI archive (`ai` jobs of the release workflow): 0.94.0 passed the gate and failed there, on a model of the AI services the new backend runtime could not make (found 2026-11-22). Wanted: the gate imports the AI services with the tree's runtimes before a tag.
+- **The editor end-to-end check** (the user chose it on 2026-11-23, after a port change broke their app while every suite was green): VS Code with the extension, a real workspace of a backend, a web app and a mobile app, run as the user does (Serve, the Synapsis device), screenshots checked that the web and the device show the backend's data, Serve/Stop work, switching tools keeps the layout; in the delivery gate and before a change is called done. Not built yet: next, after the fix of the port registry is proved.

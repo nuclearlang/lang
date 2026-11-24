@@ -8,6 +8,13 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
 
 ## Publish a release
 
+Before step 1 (the user, 2026-11-23): a release carries a batch, never one fix; **one large change at a time**, each
+finished and proved end to end before the next starts; and **the user validates first**: the batch is installed on
+the developer's machine (`installer/install.sh --ai`, the `.vsix` into the editor), the user is told what to try, and
+the release starts only after the user says it works. Every change is also proved in the real editor on a real
+workspace (backend, web, mobile on the Synapsis device: the data shows, Serve and Stop work, the layout holds) before it
+is called done; that check is being built into the delivery gate (`installer/docs/01-product/roadmap.md`).
+
 1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other
    manifest), raised by Semantic Versioning: a fix
    PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) ([coding.md](../../../docs/05-standards/coding.md#git)).
