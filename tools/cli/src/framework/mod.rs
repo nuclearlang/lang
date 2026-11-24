@@ -2533,12 +2533,13 @@ mod tests {
         assert!(needs_pub_get(&app));
         std::fs::write(app.join("pubspec.lock"), "").unwrap();
         std::fs::write(app.join(".dart_tool/package_config.json"), "").unwrap();
+        std::fs::write(app.join(PUB_GET_MARK), env!("CARGO_PKG_VERSION")).unwrap(); // the mark of this version's pub get
         assert!(!needs_pub_get(&app));
         // pub get keeps an unchanged lock: the mark says it already ran after the pubspec changed
         std::thread::sleep(std::time::Duration::from_millis(20));
         std::fs::write(app.join("pubspec.yaml"), "").unwrap();
         assert!(needs_pub_get(&app));
-        std::fs::write(app.join(PUB_GET_MARK), "").unwrap();
+        std::fs::write(app.join(PUB_GET_MARK), env!("CARGO_PKG_VERSION")).unwrap();
         assert!(!needs_pub_get(&app));
         std::fs::remove_dir_all(app.join(".dart_tool")).unwrap(); // what flutter clean does
         assert!(needs_pub_get(&app));
