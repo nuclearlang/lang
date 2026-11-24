@@ -11034,6 +11034,594 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#compact-results",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — Compact results",
+   "summary": "`test` and `check` answer `{passed, failed, errors: [{file, line, message, fix}], log}`; the whole output goes to a file under `.nuclear/` whose path is in `log`.",
+   "body": [
+    "`test` and `check` answer `{passed, failed, errors: [{file, line, message, fix}], log}`; the whole output goes to a",
+    "file under `.nuclear/` whose path is in `log`. `verify` runs `check`, `fmt --check` and `test` and answers the three",
+    "in one result."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#spec-025-the-mcp-server-is-the-oracle-design",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design",
+   "summary": "The rule of the design: what an agent uses always is in its first request; what it uses rarely is one search away; what it reads by hand today is one call of the oracle.",
+   "body": [
+    "The rule of the design: **what an agent uses always is in its first request; what it uses rarely is one search away;",
+    "what it reads by hand today is one call of the oracle.** On-demand loading costs a turn, and a turn costs more than",
+    "the tokens it saves (a local model reprocesses the whole prompt each turn), so the oracle is made to answer more per",
+    "call, not to be asked more often."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#tests",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — Tests",
+   "summary": "Tests",
+   "body": [
+    "| Requirement | Test |",
+    "|---|---|",
+    "| 1-2 | the benchmark's baseline and each phase's comparison, recorded in `tasks.md` |",
+    "| 3-4 | `test_metrics.nuc`: a fixture ledger with the new fields |",
+    "| 5-7 | `tools/mcp` tests: no tool twice with `--no-factory`; each profile has the core; `nuclear_tools` finds and calls; every description's first sentence under a length |",
+    "| 8-11 | `tools/mcp` tests on a fixture project: the map, the compact results, `verify`, several files |",
+    "| 12-14 | the adapters' tests: the prompt, the denied paths, OpenCode's configuration (no user files, no unused tools) |",
+    "| 15-17 | `tools/cli` and `tools/code_generator` tests: the section and `docs/README.md` say the rule; `agent init` merges into an old project (fixture) |",
+    "| 18 | `api_anthropic` test: the request carries `cache_control` and the same tools' order twice |",
+    "| 19-20 | a preflight test with a stubbed Ollama; a real step on gemma4 with a 32k window |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-agents-context",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The agents' context",
+   "summary": "factory does not use (image generation, web search, subagents).",
+   "body": [
+    "- OpenCode: the run's configuration turns off its reading of the user's agent files and the built-in tools the",
+    "  factory does not use (image generation, web search, subagents). How OpenCode 2.3 turns off the reading of",
+    "  `~/.claude` and whether its permissions deny a read by path is verified first (task T1.3); where it cannot, the",
+    "  limit goes to the Builder's roadmap.",
+    "- Claude Code: `--strict-mcp-config` already; reads denied by path (`Read(build/**)`).",
+    "- The API adapter: the profile's tools only, a stable order, `cache_control` on the tools, the system and the last",
+    "  message."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-catalog-without-repeats",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The catalog without repeats",
+   "summary": "The 47 tools both servers offer stay in both: an agent outside the factory (Claude Code on a project) has only `nuclear-mcp`, and every action of the Builder is a tool of `nuclear-builder mcp` (ADR-platform-0009).",
+   "body": [
+    "The 47 tools both servers offer stay in both: an agent outside the factory (Claude Code on a project) has only",
+    "`nuclear-mcp`, and every action of the Builder is a tool of `nuclear-builder mcp` (ADR-platform-0009). The factory",
+    "passes `--no-factory` to `nuclear-mcp` when it starts both."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-context-preflight",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The context preflight",
+   "summary": "The window comes from the provider: Ollama's `/api/show` and its running `num_ctx` (`/api/ps`), the Models API's `max_input_tokens` for Anthropic, a table for the others.",
+   "body": [
+    "The window comes from the provider: Ollama's `/api/show` and its running `num_ctx` (`/api/ps`), the Models API's",
+    "`max_input_tokens` for Anthropic, a table for the others. The fixed context is measured the same way as phase 0 does.",
+    "The refusal is an error of the run or the answer with the window, the need and the fix."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-pieces-by-project",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The pieces, by project",
+   "summary": "The pieces, by project",
+   "body": [
+    "| Project | Change | Requirements |",
+    "|---|---|---|",
+    "| `tools/mcp` (`nuclear-mcp`) | `--for <station>`: the station's profile; `--no-factory`: leaves out the Builder's tools; `nuclear_tools` (find a tool by words, get its schema, call it); the project's map in `project_inspect`; `test`/`check` compact; `verify`; several files per read; short descriptions | 5-11, 15 |",
+    "| `extensions/tools/nuclear-builder` | the adapters start the servers with the station's profile; the ledger's new fields and `metrics`; the station prompt; reads of `build/`, `node_modules`, `dist` denied; OpenCode isolated from the user's agent files and unused built-in tools; Anthropic's prompt cache; the context preflight | 3-4, 6, 12-14, 18-19 |",
+    "| `tools/cli` | the NuclearLang section of `AGENTS.md` (`agent-files/project/AGENTS.md`) says the oracle's rule; `nuclear agent init` refreshes old projects | 15, 17 |",
+    "| `tools/code_generator` | the context documents: `docs/README.md` holds the oracle's rule; `02-architecture/overview.md` keeps the project's architecture (layers, layout, C4, flows) | 15-16 |",
+    "| `nuclear-graph-storage` | the rows of the new tools and options; the knowledge base's guide for agents says the same rule | 15 |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-profiles",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The profiles",
+   "summary": "A profile is data, not code: `tools/mcp` holds one list per station (`analysis`, `design`, `tests`, `code`, `quality`, `delivery`) and one for the chat, made from the ledger's counts and reviewed at each round of the benchmark.",
+   "body": [
+    "A profile is data, not code: `tools/mcp` holds one list per station (`analysis`, `design`, `tests`, `code`,",
+    "`quality`, `delivery`) and one for the chat, made from the ledger's counts and reviewed at each round of the",
+    "benchmark. The core tools (`nuclear_start`, `nuclear_doc`, `nuclear_help`, `graph_search`, `nuclear_project`,",
+    "`project_inspect`, `nuclear_tools`) are in every profile. `--informs` (Atlas) stays as it is: a profile of its own."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-project-s-documents",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The project's documents",
+   "summary": "The NuclearLang section of `AGENTS.md` gains, after its first line: `docs/README.md` of the context documents says the same rule for whoever writes the documents: never copy into the project what the oracle answers; always write there the project's architecture.",
+   "body": [
+    "The NuclearLang section of `AGENTS.md` gains, after its first line:",
+    "",
+    "> The `nuclear` MCP server is your oracle: ask it before you open a file. What Nuclear is, its syntax, kinds, words,",
+    "> commands and how-tos, the platform, the factory's specs, runs and teams, and this project's map are answered there",
+    "> (`nuclear_start`, `nuclear_doc`, `project_inspect`). This project's `docs/` hold only what is its own: its",
+    "> architecture (its components' layers, presentation, domain and data, and where each piece goes), its business,",
+    "> its decisions and its conventions.",
+    "",
+    "`docs/README.md` of the context documents says the same rule for whoever writes the documents: never copy into the",
+    "project what the oracle answers; always write there the project's architecture."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/design.md#the-project-s-map",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Design — The project's map",
+   "summary": "`project_inspect` answers, with no model call: the platform and dialect, the components with their layers and `.nuc` files, the layout of the platform (where each kind goes), the spec at work and its documents' names.",
+   "body": [
+    "`project_inspect` answers, with no model call: the platform and dialect, the components with their layers and `.nuc`",
+    "files, the layout of the platform (where each kind goes), the spec at work and its documents' names. It is the first",
+    "call of a station; the station prompt says so."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#a-small-catalog",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — A small catalog",
+   "summary": "5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools the Builder's server owns.",
+   "body": [
+    "5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools",
+    "   the Builder's server owns. No tool is removed from either server.",
+    "6. WHEN a station's agent starts THE SYSTEM SHALL offer the tools that station uses (its profile, from the ledger)",
+    "   and one tool that finds and calls any other: an agent always reaches every tool.",
+    "7. Every tool's description SHALL say in its first sentence what it answers and when to call it; the rest is a topic",
+    "   of `nuclear_doc`."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#cost-and-local-models",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — Cost and local models",
+   "summary": "18. WHEN the API adapter calls Anthropic THE SYSTEM SHALL cache the tools, the system prompt and the conversation so far; the tools' order SHALL be stable so OpenAI's and Google's automatic caches hit too.",
+   "body": [
+    "18. WHEN the API adapter calls Anthropic THE SYSTEM SHALL cache the tools, the system prompt and the conversation",
+    "    so far; the tools' order SHALL be stable so OpenAI's and Google's automatic caches hit too.",
+    "19. WHEN a run or a chat answer starts THE SYSTEM SHALL compare the model's context window with the fixed context it",
+    "    is about to send and, when it does not fit, refuse before the call, saying the window, the need and the fix",
+    "    (for Ollama, `OLLAMA_CONTEXT_LENGTH`).",
+    "20. WHEN phases 1 to 3 are done THE SYSTEM SHALL start a factory step on a local model with a 32 768-token window."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#out-of-scope",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — Out of scope",
+   "summary": "Out of scope",
+   "body": [
+    "- Changing the MCP protocol or a client's way of loading tools (OpenCode's Code Mode, Claude Code's deferred tools).",
+    "- The roles' skills as an index loaded on demand: measured in phase 3, adopted only if the guard holds."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#spec-025-the-mcp-server-is-the-oracle-requirements",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements",
+   "summary": "fewest turns and tokens: the server is the oracle of information.",
+   "body": [
+    "**Priority: high** (the user, 2026-11-24). An agent learns everything it needs from the MCP server, on demand, in the",
+    "fewest turns and tokens: the server is the oracle of information. The agent no longer explores files to find what a",
+    "call answers, and the context it starts with is small enough for a local model. A project's documents keep only what",
+    "is the project's own, its architecture first, and send the agent to the oracle for the rest."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#the-agents-use-the-oracle",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — The agents use the oracle",
+   "summary": "12. A station's prompt SHALL say that the documents of the stations before are in it and the project's map is one call away, and that the oracle is asked before any file is opened by hand.",
+   "body": [
+    "12. A station's prompt SHALL say that the documents of the stations before are in it and the project's map is one",
+    "    call away, and that the oracle is asked before any file is opened by hand.",
+    "13. IF an agent tries to read `build/`, `node_modules` or `dist` THEN THE SYSTEM SHALL refuse it and name the tool",
+    "    that answers instead (generated code is never the agent's: root rule 13).",
+    "14. WHEN the factory renders an agent THE SYSTEM SHALL give it only the installation's and the project's context:",
+    "    never the user's own agent files (`~/.claude/skills`, `~/.claude/CLAUDE.md`, an editor's rules), nor built-in",
+    "    tools the factory does not use (root rule 14)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#the-measure",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — The measure",
+   "summary": "3. WHEN a step or a chat answer ends THE SYSTEM SHALL record in the ledger its turns, its fixed prompt's size, the characters of its tools' results, its reads by hand and its repeated reads.",
+   "body": [
+    "3. WHEN a step or a chat answer ends THE SYSTEM SHALL record in the ledger its turns, its fixed prompt's size, the",
+    "   characters of its tools' results, its reads by hand and its repeated reads.",
+    "4. WHEN `metrics` is asked THE SYSTEM SHALL report them by station, provider and model."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#the-oracle-answers-what-is-read-by-hand",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — The oracle answers what is read by hand",
+   "summary": "8. WHEN an agent asks for the project's map THE SYSTEM SHALL answer in one call: its components, their layers and `.nuc` files, the platform's layout, the spec at work, with no model call.",
+   "body": [
+    "8. WHEN an agent asks for the project's map THE SYSTEM SHALL answer in one call: its components, their layers and",
+    "   `.nuc` files, the platform's layout, the spec at work, with no model call.",
+    "9. WHEN `test` or `check` runs for an agent THE SYSTEM SHALL answer the totals and only what failed, each with its",
+    "   file, line and fix, and the path of the whole log.",
+    "10. WHEN an agent verifies a change THE SYSTEM SHALL check, format-check and test in one call.",
+    "11. WHEN an agent needs several files THE SYSTEM SHALL give them in one call."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#the-performance-guard",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — The performance guard",
+   "summary": "1. WHEN a change of this spec is proposed THE SYSTEM SHALL be measured against the baseline of phase 0 (the benchmark's tasks, spec 020) for success, turns, input tokens, cost and time, per provider.",
+   "body": [
+    "1. WHEN a change of this spec is proposed THE SYSTEM SHALL be measured against the baseline of phase 0 (the",
+    "   benchmark's tasks, spec 020) for success, turns, input tokens, cost and time, per provider.",
+    "2. IF a change lowers the success rate or raises the time of a step THEN it SHALL NOT be merged; each change is",
+    "   reverted on its own."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#the-project-s-documents-point-to-the-oracle",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — The project's documents point to the oracle",
+   "summary": "15. The context documents `nuclear new` writes, and the NuclearLang section of `AGENTS.md`, SHALL say that the MCP server is the oracle: what Nuclear is, its syntax, kinds, words, commands, how-tos, the platform's meaning, the factory's state (specs, runs, teams) and the project's map are asked of…",
+   "body": [
+    "15. The context documents `nuclear new` writes, and the NuclearLang section of `AGENTS.md`, SHALL say that the MCP",
+    "    server is the oracle: what Nuclear is, its syntax, kinds, words, commands, how-tos, the platform's meaning, the",
+    "    factory's state (specs, runs, teams) and the project's map are asked of it, never copied into the project's",
+    "    documents nor read from the installation's files or `build/`.",
+    "16. The project's documents SHALL keep what is the project's own: **its architecture** (the layers of its components",
+    "    as the platform lays them out, presentation, domain and data; where each piece goes; its C4 context and",
+    "    containers; its critical flows), its business and domain, its product, its decisions and its conventions.",
+    "17. WHEN `nuclear agent init` runs in a project made before this spec THE SYSTEM SHALL refresh the NuclearLang",
+    "    section and add the oracle's rule to `docs/README.md` without overwriting what the user wrote."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#why-what-was-measured-2026-11-24",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Requirements — Why: what was measured (2026-11-24)",
+   "summary": "13 runs of the factory (266 steps, 14 064 tool calls), the factory's ledger of 2026-11, both MCP servers listed live, and one OpenCode 2.3.2 request captured whole.",
+   "body": [
+    "13 runs of the factory (266 steps, 14 064 tool calls), the factory's ledger of 2026-11, both MCP servers listed live,",
+    "and one OpenCode 2.3.2 request captured whole.",
+    "",
+    "| Fact | Measure |",
+    "|---|---|",
+    "| A step's turns | median 47, p90 100 |",
+    "| The fixed context of a turn, OpenCode (role 3 200, Code Mode 2 950, `~/.claude` skills and `CLAUDE.md` 3 150, built-in tools 3 600) | ~13 000 tokens |",
+    "| The fixed context of a turn, the API adapter (both servers' tools whole) | ~31 000 tokens |",
+    "| Tools offered / distinct / repeated in both servers / ever used | 150 / 103 / 47 / 37 |",
+    "| Tools' descriptions in the tools' size | 44 % |",
+    "| Files read by hand vs questions asked of the server | ~8 300 vs ~1 000 |",
+    "| Reads of `specs/` (already in the step's prompt) | 1 299 |",
+    "| Reads of `build/`, `node_modules`, `dist` (generated or foreign code) | 724 |",
+    "| The same file read again in the same step | 654 |",
+    "| Folder reads and globs to find one's way | 1 441 |",
+    "| Input tokens of a step (ledger) | 0.4 M (Sonnet) to 2.8 M (DeepSeek) |",
+    "| Input tokens of one chat answer (ledger) | 63 000 to 219 000 |",
+    "| The API adapter's prompt caching | none |",
+    "| Ollama's window for gemma4:26b on a 14.5 GiB GPU | 4 096 (its VRAM default): the factory's first request does not fit |",
+    "",
+    "A step costs `fixed × turns + history`. The largest saving is fewer turns; each turn saved is ~30 000 tokens and",
+    "3 s (cloud) to 45 s (local)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-0-the-measure-the-gate",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 0 — The measure (the gate)",
+   "summary": "repeated reads) and `metrics` by station, provider and model.",
+   "body": [
+    "- [ ] T0.1 agent: the ledger's new fields (turns, fixed prompt's size, tools' results' characters, reads by hand,",
+    "      repeated reads) and `metrics` by station, provider and model.",
+    "- [ ] T0.2 user: the budget and the models of the baseline (spec 020's tiers, and gemma4 local).",
+    "- [ ] T0.3 agent: the baseline: the benchmark's tasks on each model, recorded here."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-1-free-wins",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 1 — Free wins",
+   "summary": "does it, and whether it denies a read by path.",
+   "body": [
+    "- [ ] T1.1 agent: `nuclear-mcp --no-factory`, passed by the factory when it starts both servers.",
+    "- [ ] T1.2 agent: Anthropic's prompt cache in the API adapter; the tools' order stable.",
+    "- [ ] T1.3 agent: OpenCode isolated (no user agent files, no unused built-in tools); first verify how OpenCode 2.3",
+    "      does it, and whether it denies a read by path.",
+    "- [ ] T1.4 agent: the context preflight (Ollama, Anthropic, a table for the others)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-2-the-oracle-answers-more-per-call",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 2 — The oracle answers more per call",
+   "summary": "denied paths (`build/`, `node_modules`, `dist`).",
+   "body": [
+    "- [ ] T2.1 agent: the project's map in `project_inspect`.",
+    "- [ ] T2.2 agent: compact `test` and `check`; `verify`; several files per read.",
+    "- [ ] T2.3 agent: the station prompt (the documents are in it, the map is one call away, the oracle first) and the",
+    "      denied paths (`build/`, `node_modules`, `dist`)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-3-a-small-catalog",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 3 — A small catalog",
+   "summary": "`nuclear_tools`.",
+   "body": [
+    "- [ ] T3.1 agent: the profiles per station and the chat, from the ledger; `nuclear-mcp --for <station>`;",
+    "      `nuclear_tools`.",
+    "- [ ] T3.2 agent: short descriptions (first sentence: what and when), the rest in `nuclear_doc` topics.",
+    "- [ ] T3.3 agent: the roles' skills as an index: measured, adopted only if the guard holds."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-4-the-documents-and-the-local-models",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 4 — The documents and the local models",
+   "summary": "`docs/README.md`; the architecture kept in `02-architecture/overview.md`; `nuclear agent init` for old projects.",
+   "body": [
+    "- [ ] T4.1 agent: the oracle's rule in the NuclearLang section of `AGENTS.md` and in the context documents'",
+    "      `docs/README.md`; the architecture kept in `02-architecture/overview.md`; `nuclear agent init` for old projects.",
+    "- [ ] T4.2 agent: the knowledge base's rows and its guide for agents.",
+    "- [ ] T4.3 agent: a factory step on gemma4:26b with a 32 768-token window, measured."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#spec-025-the-mcp-server-is-the-oracle-tasks",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks",
+   "summary": "Who: agent (in the tree), user (money, decisions).",
+   "body": [
+    "Who: **agent** (in the tree), **user** (money, decisions). Each phase ends with the guard: the benchmark compared with",
+    "the baseline, every test set of the tree (`nuclearlang/docs/05-standards/testing.md`), the deploy (root rule 15)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.096416",
    "type": "readme",
    "title": "Specs of the platform",
@@ -11098,22 +11686,6 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.292902",
-   "type": "readme",
-   "title": "Specs of the platform",
-   "summary": "Specs of the platform",
-   "body": "| [023-teams-like-human-teams](023-teams-like-human-teams/requirements.md) | **High priority.** Atlas informs and routes tasks to the tech leads; the chat lists only tech leads, who plan, explain and assign; each team has its method (Scrum by default) and instructions; spending asked only for API work; a team's model for all; every asset local, the release as contingency | in progress |",
-   "agents": false,
-   "sources": [
-    "docs/04-specs/README.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.992d45",
    "type": "readme",
    "title": "Specs of the platform",
@@ -11143,6 +11715,25 @@
     "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
     "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |",
     "| [018-failure-matrix](018-failure-matrix/requirements.md) | Every machine, every state, fail-safe: the cases where NuclearLang can fail (systems, architectures, toolchains, editors, versions and upgrades, the user's choices, ports, our services, the LSP, permissions), each with its expected behaviour, its state and its test | draft (phase 1 half done: the update, the installers' choices and lock, sudo, the extension without NuclearLang) |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.b73762",
+   "type": "readme",
+   "title": "Specs of the platform",
+   "summary": "Specs of the platform",
+   "body": [
+    "| [023-teams-like-human-teams](023-teams-like-human-teams/requirements.md) | **High priority.** Atlas informs and routes tasks to the tech leads; the chat lists only tech leads, who plan, explain and assign; each team has its method (Scrum by default) and instructions; spending asked only for API work; a team's model for all; every asset local, the release as contingency | in progress |",
+    "| [025-mcp-the-oracle](025-mcp-the-oracle/requirements.md) | **High priority.** The MCP server is the oracle: an agent asks it before opening a file; a small catalog per station, the project's map and compact results in one call, no reads of generated code, the prompt cache, a context preflight; a project's documents keep only its architecture and what is its own, and point to the oracle for the rest | approved |"
    ],
    "agents": false,
    "sources": [
