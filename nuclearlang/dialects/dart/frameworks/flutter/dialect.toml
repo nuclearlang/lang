@@ -125,7 +125,7 @@ field = "{{#override}}@override\n{{/override}}final {{#type}}{{type}}{{/type}}{{
 [kinds.repository]
 description = "@repository(path, saveLocal) repository Name + @get/@post/... methods without body → http calls; saveLocal: a GET saves its rows locally and gets <method>AsLocal()"
 inherits = ["Repository"]
-imports = ["Repository", "HttpMethod", "Decode", "Cache"]
+imports = ["Repository", "HttpMethod", "Decode", "Cache", "BigIntJson", "BigDoubleJson"]
 async_methods = true
 method_members = ["purge{{name|pascal}}", "{{name}}AsLocal"]
 template = { file = "templates/repository.tpl" }
@@ -206,7 +206,7 @@ template = { file = "templates/statemodel.tpl" }
 # field gives the model a local table (`Model.table`, a LocalTable); @created / @updated are stamped by it
 [kinds.model]
 description = "@entity(table) Name + fields in domain/models → immutable class with fromJson/toJson (json_serializable); @primary gives it a local table"
-imports = ["JsonSerializable", "listEquals", "LocalTable"]
+imports = ["JsonSerializable", "listEquals", "LocalTable", "BigIntJson", "BigDoubleJson"]
 file_header = "part '{{file}}.g.dart';"
 template = { file = "templates/model.tpl" }
 

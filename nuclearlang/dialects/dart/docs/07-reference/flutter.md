@@ -204,7 +204,8 @@ devDependencies(
   `app(...)`.
 - Only the project's own packages are written. Synapsis adds its own: `synapsis`, `flutter_bloc`, `fpdart`,
   `go_router`, `json_annotation`; `build_runner`, `json_serializable`, `mocktail`, `bloc_test` and
-  `integration_test` to generate code and for tests; `flutter_native_splash` with `@splash`. The full list is
+  `integration_test` to generate code and for tests; `flutter_native_splash` with `@splash`; `decimal` when the code
+  uses a `bigdouble`. The full list is
   in `build/app/pubspec.yaml`.
 - **Only third-party packages the framework does not use.** A package of the dialect (those of `defs`: dio,
   go_router, flutter_bloc, get_it...) or of Synapsis (`[project.manifest] reserved`: fpdart, build_runner,
@@ -526,6 +527,42 @@ class CharacterError {
 
 An error type of a synapsis `Result` (repositories, guards) has a field `message: string`: synapsis builds it
 with `E(message = ...)`. A `Result<string, T>` gets the message directly.
+
+**Exact numbers** (ADR-lang-0015, the backend's rule ADR-backend-0003). A `bigint` field is a `BigInt` and a
+`bigdouble` one a `Decimal` (`package:decimal`, which `nuclear build` adds to the app's `pubspec.yaml` when the code
+uses it). Their JSON is a text both ways: synapsis's converters `BigIntJson` and `BigDoubleJson` read the language's
+texts (a JSON number, another text or more than 1000 digits throw a `FormatException`, a decoding error) and write
+`toString()` (`"2.0"` for a whole `bigdouble`). A local table keeps their text and compares and sorts it by value
+(`exact:`):
+
+```nuclear
+model Price
+  @primary
+  id: int
+  amount: bigdouble
+  code?: bigint
+```
+
+```dart
+  final int id;
+  @BigDoubleJson()
+  final Decimal amount;
+  @BigIntJson()
+  final BigInt? code;
+
+  Map<String, dynamic> toJson() => _$PriceToJson(this);
+
+  /// The local table of Price (`@primary`): its rows by `id`, CRUD and queries on the device.
+  static final LocalTable<Price> table = LocalTable<Price>(
+    'price',
+    Price.fromJson,
+    key: 'id',
+    exact: {
+      'amount',
+      'code',
+    },
+  );
+```
 
 **Generic models.** A shape that repeats with another model inside (an API page) is declared once with a type
 parameter and each use says which one: `Page<Character>`, `Page<Episode>`. It goes in `shared/models/` so every
@@ -1707,11 +1744,12 @@ Rules of a field of the form model (decorators on the field; all accept `message
 | `@required` | not empty (a `boolean` must be `true`: accepting the terms) |
 | `@email`, `@url` | format |
 | `@minLength(n)`, `@maxLength(n)` | length of the text |
-| `@min(n)`, `@max(n)` | value of a number |
+| `@min(n)`, `@max(n)` | value of a number; of a `bigint` / `bigdouble` field, compared exactly (`Rules.minExact`, `Rules.maxExact`; `n` a literal of the field's type) |
 | `@pattern("regex")` | regular expression (`\\d` is written with two backslashes) |
 | `@matches("other")` | equal to the field `other` (repeating the password) |
 
-An `int` or `double` field also validates that it is a number; an empty optional one (`field?: T`) passes every
+An `int` or `double` field also validates that it is a number, a `bigint` or `bigdouble` field that it is the text of
+its type (`Rules.bigint()`, `Rules.bigdouble()`; `fromValues` reads it with `Rules.asBigInt` / `asBigDouble`); an empty optional one (`field?: T`) passes every
 rule except `@required`. A `message` is a key of the dictionary (§6.16) or the text; without `message`,
 Synapsis's text in the app's language. A field's error shows when the user leaves it or when the form is sent.
 

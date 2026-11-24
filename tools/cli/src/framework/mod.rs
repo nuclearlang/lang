@@ -612,8 +612,9 @@ fn sync_plugin_packages(app: &Path, wanted: &[(String, String)]) -> Result<(), S
     std::fs::write(&mark, names.join("\n")).map_err(|e| e.to_string())
 }
 
-/// Adds to the app the packages Synapsis needs that its pubspec.yaml does not list yet.
-fn ensure_packages(app: &Path, splash: bool) -> Result<(), String> {
+/// Adds to the app the packages Synapsis needs that its pubspec.yaml does not list yet; `decimal` when the code
+/// uses `bigdouble` (ADR-lang-0015: its value is a `Decimal` of that package).
+fn ensure_packages(app: &Path, splash: bool, decimal: bool) -> Result<(), String> {
     let pubspec = std::fs::read_to_string(app.join("pubspec.yaml")).unwrap_or_default();
     let listed = |name: &str| pubspec.lines().any(|l| l.trim_start().starts_with(&format!("{name}:")));
     let mut missing: Vec<String> = Vec::new();
@@ -635,6 +636,9 @@ fn ensure_packages(app: &Path, splash: bool) -> Result<(), String> {
     }
     if splash && !listed("flutter_native_splash") {
         missing.push("flutter_native_splash".into());
+    }
+    if decimal && !listed("decimal") {
+        missing.push("decimal".into());
     }
     if !listed("integration_test") {
         missing.push("dev:integration_test:{\"sdk\":\"flutter\"}".into());
@@ -1455,7 +1459,7 @@ fn create_app(root: &Path, name: &str, org: &str) -> Result<PathBuf, String> {
     std::fs::create_dir_all(&app).map_err(|e| e.to_string())?;
     flutter(&app, &["create", "--project-name", name, "--org", org, "--empty", "."])?;
     let _ = std::fs::remove_file(app.join("test/widget_test.dart"));
-    ensure_packages(&app, false)?;
+    ensure_packages(&app, false, false)?;
     Ok(app)
 }
 
@@ -1501,7 +1505,8 @@ fn build(root: &Path) -> Result<PathBuf, String> {
     }
     assets::fonts(&asset_paths(&out))?;
     let splash = out.generated.iter().any(|(p, _)| p == SPLASH_YAML);
-    ensure_packages(&app, splash)?;
+    let decimal = out.files.iter().any(|f| f.code.contains("package:decimal/decimal.dart"));
+    ensure_packages(&app, splash, decimal)?;
     sync_plugin_packages(&app, &plugin_packages(root, &d))?;
     let written = write_app(&app, &out)?;
     write_line_map(&app, &out)?;
@@ -2379,6 +2384,10 @@ mod tests {
                 assert!(gen_command(&root, args(&["usecase", "catalog", "TidyTitle", "--route", "GET books/{id}"])).is_err_and(|e| e.contains("{id}")), "{dialect}");
             } else {
                 assert!(gen_command(&root, args(&["usecase", "characters", "FindCharacter", "--route", "GET characters/find"])).is_err_and(|e| e.contains("no routes")), "{dialect}");
+                // the exact numbers in a client: a model field of their own, read and written as JSON texts (ADR-lang-0015)
+                gen_command(&root, args(&["resource", "prices", "Price", "--fields", "id:int code:bigint amount:bigdouble", "--source", "rest:https://example.com/api", "--screen", "prices"])).unwrap();
+                let price = std::fs::read_to_string(root.join(d.layout["model"].replace("{component}", "prices").replace("{file}", "price"))).unwrap();
+                assert!(price.contains("  code: bigint\n  amount: bigdouble\n"), "{dialect}: {price}");
             }
             let m = nuclear_transpile::project::Manifest::read(&root).unwrap();
             let out = nuclear_transpile::project::build(&root, &m, &d);

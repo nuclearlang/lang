@@ -9,6 +9,7 @@ export type { Host } from './embed.js';
 export type { HttpOptions, HttpRequest, HttpResponse } from './config.js';
 export { Synapsis } from './app.js';
 export { Repository, Decode, Cache, MemoryCache, HttpMethod } from './http.js';
+export { exactText, wire, MAX_DIGITS } from './exact.js';
 export type { Json, SendOptions } from './http.js';
 export { StateManager } from './state.js';
 export {

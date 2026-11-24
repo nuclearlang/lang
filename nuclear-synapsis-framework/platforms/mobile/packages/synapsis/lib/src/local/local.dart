@@ -4,9 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:decimal/decimal.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../exact.dart';
 import '../http/errors.dart';
 
 /// A row the local database does not have (`find`, `getOne`, a `<method>AsLocal()` never answered).
@@ -184,7 +186,15 @@ abstract final class Local {
 /// CRUD without writing it ([find], [findAll], [save], [remove]) and a query builder ([where], [orderBy],
 /// [limit], [offset], then `getOne`, `getMany`, `count`, `exists`, `update`, `delete`).
 class LocalTable<T extends Object> {
-  LocalTable(String name, this.fromJson, {required this.key, this.generated = false, this.created, this.updated})
+  LocalTable(
+    String name,
+    this.fromJson, {
+    required this.key,
+    this.generated = false,
+    this.created,
+    this.updated,
+    this.exact = const {},
+  })
     : name = 'synapsis_$name';
 
   /// The box name: `synapsis_` + the model's name in snake_case, or the name `@entity("...")` gives.
@@ -203,6 +213,12 @@ class LocalTable<T extends Object> {
   /// JSON names of the `@created` / `@updated` fields, stamped by the table.
   final String? created;
   final String? updated;
+
+  /// JSON names of the exact fields (`bigint`, `bigdouble`): their rows keep the text, compared and sorted by value.
+  final Set<String> exact;
+
+  /// The value [field] of [row] is compared by: an exact field's text as its number.
+  Object? valueOf(Map<String, dynamic> row, String field) => exact.contains(field) ? Exact.of(row[field]) : row[field];
 
   Future<Box<String>> get box => Local.open(name, component: component);
 
@@ -260,9 +276,9 @@ class LocalTable<T extends Object> {
       // the auto-increment key of hive, written into the row itself
       final id = await b.add('');
       json[key] = id;
-      await b.put(id, jsonEncode(json));
+      await b.put(id, jsonEncode(json, toEncodable: Exact.encodable));
     } else {
-      await b.put(keyOf(json), jsonEncode(json));
+      await b.put(keyOf(json), jsonEncode(json, toEncodable: Exact.encodable));
     }
     return json;
   }
@@ -352,14 +368,14 @@ class LocalQuery<T extends Object> {
   }
 
   bool _matches(Map<String, dynamic> row) => _conditions.every((c) {
-    final value = row[c.$1];
+    final value = table.valueOf(row, c.$1);
     final cond = c.$2;
-    return cond is Op ? cond.test(value) : value == cond;
+    return cond is Op ? cond.test(value) : _same(value, cond);
   });
 
   int _compare(Map<String, dynamic> a, Map<String, dynamic> b) {
     for (final (field, desc) in _orders) {
-      final r = compareValues(a[field], b[field]);
+      final r = compareValues(table.valueOf(a, field), table.valueOf(b, field));
       if (r != 0) return desc ? -r : r;
     }
     return 0;
@@ -437,7 +453,7 @@ Op lt(Object value) => Op((x) => x != null && compareValues(x, value) < 0);
 Op lte(Object value) => Op((x) => x != null && compareValues(x, value) <= 0);
 
 /// `ne(null)` is "not null"; a plain `null` in `where` is "is null".
-Op ne(Object? value) => Op((x) => x != value);
+Op ne(Object? value) => Op((x) => !_same(x, value));
 
 /// SQL `LIKE`: `%` any text, `_` one character.
 Op like(String pattern) => _like(pattern, caseSensitive: true);
@@ -450,14 +466,21 @@ Op _like(String pattern, {required bool caseSensitive}) {
   return Op((x) => x is String && re.hasMatch(x));
 }
 
-Op oneOf(List<Object?> values) => Op(values.contains);
+Op oneOf(List<Object?> values) => Op((x) => values.any((v) => _same(x, v)));
+
+/// Equal values; an exact number equals the same number of the other exact type (`1` and `1.0`).
+bool _same(Object? a, Object? b) => a == b || ((a is BigInt || a is Decimal) && Exact.of(a) == Exact.of(b));
 
 Op between(Object low, Object high) =>
     Op((x) => x != null && compareValues(x, low) >= 0 && compareValues(x, high) <= 0);
 
-/// Orders JSON values: numbers, texts (ISO dates among them), booleans; null first.
+/// Orders JSON values: numbers, exact numbers by value, texts (ISO dates among them), booleans; null first.
 int compareValues(Object? a, Object? b) {
   if (a == null || b == null) return a == null ? (b == null ? 0 : -1) : 1;
+  if (a is BigInt || a is Decimal || b is BigInt || b is Decimal) {
+    final (x, y) = (Exact.of(a), Exact.of(b));
+    if (x != null && y != null) return x.compareTo(y);
+  }
   if (a is num && b is num) return a.compareTo(b);
   if (a is String && b is String) return a.compareTo(b);
   if (a is bool && b is bool) return (a ? 1 : 0) - (b ? 1 : 0);

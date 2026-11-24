@@ -29,7 +29,7 @@ The tests every platform shares (the contract, the layout, the editor docs, the 
 | `cargo test`: the contract of a backend | `tasks_app` built from the contract of `tasks_api`; a change in the backend breaks the client's build with the field's name | `tests/projects.rs`, `a_client_builds_from_the_backend_contract_and_sees_drift` |
 | `cargo test`: the reference shows the real output | the Synapsis blocks of the flutter reference | `tests/projects.rs`, `synapsis_spec_shows_the_real_output` |
 | `checks/spec-check-synapsis.py` | the same blocks, 27 today, and `--fix` to rewrite them | below |
-| `flutter test` in `packages/synapsis` | the runtime: 64 tests (`synapsis_test`, `framework_test`, `local_test`, `testing_test`, `ui_test`) | `packages/synapsis/test/` |
+| `flutter test` in `packages/synapsis` | the runtime: 69 tests (`synapsis_test`, `framework_test`, `local_test`, `exact_test`, `testing_test`, `ui_test`) | `packages/synapsis/test/` |
 | `flutter analyze` in `packages/synapsis` | `flutter_lints`, nothing reported | `packages/synapsis/analysis_options.yaml` |
 | `flutter test` in `packages/synapsis_genkit` | the `genkit` runtime (`remote_test`, `runtime_test`); the CI workflow does not run it | `packages/synapsis_genkit/test/` |
 | `checks/analyze-flutter.sh [file.nuc...]` | every single-file example transpiled and checked with `flutter analyze` (`flutter_lints`, 0 warnings) | below |

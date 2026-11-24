@@ -4,6 +4,10 @@ All notable changes to synapsis-mobile are written here; versions follow [Semant
 
 ## Unreleased
 
+- Exact numbers (ADR-lang-0015): a model's `bigint` / `bigdouble` fields are a JSON text both ways (`BigIntJson`,
+  `BigDoubleJson`; a JSON number or another text is a `FormatException`); a local table compares and sorts their text
+  by value (`LocalTable(exact:)`); a form validates their text (`Rules.bigint`, `Rules.bigdouble`) and its `@min` /
+  `@max` compare exactly (`Rules.minExact`, `Rules.maxExact`); the runtime depends on `decimal`.
 - Environments (spec 021): `env("NAME", "default")` in a mobile app reads the values of the environment it was built
   for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example
   `clean-flutter-project` reads `API_URL`.

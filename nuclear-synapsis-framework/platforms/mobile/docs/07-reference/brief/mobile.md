@@ -39,7 +39,7 @@ use `BuildContext` and navigate.
 ## Pieces
 
 ```nuclear
-// model (domain/models/): only fields; fromJson/toJson/== are generated. @key("json_name"), @DateConverter
+// model (domain/models/): only fields; fromJson/toJson/== generated (exact fields: JSON texts). @key("json_name"), @DateConverter
 Character
   id: int
   name: string

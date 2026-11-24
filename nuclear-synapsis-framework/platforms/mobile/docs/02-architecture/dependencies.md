@@ -36,6 +36,7 @@ Versions are `packages/synapsis/pubspec.yaml`; what each library is used for, cl
 | Session and the key of the local database | `flutter_secure_storage` |
 | Local database | `hive_ce` |
 | Models' JSON | `json_annotation` |
+| Exact numbers (`bigdouble`) | `decimal` |
 | Translations | `flutter_localizations` (SDK), `path_provider`, `web` |
 | `Result` and test helpers (`testing.dart`) | `fpdart` (`Result` is its `Either`), `mocktail`, `flutter_test` (SDK) |
 
@@ -51,7 +52,7 @@ Google AI, Vertex AI, OpenAI, Anthropic) are added to an app by its plugin, not 
 The dialect adds these to every generated app; a project never lists them in `config.nuc`
 ([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)): `synapsis`, `flutter_bloc`, `fpdart`,
 `go_router`, `json_annotation`; to generate code and for tests `build_runner`, `json_serializable`, `mocktail`,
-`bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`. The full list of an app is its
+`bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`; `decimal` when the code uses a `bigdouble`. The full list of an app is its
 `build/app/pubspec.yaml`. The list itself is the dialect's
 ([flutter reference §3.1](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md)).
 

@@ -38,6 +38,7 @@
   "Log": 0,
   "LogEntry": 0,
   "LogLevel": 0,
+  "MAX_DIGITS": 0,
   "MemoryCache": 0,
   "NetworkManager": 0,
   "NotFound": 0,
@@ -73,6 +74,7 @@
   "el": 0,
   "em": 0,
   "errOf": 1,
+  "exactText": 0,
   "footer": 0,
   "form": 0,
   "fragment": 0,
@@ -130,7 +132,8 @@
   "useState": 0,
   "useStateOf": 0,
   "verify": 1,
-  "when": 1
+  "when": 1,
+  "wire": 0
 },
 "defaults": {
 
@@ -170,7 +173,7 @@
   "SessionEnded": {"supers":["AppEvent"],"members":["eventName","toJson"],"params":[]},
   "SessionManager": {"supers":["Global"],"members":["active","current","destroy","dispose","init","key","lastActivity","register","session","start","timeout","token","touch","value"],"params":["options"]},
   "SessionStarted": {"supers":["AppEvent"],"members":["eventName","session","toJson"],"params":["session"]},
-  "StateManager": {"supers":[],"members":["close","current","emit","listen","listeners","state","stops","subscribe"],"params":["initial"]},
+  "StateManager": {"supers":[],"members":["close","current","emit","isLatestTurn","listen","listeners","state","stateTurn","stops","subscribe","turns"],"params":["initial"]},
   "StatefulView": {"supers":["View"],"members":["attach","build","dispose","initState","manager","managers","mounted","props","rerender","setState"],"params":[]},
   "StatelessView": {"supers":["View"],"members":["build","manager","managers","props"],"params":["props"]},
   "Stream": {"supers":[],"members":["listen","map","start"],"params":["start"]},

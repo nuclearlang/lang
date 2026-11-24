@@ -1,3 +1,9 @@
+## Unreleased
+
+- `Exact`, `BigIntJson`, `BigDoubleJson`: Nuclear's exact numbers in JSON (texts both ways); `LocalTable(exact:)`
+  compares and sorts their text by value; `Rules.bigint`, `Rules.bigdouble`, `Rules.minExact`, `Rules.maxExact`,
+  `Rules.asBigInt`, `Rules.asBigDouble`. Depends on `decimal`.
+
 ## 0.1.0
 
 - Debug builds on the web expose `globalThis.__synapsisTextLayer()`: the visible texts with their place, color

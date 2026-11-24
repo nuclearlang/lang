@@ -16,6 +16,12 @@
 {{#decor.key}}
   @JsonKey(name: {{decor.key.arg}})
 {{/decor.key}}
+{{#tinfo.is.bigint}}
+  @BigIntJson()
+{{/tinfo.is.bigint}}
+{{#tinfo.is.bigdouble}}
+  @BigDoubleJson()
+{{/tinfo.is.bigdouble}}
   {{#decorators}}{{decorators}}{{/decorators}}final {{type}}{{#optional}}?{{/optional}} {{name}};
 {{/fields}}
 
@@ -50,6 +56,15 @@
     updated: {{#decor.key}}{{decor.key.arg}}{{/decor.key}}{{^decor.key}}'{{name}}'{{/decor.key}},
 {{/decor.updated}}
 {{/fields}}
+{{#exact_fields}}
+{{#@first}}
+    exact: {
+{{/@first}}
+      {{#decor.key}}{{decor.key.arg}}{{/decor.key}}{{^decor.key}}'{{name}}'{{/decor.key}},
+{{#@last}}
+    },
+{{/@last}}
+{{/exact_fields}}
   );
 {{/field_decor.primary}}
 {{/generic_list}}

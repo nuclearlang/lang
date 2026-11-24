@@ -91,6 +91,38 @@ export class Origin {
 }
 ```
 
+The exact fields of a model (ADR-lang-0015, the backend's rule): a `bigint` is the native `bigint`, a `bigdouble` the
+dialect's `BigDouble` (the class is written in the file). In JSON both are texts: `fromJson` reads them with the
+runtime's `exactText` (the language's texts; a JSON number, another text or more than 1000 digits throw a
+`TypeError`, a decoding error) and `toJson` writes `String(value)`. A request's body is sent through the runtime's
+`wire` replacer, so a model travels as its `toJson()`:
+
+```nuclear
+model Price
+  amount: bigdouble
+  @key("item_code")
+  code?: bigint
+  codes: bigint[]
+```
+
+```typescript
+  static fromJson(json: Json): Price {
+    return new Price({
+      amount: BigDouble.of(exactText(json['amount'], 'bigdouble')),
+      code: json['item_code'] == null ? null : BigInt(exactText(json['item_code'], 'bigint')),
+      codes: (json['codes'] as unknown[]).map((o) => BigInt(exactText(o, 'bigint'))),
+    });
+  }
+
+  toJson(): Json {
+    return {
+      amount: String(this.amount),
+      ['item_code']: this.code == null ? null : String(this.code),
+      codes: this.codes.map(String),
+    };
+  }
+```
+
 A view:
 
 ```nuclear
@@ -241,7 +273,8 @@ export class TaskRepository extends Repository {
 | `Stream<T>` (`listen`, `map`), `Frames`, `Bridge`, `BridgeTransport` | what a server pushes; the platform's frames (ADR-synapsis-0008) over a socket or a host's bridge |
 | `Synapsis.start/addConfig/connection/transport/embed/reset` | the runtime's entry point |
 | `mountApp(element, host, App, start, styles)`, `Host` | the embedded mode: a shadow root, the in-memory router, the bridge (ADR-synapsis-0009) |
-| `Repository` (`send`, `result`, `attempt`, `target`, `purgeCache`), `Decode`, `Cache`, `HttpMethod` | http calls over fetch; GET/PUT/DELETE retry transient failures twice |
+| `Repository` (`send`, `result`, `attempt`, `target`, `purgeCache`), `Decode`, `Cache`, `HttpMethod` | http calls over fetch; GET/PUT/DELETE retry transient failures twice; a body is `JSON.stringify(body, wire)` |
+| `exactText`, `wire`, `MAX_DIGITS` | the exact numbers in JSON: the checked text of a `bigint` / `bigdouble` of an answer (a `TypeError` otherwise); the replacer that writes a model as its `toJson()` and a `bigint` as its text |
 | `StateManager<S>` (`state`, `emit`, `subscribe`, `listen`, `close`) | the state of a screen |
 | `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, `useManager`, `useStateOf`, `useManagerState`, `Element` | views as classes over React components; the provided managers |
 | `div`, `span`, `ul`, `li`, `button`, `input`, `img`, `form`... (`el`, `fragment`) | HTML without JSX: `div({ className, children })` or `div(child, child)` |

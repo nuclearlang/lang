@@ -6,6 +6,7 @@ library;
 export 'src/acl/acl.dart';
 export 'src/core.dart';
 export 'src/events/events.dart';
+export 'src/exact.dart';
 export 'src/forms/forms.dart';
 export 'src/http/cache.dart';
 export 'src/http/connection.dart';

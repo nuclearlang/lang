@@ -34,7 +34,7 @@ FLUTTER=<sdk>/bin/flutter nuclear-synapsis-framework/platforms/mobile/checks/ana
 From this folder:
 
 ```sh
-(cd packages/synapsis && flutter pub get && flutter test && flutter analyze)    # the runtime: 64 tests
+(cd packages/synapsis && flutter pub get && flutter test && flutter analyze)    # the runtime: 69 tests
 (cd examples/examples-flutter-dialect/tasks_app && nuclear build && nuclear test)
 ```
 

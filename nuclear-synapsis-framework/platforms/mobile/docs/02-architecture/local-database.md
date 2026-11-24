@@ -45,6 +45,10 @@ is [mobile.md §3, rule 6](../07-reference/mobile.md); the decision and what was
   intact); the box is `synapsis_<name>`. `putRow` stamps `created` / `updated` (ISO-8601 texts) and gives
   `generated` keys.
 - `LocalQuery<T>` and the operators as top-level functions.
+- An exact field (`bigint`, `bigdouble`): the row keeps its JSON text; the table's `exact` names those fields and
+  `valueOf` reads them as a `Decimal`, so `where` (equality, `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`) and
+  `orderBy` compare by value, as the backend's SQLite does (ADR-backend-0003). The dialect writes `exact:` in the
+  model's table.
 - `NotFound`: a `RepositoryError`, like `HttpError`; `attempt` catches both.
 - `Repository.send(local:)`, `recall`, `target`, `local<T>()`, `saveLocal`.
 - `Synapsis.reset` closes the database; `SynapsisTest.start` sets `memory`.

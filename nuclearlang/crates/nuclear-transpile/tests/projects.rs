@@ -342,6 +342,71 @@ fn exact_fields_are_exact_columns_and_texts_in_json() {
     }
 }
 
+/// ADR-lang-0015 on the clients: a contract with exact fields gives a mobile and a web client models whose fields are
+/// `bigint` / `bigdouble` (never `string`), their bounds and defaults literals of that type; their JSON is a text both
+/// ways, read with the language's rule.
+#[test]
+fn a_client_of_a_contract_with_exact_fields_gets_exact_fields() {
+    let tmp = std::env::temp_dir().join(format!("nuclear-exact-client-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&tmp);
+    let api = tmp.join("store_api");
+    copy_tree(&tree("examples/examples-backend/store_api"), &api);
+    std::fs::write(
+        api.join("components/store/domain/models/new_balance.nuc"),
+        "NewBalance\n  @max(12345678901234567890123)\n  serial: bigint\n  @min(0.1)\n  amount: bigdouble\n  rate: bigdouble = 1.5\n",
+    )
+    .unwrap();
+    let (nest, _) = loader(None).load("nestjs");
+    project::write_metadata(&api, &Manifest::read(&api).unwrap(), &nest.unwrap()).unwrap();
+    let contract: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(api.join(".nuclear/contract.json")).unwrap()).unwrap();
+    for (dialect, app_src, ext) in
+        [("flutter", "examples/examples-flutter-dialect/tasks_app", "dart"), ("react", "examples/examples-web/tasks_live", "ts")]
+    {
+        let (d, _) = loader(None).load(dialect);
+        let d = d.unwrap();
+        let files = nuclear_transpile::contract::generate("store_api", &contract, &d);
+        let text = |name: &str| files.iter().find(|(p, _)| p.ends_with(name)).map(|(_, t)| t.clone()).unwrap();
+        let new_balance = text("models/new_balance.nuc");
+        assert!(new_balance.contains("  serial: bigint\n") && new_balance.contains("  rate: bigdouble = 1.5\n"), "{new_balance}");
+        if d.consumed_decorators.contains("min") {
+            assert!(new_balance.contains("  @max(12345678901234567890123)\n  serial") && new_balance.contains("  @min(0.1)\n"), "{new_balance}");
+        }
+        assert!(text("models/balance.nuc").contains("  amount: bigdouble\n"));
+        assert!(text("balances_repository.nuc").contains("balancesAtLeast(amount: bigdouble) Result<StoreApiError, Balance[]>"));
+        // the client builds with it: the models read and write the texts
+        let app = tmp.join(dialect);
+        copy_tree(&tree(app_src), &app);
+        let config = std::fs::read_to_string(app.join("config.nuc")).unwrap();
+        let config: Vec<String> = config
+            .lines()
+            .map(|l| if l.starts_with("contracts(") { "contracts(store_api = \"../store_api\")".to_string() } else { l.to_string() })
+            .collect();
+        std::fs::write(app.join("config.nuc"), config.join("\n") + "\n").unwrap();
+        let _ = std::fs::remove_dir_all(app.join("contracts"));
+        nuclear_transpile::contract::install(&app, "store_api", &contract, &d).unwrap();
+        let out = project::build(&app, &Manifest::read(&app).unwrap(), &d);
+        let errors: Vec<String> = out
+            .files
+            .iter()
+            // the models (a web client has no `Page` yet: a paged route of the contract is the roadmap's)
+            .filter(|f| f.out_path.contains("store_api") && f.out_path.contains("models"))
+            .flat_map(|f| f.diagnostics.iter().filter(|x| x.is_error()).map(|x| x.message.clone()))
+            .collect();
+        assert!(errors.is_empty(), "{dialect}: {errors:#?}");
+        let model = out.files.iter().find(|f| f.out_path.ends_with(&format!("/balance.{ext}"))).map(|f| f.code.clone()).unwrap();
+        let wants: &[&str] = if dialect == "flutter" {
+            &["  @BigIntJson()\n  final BigInt serial;", "  @BigDoubleJson()\n  final Decimal amount;"]
+        } else {
+            &["serial: BigInt(exactText(json['serial'], 'bigint'))", "amount: BigDouble.of(exactText(json['amount'], 'bigdouble'))", "serial: String(this.serial)"]
+        };
+        for want in wants {
+            assert!(model.contains(want), "{dialect}: no {want} in\n{model}");
+        }
+    }
+    let _ = std::fs::remove_dir_all(&tmp);
+}
+
 /// Copies a project's sources (not its `build/`).
 fn copy_tree(from: &std::path::Path, to: &std::path::Path) {
     std::fs::create_dir_all(to).unwrap();

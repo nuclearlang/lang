@@ -22,6 +22,7 @@
 | `flutter_secure_storage` | `SessionManager` stores the session in the Keychain / Keystore; `Local` keeps the key of the local database there |
 | `hive_ce` | `Local` / `LocalTable`: the local database (one box per table, on Android, iOS, Linux, macOS, Windows; IndexedDB on web), encrypted as `LocalDatabase` says |
 | `json_annotation` | the generated models (json_serializable) |
+| `decimal` | `Decimal`, the value of a `bigdouble`: `Exact`, `BigDoubleJson`, the comparisons of `LocalTable` and the exact form rules |
 | `flutter_localizations` (SDK) | `Translations.delegates`: the texts of Flutter's widgets |
 | `path_provider`, `web` | `Translations` stores the remote dictionaries (files; `localStorage` on web) |
 | `fpdart`, `mocktail`, `flutter_test` | `package:synapsis/testing.dart` |
@@ -67,6 +68,8 @@ Future<void> main() async {
 | `SessionInterceptor`, `HttpLogInterceptor` | the session token (and ending the session on a 401); logs of each request |
 | `EventInterceptor(header, events)` | a response (or an error) with the `header` header (`x-app-event`) publishes the event its value names in `events` |
 | `HttpError` | `message`, `statusCode`, `data`, `headers`, `timeout`, `offline`, `transient` (timeout, no connection, 5xx). A `RepositoryError`, as `NotFound` of the local database |
+| `BigIntJson`, `BigDoubleJson` | the `JsonConverter`s of a model's `bigint` (`BigInt`) and `bigdouble` (`Decimal`) fields: a JSON text both ways (ADR-lang-0015); a JSON number, another text or more than 1000 digits throw a `FormatException` |
+| `Exact` | `parseBigInt`, `parseBigDouble` (the language's `text.toBigInt()` / `toBigDouble()`, at most `maxDigits` = 1000 digits), `text(Decimal)` (`toString()` of a `bigdouble`: `2.0`), `bigint(json)` / `bigdouble(json)` (or a `FormatException`), `of(v)` (the `Decimal` of an exact value or its text), `encodable` (what `jsonEncode` writes for a row) |
 
 ### 3.1 `Repository`
 
@@ -111,7 +114,7 @@ final alive = await Character.table.where({'status': 'Alive'}).orderBy('name').l
 | API | What it does |
 |---|---|
 | `LocalDatabase({encrypted = true})` | `local` of `AppConfig` / `ComponentConfig`: how the tables are kept; `encrypted` is AES-256 with a key generated once in the secure storage (Keychain, Keystore, libsecret, DPAPI, WebCrypto); a component's config applies to the tables of its models |
-| `LocalTable<T>(name, fromJson, {key, generated, created, updated})` | the table of a model: rows as JSON (`toJson`/`fromJson`) in the box `synapsis_<name>` (`name` from `@entity` or the model's name in snake_case), by the JSON field `key`; `generated`: a null key gets the next number; `created`/`updated`: JSON fields the table stamps (ISO-8601) |
+| `LocalTable<T>(name, fromJson, {key, generated, created, updated, exact})` | the table of a model: rows as JSON (`toJson`/`fromJson`) in the box `synapsis_<name>` (`name` from `@entity` or the model's name in snake_case), by the JSON field `key`; `generated`: a null key gets the next number; `created`/`updated`: JSON fields the table stamps (ISO-8601); `exact`: the JSON fields of an exact type, whose text `where`, `orderBy` and `valueOf(row, field)` compare by value |
 | `find(id)`, `findAll()`, `save(x)`, `saveAll(xs)`, `remove(id)`, `clear()` | CRUD; `find` is `Either<NotFound, T>`, `save` returns the row as saved |
 | `where({...})`, `orderBy(field, desc:)`, `limit(n)`, `offset(n)` | a `LocalQuery<T>`; `where` takes equality or `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `between` (top-level functions); a plain `null` is "is null" |
 | `getOne()`, `getMany()`, `count()`, `exists()`, `update({...})`, `delete()` | run the query (`count` ignores limit and offset) |
@@ -185,7 +188,7 @@ called again before its answer comes drops the older answer when it comes back l
 | `SplashScreen(next, child, minDuration, onLoad, onError)` | the first screen: `child` for at least `minDuration` (3 s) and until `onLoad` finishes; then `goTo(next)`. If `onLoad` fails, `onError(context, error, retry)`; without it, a log and `next`. A single timer, no polling |
 | `Log.d/i/s/w/e` (or `debug/info/success/warn/error`), `Log.level`, `Log.sink`, `Log.colors`, `Log.console`, `Log.componentColors` | one block per log with the frame and level badge in the colors of Bootstrap's alerts (primary, info, success, warning, danger) and the breadcrumb `at` (`component › kind › Class.method · file:line`) in the component's color (`LogColor`, the same for the same name; `ComponentConfig.logColor` chooses it; Synapsis in purple) and code colors; the time, the message, `data` as JSON, the error and the stack; only the stack line where an error happened blinks (`▶`). `Log.catchFlutterErrors(app:)` / `Log.formatError` / `Log.presentError`: Flutter exceptions with a double red frame, an ordered message and the stack in columns with the app's frames first in sight (Dart SDK hidden); a repeated error comes out in one line. In release only warn and error; `token`, `password`, `authorization`, `secret` and `cookie` are masked. `sink` gets a `LogEntry` |
 | (debug, web) `globalThis.__synapsisTextLayer()` | installed by `Synapsis.start`: the visible texts with their box, color and weight as JSON (`t x y w h c b`); texts that something else covers (the page below, a dialog) are left out. Used by the Synapsis Terminal device |
-| `Rules.required/email/url/number/minLength/maxLength/min/max/pattern/matches(..., message)`, `Rules.asInt/asDouble` | the rules of a field (`Rule`: `(value, values) → message or null`); the message is a translation key or the text |
+| `Rules.required/email/url/number/bigint/bigdouble/minLength/maxLength/min/max/minExact/maxExact/pattern/matches(..., message)`, `Rules.asInt/asDouble/asBigInt/asBigDouble` | the rules of a field (`Rule`: `(value, values) → message or null`); the message is a translation key or the text |
 | `FormManager<F>(rules, initial, fromValues)` | the state of a form (Cubit of `FormValues`: `values`, `errors`, `errorOf`, `touched`, `checking`, `attempted`, `status`): `change`, `touch`, `submit(onValid)`, `reset`, `form`; `checkOf(field)` gives its remote validation (`FieldCheck`), with `debounce` (400 ms) and no stale responses |
 | `SynapsisForm(manager, onSubmit, child)`, `FormTextField(name, ...)`, `FormCheckbox`, `FormInput<T>(name, builder)`, `FormSubmit(child)` | the form widgets, bound by the field name; each one rebuilds only when its own part changes |
 | `Validators.required/email/minLength/maxLength/pattern/all` | the same messages for a plain `TextFormField` |

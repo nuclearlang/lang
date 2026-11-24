@@ -31,6 +31,10 @@ in how the `react` dialect writes its target is in the TypeScript dialect's proj
   (Chromium, headless) on 2026-11-16: the onboarding's `todos_web` (its screen loads and lists the todos of the
   API) and the website (every screen, routes with parameters, a library of npm, the state builders re-rendering).
 
+- Exact numbers (ADR-lang-0015): a client of a contract ran in a browser against a fastapi backend (2026-11-24),
+  never against nestjs; a decoding error of an exact field is a thrown `TypeError` that a GET retries twice, as
+  every other decoding error (`transient` treats any error that is not an `HttpError` as a network failure).
+
 ## To decide with the user
 
 From the analysis of ADR-web-0001:
@@ -42,6 +46,8 @@ From the analysis of ADR-web-0001:
 ## Pending
 
 - **Found writing the skills library (2026-11-18)**: no translations and no local database.
+- **`Page<T>` is not a class of the web runtime**: a contract with a paged route (`Result<E, Page<T>>`) gives a web
+  client a repository that does not compile (N0106); found by the exact numbers' contract test, 2026-11-24.
 - The five `gen.js` commands of the web type definitions (`react`, `react_router`, `vitest`...) are in no script
   (the TODO of `docs/06-runbooks/`, found in spec 008).
 

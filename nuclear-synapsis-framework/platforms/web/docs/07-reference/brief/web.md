@@ -113,6 +113,8 @@ stateless CharacterListScreen
 - The same build also mounts in a host's page: `mount(element, { bridge, path })` (`npm run build:embed`).
 - Navigation by screen, never by address: `goTo(Screen, id = 7)`, `goBack()`. Inside a screen,
   `Manager.method()` calls its provider; elsewhere `inject<CharactersComponent>()`.
+- Exact fields of a model (`price: bigdouble`, `code: bigint`) are JSON texts both ways (`"0.3"`); a JSON number
+  there fails the call. A client of a contract gets them as their type.
 - A statemanager has no generics (`statemanager M<S>` is N0218): the state model goes in `@stateModel(S)`.
 - Events: `event Name` + fields; `Events.publish(Name(...))`; `useEvent(Name)` in `build`. Access: `guard` with
   `canActivate()`, `@screen(acl = {...})`, `@acl(...)` on a use case. Not in this version: forms, translations,

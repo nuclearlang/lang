@@ -1531,14 +1531,15 @@
    "id": "can:exact-numbers",
    "type": "can",
    "title": "Can: exact numbers of any size (bigint, bigdouble)",
-   "summary": "`bigint` is an exact whole number of any size and `bigdouble` an exact decimal (`0.1 + 0.2 == 0.3`), the same value and text in TypeScript, Dart and Python; a literal takes the exact type of its place; they never mix silently with int or double.",
+   "summary": "`bigint` is an exact whole number of any size and `bigdouble` an exact decimal (`0.1 + 0.2 == 0.3`), the same value and text in TypeScript, Dart and Python; a literal takes the exact type of its place; they never mix silently with int or double; backends, mobile and web apps keep them exact in columns, JSON (as text), local tables and forms.",
    "body": [
     "- Declare them: `a: bigint = 123456789012345678901234567890`, `price: bigdouble = 0.1`; a literal beside one takes its type (`a + 1`, `price > 0.5`). A whole literal beyond 2^53 − 1 elsewhere is an error.",
     "- Check and convert: `text.toBigInt()` / `text.toBigDouble()` give `null` for a bad text; `n.toBigInt()`, `d.toBigDouble()`, `big.toInt()` (`null` out of range), `toDouble()`; on `bigdouble`: `round`, `floor`, `ceil`, `truncate`, `roundTo(digits)`, `toFixed(digits)`; `abs`, `sign`, `compareTo` (−1, 0, 1).",
     "- Mixing with `int` or `double` is N0119 (the fix names the conversion); what they lack is N0120: `bigint / bigint`, bitwise operators, `is bigint`, `Math`, a `Set` of `bigdouble`, list members that sort or sum.",
     "- In JSON an exact number is its text (`\"0.3\"`), read back with `toBigInt()` / `toBigDouble()`.",
     "- Targets: TypeScript `bigint` and a small exact decimal written once per file; Dart `BigInt` and `package:decimal`; Python `int` and `decimal.Decimal` with no rounding.",
-    "- Backend (both dialects, the four databases): an entity's `bigint` is a `BIGINT` column (−2^63 … 2^63−1; beyond it the write answers 409), a `bigdouble` a `NUMERIC`/`DECIMAL` with `@column(precision = p, scale = s)` (default 30, 10; more decimals or digits than the column holds answers 409, never rounded); SQLite stores their exact text. In a body, an answer, a path or a query an exact field is a JSON text (a JSON number or a bad text answers 400 rule `type`); the OpenAPI document types it as a `string` with a pattern; `@min`/`@max`, `where` and `orderBy` compare by value. `nuclear gen resource ... --fields \"price:bigdouble\"` writes them. Not yet: an exact key, and the mobile and web platforms reading an exact field of a contract."
+    "- Backend (both dialects, the four databases): an entity's `bigint` is a `BIGINT` column (−2^63 … 2^63−1; beyond it the write answers 409), a `bigdouble` a `NUMERIC`/`DECIMAL` with `@column(precision = p, scale = s)` (default 30, 10; more decimals or digits than the column holds answers 409, never rounded); SQLite stores their exact text. In a body, an answer, a path or a query an exact field is a JSON text (a JSON number or a bad text answers 400 rule `type`); the OpenAPI document types it as a `string` with a pattern; `@min`/`@max`, `where` and `orderBy` compare by value. `nuclear gen resource ... --fields \"price:bigdouble\"` writes them. Not yet: an exact key.",
+    "- Mobile and web apps: a model's exact field is a JSON text both ways (`\"0.3\"`); a JSON number or another text in an answer is a decoding error that fails the call. A client generated from a backend's contract (`contracts(...)`) or by `nuclear gen resource --fields \"price:bigdouble\"` gets `bigint` / `bigdouble` fields, never `string`. Mobile only: a local table compares and sorts an exact field by value; a form validates its text and its `@min` / `@max` exactly."
    ],
    "keys": [
     "bigint",
@@ -1566,7 +1567,10 @@
    "sources": [
     "nuclearlang/docs/07-reference/nuclear-base.md",
     "nuclearlang/docs/07-reference/library.md",
-    "nuclearlang/docs/03-adr/0015-exact-numbers.md"
+    "nuclearlang/docs/03-adr/0015-exact-numbers.md",
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0003-exact-numbers-in-the-database.md",
+    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md",
+    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
    ],
    "meta": {
     "area": "language",

@@ -8,6 +8,7 @@ import { Synapsis } from './app.js';
 import { AppConfig } from './config.js';
 import { inject, replace } from './inject.js';
 import { Result } from './result.js';
+import { wire } from './exact.js';
 import { buildRouter, RouterProvider, AnyRoute } from './router.js';
 
 type Ctor<T> = abstract new (...args: never[]) => T;
@@ -35,7 +36,7 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
   requests.push(request);
   return Promise.resolve(responder(request)).then(
     ([status, body]) =>
-      new Response(body === null || body === undefined ? '' : JSON.stringify(body), {
+      new Response(body === null || body === undefined ? '' : JSON.stringify(body, wire), {
         status,
         headers: { 'content-type': 'application/json' },
       }),
@@ -152,11 +153,11 @@ export async function statesOf<S>(manager: { subscribe(l: () => void): () => voi
 
 /** `expect(result).toEqual(isOkWith(x))` helpers: the value of an Ok, or the error of an Err. */
 export function okOf<E, T>(result: Result<E, T>): T {
-  if (!result.isOk) throw new Error(`expected Ok, got Err(${JSON.stringify(result.error)})`);
+  if (!result.isOk) throw new Error(`expected Ok, got Err(${JSON.stringify(result.error, wire)})`);
   return result.value;
 }
 
 export function errOf<E, T>(result: Result<E, T>): E {
-  if (result.isOk) throw new Error(`expected Err, got Ok(${JSON.stringify(result.value)})`);
+  if (result.isOk) throw new Error(`expected Err, got Ok(${JSON.stringify(result.value, wire)})`);
   return result.error;
 }

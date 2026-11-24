@@ -983,19 +983,22 @@ pub fn generate(name: &str, contract: &Value, dialect: &Dialect) -> Vec<(PathBuf
             {
                 text.push_str(&format!("  @key(\"{k}\")\n"));
             }
+            let ty = f["type"].as_str().unwrap_or("any");
             for (rule, v) in f["rules"].as_object().into_iter().flatten() {
                 if !consumes(rule) {
                     continue;
                 }
                 match v {
                     Value::Bool(true) => text.push_str(&format!("  @{rule}\n")),
+                    // the bound of an exact field is its text in JSON and a literal of its type in Nuclear
+                    Value::String(s) if is_exact_text(ty) && is_number_text(s) => text.push_str(&format!("  @{rule}({s})\n")),
                     Value::String(s) => text.push_str(&format!("  @{rule}(\"{s}\")\n")),
                     other => text.push_str(&format!("  @{rule}({other})\n")),
                 }
             }
             let opt = if f["optional"].as_bool().unwrap_or(false) { "?" } else { "" };
-            let default = f.get("default").map(|d| format!(" = {}", nuclear_literal(d))).unwrap_or_default();
-            text.push_str(&format!("  {}{opt}: {}{default}\n", f["name"].as_str().unwrap_or(""), f["type"].as_str().unwrap_or("any")));
+            let default = f.get("default").map(|d| format!(" = {}", literal_of(d, ty))).unwrap_or_default();
+            text.push_str(&format!("  {}{opt}: {ty}{default}\n", f["name"].as_str().unwrap_or("")));
         }
         out.push((PathBuf::from("models").join(format!("{}.nuc", snake(n))), text));
     }
@@ -1051,8 +1054,8 @@ pub fn generate(name: &str, contract: &Value, dialect: &Dialect) -> Vec<(PathBuf
                 let model_body = place == "body" && bodies == 1 && !is_primitive_text(ty);
                 let prefix = if place != natural || model_body { format!("@{place} ") } else { String::new() };
                 let opt = if p["optional"].as_bool().unwrap_or(false) { "?" } else { "" };
-                let default = p.get("default").map(|d| format!(" = {}", nuclear_literal(d))).unwrap_or_default();
-                params.push(format!("{prefix}{}{opt}: {}{default}", p["name"].as_str().unwrap_or(""), p["type"].as_str().unwrap_or("any")));
+                let default = p.get("default").map(|d| format!(" = {}", literal_of(d, ty))).unwrap_or_default();
+                params.push(format!("{prefix}{}{opt}: {ty}{default}", p["name"].as_str().unwrap_or("")));
             }
             text.push_str(&format!("  {}({}) Result<{error}, {returns}>\n", r["name"].as_str().unwrap_or("call"), params.join(", ")));
         }
@@ -1090,6 +1093,24 @@ fn type_names(t: &str) -> Vec<String> {
 fn is_primitive_text(t: &str) -> bool {
     let base = t.trim_end_matches('?').trim_end_matches("[]").trim_end_matches('?');
     PRIMITIVES.contains(&base)
+}
+
+/// `bigint`, `bigdouble` or one of them nullable: a type whose JSON values are texts (ADR-lang-0015).
+fn is_exact_text(t: &str) -> bool {
+    matches!(t.trim_end_matches('?'), "bigint" | "bigdouble")
+}
+
+/// A number's text and nothing else (a contract is read from another project: never Nuclear written into the client).
+fn is_number_text(s: &str) -> bool {
+    !s.is_empty() && s.chars().all(|c| c.is_ascii_digit() || matches!(c, '+' | '-' | '.' | 'e' | 'E'))
+}
+
+/// A JSON value as a Nuclear literal of the type `t`: an exact number's text is the literal itself (`"0.1"` → `0.1`).
+fn literal_of(v: &Value, t: &str) -> String {
+    match v {
+        Value::String(s) if is_exact_text(t) && is_number_text(s) => s.clone(),
+        other => nuclear_literal(other),
+    }
 }
 
 fn nuclear_literal(v: &Value) -> String {

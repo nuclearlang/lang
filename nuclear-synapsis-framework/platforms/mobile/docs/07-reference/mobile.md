@@ -124,6 +124,24 @@ nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.epi
    its GET methods answer and gives each one a `<method>AsLocal()` twin; the queries (`where`, `orderBy`, `limit`,
    `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`, `exists`, `update`, `delete`) are the backend's. The Nuclear never names
    the storage engine.
+7. **Exact numbers are exact on the device** (`bigint`, `bigdouble`: ADR-lang-0015, the backend's rule
+   ADR-backend-0003). A model field of an exact type is a JSON text both ways, the language's `toString()`
+   (`"0.3"`, `"2.0"`, `"12345678901234567890123"`): an answer whose exact field is a JSON number, another text or more
+   than 1000 digits is a decoding error, and the call fails with it (it is not the `Err` of a `Result` method). A
+   client of a contract (`contracts(...)`) or of `nuclear gen resource --fields "price:bigdouble"` gets the exact
+   fields as their type, never as a `string`. A local table keeps an exact field's text and its queries (`where`
+   with equality, `gt`, `gte`, `lt`, `lte`, `between`, `oneOf`, `ne`, and `orderBy`) compare it by value; `update`
+   takes exact values. A form field of an exact type takes the text of its type (`text.toBigInt()`,
+   `text.toBigDouble()`), and its `@min` / `@max` compare exactly (`@min(0.1) price: bigdouble`).
+
+```nuclear
+// domain/models/: a model with exact fields; its JSON is {"price": "0.3", "code": "12345678901234567890123"}
+Product
+  @primary
+  id: int
+  price: bigdouble
+  code: bigint
+```
 
 ## 4. Architecture
 

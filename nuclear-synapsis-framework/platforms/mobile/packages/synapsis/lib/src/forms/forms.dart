@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../exact.dart';
 import '../i18n/translations.dart';
 
 /// A check of one field: the error message, or null when [value] is valid. [values] has every field
@@ -40,6 +42,28 @@ abstract final class Rules {
   static Rule number({String? message}) =>
       (v, _) => isEmpty(v) || asDouble(v) != null ? null : _msg(message, 'number');
 
+  /// An exact whole number (`bigint` fields have it without writing it): the text `text.toBigInt()` reads.
+  static Rule bigint({String? message}) =>
+      (v, _) => isEmpty(v) || asBigInt(v) != null ? null : _msg(message, 'wholeNumber');
+
+  /// An exact decimal (`bigdouble` fields have it without writing it): the text `text.toBigDouble()` reads.
+  static Rule bigdouble({String? message}) =>
+      (v, _) => isEmpty(v) || asBigDouble(v) != null ? null : _msg(message, 'number');
+
+  /// `@min` of an exact field: compared exactly, never through a double.
+  static Rule minExact(Object n, {String? message}) => (v, _) {
+    final x = Exact.of(v is String ? v.trim() : v);
+    return isEmpty(v) || x == null || x >= Exact.of(n)! ? null : _msg(message, 'min', {'n': _shown(n)});
+  };
+
+  /// `@max` of an exact field: compared exactly, never through a double.
+  static Rule maxExact(Object n, {String? message}) => (v, _) {
+    final x = Exact.of(v is String ? v.trim() : v);
+    return isEmpty(v) || x == null || x <= Exact.of(n)! ? null : _msg(message, 'max', {'n': _shown(n)});
+  };
+
+  static String _shown(Object n) => n is Decimal ? Exact.text(n) : '$n';
+
   static Rule minLength(int n, {String? message}) =>
       (v, _) => isEmpty(v) || '$v'.length >= n ? null : _msg(message, 'minLength', {'n': n});
 
@@ -69,6 +93,12 @@ abstract final class Rules {
       : int.tryParse('${v ?? ''}'.trim());
 
   static double? asDouble(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}'.trim());
+
+  /// The value of a `bigint` field: the value, or the text of a text field.
+  static BigInt? asBigInt(Object? v) => v is BigInt ? v : Exact.parseBigInt('${v ?? ''}');
+
+  /// The value of a `bigdouble` field: the value, or the text of a text field.
+  static Decimal? asBigDouble(Object? v) => v is Decimal ? v : Exact.parseBigDouble('${v ?? ''}');
 }
 
 /// Validators for a plain `TextFormField(validator: ...)`, with the same messages as [Rules].

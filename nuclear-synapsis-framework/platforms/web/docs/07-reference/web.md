@@ -176,7 +176,23 @@ the environment's values and does not start while a required one has none.
 A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform
 ([flutter.md](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) §6.3): the path under the connection's `baseUrl`, `:name` from a parameter, the rest to
 the query (GET, DELETE) or the JSON body; a `Result` method answers `Err(E(message = ...))`; `cache`/`ttl`/`retry`.
-A model is its fields; it gets `fromJson`, `toJson` and `copyWith`; `@key` names a field in the JSON.
+A model is its fields; it gets `fromJson`, `toJson` and `copyWith`; `@key` names a field in the JSON. A request's
+body is the JSON of its model (`toJson`: the names of `@key`).
+
+**Exact numbers are exact in the browser** (`bigint`, `bigdouble`: ADR-lang-0015, the backend's rule
+ADR-backend-0003). A model field of an exact type is a JSON text both ways, the language's `toString()` (`"0.3"`,
+`"2.0"`, `"12345678901234567890123"`): an answer whose exact field is a JSON number, another text or more than 1000
+digits is a decoding error, and the call fails with it (it is not the `Err` of a `Result` method), as on the mobile
+platform. A client of a contract (`contracts(...)`) or of `nuclear gen resource --fields "price:bigdouble"` gets the
+exact fields as their type, never as a `string`.
+
+```nuclear
+// domain/models/: its JSON is {"price": "0.3", "code": "12345678901234567890123"}
+Product
+  id: int
+  price: bigdouble
+  code: bigint
+```
 
 What the server pushes is a method without a body with `@on("topic")` that returns `Stream<T>` (`T` a model, or a
 map): the events of that topic, read as `T`, over a connection that can push (`WebSocket`, or the host's bridge);

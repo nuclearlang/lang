@@ -5,6 +5,7 @@ import { Synapsis } from './app.js';
 import { HttpRequest, HttpResponse } from './config.js';
 import { Stream } from './sockets.js';
 import { AppError, HttpError } from './errors.js';
+import { wire } from './exact.js';
 import { Err, Ok, Result } from './result.js';
 
 export enum HttpMethod {
@@ -165,7 +166,7 @@ export class Repository {
       method,
       url: qs ? `${url}?${qs}` : url,
       headers: { ...transport.headers, ...headers, ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body, wire) : undefined,
     };
     for (const i of transport.interceptors) request = await i.onRequest(request);
     let response: HttpResponse = await transport.exchange(request);

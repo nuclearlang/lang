@@ -18,6 +18,12 @@
 {{#tinfo.is.double}}
       Rules.number(),
 {{/tinfo.is.double}}
+{{#tinfo.is.bigint}}
+      Rules.bigint(),
+{{/tinfo.is.bigint}}
+{{#tinfo.is.bigdouble}}
+      Rules.bigdouble(),
+{{/tinfo.is.bigdouble}}
 {{#decor.email}}
       Rules.email({{decor.email.args}}),
 {{/decor.email}}
@@ -31,10 +37,30 @@
       Rules.maxLength({{decor.maxLength.args}}),
 {{/decor.maxLength}}
 {{#decor.min}}
+{{#tinfo.is.bigint}}
+      Rules.minExact({{decor.min.args}}),
+{{/tinfo.is.bigint}}
+{{#tinfo.is.bigdouble}}
+      Rules.minExact({{decor.min.args}}),
+{{/tinfo.is.bigdouble}}
+{{^tinfo.is.bigint}}
+{{^tinfo.is.bigdouble}}
       Rules.min({{decor.min.args}}),
+{{/tinfo.is.bigdouble}}
+{{/tinfo.is.bigint}}
 {{/decor.min}}
 {{#decor.max}}
+{{#tinfo.is.bigint}}
+      Rules.maxExact({{decor.max.args}}),
+{{/tinfo.is.bigint}}
+{{#tinfo.is.bigdouble}}
+      Rules.maxExact({{decor.max.args}}),
+{{/tinfo.is.bigdouble}}
+{{^tinfo.is.bigint}}
+{{^tinfo.is.bigdouble}}
       Rules.max({{decor.max.args}}),
+{{/tinfo.is.bigdouble}}
+{{/tinfo.is.bigint}}
 {{/decor.max}}
 {{#decor.pattern}}
       Rules.pattern({{decor.pattern.args}}),
@@ -57,8 +83,8 @@
   static {{class_name}} fromValues(Map<String, Object?> v) => {{class_name}}(
 {{#fields}}
         {{name}}: {{#tinfo.is.int}}Rules.asInt(v['{{name}}']){{^optional}}!{{/optional}}{{/tinfo.is.int}}
-{{#tinfo.is.double}}Rules.asDouble(v['{{name}}']){{^optional}}!{{/optional}}{{/tinfo.is.double}}
-{{#tinfo.is.boolean}}v['{{name}}'] == true{{/tinfo.is.boolean}}{{^tinfo.is.int}}{{^tinfo.is.double}}{{^tinfo.is.boolean}}v['{{name}}'] as {{type}}{{#optional}}?{{/optional}}{{/tinfo.is.boolean}}{{/tinfo.is.double}}{{/tinfo.is.int}},
+{{#tinfo.is.double}}Rules.asDouble(v['{{name}}']){{^optional}}!{{/optional}}{{/tinfo.is.double}}{{#tinfo.is.bigint}}Rules.asBigInt(v['{{name}}']){{^optional}}!{{/optional}}{{/tinfo.is.bigint}}{{#tinfo.is.bigdouble}}Rules.asBigDouble(v['{{name}}']){{^optional}}!{{/optional}}{{/tinfo.is.bigdouble}}
+{{#tinfo.is.boolean}}v['{{name}}'] == true{{/tinfo.is.boolean}}{{^tinfo.is.int}}{{^tinfo.is.double}}{{^tinfo.is.boolean}}{{^tinfo.is.bigint}}{{^tinfo.is.bigdouble}}v['{{name}}'] as {{type}}{{#optional}}?{{/optional}}{{/tinfo.is.bigdouble}}{{/tinfo.is.bigint}}{{/tinfo.is.boolean}}{{/tinfo.is.double}}{{/tinfo.is.int}},
 {{/fields}}
       );
 {{#methods_code}}

@@ -30,6 +30,8 @@ Done; each needs a manual test.
   ran.
 - Genkit (ADR-synapsis-0004): Firebase AI, Google AI, Vertex AI, OpenAI's and Anthropic's real services (no keys); the
   chat screen on a device. FirebaseAI needs `flutterfire configure` in the app (not automated by the CLI).
+- Exact numbers (ADR-lang-0015) on a phone and a desktop: they ran in the runtime's tests, in a generated app's
+  tests and as a web page against a fastapi backend (2026-11-24), never on Android, iOS or a desktop build.
 
 ## Pending
 
@@ -44,6 +46,10 @@ Done; each needs a manual test.
   Apache-2.0 (its `LICENSE` file)?
 - `WebSocket` uses `dart:io`: it does not work on web.
 - A splash's `onLoad` has no timeout.
+- **Exact numbers** (ADR-lang-0015): a model's `bigint[]` / `bigdouble[]` field is read and written as texts, but a
+  local table compares only a single exact field by value (a list of them is compared as JSON); a model's list field
+  with a default (`tags: string[] = []`) gives a constant constructor a non-constant default (`flutter analyze`
+  error), whatever its type (found 2026-11-24).
 - **Ideas:** `@changed("field")` in forms, plurals in messages and translations, a warning for a missing
   translation key, `nuclear g form`.
 - **Limits of the local database** ([ADR-mobile-0006](../03-adr/0006-local-database.md)):

@@ -4,6 +4,8 @@ All notable changes to synapsis-web are written here; versions follow [Semantic 
 
 ## Unreleased
 
+- Exact numbers (ADR-lang-0015): a model's `bigint` / `bigdouble` fields are a JSON text both ways (`exactText`; a
+  JSON number or another text is a `TypeError`); a request's body is its model's `toJson()` (`wire`).
 - Environments (spec 021): `env("NAME", "default")` in a web app reads the values of the environment it was built
   for, constants of the build (`nuclear build --env <name>`); a secret read by the app is N0311. The example
   `characters` reads `API_URL`.

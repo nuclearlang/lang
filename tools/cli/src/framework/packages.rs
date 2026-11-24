@@ -20,6 +20,8 @@ const OWN: &[&str] = &[
     "synapsis",
     "flutter_native_splash",
     "integration_test",
+    // added when the code uses `bigdouble` (ADR-lang-0015)
+    "decimal",
 ];
 
 /// `config.nuc`, read with the sections of the dialect's `[project.manifest]` (errors are shown by

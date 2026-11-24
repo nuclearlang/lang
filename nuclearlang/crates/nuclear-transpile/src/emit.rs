@@ -2509,7 +2509,7 @@ impl<'a> Emitter<'a> {
                 m.insert("args".into(), Value::List(args));
             }
             const PRIMITIVES: &[&str] =
-                &["string", "int", "double", "number", "boolean", "bool", "dynamic", "any", "void"];
+                &["string", "int", "double", "number", "boolean", "bool", "dynamic", "any", "void", "bigint", "bigdouble"];
             let primitive = PRIMITIVES.contains(&name.as_str());
             m.insert("primitive".into(), Value::Bool(primitive));
             // a declaration of the project, or a class of the runtime that reads itself from JSON (`Page`)
@@ -3303,6 +3303,8 @@ impl<'a> Emitter<'a> {
         let mut ctor_pos: Option<usize> = None;
         let mut ctor_text: Option<String> = None;
         let mut fields_list = Vec::new();
+        // the fields of an exact type (`bigint`, `bigdouble`, nullable or not): a template names them together
+        let mut exact_fields = Vec::new();
         let mut fields_required = false;
         let mut field_inits: Vec<(String, String)> = Vec::new();
         let mut deferred_ctor = None;
@@ -3360,7 +3362,8 @@ impl<'a> Emitter<'a> {
                     if !f.optional && default.is_none() {
                         fields_required = true;
                     }
-                    fields_list.push(
+                    let is_exact = decor_exact.is_some();
+                    let field_ctx =
                         Ctx::new()
                             .value("tinfo", tinfo)
                             .value("decor", decor.clone())
@@ -3372,8 +3375,11 @@ impl<'a> Emitter<'a> {
                             .opt("type_nullable", type_nullable)
                             .opt("default", default.clone())
                             .flag("optional", f.optional)
-                            .into_value(),
-                    );
+                            .into_value();
+                    if is_exact {
+                        exact_fields.push(field_ctx.clone());
+                    }
+                    fields_list.push(field_ctx);
                     let field_tinfo = self.type_info(f.ty.as_ref());
                     let text = self.tpl(
                         "field",
@@ -3554,6 +3560,7 @@ impl<'a> Emitter<'a> {
                     // a field without `?` and without a default must be given to build the declaration
                     .flag("fields_required", fields_required)
                     .value("fields", Value::List(fields_list))
+                    .value("exact_fields", Value::List(exact_fields))
                     .value("methods", Value::List(methods_list))
                     .set("params", params_text)
                     .value("params_list", Value::List(params_list))
