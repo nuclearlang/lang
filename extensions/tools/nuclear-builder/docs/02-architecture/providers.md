@@ -36,7 +36,12 @@ Every provider of a role is called the same way (`adapter.nuc`):
 The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as
 OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory
 (`openCodeLocalModels`); OpenCode as an agent never lists them. A member with no model takes the first Ollama has,
-never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. The local Nuclear Developer
+never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. A model's window must hold
+`MIN_LOCAL_WINDOW` (16 384) tokens (spec 025): OpenCode's requests cannot set one, so Ollama gives the model's own
+`num_ctx` (a variant made with `PARAMETER num_ctx`), else its server's default (4 096 under 24 GiB of VRAM).
+`ollamaWindow` reads the first, or the one the model runs with (`/api/ps`); one too small is refused before any
+call, and Ollama's 400 *the prompt is longer than the context length* is said the same way, with the fix
+(`windowFix`: a `-32k` variant, or `OLLAMA_CONTEXT_LENGTH`). The local Nuclear Developer
 (`nuclear-developer`) is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers
 it, a member of it is converted on read (teams-and-vault.md), and its adapter stays, dormant; what the factory does
 only for it (its routes, the lead after it, no repair, no check by prompt) asks `onDeveloper`, never the kind.
@@ -71,7 +76,10 @@ only for it (its routes, the lead after it, no repair, no check by prompt) asks 
   then up to `MAX_TURNS` (30) turns: the model answers, each tool it calls goes to the server (`tools/call`), the
   results go back. The key comes from the vault (`vaultKey`). Before every turn the step's cost is held against its
   budget; a model with no price is refused before any call (`PRICES` has Anthropic's of 2026-11-03; others go in
-  `.nuclear/builder.json` `"prices": { "<provider>/<model>": [input, output] }`, USD per million tokens).
+  `.nuclear/builder.json` `"prices": { "<provider>/<model>": [input, output, cache read] }`, USD per million
+  tokens; without the third a cache read is a tenth of the input). Anthropic's requests cache their prefix (the
+  top-level `cache_control`): a turn's input is priced fresh, read from the cache (`CACHE_READ_PRICES`) and written to
+  it (1.25 times the input), as the answer's `usage` splits it (spec 025).
 - A chat's turn (`inputs.stream`, Nuclear Chat) adds `--include-partial-messages` to `claude`: its
   `stream_event` lines' `text_delta`s are `text-delta` events, the answer as it is written; a run never streams.
 - Which agents are on this machine is `nuclear-builder agents --json` (`chat_agents.nuc`, the tool `agents_list`):

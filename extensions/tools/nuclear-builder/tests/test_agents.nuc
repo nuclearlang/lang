@@ -1,5 +1,6 @@
 use os
 use json
+use httpx
 use pathlib{ Path }
 
 // The agent adapters with their command lines stubbed: a fake `claude`, `opencode`, `codex`, `gemini`, `agent` and `grok` on the PATH
@@ -174,3 +175,13 @@ testGrokGetsItsOwnHomeWithTheMcpServersAndTheUsersLoginAndLeavesNothing(tmpPath:
   found: <string, any> = { "text": "", "failed": false }
   grokLine({ "type": "result", "result": "All." }, (e: <string, any>) => null, found)
   expect(found["text"] == "All." and found["failed"] == false)
+
+// Spec 025: Ollama's 400 for a window it did not tell (the server's default) is said with the window the factory needs
+// and how to give it, never only as the provider's text.
+testOllamasTooLongPromptIsSaidWithTheFix(tmpPath: Path, monkeypatch: any) void
+  fakeAgent(tmpPath, monkeypatch, "opencode", [{ "type": "error", "error": { "type": "provider.invalid-request", "message": "the prompt is longer than the context length currently available to the model" } }])
+  monkeypatch.setenv("FAKE_EXIT", "1")
+  work = agentWork(tmpPath, monkeypatch, "ollama/gemma4:26b")
+  work.inputs["transport"] = httpx.MockTransport((request: httpx.Request) => httpx.Response(200, json = { "parameters": "temperature 1", "models": [] as any[] }))
+  out = runAdapter(localOpenCodeAdapter, analyst(tmpPath), "analysis", work, (e) => null, "opencode-local")
+  expect(not out.ok and "window in Ollama is smaller" in out.error and "ollama create gemma4:26b-32k" in out.error, out.error)

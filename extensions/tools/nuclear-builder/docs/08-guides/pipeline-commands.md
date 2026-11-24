@@ -49,7 +49,7 @@ Analysis, Design, Tests first, Code, Quality and Delivery, each station worked b
   "gates": ["analysis", "design", "delivery"],
   "stations": ["analysis", "design", "tests", "code", "quality", "delivery"],
   "forceConfirm": false,
-  "prices": { "openai/<model>": [1.25, 10] }
+  "prices": { "openai/<model>": [1.25, 10, 0.125] }
 }
 ```
 
@@ -57,6 +57,8 @@ Analysis, Design, Tests first, Code, Quality and Delivery, each station worked b
 - Paid providers (an agent's command line, an API model) are confirmed twice before the first call, or in advance
   with `--confirm-spending`, which `"forceConfirm": true` refuses. The team's budget (5 USD by default) holds for
   the whole run.
+- `prices` gives a model the factory does not know its price: USD per million tokens in, out and (optional) read
+  from its cache; without the third, a cache read is a tenth of the input.
 - QA's plan is the run's checks: `nuclear-builder checks <id>` lists them; `add --title … --station …`, `on`/`off`
   and `mark <check> passed|failed` change them.
 - DevOps, at the Delivery station, opens the pull request only when you approve it, from the branch `factory/<id>`, with your git identity.

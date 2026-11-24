@@ -98,4 +98,13 @@ localOpenCodeAdapter(role: Role, station: string, work: Work, emit: (e: <string,
   work.model = localOpenCodeModel(work.model, installed)
   if work.model.isEmpty
     return Outcome(false, "", {}, [], 0, [], "no local model: Ollama has none (ollama pull <model>), or it does not answer")
-  openCodeAdapter(role, station, work, emit)
+  // a window too small is said before any call, with its fix (spec 025); Ollama's own answer would only be a 400
+  tag = work.model.replace(OLLAMA_PREFIX, "")
+  window = ollamaWindow(tag, work.inputs["transport"])
+  if window != null and window! < MIN_LOCAL_WINDOW
+    return Outcome(false, "", {}, [], 0, [], "${work.model} answers with a window of ${window} tokens and an agent of the factory needs at least ${MIN_LOCAL_WINDOW}: ${windowFix(tag)}")
+  out = openCodeAdapter(role, station, work, emit)
+  // the server's default window, which Ollama's API does not tell, was too small: said with its fix
+  if not out.ok and "longer than the context length" in out.error
+    out.error = "${work.model}'s window in Ollama is smaller than what the factory sends (at least ${MIN_LOCAL_WINDOW} tokens): ${windowFix(tag)}"
+  out

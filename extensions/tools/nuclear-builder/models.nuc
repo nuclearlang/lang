@@ -365,3 +365,38 @@ modelsLine(args: string[]) int
     printJson({ "error": "${e}" })
     return 1
   0
+
+// ---------- a local model's window (spec 025) ----------
+
+// The fewest tokens a local model's window must hold for an agent of the factory: its first request is ~8 000 tokens
+// (OpenCode, the role, both MCP servers' tools) and each turn adds the tools' results.
+MIN_LOCAL_WINDOW = 16384
+
+// The window Ollama gives a model in OpenCode's requests (they cannot set one): the model's own `num_ctx` (a variant
+// made with `PARAMETER num_ctx`), else the one it runs with now (`/api/ps`); null when neither says (the server's
+// default, which Ollama's API does not tell).
+ollamaWindow(model: string, transport: httpx.BaseTransport? = null) int?
+  base = urls()["ollama"]!
+  client = httpx.Client(transport = transport, timeout = 3.0)
+  try
+    shown = client.post("${base}/api/show", json = { "model": model })
+    if shown.statusCode == 200
+      said = Regex(r"(?m)^num_ctx\s+(\d+)").find("${(shown.json() as <string, any>)["parameters"] ?? ""}")
+      if said != null
+        return (said![1] ?? "").toInt()
+    running = client.get("${base}/api/ps")
+    if running.statusCode == 200
+      for r in ((running.json() as <string, any>)["models"] ?? []) as <string, any>[]
+        if r["name"] == model or r["model"] == model
+          return r["context_length"]
+    null
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, ValueError)
+      throw e
+    null
+  finally
+    client.close()
+
+// What to do when a local model's window is too small: a variant of it with a larger one, or Ollama's default raised.
+windowFix(model: string) string
+  "give it a larger window: `printf 'FROM ${model}\\nPARAMETER num_ctx 32768\\n' > Modelfile && ollama create ${model}-32k -f Modelfile`, then choose `${OLLAMA_PREFIX}${model}-32k`; or raise Ollama's default (`OLLAMA_CONTEXT_LENGTH=32768` in its service)"

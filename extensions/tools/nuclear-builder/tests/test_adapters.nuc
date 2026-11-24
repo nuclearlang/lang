@@ -108,6 +108,22 @@ testAFailureThatWillNotPassIsNotRetried(tmpPath: Path) void
   out = localAdapter(composeRole("developer", {}, tmpPath), "code", work, (e) => null)
   expect(not out.ok and calls[0] == 1 and "/developer/code: 422 bad body" in out.error)
 
+// Spec 025: a local model's window is read from Ollama (its `num_ctx`, else the one it runs with); one too small is
+// refused before any call with its fix, and Ollama's 400 for a window it did not tell is said with the same fix.
+testALocalModelWithASmallWindowIsRefusedBeforeAnyCallWithItsFix(tmpPath: Path, monkeypatch: any) void
+  ollama = (request: httpx.Request) =>
+    if request.url.path == "/api/show"
+      asked: <string, any> = json.loads(request.content)
+      return httpx.Response(200, json = { "parameters": asked["model"] == "small" ? "temperature 1\nnum_ctx 4096" : asked["model"] == "big" ? "num_ctx 32768" : "temperature 1" })
+    httpx.Response(200, json = { "models": [{ "name": "running", "context_length": 8192 }] })
+  shown = httpx.MockTransport(ollama)
+  expect(ollamaWindow("small", shown) == 4096 and ollamaWindow("big", shown) == 32768 and ollamaWindow("running", shown) == 8192 and ollamaWindow("other", shown) == null)
+  work = project(tmpPath)
+  work.inputs["transport"] = shown
+  work.model = "ollama/small"
+  out = localOpenCodeAdapter(composeRole("analyst", {}, tmpPath), "analysis", work, (e) => null)
+  expect(not out.ok and "window of 4096 tokens" in out.error and "PARAMETER num_ctx 32768" in out.error and "ollama/small-32k" in out.error, out.error)
+
 testTheLocalOpenCodeRunsOnlyOllamasModels() void
   expect(localOpenCodeModel("", ["ollama/qwen2.5-coder:3b", "ollama/gemma4:e2b"]) == "ollama/qwen2.5-coder:3b")
   expect(localOpenCodeModel("gemma4:e2b", []) == "ollama/gemma4:e2b" and localOpenCodeModel("ollama/gemma4:e2b", []) == "ollama/gemma4:e2b")

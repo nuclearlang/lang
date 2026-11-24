@@ -61,6 +61,15 @@ apiWork(tmpPath: Path, model: string, transport: httpx.MockTransport, budget: do
 theRole() Role
   Role("analyst", "Analyst", "You find what the client needs.", {}, {}, [], ["analysis"])
 
+// Spec 025: what the cache read and wrote is priced as Anthropic prices it, and a price of the project may give the
+// cache read as a third number.
+testACacheReadCostsItsPriceAndACacheWriteAQuarterMore() void
+  turn = ModelTurn("", [] as <string, any>[], 1_000_000, 0, null, 600_000, 200_000)
+  // 200 000 fresh at 4, 600 000 read at 0.2, 200 000 written at 5 (USD per million)
+  expect((turnCost(turn, priceOf("anthropic", "claude-opus-5-5")) - (0.8 + 0.12 + 1.0)).abs() < 0.000001)
+  expect(priceOf("openai", "x", { "openai/x": [1.0, 2.0] }) == [1.0, 2.0, 0.1] and priceOf("openai", "y", { "openai/y": [1.0, 2.0, 0.5] }) == [1.0, 2.0, 0.5])
+  expect(priceOf("anthropic", "claude-haiku-5-5") == [0.1, 0.5, 0.01])
+
 testAnthropicCallsTheMcpToolsAndIsPricedFromItsTokens(tmpPath: Path, monkeypatch: any) void
   log = fakeMcp(tmpPath, monkeypatch)
   seen: <string, any>[] = []
@@ -76,6 +85,8 @@ testAnthropicCallsTheMcpToolsAndIsPricedFromItsTokens(tmpPath: Path, monkeypatch
   expect(headers["x-api-key"] == "sk-test-key" and headers["anthropic-version"] == "2026-10-21")
   body: <string, any> = seen[1]["body"]!
   expect(body["system"] == theRole().text() and (body["tools"] as <string, any>[])[0]["name"] == "nuclear_check")
+  // spec 025: every request caches its prefix, and the tools come in the same order every turn
+  expect(body["cache_control"] == { "type": "ephemeral" } and (seen[0]["body"] as <string, any>)["tools"] == body["tools"])
   messages: <string, any>[] = body["messages"]!
   expect(messages[2]["content"]![0] == { "type": "tool_result", "tool_use_id": "tu1", "content": "ok: 0 problems", "is_error": false })
   said = log.readText()

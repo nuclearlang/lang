@@ -858,6 +858,47 @@
     "family": "environment",
     "severity": "error"
    }
+  },
+  {
+   "id": "failure:a-local-window-too-small",
+   "type": "failure",
+   "title": "Failure: a local model's window is too small for the factory (Ollama, OpenCode)",
+   "summary": "A member worked by OpenCode on one of Ollama's models fails before it starts, or with Ollama's `the prompt is longer than the context length`: the model's window holds fewer than the 16 384 tokens an agent of the factory needs. OpenCode cannot set a window, so Ollama gives the model's own `num_ctx`, else its server's default (4 096 under 24 GiB of VRAM). Make a variant with a larger window and choose it.",
+   "body": [
+    "**Looks like.** `<model> answers with a window of 4096 tokens and an agent of the factory needs at least 16384`, or `<model>'s window in Ollama is smaller than what the factory sends`, in a run's step or a chat answer.",
+    "",
+    "**Cause.** An agent's first request is about 8 000 tokens (OpenCode, the role, both MCP servers' tools) and each turn adds the tools' results; `/set parameter num_ctx` in `ollama run` changes only that session.",
+    "",
+    "**Next step.** `printf 'FROM <model>\\nPARAMETER num_ctx 32768\\n' > Modelfile && ollama create <model>-32k -f Modelfile`, then choose `ollama/<model>-32k` for the member (`nuclear-builder team member update <team> <member> --model ollama/<model>-32k`); or `OLLAMA_CONTEXT_LENGTH=32768` in Ollama's service, for every model. A model that does not fit in the GPU with it is slow: `ollama ps` says where it runs."
+   ],
+   "keys": [
+    "context length",
+    "num_ctx",
+    "window",
+    "prompt is longer than the context length",
+    "ollama_context_length",
+    "ollama create"
+   ],
+   "asks": [
+    "the prompt is longer than the context length",
+    "could not answer: OpenCode ended with 1",
+    "el prompt es más largo que el contexto",
+    "how do I give an ollama model a larger context"
+   ],
+   "links": [
+    {
+     "rel": "see-also",
+     "to": "failure:a-model-is-missing"
+    }
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md#Who does a role",
+    "docs/04-specs/025-mcp-the-oracle/tasks.md#Phase 1 — Free wins"
+   ],
+   "meta": {
+    "family": "environment",
+    "severity": "error"
+   }
   }
  ]
 }

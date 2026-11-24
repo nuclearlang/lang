@@ -3469,6 +3469,34 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.003e16",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "and it has a priced model (`PRICES`, the project's `prices`).",
+   "body": [
+    "and it has a priced model (`PRICES`, the project's `prices`).",
+    "- Which models each provider offers is `nuclear-builder models [--provider <id>] [--fresh] --json` (`models.nuc`, the",
+    "  tool `models_list`), from the provider itself (spec 011 requirement 35): Claude Code its aliases `fable`, `opus`,",
+    "  `sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text",
+    "  taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a",
+    "  model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI",
+    "  `GET /v1/models` without the embedding, audio and image models, Google `models` with `generateContent`, OpenRouter",
+    "  `api/v1/models`: free calls), else its priced models, each said `priced` or not (a run needs a price; OpenRouter",
+    "  reports each call's cost); the local agents every model Ollama has installed (`/api/tags`, the embedding models",
+    "  left out) with its size, parameters and quantization, then a few small ones it can pull (`PULLABLE`, *not",
+    "  installed: downloads N GB*; a run's *Check the connections* says `ollama pull`). A command's or an API's list is",
+    "  kept 10 minutes in `<factory>/cache/models-<provider>.json`; Ollama's and Claude Code's are read each time."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.0df5fa",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
@@ -3480,6 +3508,34 @@
     "| `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |",
     "| `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |",
     "| `api` | `openrouter` | `api_openrouter.nuc` | Chat Completions at OpenRouter with `usage.include` | as OpenAI | what OpenRouter reports |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.1348fd",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory (`openCodeLocalModels`); OpenCode as an agent never lists them.",
+   "body": [
+    "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as",
+    "OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory",
+    "(`openCodeLocalModels`); OpenCode as an agent never lists them. A member with no model takes the first Ollama has,",
+    "never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. A model's window must hold",
+    "`MIN_LOCAL_WINDOW` (16 384) tokens (spec 025): OpenCode's requests cannot set one, so Ollama gives the model's own",
+    "`num_ctx` (a variant made with `PARAMETER num_ctx`), else its server's default (4 096 under 24 GiB of VRAM).",
+    "`ollamaWindow` reads the first, or the one the model runs with (`/api/ps`); one too small is refused before any",
+    "call, and Ollama's 400 *the prompt is longer than the context length* is said the same way, with the fix",
+    "(`windowFix`: a `-32k` variant, or `OLLAMA_CONTEXT_LENGTH`). The local Nuclear Developer",
+    "(`nuclear-developer`) is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers",
+    "it, a member of it is converted on read (teams-and-vault.md), and its adapter stays, dormant; what the factory does",
+    "only for it (its routes, the lead after it, no repair, no check by prompt) asks `onDeveloper`, never the kind."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3520,12 +3576,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.37339e",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.2ab291",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "first, so a version is chosen as easily as the latest.",
+   "summary": "Each model says what it is (`modelNamed`): its `family`, its `version` and a `label` (`claude-opus-5-5` → opus 5.5, `qwen2.5-coder:3b` → qwen2.5-coder 3b, `gemini-2.5-pro` → gemini 2.5 pro), `alias` for an alias, whose version is `latest`.",
    "body": [
-    "first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·",
+    "Each model says what it is (`modelNamed`): its `family`, its `version` and a `label` (`claude-opus-5-5` → opus",
+    "  5.5, `qwen2.5-coder:3b` → qwen2.5-coder 3b, `gemini-2.5-pro` → gemini 2.5 pro), `alias` for an alias, whose",
+    "  version is `latest`. Claude Code lists each alias followed by every version of its family it accepts, the newest",
+    "  first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·",
     "  opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every",
     "  group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a",
     "  key*, *Local — this machine, free*). Only the pay-per-token kind (`api`) asks the user to confirm the spending",
@@ -3533,10 +3592,7 @@
     "  model (`CHAT_MODEL`, [chat.md](chat.md)).",
     "- **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and",
     "  `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows",
-    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per",
-    "  weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
-    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
-    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or"
+    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3569,35 +3625,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.923305",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.94b48b",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory (`openCodeLocalModels`); OpenCode as an agent never lists them.",
+   "summary": "weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at Ollama's default context), and its fit `fitOf`: too-big when the need passes the machine's memory less what the system and the editor keep (2 GB, or 15% of a bigger machine), since it…",
    "body": [
-    "The kind `local` is OpenCode on Ollama's models (`opencode-local`), free: the models Ollama has installed, as",
-    "OpenCode names them (`ollama/<tag>`, OpenCode finds them by itself), each with what it needs of the memory",
-    "(`openCodeLocalModels`); OpenCode as an agent never lists them. A member with no model takes the first Ollama has,",
-    "never OpenCode's own default. Ollama and its models are the user's: nothing pulls one. The local Nuclear Developer",
-    "(`nuclear-developer`) is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers",
-    "it, a member of it is converted on read (teams-and-vault.md), and its adapter stays, dormant; what the factory does",
-    "only for it (its routes, the lead after it, no repair, no check by prompt) asks `onDeveloper`, never the kind."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.ba2327",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "restart; tight when it passes the memory free now (it swaps unless other programs give memory back); else before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or tight local member: `{member, model, needGb, totalGb, availableGb, fit,…",
-   "body": [
-    "restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
+    "weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
+    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
+    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or",
+    "  restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
     "  **fits**. A margin, not a measure; the GPU's own memory is not counted. The pickers draw too-big in red and ask",
     "  before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or",
     "  tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer",
@@ -3605,10 +3641,7 @@
     "- **Cursor** (`adapter_cursor.nuc`): its command is `agent`, a generic name, taken as Cursor's only when its real path",
     "  names Cursor (the installer links `~/.local/bin/agent` into `~/.local/share/cursor-agent/`), else the older",
     "  `cursor-agent` (`agentCommand`, `preflight.nuc`: *Check the connections* and `agents --json` ask the same). Cursor has",
-    "  no flag for an MCP configuration (only `.cursor/mcp.json` of the project or the home): the two servers come in a",
-    "  plugin of the run's temporary folder (`--plugin-dir`: `.cursor-plugin/plugin.json` and `mcp.json`), which also",
-    "  denies the shell with a `beforeShellExecution` hook that exits 2 (`failClosed`); `--force` lets everything run that",
-    "  is not denied, and without it what needs an approval is refused. The role goes at the head of the prompt. Its"
+    "  no flag for an MCP configuration (only `.cursor/mcp.json` of the project or the home): the two servers come in a"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3620,23 +3653,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.c3f30a",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.b41567",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "`sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a model typed); an API provider its list endpoint when the vault…",
+   "summary": "plugin of the run's temporary folder (`--plugin-dir`: `.cursor-plugin/plugin.json` and `mcp.json`), which also denies the shell with a `beforeShellExecution` hook that exits 2 (`failClosed`); `--force` lets everything run that is not denied, and without it what needs an approval is refused.",
    "body": [
-    "`sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text",
-    "  taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a",
-    "  model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI",
-    "  `GET /v1/models` without the embedding, audio and image models, Google `models` with `generateContent`, OpenRouter",
-    "  `api/v1/models`: free calls), else its priced models, each said `priced` or not (a run needs a price; OpenRouter",
-    "  reports each call's cost); the local agents every model Ollama has installed (`/api/tags`, the embedding models",
-    "  left out) with its size, parameters and quantization, then a few small ones it can pull (`PULLABLE`, *not",
-    "  installed: downloads N GB*; a run's *Check the connections* says `ollama pull`). A command's or an API's list is",
-    "  kept 10 minutes in `<factory>/cache/models-<provider>.json`; Ollama's and Claude Code's are read each time.",
-    "  Each model says what it is (`modelNamed`): its `family`, its `version` and a `label` (`claude-opus-5-5` → opus",
-    "  5.5, `qwen2.5-coder:3b` → qwen2.5-coder 3b, `gemini-2.5-pro` → gemini 2.5 pro), `alias` for an alias, whose",
-    "  version is `latest`. Claude Code lists each alias followed by every version of its family it accepts, the newest"
+    "plugin of the run's temporary folder (`--plugin-dir`: `.cursor-plugin/plugin.json` and `mcp.json`), which also",
+    "  denies the shell with a `beforeShellExecution` hook that exits 2 (`failClosed`); `--force` lets everything run that",
+    "  is not denied, and without it what needs an approval is refused. The role goes at the head of the prompt. Its",
+    "  `stream-json` lines: `system`/`init` (the model), `assistant` (`message.content[].text`), `tool_call` (`started`,",
+    "  `completed` with its `result`), and the `result` (`result`, `is_error`, `subtype`): no tokens nor cost. Its login:",
+    "  `agent login` or `CURSOR_API_KEY`.",
+    "- **Grok Build** (`adapter_grok.nuc`): no flag nor variable gives it an MCP configuration but its home: the run gets a",
+    "  `GROK_HOME` of its own in the temporary folder, each entry of the user's (`GROK_HOME`, else `~/.grok`: the login,",
+    "  the sessions, the skills) linked into it, and its own `config.toml` with `[mcp_servers.nuclear]`,",
+    "  `[mcp_servers.nuclear_builder]` and `[permission] rules = [{ action = \"deny\", tool = \"bash\" }]` (a deny holds under",
+    "  `--always-approve`); the user's `config.toml` is not read for that run, and their files are never written. The",
+    "  role is `--rules`. Its `streaming-json` events are **not documented**: the adapter assumes JSON objects with a"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3648,23 +3681,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.cdc331",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.b6ebe2",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
    "summary": "results go back.",
    "body": [
     "results go back. The key comes from the vault (`vaultKey`). Before every turn the step's cost is held against its",
     "  budget; a model with no price is refused before any call (`PRICES` has Anthropic's of 2026-11-03; others go in",
-    "  `.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output] }`, USD per million tokens).",
+    "  `.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output, cache read] }`, USD per million",
+    "  tokens; without the third a cache read is a tenth of the input). Anthropic's requests cache their prefix (the",
+    "  top-level `cache_control`): a turn's input is priced fresh, read from the cache (`CACHE_READ_PRICES`) and written to",
+    "  it (1.25 times the input), as the answer's `usage` splits it (spec 025).",
     "- A chat's turn (`inputs.stream`, Nuclear Chat) adds `--include-partial-messages` to `claude`: its",
     "  `stream_event` lines' `text_delta`s are `text-delta` events, the answer as it is written; a run never streams.",
     "- Which agents are on this machine is `nuclear-builder agents --json` (`chat_agents.nuc`, the tool `agents_list`):",
     "  an agent when its command is on the tools' PATH (Claude Code's models are its aliases `haiku`, `sonnet`, `opus`;",
     "  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's, Gemini CLI's, Cursor's and Grok Build's their",
-    "  own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)",
-    "  and it has a priced model (`PRICES`, the project's `prices`).",
-    "- Which models each provider offers is `nuclear-builder models [--provider <id>] [--fresh] --json` (`models.nuc`, the",
-    "  tool `models_list`), from the provider itself (spec 011 requirement 35): Claude Code its aliases `fable`, `opus`,"
+    "  own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3695,40 +3728,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.f20895",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.f92e58",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "`stream-json` lines: `system`/`init` (the model), `assistant` (`message.content[].text`), `tool_call` (`started`, `completed` with its `result`), and the `result` (`result`, `is_error`, `subtype`): no tokens nor cost.",
+   "summary": "`type` (or `event`); a `tool…` one is a call, or its result when its type says `result` or its `status` ended; an `error` (or `is_error`) fails the call; a `result`/`done`/`end`/`final` one (or one with a `stopReason`) gives the answer when it carries `result` or `text`; any other with a `text`,…",
    "body": [
-    "`stream-json` lines: `system`/`init` (the model), `assistant` (`message.content[].text`), `tool_call` (`started`,",
-    "  `completed` with its `result`), and the `result` (`result`, `is_error`, `subtype`): no tokens nor cost. Its login:",
-    "  `agent login` or `CURSOR_API_KEY`.",
-    "- **Grok Build** (`adapter_grok.nuc`): no flag nor variable gives it an MCP configuration but its home: the run gets a",
-    "  `GROK_HOME` of its own in the temporary folder, each entry of the user's (`GROK_HOME`, else `~/.grok`: the login,",
-    "  the sessions, the skills) linked into it, and its own `config.toml` with `[mcp_servers.nuclear]`,",
-    "  `[mcp_servers.nuclear_builder]` and `[permission] rules = [{ action = \"deny\", tool = \"bash\" }]` (a deny holds under",
-    "  `--always-approve`); the user's `config.toml` is not read for that run, and their files are never written. The",
-    "  role is `--rules`. Its `streaming-json` events are **not documented**: the adapter assumes JSON objects with a",
-    "  `type` (or `event`); a `tool…` one is a call, or its result when its type says `result` or its `status` ended; an",
+    "`type` (or `event`); a `tool…` one is a call, or its result when its type says `result` or its `status` ended; an",
     "  `error` (or `is_error`) fails the call; a `result`/`done`/`end`/`final` one (or one with a `stopReason`) gives the",
-    "  answer when it carries `result` or `text`; any other with a `text`, `content` or `delta` string is a piece of the"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.f4508a",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "answer (added when it is a delta or a chunk), but the user's prompt and the thinking.",
-   "body": [
-    "answer (added when it is a delta or a chunk), but the user's prompt and the thinking. No tokens nor cost are read.",
+    "  answer when it carries `result` or `text`; any other with a `text`, `content` or `delta` string is a piece of the",
+    "  answer (added when it is a delta or a chunk), but the user's prompt and the thinking. No tokens nor cost are read.",
     "  Its login: `grok login` or `XAI_API_KEY`.",
     "- The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode",
     "  2.2.7's. Codex, Gemini CLI, Cursor and Grok Build are written from their documented headless modes, untested here",
@@ -5734,7 +5742,32 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md#the-software-factory-s-line",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md#the-software-factory-s-line.186b7b",
+   "type": "guide",
+   "title": "The pipeline's commands, locally and on a server — The software factory's line",
+   "summary": "with `--confirm-spending`, which `\"forceConfirm\": true` refuses.",
+   "body": [
+    "- A gate stops the run for you: approve, ask for a change, or stop; `nuclear-builder run --resume <id>` asks again.",
+    "- Paid providers (an agent's command line, an API model) are confirmed twice before the first call, or in advance",
+    "  with `--confirm-spending`, which `\"forceConfirm\": true` refuses. The team's budget (5 USD by default) holds for",
+    "  the whole run.",
+    "- `prices` gives a model the factory does not know its price: USD per million tokens in, out and (optional) read",
+    "  from its cache; without the third, a cache read is a tenth of the input.",
+    "- QA's plan is the run's checks: `nuclear-builder checks <id>` lists them; `add --title … --station …`, `on`/`off`",
+    "  and `mark <check> passed|failed` change them.",
+    "- DevOps, at the Delivery station, opens the pull request only when you approve it, from the branch `factory/<id>`, with your git identity."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md#the-software-factory-s-line.7e70cb",
    "type": "guide",
    "title": "The pipeline's commands, locally and on a server — The software factory's line",
    "summary": "`nuclear-builder run` (in a terminal, a CI job or the JetBrains window) runs the software factory: the spec through Analysis, Design, Tests first, Code, Quality and Delivery, each station worked by a member of its role in your team (the one `--assign` names, else the role's first)…",
@@ -5749,17 +5782,9 @@
     "  \"gates\": [\"analysis\", \"design\", \"delivery\"],",
     "  \"stations\": [\"analysis\", \"design\", \"tests\", \"code\", \"quality\", \"delivery\"],",
     "  \"forceConfirm\": false,",
-    "  \"prices\": { \"openai/<model>\": [1.25, 10] }",
+    "  \"prices\": { \"openai/<model>\": [1.25, 10, 0.125] }",
     "}",
-    "```",
-    "",
-    "- A gate stops the run for you: approve, ask for a change, or stop; `nuclear-builder run --resume <id>` asks again.",
-    "- Paid providers (an agent's command line, an API model) are confirmed twice before the first call, or in advance",
-    "  with `--confirm-spending`, which `\"forceConfirm\": true` refuses. The team's budget (5 USD by default) holds for",
-    "  the whole run.",
-    "- QA's plan is the run's checks: `nuclear-builder checks <id>` lists them; `add --title … --station …`, `on`/`off`",
-    "  and `mark <check> passed|failed` change them.",
-    "- DevOps, at the Delivery station, opens the pull request only when you approve it, from the branch `factory/<id>`, with your git identity."
+    "```"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md"

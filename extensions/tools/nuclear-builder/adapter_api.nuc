@@ -10,8 +10,9 @@ use httpx
 // goes anywhere else. Each turn's tokens are priced (or the provider says the cost, as OpenRouter does) and the loop
 // stops before the step's budget is passed.
 
-// What one turn of a model said: its text, the tools it called, its tokens, its cost when the provider reports it.
-ModelTurn(text: string, calls: <string, any>[], inputTokens: int, outputTokens: int, reportedUsd: double? = null)
+// What one turn of a model said: its text, the tools it called, its tokens (the input with what its cache read and
+// wrote, and those two apart), its cost when the provider reports it.
+ModelTurn(text: string, calls: <string, any>[], inputTokens: int, outputTokens: int, reportedUsd: double? = null, cacheReadTokens: int = 0, cacheWriteTokens: int = 0)
 
 // The USD per million tokens (input, output) of the models whose prices are known here (Anthropic's, 2026-11-03).
 // Others come from `.nuclear/builder.json` "prices" ({ "<provider>/<model>": [input, output] }); a model with no
@@ -20,17 +21,30 @@ PRICES: <string, double[]> = { "anthropic/claude-fable-5-2": [8.0, 40.0], "anthr
 
 MAX_TURNS = 30
 
+// The USD per million tokens a cache read costs (Anthropic's, 2026-11-03); a model not here reads at a tenth of its
+// input. A cache write costs 1.25 times the input (the five minutes' cache).
+CACHE_READ_PRICES: <string, double> = { "anthropic/claude-fable-5-2": 0.2, "anthropic/claude-opus-5-5": 0.2, "anthropic/claude-sonnet-5-5": 0.1 }
+
+CACHE_WRITE_FACTOR = 1.25
+
+// A model's prices: [input, output, cache read] (USD per million tokens); `.nuclear/builder.json` may give two (the
+// cache read is then a tenth of the input) or three.
 priceOf(provider: string, model: string, given: <string, any> = {}) double[]?
   key = "${provider}/${model}"
   own = given[key]
-  if isinstance(own, list) and (own as any[]).length == 2
-    return own
-  PRICES[key]
+  if isinstance(own, list) and ((own as any[]).length == 2 or (own as any[]).length == 3)
+    found: double[] = own
+    return found.length == 3 ? found : [found[0], found[1], found[0] / 10]
+  known = PRICES[key]
+  known == null ? null : [known![0], known![1], CACHE_READ_PRICES[key] ?? known![0] / 10]
 
 turnCost(turn: ModelTurn, price: double[]?) double
   if turn.reportedUsd != null
     return turn.reportedUsd!
-  price == null ? 0.0 : (turn.inputTokens * price![0] + turn.outputTokens * price![1]) / 1_000_000
+  if price == null
+    return 0.0
+  fresh = turn.inputTokens - turn.cacheReadTokens - turn.cacheWriteTokens
+  (fresh * price![0] + turn.cacheReadTokens * price![2] + turn.cacheWriteTokens * price![0] * CACHE_WRITE_FACTOR + turn.outputTokens * price![1]) / 1_000_000
 
 // ---------- the Nuclear MCP server, as a client ----------
 

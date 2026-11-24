@@ -61,14 +61,32 @@ Stopped by its 90-minute limit in the Tests (the minutes add up the steps that r
       Measured: `nuclear-mcp` gives an agent of the factory 45 tools (~10 200 tokens) instead of 92 (~17 900); both
       servers ~19 900 instead of ~27 700 (−28 %). Left for the profiles (T3.1): the same action under two names
       (`team_edit` / `team_update`, `member_edit` / `team_member_update`, `spec_create` / `spec_new`).
-- [ ] T1.2 agent: Anthropic's prompt cache in the API adapter; the tools' order stable.
+- [x] T1.2 agent: Anthropic's prompt cache in the API adapter (the top-level `cache_control`), the tools in the
+      servers' order every turn, a turn priced fresh, read and written as its `usage` splits it. Not run against the
+      real API (no key in the vault): tested with the HTTP stubbed.
 - [x] T1.3 agent: OpenCode isolated: `OPENCODE_DISABLE_CLAUDE_CODE=1` (no `~/.claude/CLAUDE.md`), and its skills,
       web, images, subagents and questions denied (`OPENCODE_PERMISSION`: denying `skill` also drops the skills of
       `~/.claude/skills`, `~/.agents/skills` and `~/.config/opencode/skills`, which the variables alone do not).
       Measured with a captured request: OpenCode's first request of a step went from ~12 900 to ~8 000 tokens (−38 %;
       with T1.1). Left: whether the other agents (Claude Code, Codex, Gemini CLI) read the user's own files
       (`~/.claude`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md`); a read denied by path goes with T2.3.
-- [ ] T1.4 agent: the context preflight (Ollama, Anthropic, a table for the others).
+- [x] T1.4 agent: the context preflight for the local models, the only ones whose window can be smaller than what the
+      factory sends (the APIs' and the agents' hold a million or more): `ollamaWindow` before the call, Ollama's 400
+      said with its fix, in the adapter both a run and a chat answer go through (`localOpenCodeAdapter`).
+
+### Phase 1 against the baseline (Haiku, T1.1 and T1.3; one run each side, 2026-11-24)
+
+| Analysis to Code | Baseline | Phase 1 | Change |
+|---|---|---|---|
+| Turns | 169 | 120 | −29 % |
+| Tool calls | 263 | 183 | −30 % |
+| By hand | 116 | 78 | −33 % |
+| Tokens in | 11 842 984 | 7 080 950 | −40 % |
+| Tokens in per turn | 70 076 | 59 007 | −16 % |
+| Minutes | 24.2 | 12.4 | −49 % |
+
+The Code passed (the baseline stopped there twice) and the run reached the Quality. One run a side: the guard's
+comparison holds only with more runs (spec 020's harness).
 
 ## Phase 2 — The oracle answers more per call
 
