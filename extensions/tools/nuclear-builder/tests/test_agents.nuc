@@ -14,6 +14,7 @@ for a in "$@"; do
   [ -d "$a" ] && find "$a" -type f -exec sh -c 'echo "== $1"; cat "$1"' _ {} \\; >> "$FAKE_LOG.files"
 done
 [ -n "$OPENCODE_CONFIG_DIR" ] && find "$OPENCODE_CONFIG_DIR" "$OPENCODE_CONFIG" -type f -exec sh -c 'echo "== $1"; cat "$1"' _ {} \\; >> "$FAKE_LOG.files"
+[ -n "$OPENCODE_CONFIG_DIR" ] && echo "claude files off: $OPENCODE_DISABLE_CLAUDE_CODE" >> "$FAKE_LOG.files"
 [ -n "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" ] && cat "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" >> "$FAKE_LOG.files"
 [ -n "$GROK_HOME" ] && cat "$GROK_HOME/config.toml" "$GROK_HOME/auth.json" >> "$FAKE_LOG.files"
 [ -n "$FAKE_DOC" ] && printf '# Analysis\\nby the agent\\n' > "$FAKE_DOC"
@@ -91,6 +92,8 @@ testOpenCodeGetsItsOwnAgentFileTheMcpServerAndNoShell(tmpPath: Path, monkeypatch
   expect(args.take(8) == ["run", "--standalone", "--agent", "analyst", "--format", "json", "--auto", "--model"] and args[8] == "anthropic/claude-haiku-4-5")
   files = Path("${log}.files").readText()
   expect("agent/analyst.md" in files and "bash: deny" in files and "\"nuclear-mcp\"" in files and "Be brief." in files)
+  // spec 025: never the user's own agent files, none of OpenCode's tools the factory does not use, each tool once
+  expect("claude files off: 1" in files and "\"skill\": \"deny\"" in files and "\"websearch\": \"deny\"" in files and "\"--skip\"" in files, files)
   expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "cost", "cost"])
   expect(out.text == "Written." and (out.costUsd - 0.005).abs() < 0.000001)
 

@@ -3676,12 +3676,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.e4cb85",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.e6a4c2",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
    "summary": "Who does a role",
    "body": [
-    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`) | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |",
+    "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --standalone --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder (`--standalone`: a private server that reads them; OpenCode 2.2's background service answers `Agent not found`); `OPENCODE_DISABLE_CLAUDE_CODE=1`: never the user's `~/.claude/CLAUDE.md` nor skills | `.opencode/agent/<role>.md` (shell denied; and OpenCode's skills, web, images, subagents and questions: `OPENCODE_PERMISSION`, spec 025) | the sum of `step_finish` costs |",
     "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
     "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |"
    ],
