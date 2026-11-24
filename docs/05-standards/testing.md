@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-24
 related: []
 ---
 # How the platform is tested
@@ -24,3 +24,8 @@ Rules:
 - Every change to the transpiler, a dialect or the library runs the standard library, the semantics and the
   conformance programs before it is done: one feature must never break another.
 - A check that needs an SDK the machine lacks is listed as *Untested* in the project's roadmap, not left out.
+- A check of more than about ten minutes is split, never shortened: in the CI one job per part, run at the same time,
+  and a last job that compares what they kept (`platform-backend.yml`: a job per dialect and database, then
+  `compare`); on this machine every part at once before a tag (`installer/release/delivery.sh`, step `databases`).
+  The repository is public: its jobs run on GitHub's runners (free for a public repository), never on a runner of
+  this machine, where a pull request's code would run with the user's files.

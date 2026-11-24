@@ -28,7 +28,8 @@ is called done; that check is being built into the delivery gate (`installer/doc
    v<version>`; `cargo test`; `cargo clippy --all-targets -- -D warnings`; this tree's `nuclear` staged in a temporary
    installation and put first on `PATH`; `extensions/vscode` `npm run compile` and `npm test` (every text has its
    Spanish, no local-model setting); Nuclear Builder (`nuclear check`, `nuclear build`, pytest); the MCP server
-   (`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website
+   (`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); both backend dialects on the four databases in
+   Docker, every pair at the same time (`database-check/check.sh --parallel`; Docker must be running); the website
    exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding
    example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);
    `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,

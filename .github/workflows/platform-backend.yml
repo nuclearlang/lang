@@ -45,5 +45,60 @@ jobs:
         run: sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh
       - name: "nestjs: tsc, node:test, migrations, a live run"
         run: sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh
-      - name: "Real databases in Docker: both dialects on SQLite, PostgreSQL, MySQL and MariaDB, the same answers"
-        run: sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh
+
+  # The real databases: one job per dialect and database, all at the same time (one after another they took 49 min);
+  # each keeps its answers and schemas, and the job `compare` holds them to one another.
+  databases:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dialect: [fastapi, nestjs]
+        database: [sqlite, postgres, mysql, mariadb]
+    name: databases (${{ matrix.dialect }}, ${{ matrix.database }})
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Node tools of the checks and the runtimes
+        run: |
+          (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          installer/release/build-runtimes.sh
+      - name: Python tools of the checks
+        run: |
+          python -m venv nuclearlang/tools/python/.venv
+          nuclearlang/tools/python/.venv/bin/pip install -q -r nuclearlang/tools/python/requirements.txt
+          nuclearlang/tools/python/.venv/bin/pip install -q -e nuclear-synapsis-framework/platforms/backend/packages/synapsis-py
+      - name: "Real database in Docker: ${{ matrix.dialect }} on ${{ matrix.database }}"
+        run: OUT="$RUNNER_TEMP/dbcheck" sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh ${{ matrix.dialect }} ${{ matrix.database }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dbcheck-${{ matrix.dialect }}-${{ matrix.database }}
+          path: ${{ runner.temp }}/dbcheck
+          if-no-files-found: error
+          retention-days: 3
+
+  compare:
+    needs: databases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Python tools of the checks
+        run: |
+          python -m venv nuclearlang/tools/python/.venv
+          nuclearlang/tools/python/.venv/bin/pip install -q -r nuclearlang/tools/python/requirements.txt
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dbcheck-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/dbcheck
+      - name: "Both dialects on SQLite, PostgreSQL, MySQL and MariaDB: the same answers and schemas"
+        run: sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh --compare "$RUNNER_TEMP/dbcheck"

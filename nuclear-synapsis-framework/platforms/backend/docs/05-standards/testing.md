@@ -72,10 +72,19 @@ The first two scripts find the tree from their own place (`NUCLEAR_ROOT` overrid
    must answer "no changes".
 6. The runtime's tests (`tsconfig.test.json`, `dist-test/test/**/*.js`).
 
-**`database-check/check.sh`** (needs Docker running, besides the set-up above; about twenty minutes). It proves that
-one Nuclear project behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those
-dialects and databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one
-`ok` / `FAIL` line per dialect, database and stage, goes on after a failure and exits 1 if any failed.
+**`database-check/check.sh`** (needs Docker running, besides the set-up above). It proves that one Nuclear project
+behaves the same in every dialect on every database. `check.sh fastapi postgres` runs only those dialects and
+databases (any of `fastapi`, `nestjs`; any of `sqlite`, `postgres`, `mysql`, `mariadb`). It prints one `ok` / `FAIL`
+line per dialect, database and stage, goes on after a failure and exits 1 if any failed.
+
+- **One pair after another** (no option): about 50 minutes, the `migrations` stage most of it (87 runs of
+  `nuclear migrate` per pair; `nestjs` compiles its TypeScript on each).
+- **`--parallel`**: the eight pairs at the same time, each a run of its own (its folder, containers and ports), after
+  the shared preparation (the `nestjs` runtime, `cargo build`) is done once; then the comparisons over all of them.
+  The delivery gate runs it (`installer/release/delivery.sh`, step `databases`).
+- **`OUT=<dir>`** also keeps the run's answers and schemas in `<dir>`; **`--compare <dir>`** makes only the
+  comparisons over what several runs kept, and fails when a pair asked for left nothing. The CI runs one job per pair
+  (`platform-backend.yml`, job `databases`) and the job `compare` over all of them.
 
 1. Starts `postgres:16-alpine`, `mysql:8.0` and `mariadb:11` one at a time, each in a throwaway container
    (`nuclear-dbcheck-<pid>-<database>`, a free port of `127.0.0.1`, its data in memory), waits for its health check,

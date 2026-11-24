@@ -37,7 +37,7 @@ nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/pla
 cargo test                                   # the examples with both dialects, the goldens
 sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, migrations, a live run
 sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, migrations, a live run
-sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite
+sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh --parallel  # needs Docker: both dialects on PostgreSQL, MySQL, MariaDB, SQLite, every pair at once
 sh nuclear-synapsis-framework/platforms/backend/checks/app-check/check.sh       # needs Docker: the logs, the security and the performance of an app in both dialects
 UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff
 installer/install.sh                         # the user runs the installed copy: install after a change

@@ -10,7 +10,8 @@
 # (--all-targets, 0 warnings), nuclear (this tree's nuclear staged in a temporary installation, first on PATH: the
 # later steps run it, never the one installed in the user's HOME), vscode (npm run compile, npm test: the Spanish of
 # every text, no local-model setting), builder (Nuclear Builder: nuclear check, build, pytest), mcp (nuclear check,
-# build, pytest), runtimes (synapsis-py pytest, synapsis-nest npm test), website (as .github/workflows/website.yml:
+# build, pytest), runtimes (synapsis-py pytest, synapsis-nest npm test), databases (both backend dialects on SQLite,
+# PostgreSQL, MySQL and MariaDB in Docker, every pair at the same time: database-check --parallel), website (as .github/workflows/website.yml:
 # content.mjs without UPDATE_EXAMPLES, so an onboarding example that is no longer what `nuclear new` writes fails here;
 # nuclear build, install, test, the bundle), knowledge (nuclear-graph knowledge check clean), installer (package.sh,
 # then installer/tests/run.sh: every case, OUT1 what the user reads, UPD1 an update from the previous published
@@ -92,6 +93,9 @@ step_runtimes() {
 fix_runtimes="the backend runtimes' tests: synapsis-py (uv run --extra test --extra ai pytest), synapsis-nest (npm test)"
 
 # exactly the job of .github/workflows/website.yml: a failure here is a site that would not publish
+step_databases() { cd "$REPO" && sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh --parallel; }
+fix_databases="sh nuclear-synapsis-framework/platforms/backend/checks/database-check/check.sh <dialect> <database> for the pair that failed (needs Docker running)"
+
 step_website() {
   cd "$REPO/website" && (cd tools && npm ci --no-audit --no-fund) && env -u UPDATE_EXAMPLES node tools/content.mjs &&
     nuclear build && nuclear install && nuclear test && (cd build/app && npx vite build)
@@ -124,7 +128,7 @@ summary_ok() {
   [ -z "$ONLY" ] && echo "${GREEN}Tag it:${OFF} git tag v$VERSION && git push origin v$VERSION; then installer/release/after-release.sh $VERSION"
 }
 
-for s in version rust clippy nuclear vscode builder mcp runtimes website knowledge installer; do
+for s in version rust clippy nuclear vscode builder mcp runtimes databases website knowledge installer; do
   case $ONLY in ''|*",$s,"*) ;; *) continue ;; esac
   case $s in builder|mcp|website|knowledge) staged_path ;; esac
   start=$(date +%s)

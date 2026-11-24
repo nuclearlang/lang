@@ -8,8 +8,12 @@
 # migration makes); then it compares the answers (the same bytes in every dialect on every database) and says where
 # the schemas of the dialects differ. On SQLite it also makes a project with `nuclear new` and migrates it.
 #
-#   check.sh                     everything
+#   check.sh                     everything, one pair after another
 #   check.sh fastapi postgres    only those dialects and databases (any of each)
+#   check.sh --parallel [...]    every pair at the same time, each in its own folder and containers (this machine,
+#                                before a tag: installer/release/delivery.sh), then the comparisons over all of them
+#   OUT=<dir> check.sh ...       also keeps the answers and the schemas in <dir> (one CI job per pair)
+#   check.sh --compare <dir>...  only the comparisons, over what the runs kept: every pair must be there
 #
 # Needs Docker (the databases run in throwaway containers, removed when the script ends) and what the other two
 # checks need: nuclearlang/tools/python/.venv and nuclearlang/tools/node (npm install there).
@@ -20,18 +24,21 @@ V="$root/nuclearlang/tools/python/.venv/bin"
 nm="$root/nuclearlang/tools/node/node_modules"
 py="$V/python"
 
-dialects="" databases=""
-for a in "$@"; do
-  case $a in
-    fastapi|nestjs) dialects="$dialects $a" ;;
-    sqlite|postgres|mysql|mariadb) databases="$databases $a" ;;
-    *) echo "usage: check.sh [fastapi|nestjs]... [sqlite|postgres|mysql|mariadb]..." >&2; exit 2 ;;
+dialects="" databases="" parallel="" compare=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    fastapi|nestjs) dialects="$dialects $1" ;;
+    sqlite|postgres|mysql|mariadb) databases="$databases $1" ;;
+    --parallel) parallel=1 ;;
+    --compare) shift; [ -d "${1:-}" ] || { echo "--compare needs a folder" >&2; exit 2; }; compare=$(cd "$1" && pwd) ;;
+    *) echo "usage: check.sh [--parallel | --compare <dir>] [fastapi|nestjs]... [sqlite|postgres|mysql|mariadb]..." >&2; exit 2 ;;
   esac
+  shift
 done
 dialects=${dialects:-fastapi nestjs}
 databases=${databases:-sqlite postgres mysql mariadb}
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-dbcheck.XXXXXX")
+work=${compare:-$(mktemp -d "${TMPDIR:-/tmp}/nuclear-dbcheck.XXXXXX")}
 prefix="nuclear-dbcheck-$$"
 app_pid=""
 failed=0
@@ -39,6 +46,7 @@ cleanup() {
   [ -n "$app_pid" ] && kill "$app_pid" 2>/dev/null
   ids=$(docker ps -aq --filter "name=$prefix-" 2>/dev/null)
   [ -n "$ids" ] && docker rm -f -v $ids >/dev/null 2>&1
+  [ -n "$compare" ] && return
   [ -n "$KEEP" ] && echo "kept: $work" || rm -rf "$work"
 }
 trap cleanup EXIT
@@ -167,15 +175,65 @@ tables() { # the same project with createTables on an empty database: the app ma
   "$py" "$self/tables.py" "$dialect" "$database" "$url" "$project" "$work"
 }
 
-# the runtime of the nestjs dialect, built and copied fresh as the nestjs check does (see its comments)
-case " $dialects " in *" nestjs "*)
+# the comparisons: the answers the same in every dialect on every database, the schemas the same in every dialect
+compare_results() {
+  # every pair asked for left its answers: a missing one is a failure, never a smaller comparison
+  for database in $databases; do for dialect in $dialects; do
+    [ -f "$work/answers-$dialect-$database.json" ] || { report FAIL "$dialect" "$database" answers "none kept"; failed=1; }
+  done; done
+  first=""
+  for f in "$work"/answers-*.json; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .json | sed 's/^answers-//')
+    if [ -z "$first" ]; then first=$f; first_name=$name; continue; fi
+    if cmp -s "$first" "$f"; then
+      report ok "${name%%-*}" "${name#*-}" answers "the same bytes as $first_name"
+    else
+      report FAIL "${name%%-*}" "${name#*-}" answers "not what $first_name answered:"
+      diff "$first" "$f" | head -60 | cut -c1-400 | sed 's/^/     | /'
+      failed=1
+    fi
+  done
+  # the schemas the migrations and createTables left: the same in every dialect on each database, step by step
+  # (ADR-backend-0002)
+  differences=$("$py" "$self/db.py" compare "$work")
+  if [ -n "$differences" ]; then
+    echo "FAIL the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; failed=1
+  elif ls "$work"/schema-fastapi-* >/dev/null 2>&1 && ls "$work"/schema-nestjs-* >/dev/null 2>&1; then
+    echo "ok   the schemas of the dialects are the same on every database, after every step"
+  fi
+}
+finish() {
+  [ "$failed" -eq 0 ] && echo "database-check: every dialect on every database ok" || echo "database-check: FAILED"
+  exit "$failed"
+}
+if [ -n "$compare" ]; then compare_results; finish; fi
+
+# the runtime of the nestjs dialect, built and copied fresh as the nestjs check does (see its comments); once, before
+# the pairs of --parallel start (they share node_modules)
+[ -n "$DBCHECK_PREPARED" ] || case " $dialects " in *" nestjs "*)
   (cd "$here/packages/synapsis-nest" && node "$nm/typescript/bin/tsc" -p tsconfig.json) || exit 1
   rm -rf "$nm/synapsis-nest"
   (cd "$root/nuclearlang/tools/node" && npm install --no-save --no-audit --no-fund --install-links "$here/packages/synapsis-nest" >/dev/null 2>&1) || exit 1 ;;
 esac
-(cd "$root" && cargo build -q -p nuclear-cli) || exit 1
+[ -n "$DBCHECK_PREPARED" ] || { (cd "$root" && cargo build -q -p nuclear-cli) || exit 1; }
 # `nuclear migrate` runs `nuclear build .`: the tree's build is the `nuclear` of this script
 PATH="$root/target/debug:$PATH"; export PATH
+
+if [ -n "$parallel" ]; then
+  # each pair is a run of its own (its folder, its containers, its ports); its lines are printed when it ends
+  pids=""
+  for database in $databases; do for dialect in $dialects; do
+    DBCHECK_PREPARED=1 OUT="$work" sh "$0" "$dialect" "$database" >"$work/log-$dialect-$database" 2>&1 &
+    pids="$pids $!:$dialect-$database"
+  done; done
+  for p in $pids; do
+    wait "${p%%:*}" || failed=1
+    grep -v '^database-check: ' "$work/log-${p#*:}"
+  done
+  compare_results
+  finish
+fi
 
 for database in $databases; do
   dialect="-"
@@ -222,27 +280,9 @@ for database in $databases; do
   [ "$database" != sqlite ] && docker rm -f -v "$prefix-$database" >/dev/null 2>&1
 done
 
-# --- the answers: the same in every dialect on every database
-first=""
-for f in "$work"/answers-*.json; do
-  [ -f "$f" ] || continue
-  name=$(basename "$f" .json | sed 's/^answers-//')
-  if [ -z "$first" ]; then first=$f; first_name=$name; continue; fi
-  if cmp -s "$first" "$f"; then
-    report ok "${name%%-*}" "${name#*-}" answers "the same bytes as $first_name"
-  else
-    report FAIL "${name%%-*}" "${name#*-}" answers "not what $first_name answered:"
-    diff "$first" "$f" | head -60 | cut -c1-400 | sed 's/^/     | /'
-    failed=1
-  fi
-done
-# --- the schemas the migrations and createTables left: the same in every dialect on each database, step by step
-# (ADR-backend-0002)
-differences=$("$py" "$self/db.py" compare "$work")
-if [ -n "$differences" ]; then
-  echo "FAIL the schemas of the dialects differ in:"; echo "$differences" | sed 's/^/     ~ /'; failed=1
-elif ls "$work"/schema-fastapi-* >/dev/null 2>&1 && ls "$work"/schema-nestjs-* >/dev/null 2>&1; then
-  echo "ok   the schemas of the dialects are the same on every database, after every step"
+# what a run keeps for the comparisons of several runs (--parallel, the CI's job of the comparisons)
+if [ -n "$OUT" ]; then
+  mkdir -p "$OUT" && cp "$work"/answers-*.json "$work"/schema-*.json "$OUT"/ 2>/dev/null
 fi
-[ "$failed" -eq 0 ] && echo "database-check: every dialect on every database ok" || echo "database-check: FAILED"
-exit "$failed"
+compare_results
+finish
