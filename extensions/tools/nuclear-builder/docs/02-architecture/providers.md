@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-19
+updated: 2026-11-24
 related: [teams-and-vault.md, engine.md, ../../../../../docs/04-specs/011-software-factory/design.md]
 ---
 # The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)
@@ -58,7 +58,9 @@ only for it (its routes, the lead after it, no repair, no check by prompt) asks 
 
 - **Two MCP servers for every agent**: `nuclear-mcp` (`nuclear`: the generators, the compiler, the graph, the local
   developer) and the Builder's, `nuclear-builder mcp --root <project>` (`nuclear_builder`: every action of the
-  Builder's pages, [actions.md](actions.md)), from `mcpServers(command, root)` (`adapter.nuc`); its command is
+  Builder's pages, [actions.md](actions.md)), from `mcpServers(command, root)` (`adapter.nuc`). `nuclear-mcp` is
+  started with `--skip` and the Builder's own tools' names (`builderToolNames`; Atlas: `INFORM_TOOLS`), so each tool
+  is in the agent's context once (spec 025). The Builder's command is
   `NUCLEAR_BUILDER_COMMAND`, else `nuclear-builder`. OpenCode gets both in its `mcp` table, Codex as `-c
   mcp_servers.*`, Gemini CLI in its settings, Cursor in a plugin, Grok Build in a `GROK_HOME` of its own, the API loop as two clients (each call goes to the server that has the
   tool).

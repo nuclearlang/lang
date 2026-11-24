@@ -90,6 +90,18 @@ testTheInformingServerOffersNoToolThatDoesTheWork() void
   expect(not ("spec_create" in names) and not ("nuclear_build" in names) and not ("generate_resource" in names) and not ("nuclear_project" in names) and not ("workspace_create" in names))
   expect(names.all((n) => n in INFORM_TOOLS))
 
+// Spec 025: `--skip` leaves out the tools another server of the agent offers (the factory's, the Builder's), with or
+// without `--informs`; the rest stay.
+testTheToolsAnotherServerOffersAreLeftOut() void
+  names: string[] = []
+  for tool in asyncio.run(mcpServer(false, ["runs", "team_list"]).listTools())
+    names.add(tool.name)
+  expect(not ("runs" in names) and not ("team_list" in names) and "nuclear_start" in names and "team_create" in names)
+  informing: string[] = []
+  for tool in asyncio.run(mcpServer(true, ["team_list"]).listTools())
+    informing.add(tool.name)
+  expect(not ("team_list" in informing) and "team_create" in informing and informing.all((n) => n in INFORM_TOOLS))
+
 // A migration starts from the original's inventory: an Express API with Sequelize on PostgreSQL becomes a backend
 // (nestjs) with the postgres plugin, a Flutter app a mobile app; nothing is written.
 testMigrationInspectMapsAnOriginalProjectToItsPlatformsDialectsAndPlugins(tmpPath: Path) void

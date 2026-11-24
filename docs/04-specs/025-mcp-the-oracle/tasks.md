@@ -36,6 +36,19 @@ the baseline, every test set of the tree (`nuclearlang/docs/05-standards/testing
 - The run stopped at the Code, both times it was run: `@required` on an empty text answers the rule `minLength`
   and the agents tested `required` (the backend platform's roadmap, *To decide with the user*). Quality and
   Delivery are not measured yet.
+### The baseline: OpenCode 2.3.2 · `opencode-go/deepseek-v4.1-flash`
+
+Stopped by its 90-minute limit in the Tests (the minutes add up the steps that ran at the same time):
+
+| Station | Steps | Turns | Tool calls | By hand | Repeated | Tokens in | Tokens out | Minutes |
+|---|---|---|---|---|---|---|---|---|
+| analysis | 3 | 78 | 102 | 47 | 2 | 5 375 466 | 66 682 | 23.1 |
+| design | 5 | 399 | 557 | 254 | 14 | 38 484 491 | 297 237 | 84.4 |
+| **total** | **8** | **477** | **659** | **301 (46 %)** | **16** | **43 859 957** | **363 919** | **107.5** |
+
+- **91 949 tokens in per turn**; the same two stations took 3.7 times Haiku's turns and 7 times its tokens. A cheap
+  model explores more by hand and each turn carries more history: where the oracle should save the most.
+
 - A first run on the same model (a spec that asked for 422) gave 17 steps, 124 turns, 8 625 442 tokens in: the same
   ~70 000 per turn.
 - Found on the way and fixed: an agent that marked several checks at once tore `checks.json` and the engine fell
@@ -44,7 +57,10 @@ the baseline, every test set of the tree (`nuclearlang/docs/05-standards/testing
 
 ## Phase 1 — Free wins
 
-- [ ] T1.1 agent: `nuclear-mcp --no-factory`, passed by the factory when it starts both servers.
+- [x] T1.1 agent: `nuclear-mcp --skip <names>`, passed by the factory with the Builder's own tools' names.
+      Measured: `nuclear-mcp` gives an agent of the factory 45 tools (~10 200 tokens) instead of 92 (~17 900); both
+      servers ~19 900 instead of ~27 700 (−28 %). Left for the profiles (T3.1): the same action under two names
+      (`team_edit` / `team_update`, `member_edit` / `team_member_update`, `spec_create` / `spec_new`).
 - [ ] T1.2 agent: Anthropic's prompt cache in the API adapter; the tools' order stable.
 - [ ] T1.3 agent: OpenCode isolated (no user agent files, no unused built-in tools); first verify how OpenCode 2.3
       does it, and whether it denies a read by path.

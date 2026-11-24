@@ -249,8 +249,12 @@ testAtlasOnlyInformsAndNamesTheFreeTeamsWithTheirTechLead(tmpPath: Path, monkeyp
   expect(chatTool(root, "spec_new", { "title": "x" }, true)["error"] == true and "no tool" in "${chatTool(root, "run_start", {}, true)["text"]}")
   work = Work(root, root, "", {}, [], "", 0.0, "nuclear-mcp", 1000, { "informs": true })
   servers = mcpServers(work)
-  expect((servers["nuclear"] as <string, any>)["args"] == ["--informs"] and "--informs" in ((servers["nuclear_builder"] as <string, any>)["args"] as string[]))
-  expect((mcpServers(Work(root, root, "", {}, [], "", 0.0))["nuclear"] as <string, any>)["args"] == [])
+  // spec 025: the Nuclear server leaves out what the Builder's offers the same agent, so each tool is there once
+  informing: string[] = (servers["nuclear"] as <string, any>)["args"]!
+  expect(informing.take(2) == ["--informs", "--skip"] and informing[2].split(",") == INFORM_TOOLS and "--informs" in ((servers["nuclear_builder"] as <string, any>)["args"] as string[]), json.dumps(informing))
+  expect(not ("--skip" in ((servers["nuclear_builder"] as <string, any>)["args"] as string[])))
+  working: string[] = (mcpServers(Work(root, root, "", {}, [], "", 0.0))["nuclear"] as <string, any>)["args"]!
+  expect(working[0] == "--skip" and working[1].split(",") == builderToolNames() and "spec_new" in working[1].split(","))
   // a team with a run in progress is busy; with none, Atlas offers to make one
   run = newRun(root, { "name": "app" }, { "id": "s1", "title": "S" }, loadTeam("night-shift"), ["design"], "specs/s1")
   run["status"] = "waiting"

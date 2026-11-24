@@ -514,8 +514,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
 INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "migration_inspect", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit", "runs", "run_file", "run_journal", "checks", "team_suggest", "team_name_suggest", "team_runnable", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "metrics", "agents_list", "models_list"]
 
 // The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always); `informs`:
-// only `INFORM_TOOLS`.
-mcpServer(informs: boolean = false) MCPServer
+// only `INFORM_TOOLS`; `skip`: the tools left out because another server of the agent offers them (spec 025).
+mcpServer(informs: boolean = false, skip: string[] = []) MCPServer
   remote = not localDeveloper()
   server = MCPServer("nuclear", instructions = "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
@@ -524,6 +524,8 @@ mcpServer(informs: boolean = false) MCPServer
     if remote and name.startsWith("developer_")
       continue
     if informs and not (name in INFORM_TOOLS)
+      continue
+    if name in skip
       continue
     server.addTool(tool)
   server
@@ -542,7 +544,7 @@ mcpTools() <string, any>
 // Serves MCP over stdio until the client closes it. An agent's session is a use of NuclearLang: `nuclear` is told
 // (apart, never waited for), so a newer release waits for the user to stop working; each tool that runs `nuclear`
 // tells it again.
-mcpMain(informs: boolean = false) void
+mcpMain(informs: boolean = false, skip: string[] = []) void
   if shutil.which("nuclear") != null
     subprocess.Popen(["nuclear", "update", "--touch"], stdin = subprocess.DEVNULL, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-  mcpServer(informs).run()
+  mcpServer(informs, skip).run()

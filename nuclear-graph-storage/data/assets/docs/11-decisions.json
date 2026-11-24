@@ -11133,7 +11133,8 @@
    "body": [
     "The 47 tools both servers offer stay in both: an agent outside the factory (Claude Code on a project) has only",
     "`nuclear-mcp`, and every action of the Builder is a tool of `nuclear-builder mcp` (ADR-platform-0009). The factory",
-    "passes `--no-factory` to `nuclear-mcp` when it starts both."
+    "starts `nuclear-mcp --skip <names>` with the names of the Builder's own tools (`builderToolNames`, or its",
+    "`INFORM_TOOLS` for Atlas): no list of the other server's tools is kept in either, so the two never drift apart."
    ],
    "agents": false,
    "sources": [
@@ -11173,7 +11174,7 @@
    "body": [
     "| Project | Change | Requirements |",
     "|---|---|---|",
-    "| `tools/mcp` (`nuclear-mcp`) | `--for <station>`: the station's profile; `--no-factory`: leaves out the Builder's tools; `nuclear_tools` (find a tool by words, get its schema, call it); the project's map in `project_inspect`; `test`/`check` compact; `verify`; several files per read; short descriptions | 5-11, 15 |",
+    "| `tools/mcp` (`nuclear-mcp`) | `--for <station>`: the station's profile; `--skip <names>`: leaves out the tools the Builder's server offers; `nuclear_tools` (find a tool by words, get its schema, call it); the project's map in `project_inspect`; `test`/`check` compact; `verify`; several files per read; short descriptions | 5-11, 15 |",
     "| `extensions/tools/nuclear-builder` | the adapters start the servers with the station's profile; the ledger's new fields and `metrics`; the station prompt; reads of `build/`, `node_modules`, `dist` denied; OpenCode isolated from the user's agent files and unused built-in tools; Anthropic's prompt cache; the context preflight | 3-4, 6, 12-14, 18-19 |",
     "| `tools/cli` | the NuclearLang section of `AGENTS.md` (`agent-files/project/AGENTS.md`) says the oracle's rule; `nuclear agent init` refreshes old projects | 15, 17 |",
     "| `tools/code_generator` | the context documents: `docs/README.md` holds the oracle's rule; `02-architecture/overview.md` keeps the project's architecture (layers, layout, C4, flows) | 15-16 |",
@@ -11261,10 +11262,10 @@
    "id": "doc:docs/04-specs/025-mcp-the-oracle/requirements.md#a-small-catalog",
    "type": "spec",
    "title": "Spec 025: The MCP server is the oracle — Requirements — A small catalog",
-   "summary": "5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools the Builder's server owns.",
+   "summary": "5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools the Builder's server offers (`--skip`, with the Builder's own names).",
    "body": [
     "5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools",
-    "   the Builder's server owns. No tool is removed from either server.",
+    "   the Builder's server offers (`--skip`, with the Builder's own names). No tool is removed from either server.",
     "6. WHEN a station's agent starts THE SYSTEM SHALL offer the tools that station uses (its profile, from the ledger)",
     "   and one tool that finds and calls any other: an agent always reaches every tool.",
     "7. Every tool's description SHALL say in its first sentence what it answers and when to call it; the rest is a topic",
@@ -11539,7 +11540,35 @@
     "  results and what was read by hand).",
     "- The run stopped at the Code, both times it was run: `@required` on an empty text answers the rule `minLength`",
     "  and the agents tested `required` (the backend platform's roadmap, *To decide with the user*). Quality and",
-    "  Delivery are not measured yet.",
+    "  Delivery are not measured yet."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/025-mcp-the-oracle/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-0-the-measure-the-gate-the-baseline-opencode-2-3-2-opencode-go-deepseek-v4",
+   "type": "spec",
+   "title": "Spec 025: The MCP server is the oracle — Tasks — The baseline: OpenCode 2.3.2 · `opencode-go/deepseek-v4.1-flash`",
+   "summary": "Stopped by its 90-minute limit in the Tests (the minutes add up the steps that ran at the same time): model explores more by hand and each turn carries more history: where the oracle should save the most.",
+   "body": [
+    "Stopped by its 90-minute limit in the Tests (the minutes add up the steps that ran at the same time):",
+    "",
+    "| Station | Steps | Turns | Tool calls | By hand | Repeated | Tokens in | Tokens out | Minutes |",
+    "|---|---|---|---|---|---|---|---|---|",
+    "| analysis | 3 | 78 | 102 | 47 | 2 | 5 375 466 | 66 682 | 23.1 |",
+    "| design | 5 | 399 | 557 | 254 | 14 | 38 484 491 | 297 237 | 84.4 |",
+    "| **total** | **8** | **477** | **659** | **301 (46 %)** | **16** | **43 859 957** | **363 919** | **107.5** |",
+    "",
+    "- **91 949 tokens in per turn**; the same two stations took 3.7 times Haiku's turns and 7 times its tokens. A cheap",
+    "  model explores more by hand and each turn carries more history: where the oracle should save the most.",
+    "",
     "- A first run on the same model (a spec that asked for 422) gave 17 steps, 124 turns, 8 625 442 tokens in: the same",
     "  ~70 000 per turn.",
     "- Found on the way and fixed: an agent that marked several checks at once tore `checks.json` and the engine fell",
@@ -11560,9 +11589,12 @@
    "id": "doc:docs/04-specs/025-mcp-the-oracle/tasks.md#phase-1-free-wins",
    "type": "spec",
    "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 1 — Free wins",
-   "summary": "does it, and whether it denies a read by path.",
+   "summary": "Measured: `nuclear-mcp` gives an agent of the factory 45 tools (~10 200 tokens) instead of 92 (~17 900); both servers ~19 900 instead of ~27 700 (−28 %).",
    "body": [
-    "- [ ] T1.1 agent: `nuclear-mcp --no-factory`, passed by the factory when it starts both servers.",
+    "- [x] T1.1 agent: `nuclear-mcp --skip <names>`, passed by the factory with the Builder's own tools' names.",
+    "      Measured: `nuclear-mcp` gives an agent of the factory 45 tools (~10 200 tokens) instead of 92 (~17 900); both",
+    "      servers ~19 900 instead of ~27 700 (−28 %). Left for the profiles (T3.1): the same action under two names",
+    "      (`team_edit` / `team_update`, `member_edit` / `team_member_update`, `spec_create` / `spec_new`).",
     "- [ ] T1.2 agent: Anthropic's prompt cache in the API adapter; the tools' order stable.",
     "- [ ] T1.3 agent: OpenCode isolated (no user agent files, no unused built-in tools); first verify how OpenCode 2.3",
     "      does it, and whether it denies a read by path.",

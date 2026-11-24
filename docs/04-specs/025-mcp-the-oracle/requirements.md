@@ -50,7 +50,7 @@ A step costs `fixed × turns + history`. The largest saving is fewer turns; each
 
 ## A small catalog
 5. WHEN the factory starts both MCP servers THE SYSTEM SHALL offer each tool once: `nuclear-mcp` leaves out the tools
-   the Builder's server owns. No tool is removed from either server.
+   the Builder's server offers (`--skip`, with the Builder's own names). No tool is removed from either server.
 6. WHEN a station's agent starts THE SYSTEM SHALL offer the tools that station uses (its profile, from the ledger)
    and one tool that finds and calls any other: an agent always reaches every tool.
 7. Every tool's description SHALL say in its first sentence what it answers and when to call it; the rest is a topic

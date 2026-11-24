@@ -293,13 +293,15 @@ builderMcpCommand() string
 informs(work: Work) boolean
   work.inputs["informs"] == true
 
-// The Nuclear MCP server's arguments for a work.
+// The Nuclear MCP server's arguments for a work: every agent has the Builder's server beside it, so the tools that one
+// offers are left out of this one (spec 025: each tool once in the agent's context).
 nuclearMcpArgs(work: Work) string[]
-  informs(work) ? ["--informs"] : ([] as string[])
+  own = informs(work) ? INFORM_TOOLS : builderToolNames()
+  [...(informs(work) ? ["--informs"] : ([] as string[])), "--skip", own.join(",")]
 
 // The Builder's server's arguments for a work in the project `root`.
 builderMcpArgs(work: Work) string[]
-  ["mcp", "--root", work.root, ...nuclearMcpArgs(work)]
+  ["mcp", "--root", work.root, ...(informs(work) ? ["--informs"] : ([] as string[]))]
 
 // The MCP servers every agent gets, as their configuration names them: NuclearLang's (`nuclear`) and the Builder's
 // (`nuclear_builder`, every action of the Builder's pages in the work's project).

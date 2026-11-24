@@ -16,6 +16,10 @@ the server registers no `developer_*` tool on any machine, and its work cycle ne
 skills, the line, the reports and the agents and models, and the team tools that ask first (`team_create`, `team_edit`, `member_add`, `member_edit`); no generator, build, project command,
 spec, run, skill or workspace written.
 
+`nuclear-mcp --skip <tool,tool...>` leaves those tools out, with or without `--informs`. Nuclear Builder starts the
+server this way for its agents, with the names of the tools its own server (`nuclear-builder mcp`) gives them: each
+tool is in the agent's context once (spec 025).
+
 ## 1. Set up
 
 The server comes with the AI services: [set them up](../../../../installer/docs/08-guides/ai-setup.md) first (the

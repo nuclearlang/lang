@@ -2,14 +2,23 @@ use sys
 use json
 
 // `nuclear-mcp`: the MCP server on stdio (what an AI client starts; `--informs`: only the tools of an agent that
-// informs, Nuclear Atlas); `nuclear-mcp tools`: its instructions and tools as JSON (what the knowledge base records).
+// informs, Nuclear Atlas; `--skip a,b`: without those tools, the ones another server of the same agent already
+// offers, spec 025); `nuclear-mcp tools`: its instructions and tools as JSON (what the knowledge base records).
 main(argv: string[]? = null) void
   args: string[] = argv ?? sys.argv.slice(1)
   if args.length > 0 and args[0] == "tools"
     print(json.dumps(mcpTools(), indent = 1))
-  else if args == ["--informs"]
-    mcpMain(true)
-  else if args.length > 0
-    sys.exit("usage: nuclear-mcp [tools | --informs]")
-  else
-    mcpMain()
+    return
+  informs = false
+  skip: string[] = []
+  at = 0
+  while at < args.length
+    if args[at] == "--informs"
+      informs = true
+    else if args[at] == "--skip" and at + 1 < args.length
+      at += 1
+      skip = args[at].split(",").map((n: string) => n.trim()).filter((n: string) => not n.isEmpty)
+    else
+      sys.exit("usage: nuclear-mcp [tools | [--informs] [--skip <tool,tool...>]]")
+    at += 1
+  mcpMain(informs, skip)

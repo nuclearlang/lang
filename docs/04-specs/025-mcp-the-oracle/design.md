@@ -16,7 +16,7 @@ call, not to be asked more often.
 
 | Project | Change | Requirements |
 |---|---|---|
-| `tools/mcp` (`nuclear-mcp`) | `--for <station>`: the station's profile; `--no-factory`: leaves out the Builder's tools; `nuclear_tools` (find a tool by words, get its schema, call it); the project's map in `project_inspect`; `test`/`check` compact; `verify`; several files per read; short descriptions | 5-11, 15 |
+| `tools/mcp` (`nuclear-mcp`) | `--for <station>`: the station's profile; `--skip <names>`: leaves out the tools the Builder's server offers; `nuclear_tools` (find a tool by words, get its schema, call it); the project's map in `project_inspect`; `test`/`check` compact; `verify`; several files per read; short descriptions | 5-11, 15 |
 | `extensions/tools/nuclear-builder` | the adapters start the servers with the station's profile; the ledger's new fields and `metrics`; the station prompt; reads of `build/`, `node_modules`, `dist` denied; OpenCode isolated from the user's agent files and unused built-in tools; Anthropic's prompt cache; the context preflight | 3-4, 6, 12-14, 18-19 |
 | `tools/cli` | the NuclearLang section of `AGENTS.md` (`agent-files/project/AGENTS.md`) says the oracle's rule; `nuclear agent init` refreshes old projects | 15, 17 |
 | `tools/code_generator` | the context documents: `docs/README.md` holds the oracle's rule; `02-architecture/overview.md` keeps the project's architecture (layers, layout, C4, flows) | 15-16 |
@@ -33,7 +33,8 @@ benchmark. The core tools (`nuclear_start`, `nuclear_doc`, `nuclear_help`, `grap
 
 The 47 tools both servers offer stay in both: an agent outside the factory (Claude Code on a project) has only
 `nuclear-mcp`, and every action of the Builder is a tool of `nuclear-builder mcp` (ADR-platform-0009). The factory
-passes `--no-factory` to `nuclear-mcp` when it starts both.
+starts `nuclear-mcp --skip <names>` with the names of the Builder's own tools (`builderToolNames`, or its
+`INFORM_TOOLS` for Atlas): no list of the other server's tools is kept in either, so the two never drift apart.
 
 ## The project's map
 
