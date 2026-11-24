@@ -136,7 +136,7 @@ def reasons_of(errors: Iterable[Mapping[str, Any]]) -> list[dict[str, str]]:
         base = kind.split("_")[0]
         if kind == "synapsis":  # a reason already in Nuclear's words (synapsis.wire)
             out.append(dict(e["synapsis"]))
-        elif kind == "missing" or (kind.endswith("_type") and e.get("input") is None):
+        elif kind in ("missing", "nuclear_required") or (kind.endswith("_type") and e.get("input") is None):
             out.append(reason(field, "required"))
         elif kind == "json_invalid":
             out.append(reason("", "json"))

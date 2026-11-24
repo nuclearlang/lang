@@ -51,6 +51,11 @@ try {
   assert.equal(await code('/tasks', { ...TOKEN, origin: 'https://example.com' }), 403);
   assert.equal(await code('/projects/1', TOKEN), 401);
   assert.equal(await code('/projects/1', { ...TOKEN, authorization: 'Bearer owner-secret' }), 404);
+  // an empty text under @required is not given: `required`, as in every dialect
+  const owner = { ...TOKEN, authorization: 'Bearer owner-secret', 'content-type': 'application/json' };
+  const empty = await fetch(base + '/projects', { method: 'POST', headers: owner, body: JSON.stringify({ name: '' }) });
+  assert.equal(empty.status, 400);
+  assert.deepEqual((await empty.json()).errors, [{ field: 'name', rule: 'required', message: 'name is required' }]);
   // the WebSocket: the upgrade is guarded, a request answers what HTTP answers, a published event is pushed
   const ws = base.replace(/^http/, 'ws') + '/ws';
   await new Promise((resolve) => new WebSocket(ws).on('error', resolve).on('open', () => assert.fail('opened without a token')));

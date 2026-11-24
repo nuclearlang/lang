@@ -148,9 +148,9 @@ export function reasonsOf(errors: readonly Invalidity[], prefix = ''): Reason[] 
         out.push(reason(field, 'required'));
         continue;
       }
-      // an empty text given for a required one: the rule a text of one character or more has in every dialect
+      // an empty text under @required is not given, as a missing value is: `required` in every dialect
       if (name === 'isNotEmpty') {
-        out.push(reason(field, 'minLength', 1));
+        out.push(reason(field, 'required'));
         continue;
       }
       const [rule, type] = CONSTRAINTS[name] ?? ['invalid'];

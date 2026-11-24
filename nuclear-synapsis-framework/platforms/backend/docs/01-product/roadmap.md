@@ -90,12 +90,6 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 
 ## To decide with the user
 
-- **The rule an empty text answers under `@required`** (found 2026-11-24, spec 025's baseline, twice). `@required` on a
-  `string` field is written as a length of at least 1, so `""` answers the rule `minLength`; `docs/07-reference/backend.md`
-  says only that `null` in a required field is `required`. The agents of a run read `required` and wrote tests for it;
-  the run stopped at the Code. To decide: `""` under `@required` answers `required` (both runtimes and the reference),
-  or the reference says it answers `minLength`.
-
 Found by the app check (2026-11-23), left by the fixes of the same day (`checks/app-check/known.txt` holds the
 probes that show what still differs):
 

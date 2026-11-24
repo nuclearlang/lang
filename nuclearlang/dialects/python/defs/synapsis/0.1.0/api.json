@@ -78,6 +78,7 @@
 {"name":"ilike","library":"synapsis","kind":"function","params":[{"name":"pattern","type":"string"}],"returns":"Op"},
 {"name":"inject","library":"synapsis","kind":"function","params":[{"name":"cls","type":"type<T>"}],"returns":"T","doc":"The instance of `cls` (created on first use, with its dependencies injected)."},
 {"name":"is_email","library":"synapsis.validators","kind":"function","params":[{"name":"value","type":"string?"}],"returns":"string?","doc":"The value, if it is an e-mail address (None passes: the field is optional)."},
+{"name":"is_given","library":"synapsis.validators","kind":"function","params":[{"name":"value","type":"object"}],"returns":"object","doc":"The value, unless it is an empty text: under @required, \"\" is not given, as a missing value is (the rule `required`, the same in every dialect; a text of at least one character is @minLength(1))."},
 {"name":"is_null","library":"synapsis","kind":"function","params":[{"name":"null","type":"boolean","optional":true,"default":"True"}],"returns":"Op"},
 {"name":"is_url","library":"synapsis.validators","kind":"function","params":[{"name":"value","type":"string?"}],"returns":"string?","doc":"The value, if it is an http(s) URL (None passes: the field is optional)."},
 {"name":"like","library":"synapsis","kind":"function","params":[{"name":"pattern","type":"string"}],"returns":"Op"},

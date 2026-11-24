@@ -20,6 +20,10 @@ with TestClient(app) as http:
     assert http.get("/tasks", headers=TOKEN).json() == []
     assert http.get("/projects/1", headers=TOKEN).status_code == 401
     assert http.get("/projects/1", headers={**TOKEN, "Authorization": "Bearer owner-secret"}).status_code == 404
+    # an empty text under @required is not given: `required`, as in every dialect
+    empty = http.post("/projects", json={"name": ""}, headers={**TOKEN, "Authorization": "Bearer owner-secret"})
+    assert empty.status_code == 400, empty.text
+    assert empty.json()["errors"] == [{"field": "name", "rule": "required", "message": "name is required"}], empty.text
     # the WebSocket: the upgrade is guarded, a request answers what HTTP answers, a published event is pushed
     try:
         with http.websocket_connect("/ws") as ws:

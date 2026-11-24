@@ -45,7 +45,7 @@ bigdouble = "BigDouble"
 
 [names]
 written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "Awaitable", "Annotated", "MinLen", "MaxLen", "Ge", "Le",
-  "AfterValidator", "Field", "AliasChoices", "is_email", "is_url", "Repository", "Mapped", "BaseModel", "TypedDict", "AppConfig", "ComponentConfig"]
+  "AfterValidator", "Field", "AliasChoices", "is_email", "is_given", "is_url", "Repository", "Mapped", "BaseModel", "TypedDict", "AppConfig", "ComponentConfig"]
 
 [auto_imports]
 "synapsis" = [
@@ -64,7 +64,7 @@ written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "A
 "synapsis.sockets" = ["WebSocketServer"]
 "synapsis.telemetry" = ["Telemetry", "Otlp", "Datadog", "NewRelic", "Grafana", "Metric", "traced"]
 "synapsis.testing" = ["FakeModel", "memory_database", "app_client", "AppClient", "AppSocket", "HttpAnswer", "SocketEvent"]
-"synapsis.validators" = ["is_email", "is_url"]
+"synapsis.validators" = ["is_email", "is_given", "is_url"]
 # in a model, Field is pydantic's (not the dataclasses class)
 "pydantic" = ["Field", "AfterValidator", "AliasChoices"]
 "annotated_types" = ["MinLen", "MaxLen", "Ge", "Le"]

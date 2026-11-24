@@ -23,7 +23,7 @@ Removed
 
 // What the API receives to create a project.
 NewProject
-  @minLength(1)
+  @required
   @maxLength(100)
   name: string
 

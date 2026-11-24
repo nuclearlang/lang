@@ -377,33 +377,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3130f3",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)` (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`, compared and sorted by value); migrations make and change them; a value…",
-   "body": [
-    "- **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`",
-    "  on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`",
-    "  (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,",
-    "  compared and sorted by value); migrations make and change them; a value the column cannot hold (beyond 64 bits,",
-    "  more decimals or digits than it has) is 409 `conflict`, never rounded. In JSON, in a body and in a parameter they",
-    "  are the language's texts (`\"0.3\"`; a JSON number is 400 `type`), answered as `toString()`; the OpenAPI document",
-    "  gives a `string` with a `pattern`; `@min` / `@max` compare them exactly. `nuclear gen resource --fields",
-    "  \"price:bigdouble\"` takes them. N0308: a key is an `int` or a `string`, `precision` and `scale` are a `bigdouble`'s."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3af5a5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -672,6 +645,37 @@
     "  - an `int` holds 64 bits and a `double` is finite, in a body and a parameter (`1e20` was kept by `nestjs`, `NaN`,",
     "    `Infinity` and `1e400` were a number in `fastapi`); a parameter of the path or the query is exactly its type",
     "    (`0x1`, `1e0`, a blank were whole numbers in `nestjs`; `1` and `yes` were true in `fastapi`, `maybe` false in"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.893998",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`.",
+   "body": [
+    "- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in",
+    "  `fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers",
+    "  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`.",
+    "",
+    "- **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`",
+    "  on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`",
+    "  (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,",
+    "  compared and sorted by value); migrations make and change them; a value the column cannot hold (beyond 64 bits,",
+    "  more decimals or digits than it has) is 409 `conflict`, never rounded. In JSON, in a body and in a parameter they",
+    "  are the language's texts (`\"0.3\"`; a JSON number is 400 `type`), answered as `toString()`; the OpenAPI document",
+    "  gives a `string` with a `pattern`; `@min` / `@max` compare them exactly. `nuclear gen resource --fields",
+    "  \"price:bigdouble\"` takes them. N0308: a key is an `int` or a `string`, `precision` and `scale` are a `bigdouble`'s."
    ],
    "platforms": [
     "backend"

@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-24
 related: [../07-reference/fastapi.md, ../03-adr/0002-fastapi-dialect.md, overview.md, dependencies.md]
 ---
 # The `fastapi` dialect: the backend platform written in Python
@@ -33,7 +33,7 @@ graphs. The generated code calls the platform's runtime package `synapsis-py` (i
 | `entity` | `entity.tpl`, `entity_field.tpl` | a SQLAlchemy 2 table (`Entity`, `Mapped`); the field decorators (`@primary(generated)`, `@column(...)`, `@created`, `@updated`, the relations) are read by the template, not written as Python decorators. Two related entities import each other under `if TYPE_CHECKING:` (`type_imports = true`): SQLAlchemy finds them by name, the import is for pyright |
 | `repository` | `repository.tpl`, `repository_method.tpl` | `Repository[Entity]` with CRUD; the entity is the `@repository(Entity)` argument or the name without `Repository`. Each method writes `q = self.query()` and `self_member = "q.{{name}}"`, so the user's lines (`where`, `orderBy`, `limit`, `getOne`...) build one query per call. Methods return an awaitable (callers write `~`) |
 | `repository` with `@repository(path = "...")` | `repository_http_method.tpl` | `HttpRepository`: a method without a body and with `@get` / `@post` / `@put` / `@patch` / `@delete` is an HTTP call |
-| `model` | `model.tpl`, `model_field.tpl` | a pydantic `BaseModel`; the rule decorators (`@required`, `@email`, `@minLength`...) become pydantic constraints (`Annotated`, `MinLen`, `MaxLen`, `Ge`, `Le`, `AfterValidator`, `is_email`, `is_url`); `@key` names the field in the JSON |
+| `model` | `model.tpl`, `model_field.tpl` | a pydantic `BaseModel`; the rule decorators (`@required`, `@email`, `@minLength`...) become pydantic constraints (`Annotated`, `MinLen`, `MaxLen`, `Ge`, `Le`, `AfterValidator`, `is_email`, `is_url`); `@required` is the runtime's `is_given` (an empty text answers `required`, ADR-synapsis-0014), never `MinLen(1)`, which is `@minLength(1)`'s; `@key` names the field in the JSON |
 | `usecase`, `service`, `aggregate`, `controller` | `injectable.tpl` | a plain class with its decorators; a use case has one `exec` that returns `Result` |
 | `appcomponent` | `injectable.tpl` | aliases to the use cases through `inject` (`alias_via = "inject"`) |
 | `controller` | `injectable.tpl` | the runtime's `controller` / `get` / `post`... decorators over FastAPI. They add the leading slash to the platform's segments; path parameters, the body (a model) and the query are read by themselves; an invalid body answers 400; a `Result` answers its value or the `AppError`'s status; an entity in a body or an answer goes through a pydantic schema built from its columns |

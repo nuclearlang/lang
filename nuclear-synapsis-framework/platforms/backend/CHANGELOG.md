@@ -4,6 +4,10 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in
+  `fastapi` and `nestjs`: `""` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers
+  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`.
+
 - **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`
   on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`
   (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,

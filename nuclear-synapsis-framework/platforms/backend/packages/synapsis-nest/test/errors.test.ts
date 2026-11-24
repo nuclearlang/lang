@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { Body, Controller, Get, Module, Param, Post, Query } from '@nestjs/common';
-import { IsEmail, IsInt, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { AppError, Err, IntPipe, NotFound, Ok, Result } from '../src/index.js';
 import { startTestApp, stopTestApp } from '../src/testing.js';
 
@@ -30,6 +30,9 @@ class Signup {
   @IsString()
   @IsUrl()
   site?: string;
+  @IsString()
+  @IsNotEmpty()
+  note!: string;
 }
 
 @Controller('signups')
@@ -54,7 +57,7 @@ class SignupController {
 @Module({ controllers: [SignupController] })
 class SignupModule {}
 
-const GOOD = { email: 'a@b.co', name: 'Anna', age: 30, code: 'ABC' };
+const GOOD = { email: 'a@b.co', name: 'Anna', age: 30, code: 'ABC', note: 'x' };
 
 // [what is sent, the status, the body]: the same list as test_errors.py
 const BODIES: [unknown, number, unknown][] = [
@@ -63,6 +66,7 @@ const BODIES: [unknown, number, unknown][] = [
     { field: 'code', rule: 'required', message: 'code is required' },
     { field: 'email', rule: 'required', message: 'email is required' },
     { field: 'name', rule: 'required', message: 'name is required' },
+    { field: 'note', rule: 'required', message: 'note is required' },
   ] }],
   [{ ...GOOD, email: 'nope', name: 'Al', age: 7, code: 'abc', site: 'x' }, 400, { status: 400, message: 'invalid', errors: [
     { field: 'age', rule: 'min', message: 'age must be at least 18' },
@@ -79,6 +83,10 @@ const BODIES: [unknown, number, unknown][] = [
     { field: 'age', rule: 'type', message: 'age must be a whole number' },
     { field: 'email', rule: 'required', message: 'email is required' },
     { field: 'name', rule: 'type', message: 'name must be a text' },
+  ] }],
+  // an empty text under @required is not given: `required`, never `minLength`
+  [{ ...GOOD, note: '' }, 400, { status: 400, message: 'invalid', errors: [
+    { field: 'note', rule: 'required', message: 'note is required' },
   ] }],
 ];
 

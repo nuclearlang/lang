@@ -266,7 +266,9 @@ Nuclear type, and any other is refused with the rule `type`:
 | `bigdouble` | a text of `text.toBigDouble()`: decimals, an exponent (`"0.1"`, `"-2.5e3"`) | a number (`0.1`), another text (`"1."`), more than 1000 digits written without the exponent |
 | `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |
 
-`null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the
+`null` is only for an optional field (`T?`); for a required one the rule is `required`. Under `@required` an empty
+text (`""`) is not given either: its rule is `required` too, never `minLength` (ADR-synapsis-0014); an empty list is
+given. A text never holds the
 character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field.
 
 **A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in

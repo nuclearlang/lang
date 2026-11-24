@@ -13,7 +13,7 @@ from pydantic import AfterValidator, Field
 
 from synapsis import AppConfig, AppError, Model, NotFound, Ok, Err, Result, SQLite, controller, create_app, get, post
 from synapsis.testing import client, memory_database
-from synapsis.validators import is_email, is_url
+from synapsis.validators import is_email, is_given, is_url
 
 
 class Signup(Model):
@@ -22,6 +22,7 @@ class Signup(Model):
     age: Annotated[int, Ge(18), Le(99)]
     code: Annotated[str, Field(pattern=r"^[A-Z]+$")]
     site: Annotated[str | None, AfterValidator(is_url)] = None
+    note: Annotated[str, AfterValidator(is_given)]
 
 
 @controller("/signups")
@@ -45,7 +46,7 @@ class Config(AppConfig):
     connections = [SQLite("unused.db")]
 
 
-GOOD = {"email": "a@b.co", "name": "Anna", "age": 30, "code": "ABC"}
+GOOD = {"email": "a@b.co", "name": "Anna", "age": 30, "code": "ABC", "note": "x"}
 
 # (what is sent, the status, the body): the same list as errors.test.ts
 BODIES = [
@@ -54,6 +55,7 @@ BODIES = [
         {"field": "code", "rule": "required", "message": "code is required"},
         {"field": "email", "rule": "required", "message": "email is required"},
         {"field": "name", "rule": "required", "message": "name is required"},
+        {"field": "note", "rule": "required", "message": "note is required"},
     ]}),
     ({**GOOD, "email": "nope", "name": "Al", "age": 7, "code": "abc", "site": "x"}, 400, {"status": 400, "message": "invalid", "errors": [
         {"field": "age", "rule": "min", "message": "age must be at least 18"},
@@ -70,6 +72,10 @@ BODIES = [
         {"field": "age", "rule": "type", "message": "age must be a whole number"},
         {"field": "email", "rule": "required", "message": "email is required"},
         {"field": "name", "rule": "type", "message": "name must be a text"},
+    ]}),
+    # an empty text under @required is not given: `required`, never `minLength`
+    ({**GOOD, "note": ""}, 400, {"status": 400, "message": "invalid", "errors": [
+        {"field": "note", "rule": "required", "message": "note is required"},
     ]}),
 ]
 

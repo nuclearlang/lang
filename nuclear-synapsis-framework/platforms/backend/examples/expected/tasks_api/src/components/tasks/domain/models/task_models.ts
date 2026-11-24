@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { IsWhole, checkModel } from 'synapsis-nest';
 
 /** What the API receives to create a task. */
@@ -62,7 +62,7 @@ export class Removed {
 /** What the API receives to create a project. */
 export class NewProject {
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   @MaxLength(100)
   name!: string;
 

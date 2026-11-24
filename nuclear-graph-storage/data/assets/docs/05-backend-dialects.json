@@ -767,14 +767,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.07b86d",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.5294ba",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.3 Model",
    "summary": "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`: its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's (ADR-synapsis-0012); it reads either name.",
    "body": [
     "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:",
     "its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's",
-    "(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = \"\")` built in code is checked by pydantic and raises its `ValidationError`. An optional field left empty is `None`, written `null` in the answer, never absent.",
+    "(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required` (the runtime's `AfterValidator(is_given)`: an empty text answers `required`), `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 400 with the reasons, the platform's answer in every dialect (the runtime replaces FastAPI's 422). Nothing converts a value: the runtime's `Model` takes pydantic's conversions away (a text is never a number or a boolean, a number is never a `DateTime`; `30.0` is a whole number). `NewCharacter(name = \"\")` built in code is checked by pydantic and raises its `ValidationError`. An optional field left empty is `None`, written `null` in the answer, never absent.",
     "",
     "```nuclear",
     "model NewCharacter",
@@ -787,13 +787,7 @@
     "```",
     "",
     "```python",
-    "from __future__ import annotations",
-    "",
-    "from annotated_types import MaxLen, MinLen",
-    "from pydantic import AfterValidator",
-    "from synapsis import Model",
-    "from synapsis.validators import is_email",
-    "from typing import Annotated"
+    "from __future__ import annotations"
    ],
    "platforms": [
     "backend"
@@ -809,11 +803,17 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.c74263",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model.eefa65",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.3 Model",
-   "summary": "class NewCharacter(Model): name: Annotated[str, MinLen(1), MaxLen(100)] status: str = \"alive\" contact: Annotated[str | None, AfterValidator(is_email)] = None A `bigint` or `bigdouble` field reads a JSON text with the language's rules (`synapsis.exact`) and refuses a JSON number (the reader marks…",
+   "summary": "from annotated_types import MaxLen, MinLen from pydantic import AfterValidator from synapsis import Model from synapsis.validators import is_email from typing import Annotated class NewCharacter(Model): name: Annotated[str, MinLen(1), MaxLen(100)] status: str = \"alive\" contact: Annotated[str |…",
    "body": [
+    "from annotated_types import MaxLen, MinLen",
+    "from pydantic import AfterValidator",
+    "from synapsis import Model",
+    "from synapsis.validators import is_email",
+    "from typing import Annotated",
+    "",
     "class NewCharacter(Model):",
     "    name: Annotated[str, MinLen(1), MaxLen(100)]",
     "    status: str = \"alive\"",

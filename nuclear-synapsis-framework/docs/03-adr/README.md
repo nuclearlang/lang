@@ -25,6 +25,7 @@ root) with the next number. An accepted decision is never edited: a change is a 
 | [0011](0011-observability-over-otlp.md) | Observability is a connection over OTLP (`Datadog`, `NewRelic`, `Grafana`, `Otlp`), its spans written at build time; `@untraced` leaves something out | accepted | 2026-11-18 |
 | [0012](0012-one-json-for-every-dialect.md) | A model's JSON has Nuclear's names (camelCase) in every dialect | accepted | 2026-11-18 |
 | [0013](0013-errors-and-openapi-are-nuclears.md) | The body of an error and the OpenAPI document are Nuclear's: each runtime converts what its framework answers, and the API is described once from the contract | accepted | 2026-11-22 |
+| [0014](0014-an-empty-required-text-is-not-given.md) | An empty text under `@required` answers the rule `required`, in every dialect; `@minLength(n)` keeps `minLength` | accepted | 2026-11-24 |
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).

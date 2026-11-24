@@ -691,19 +691,64 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.301bb1",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.6d136c",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "never a number a client would round.",
+   "summary": "`null` is only for an optional field (`T?`); for a required one the rule is `required`.",
    "body": [
+    "`null` is only for an optional field (`T?`); for a required one the rule is `required`. Under `@required` an empty",
+    "text (`\"\"`) is not given either: its rule is `required` too, never `minLength` (ADR-synapsis-0014); an empty list is",
+    "given. A text never holds the",
+    "character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field.",
+    "",
+    "**A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in",
+    "UTF-8; another type, a form among them, answers **415** `unsupported media type`. A body larger than the app's",
+    "`maxBodySize` (§2.8, 1 MB by default) answers **413** `content too large`. JSON that cannot be read (not JSON, not",
+    "UTF-8, `NaN`, nested deeper than 512 levels) answers 400 with the rule `json`; an empty body, or `null`, is `required`;",
+    "one that is not an object is `type`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.6ec808",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.3 Model",
+   "summary": "around it.",
+   "body": [
+    "**A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks",
+    "around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`",
+    "a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`; a",
+    "`bigint` and a `bigdouble` the texts of a body (`?min=0.1`).",
+    "Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the",
+    "method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when",
+    "any is refused, the answer has the reason of each refused one, and the body is read only after they pass.",
+    "",
     "**An exact number is a text in JSON** (`\"price\": \"0.3\"`): its answer is what `toString()` writes (`\"0.3\"`, `\"2.0\"`),",
     "never a number a client would round. In the OpenAPI document it is a `string` with the `pattern` of its text.",
     "`@min(n)` and `@max(n)` of an exact field compare exactly; `n` is a literal of the field's type (`@min(0.01)`,",
     "`@max(12345678901234567890123)`).",
     "",
     "**A model built in code is checked like a body.** `NewTask(title = \"\")` breaks `@minLength(1)` and throws; a use",
-    "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400).",
-    "",
+    "case that lets that error go answers 500 (the body of a request is checked before the use case, and answers 400)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.b480c5",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.3 Model",
+   "summary": "NewTask @minLength(1) @maxLength(200) title: string @min(1) @max(3) priority: int = 2 TaskChanges @minLength(1) title?: string done?: boolean",
+   "body": [
     "```nuclear",
     "NewTask",
     "  @minLength(1)",
@@ -727,37 +772,10 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.504f87",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.c419b2",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "UTF-8; another type, a form among them, answers 415 `unsupported media type`.",
-   "body": [
-    "**A body is JSON.** A request that carries a body sends it as `application/json` (or `application/<name>+json`), in",
-    "UTF-8; another type, a form among them, answers **415** `unsupported media type`. A body larger than the app's",
-    "`maxBodySize` (§2.8, 1 MB by default) answers **413** `content too large`. JSON that cannot be read (not JSON, not",
-    "UTF-8, `NaN`, nested deeper than 512 levels) answers 400 with the rule `json`; an empty body, or `null`, is `required`;",
-    "one that is not an object is `type`.",
-    "",
-    "**A parameter of the path or of the query** has no JSON type: it is a text, converted to its type, without the blanks",
-    "around it. An `int` is digits with an optional sign, within 64 bits (`?page=2`; not `0x1`, `1e0`, `1.0`); a `double`",
-    "a finite decimal number (`1.5`, `-2e3`; not `NaN`, `Infinity`, `0x10`); a `boolean` exactly `true` or `false`; a",
-    "`bigint` and a `bigdouble` the texts of a body (`?min=0.1`).",
-    "Another text is refused with the rule `type`, and so is a parameter given twice. An empty one is not given: the",
-    "method's default, `null` when it is optional (`T?`), else `required`. The parameters are checked before the body: when",
-    "any is refused, the answer has the reason of each refused one, and the body is read only after they pass."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model.ac5b7e",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.3 Model",
-   "summary": "`null` is only for an optional field (`T?`); for a required one the rule is `required`.",
+   "summary": "2.3 Model",
    "body": [
     "| Field | JSON it takes | Refused |",
     "|---|---|---|",
@@ -768,10 +786,7 @@
     "| `DateTime` | a text that is a date and time (`\"2026-03-04T05:06:07Z\"`) | a number, a text that is no date |",
     "| `bigint` | a text of `text.toBigInt()`: a sign and digits (`\"12345678901234567890123\"`) | a number (`5`), another text (`\"5.0\"`), more than 1000 digits |",
     "| `bigdouble` | a text of `text.toBigDouble()`: decimals, an exponent (`\"0.1\"`, `\"-2.5e3\"`) | a number (`0.1`), another text (`\"1.\"`), more than 1000 digits written without the exponent |",
-    "| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |",
-    "",
-    "`null` is only for an optional field (`T?`); for a required one the rule is `required`. A text never holds the",
-    "character U+0000 (a database cannot keep it): a body that has one is refused with the rule `invalid` at its field."
+    "| `T[]` | a list whose items are each a `T` | anything else; an item of another type is named by its place (`tags.1`) |"
    ],
    "platforms": [
     "backend"

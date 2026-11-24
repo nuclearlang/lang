@@ -16452,6 +16452,116 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md#consequences",
+   "type": "adr",
+   "title": "ADR-0014: An empty text under `@required` is not given — Consequences",
+   "summary": "that read the old rule reads the new one.",
+   "body": [
+    "- A body that sends `\"\"` for a required field answers `required` instead of `minLength` in both dialects: a client",
+    "  that read the old rule reads the new one.",
+    "- An empty list under `@required` is accepted by `fastapi` now, as by `nestjs`."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-0014: An empty text under `@required` is not given — Context and problem",
+   "summary": "`@required` on a text was written as a length of at least one character in both backend dialects (`MinLen(1)` in `fastapi`, `@IsNotEmpty()` read as `minLength` 1 in `nestjs`), so `\"\"` answered the rule `minLength` while a missing value or `null` answered `required`.",
+   "body": [
+    "`@required` on a text was written as a length of at least one character in both backend dialects (`MinLen(1)` in",
+    "`fastapi`, `@IsNotEmpty()` read as `minLength` 1 in `nestjs`), so `\"\"` answered the rule `minLength` while a missing",
+    "value or `null` answered `required`. The reference of the backend said only the second. In the factory's baseline",
+    "runs (spec 025) the agents read `@required` as `required` three times out of three, wrote the tests for it, and the",
+    "run stopped: a client reads it so too. `@minLength(1)` could not be told from `@required` in the answer either."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md#decision",
+   "type": "adr",
+   "title": "ADR-0014: An empty text under `@required` is not given — Decision",
+   "summary": "1. `\"\"` under `@required` answers the rule `required` (`<field> is required`), as a missing value and `null` do, in every dialect.",
+   "body": [
+    "1. **`\"\"` under `@required` answers the rule `required`** (`<field> is required`), as a missing value and `null` do,",
+    "   in every dialect. `@minLength(n)` keeps the rule `minLength`, `@minLength(1)` too.",
+    "2. `fastapi`: `@required` is the runtime's own check (`AfterValidator(is_given)`), never `MinLen(1)`; `nestjs`:",
+    "   `@IsNotEmpty()` answers `required`. Both runtimes test the same case (`test_errors.py`, `errors.test.ts`), and the",
+    "   conformance example (`tasks_api`) asks it of both dialects.",
+    "3. `@required` refuses an empty text only: an empty list is given (as `nestjs` always did; `fastapi` refused it as a",
+    "   length before)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/0014-an-empty-required-text-is-not-given.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/03-adr/README.md#decisions-of-the-framework.44c484",
+   "type": "adr",
+   "title": "Decisions of the framework",
+   "summary": "Decisions of the framework",
+   "body": [
+    "| [0008](0008-websockets-are-a-connection.md) | WebSockets are a connection of the configuration; the repository's adapter carries its calls; `publish` reaches the subscribed clients | accepted | 2026-11-18 |",
+    "| [0009](0009-a-web-app-mounts-in-a-host-page.md) | A web app also builds as a bundle that mounts in a host's page (`mount(element, host)`), with the host's theme and its bridge | accepted | 2026-11-18 |",
+    "| [0010](0010-a-backend-is-tested-as-its-clients-call-it.md) | A backend's tests call the app over HTTP and its WebSocket (`appClient()`), with their own environment (`testEnv`) | accepted | 2026-11-18 |",
+    "| [0011](0011-observability-over-otlp.md) | Observability is a connection over OTLP (`Datadog`, `NewRelic`, `Grafana`, `Otlp`), its spans written at build time; `@untraced` leaves something out | accepted | 2026-11-18 |",
+    "| [0012](0012-one-json-for-every-dialect.md) | A model's JSON has Nuclear's names (camelCase) in every dialect | accepted | 2026-11-18 |",
+    "| [0013](0013-errors-and-openapi-are-nuclears.md) | The body of an error and the OpenAPI document are Nuclear's: each runtime converts what its framework answers, and the API is described once from the contract | accepted | 2026-11-22 |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/03-adr/README.md#decisions-of-the-framework.4d6e1e",
+   "type": "adr",
+   "title": "Decisions of the framework",
+   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
+   "body": [
+    "| [0014](0014-an-empty-required-text-is-not-given.md) | An empty text under `@required` answers the rule `required`, in every dialect; `@minLength(n)` keeps `minLength` | accepted | 2026-11-24 |",
+    "",
+    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
+    "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/03-adr/README.md#decisions-of-the-framework.5ea903",
    "type": "adr",
    "title": "Decisions of the framework",
@@ -16486,32 +16596,6 @@
     "Cited as `ADR-synapsis-NNNN`. A new decision copies the template of the tree (`docs/03-adr/0000-template.md` at the",
     "root) with the next number. An accepted decision is never edited: a change is a new one, and the old one is marked",
     "`superseded by ADR-synapsis-NNNN`. The decisions of one platform are in that platform's own `docs/03-adr/`."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclear-synapsis-framework/docs/03-adr/README.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/docs/03-adr/README.md#decisions-of-the-framework.c4a6f6",
-   "type": "adr",
-   "title": "Decisions of the framework",
-   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
-   "body": [
-    "| [0008](0008-websockets-are-a-connection.md) | WebSockets are a connection of the configuration; the repository's adapter carries its calls; `publish` reaches the subscribed clients | accepted | 2026-11-18 |",
-    "| [0009](0009-a-web-app-mounts-in-a-host-page.md) | A web app also builds as a bundle that mounts in a host's page (`mount(element, host)`), with the host's theme and its bridge | accepted | 2026-11-18 |",
-    "| [0010](0010-a-backend-is-tested-as-its-clients-call-it.md) | A backend's tests call the app over HTTP and its WebSocket (`appClient()`), with their own environment (`testEnv`) | accepted | 2026-11-18 |",
-    "| [0011](0011-observability-over-otlp.md) | Observability is a connection over OTLP (`Datadog`, `NewRelic`, `Grafana`, `Otlp`), its spans written at build time; `@untraced` leaves something out | accepted | 2026-11-18 |",
-    "| [0012](0012-one-json-for-every-dialect.md) | A model's JSON has Nuclear's names (camelCase) in every dialect | accepted | 2026-11-18 |",
-    "| [0013](0013-errors-and-openapi-are-nuclears.md) | The body of an error and the OpenAPI document are Nuclear's: each runtime converts what its framework answers, and the API is described once from the contract | accepted | 2026-11-22 |",
-    "",
-    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
-    "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
    ],
    "agents": false,
    "sources": [
