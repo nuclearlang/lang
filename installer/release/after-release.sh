@@ -21,7 +21,9 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
   RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); BOLD=$(printf '\033[1m'); OFF=$(printf '\033[0m')
 else RED=""; GREEN=""; BOLD=""; OFF=""; fi
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/nuclear-after-release.XXXXXX")
-trap 'rm -rf "$WORK"' EXIT
+# what the fake installs left running (a detached `nuclear update --when-idle` wrote the folder again after it was
+# removed: five of 1.3 GB stayed on /tmp) is stopped first
+trap 'pkill -f "$WORK/" 2>/dev/null; sleep 1; rm -rf "$WORK"' EXIT
 trap 'exit 130' INT TERM HUP  # a signal still runs the EXIT trap: the work folder never stays
 # the work folders of runs that were killed before this rule (1.3 GB each on a shared tmpfs)
 find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'nuclear-after-release.*' ! -path "$WORK" -mmin +180 -exec rm -rf {} + 2>/dev/null || true
@@ -98,7 +100,7 @@ done
 # --- 4. the user's path, in a fake HOME ---
 H="$WORK/home"
 in_home() {
-  env -i PATH="/usr/bin:/bin:/usr/local/bin" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" \
+  env -i PATH="/usr/bin:/bin:/usr/local/bin" NUCLEAR_AUTO_UPDATE=0 HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" \
     XDG_STATE_HOME="$H/.local/state" XDG_DATA_HOME="$H/.local/share" NO_COLOR=1 "$@" < /dev/null
 }
 mkdir -p "$H"
