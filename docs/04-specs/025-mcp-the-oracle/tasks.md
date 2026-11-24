@@ -133,7 +133,9 @@ now is what the platform cannot do yet, not the factory's context.
 
 ## Phase 4 — The documents and the local models
 
-- [ ] T4.1 agent: the oracle's rule in the NuclearLang section of `AGENTS.md` and in the context documents'
-      `docs/README.md`; the architecture kept in `02-architecture/overview.md`; `nuclear agent init` for old projects.
+- [x] T4.1 agent: the oracle's rule in the NuclearLang section of `AGENTS.md`, in the project's `AGENTS.md` rules
+      and in `docs/README.md` (its section between the markers, one text: `nuclear_codegen::context::oracle_section`);
+      the architecture kept in `02-architecture/overview.md` (`context-docs`); `nuclear agent init` adds the section to
+      an older project's `docs/README.md`, the user's text kept; the skill says it too.
 - [ ] T4.2 agent: the knowledge base's rows and its guide for agents.
 - [ ] T4.3 agent: a factory step on gemma4:26b with a 32 768-token window, measured.

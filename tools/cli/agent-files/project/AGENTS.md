@@ -4,8 +4,13 @@
 This project is written in NuclearLang (`.nuc`), dialect `{dialect}`. Its syntax is not TypeScript, Dart nor Python,
 and nothing about it is in your training: learn it from the installation, never from guesses or other folders.
 
-- With the `nuclear` MCP server: call `nuclear_start` first (what Nuclear is, the rules, the work cycle, the atlas of
-  every topic), then `nuclear_doc(<topic>)`. Without it: `nuclear help start`, `nuclear help atlas`.
+- The `nuclear` MCP server is your oracle: ask it before you open a file. Call `nuclear_start` first (what Nuclear
+  is, the rules, the work cycle, the atlas of every topic), then `nuclear_doc(<topic>)`; this project's map (its
+  components, their pieces by kind and file, the generators) is `project_inspect`. Without it: `nuclear help start`,
+  `nuclear help atlas`.
+- This project's `docs/` hold only what is its own: its architecture (its components' layers, for example
+  presentation, domain and data, and where each piece goes), its business, its decisions, its conventions. Never
+  copy Nuclear into them: the oracle answers it for the installed version.
 - Size each request first (`nuclear help task-size`): small (≤ 3 files, ≤ 100 lines) and medium (≤ 10 files,
   ≤ 400 lines) without a new feature are yours to do; a new feature, more, or several specs: propose Nuclear Builder
   with your count, and let the user decide.

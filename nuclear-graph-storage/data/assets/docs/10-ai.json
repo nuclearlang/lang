@@ -20197,16 +20197,25 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.52a8cf",
+   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.d4c829",
    "type": "readme",
    "title": "AGENTS — NuclearLang",
-   "summary": "`migration_inspect`, then `graph_strategy(\"migrate a project into Nuclear\")`), never line by line.",
+   "summary": "is, the rules, the work cycle, the atlas of every topic), then `nuclear_doc(<topic>)`; this project's map (its components, their pieces by kind and file, the generators) is `project_inspect`.",
    "body": [
-    "- A project of another technology is migrated by reading it and rewriting it in Nuclear with the tools (MCP",
-    "  `migration_inspect`, then `graph_strategy(\"migrate a project into Nuclear\")`), never line by line.",
-    "- Never change Nuclear (the compiler, a dialect, a template, a runtime, the installation): a limit is reported, not",
-    "  patched. The installation is sealed and a changed one builds nothing (N0226).",
-    "<!-- /nuclearlang -->"
+    "- The `nuclear` MCP server is your oracle: ask it before you open a file. Call `nuclear_start` first (what Nuclear",
+    "  is, the rules, the work cycle, the atlas of every topic), then `nuclear_doc(<topic>)`; this project's map (its",
+    "  components, their pieces by kind and file, the generators) is `project_inspect`. Without it: `nuclear help start`,",
+    "  `nuclear help atlas`.",
+    "- This project's `docs/` hold only what is its own: its architecture (its components' layers, for example",
+    "  presentation, domain and data, and where each piece goes), its business, its decisions, its conventions. Never",
+    "  copy Nuclear into them: the oracle answers it for the installed version.",
+    "- Size each request first (`nuclear help task-size`): small (≤ 3 files, ≤ 100 lines) and medium (≤ 10 files,",
+    "  ≤ 400 lines) without a new feature are yours to do; a new feature, more, or several specs: propose Nuclear Builder",
+    "  with your count, and let the user decide.",
+    "- This project's own documents (`docs/README.md`) win over the default way of documenting (`nuclear help context-docs`).",
+    "- Before writing code, read the sheet: `nuclear spec --brief --dialect {dialect}`.",
+    "- After each change: `{check}` must report no errors; fix exactly what each error says (most carry a `fix`).",
+    "- Look up instead of guessing: an API `nuclear defs show <Name> --dialect {dialect}`; a kind or decorator"
    ],
    "sources": [
     "tools/cli/agent-files/project/AGENTS.md"
@@ -20218,24 +20227,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.d8df4b",
+   "id": "doc:tools/cli/agent-files/project/AGENTS.md#nuclearlang.e22dbe",
    "type": "readme",
    "title": "AGENTS — NuclearLang",
-   "summary": "every topic), then `nuclear_doc(<topic>)`.",
+   "summary": "`nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.",
    "body": [
-    "- With the `nuclear` MCP server: call `nuclear_start` first (what Nuclear is, the rules, the work cycle, the atlas of",
-    "  every topic), then `nuclear_doc(<topic>)`. Without it: `nuclear help start`, `nuclear help atlas`.",
-    "- Size each request first (`nuclear help task-size`): small (≤ 3 files, ≤ 100 lines) and medium (≤ 10 files,",
-    "  ≤ 400 lines) without a new feature are yours to do; a new feature, more, or several specs: propose Nuclear Builder",
-    "  with your count, and let the user decide.",
-    "- This project's own documents (`docs/README.md`) win over the default way of documenting (`nuclear help context-docs`).",
-    "- Before writing code, read the sheet: `nuclear spec --brief --dialect {dialect}`.",
-    "- After each change: `{check}` must report no errors; fix exactly what each error says (most carry a `fix`).",
-    "- Look up instead of guessing: an API `nuclear defs show <Name> --dialect {dialect}`; a kind or decorator",
-    "  `nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.",
+    "`nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.",
     "{synapsis}{packages}- Never edit generated code ({generated}): change the `.nuc` files.",
     "- Make it with the tools: `nuclear gen`, `nuclear make`, the MCP server, `nuclear add` for a library. Never write",
-    "  target code for a feature; when a tool cannot do something, say so instead of working around it."
+    "  target code for a feature; when a tool cannot do something, say so instead of working around it.",
+    "- A project of another technology is migrated by reading it and rewriting it in Nuclear with the tools (MCP",
+    "  `migration_inspect`, then `graph_strategy(\"migrate a project into Nuclear\")`), never line by line.",
+    "- Never change Nuclear (the compiler, a dialect, a template, a runtime, the installation): a limit is reported, not",
+    "  patched. The installation is sealed and a changed one builds nothing (N0226).",
+    "<!-- /nuclearlang -->"
    ],
    "sources": [
     "tools/cli/agent-files/project/AGENTS.md"
@@ -20271,7 +20276,9 @@
    "summary": "New to Nuclear: `nuclear help start` (MCP `nuclear_start`) first: what it is, the rules, the cycle; then `nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`).",
    "body": [
     "New to Nuclear: `nuclear help start` (MCP `nuclear_start`) first: what it is, the rules, the cycle; then",
-    "`nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`).",
+    "`nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`). The MCP server is",
+    "the oracle: ask it before you open a file (a project's map is `project_inspect`); a project's `docs/` hold its own",
+    "architecture and decisions, never Nuclear itself.",
     "",
     "```sh",
     "nuclear spec --brief --dialect flutter     # Synapsis app (config.nuc + main.nuc, no nuclear.toml)",

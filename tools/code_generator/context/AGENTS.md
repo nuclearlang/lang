@@ -24,6 +24,8 @@ TODO(user): one or two sentences: what it is, for whom, and the problem it solve
 - A structural decision (a library, a pattern, infrastructure) is an ADR in `docs/03-adr/`.
 - A changed API or contract updates `docs/02-architecture/integrations.md`.
 - What is not documented and cannot be read from the code is asked, never invented.
+- Nuclear itself is never written in `docs/`: the MCP server answers it (the NuclearLang section below); `docs/`
+  holds this project's architecture and what is only its own (`docs/README.md`).
 - A change is done when its tests pass and the documents it touches say it, in the same change.
 
 ## Documents (read by task)

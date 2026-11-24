@@ -146,8 +146,10 @@
    "id": "concept:mcp",
    "type": "concept",
    "title": "The MCP of NuclearLang: what it is and how it works",
-   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang: it gives the client the generators, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools.",
+   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang: it gives the client the generators, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools. It is the agent's oracle.",
    "body": [
+    "**The oracle.** What Nuclear is, its rules, the platform and a project's map (`project_inspect`) are asked of the server before a file is opened by hand, and never copied into a project's documents: those hold the project's own architecture (its components' layers, for example presentation, domain and data), its business and its decisions (spec 025).",
+    "",
     "**How it works.** The AI client starts `nuclear-mcp` and talks to it over stdio. The server offers tools and a set of instructions; the instructions send a model that knows nothing about Nuclear to `nuclear_start` first (what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic, each read with `nuclear_doc`). The model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`) and answers text the model reads.",
     "",
     "**Connect it.**",

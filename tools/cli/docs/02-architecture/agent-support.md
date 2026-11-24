@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-24
 related: [tools/cli/src/agent.rs, tools/cli/agent-files/, tools/cli/docs/03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md]
 ---
 # What a project and a machine get for AI agents
@@ -42,7 +42,7 @@ default way of documenting.
 
 Run in a project folder; `nuclear agent init` and every `nuclear new` call it. Inside a project of the framework
 (`framework::agent_init`) it runs in the same process: starting `nuclear agent init` again there would be claimed by
-the framework again, a loop. It writes four things and keeps
+the framework again, a loop. It writes four things (five in a project with context documents) and keeps
 everything else of the project's files:
 
 1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.
@@ -52,6 +52,9 @@ everything else of the project's files:
 3. **`.cursor/rules/nuclear.mdc`**: the Cursor rule for `*.nuc`.
 4. **`.claude/settings.json`**: a `PostToolUse` hook with the matcher `Edit|Write|MultiEdit` and the command
    `nuclear agent hook`, added once; the other hooks and settings stay.
+5. **`docs/README.md`**, only when the project has it: the section *What is not written here: the oracle* between
+   the same markers (spec 025: Nuclear is the MCP server's, the architecture is the project's), the text `nuclear new`
+   writes (`nuclear_codegen::context::oracle_section`), replaced or appended; what the user wrote outside it stays.
 
 The dialect: `--dialect`, else the one of `nuclear.toml`, else the one `config.nuc` names, else (a `main.nuc` alone,
 or a `config.nuc` without the `synapsis(...)` line) the mobile platform's default dialect; with none of them it asks

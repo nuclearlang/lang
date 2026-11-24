@@ -3051,29 +3051,26 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.4ff17a",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.8779d5",
    "type": "context",
    "title": "What a project and a machine get for AI agents — `nuclear agent init [--dialect <d>]` (`agent::init`)",
-   "summary": "Run in a project folder; `nuclear agent init` and every `nuclear new` call it.",
+   "summary": "The dialect: `--dialect`, else the one of `nuclear.toml`, else the one `config.nuc` names, else (a `main.nuc` alone, or a `config.nuc` without the `synapsis(...)` line) the mobile platform's default dialect; with none of them it asks for `--dialect`.",
    "body": [
-    "Run in a project folder; `nuclear agent init` and every `nuclear new` call it. Inside a project of the framework",
-    "(`framework::agent_init`) it runs in the same process: starting `nuclear agent init` again there would be claimed by",
-    "the framework again, a loop. It writes four things and keeps",
-    "everything else of the project's files:",
-    "",
-    "1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.",
-    "   A file that has the markers gets the section replaced; one without them gets it appended; a missing one is",
-    "   created.",
-    "2. **`CLAUDE.md`**: `@AGENTS.md`, added once.",
-    "3. **`.cursor/rules/nuclear.mdc`**: the Cursor rule for `*.nuc`.",
-    "4. **`.claude/settings.json`**: a `PostToolUse` hook with the matcher `Edit|Write|MultiEdit` and the command",
-    "   `nuclear agent hook`, added once; the other hooks and settings stay.",
-    "",
     "The dialect: `--dialect`, else the one of `nuclear.toml`, else the one `config.nuc` names, else (a `main.nuc` alone,",
     "or a `config.nuc` without the `synapsis(...)` line) the mobile platform's default dialect; with none of them it asks",
     "for `--dialect`.",
     "",
-    "The templates have five placeholders:"
+    "The templates have five placeholders:",
+    "",
+    "| Placeholder | Filled with |",
+    "|---|---|",
+    "| `{dialect}` | the dialect |",
+    "| `{check}` | `nuclear check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |",
+    "| `{synapsis}` | in a Synapsis project: create each piece with `nuclear make`, then `nuclear analyze` and `nuclear test` |",
+    "| `{packages}` | in a Synapsis project: a missing library is `nuclear add <package>`, never installed by hand in `build/` |",
+    "| `{generated}` | what is never edited: `build/` (and, outside Synapsis, the `.ts` / `.dart` / `.py` built from the `.nuc`) |",
+    "",
+    "Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`)."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
@@ -3085,20 +3082,26 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.a15f56",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.d32863",
    "type": "context",
    "title": "What a project and a machine get for AI agents — `nuclear agent init [--dialect <d>]` (`agent::init`)",
-   "summary": "Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`).",
+   "summary": "Run in a project folder; `nuclear agent init` and every `nuclear new` call it.",
    "body": [
-    "| Placeholder | Filled with |",
-    "|---|---|",
-    "| `{dialect}` | the dialect |",
-    "| `{check}` | `nuclear check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |",
-    "| `{synapsis}` | in a Synapsis project: create each piece with `nuclear make`, then `nuclear analyze` and `nuclear test` |",
-    "| `{packages}` | in a Synapsis project: a missing library is `nuclear add <package>`, never installed by hand in `build/` |",
-    "| `{generated}` | what is never edited: `build/` (and, outside Synapsis, the `.ts` / `.dart` / `.py` built from the `.nuc`) |",
+    "Run in a project folder; `nuclear agent init` and every `nuclear new` call it. Inside a project of the framework",
+    "(`framework::agent_init`) it runs in the same process: starting `nuclear agent init` again there would be claimed by",
+    "the framework again, a loop. It writes four things (five in a project with context documents) and keeps",
+    "everything else of the project's files:",
     "",
-    "Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`)."
+    "1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.",
+    "   A file that has the markers gets the section replaced; one without them gets it appended; a missing one is",
+    "   created.",
+    "2. **`CLAUDE.md`**: `@AGENTS.md`, added once.",
+    "3. **`.cursor/rules/nuclear.mdc`**: the Cursor rule for `*.nuc`.",
+    "4. **`.claude/settings.json`**: a `PostToolUse` hook with the matcher `Edit|Write|MultiEdit` and the command",
+    "   `nuclear agent hook`, added once; the other hooks and settings stay.",
+    "5. **`docs/README.md`**, only when the project has it: the section *What is not written here: the oracle* between",
+    "   the same markers (spec 025: Nuclear is the MCP server's, the architecture is the project's), the text `nuclear new`",
+    "   writes (`nuclear_codegen::context::oracle_section`), replaced or appended; what the user wrote outside it stays."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
@@ -5450,13 +5453,15 @@
    "id": "doc:tools/code_generator/context/AGENTS.md#rules",
    "type": "readme",
    "title": "{{name}} — Rules",
-   "summary": "Rules",
+   "summary": "holds this project's architecture and what is only its own (`docs/README.md`).",
    "body": [
     "- Never commit secrets.",
     "- Before building a feature, read or write its spec in `docs/04-specs/`.",
     "- A structural decision (a library, a pattern, infrastructure) is an ADR in `docs/03-adr/`.",
     "- A changed API or contract updates `docs/02-architecture/integrations.md`.",
     "- What is not documented and cannot be read from the code is asked, never invented.",
+    "- Nuclear itself is never written in `docs/`: the MCP server answers it (the NuclearLang section below); `docs/`",
+    "  holds this project's architecture and what is only its own (`docs/README.md`).",
     "- A change is done when its tests pass and the documents it touches say it, in the same change."
    ],
    "sources": [
@@ -6119,6 +6124,32 @@
     "project needs.",
     "",
     "The numbered prefixes only fix the reading order, from the general to the concrete.",
+    "",
+    "<!-- nuclearlang -->"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/README.md#what-is-not-written-here-the-oracle",
+   "type": "readme",
+   "title": "Context documents — What is not written here: the oracle",
+   "summary": "NuclearLang's knowledge is never copied into these documents: what Nuclear is, its syntax, kinds, words, commands and how-tos, what the platform means, the factory's specs, runs and teams, and this project's map are answered by the `nuclear` MCP server, the oracle (`nuclear_start`, `nuclear_doc`,…",
+   "body": [
+    "NuclearLang's knowledge is never copied into these documents: what Nuclear is, its syntax, kinds, words, commands",
+    "and how-tos, what the platform means, the factory's specs, runs and teams, and this project's map are answered by",
+    "the `nuclear` MCP server, the oracle (`nuclear_start`, `nuclear_doc`, `project_inspect`; without it, `nuclear help`),",
+    "always for the installed version. These documents hold what only this project has: **its architecture** (its",
+    "components and the layers of each as its platform lays them out, for example presentation, domain and data; where",
+    "each piece goes; its C4 context and containers; its critical flows: `02-architecture/`), its business and domain,",
+    "its product, its decisions and its conventions.",
+    "<!-- /nuclearlang -->",
     "",
     "| Folder | Kind | What it holds | Changes? |",
     "|---|---|---|---|",
@@ -6866,9 +6897,16 @@
    "body": [
     "- `AGENTS.md` ends with a section between `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`: how an agent learns",
     "  Nuclear (the MCP server's `nuclear_start`) and checks its work. `nuclear agent init` refreshes only that section.",
-    "- `02-architecture/overview.md` holds the platform's layout: where each kind of piece goes. The meaning of each",
-    "  kind is the platform's topic (`nuclear help <platform>`), never copied into the project: it always comes from the",
-    "  installed version.",
+    "- **The MCP server is the oracle; the architecture is the project's.** Nothing of NuclearLang is copied into the",
+    "  documents (what Nuclear is, its syntax, kinds, words, commands and how-tos, the platform's meaning, the factory's",
+    "  specs, runs and teams, the project's map): an agent asks the `nuclear` MCP server for it (`nuclear_start`,",
+    "  `nuclear_doc`, `project_inspect`), always for the installed version. What only the project has is written:",
+    "  its architecture first. `docs/README.md` says it between `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`, and",
+    "  `nuclear agent init` refreshes that section in a project made before it.",
+    "- `02-architecture/overview.md` holds the project's architecture: its components and the layers of each as its",
+    "  platform lays them out (for example presentation, domain and data), where each kind of piece goes, its C4 views",
+    "  and flows. The meaning of each kind is the platform's topic (`nuclear help <platform>`), never copied into the",
+    "  project.",
     "- `02-architecture/dependencies.md`: the libraries are in `config.nuc` (`nuclear add <package>`)."
    ],
    "sources": [

@@ -68,14 +68,22 @@ pub fn init(dir: &Path, dialect: Option<&str>, mobile_default: Option<String>) -
     let section = fill(AGENTS);
     let path = dir.join("AGENTS.md");
     let text = match std::fs::read_to_string(&path) {
-        Ok(old) => match (old.find(START), old.find(END)) {
-            (Some(a), Some(b)) if a < b => format!("{}{}{}", &old[..a], section.trim_end(), &old[b + END.len()..]),
-            _ => format!("{}\n\n{section}", old.trim_end()),
-        },
+        Ok(old) => refreshed(&old, &section),
         Err(_) => format!("# AGENTS.md\n\n{section}"),
     };
     write(&path, &text)?;
     done.push("AGENTS.md (Codex, OpenCode, Cursor and other agents)".to_string());
+
+    // the context documents' rule (spec 025): Nuclear is the oracle's, the architecture the project's; only where the
+    // project has those documents, never written over what the user wrote outside the markers
+    let path = dir.join("docs/README.md");
+    if let Ok(old) = std::fs::read_to_string(&path) {
+        let oracle = nuclear_codegen::context::oracle_section();
+        if !oracle.is_empty() {
+            write(&path, &refreshed(&old, oracle))?;
+            done.push("docs/README.md (what the documents hold: the oracle answers Nuclear)".to_string());
+        }
+    }
 
     let path = dir.join("CLAUDE.md");
     match std::fs::read_to_string(&path) {
@@ -97,6 +105,14 @@ pub fn init(dir: &Path, dialect: Option<&str>, mobile_default: Option<String>) -
     write(&path, &(serde_json::to_string_pretty(&settings).unwrap() + "\n"))?;
     done.push(".claude/settings.json (hook: every edited .nuc is checked)".to_string());
     Ok(done)
+}
+
+/// `old` with its NuclearLang section (between `START` and `END`) replaced by `section`, or `section` added at its end.
+fn refreshed(old: &str, section: &str) -> String {
+    match (old.find(START), old.find(END)) {
+        (Some(a), Some(b)) if a < b => format!("{}{}{}", &old[..a], section.trim_end(), &old[b + END.len()..]),
+        _ => format!("{}\n\n{}\n", old.trim_end(), section.trim_end()),
+    }
 }
 
 /// Adds the PostToolUse hook once; the other hooks and settings stay.
@@ -204,6 +220,26 @@ mod tests {
         assert_eq!(settings["hooks"]["PostToolUse"].as_array().unwrap().len(), 1);
         assert_eq!(std::fs::read_to_string(dir.join("CLAUDE.md")).unwrap(), "@AGENTS.md\n");
         assert!(dir.join(".cursor/rules/nuclear.mdc").is_file());
+        // a project without context documents gets none
+        assert!(!dir.join("docs/README.md").exists());
+    }
+
+    /// Spec 025: a project made before the oracle's rule gets it in its `docs/README.md` once, what the user wrote
+    /// there kept, and the section of `AGENTS.md` names the oracle.
+    #[test]
+    fn init_adds_the_oracles_rule_to_an_older_projects_documents() {
+        let dir = std::env::temp_dir().join(format!("nuclear-agent-oracle-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("docs")).unwrap();
+        std::fs::write(dir.join("main.nuc"), "main() void\n  print(1)\n").unwrap();
+        std::fs::write(dir.join("docs/README.md"), "# Context documents\n\nOur own way.\n").unwrap();
+        init(&dir, None, Some("flutter".into())).unwrap();
+        init(&dir, None, Some("flutter".into())).unwrap();
+        let readme = std::fs::read_to_string(dir.join("docs/README.md")).unwrap();
+        assert!(readme.starts_with("# Context documents\n\nOur own way."), "{readme}");
+        assert_eq!(readme.matches(START).count(), 1, "{readme}");
+        assert!(readme.contains("its architecture"), "{readme}");
+        assert!(std::fs::read_to_string(dir.join("AGENTS.md")).unwrap().contains("is your oracle"));
     }
 
     /// The hook checks a project as `nuclear check` does: a name of the project's own type definitions

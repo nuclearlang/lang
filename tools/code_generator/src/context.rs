@@ -37,6 +37,18 @@ const TEMPLATES: &[(&str, &str)] = &[
     ("docs/06-runbooks/incidents.md", include_str!("../context/docs/06-runbooks/incidents.md")),
 ];
 
+/// The section of `docs/README.md` that says what the documents never hold (spec 025: Nuclear is the MCP server's,
+/// the oracle; the architecture is the project's), between its markers: `nuclear agent init` refreshes it in a
+/// project made before it, the same text `nuclear new` writes.
+pub fn oracle_section() -> &'static str {
+    let readme = TEMPLATES.iter().find(|(p, _)| *p == "docs/README.md").map(|(_, t)| *t).unwrap_or_default();
+    let (start, end) = ("<!-- nuclearlang -->", "<!-- /nuclearlang -->");
+    match (readme.find(start), readme.find(end)) {
+        (Some(a), Some(b)) if a < b => &readme[a..b + end.len()],
+        _ => "",
+    }
+}
+
 /// What is known of a new project.
 pub struct Project<'a> {
     pub name: &'a str,
@@ -143,6 +155,15 @@ fn civil(days: i64) -> (i64, u32, u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Spec 025: the README's section that sends Nuclear to the oracle and keeps the architecture, whole between its
+    /// markers, what `nuclear agent init` refreshes.
+    #[test]
+    fn the_oracle_section_is_the_readmes_between_its_markers() {
+        let s = oracle_section();
+        assert!(s.starts_with("<!-- nuclearlang -->") && s.ends_with("<!-- /nuclearlang -->"), "{s}");
+        assert!(s.contains("MCP server") && s.contains("its architecture") && s.contains("project_inspect"), "{s}");
+    }
 
     #[test]
     fn civil_dates() {

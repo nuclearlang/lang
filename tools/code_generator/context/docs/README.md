@@ -6,6 +6,18 @@ project needs.
 
 The numbered prefixes only fix the reading order, from the general to the concrete.
 
+<!-- nuclearlang -->
+## What is not written here: the oracle
+
+NuclearLang's knowledge is never copied into these documents: what Nuclear is, its syntax, kinds, words, commands
+and how-tos, what the platform means, the factory's specs, runs and teams, and this project's map are answered by
+the `nuclear` MCP server, the oracle (`nuclear_start`, `nuclear_doc`, `project_inspect`; without it, `nuclear help`),
+always for the installed version. These documents hold what only this project has: **its architecture** (its
+components and the layers of each as its platform lays them out, for example presentation, domain and data; where
+each piece goes; its C4 context and containers; its critical flows: `02-architecture/`), its business and domain,
+its product, its decisions and its conventions.
+<!-- /nuclearlang -->
+
 | Folder | Kind | What it holds | Changes? |
 |---|---|---|---|
 | `00-context/` | State | Vision, glossary, domain | Updated |

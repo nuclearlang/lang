@@ -53,7 +53,14 @@ docs/
 
 - `AGENTS.md` ends with a section between `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`: how an agent learns
   Nuclear (the MCP server's `nuclear_start`) and checks its work. `nuclear agent init` refreshes only that section.
-- `02-architecture/overview.md` holds the platform's layout: where each kind of piece goes. The meaning of each
-  kind is the platform's topic (`nuclear help <platform>`), never copied into the project: it always comes from the
-  installed version.
+- **The MCP server is the oracle; the architecture is the project's.** Nothing of NuclearLang is copied into the
+  documents (what Nuclear is, its syntax, kinds, words, commands and how-tos, the platform's meaning, the factory's
+  specs, runs and teams, the project's map): an agent asks the `nuclear` MCP server for it (`nuclear_start`,
+  `nuclear_doc`, `project_inspect`), always for the installed version. What only the project has is written:
+  its architecture first. `docs/README.md` says it between `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`, and
+  `nuclear agent init` refreshes that section in a project made before it.
+- `02-architecture/overview.md` holds the project's architecture: its components and the layers of each as its
+  platform lays them out (for example presentation, domain and data), where each kind of piece goes, its C4 views
+  and flows. The meaning of each kind is the platform's topic (`nuclear help <platform>`), never copied into the
+  project.
 - `02-architecture/dependencies.md`: the libraries are in `config.nuc` (`nuclear add <package>`).

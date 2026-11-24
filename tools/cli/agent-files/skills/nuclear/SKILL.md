@@ -29,7 +29,9 @@ sealed: a changed one builds nothing (N0226). A limit of Nuclear is said to the 
 ## 1. Load the sheet (once per task, ~3k tokens)
 
 New to Nuclear: `nuclear help start` (MCP `nuclear_start`) first: what it is, the rules, the cycle; then
-`nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`).
+`nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`). The MCP server is
+the oracle: ask it before you open a file (a project's map is `project_inspect`); a project's `docs/` hold its own
+architecture and decisions, never Nuclear itself.
 
 ```sh
 nuclear spec --brief --dialect flutter     # Synapsis app (config.nuc + main.nuc, no nuclear.toml)
