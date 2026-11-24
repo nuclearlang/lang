@@ -8,6 +8,6 @@ import { AppConfig, Connection, Http } from 'synapsis-web';
 export class ProjectConfig extends AppConfig {
   override readonly connections: Connection[] = [
     new Http({ connectionName: 'todos', baseUrl: 'https://jsonplaceholder.typicode.com' }),
-    new Http({ baseUrl: env('API_URL', 'http://localhost:8000/'), timeout: 5000 }),
+    new Http({ baseUrl: env('API_URL', 'http://127.0.0.1:8000/'), timeout: 5000 }),
   ];
 }

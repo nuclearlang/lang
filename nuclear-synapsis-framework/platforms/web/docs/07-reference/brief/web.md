@@ -15,7 +15,7 @@ Environments: `env("NAME", "default")` (`env("NAME")`: required) reads a variabl
 `.env.<environment>`, `.env.local`, `.env.<environment>.local` (later wins), secrets in the keyring, the process last.
 `nuclear env list`, `nuclear env set NAME value --env staging`, `nuclear env set NAME --secret --env production` (value
 from stdin); `nuclear run|build|test|check --env <name>`. They are constants of the build: a secret read by the app is N0311; the backend's url is
-`Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))` (in development, an app of a workspace without `API_URL` calls the workspace's backend at its port of `nuclear projects`).
+`Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))` (in development, an app of a workspace whose `API_URL` is not chosen calls the workspace's backend at the port it serves on: the dialect's, or its `PORT`).
 
 ## Layout and kinds (the folder gives the kind of a declaration without a header word)
 

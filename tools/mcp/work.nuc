@@ -216,8 +216,8 @@ WorkTools(runner: any = runCommand)
 
   // Every Nuclear project of this machine and where it runs in development, whatever its workspace (`nuclear
   // projects --json`): {file, projects: [{name, root, platform, dialect, workspace: {name, root} | null, url, scheme,
-  // host, port}]}. Each project has its own port, chosen once (its dialect's when free, else the next free one) and
-  // used by `nuclear run`; a backend run in development lets every one of these addresses, and any port of localhost,
+  // host, port}]}, only the user's projects. A project's port never moves by itself (its dialect's, or the PORT the
+  // project sets) and is the one `nuclear run` uses; a backend run in development lets every one of these addresses, and any port of localhost,
   // 127.0.0.1 and [::1], call it from a browser (CORS); a web or mobile app of a workspace calls the workspace's
   // backend at its address. Read it to know which port a backend uses, or why a browser app says it has no
   // connection to its server.

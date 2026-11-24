@@ -106,6 +106,13 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
   `.nuclear/logs/run.log` (`RunFollower` of `launch-log.ts`): building, installing, starting the server, ready when its
   address answers; `failed:`, `exited:` or a step silent past its limit (`RUN_STALL_MS`) shows why with *Show the log*
   and *Try again*.
+- ▷ Serve of a backend or web app becomes ■ Stop while its `nuclear run` runs (`Workspace.checkServing`: the shell
+  of the terminal `<project> · run` has a `nuclear` child, `pgrep -P`; on Windows an open terminal counts), followed on
+  the terminals' open and close and every 2 s while such a terminal exists. The context key `nuclear.serving` swaps
+  the editor title's `nuclear.action.serve` for `nuclear.action.stop`; the column's actions get `■ Stop` in place of
+  ▷ Serve. ■ Stop sends Ctrl+C to the terminal and closes it if the server still runs 5 s later. ▷ Serve (its
+  button or `Ctrl+Alt+R`) of a project that already serves never starts a second server: it shows the terminal and
+  offers ■ Stop.
 - A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global
   state, adds the folder and reloads; `activateWorkspace` resumes it.
 - `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the

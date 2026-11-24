@@ -148,10 +148,10 @@ appConfig ProjectConfig
 ```
 
 Environments (spec 021, ADR-platform-0012): the backend of each environment is a variable,
-`Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))`. In `development`, an app of a workspace that gives no
-`API_URL` calls the workspace's backend at its address of the machine's registry of projects (`nuclear projects`; the
-backend's reference, §2.8), and `nuclear run` serves the app on its own port of the registry, an origin a backend in
-development allows.
+`Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))`. In `development`, an app of a workspace whose
+`API_URL` is not chosen (not given, or its `.env` only repeats the code's default) calls the workspace's backend at
+the address it serves on (the backend's reference, §2.8), and `nuclear run` serves the app on its own port (the
+dialect's, or the `PORT` the project sets), an origin a backend in development allows.
 
 `env("NAME", "default")` is a variable of the project; `env("NAME")`, without a default, is required. The
 compiler lists every one in the contract (`env` of `.nuclear/contract.json`: name, default, required, client, where it

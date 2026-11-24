@@ -550,14 +550,16 @@ no backend.
 
 #### Where it runs in development
 
-Each project has its own development port, recorded in the machine's registry of projects the first time it is
-made, built or run, and kept: the dialect's port when no other project of the registry has it, else the next one
-that none has (`nuclear projects` shows them; two backends of one machine never share a port). `nuclear run` serves
-on it, on `127.0.0.1` (`HOST` changes the address; a `PORT` of the command's environment is used instead of the
-registry's for that run). A web or mobile app of a
-workspace built in `development` without an `API_URL` calls the workspace's first backend at its address of the
-registry (`http://127.0.0.1:<port>/`): an app written with `env("API_URL", "http://127.0.0.1:8000/")` follows its
-backend's port. The address is `127.0.0.1`, never `localhost`, which may be `::1` first where the server listens on
+A project's development port is its own and never moves by itself: the dialect's port, or the `PORT` the project
+sets for its environment (`nuclear env set PORT 8010`). `nuclear run` serves on it, on `127.0.0.1` (`HOST` changes
+the address; a `PORT` of the command's environment is used instead for that run); when another process holds the
+port, `nuclear run` stops and says which process (and which Nuclear project) holds it and how to choose another, and
+never serves on a different port. The machine's registry of projects (`nuclear projects`) records each project of
+the person and its address; it never assigns one, and it holds no temporary folder and no project of Nuclear's own.
+A web or mobile app of a workspace built in `development` whose `API_URL` is not chosen (not given, or its `.env`
+only repeats the code's default) calls the workspace's first backend at that backend's address
+(`http://127.0.0.1:<port>/`): an app written with `env("API_URL", "http://127.0.0.1:8000/")` follows its backend's
+port. The address is `127.0.0.1`, never `localhost`, which may be `::1` first where the server listens on
 IPv4 only. The Android emulator reaches the machine at `10.0.2.2`: its `API_URL` is
 `http://10.0.2.2:<port>/` (`nuclear env set API_URL http://10.0.2.2:8000/ --local`).
 

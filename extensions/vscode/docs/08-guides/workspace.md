@@ -91,6 +91,12 @@ Device and API have no key. *Nuclear: Run an Action of the Active Project* lists
   inside it. So ▷ Run, ◉ Debug and ▭ Device add the folder first: the window reloads once, then the action goes on.
 - Backend and web ▷ Serve, ⚒ Build, ✓ Test and ☑ Check run in a terminal named `<project> · <action>` (`nuclear
   run`, `build`, `test`, `check`). When the app has no packages yet, `nuclear install` runs first.
+- While a backend or web app serves, its ▷ Serve becomes ■ Stop (in *Actions* and in the editor title), which ends
+  the server. ▷ Serve again, or `Ctrl+Alt+R`, never starts a second server: it shows the running terminal. The server
+  answers on the app's own port (the dialect's, or `nuclear env set PORT <port>`); a port another program holds is
+  said in the terminal, never replaced by another.
+- Going to the Devices tool and back keeps the editor's sizes: a device keeps the width you gave it beside the code
+  (in the Devices tool, an empty group stays at its left).
 - Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md).
 - Backend ⇄ opens the project's routes in HTTP Connections.
 

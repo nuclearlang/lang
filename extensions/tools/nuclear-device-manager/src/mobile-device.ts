@@ -135,7 +135,8 @@ async function ensureDevice(p: Project): Promise<void> {
     }
     changed = true;
   }
-  if (!changed) return;
+  // a Dart extension not started yet reads the env and the devices when it starts: nothing to restart
+  if (!changed || !vscode.extensions.getExtension('Dart-Code.dart-code')?.isActive) return;
   // the Dart extension's Flutter daemon reads the env and the devices when it starts: restart it (the Dart
   // extension's own silent restart), or ask for a window reload if that command is gone
   try {
@@ -608,13 +609,15 @@ interface EditorLayout {
 
 /** Gives the device's editor group `width` pixels, taken from the other groups in proportion.
  * shortcut: only for groups side by side (no nested splits); a nested layout keeps its sizes. */
-async function setGroupWidth(width: number, column: vscode.ViewColumn | undefined): Promise<void> {
+async function setGroupWidth(width: number, column: vscode.ViewColumn | undefined, fallback = width): Promise<void> {
   const group = vscode.window.tabGroups.all.find((g) => g.viewColumn === column && isDeviceGroup(g));
   const layout = await vscode.commands.executeCommand<EditorLayout>('vscode.getEditorLayout');
   if (!group || !layout || layout.orientation !== 0 || layout.groups.some((g) => g.groups?.length || !g.size)) return;
   const i = group.viewColumn - 1;
   const total = layout.groups.reduce((a, g) => a + g.size!, 0);
   const rest = total - (layout.groups[i]?.size ?? total);
+  // a width that leaves the code almost nothing (a device's width once kept while it was alone) gives way to the default
+  if (width > total * 0.75) width = fallback;
   if (rest <= 0 || width >= total) return;
   const scale = (total - width) / rest;
   await vscode.commands.executeCommand('vscode.setEditorLayout', {
@@ -727,9 +730,17 @@ export class DevicePanel {
     return [...panels].find((p) => !p.running);
   }
 
-  /** Closes every panel but keeps its app running (leaving the mobile workspaces). */
-  static park(): void {
+  /** Closes every panel but keeps its app running (leaving the mobile workspaces), and its editor group with it: a
+   * device's group is locked, and VS Code keeps a locked group standing when it empties; the code closed next then
+   * left that group the only one, and the next device took the whole editor instead of its width beside the code. */
+  static async park(): Promise<void> {
+    const groups = vscode.window.tabGroups.all.filter(isDeviceGroup);
     for (const p of [...panels]) p.view.dispose();
+    // the tabs leave the groups a moment after the panels
+    for (let i = 0; i < 40 && groups.some((g) => g.tabs.length && vscode.window.tabGroups.all.includes(g)); i++) await new Promise((r) => setTimeout(r, 25));
+    const empty = groups.filter((g) => !g.tabs.length && vscode.window.tabGroups.all.includes(g));
+    // the last group of the window cannot close: it stays (VS Code keeps one)
+    if (empty.length && empty.length < vscode.window.tabGroups.all.length) await vscode.window.tabGroups.close(empty, true);
   }
 
   /** Gives the hidden apps a panel again, side by side (entering a mobile workspace or the Devices tool). */
@@ -796,11 +807,12 @@ export class DevicePanel {
     if (!this.widthSet) {
       this.widthSet = true;
       const want = widths[s.screen] ?? defaultWidth(s.screen);
-      if (Math.abs(want - s.width) > 8) await setGroupWidth(want, this.view.viewColumn);
+      if (Math.abs(want - s.width) > 8) await setGroupWidth(want, this.view.viewColumn, defaultWidth(s.screen));
       return;
     }
-    // a hidden or maximized panel is not a width to keep
-    if (s.width < 200 || s.width > s.screen * 0.7) return;
+    // a hidden or maximized panel is not a width to keep, nor one without code beside it (alone, a device spans the
+    // editor: that width is VS Code's, and kept it made every device after it take the whole editor)
+    if (s.width < 200 || s.width > s.screen * 0.7 || vscode.window.tabGroups.all.every(isDeviceGroup)) return;
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => void this.context.globalState.update(WIDTHS_KEY, { ...widths, [s.screen]: Math.round(s.width) }), 600);
   }
@@ -1094,6 +1106,7 @@ export function activateDevice(
         void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: run `nuclear build` in the project first.'));
         return;
       }
+      await ensureDeviceOnce(p);
       const hidden = typeof panelId === 'string' ? parked.find((r) => `hidden:${r.key}` === panelId) : undefined;
       if (hidden) DevicePanel.adopt(context, hidden);
       const target = (typeof panelId === 'string' && [...panels].find((d) => d.id === panelId || d.running === hidden)) || DevicePanel.idle() || DevicePanel.show(context);
@@ -1111,5 +1124,10 @@ export function activateDevice(
   // VS Code closed or crashed: end every app this window started on the device
   reap(marker('').slice(0, -2), process.pid);
   const p = find();
-  if (p) void ensureDevice(p);
+  if (p) void ensureDeviceOnce(p);
 }
+
+/** `ensureDevice` once per window: at activation when the folder is a project, else at the first run on a device (a
+ * Nuclear workspace's folder holds its apps in subfolders, so activation finds no project there). */
+let ensured: Promise<void> | undefined;
+const ensureDeviceOnce = (p: Project): Promise<void> => (ensured ??= ensureDevice(p));

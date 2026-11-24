@@ -65,7 +65,11 @@ Flutter's `web-server` device is rejected: its debug service has no breakpoints.
 ## The panel
 
 - Its width is saved per screen width (`nuclear.device.widths`; by default 20 % of the screen, between 340 and
-  540).
+  540), only while code sits beside it (a device alone spans the editor: that width is not the user's). A saved
+  width over 75 % of the editor (kept by earlier versions that way) gives way to the default.
+- The Synapsis device is registered with Flutter (`ensureDevice`: `FLUTTER_CUSTOM_DEVICES`, `flutter custom-devices
+  add`) at activation when the folder is a project, else at the first run on a device (a Nuclear workspace's folder
+  holds its apps in subfolders); a Dart extension that is not started yet reads it when it starts.
 - *Fit* goes up to zoom 1.5.
 - `lockDeviceGroup` locks its editor group, and only it: VS Code locks the active group, so the device is revealed and
   the lock waits (up to a second) until the device's group is the active one; never the user's editor group.

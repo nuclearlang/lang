@@ -34,8 +34,8 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
 - The registry of projects (`nuclear projects`) on Windows (`%LOCALAPPDATA%`) and macOS; two commands writing it at
   the same moment keep one change (the other is written on its next build). The editor's devices (`nuclear device`)
   still pick a random port for Flutter web: allowed by a backend in development (any local port), not in the
-  registry. A project whose port another program holds fails to start (address in use): no other port is chosen
-  then.
+  registry. `nuclear run`'s message about a busy port names the process through `lsof` (Linux, macOS); on Windows it
+  says only that the port is taken.
 
 ## To decide with the user
 

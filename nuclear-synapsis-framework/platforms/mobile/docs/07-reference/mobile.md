@@ -39,9 +39,9 @@ Rules of the platform: §3; architecture (who uses whom, what a component shows)
 ### 1.1 Environments (spec 021, ADR-platform-0012)
 
 The backend of each environment is a variable: `Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"))`. In
-`development`, an app of a workspace that gives no `API_URL` calls the workspace's backend at its address of the
-machine's registry of projects (`nuclear projects`; the backend's reference, §2.8). Run as a web page, `nuclear run`
-serves the app on its own port of the registry (`--web-port`, on `127.0.0.1`), an origin a backend in development
+`development`, an app of a workspace whose `API_URL` is not chosen calls the workspace's backend at the address it
+serves on (the backend's reference, §2.8). Run as a web page, `nuclear run` serves the app on its own port (the
+dialect's, or the `PORT` the project sets; `--web-port`, on `127.0.0.1`), an origin a backend in development
 allows. The Android emulator reaches the machine at `10.0.2.2`: `nuclear env set API_URL http://10.0.2.2:8000/ --local`.
 
 `env("NAME", "default")` is a variable of the project; `env("NAME")`, without a default, is required. The

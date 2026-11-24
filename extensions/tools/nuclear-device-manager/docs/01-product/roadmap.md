@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-23
 related: [../02-architecture/overview.md, ../../../../vscode/docs/01-product/roadmap.md]
 ---
 # Roadmap of the devices in the editor
@@ -15,8 +15,8 @@ The CLI's devices (`nuclear device`, a real phone, macOS and Windows) are the pe
   running VS Code in Spanish.
 Never tried in a running VS Code:
 
-- Hot reload of each device, the 30-minute idle auto-stop, two devices with two signed-in users, park / unpark when
-  switching to a project that is not mobile and back.
+- Hot reload of each device, the 30-minute idle auto-stop, two devices with two signed-in users. (Park / unpark
+  across the Devices tool, a backend and back, with the device's width kept, was seen in a real VS Code.)
 - 0.36.1–0.36.3: the device keeping its own group across a workspace round-trip, the monitor-aware sharp streaming.
 - The web device panel (only its engine ran).
 
@@ -29,3 +29,5 @@ Never tried in a running VS Code:
 ## Pending
 
 - `reap` has no Windows version, and the watchdog's search of orphan processes (`pgrep`) does not run on Windows.
+- After a window reload a device's locked editor group stays standing empty (its webview is not restored): the
+  next device opens beside it.

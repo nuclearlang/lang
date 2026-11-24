@@ -977,9 +977,10 @@
    "body": [
     "- `origins: string[] = [env(\"WEB_ORIGIN\", \"https://shop.example\")]` in `config/project_config.nuc`, beside `connections`: the origins of production.",
     "- Without `origins`, no browser on another origin can call the API in production: a web app that reads the backend fails with a CORS error in its console.",
-    "- In development the allowed origins are more, with nothing to write: a backend whose `NUCLEAR_ENV` is `development` (what `nuclear run` gives it) also allows every development address of the machine's registry of projects (`nuclear projects`, any workspace; `nuclear run` passes them in `NUCLEAR_DEV_ORIGINS`, read at start) and any `http://` or `https://` origin whose host is `localhost`, `127.0.0.1` or `[::1]`, on any port (vite, Flutter web on Chrome, a test device).",
+    "- In development the allowed origins are more, with nothing to write: a backend whose `NUCLEAR_ENV` is `development` (what `nuclear run` gives it) also allows every development address of the machine's registry of projects (`nuclear projects`: the person's projects only; `nuclear run` passes them in `NUCLEAR_DEV_ORIGINS`, read at start) and any `http://` or `https://` origin whose host is `localhost`, `127.0.0.1` or `[::1]`, on any port (vite, Flutter web on Chrome, the editor's devices).",
     "- In any other environment, and in a server started without `NUCLEAR_ENV` (a deployment: `python -m synapsis.server`, `npm start`), only `origins` apply.",
     "- A refused browser never gives the answer to the app: the request fails as if there were no server. A Flutter app run on Chrome says \"No connection to the server\" (its HTTP client reports a connection error), a web app shows `TypeError: Failed to fetch` and a CORS error in the browser's console. Run the backend with `nuclear run` (development), or add the app's origin to `origins` for production.",
+    "- \"No connection to the server\" with the backend running is often the wrong port, not CORS: the app calls the address its `API_URL` gives (in a workspace in development, the backend's real address; the backend's port never moves by itself: the dialect's or its `PORT`). `nuclear run` of the backend refuses a port another process holds and says which one.",
     "- `NoOrigin()` (a guard) does the opposite: it refuses every request from a web page.",
     "- A preflight from an allowed origin answers 200 (the methods, the requested headers, max-age 1800); from any other origin 403 `origin not allowed`; credentials are never allowed, in any environment."
    ],
@@ -1037,7 +1038,7 @@
    "id": "can:project-registry",
    "type": "can",
    "title": "Can: know every Nuclear project of the machine and the port it runs on (`nuclear projects`)",
-   "summary": "A registry of the machine's Nuclear projects (`projects.json` in the user's data folder) lists every project made, built or run, whatever its workspace: its name, folder, platform, dialect, workspace and development address. Each project has its own port, chosen once and kept; `nuclear run` serves there. `nuclear projects [--json]` and the MCP tool `projects_list` show it.",
+   "summary": "A registry of the person's Nuclear projects on the machine (`projects.json` in the user's data folder) lists every project made, built or run, whatever its workspace: its name, folder, platform, dialect, workspace and development address. A project's port never moves by itself: the dialect's, or the `PORT` the project sets (`nuclear env set PORT <port>`); the registry only records it, and `nuclear run` serves there or says which process holds it. `nuclear projects [--json]` and the MCP tool `projects_list` show it.",
    "body": [
     "```sh",
     "nuclear projects            # name, platform, dialect, address, folder, workspace",
@@ -1045,10 +1046,10 @@
     "```",
     "",
     "- Where: `$XDG_DATA_HOME/nuclearlang/projects.json`, else `~/.local/share/nuclearlang/projects.json`; `%LOCALAPPDATA%\\nuclearlang\\projects.json` on Windows. `NUCLEAR_PROJECTS` names another file.",
-    "- Written by `nuclear new`, `nuclear build` (the project's own build) and `nuclear run`; a project whose folder is gone (no `config.nuc`) leaves it.",
-    "- The port: chosen the first time, the platform's default when no other project of the registry has it (a backend 8000 or 3000 by its dialect, a web app 5173, a mobile app run as a web page 8080), else the next one no project has; then kept. Two projects never share one.",
-    "- `nuclear run` uses it: a backend gets it as its port (`PORT`) on `127.0.0.1`, a web app's dev server `--port`, a mobile app `--web-port <port> --web-hostname 127.0.0.1` when it runs as a web page (Chrome). A port another program holds makes the run fail (address in use).",
-    "- A web or mobile app of a workspace built in `development` without an `API_URL` calls the workspace's backend at its address (`http://127.0.0.1:<port>/`); `nuclear new` of a web app in a workspace writes it in its `.env`.",
+    "- Written by `nuclear new`, `nuclear build` (the project's own build) and `nuclear run`. Only the person's projects: a temporary folder (`/tmp`, `$TMPDIR`), Nuclear's installation and the folders of Nuclear's own source tree (its services, examples, checks, the website's onboarding) never enter it, and are pruned from an existing file on read; a project whose folder is gone (no `config.nuc`) leaves it.",
+    "- The port: the dialect's (a backend 8000 or 3000 by its dialect, a web app 5173, a mobile app run as a web page 8080), or the `PORT` the project sets for its environment (`nuclear env set PORT 8010` writes it in its `.env`). Never chosen nor moved by the registry: two projects with the same port are the person's to separate.",
+    "- `nuclear run` uses it: a backend gets it as its port (`PORT`) on `127.0.0.1`, a web app's dev server `--port`, a mobile app `--web-port <port> --web-hostname 127.0.0.1` when it runs as a web page (Chrome); a `PORT` of the command's environment wins for that run. A port another process holds stops the run before the server starts: it says which process (and which Nuclear project of the registry) holds it and how to choose another (`nuclear env set PORT <port>`), never serving elsewhere.",
+    "- A web or mobile app of a workspace built in `development` whose `API_URL` is not chosen (not given, or its `.env` only repeats the code's default, as `nuclear new` writes it) calls the workspace's backend at the address that backend serves on (`http://127.0.0.1:<port>/`, read from the backend's own files): the same in a terminal, the editor's ▷ Serve and the Synapsis device, which build through `nuclear build`.",
     "- A backend in development lets every address of the registry call it from a browser (CORS); in production only its `origins`.",
     "- `127.0.0.1`, not `localhost`: the backend listens on IPv4, and `localhost` may resolve to `::1` first. The Android emulator reaches the machine at `10.0.2.2`: `nuclear env set API_URL http://10.0.2.2:8000/ --local` in the app."
    ],
@@ -1065,7 +1066,10 @@
     "web-port",
     "address already in use",
     "127.0.0.1",
-    "10.0.2.2"
+    "10.0.2.2",
+    "port never moves",
+    "port is taken",
+    "nuclear env set port"
    ],
    "asks": [
     "which port does my backend use",
@@ -1073,7 +1077,9 @@
     "two backends on the same port",
     "where does my flutter web app run",
     "localhost or 127.0.0.1 for the api url",
-    "the android emulator cannot reach my backend"
+    "the android emulator cannot reach my backend",
+    "my backend moved to another port",
+    "the port of my backend is already in use"
    ],
    "platforms": [
     "backend",

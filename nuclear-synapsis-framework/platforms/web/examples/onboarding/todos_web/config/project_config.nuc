@@ -3,5 +3,5 @@
 appConfig ProjectConfig
   connections: Connection[] = [
     Http(connectionName = "todos", baseUrl = "https://jsonplaceholder.typicode.com"),
-    Http(baseUrl = env("API_URL", "http://localhost:8000/"), timeout = 5000),
+    Http(baseUrl = env("API_URL", "http://127.0.0.1:8000/"), timeout = 5000),
   ]

@@ -1327,6 +1327,12 @@
         "icon": "$(play)"
       },
       {
+        "command": "nuclear.action.stop",
+        "title": "%command.nuclear.action.stop%",
+        "category": "%category.nuclear-workspace%",
+        "icon": "$(debug-stop)"
+      },
+      {
         "command": "nuclear.action.debug",
         "title": "%command.nuclear.action.debug%",
         "category": "%category.nuclear-workspace%",
@@ -1569,7 +1575,12 @@
         },
         {
           "command": "nuclear.action.serve",
-          "when": "nuclear.platform =~ /^(backend|web)$/",
+          "when": "nuclear.platform =~ /^(backend|web)$/ && !nuclear.serving",
+          "group": "navigation@1"
+        },
+        {
+          "command": "nuclear.action.stop",
+          "when": "nuclear.platform =~ /^(backend|web)$/ && nuclear.serving",
           "group": "navigation@1"
         },
         {

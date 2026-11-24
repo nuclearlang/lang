@@ -158,7 +158,7 @@ interface Action {
   key: string;
   title: string;
 }
-const ACTION_KEYS: Record<string, string> = { run: 'Ctrl+Alt+R', debug: 'Ctrl+Alt+G', reload: 'Ctrl+Alt+L', device: 'Ctrl+Alt+V', build: 'Ctrl+Alt+B', test: 'Ctrl+Alt+T', check: 'Ctrl+Alt+C', api: 'Ctrl+Alt+H' };
+const ACTION_KEYS: Record<string, string> = { run: 'Ctrl+Alt+R', stop: 'Ctrl+Alt+R', debug: 'Ctrl+Alt+G', reload: 'Ctrl+Alt+L', device: 'Ctrl+Alt+V', build: 'Ctrl+Alt+B', test: 'Ctrl+Alt+T', check: 'Ctrl+Alt+C', api: 'Ctrl+Alt+H' };
 const action = (id: string, label: string, title: string): Action => ({ id, label, key: ACTION_KEYS[id], title });
 const platformActions = (): Record<string, Action[]> => ({
   mobile: [
@@ -194,6 +194,29 @@ const TERMINAL_COMMANDS: Record<string, Record<string, string>> = {
   backend: { run: 'nuclear run', test: 'nuclear test', build: 'nuclear build', check: 'nuclear check' },
   web: { run: 'nuclear run', build: 'nuclear build', test: 'nuclear test', check: 'nuclear check' },
 };
+
+/** The terminal of a project's ▷ Serve (`<name> · run`). */
+const serveTerminal = (name: string) => vscode.window.terminals.find((t) => t.name === `${name} · run` && !t.exitStatus);
+
+/** Whether `nuclear run` is running in the terminal: its shell has a `nuclear` child process (`pgrep`). Where the
+ * system has no `pgrep` (Windows), a terminal of ▷ Serve that is open counts as serving. */
+async function serving(t: vscode.Terminal | undefined): Promise<boolean> {
+  const pid = t && !t.exitStatus ? await t.processId : undefined;
+  if (!pid) return false;
+  if (process.platform === 'win32') return true;
+  return new Promise((done) => execFile('pgrep', ['-P', String(pid), '-f', 'nuclear'], (e) => done(!e)));
+}
+
+/** ■ Stop: Ctrl+C to `nuclear run` (it ends its server), and the terminal closed when the server is still up a few
+ * seconds later (its processes end with it). */
+async function stopServing(t: vscode.Terminal): Promise<void> {
+  t.sendText('\x03', false);
+  for (let i = 0; i < 10; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    if (!(await serving(t))) return;
+  }
+  t.dispose();
+}
 
 // the projects opened by hand: this window's folder's own list (workspace state); the global list of 0.84 to 0.88.3
 // (`nuclear.workspace.projects` in the global state) showed every window's projects in each, and is no longer read
@@ -274,6 +297,15 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     context.subscriptions.push(vscode.commands.registerCommand(`nuclear.action.${id}`, () => ws.action(id)));
   }
   context.subscriptions.push(vscode.commands.registerCommand('nuclear.action.serve', () => ws.action('run')));
+  context.subscriptions.push(vscode.commands.registerCommand('nuclear.action.stop', () => ws.action('stop')));
+  // ▷ Serve becomes ■ Stop while the project's `nuclear run` runs: followed on the terminals' changes and every 2 s
+  // while a terminal of ▷ Serve is open
+  context.subscriptions.push(
+    vscode.window.onDidOpenTerminal(() => void ws.checkServing()),
+    vscode.window.onDidCloseTerminal(() => void ws.checkServing()),
+  );
+  const servingTimer = setInterval(() => vscode.window.terminals.some((t) => t.name.endsWith(' · run')) && void ws.checkServing(), 2000);
+  context.subscriptions.push({ dispose: () => clearInterval(servingTimer) });
   const cards = vscode.workspace.createFileSystemWatcher('**/.nuclear/project.json');
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('nuclear.workspace', ws, { webviewOptions: { retainContextWhenHidden: true } }),
@@ -744,14 +776,19 @@ class Workspace implements vscode.WebviewViewProvider {
       await this.context.workspaceState.update(TABS, saved);
       if (from === TOOL_PREFIX + 'http-connections') this.http.reopen = ComponentPanel.openKeys();
     }
+    // the devices belong to the mobile workspaces and the Devices tool: elsewhere they are parked (their apps go on).
+    // Parked before the code closes: a device left alone in the editor took its whole width for a moment (and the
+    // Devices tool kept it so), and a device panel left over from the previous workspace collapsed into the first
+    // column where the reopened code merged into its group; unpark (below) gives it a fresh group beside the code,
+    // at the width the user gave it.
+    const mobile = to === TOOL_PREFIX + 'devices' || this.projects().find((p) => p.root === to)?.platform === 'mobile';
+    await vscode.commands.executeCommand('nuclear.parkDevices');
+    // the code's group is never locked (only a device's is): a lock left on it (an earlier build could lock it instead
+    // of the device's) kept it standing empty, and the next device took the whole editor
+    if (!isDeviceGroup(vscode.window.tabGroups.activeTabGroup)) await vscode.commands.executeCommand('workbench.action.unlockEditorGroup');
     // an unsaved editor is never closed (VS Code would ask to save, as if the window closed): it stays until saved
     const closable = open.filter((t) => !t.isDirty);
     if (closable.length) await vscode.window.tabGroups.close(closable, true);
-    // the devices belong to the mobile workspaces and the Devices tool: elsewhere they are parked (their apps go on).
-    // Always park before reopening: a device panel left over from the previous workspace collapses into the first
-    // column and the reopened code would merge into its group; unpark (below) gives it a fresh group beside the code.
-    const mobile = to === TOOL_PREFIX + 'devices' || this.projects().find((p) => p.root === to)?.platform === 'mobile';
-    await vscode.commands.executeCommand('nuclear.parkDevices');
     if (await this.showTool(to)) return true;
     for (const t of (saved[to] ?? []).sort((a, b) => Number(a.active) - Number(b.active))) {
       try {
@@ -769,7 +806,17 @@ class Workspace implements vscode.WebviewViewProvider {
     const tool = tools().find((t) => TOOL_PREFIX + t.id === to);
     if (tool) {
       if (tool.id === 'http-connections') ComponentPanel.restore(this.context, this.http, this.http.reopen);
-      else if (tool.id === 'devices') await vscode.commands.executeCommand('nuclear.unparkDevices');
+      else if (tool.id === 'devices') {
+        // the code is closed here and its emptied group is the only one: VS Code would open a device "beside" it into
+        // it, spanning the whole editor; an empty group to its right takes the device instead, so each device keeps
+        // the width the user gave it beside the code
+        const all = vscode.window.tabGroups.all;
+        if (all.length === 1 && !all[0].tabs.length && devices().some((d) => d.status === 'hidden')) {
+          await vscode.commands.executeCommand('workbench.action.newGroupRight');
+          await vscode.commands.executeCommand('workbench.action.focusLeftGroup');
+        }
+        await vscode.commands.executeCommand('nuclear.unparkDevices');
+      }
       else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       // in a workspace the chat stays where the user left it (the workspace's own, first): choosing an app to run does not
@@ -873,6 +920,24 @@ class Workspace implements vscode.WebviewViewProvider {
       void vscode.window.showInformationMessage(l10n.t('No project in the Nuclear workspace (Ctrl+Alt+O opens one).'));
       return;
     }
+    // ▷ Serve of a backend or web app that already serves: never a second server; its terminal is shown instead.
+    // ■ Stop ends it.
+    const running = p.platform === 'backend' || p.platform === 'web' ? serveTerminal(p.name) : undefined;
+    if (id === 'stop' || (id === 'run' && running)) {
+      if (!running || !(await serving(running))) {
+        void this.checkServing();
+        if (id === 'stop') return;
+      } else {
+        if (id === 'stop') {
+          await stopServing(running);
+          return this.checkServing();
+        }
+        running.show(true);
+        const stop = l10n.t('■ Stop');
+        if ((await vscode.window.showInformationMessage(l10n.t('{0} is already serving: its terminal is {1}.', p.name, running.name), stop)) === stop) await this.action('stop');
+        return;
+      }
+    }
     const actions = platformActions()[p.platform ?? ''] ?? [];
     let a = actions.find((x) => x.id === id);
     if (!id) {
@@ -902,6 +967,22 @@ class Workspace implements vscode.WebviewViewProvider {
     const offset = logSize(p.root);
     terminal.sendText(cmd);
     if (a.id === 'run') followRun(p.root, p.name, offset, () => void this.action(a!.id));
+    if (a.id === 'run') setTimeout(() => void this.checkServing(), 1500);
+  }
+
+  /** The roots whose ▷ Serve runs now (`nuclear run` in their terminal). */
+  private served = new Set<string>();
+
+  /** Follows which projects serve: the active one's ▷ Serve becomes ■ Stop (the column's actions, the editor title
+   * through the context key `nuclear.serving`). */
+  async checkServing(): Promise<void> {
+    const now = new Set<string>();
+    for (const p of this.projects().filter((x) => x.platform === 'backend' || x.platform === 'web')) {
+      if (await serving(serveTerminal(p.name))) now.add(p.root);
+    }
+    const changed = now.size !== this.served.size || [...now].some((r) => !this.served.has(r));
+    this.served = now;
+    if (changed) this.refresh();
   }
 
   /** The Dart extension launches Flutter only for a project inside the workspace folders ("Dart-only workspace"):
@@ -968,6 +1049,8 @@ class Workspace implements vscode.WebviewViewProvider {
     const active = key.startsWith(TOOL_PREFIX) ? undefined : this.active();
     // the editor title bar shows the actions of this platform (package.json `editor/title`, `when: nuclear.platform == ...`)
     void vscode.commands.executeCommand('setContext', 'nuclear.platform', active?.platform ?? '');
+    const serves = !!active && this.served.has(active.root);
+    void vscode.commands.executeCommand('setContext', 'nuclear.serving', serves);
     if (!this.view) return;
     const unread = notices.unread();
     this.view.badge = unread ? { value: unread, tooltip: unread === 1 ? l10n.t('1 notification of the agents') : l10n.t('{0} notifications of the agents', unread) } : undefined;
@@ -976,7 +1059,7 @@ class Workspace implements vscode.WebviewViewProvider {
     const tool = tools().find((t) => TOOL_PREFIX + t.id === key);
     const envs = this.http.environments();
     const pane = !tool
-      ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect, actions: platformActions()[active.platform ?? ''] ?? [] } }
+      ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect, actions: (platformActions()[active.platform ?? ''] ?? []).map((x) => (x.id === 'run' && serves ? action('stop', l10n.t('■ Stop'), l10n.t('ends the running server (its terminal: {0} · run)', active.name)) : x)) } }
       : tool.id === 'http-connections'
         ? { kind: 'tree', nodes: this.http.tree(), environment: envs.active }
         : tool.id === 'devices'

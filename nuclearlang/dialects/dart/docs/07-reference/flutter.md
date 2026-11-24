@@ -2686,7 +2686,7 @@ nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--
 nuclear code                               # opens the project in VS Code
 nuclear watch                              # transpiles every time a .nuc changes
 nuclear build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build arguments>]
-nuclear run [-- -d <device>]               # as a web page (-d chrome): on its own port of nuclear projects
+nuclear run [-- -d <device>]               # as a web page (-d chrome): on its own port (the dialect's, or its PORT)
 nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator
 nuclear device list                        # the open devices and the devices it can be
 nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal
@@ -2696,7 +2696,7 @@ nuclear repair                             # when the build or the app fails: re
 nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
 nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)
 nuclear run --env staging                  # the values of an environment inside the build (env(), spec 021)
-nuclear projects [--json]                  # every Nuclear project of this machine and its development address (its own port)
+nuclear projects [--json]                  # every Nuclear project of this machine and its development address
 nuclear env list | set NAME value --env e  # the variables by environment; --secret: the system's keyring
 nuclear monitor [--json]                   # what the app is doing (its last run: state, requests, errors) and the report: hot spots, each function's time, calls, connections, memory
 nuclear monitor --on | --off               # keep the app measured on every build, watch and run, or stop

@@ -385,6 +385,20 @@ pub fn resolve(root: &Path, project: &str, environment: &str, process: bool) -> 
     Ok(out)
 }
 
+/// The value of `name` in the project's own files of `environment` (no keyring, no process): what the project
+/// sets for itself, such as its `PORT`.
+pub fn file_value(root: &Path, environment: &str, name: &str) -> Option<String> {
+    let lookup = |n: &str| std::env::var(n).ok();
+    files(environment)
+        .iter()
+        .filter_map(|f| std::fs::read_to_string(root.join(f)).ok())
+        .filter_map(|t| parse(&t, &lookup).ok())
+        .flatten()
+        .filter(|(k, _)| k == name)
+        .map(|(_, v)| v)
+        .next_back()
+}
+
 /// The variables the code declares (`env` of the contract the build wrote, `.nuclear/contract.json`).
 pub fn declared(root: &Path) -> Vec<Value> {
     std::fs::read_to_string(root.join(nuclear_transpile::contract::CONTRACT_FILE))
@@ -466,8 +480,8 @@ pub struct ForBuild {
 
 /// Before a build of a platform project (`None` for any other): the environment's values, and for a web or mobile app
 /// the ones its build carries (`Manifest::env`, with the process environment, never a secret). In `development`, a
-/// client of a workspace that gives no `API_URL` calls the workspace's backend at its address of the registry of
-/// projects (`nuclear projects`).
+/// client of a workspace whose `API_URL` is not chosen (not given, or its `.env` only repeats the code's default)
+/// calls the workspace's backend at the address `nuclear run` serves it on (`projects::workspace_backend`).
 pub fn prepare(root: &Path, manifest: &mut nuclear_transpile::project::Manifest) -> Result<Option<ForBuild>, String> {
     if manifest.platform.is_none() {
         return Ok(None);
@@ -475,9 +489,12 @@ pub fn prepare(root: &Path, manifest: &mut nuclear_transpile::project::Manifest)
     let client = matches!(manifest.platform.as_deref(), Some("web" | "mobile"));
     let environment = chosen(root, DEFAULT);
     let mut values = resolve(root, &manifest.name, &environment, client)?;
+    // a value that only repeats the code's own default (the `.env` `nuclear new` writes) chooses nothing
+    let default_of = |name: &str| declared(root).into_iter().find(|v| v["name"] == name).and_then(|v| v["default"].as_str().map(str::to_string));
+    let chosen_url = values.get(API_URL).is_some_and(|r| r.source != ".env" || default_of(API_URL).as_deref() != Some(r.value.as_str()));
     if client
         && environment == DEFAULT
-        && !values.contains_key(API_URL)
+        && !chosen_url
         && let Some(url) = crate::framework::projects::workspace_backend(root)
     {
         values.insert(API_URL.into(), Resolved { value: format!("{url}/"), source: "projects".into(), secret: false });

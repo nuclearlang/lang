@@ -1,11 +1,14 @@
 //! The machine's registry of Nuclear projects and where each one runs in development: `projects.json` in the user's
 //! data folder (`$XDG_DATA_HOME/nuclearlang/`, else `~/.local/share/nuclearlang/`; `%LOCALAPPDATA%\nuclearlang\` on
 //! Windows; `NUCLEAR_PROJECTS` names another file). Every build, check, run and `nuclear new` of a platform project
-//! records it: its name, folder, platform, dialect, workspace and its development address. Its port is chosen once
-//! (the dialect's when no other project has it, else the next one no project has) and kept: `nuclear run` serves on
-//! it, a backend in development lets every address of the registry call it (CORS), and a client of a workspace
-//! calls the workspace's backend there. A project whose folder is gone leaves the registry. `nuclear projects` and
-//! the MCP tool `projects_list` show it.
+//! records it: its name, folder, platform, dialect, workspace and its development address. The address is the
+//! project's own and never moves by itself: the dialect's (`[toolchain] url`), with the `PORT` the project sets
+//! (`nuclear env set PORT <port>`, its `.env` files); the registry only records it. `nuclear run` serves there and,
+//! when another process holds the port, says which one instead of taking another; a backend in development lets
+//! every address of the registry call it (CORS), and a client of a workspace calls the workspace's backend at its
+//! address. Only the person's projects are recorded: never a temporary folder nor Nuclear's own projects (its
+//! installation, its source tree); a project whose folder is gone, or one of those, leaves the registry on the next
+//! read. `nuclear projects` and the MCP tool `projects_list` show it.
 
 use super::{landing, workspace};
 use nuclear_dialect::Dialect;
@@ -36,7 +39,23 @@ pub fn path() -> Option<PathBuf> {
     data.map(|d| d.join("nuclearlang").join("projects.json"))
 }
 
-/// Every project of the registry whose folder still holds its `config.nuc`.
+/// Whether a project at `root` stays out of the registry: a temporary folder (unless the registry is the one
+/// `NUCLEAR_PROJECTS` names: a test's), the installation of Nuclear, or a folder of Nuclear's own source tree (its
+/// services, examples, checks and the website's onboarding).
+fn excluded(root: &Path) -> bool {
+    let temp = [std::env::temp_dir(), PathBuf::from("/tmp"), PathBuf::from("/var/tmp")];
+    let mine = std::env::var_os(FILE_ENV).is_some_and(|p| !p.is_empty()) || cfg!(test);
+    if !mine && temp.iter().any(|t| root.starts_with(t) || t.canonicalize().is_ok_and(|t| root.starts_with(t))) {
+        return true;
+    }
+    let installation = nuclear_dialect::install_dir().into_iter().chain(path().and_then(|p| p.parent().map(Path::to_path_buf)).filter(|_| !mine));
+    if installation.into_iter().any(|i| root.starts_with(&i)) {
+        return true;
+    }
+    root.ancestors().any(|a| a.join("nuclear-synapsis-framework").is_dir() && a.join("nuclearlang").join("dialects").is_dir())
+}
+
+/// Every project of the registry whose folder still holds its `config.nuc` and that belongs there (`excluded`).
 pub fn read() -> Vec<Value> {
     let text = path().and_then(|p| std::fs::read_to_string(p).ok()).unwrap_or_default();
     let all: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
@@ -45,7 +64,7 @@ pub fn read() -> Vec<Value> {
         .cloned()
         .unwrap_or_default()
         .into_iter()
-        .filter(|e| e["root"].as_str().is_some_and(|r| Path::new(r).join(super::packages::CONFIG).is_file()))
+        .filter(|e| e["root"].as_str().is_some_and(|r| Path::new(r).join(super::packages::CONFIG).is_file() && !excluded(Path::new(r))))
         .collect()
 }
 
@@ -73,61 +92,78 @@ pub fn default_url(d: &Dialect) -> Option<&str> {
     d.tool("url").or(d.tool("web_url"))
 }
 
-/// `entry` put in `list` with its port: the one it had when no other project has it, else the first one from the
-/// default's that no other project has. Returns the entry as recorded.
-fn put(list: &mut Vec<Value>, mut entry: Value, default: &str) -> Value {
-    let root = entry["root"].clone();
-    let old = list.iter().position(|e| e["root"] == root).map(|i| list.remove(i));
-    let taken = |p: u64| list.iter().any(|e| e["port"].as_u64() == Some(p));
-    if let Some((scheme, host, port)) = parts(default) {
-        let kept = old.as_ref().and_then(|o| o["port"].as_u64()).filter(|p| !taken(*p));
-        let port = kept.unwrap_or_else(|| (u64::from(port)..=65535).find(|p| !taken(*p)).unwrap_or(u64::from(port)));
-        entry["url"] = json!(format!("{scheme}://{host}:{port}"));
-        entry["scheme"] = json!(scheme);
-        entry["host"] = json!(host);
-        entry["port"] = json!(port);
-    }
-    list.push(entry.clone());
-    list.sort_by(|a, b| a["root"].as_str().cmp(&b["root"].as_str()));
-    entry
+/// The project's development address: the dialect's (`default_url`) with the `PORT` the project sets for its
+/// environment (its `.env` files: `nuclear env set PORT <port>`), as `(scheme, host, port)`. Never another one.
+pub fn address(root: &Path, d: &Dialect) -> Option<(String, String, u16)> {
+    let (scheme, host, port) = parts(default_url(d)?)?;
+    let environment = crate::env::chosen(root, crate::env::DEFAULT);
+    let port = crate::env::file_value(root, &environment, "PORT").and_then(|p| p.trim().parse().ok()).unwrap_or(port);
+    Some((scheme.to_string(), host.to_string(), port))
 }
 
-/// Records the project at `root` (a build, a check, a run, `nuclear new`). A registry that cannot be written never
-/// stops the command: it says why.
-pub fn record(root: &Path, m: &Manifest, d: &Dialect) -> Option<Value> {
+/// The registry's entry of the project at `root` (not written).
+pub fn entry(root: &Path, m: &Manifest, d: &Dialect) -> Option<Value> {
     let platform = m.platform.as_deref()?;
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let ws = workspace::find(&root).and_then(|w| workspace::load(&w).ok());
-    let entry = json!({
+    let mut entry = json!({
         "name": m.name,
         "root": root.display().to_string(),
         "platform": platform,
         "dialect": m.dialect,
         "workspace": ws.map(|w| json!({ "name": w.name, "root": w.root.display().to_string() })),
     });
+    if let Some((scheme, host, port)) = address(&root, d) {
+        entry["url"] = json!(format!("{scheme}://{host}:{port}"));
+        entry["scheme"] = json!(scheme);
+        entry["host"] = json!(host);
+        entry["port"] = json!(port);
+    }
+    Some(entry)
+}
+
+/// `entry` put in `list` in place of the one of its folder.
+fn put(list: &mut Vec<Value>, entry: Value) {
+    list.retain(|e| e["root"] != entry["root"]);
+    list.push(entry);
+    list.sort_by(|a, b| a["root"].as_str().cmp(&b["root"].as_str()));
+}
+
+/// Records the project at `root` (a build, a check, a run, `nuclear new`) unless it stays out (`excluded`), and
+/// returns its entry. A registry that cannot be written never stops the command: it says why.
+pub fn record(root: &Path, m: &Manifest, d: &Dialect) -> Option<Value> {
+    let entry = entry(root, m, d)?;
+    if excluded(Path::new(entry["root"].as_str().unwrap_or_default())) {
+        return Some(entry);
+    }
     let mut list = read();
-    let entry = put(&mut list, entry, default_url(d).unwrap_or_default());
+    if list.contains(&entry) {
+        return Some(entry);
+    }
+    put(&mut list, entry.clone());
     if let Err(e) = write(&list) {
         eprintln!("warning: {e}");
     }
     Some(entry)
 }
 
-/// The project at `root` as the registry has it.
-pub fn of(root: &Path) -> Option<Value> {
-    let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf()).display().to_string();
-    read().into_iter().find(|e| e["root"] == json!(root))
+/// The entry of the project at `root` read from its own files (its `config.nuc`, its dialect, its `.env`).
+pub fn here(root: &Path) -> Option<Value> {
+    let m = Manifest::read(root).ok()?;
+    let d = super::loader().load(&m.dialect).0?;
+    entry(root, &m, &d)
 }
 
-/// The address of the backend of the workspace that holds `root` (its first backend app the registry knows).
+/// Which registered project is at `port`, if any (a busy port's likely holder).
+pub fn at_port(port: u16) -> Option<Value> {
+    read().into_iter().find(|e| e["port"].as_u64() == Some(u64::from(port)))
+}
+
+/// The address of the backend of the workspace that holds `root` (its first backend app), read from the backend's
+/// own files: the same address `nuclear run` serves it on.
 pub fn workspace_backend(root: &Path) -> Option<String> {
     let ws = workspace::load(&workspace::find(root)?).ok()?;
-    let list = read();
-    ws.apps.iter().filter(|a| a.platform == "backend").find_map(|a| {
-        let dir = ws.root.join(&a.folder);
-        let dir = dir.canonicalize().unwrap_or(dir).display().to_string();
-        list.iter().find(|e| e["root"] == json!(dir))?["url"].as_str().map(str::to_string)
-    })
+    ws.apps.iter().filter(|a| a.platform == "backend").find_map(|a| here(&ws.root.join(&a.folder))?["url"].as_str().map(str::to_string))
 }
 
 /// The origins a backend in development lets call it besides its own `origins`: every address of the registry.
@@ -171,30 +207,27 @@ pub fn command(rest: &[String]) -> Result<(), String> {
 mod tests {
     use super::*;
 
-    fn project(root: &str) -> Value {
-        json!({ "name": root, "root": root, "platform": "backend", "dialect": "fastapi", "workspace": null })
+    fn project(root: &str, port: u64) -> Value {
+        json!({ "name": root, "root": root, "platform": "backend", "dialect": "fastapi", "workspace": null, "port": port })
     }
 
     #[test]
-    fn each_project_keeps_its_own_port_and_no_two_share_one() {
+    fn a_port_is_recorded_as_the_project_gives_it_never_moved() {
         let mut list = Vec::new();
-        assert_eq!(put(&mut list, project("/a"), "http://127.0.0.1:8000")["url"], "http://127.0.0.1:8000");
-        assert_eq!(put(&mut list, project("/b"), "http://127.0.0.1:8000")["port"], 8001);
-        // built again: the same port, never a new one
-        assert_eq!(put(&mut list, project("/a"), "http://127.0.0.1:8000")["port"], 8000);
-        assert_eq!(put(&mut list, project("/b"), "http://127.0.0.1:8000")["port"], 8001);
-        // a web app from its own default, with its own host
-        let web = put(&mut list, project("/w"), "http://localhost:5173");
-        assert_eq!((web["host"].as_str(), web["port"].as_u64()), (Some("localhost"), Some(5173)));
-        // a port two entries share (a file edited by hand): the second one moves
-        list.push(json!({ "root": "/c", "port": 8000 }));
-        assert_eq!(put(&mut list, project("/c"), "http://127.0.0.1:8000")["port"], 8002);
-        assert_eq!(list.len(), 4);
+        put(&mut list, project("/a", 8000));
+        // another project on the same port keeps it: the registry records, it never reassigns
+        put(&mut list, project("/b", 8000));
+        put(&mut list, project("/a", 8010));
+        let ports: Vec<_> = list.iter().map(|e| (e["root"].as_str().unwrap(), e["port"].as_u64().unwrap())).collect();
+        assert_eq!(ports, [("/a", 8010), ("/b", 8000)]);
     }
 
     #[test]
-    fn a_dialect_without_an_address_records_none() {
-        let mut list = Vec::new();
-        assert!(put(&mut list, project("/m"), "")["port"].is_null());
+    fn nuclear_s_own_folders_stay_out() {
+        let tree = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").canonicalize().unwrap();
+        assert!(excluded(&tree.join("nuclear-chat/nuclear_chat")));
+        assert!(excluded(&tree.join("website/onboarding")));
+        assert!(!excluded(Path::new("/home/someone/projects/shop_api")));
+        assert_eq!(parts("http://127.0.0.1:8000"), Some(("http", "127.0.0.1", 8000)));
     }
 }

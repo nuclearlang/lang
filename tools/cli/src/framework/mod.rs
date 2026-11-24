@@ -97,12 +97,15 @@ nuclear help workspace)
                                              dialect, exists}]} (find: or null), {error} when it fails
   check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
 
-projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project made, built or run)
+projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project of yours made,
+built or run; never a temporary folder nor Nuclear's own projects)
   projects [--json]                          each project, its platform, dialect, workspace and development address;
-                                             its port is its own (the dialect's when free, else the next free one):
-                                             run serves there, a backend in development lets every address of the
-                                             registry and any localhost / 127.0.0.1 / [::1] port call it (CORS), an
-                                             app of a workspace calls the workspace's backend there (API_URL)
+                                             its port never moves by itself: the dialect's, or the PORT the project
+                                             sets (nuclear env set PORT <port>); run serves there and, when another
+                                             process holds it, says which one; a backend in development lets every
+                                             address of the registry and any localhost / 127.0.0.1 / [::1] port call
+                                             it (CORS), an app of a workspace calls the workspace's backend there
+                                             (API_URL)
 
 environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)
@@ -919,9 +922,9 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
     let given: Vec<(String, String)> =
         values.into_iter().filter(|(_, r)| r.source != "process").map(|(k, r)| (k, r.value)).collect();
     log.step(&format!("environment {environment}"));
-    // the project's own port of the registry of projects (`nuclear projects`): two servers never share one
-    // (a `PORT` of the process is the person's choice for this run, as before the registry)
-    let mut own = projects::of(root).or_else(|| projects::record(root, m, &dialect)).unwrap_or_default();
+    // the project's own address (the dialect's, with the PORT the project sets), recorded in the registry of
+    // projects; a `PORT` of the process is the person's choice for this run
+    let mut own = projects::record(root, m, &dialect).unwrap_or_default();
     if let (Ok(port), Some(scheme), Some(host)) = (
         std::env::var("PORT").map_err(|_| ()).and_then(|p| p.parse::<u16>().map_err(|_| ())),
         own["scheme"].as_str().map(str::to_string),
@@ -934,6 +937,10 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
         .into_iter()
         .filter_map(|k| own[k].as_str().map(str::to_string).or_else(|| own[k].as_u64().map(|p| p.to_string())).map(|v| (k, v)))
         .collect();
+    // a port another process holds: say which one and how to choose another, never serve somewhere else
+    if let (Some(host), Some(port)) = (own["host"].as_str(), own["port"].as_u64().and_then(|p| u16::try_from(p).ok())) {
+        port_free(root, host, port)?;
+    }
     let command = toolchain_command(root, "run", m, &dialect, rest, &place)?;
     match own["url"].as_str().or(dialect.tool("url")) {
         Some(url) => log.step(&format!("serve {url}")),
@@ -963,6 +970,41 @@ fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog)
     if status.success() { Ok(()) } else { Err(SERVER_ENDED.into()) }
 }
 
+/// Err when `host:port` is taken (any of its addresses): which process holds it (and the Nuclear project, when
+/// one of the registry has that port) and how this project chooses another port.
+fn port_free(root: &Path, host: &str, port: u16) -> Result<(), String> {
+    use std::net::{TcpListener, ToSocketAddrs};
+    let addrs: Vec<_> = (host, port).to_socket_addrs().map(|a| a.collect()).unwrap_or_default();
+    if !addrs.iter().any(|a| TcpListener::bind(a).is_err_and(|e| e.kind() == std::io::ErrorKind::AddrInUse)) {
+        return Ok(());
+    }
+    let mut holder = port_holder(port).map(|h| format!(" by {h}")).unwrap_or_default();
+    let me = root.canonicalize().unwrap_or_else(|_| root.to_path_buf()).display().to_string();
+    if let Some(p) = projects::at_port(port).filter(|p| p["root"].as_str() != Some(me.as_str())) {
+        holder.push_str(&format!(
+            "{}the Nuclear project {} ({}) has that port",
+            if holder.is_empty() { ": " } else { "; " },
+            p["name"].as_str().unwrap_or("?"),
+            p["root"].as_str().unwrap_or("?")
+        ));
+    } else if holder.contains(&me) {
+        holder.push_str(" (this project is already running: stop it first, or use the terminal where it runs)");
+    }
+    Err(format!(
+        "port {port} of {host} is taken{holder}.\nThis project serves on {port}; stop that process, or choose another port for this project: nuclear env set PORT <port> (its workspace's apps follow it on their next build)"
+    ))
+}
+
+/// The process listening on `port` (`lsof`, where the system has it): its pid, command and folder.
+fn port_holder(port: u16) -> Option<String> {
+    let out = Command::new("lsof").args(["-nP", &format!("-iTCP:{port}"), "-sTCP:LISTEN", "-Fpc"]).output().ok()?;
+    let text = String::from_utf8_lossy(&out.stdout);
+    let pid = text.lines().find_map(|l| l.strip_prefix('p'))?.to_string();
+    let name = text.lines().find_map(|l| l.strip_prefix('c')).unwrap_or("?");
+    let cwd = std::fs::read_link(format!("/proc/{pid}/cwd")).map(|c| format!(" in {}", c.display())).unwrap_or_default();
+    Some(format!("process {pid} ({name}){cwd}"))
+}
+
 /// `nuclear run` of a mobile app: Flutter keeps the terminal (its keys: r, R, q), so only the steps and how it
 /// ended go to the log.
 fn run_mobile(root: &Path, rest: &[String], log: &runlog::RunLog) -> Result<(), String> {
@@ -977,7 +1019,7 @@ fn run_mobile(root: &Path, rest: &[String], log: &runlog::RunLog) -> Result<(), 
     // command line gives one (Flutter takes these flags for any device and uses them only for the web)
     let mut args: Vec<String> = vec!["run".into(), "--no-pub".into()];
     let given = passthrough(rest);
-    if let Some((host, port)) = projects::of(root).and_then(|e| Some((e["host"].as_str()?.to_string(), e["port"].as_u64()?)))
+    if let Some((host, port)) = projects::here(root).and_then(|e| Some((e["host"].as_str()?.to_string(), e["port"].as_u64()?)))
         && !given.iter().any(|a| a.starts_with("--web-port") || a.starts_with("--web-hostname"))
     {
         args.extend(["--web-port".into(), port.to_string(), "--web-hostname".into(), host]);

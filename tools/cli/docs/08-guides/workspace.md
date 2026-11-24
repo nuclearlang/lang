@@ -47,9 +47,13 @@ written into the marker. An app's name is a project's name: letters, digits and 
 ## Where its apps run
 
 Every app is also in the registry of projects of the machine (`nuclear projects [--json]`, MCP `projects_list`),
-with its own development port, chosen once and kept (the dialect's when no other project has it, else the next
-one): `nuclear run` serves there. A web or mobile app built in `development` without an `API_URL` calls the
-workspace's first backend at its address (`http://127.0.0.1:<port>/`), and a backend run in `development` lets every
+with its development address. Its port never moves by itself: the dialect's (8000 for fastapi, 3000 for nestjs,
+5173 for react), or the one the app sets (`nuclear env set PORT 8010` in its folder); `nuclear run` serves there,
+and when another process holds that port it stops and says which one (and which Nuclear project) instead of taking
+another. The registry only records: it holds only your projects, never a temporary folder nor Nuclear's own
+services. A web or mobile app built in `development` whose `API_URL` is not chosen (not given, or its `.env` only
+repeats the code's default) calls the workspace's first backend at the address that backend serves on
+(`http://127.0.0.1:<port>/`, following its `PORT`), and a backend run in `development` lets every
 address of the registry, and any port of `localhost`, `127.0.0.1` and `[::1]`, call it from a browser (CORS): a
 web app or a Flutter app run on Chrome reaches its backend without listing its origin. In production only the
 backend's `origins` apply (the backend's reference, §2.8).

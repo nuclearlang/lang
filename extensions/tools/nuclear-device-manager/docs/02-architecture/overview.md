@@ -33,8 +33,8 @@ The rest of this file is about the Synapsis devices: there can be several at onc
 | What happens | Effect |
 |---|---|
 | The user closes a device's tab | the disposed panel parks its app: it goes on, hidden; the Devices pane lists it (`hidden:<key>` ids) and `revealDevice` adopts it again |
-| The workspace switches tab (`Workspace.switchTabs`) | `nuclear.parkDevices` → `DevicePanel.park()`: the panels close, the apps go on with their sessions (`parked`) |
-| A mobile workspace or the Devices tool is entered | `nuclear.unparkDevices` → `unpark()`, after the code is reopened: each device gets a fresh locked editor group to the right of the code (`lockDeviceGroup`), never merged into the code's group |
+| The workspace switches tab (`Workspace.switchTabs`) | `nuclear.parkDevices` → `DevicePanel.park()`, before the code closes: the panels close, the apps go on with their sessions (`parked`), and their emptied groups are closed too (a locked group stays standing when it empties; left alone it became the only group and the next device spanned the editor) |
+| A mobile workspace or the Devices tool is entered | `nuclear.unparkDevices` → `unpark()`, after the code is reopened: each device gets a fresh locked editor group to the right of the code (`lockDeviceGroup`), never merged into the code's group. In the Devices tool the code's group is empty and the only one: VS Code would put a device "beside" it into it, so `showTool` makes an empty group to its right first and the device goes there, at its width |
 | ✕ of the Devices pane (`nuclear.closeDevice(id)`), the panel's ■, the end of its session | `endRunning`: the session, the CDP connection, the browser and `reap` |
 | A parked app's session ends | cleaned by `endRunning` |
 | Nobody looked at a device for `IDLE_LIMIT` (30 minutes: hidden, or its panel not visible) | the watchdog ends it |

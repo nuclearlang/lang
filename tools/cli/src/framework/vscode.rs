@@ -100,8 +100,8 @@ pub fn write(
         tasks.push(task("nuclear: analyze", &["analyze"], json!("none"), None));
     }
     tasks.push(task("nuclear: check", &["check"], json!("none"), None));
-    // the project's own address of the registry of projects (`nuclear run` serves there), else the dialect's
-    let own = super::projects::of(root).unwrap_or_default();
+    // the project's own address (the dialect's with the PORT it sets: `nuclear run` serves there)
+    let own = super::projects::entry(root, m, dialect).unwrap_or_default();
     let vars = [
         ("name", m.name.clone()),
         ("app", app_folder.clone()),

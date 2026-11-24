@@ -74,7 +74,7 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
   install a package by hand inside `build/`. A package's default export is one name (`dayjs()`, `lodash.chunk(...)`).
 - A kind, decorator or header word of the dialect (what it generates, its rules, an example):
   `nuclear help <word> --dialect <d>` (`repository`, `@screen`...); every word: `nuclear help words --dialect <d>`; where a kind's file goes: `nuclear help layout --dialect <d>`.
-- Where a project runs (its own port) and every project of the machine: `nuclear projects --json` (MCP `projects_list`).
+- Where a project runs and every project of the machine: `nuclear projects --json` (MCP `projects_list`). A port never moves by itself: the dialect's, or the project's `PORT` (`nuclear env set PORT <port>`); `nuclear run` says which process holds a busy one.
   A browser app (web, Flutter on Chrome) that says "no connection to the server" is refused by its backend's CORS:
   run the backend with `nuclear run` (development allows every local address) or list the origin in `origins`.
 - A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `synapsis`, `tutorial`...).

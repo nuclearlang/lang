@@ -14,6 +14,9 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **■ Stop and the layout of the devices (Unreleased)**: seen in a real VS Code (a copy of a workspace, driven over
+  CDP on a private display): Serve → Stop → Serve, the device's width kept across the Devices tool, the api and back.
+  Not seen: Windows (no `pgrep`: an open terminal of ▷ Serve counts as serving), Cursor.
 - **A device brought back by switching tools (reported 2026-11-21, not reproduced)**: the user went from the
   workspace to the Builder and a device panel came with it. Tried in a real VS Code: `rick_mobile` → Builder with no
   device open leaves none. Not tried: with a device whose app runs (parked on leaving, `DevicePanel.park`), with a

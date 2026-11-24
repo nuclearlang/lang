@@ -125,12 +125,15 @@ nuclear help workspace)
                                              dialect, exists}]} (find: or null), {error} when it fails
   check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
 
-projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project made, built or run)
+projects of this machine (the registry ~/.local/share/nuclearlang/projects.json: every project of yours made,
+built or run; never a temporary folder nor Nuclear's own projects)
   projects [--json]                          each project, its platform, dialect, workspace and development address;
-                                             its port is its own (the dialect's when free, else the next free one):
-                                             run serves there, a backend in development lets every address of the
-                                             registry and any localhost / 127.0.0.1 / [::1] port call it (CORS), an
-                                             app of a workspace calls the workspace's backend there (API_URL)
+                                             its port never moves by itself: the dialect's, or the PORT the project
+                                             sets (nuclear env set PORT <port>); run serves there and, when another
+                                             process holds it, says which one; a backend in development lets every
+                                             address of the registry and any localhost / 127.0.0.1 / [::1] port call
+                                             it (CORS), an app of a workspace calls the workspace's backend there
+                                             (API_URL)
 
 environments (spec 021: every env("NAME", "default") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)
