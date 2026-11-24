@@ -1,0 +1,20 @@
+// An exact number reached through a lambda whose parameter's type is inferred (from a list member, a function's
+// parameter or a field of a class) prints and interpolates the language's text: `2.0`, never the target's `2`.
+Price(amount: bigdouble, code: bigint)
+
+describe(f: (p: Price) => string, p: Price) string
+  f(p)
+
+main() void
+  amounts: bigdouble[] = [2.0, 0.5, 12345678901234567890123]
+  print("map", amounts.map((a) => "v ${a}").join(", "))
+  print("filter", amounts.filter((a) => a > 1.0).map((a) => a.toString()).join(", "))
+  prices: Price[] = [Price(amount = 2.0, code = 9223372036854775807), Price(amount = 0.1, code = 2)]
+  print("fields", prices.map((p) => "${p.amount} ${p.code}").join(", "))
+  print("call", describe((q) => "amount ${q.amount}", prices[0]))
+  total: bigdouble = 0
+  for p in prices
+    total += p.amount
+  print("total", total, "${total + 0.2}")
+  for t in prices.map((p) => p.amount)
+    print("each", t)

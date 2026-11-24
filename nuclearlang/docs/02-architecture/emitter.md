@@ -38,7 +38,9 @@ options a dialect sets and what the targets without braces needed are in [emitte
   module nor a file with a whole-module `use`.
 - A lambda given for a parameter of a function type takes its parameters' types from it, with the type parameters
   the call fixes replaced (`callee_bound`, `lambda_hints`); in a list of functions it also writes them
-  (`item_hints`, `typed_hints`).
+  (`item_hints`, `typed_hints`). A class a kind writes next to a declaration (`[kinds.x] declares`, the state
+  builder `CharactersStateBuilder`) has no signature: a lambda named for one of the declaration's fields takes that
+  field's type (`callee_field_lambdas`, `declared_by_kind`), so `full = (items) => ...` knows `items`.
 - A literal given for `any`, or inside a map or a list of `any`, is written with the dialect's `object_any` /
   `list_any` (`any_level`, `any_literal`); a value declared `any` is shown with `show_any`, a nullable decimal with
   `show_double_nullable`.

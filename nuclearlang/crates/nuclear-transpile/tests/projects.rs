@@ -407,6 +407,48 @@ fn a_client_of_a_contract_with_exact_fields_gets_exact_fields() {
     let _ = std::fs::remove_dir_all(&tmp);
 }
 
+/// Root rule 16 for the exact numbers: a lambda given to a state builder for one of its states takes that state's type,
+/// so a `bigdouble` it shows is written with the language's text (`2.0`), never the target's own (`2`), also when the
+/// state model is in another file.
+#[test]
+fn a_state_builder_lambda_takes_its_state_type() {
+    let tmp = std::env::temp_dir().join(format!("nuclear-builder-lambda-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&tmp);
+    let api = tmp.join("tasks_api");
+    let app = tmp.join("tasks_app");
+    copy_tree(&tree("examples/examples-backend/tasks_api"), &api);
+    copy_tree(&tree("examples/examples-flutter-dialect/tasks_app"), &app);
+    let (nest, _) = loader(None).load("nestjs");
+    project::write_metadata(&api, &Manifest::read(&api).unwrap(), &nest.unwrap()).unwrap();
+    let config = std::fs::read_to_string(app.join("config.nuc")).unwrap();
+    let config: Vec<&str> = config.lines().map(|l| if l.starts_with("contracts(") { "contracts(tasks_api = \"../tasks_api\")" } else { l }).collect();
+    std::fs::write(app.join("config.nuc"), config.join("\n") + "\n").unwrap();
+    let dir = app.join("components/tasks/presentation/prices");
+    std::fs::create_dir_all(dir.join("managers")).unwrap();
+    std::fs::create_dir_all(dir.join("state_models")).unwrap();
+    std::fs::create_dir_all(app.join("components/tasks/domain/models")).unwrap();
+    std::fs::write(app.join("components/tasks/domain/models/price.nuc"), "Price\n  amount: bigdouble\n").unwrap();
+    std::fs::write(dir.join("state_models/prices_state.nuc"), "PricesState\n  (full: Price[], loading: boolean)\n").unwrap();
+    std::fs::write(
+        dir.join("managers/prices_manager.nuc"),
+        "@stateModel(PricesState)\nstatemanager PricesManager\n  @state(PricesState.full)\n  load() Price[]\n    [Price(amount = 2.0)]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("prices_screen.nuc"),
+        "@screen(route = \"/prices\", providers = [PricesManager])\nstateless PricesScreen\n  build(context: BuildContext) Widget\n    PricesStateBuilder<PricesManager>(\n      loading = () => Text(\"...\"),\n      full = (items) => ListView(children = items.map((p) => Text(\"price ${p.amount}\"))),\n    )\n",
+    )
+    .unwrap();
+    let (d, _) = loader(None).load("flutter");
+    let d = d.unwrap();
+    let out = project::build(&app, &Manifest::read(&app).unwrap(), &d);
+    let errors: Vec<String> = out.files.iter().flat_map(|f| f.diagnostics.iter().filter(|x| x.is_error()).map(|x| x.message.clone())).collect();
+    assert!(errors.is_empty(), "{errors:#?}");
+    let screen = out.files.iter().find(|f| f.out_path.ends_with("/prices_screen.dart")).map(|f| f.code.clone()).unwrap();
+    assert!(screen.contains("Text('price ${_decText(p.amount)}')"), "{screen}");
+    let _ = std::fs::remove_dir_all(&tmp);
+}
+
 /// Copies a project's sources (not its `build/`).
 fn copy_tree(from: &std::path::Path, to: &std::path::Path) {
     std::fs::create_dir_all(to).unwrap();

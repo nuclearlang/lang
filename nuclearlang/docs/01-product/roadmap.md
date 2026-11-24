@@ -25,10 +25,10 @@ The pending work of the language, the compiler and the language server. A done i
 
 - **The exact numbers, step two** (ADR-lang-0015): the language part is done (`bigint`, `bigdouble`, their
   operators, members, text and parsing). Left, refused today with N0120 so no target differs:
-  - A `bigdouble` whose type the compiler does not know prints the target's own text in Dart: in a lambda of a
-    state builder (`(items) => ... "${p.price}"` with `p` of `items.map`), `Decimal.toString()` writes
-    `12345678901234567890123` where TypeScript writes `12345678901234567890123.0` (found by the mobile proof of
-    2026-11-24; a declared name prints `.0` in both). The lambda's parameter needs the type of the list it maps.
+  - A `bigdouble` held where the compiler knows no type (an `any`, the result of a runtime's generic method such as a
+    backend's `find`) prints the target's own text in Dart and Python (`2`, where TypeScript writes `2.0`): its text
+    is chosen by its static type. Every typed place, a lambda's inferred parameter and a state builder's lambda
+    included, prints the language's text (`examples/conformance/big_lambdas.nuc`).
   - A route of a contract that answers a list of exact numbers (`bigint[]`) is read as the JSON values, not as
     their texts (the mobile and web repositories read a single exact answer and the exact fields of models).
   - The type of a value a runtime's method gives is not known to the compiler (`found = ~repository.find(id)` of a

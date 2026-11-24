@@ -451,6 +451,9 @@ pub struct Emitter<'a> {
     /// The exact fields of the class being constructed (`Price(amount = 1.5)`): a named argument's literal takes the
     /// field's type, as for a parameter.
     ctor_exact_fields: HashMap<String, Type>,
+    /// The fields of the declaration a kind writes the callee next to (`CharactersStateBuilder` of `CharactersState`):
+    /// a lambda given for a field's name takes the field's type as its parameter's (`full = (items) => ...`).
+    callee_field_lambdas: HashMap<String, Type>,
     /// The exact type of the field whose decorators are read (`@min(0.5) price: bigdouble`): a number literal given as
     /// a decorator's argument takes it.
     decor_exact: Option<NumKind>,
@@ -734,6 +737,7 @@ impl<'a> Emitter<'a> {
             exact_args: None,
             exact_values: None,
             ctor_exact_fields: HashMap::new(),
+            callee_field_lambdas: HashMap::new(),
             decor_exact: None,
             loop_names: Vec::new(),
             default_inits: Vec::new(),
@@ -7908,6 +7912,11 @@ impl<'a> Emitter<'a> {
             self.ctor_exact_fields =
                 info.field_types.iter().filter(|(_, t)| holds_exact(t)).map(|(k, t)| (k.clone(), t.clone())).collect();
         }
+        if let ExprKind::Name(n) = &callee.kind
+            && let Some(info) = self.declared_by_kind(n)
+        {
+            self.callee_field_lambdas = info.field_types.clone();
+        }
         let mut a = self.args(args, params.as_deref(), span, c.len());
         if !type_names.is_empty() {
             // Python: inject<Repo>() → inject(Repo)
@@ -7927,6 +7936,15 @@ impl<'a> Emitter<'a> {
             _ => self.tpl(key, ctx, span),
         };
         close_on_own_line(text, &a)
+    }
+
+    /// The declaration whose kind writes the class `name` next to it (`CharactersStateBuilder` → `CharactersState`).
+    fn declared_by_kind(&self, name: &str) -> Option<&DeclInfo> {
+        self.decls.iter().find_map(|(decl, info)| {
+            let DeclKind::Kind(k) = &info.kind else { return None };
+            let kd = self.d.kinds.get(k)?;
+            kd.value.declares.iter().any(|t| t.render(&Ctx::new().set("name", decl).into_value()) == name).then_some(info)
+        })
     }
 
     /// The `construct` template of the kind of the declaration `name`, when its dialect gives one.
@@ -7981,6 +7999,7 @@ impl<'a> Emitter<'a> {
         let bound = std::mem::take(&mut self.callee_bound);
         let props = std::mem::take(&mut self.callee_takes_props);
         let exact_fields = std::mem::take(&mut self.ctor_exact_fields);
+        let field_lambdas = std::mem::take(&mut self.callee_field_lambdas);
         let ordered: Option<Vec<Arg>> = match (has_named, params) {
             (true, Some(ps)) => reorder(args, ps, self.d.options.named_args_native, props),
             _ => None,
@@ -8015,6 +8034,11 @@ impl<'a> Emitter<'a> {
                 && let Some(Type { kind: TypeKind::Func { params: wanted, .. }, .. }) = param.and_then(|p| p.ty.as_ref())
             {
                 self.lambda_hints = wanted.iter().filter_map(|w| w.ty.as_ref().map(|t| subst_type(t, &bound))).collect();
+            } else if param.is_none()
+                && matches!(a.value.kind, ExprKind::Lambda(_))
+                && let Some(t) = a.name.as_ref().and_then(|n| field_lambdas.get(&n.name))
+            {
+                self.lambda_hints = vec![t.clone()];
             }
             if matches!(a.value.kind, ExprKind::List(_))
                 && let Some(Type { kind: TypeKind::List(item), .. }) = param.and_then(|p| p.ty.as_ref())
