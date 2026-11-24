@@ -1100,3 +1100,16 @@ testWhatTheChecksFixComesBackMergedAndAClashIsSetAside(tmpPath: Path, monkeypatc
   expect(["probe-1", "probe-2", "probe-3"].all((p) => checks.any((s) => "${s["title"]}" == "Check: ${p}" and "${s["id"]}" in writes)))
   journal: string = Path(root, ".nuclear", "builder", "runs", "count-books.md").readText()
   expect(journal.indexOf("### Check: probe-3") < journal.indexOf("### Check: probe-1"))
+
+// Spec 025's baseline found it: an agent marked several checks at once (one MCP server, its threads) and the list was
+// torn. Every change holds the lock and every write its own temporary file: the list stays whole, no mark is lost.
+testChecksMarkedAtTheSameTimeKeepTheListWholeAndEveryMark(tmpPath: Path) void
+  root = "${tmpPath}"
+  saveChecks(root, "many", (0..24).map((n) => { "id": "qa.c${n}", "title": "c${n}", "station": "quality", "on": true, "by": "role", "role": "qa", "state": "pending", "note": "" } as <string, any>))
+  workers: threading.Thread[] = (0..24).map((n) => threading.Thread(target = markCheck, args = [root, "many", "qa.c${n}", "passed", "note ${n}"]))
+  for w in workers
+    w.start()
+  for w in workers
+    w.join()
+  checks = loadChecks(root, "many")
+  expect(checks.length == 24 and checks.all((c) => c["state"] == "passed"), json.dumps(checks.map((c) => c["state"])))

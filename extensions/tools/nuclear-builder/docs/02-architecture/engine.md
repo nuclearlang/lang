@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-23
+updated: 2026-11-24
 related: [overview.md, providers.md, teams-and-vault.md, chat.md, ../00-context/domain.md, ../01-product/roadmap.md]
 ---
 # The engine
@@ -128,7 +128,9 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
 - **A gate** after a station of `gates`: the user approves, asks for a change (the role works again with it), or
   stops. Delivery always asks before the branch.
 - **The checks** (`checks.nuc`, `checks.json` in the spec's folder): every role's `checks.toml` and the team's tasks, with the
-  user's own (`nuclear-builder checks <id> add`). A check of `by = "role"` runs at the end of its station: a
+  user's own (`nuclear-builder checks <id> add`). The list is read, changed and written whole, one change at a time
+  in a process (`changeChecks`: an agent marks several at once through the MCP server, the engine runs them in
+  threads), and every write has its own temporary file (`writeAtomic`). A check of `by = "role"` runs at the end of its station: a
   `command` (a key of the line's `commands`; with `expect = "fail"` the project must compile (`check`) and the command
   must fail: the Developer's *each new test fails before the code* passes when the tests written before their code
   fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the

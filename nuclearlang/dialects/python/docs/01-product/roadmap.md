@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-23
+updated: 2026-11-24
 related: [../02-architecture/fastapi.md, ../05-standards/testing.md]
 ---
 # Roadmap of the `python` dialect
@@ -34,5 +34,10 @@ package, its commands) is in that platform's roadmap.
   any` holding a `Thread` became `"".join(map(str, self.worker))` and failed at run time;
   `nuclear check` said nothing. Typing the field (`worker: Thread?`) gives `worker.join()`. Wanted: a member of the
   library is not assumed on `any` (the call is left as written), or an N-code.
+- **A lambda inside a `map` captures the item late** (found 2026-11-24, spec 025): `(0..24).map((n) =>
+  Thread(target = () => mark("c${n}")))` is written as `[Thread(target=lambda: mark(f"c{n}")) for n in range(0, 24)]`,
+  and every lambda sees the last `n` (Python's comprehension binds late); in TypeScript and Dart each call has its own
+  `n`. `nuclear check` says nothing. Wanted: the item bound per call (`lambda n=n:` or a helper function), and a case
+  in `examples/semantics`.
 - **Logs with call sites for Python.** `fastapi` has no `[call_site]` section (the `flutter` and `react` dialects
   have `[call_site.Log]`).

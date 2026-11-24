@@ -11502,9 +11502,10 @@
    "title": "Spec 025: The MCP server is the oracle — Tasks — Phase 0 — The measure (the gate)",
    "summary": "repeated reads) and `metrics` by station, provider and model.",
    "body": [
-    "- [ ] T0.1 agent: the ledger's new fields (turns, fixed prompt's size, tools' results' characters, reads by hand,",
+    "- [x] T0.1 agent: the ledger's new fields (turns, fixed prompt's size, tools' results' characters, reads by hand,",
     "      repeated reads) and `metrics` by station, provider and model.",
-    "- [ ] T0.2 user: the budget and the models of the baseline (spec 020's tiers, and gemma4 local).",
+    "- [x] T0.2 user: the budget and the models of the baseline: 5 USD of API at most, used well; the tests on OpenCode's",
+    "      subscription (10 USD a month) with its cheapest models (the user, 2026-11-24).",
     "- [ ] T0.3 agent: the baseline: the benchmark's tasks on each model, recorded here."
    ],
    "agents": false,
@@ -11727,13 +11728,13 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.b73762",
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.ac775f",
    "type": "readme",
    "title": "Specs of the platform",
    "summary": "Specs of the platform",
    "body": [
     "| [023-teams-like-human-teams](023-teams-like-human-teams/requirements.md) | **High priority.** Atlas informs and routes tasks to the tech leads; the chat lists only tech leads, who plan, explain and assign; each team has its method (Scrum by default) and instructions; spending asked only for API work; a team's model for all; every asset local, the release as contingency | in progress |",
-    "| [025-mcp-the-oracle](025-mcp-the-oracle/requirements.md) | **High priority.** The MCP server is the oracle: an agent asks it before opening a file; a small catalog per station, the project's map and compact results in one call, no reads of generated code, the prompt cache, a context preflight; a project's documents keep only its architecture and what is its own, and point to the oracle for the rest | approved |"
+    "| [025-mcp-the-oracle](025-mcp-the-oracle/requirements.md) | **High priority.** The MCP server is the oracle: an agent asks it before opening a file; a small catalog per station, the project's map and compact results in one call, no reads of generated code, the prompt cache, a context preflight; a project's documents keep only its architecture and what is its own, and point to the oracle for the rest | in progress (phase 0) |"
    ],
    "agents": false,
    "sources": [

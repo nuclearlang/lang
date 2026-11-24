@@ -2511,24 +2511,106 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.30cb99",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.1b096a",
    "type": "context",
    "title": "The engine — Who works a station",
-   "summary": "`/developer/diagnose` with the failed step's output told in Nuclear, kept in `run.diagnosis`, when the team has a local role; a class the compiler does not know that the plan never had blames the plan.",
+   "summary": "`setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a retry from a station or of a step that passed, a restart, a run of the earlier engine started over) — a copy, not git, since a project need not be a repository and a copy never touches the user's branches; `retry <id>`…",
    "body": [
-    "- **The diagnosis**: a station that fails gets a step *Why it failed* (actor `diagnoser`, skipped) by",
-    "  `/developer/diagnose` with the failed step's output told in Nuclear, kept in `run.diagnosis`, when the team has a",
-    "  local role; a class the compiler does not know that the plan never had blames the plan.",
-    "- **The journal**: `.nuclear/builder/runs/<id>.md`, rewritten with the run file: the strategy, the diagnosis, the",
-    "  retries and interruptions, the files written, what is left for the reviewer, the acceptance, and every station's",
-    "  steps with who did them, their trace, decisions, what the agent read and the log of a failure.",
-    "- **A gate** after a station of `gates`: the user approves, asks for a change (the role works again with it), or",
-    "  stops. Delivery always asks before the branch.",
-    "- **The checks** (`checks.nuc`, `checks.json` in the spec's folder): every role's `checks.toml` and the team's tasks, with the",
-    "  user's own (`nuclear-builder checks <id> add`). A check of `by = \"role\"` runs at the end of its station: a",
-    "  `command` (a key of the line's `commands`; with `expect = \"fail\"` the project must compile (`check`) and the command",
-    "  must fail: the Developer's *each new test fails before the code* passes when the tests written before their code",
-    "  fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the"
+    "`setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a retry from a station or of a step that",
+    "  passed, a restart, a run of the earlier engine started over) — a copy, not git, since a project need not be a",
+    "  repository and a copy never touches the user's branches; `retry <id>` of a failed run (or one that waits for its",
+    "  retry) with neither `--from` nor `--step` goes on **in place** from its failed step (`failedStepOf`: in the station",
+    "  that failed, the first step that failed after its last step that passed; `inPlace`: a failed step of a station that",
+    "  did not pass): the station goes on from the part that holds it, every step and file kept, nothing to confirm, the",
+    "  retry an entry `you` of `retries`; `--step` of a failed step does the same; what a retry or a restart would take back of the agents'",
+    "  work (`takeBackOf`) is asked first: a terminal's prompt, else refused without `--yes` (exit code 2), `--plan` prints",
+    "  `{run, files, setAside}` and runs nothing, the tool `run_retry` refuses without `confirm`; an editor that went away",
+    "  (a closed stdout) no longer fails the step that told it an event; a retry from a step that passed (`--step <id>`) keeps the steps of its station",
+    "  before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.1bad6f",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "under one lock (`Factory.lock`, reentrant), so the run file, its journal and the events stay whole.",
+   "body": [
+    "under one lock (`Factory.lock`, reentrant), so the run file, its journal and the events stay whole. The page shows",
+    "  the checks working at once, each its row and its spinner, and *Now · N checks at the same time*; the journal and",
+    "  the page's log tell them in the order they ended. Measured with stubbed agents of 1 s each, six checks: 6.1 s one",
+    "  after another, 2.0 s with `parallelChecks` 4 (`testTheChecksOfAStationRunAtTheSameTimeUpToTheBound`).",
+    "- **Delivery**, approved: `git switch -c factory/<id>`, `git add` of the files the run wrote and the spec's folder,",
+    "  `git commit` with git's own identity (the user's; no other author), `git push -u origin`, `gh pr create",
+    "  --body-file <the spec's folder>/pr.md`. Never a merge.",
+    "- **The money**: one budget per run (the team's `budgetUsd`, 5 USD by default). Only work paid by use through an",
+    "  API key (kind `api`) asks the spending (`asksSpending`, spec 023): an agent's subscription (Claude Code, Codex,",
+    "  Cursor, Gemini CLI, OpenCode, Grok Build) is not asked, unless the project's `\"forceConfirm\"` or `--force-confirm`",
+    "  asks it of every paid provider. Before the first such call two questions, as events: the providers and the roles, then the amount; both `yes` or the",
+    "  run waits. `--confirm-spending` answers them in advance (CI, the editor with `nuclear.spending.confirm` off), refused"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.21a4d0",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "`devops.pipeline`: its commands, its build, its dependencies, which a copy does not have) or read what the others fixed.",
+   "body": [
+    "`devops.pipeline`: its commands, its build, its dependencies, which a copy does not have) or read what the others",
+    "  fixed. Which checks are independent is data (`parallel` in a role's `checks.toml`, a team's task or the run's",
+    "  `checks.json`; a list seeded before it takes it from the role's data), never a name in the code; the user's checks,",
+    "  the gates, QA's plan and the delivery are parts of their own, never among them. **The money**: each check starts",
+    "  with its share of what is left (the run's budget less its cost, less what the running checks still hold of their",
+    "  shares, over the checks still to start), its provider's budget: together they never spend more than the run has;",
+    "  with nothing left a check does not start (it fails, *the check did not start*, a failure no retry fixes alone), and",
+    "  one that ends over the budget fails. The station waits for all of them, then decides as before. **Their retries**",
+    "  are the same levels: a call of one check again in its step (`process`); the part `checks` again (`node`) and the",
+    "  user's retry in place run only the checks that did not pass: those that passed stay passed while the work they",
+    "  judged stays (`st.checksPassed`, emptied when a part before the checks runs again, as a station's repair does);",
+    "  the station's repair runs them all. Every change of the run (a step, its end, a retry, an event, the save) is made"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.25b330",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "order.",
+   "body": [
+    "order. (1) The checks by `command`, one at a time in the project: they share its build and its dependencies.",
+    "  (2) The checks by `prompt` (not `parallel = false`, the role not local), when there are two or more and the line's",
+    "  `parallelChecks` is 2 or more (1 to 16, 4 by default; 1: one after another, as before): together, at most",
+    "  `parallelChecks` at once (`checksTogether`), each its own agent's session, step (`\"parallel\": true`), trace, cost",
+    "  and line of the ledger. A check fixes what it finds, so each works in its own copy of the project (a temporary",
+    "  folder: the project but the folders the ledger skips and `.nuclear/builder/`; `--root` of the Builder's MCP server",
+    "  is the copy); as each ends, what it changed comes back to the project: a file the project still has as the copy had",
+    "  it takes the check's version, one another check changed meanwhile is merged (`git merge-file`), and a change that",
+    "  does not merge is set aside (`setAside`, the copy's version) while the check runs again in the project after the",
+    "  others; what came back is in the ledger as that check's step's. Only text files up to 1 MB come back (what the",
+    "  ledger sees); a check writes the station's documents. (3) The checks of `parallel = false`, one at a time in the",
+    "  project, after the others: those that run the project (`developer.tests-fail-first`, `qa.edge-cases`,"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2594,12 +2676,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.55f78c",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.5a67e6",
    "type": "context",
    "title": "The engine — Who works a station",
-   "summary": "disk.",
+   "summary": "after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free disk.",
    "body": [
-    "disk. A command is killed with its process group after `commandTimeoutMs`.",
+    "after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and",
+    "  the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free",
+    "  disk. A command is killed with its process group after `commandTimeoutMs`.",
     "- **Watching a call** (`adapter_local.nuc`): a call to the Developer runs in a thread of its own while it is watched:",
     "  cut after `callTimeoutMs`, or when for `stallSeconds` the Developer's `/docs` stops answering or Ollama's `/api/ps`",
     "  holds no model (nothing is working on it); a cut call is retried like a busy one, its reason in the retry's event",
@@ -2646,22 +2730,24 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.90a715",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.9f70a9",
    "type": "context",
    "title": "The engine — Who works a station",
-   "summary": "repository and a copy never touches the user's branches; `retry <id>` of a failed run (or one that waits for its retry) with neither `--from` nor `--step` goes on in place from its failed step (`failedStepOf`: in the station that failed, the first step that failed after its last step that passed;…",
+   "summary": "`/developer/diagnose` with the failed step's output told in Nuclear, kept in `run.diagnosis`, when the team has a local role; a class the compiler does not know that the plan never had blames the plan.",
    "body": [
-    "repository and a copy never touches the user's branches; `retry <id>` of a failed run (or one that waits for its",
-    "  retry) with neither `--from` nor `--step` goes on **in place** from its failed step (`failedStepOf`: in the station",
-    "  that failed, the first step that failed after its last step that passed; `inPlace`: a failed step of a station that",
-    "  did not pass): the station goes on from the part that holds it, every step and file kept, nothing to confirm, the",
-    "  retry an entry `you` of `retries`; `--step` of a failed step does the same; what a retry or a restart would take back of the agents'",
-    "  work (`takeBackOf`) is asked first: a terminal's prompt, else refused without `--yes` (exit code 2), `--plan` prints",
-    "  `{run, files, setAside}` and runs nothing, the tool `run_retry` refuses without `confirm`; an editor that went away",
-    "  (a closed stdout) no longer fails the step that told it an event; a retry from a step that passed (`--step <id>`) keeps the steps of its station",
-    "  before it (those that passed or were skipped) and the parts that ended before its part, and runs it and every step",
-    "  after it (`previous[].step` names it); step ids are never reused within a station; *Check the connections* (`preflight.nuc`) runs first: the Developer, the graph, Ollama and",
-    "  the local roles' models, each agent's `--version`, a key in the vault for each API provider, the MCP server, free"
+    "- **The diagnosis**: a station that fails gets a step *Why it failed* (actor `diagnoser`, skipped) by",
+    "  `/developer/diagnose` with the failed step's output told in Nuclear, kept in `run.diagnosis`, when the team has a",
+    "  local role; a class the compiler does not know that the plan never had blames the plan.",
+    "- **The journal**: `.nuclear/builder/runs/<id>.md`, rewritten with the run file: the strategy, the diagnosis, the",
+    "  retries and interruptions, the files written, what is left for the reviewer, the acceptance, and every station's",
+    "  steps with who did them, their trace, decisions, what the agent read and the log of a failure.",
+    "- **A gate** after a station of `gates`: the user approves, asks for a change (the role works again with it), or",
+    "  stops. Delivery always asks before the branch.",
+    "- **The checks** (`checks.nuc`, `checks.json` in the spec's folder): every role's `checks.toml` and the team's tasks, with the",
+    "  user's own (`nuclear-builder checks <id> add`). The list is read, changed and written whole, one change at a time",
+    "  in a process (`changeChecks`: an agent marks several at once through the MCP server, the engine runs them in",
+    "  threads), and every write has its own temporary file (`writeAtomic`). A check of `by = \"role\"` runs at the end of its station: a",
+    "  `command` (a key of the line's `commands`; with `expect = \"fail\"` the project must compile (`check`) and the command"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2673,40 +2759,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.93980f",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.bd02e1",
    "type": "context",
    "title": "The engine — Who works a station",
-   "summary": "the page's log tell them in the order they ended.",
+   "summary": "when the project's `\"forceConfirm\"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on.",
    "body": [
-    "the page's log tell them in the order they ended. Measured with stubbed agents of 1 s each, six checks: 6.1 s one",
-    "  after another, 2.0 s with `parallelChecks` 4 (`testTheChecksOfAStationRunAtTheSameTimeUpToTheBound`).",
-    "- **Delivery**, approved: `git switch -c factory/<id>`, `git add` of the files the run wrote and the spec's folder,",
-    "  `git commit` with git's own identity (the user's; no other author), `git push -u origin`, `gh pr create",
-    "  --body-file <the spec's folder>/pr.md`. Never a merge.",
-    "- **The money**: one budget per run (the team's `budgetUsd`, 5 USD by default). Only work paid by use through an",
-    "  API key (kind `api`) asks the spending (`asksSpending`, spec 023): an agent's subscription (Claude Code, Codex,",
-    "  Cursor, Gemini CLI, OpenCode, Grok Build) is not asked, unless the project's `\"forceConfirm\"` or `--force-confirm`",
-    "  asks it of every paid provider. Before the first such call two questions, as events: the providers and the roles, then the amount; both `yes` or the",
-    "  run waits. `--confirm-spending` answers them in advance (CI, the editor with `nuclear.spending.confirm` off), refused",
-    "  when the project's `\"forceConfirm\"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on. The",
-    "  confirmation is kept in the run (`spending`): a resumed run does not ask again. Each paid step gets what is left"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.968b9d",
-   "type": "context",
-   "title": "The engine — Who works a station",
-   "summary": "as its budget; a step that ends over it fails the run, and no paid call starts with nothing left.",
-   "body": [
-    "as its budget; a step that ends over it fails the run, and no paid call starts with nothing left.",
+    "when the project's `\"forceConfirm\"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on. The",
+    "  confirmation is kept in the run (`spending`): a resumed run does not ask again. Each paid step gets what is left",
+    "  as its budget; a step that ends over it fails the run, and no paid call starts with nothing left.",
     "- **Safety** (`run.nuc`, today's rules): the run file is written atomically on every change; every event goes to",
     "  `<id>.log` (JSON lines); the process beats every 10 s (`owner`), a beat older than 45 s or a dead process on this",
     "  machine is an orphaned run; every file a step changes goes to the ledger (`writes`: the text before, the digest",
@@ -2715,65 +2775,7 @@
     "  run is recovered (its running steps failed, their files kept, `interrupted` with the `stepId` it was in) and goes on",
     "  in place from that step; a retry from a station moves the steps from",
     "  there to `previous` and undoes their files; **nothing an undo takes back is lost** (`undoWrites`): before a file goes",
-    "  back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's",
-    "  `setAside` (`at`, `folder`, `files`, `why`) and its journal, for every undo (a retry from a station or of a step that",
-    "  passed, a restart, a run of the earlier engine started over) — a copy, not git, since a project need not be a"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.bb82a2",
-   "type": "context",
-   "title": "The engine — Who works a station",
-   "summary": "`checks.json`; a list seeded before it takes it from the role's data), never a name in the code; the user's checks, the gates, QA's plan and the delivery are parts of their own, never among them.",
-   "body": [
-    "`checks.json`; a list seeded before it takes it from the role's data), never a name in the code; the user's checks,",
-    "  the gates, QA's plan and the delivery are parts of their own, never among them. **The money**: each check starts",
-    "  with its share of what is left (the run's budget less its cost, less what the running checks still hold of their",
-    "  shares, over the checks still to start), its provider's budget: together they never spend more than the run has;",
-    "  with nothing left a check does not start (it fails, *the check did not start*, a failure no retry fixes alone), and",
-    "  one that ends over the budget fails. The station waits for all of them, then decides as before. **Their retries**",
-    "  are the same levels: a call of one check again in its step (`process`); the part `checks` again (`node`) and the",
-    "  user's retry in place run only the checks that did not pass: those that passed stay passed while the work they",
-    "  judged stays (`st.checksPassed`, emptied when a part before the checks runs again, as a station's repair does);",
-    "  the station's repair runs them all. Every change of the run (a step, its end, a retry, an event, the save) is made",
-    "  under one lock (`Factory.lock`, reentrant), so the run file, its journal and the events stay whole. The page shows",
-    "  the checks working at once, each its row and its spinner, and *Now · N checks at the same time*; the journal and"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.be57d6",
-   "type": "context",
-   "title": "The engine — Who works a station",
-   "summary": "station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already right; what only the user can decide, a tool's `needsUser` such as…",
-   "body": [
-    "station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line",
-    "  for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already",
-    "  right; what only the user can decide, a tool's `needsUser` such as replacing their CI file, is no failure either:",
-    "  the check writes `NEEDS YOU: <question>` and the station's gate asks it after its own question, `toDecide`;",
-    "  skipped, and said, when the role is local). QA's plan is the list: the run stops there until the",
-    "  user goes on with every check of theirs that is on, of the stations up to Quality, marked (`checks <id> mark",
-    "  <check> passed|failed`); a check of the user's with `gate = true` (*the user approves the analysis*, the design, QA's",
-    "  plan, the push) is marked by the user's yes at its station's gate, never asked twice.",
-    "- **The checks at the same time** (the user, 2026-11-23: a check is an agent's session of 1 to 6 minutes, and a",
-    "  station's ran one after another; Design took 17.7 min): `runChecks` runs a station's checks in three groups, in",
-    "  order. (1) The checks by `command`, one at a time in the project: they share its build and its dependencies.",
-    "  (2) The checks by `prompt` (not `parallel = false`, the role not local), when there are two or more and the line's"
+    "  back or away, what it holds is copied to `.nuclear/builder/runs/<id>.set-aside/<ms>/<path>` and named in the run's"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2803,6 +2805,34 @@
     "  away): a failure is tried again at the smallest level first, in place, the files it wrote kept and its output told",
     "  to the next attempt; only when a level is spent does the next one start. The bounds are the line's `retries`",
     "  (`RETRIES` of `ci.nuc`, a key left out keeps its default; 0 to 5 each):"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.c4f5c8",
+   "type": "context",
+   "title": "The engine — Who works a station",
+   "summary": "must fail: the Developer's *each new test fails before the code* passes when the tests written before their code fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the station's documents what it finds and can fix from the sources, then answers…",
+   "body": [
+    "must fail: the Developer's *each new test fails before the code* passes when the tests written before their code",
+    "  fail, and fails when they already pass) or a `prompt` for the role's provider (`CHECK_TASK`: it fixes in the",
+    "  station's documents what it finds and can fix from the sources, then answers `PASSED` or `FAILED` on its first line",
+    "  for the work after its fixes: a finding fixed is no failure, which would have stopped a run for what was already",
+    "  right; what only the user can decide, a tool's `needsUser` such as replacing their CI file, is no failure either:",
+    "  the check writes `NEEDS YOU: <question>` and the station's gate asks it after its own question, `toDecide`;",
+    "  skipped, and said, when the role is local). QA's plan is the list: the run stops there until the",
+    "  user goes on with every check of theirs that is on, of the stations up to Quality, marked (`checks <id> mark",
+    "  <check> passed|failed`); a check of the user's with `gate = true` (*the user approves the analysis*, the design, QA's",
+    "  plan, the push) is marked by the user's yes at its station's gate, never asked twice.",
+    "- **The checks at the same time** (the user, 2026-11-23: a check is an agent's session of 1 to 6 minutes, and a",
+    "  station's ran one after another; Design took 17.7 min): `runChecks` runs a station's checks in three groups, in"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2871,34 +2901,6 @@
     "  | `node` | a part of a station (`phase`) whose step failed, worked again with its files kept and the failure in its task (`retrying`: *Your previous attempt failed*); never a part that is the user's (`USER_PHASES`: a gate, QA's plan and its yes, the delivery's question) | 1 | `phase` |",
     "  | `station` | the diagnosis and the station once more (below, *A failure diagnosed and repaired*) | 1 | `repair` |",
     "  | the user | the run waits on a question `retry-<station>` (kind `retry`, its `step` and `worth`): *yes* retries the failed step in place, *no* ends the run failed, *stop* or no answer leaves it waiting | — | `retryAsked` |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-who-works-a-station.e7d091",
-   "type": "context",
-   "title": "The engine — Who works a station",
-   "summary": "`parallelChecks` is 2 or more (1 to 16, 4 by default; 1: one after another, as before): together, at most `parallelChecks` at once (`checksTogether`), each its own agent's session, step (`\"parallel\": true`), trace, cost and line of the ledger.",
-   "body": [
-    "`parallelChecks` is 2 or more (1 to 16, 4 by default; 1: one after another, as before): together, at most",
-    "  `parallelChecks` at once (`checksTogether`), each its own agent's session, step (`\"parallel\": true`), trace, cost",
-    "  and line of the ledger. A check fixes what it finds, so each works in its own copy of the project (a temporary",
-    "  folder: the project but the folders the ledger skips and `.nuclear/builder/`; `--root` of the Builder's MCP server",
-    "  is the copy); as each ends, what it changed comes back to the project: a file the project still has as the copy had",
-    "  it takes the check's version, one another check changed meanwhile is merged (`git merge-file`), and a change that",
-    "  does not merge is set aside (`setAside`, the copy's version) while the check runs again in the project after the",
-    "  others; what came back is in the ledger as that check's step's. Only text files up to 1 MB come back (what the",
-    "  ledger sees); a check writes the station's documents. (3) The checks of `parallel = false`, one at a time in the",
-    "  project, after the others: those that run the project (`developer.tests-fail-first`, `qa.edge-cases`,",
-    "  `devops.pipeline`: its commands, its build, its dependencies, which a copy does not have) or read what the others",
-    "  fixed. Which checks are independent is data (`parallel` in a role's `checks.toml`, a team's task or the run's"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"

@@ -3,6 +3,7 @@ use re
 use sys
 use json
 use time
+use threading
 use shutil
 use ntpath
 use posixpath
@@ -97,7 +98,8 @@ teamSlug(text: string) string
 // `keep` (a team's file).
 writeAtomic(file: Path, text: string, keep: boolean = false) void
   file.parent.mkdir(parents = true, existOk = true)
-  temp = file.withName(".${file.name}.${os.getpid()}.tmp")
+  // one temporary file per process and thread: two writes at the same time never share one (a shared one is torn)
+  temp = file.withName(".${file.name}.${os.getpid()}.${threading.getIdent()}.tmp")
   temp.writeText(text, encoding = "utf-8")
   if keep and file.exists()
     shutil.copy2(file, file.withName("${file.name}.bak"))
