@@ -90,6 +90,11 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
 
 ## To decide with the user
 
+- **A database no ORM knows** ([spec 005](../04-specs/005-database-adapters/requirements.md), 2026-11-25): the
+  inventory and the contract are written and CamusDB is probed; open: whether the Synapsis ORM serves only adapted
+  databases or every one, and whether a transaction the database asks to retry is retried
+  ([design](../04-specs/005-database-adapters/design.md) §5).
+
 Found by the app check (2026-11-23), left by the fixes of the same day (`checks/app-check/known.txt` holds the
 probes that show what still differs):
 
