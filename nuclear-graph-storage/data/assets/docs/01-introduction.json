@@ -550,6 +550,34 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.4f9ba4",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "same work.",
+   "body": [
+    "- **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the",
+    "  same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's",
+    "  agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,",
+    "  and never read nor change `build/`, `node_modules/` or `dist/`; a step's prompt sends the agent to the oracle first",
+    "  and names where each document it already holds is; Anthropic's requests cache their prefix (a cache read priced as",
+    "  it is). Measured on one spec with Haiku: -40 % to -43 % tokens in, -49 % time, -60 % files read by hand. The ledger",
+    "  and `nuclear-builder metrics --view context` say each step's turns, tool calls and reads by hand. A local model whose",
+    "  window is too small (Ollama gives 4 096 tokens under 24 GiB of VRAM) is refused before any call with its fix, and",
+    "  Ollama's *the prompt is longer than the context length* is said with the same fix (a `-32k` variant made with",
+    "  `PARAMETER num_ctx 32768`). Fix: a run whose agent marked several checks at once tore `checks.json` and the engine",
+    "  fell.",
+    "- **A project's documents point to the oracle** (spec 025): `nuclear new` writes in `docs/README.md` and `AGENTS.md`"
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.591060",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -857,6 +885,27 @@
    "body": [
     "- A service that does not answer at the end of the set-up (found on a new Mac: Nuclear Chat) is waited for, started again and, when another program holds its port without answering, moved to a free port; the port of our own service that is still starting is no longer moved under it; another copy of a service (an older version's, a source install's, one started by hand) is stopped, so one runs; a failure shows the service's own last lines. `installer/tests/stack.sh` checks the stack a real machine is left with.",
     "- The delivery gate: `installer/release/delivery.sh <version>` must pass before a tag (version check, `cargo test`, clippy with 0 warnings, the VS Code extension's compile and tests, Nuclear Builder's, the MCP server's and the backend runtimes' tests, the website exactly as its workflow, `knowledge check`, the archive and every installer test), and `installer/release/after-release.sh <version>` after it (every workflow green, every asset, the site serving the tag's installers, the public one-liner and an update from the previous release in a fake HOME)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.aa1748",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "that Nuclear is asked of the MCP server and never copied into the project, whose documents hold its own architecture (its components' layers, where each piece goes), business and decisions; `nuclear agent init` adds the section to a project made before.",
+   "body": [
+    "that Nuclear is asked of the MCP server and never copied into the project, whose documents hold its own architecture",
+    "  (its components' layers, where each piece goes), business and decisions; `nuclear agent init` adds the section to a",
+    "  project made before.",
+    "- **An empty text under `@required` answers the rule `required`** in every backend dialect, never `minLength`",
+    "  (ADR-synapsis-0014); `@minLength(1)` still answers `minLength`."
    ],
    "sources": [
     "CHANGELOG.md"

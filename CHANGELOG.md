@@ -4,6 +4,24 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the
+  same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's
+  agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,
+  and never read nor change `build/`, `node_modules/` or `dist/`; a step's prompt sends the agent to the oracle first
+  and names where each document it already holds is; Anthropic's requests cache their prefix (a cache read priced as
+  it is). Measured on one spec with Haiku: -40 % to -43 % tokens in, -49 % time, -60 % files read by hand. The ledger
+  and `nuclear-builder metrics --view context` say each step's turns, tool calls and reads by hand. A local model whose
+  window is too small (Ollama gives 4 096 tokens under 24 GiB of VRAM) is refused before any call with its fix, and
+  Ollama's *the prompt is longer than the context length* is said with the same fix (a `-32k` variant made with
+  `PARAMETER num_ctx 32768`). Fix: a run whose agent marked several checks at once tore `checks.json` and the engine
+  fell.
+- **A project's documents point to the oracle** (spec 025): `nuclear new` writes in `docs/README.md` and `AGENTS.md`
+  that Nuclear is asked of the MCP server and never copied into the project, whose documents hold its own architecture
+  (its components' layers, where each piece goes), business and decisions; `nuclear agent init` adds the section to a
+  project made before.
+- **An empty text under `@required` answers the rule `required`** in every backend dialect, never `minLength`
+  (ADR-synapsis-0014); `@minLength(1)` still answers `minLength`.
+
 - **Migrating a project into Nuclear** (ADR-platform-0015; the user: "one of the most important features of the ecosystem"): an agent asked to migrate a project of another technology refused, because the rules and the Smart Graph said Nuclear "cannot read TypeScript, Dart or Python". Now the transpiler still reads only `.nuc`, and an agent reads the original as the specification and rewrites it in Nuclear with the tools. New MCP tool `migration_inspect(folder)` (read-only): each app of the original (`package.json`, `pubspec.yaml`, `pyproject.toml`, `requirements.txt`), its language and frameworks, the Nuclear platform and dialect it becomes (React → `web`/`react`; Flutter, React Native → `mobile`/`flutter`; Express, NestJS → `backend`/`nestjs`; FastAPI, Flask, Django → `backend`/`fastapi`), its database plugin and what becomes of each dependency. The graph's new strategy `strategy:migrate-project` is the plan (inventory, workspace, one spec per component, the generators, the rest in Nuclear, the original's tests as the proof), with `can:migrate-a-project`. Express is a source like any other: it is postponed only as a dialect.
 - **No agent changes Nuclear; the installation is sealed** (ADR-platform-0016): the installers write `.seal` (size, time and SHA-256 of every file of `bin/`, `dialects/`, `platforms/`, `generators/`) and make those folders read-only; every build and check compares sizes and times (once per process) and refuses a changed installation (**N0226**), `nuclear doctor` compares the hashes. A dialect from outside the installation (a project's `dialects/`, `--dialect-path`, `NUCLEAR_DIALECT_PATH`) with the name of an installed one is refused (**N0225**): before, a folder `dialects/fastapi/` in a project replaced the installed dialect. `nuclear doctor --seal` is the installers' last step. The rule, `cannot:change-nuclear`, is in the skill, `nuclear_start`, the MCP server's instructions and the project's `AGENTS.md`.
 

@@ -2878,11 +2878,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.b518f1",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.b68a7a",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- `nuclear new` writes the oracle's rule into a project's `docs/README.md` and `AGENTS.md` (Nuclear is the MCP server's, the architecture the project's); `nuclear agent init` adds it to an older project's `docs/README.md`, what the user wrote kept (spec 025).",
     "- Fix: a mobile app whose packages an earlier release fetched failed with `Couldn't resolve the package 'decimal'` (the `synapsis` runtime of 0.100 needs it, and `pub get` ran again only when the app's own pubspec changed): `nuclear build` runs `pub get` again when another version of the platform made the last one.",
     "- A project's development port never moves by itself: the dialect's, or the `PORT` of the project's `.env` files (`nuclear env set PORT <port>`); the registry of projects records it and never assigns another (it moved a workspace's backend to 8008 while its apps called 8000). `nuclear run` refuses a port another process holds and says which one (`lsof`) and which project of the registry has it. The registry holds only the person's projects: a temporary folder, Nuclear's installation and the folders of Nuclear's source tree stay out, and are pruned from an existing file on read. A web or mobile app of a workspace gets its backend's address from the backend's own files (not the registry), also when its `.env` value equals the code's default."
    ],
