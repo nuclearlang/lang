@@ -1,48 +1,76 @@
 ---
-status: draft
+status: approved
 owner: Julian Molina
 updated: 2026-11-25
-related: [requirements.md, tasks.md, ../../02-architecture/runtime-python.md, ../../02-architecture/runtime-typescript.md]
+related: [requirements.md, tasks.md, ../../03-adr/0004-every-database-is-a-plugin.md, ../../02-architecture/runtime-python.md, ../../02-architecture/runtime-typescript.md]
 ---
 # 005 — Database adapters: design
 
-A proposal to settle in an ADR once the open decisions (§5) are taken. The Nuclear below is a sketch of the
-contract: its exact types follow the decisions.
+The decision is [ADR-backend-0004](../../03-adr/0004-every-database-is-a-plugin.md). The Nuclear below is the shape
+of the contract; its exact types are settled while T1 and T2 are built.
 
 ## 1. The layers
 
 ```
-the project's .nuc: repository, @entity, @transactional, migrations          (unchanged)
-        │
-the runtime (synapsis-py, synapsis-nest)
-        ├── an ORM connection: SQLite, Postgres, MySQL, MariaDB → SQLAlchemy / Sequelize, as today
-        └── an adapted connection → the Synapsis ORM (Nuclear, built into each runtime)
-                unit of work · entity states · mapper · query → SQL tree · relation loader · migration diff
-                        │
-                DatabaseAdapter (Nuclear contract) ← the database's package: `nuclear add camusdb`
+the project's .nuc: repository, @entity, @transactional, migrations                 (unchanged)
+   │   config: Oracle(url = env("DATABASE_URL", "..."))      ← the connection word of a plugin
+   │
+the plugin (a package: nuclear add oracle) — the same contract for every database
+   ├── native, for a dialect whose ORM knows the database: the ORM's dialect and driver
+   │        → SQLAlchemy / Sequelize do the unit of work, CRUD, transactions, as today
+   └── adapted, for a dialect whose ORM does not: the adapter in Nuclear
+            → the Synapsis ORM (Nuclear, built into each runtime) does them
+                unit of work · entity states · mapper · query → SQL tree · loader · migration diff
 ```
 
-Why not an adapter of the ORMs: SQLAlchemy takes outside dialects, Sequelize 6 (the `nestjs` runtime's) has a
-closed list of databases, so an ORM-level adapter would be two programs in two languages for each database, and
-could not exist for one of them. The Synapsis ORM is written once in Nuclear and keeps every row of
-[requirements](requirements.md) §1; a database brings only what is its own.
+The way is chosen per dialect: a database can be native in one dialect and adapted in the other. The four
+databases of today are plugins too, native in both dialects.
 
-## 2. The Synapsis ORM (provided once)
+## 2. A plugin package
+
+```
+plugins/oracle/
+├── plugin.toml          [package] name, version, platform = "backend", description
+├── oracle.nuc           the kind `plugin`: the connection word, what it refuses, the retries; the adapter when adapted
+├── docs.toml            the editor documentation of its words
+├── fastapi/kind.toml    native = { orm dialect, driver package }   or   adapted (no section)
+└── nestjs/kind.toml     the same for the other dialect
+```
+
+```nuclear
+// a database a dialect's ORM may not know: the adapter is the plugin's own code
+@refuses(onDelete = ["cascade", "set null"])
+@retries(3)
+plugin CamusDB(url: string) > DatabaseAdapter
+  open() void
+    ...
+  run(statement: Statement, tx?: Transaction) Rows
+    ...
+```
+
+A native plugin's `.nuc` holds only the connection word, `@refuses` and `@retries`: the dialect parts name the ORM's
+dialect and driver, so no target library is in Nuclear (platforms rule 1).
+
+## 3. The Synapsis ORM (provided once, for the adapted way)
 
 | Part | Does | Rows of requirements §1 |
 |---|---|---|
 | Mapper | the entity's table, columns, keys, relations, from metadata the dialect's template writes | 1.2 |
 | Unit of work | one per transaction: the identity of every row read or saved in it, the writes sent in the order of the calls (each `save` flushes, as today), commit / rollback; outside `@transactional` each write is its own | 1.5 |
+| Retry | a refusal `retry` runs the whole transaction again from its start, `@retries(n)` times, then throws | 1.5 |
 | Entity state | `new` (no key) → `kept` (read or saved); the relations loaded; a `@manyToMany` list waiting for `save` | 1.3, 1.5 |
 | Query | `where` / `orderBy` / `limit` / `offset` / `paginate` / `update` / `delete` as a SQL tree, never a text | 1.4 |
 | Loader | `relations("a.b")`: one `SELECT … WHERE key IN (…)` per relation | 1.4 |
-| Guards of a write | the length of a text, an exact number: refused with 409 before it is sent (the rules the runtimes have today) | 1.2, 1.5 |
-| Migrations | the same diff as today (entities minus the last migration), the history table, `up`/`down`/`status`, rendered through the adapter | 1.6 |
+| Guards of a write | the length of a text, an exact number: refused with 409 before it is sent | 1.2, 1.5 |
+| Migrations | the same diff as today, the history table, `up`/`down`/`status`, rendered through the adapter | 1.6 |
 
-## 3. The contract a database implements
+The native way gets the retry from the same rule: the runtime's `@transactional` retries when the plugin's
+`refusal` says `retry`, on both ways. An event published inside a transaction is sent at its commit, so a retried
+use case never publishes twice.
+
+## 4. The contract of an adapted database
 
 ```nuclear
-// what the database is asked to run
 Statement
   sql: string
   params: SqlValue[]
@@ -53,7 +81,7 @@ Rows
   values: Json[][]
   changed: int
 
-// a refusal of the database, as the platform names it (409 for the first four)
+// a refusal of the database, as the platform names it: 409 for the first four
 Refusal
   unique
   foreignKey
@@ -63,7 +91,7 @@ Refusal
   other
 
 DatabaseAdapter
-  open(url: string) void
+  open() void
   close() void
   begin() Transaction
   commit(tx: Transaction) void
@@ -73,8 +101,8 @@ DatabaseAdapter
   sql() SqlDialect
 ```
 
-`SqlDialect` is a module of the ORM with the standard SQL; an adapter extends it (`CamusSql > SqlDialect`) and
-overrides only what its database writes otherwise:
+`SqlDialect` is a module of the Synapsis ORM with the standard SQL; an adapter extends it (`CamusSql > SqlDialect`)
+and overrides only what its database writes otherwise:
 
 | Method | Standard | Asked when |
 |---|---|---|
@@ -86,22 +114,12 @@ overrides only what its database writes otherwise:
 | `everyRow()` | (nothing) | an `update` / `delete` without `where` |
 | `limit(n, skip)` | `LIMIT n OFFSET skip` | `limit`, `offset`, `paginate` |
 | `schemaChange(change)` | standard DDL | a migration step, `createTables` |
+| `transactionalDdl()` | `true` | `--transaction all`: answered `each`, and said, when `false` |
+| `returning()` | `true` | without it the row is read back by its key |
 
-**What the database can do is data**, in the package's TOML, so the compiler checks it without running anything:
+A native plugin implements only `refusal` (the ORM's error → `Refusal`), for the 409 and the retry.
 
-```toml
-[adapter]
-name = "CamusDB"                       # the connection word: CamusDB(url = env("DATABASE_URL", "..."))
-refuses = { onDelete = ["cascade", "set null"] }
-transactional_ddl = false              # --transaction all is answered with each, and says so
-returning = true                       # without it the ORM reads the row back by its key
-```
-
-A project whose entity uses a refused value, with that connection, does not build: a new diagnostic, documented in
-`diagnostics.md`, on the decorator's argument, with the fix (`onDelete = "restrict"`, or remove the children in
-the use case).
-
-## 4. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)
+## 5. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)
 
 | Need | CamusDB | Probed |
 |---|---|---|
@@ -114,25 +132,20 @@ the use case).
 | `insensitive` | `ILIKE` | yes |
 | `everyRow` | `WHERE true` (an `UPDATE` / `DELETE` needs a `WHERE`) | no (documented) |
 | `refusal` | `CADB0300` unique, `CADB0304`/`0305` foreign key, `CADB0301` required, `CADB0302` too long, `CADB0502`/`0504` retry | `CADB0300` yes |
-| `refuses` | `ON DELETE CASCADE` refused (`CADB0533`); only `NO ACTION` and `RESTRICT` | yes |
+| `@refuses` | `ON DELETE CASCADE` refused (`CADB0533`); only `NO ACTION` and `RESTRICT` | yes |
 | `ALTER TABLE ADD COLUMN … DEFAULT (0)` | works | yes |
 | `numeric(p, s)`, `datetime` precision, `LIKE … ESCAPE`, DDL in a transaction | to probe | no |
 
-## 5. Open decisions (asked to the user before the ADR)
-
-1. **Which databases the Synapsis ORM serves.** Only the adapted ones (two engines: the database check proves they
-   answer the same), or every database (one engine, SQLAlchemy and Sequelize leave the runtimes: the most parity,
-   the largest change).
-2. **A transaction the database asks to retry** (`CADB0502`): retried by the unit of work a fixed number of times,
-   or answered as an error. No database of today asks it under the isolation the platform uses.
-
 ## 6. What Nuclear lacks for this (checked in the references)
 
-1. **An HTTP client in the language's library**: `Http` exists only as a backend connection of an HTTP
+1. **The kind `plugin`** in the backend contract, its decorators `@refuses` and `@retries`, and the compile-time
+   check of `@refuses` against the entities of a project: generic data of the loader, no database name in Rust
+   (platforms rule 4), and its diagnostic in `diagnostics.md`.
+2. **An HTTP client in the language's library**: `Http` exists only as a backend connection of an HTTP
    repository; an adapter that speaks HTTP (CamusDB) needs one. A database with only a native driver needs a
    dialect's type definitions (root rule 4's exception).
-2. **A Nuclear library inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and
+3. **Built Nuclear inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and
    `synapsis-nest`; no runtime holds built Nuclear yet (lodash's delivery is the same open question).
-3. **A kind package that brings a connection and its adapter** (`[adapter]` above) and the compile-time check of
-   `refuses`: generic data of the loader, no database name in Rust (platforms rule 4).
 4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it.
+5. **The four databases of today moved out** of the dialects' `[project.plugins.*]` into plugin packages, the
+   installer shipping them.

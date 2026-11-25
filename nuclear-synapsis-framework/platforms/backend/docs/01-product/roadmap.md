@@ -12,6 +12,10 @@ commands of `nuclear` is in [the command line tools](../../../../../tools/cli/AG
 
 ## Half done
 
+- **Every database is a plugin** ([spec 005](../04-specs/005-database-adapters/tasks.md), ADR-backend-0004, 2026-11-25):
+  decided and designed, CamusDB probed; nothing built. Next: T1, what Nuclear lacks (the kind `plugin`, an HTTP
+  client in the language's library, built Nuclear inside a runtime).
+
 - **Backend parity** (step 4 of the competitiveness plan;
   [spec 004](../04-specs/004-backend-parity/plan.md)). In place, in both dialects
   ([ADR-backend-0001](../03-adr/0001-backend-data.md)): `@primary(generated)`, the relations with
@@ -89,11 +93,6 @@ sessions, a guard kind for checks beyond headers), background jobs, file uploads
   only an empty database was run.
 
 ## To decide with the user
-
-- **A database no ORM knows** ([spec 005](../04-specs/005-database-adapters/requirements.md), 2026-11-25): the
-  inventory and the contract are written and CamusDB is probed; open: whether the Synapsis ORM serves only adapted
-  databases or every one, and whether a transaction the database asks to retry is retried
-  ([design](../04-specs/005-database-adapters/design.md) §5).
 
 Found by the app check (2026-11-23), left by the fixes of the same day (`checks/app-check/known.txt` holds the
 probes that show what still differs):

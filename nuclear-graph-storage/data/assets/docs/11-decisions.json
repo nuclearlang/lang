@@ -17875,6 +17875,173 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#consequences",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — Consequences",
+   "summary": "installation; the four of today follow the same rule.",
+   "body": [
+    "- Positive: any relational database can be added by an agent with the tools, in Nuclear, without changing the",
+    "  installation; the four of today follow the same rule.",
+    "- Positive: where an ORM knows the database, nothing new runs underneath.",
+    "- Negative: two engines under the repositories; their parity rests on the database check running every plugin.",
+    "- Negative: a retried transaction runs the use case again: what it does outside the database (an event it",
+    "  publishes) must wait for the commit, or it would happen twice.",
+    "- Negative: Nuclear lacks pieces for it (spec 005 design §6): an HTTP client in the language's library, built",
+    "  Nuclear inside a runtime, the compile-time check of what a plugin refuses."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — Context and problem",
+   "summary": "A backend's repositories work on the four databases its two ORMs were wired to (SQLite, PostgreSQL, MySQL, MariaDB), and the wiring is in the dialects' TOML and the runtimes.",
+   "body": [
+    "A backend's repositories work on the four databases its two ORMs were wired to (SQLite, PostgreSQL, MySQL,",
+    "MariaDB), and the wiring is in the dialects' TOML and the runtimes. Oracle, SQL Server or a database nobody knows",
+    "(CamusDB) cannot be used, and an agent has no way to add one without changing Nuclear (root rule 17). The user",
+    "decided on 2026-11-25: one adapter for every database; when the ORM of a dialect supports the database the",
+    "transpiler matches it to that ORM natively, as the ORM is matched to Synapsis today; when it does not, Synapsis's",
+    "own adapter does the unit of work, the CRUD and the transactions, so the repositories work exactly the same. A",
+    "database is declared with the kind `plugin`, and the knowledge base tells an agent how to write one.",
+    "([spec 005](../04-specs/005-database-adapters/requirements.md) holds the inventory of what the repositories give.)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#decision.59eaac",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — Decision",
+   "summary": "fixed number of times the plugin sets; then the error is thrown, as any error the program does not handle.",
+   "body": [
+    "**A transaction the database asks to retry is retried by the library**, the whole transaction from its start, a",
+    "fixed number of times the plugin sets; then the error is thrown, as any error the program does not handle.",
+    "",
+    "**The knowledge base holds how to write a plugin**: the contract, the native and the adapted way, the checks to",
+    "pass, as a playbook an agent follows from a fresh install."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#decision.5cc7c4",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — Decision",
+   "summary": "package (`nuclear add`).",
+   "body": [
+    "**A database is a `plugin`**, a kind of the backend platform written in Nuclear and added to a project as a",
+    "package (`nuclear add`). It is data of the platform, never a word of the parser (root rule 2). The four databases",
+    "of today become plugins of the same form: none is special.",
+    "",
+    "**One contract, two ways under it, chosen per dialect.**",
+    "",
+    "| The ORM of the dialect | What the plugin gives | Who does the unit of work, CRUD, transactions |",
+    "|---|---|---|",
+    "| knows the database (Oracle and SQL Server in SQLAlchemy) | the native match, in the plugin's dialect part: the ORM's dialect and driver | the ORM, as today |",
+    "| does not (CamusDB anywhere; a database Sequelize lacks) | the adapter in Nuclear: the driver and what its SQL writes otherwise | the Synapsis ORM, written once in Nuclear |",
+    "",
+    "The project's `.nuc` is the same either way: only its connection line names the database. Whether a dialect is",
+    "native or adapted is the plugin's detail, and the database check proves both give the same answers.",
+    "",
+    "**What a database cannot do is declared by its plugin** and refused at compile time with a documented diagnostic",
+    "that names the fix. No hidden emulation (`onDelete = \"cascade\"` on CamusDB does not build)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#options-considered",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — Options considered",
+   "summary": "1. One contract for every database, native where the ORM knows it, the Synapsis ORM where not — chosen.",
+   "body": [
+    "1. **One contract for every database, native where the ORM knows it, the Synapsis ORM where not** — chosen.",
+    "2. **The Synapsis ORM for every database**: one engine, but it throws away two mature ORMs that already pass the",
+    "   database check.",
+    "3. **Adapters at the level of each ORM**: two programs in two languages per database, and impossible where an ORM",
+    "   takes no outside dialect (Sequelize 6).",
+    "4. **The Synapsis ORM only for unknown databases, the four of today wired as now**: two ways to add a database",
+    "   instead of one."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md#references",
+   "type": "adr",
+   "title": "ADR-0004: Every database is a plugin, written in Nuclear on one adapter contract — References",
+   "summary": "packages are libraries), ADR-platform-0016 (the installation is sealed).",
+   "body": [
+    "- Spec: [005-database-adapters](../04-specs/005-database-adapters/design.md).",
+    "- Builds on: ADR-backend-0001 (the data words), ADR-backend-0002 (migrations), ADR-synapsis-0004 (plugins and kind",
+    "  packages are libraries), ADR-platform-0016 (the installation is sealed)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/README.md#decisions-of-the-backend-platform.2ec542",
    "type": "adr",
    "title": "Decisions of the backend platform",
@@ -17902,7 +18069,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/README.md#decisions-of-the-backend-platform.66d820",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/03-adr/README.md#decisions-of-the-backend-platform.9a730e",
    "type": "adr",
    "title": "Decisions of the backend platform",
    "summary": "A decision of this project is cited `ADR-backend-NNNN`.",
@@ -17915,7 +18082,8 @@
     "|---|---|---|---|",
     "| [0001](0001-backend-data.md) | Backend data is written with one key decorator, a decorator per relation, `paginate`, `@transactional` and generated migrations | accepted | 2026-11-10 |",
     "| [0002](0002-typeorm-is-the-rule-of-migrations.md) | TypeORM is the rule of behaviour for migrations: the history, the order, `--fake`, the transactions, the schema of the timestamps and the foreign keys | accepted | 2026-11-22 |",
-    "| [0003](0003-exact-numbers-in-the-database.md) | A `bigint` is a `BIGINT`, a `bigdouble` a `NUMERIC(p, s)`, SQLite keeps their text compared by value; a value the column cannot hold is 409; on the wire a JSON text | accepted | 2026-11-23 |"
+    "| [0003](0003-exact-numbers-in-the-database.md) | A `bigint` is a `BIGINT`, a `bigdouble` a `NUMERIC(p, s)`, SQLite keeps their text compared by value; a value the column cannot hold is 409; on the wire a JSON text | accepted | 2026-11-23 |",
+    "| [0004](0004-every-database-is-a-plugin.md) | Every database is a `plugin` in Nuclear on one adapter contract: native where the dialect's ORM knows it, the Synapsis ORM where not; what it cannot do is refused at compile time; a retry is the library's | accepted | 2026-11-25 |"
    ],
    "platforms": [
     "backend"
@@ -18500,10 +18668,10 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#005-database-adapters-design",
    "type": "spec",
    "title": "005 — Database adapters: design",
-   "summary": "A proposal to settle in an ADR once the open decisions (§5) are taken.",
+   "summary": "The decision is ADR-backend-0004. The Nuclear below is the shape of the contract; its exact types are settled while T1 and T2 are built.",
    "body": [
-    "A proposal to settle in an ADR once the open decisions (§5) are taken. The Nuclear below is a sketch of the",
-    "contract: its exact types follow the decisions."
+    "The decision is [ADR-backend-0004](../../03-adr/0004-every-database-is-a-plugin.md). The Nuclear below is the shape",
+    "of the contract; its exact types are settled while T1 and T2 are built."
    ],
    "platforms": [
     "backend"
@@ -18522,23 +18690,22 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#1-the-layers",
    "type": "spec",
    "title": "005 — Database adapters: design — 1. The layers",
-   "summary": "the project's .nuc: repository, @entity, @transactional, migrations (unchanged) │ the runtime (synapsis-py, synapsis-nest) ├── an ORM connection: SQLite, Postgres, MySQL, MariaDB → SQLAlchemy / Sequelize, as today └── an adapted connection → the Synapsis ORM (Nuclear, built into each runtime) unit…",
+   "summary": "the project's .nuc: repository, @entity, @transactional, migrations (unchanged) │ config: Oracle(url = env(\"DATABASE_URL\", \"...\")) ← the connection word of a plugin │ the plugin (a package: nuclear add oracle) — the same contract for every database ├── native, for a dialect whose ORM knows the…",
    "body": [
     "```",
-    "the project's .nuc: repository, @entity, @transactional, migrations          (unchanged)",
-    "        │",
-    "the runtime (synapsis-py, synapsis-nest)",
-    "        ├── an ORM connection: SQLite, Postgres, MySQL, MariaDB → SQLAlchemy / Sequelize, as today",
-    "        └── an adapted connection → the Synapsis ORM (Nuclear, built into each runtime)",
-    "                unit of work · entity states · mapper · query → SQL tree · relation loader · migration diff",
-    "                        │",
-    "                DatabaseAdapter (Nuclear contract) ← the database's package: `nuclear add camusdb`",
+    "the project's .nuc: repository, @entity, @transactional, migrations                 (unchanged)",
+    "   │   config: Oracle(url = env(\"DATABASE_URL\", \"...\"))      ← the connection word of a plugin",
+    "   │",
+    "the plugin (a package: nuclear add oracle) — the same contract for every database",
+    "   ├── native, for a dialect whose ORM knows the database: the ORM's dialect and driver",
+    "   │        → SQLAlchemy / Sequelize do the unit of work, CRUD, transactions, as today",
+    "   └── adapted, for a dialect whose ORM does not: the adapter in Nuclear",
+    "            → the Synapsis ORM (Nuclear, built into each runtime) does them",
+    "                unit of work · entity states · mapper · query → SQL tree · loader · migration diff",
     "```",
     "",
-    "Why not an adapter of the ORMs: SQLAlchemy takes outside dialects, Sequelize 6 (the `nestjs` runtime's) has a",
-    "closed list of databases, so an ORM-level adapter would be two programs in two languages for each database, and",
-    "could not exist for one of them. The Synapsis ORM is written once in Nuclear and keeps every row of",
-    "[requirements](requirements.md) §1; a database brings only what is its own."
+    "The way is chosen per dialect: a database can be native in one dialect and adapted in the other. The four",
+    "databases of today are plugins too, native in both dialects."
    ],
    "platforms": [
     "backend"
@@ -18554,20 +18721,67 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#2-the-synapsis-orm-provided-once",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#2-a-plugin-package",
    "type": "spec",
-   "title": "005 — Database adapters: design — 2. The Synapsis ORM (provided once)",
-   "summary": "2. The Synapsis ORM (provided once)",
+   "title": "005 — Database adapters: design — 2. A plugin package",
+   "summary": "plugins/oracle/ ├── plugin.toml [package] name, version, platform = \"backend\", description ├── oracle.nuc the kind `plugin`: the connection word, what it refuses, the retries; the adapter when adapted ├── docs.toml the editor documentation of its words ├── fastapi/kind.toml native = { orm dialect,…",
+   "body": [
+    "```",
+    "plugins/oracle/",
+    "├── plugin.toml          [package] name, version, platform = \"backend\", description",
+    "├── oracle.nuc           the kind `plugin`: the connection word, what it refuses, the retries; the adapter when adapted",
+    "├── docs.toml            the editor documentation of its words",
+    "├── fastapi/kind.toml    native = { orm dialect, driver package }   or   adapted (no section)",
+    "└── nestjs/kind.toml     the same for the other dialect",
+    "```",
+    "",
+    "```nuclear",
+    "// a database a dialect's ORM may not know: the adapter is the plugin's own code",
+    "@refuses(onDelete = [\"cascade\", \"set null\"])",
+    "@retries(3)",
+    "plugin CamusDB(url: string) > DatabaseAdapter",
+    "  open() void",
+    "    ...",
+    "  run(statement: Statement, tx?: Transaction) Rows",
+    "    ...",
+    "```",
+    "",
+    "A native plugin's `.nuc` holds only the connection word, `@refuses` and `@retries`: the dialect parts name the ORM's",
+    "dialect and driver, so no target library is in Nuclear (platforms rule 1)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#3-the-synapsis-orm-provided-once-for-the-adapted-way",
+   "type": "spec",
+   "title": "005 — Database adapters: design — 3. The Synapsis ORM (provided once, for the adapted way)",
+   "summary": "The native way gets the retry from the same rule: the runtime's `@transactional` retries when the plugin's `refusal` says `retry`, on both ways.",
    "body": [
     "| Part | Does | Rows of requirements §1 |",
     "|---|---|---|",
     "| Mapper | the entity's table, columns, keys, relations, from metadata the dialect's template writes | 1.2 |",
     "| Unit of work | one per transaction: the identity of every row read or saved in it, the writes sent in the order of the calls (each `save` flushes, as today), commit / rollback; outside `@transactional` each write is its own | 1.5 |",
+    "| Retry | a refusal `retry` runs the whole transaction again from its start, `@retries(n)` times, then throws | 1.5 |",
     "| Entity state | `new` (no key) → `kept` (read or saved); the relations loaded; a `@manyToMany` list waiting for `save` | 1.3, 1.5 |",
     "| Query | `where` / `orderBy` / `limit` / `offset` / `paginate` / `update` / `delete` as a SQL tree, never a text | 1.4 |",
     "| Loader | `relations(\"a.b\")`: one `SELECT … WHERE key IN (…)` per relation | 1.4 |",
-    "| Guards of a write | the length of a text, an exact number: refused with 409 before it is sent (the rules the runtimes have today) | 1.2, 1.5 |",
-    "| Migrations | the same diff as today (entities minus the last migration), the history table, `up`/`down`/`status`, rendered through the adapter | 1.6 |"
+    "| Guards of a write | the length of a text, an exact number: refused with 409 before it is sent | 1.2, 1.5 |",
+    "| Migrations | the same diff as today, the history table, `up`/`down`/`status`, rendered through the adapter | 1.6 |",
+    "",
+    "The native way gets the retry from the same rule: the runtime's `@transactional` retries when the plugin's",
+    "`refusal` says `retry`, on both ways. An event published inside a transaction is sent at its commit, so a retried",
+    "use case never publishes twice."
    ],
    "platforms": [
     "backend"
@@ -18583,46 +18797,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#3-the-contract-a-database-implements.bef324",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#4-the-contract-of-an-adapted-database.99c101",
    "type": "spec",
-   "title": "005 — Database adapters: design — 3. The contract a database implements",
-   "summary": "[adapter] name = \"CamusDB\" # the connection word: CamusDB(url = env(\"DATABASE_URL\", \"...\")) refuses = { onDelete = [\"cascade\", \"set null\"] } transactional_ddl = false # --transaction all is answered with each, and says so returning = true # without it the ORM reads the row back by its key A…",
-   "body": [
-    "**What the database can do is data**, in the package's TOML, so the compiler checks it without running anything:",
-    "",
-    "```toml",
-    "[adapter]",
-    "name = \"CamusDB\"                       # the connection word: CamusDB(url = env(\"DATABASE_URL\", \"...\"))",
-    "refuses = { onDelete = [\"cascade\", \"set null\"] }",
-    "transactional_ddl = false              # --transaction all is answered with each, and says so",
-    "returning = true                       # without it the ORM reads the row back by its key",
-    "```",
-    "",
-    "A project whose entity uses a refused value, with that connection, does not build: a new diagnostic, documented in",
-    "`diagnostics.md`, on the decorator's argument, with the fix (`onDelete = \"restrict\"`, or remove the children in",
-    "the use case)."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#3-the-contract-a-database-implements.bfcb52",
-   "type": "spec",
-   "title": "005 — Database adapters: design — 3. The contract a database implements",
-   "summary": "// what the database is asked to run Statement sql: string params: SqlValue[] returning: string[] Rows columns: string[] values: Json[][] changed: int // a refusal of the database, as the platform names it (409 for the first four) Refusal unique foreignKey required tooLong retry other…",
+   "title": "005 — Database adapters: design — 4. The contract of an adapted database",
+   "summary": "Statement sql: string params: SqlValue[] returning: string[] Rows columns: string[] values: Json[][] changed: int // a refusal of the database, as the platform names it: 409 for the first four Refusal unique foreignKey required tooLong retry other DatabaseAdapter open() void close() void begin()…",
    "body": [
     "```nuclear",
-    "// what the database is asked to run",
     "Statement",
     "  sql: string",
     "  params: SqlValue[]",
@@ -18633,7 +18813,7 @@
     "  values: Json[][]",
     "  changed: int",
     "",
-    "// a refusal of the database, as the platform names it (409 for the first four)",
+    "// a refusal of the database, as the platform names it: 409 for the first four",
     "Refusal",
     "  unique",
     "  foreignKey",
@@ -18643,7 +18823,7 @@
     "  other",
     "",
     "DatabaseAdapter",
-    "  open(url: string) void",
+    "  open() void",
     "  close() void",
     "  begin() Transaction",
     "  commit(tx: Transaction) void",
@@ -18653,19 +18833,8 @@
     "  sql() SqlDialect",
     "```",
     "",
-    "`SqlDialect` is a module of the ORM with the standard SQL; an adapter extends it (`CamusSql > SqlDialect`) and",
-    "overrides only what its database writes otherwise:",
-    "",
-    "| Method | Standard | Asked when |",
-    "|---|---|---|",
-    "| `quote(name)` | `\"name\"` | every table and column |",
-    "| `param(index, name)` | `?` | every value |",
-    "| `columnType(column)` | §2.1 of the reference | `createTables`, a migration |",
-    "| `generatedKey(column)` | `GENERATED BY DEFAULT AS IDENTITY` | `@primary(generated = true)` |",
-    "| `insensitive(column, pattern)` | `lower(c) LIKE lower(p)` | `ilike`, `icontains` |",
-    "| `everyRow()` | (nothing) | an `update` / `delete` without `where` |",
-    "| `limit(n, skip)` | `LIMIT n OFFSET skip` | `limit`, `offset`, `paginate` |",
-    "| `schemaChange(change)` | standard DDL | a migration step, `createTables` |"
+    "`SqlDialect` is a module of the Synapsis ORM with the standard SQL; an adapter extends it (`CamusSql > SqlDialect`)",
+    "and overrides only what its database writes otherwise:"
    ],
    "platforms": [
     "backend"
@@ -18681,10 +18850,44 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#4-camusdb-on-the-contract-probed-on-2026-11-25-camusdb-camusdb-latest",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#4-the-contract-of-an-adapted-database.9b7bdc",
    "type": "spec",
-   "title": "005 — Database adapters: design — 4. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)",
-   "summary": "4. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)",
+   "title": "005 — Database adapters: design — 4. The contract of an adapted database",
+   "summary": "A native plugin implements only `refusal` (the ORM's error → `Refusal`), for the 409 and the retry.",
+   "body": [
+    "| Method | Standard | Asked when |",
+    "|---|---|---|",
+    "| `quote(name)` | `\"name\"` | every table and column |",
+    "| `param(index, name)` | `?` | every value |",
+    "| `columnType(column)` | §2.1 of the reference | `createTables`, a migration |",
+    "| `generatedKey(column)` | `GENERATED BY DEFAULT AS IDENTITY` | `@primary(generated = true)` |",
+    "| `insensitive(column, pattern)` | `lower(c) LIKE lower(p)` | `ilike`, `icontains` |",
+    "| `everyRow()` | (nothing) | an `update` / `delete` without `where` |",
+    "| `limit(n, skip)` | `LIMIT n OFFSET skip` | `limit`, `offset`, `paginate` |",
+    "| `schemaChange(change)` | standard DDL | a migration step, `createTables` |",
+    "| `transactionalDdl()` | `true` | `--transaction all`: answered `each`, and said, when `false` |",
+    "| `returning()` | `true` | without it the row is read back by its key |",
+    "",
+    "A native plugin implements only `refusal` (the ORM's error → `Refusal`), for the 409 and the retry."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#5-camusdb-on-the-contract-probed-on-2026-11-25-camusdb-camusdb-latest",
+   "type": "spec",
+   "title": "005 — Database adapters: design — 5. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)",
+   "summary": "5. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)",
    "body": [
     "| Need | CamusDB | Probed |",
     "|---|---|---|",
@@ -18697,34 +18900,9 @@
     "| `insensitive` | `ILIKE` | yes |",
     "| `everyRow` | `WHERE true` (an `UPDATE` / `DELETE` needs a `WHERE`) | no (documented) |",
     "| `refusal` | `CADB0300` unique, `CADB0304`/`0305` foreign key, `CADB0301` required, `CADB0302` too long, `CADB0502`/`0504` retry | `CADB0300` yes |",
-    "| `refuses` | `ON DELETE CASCADE` refused (`CADB0533`); only `NO ACTION` and `RESTRICT` | yes |",
+    "| `@refuses` | `ON DELETE CASCADE` refused (`CADB0533`); only `NO ACTION` and `RESTRICT` | yes |",
     "| `ALTER TABLE ADD COLUMN … DEFAULT (0)` | works | yes |",
     "| `numeric(p, s)`, `datetime` precision, `LIKE … ESCAPE`, DDL in a transaction | to probe | no |"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#5-open-decisions-asked-to-the-user-before-the-adr",
-   "type": "spec",
-   "title": "005 — Database adapters: design — 5. Open decisions (asked to the user before the ADR)",
-   "summary": "1. Which databases the Synapsis ORM serves.",
-   "body": [
-    "1. **Which databases the Synapsis ORM serves.** Only the adapted ones (two engines: the database check proves they",
-    "   answer the same), or every database (one engine, SQLAlchemy and Sequelize leave the runtimes: the most parity,",
-    "   the largest change).",
-    "2. **A transaction the database asks to retry** (`CADB0502`): retried by the unit of work a fixed number of times,",
-    "   or answered as an error. No database of today asks it under the isolation the platform uses."
    ],
    "platforms": [
     "backend"
@@ -18743,16 +18921,19 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/design.md#6-what-nuclear-lacks-for-this-checked-in-the-references",
    "type": "spec",
    "title": "005 — Database adapters: design — 6. What Nuclear lacks for this (checked in the references)",
-   "summary": "1. An HTTP client in the language's library: `Http` exists only as a backend connection of an HTTP repository; an adapter that speaks HTTP (CamusDB) needs one.",
+   "summary": "1. The kind `plugin` in the backend contract, its decorators `@refuses` and `@retries`, and the compile-time check of `@refuses` against the entities of a project: generic data of the loader, no database name in Rust (platforms rule 4), and its diagnostic in `diagnostics.md`.",
    "body": [
-    "1. **An HTTP client in the language's library**: `Http` exists only as a backend connection of an HTTP",
+    "1. **The kind `plugin`** in the backend contract, its decorators `@refuses` and `@retries`, and the compile-time",
+    "   check of `@refuses` against the entities of a project: generic data of the loader, no database name in Rust",
+    "   (platforms rule 4), and its diagnostic in `diagnostics.md`.",
+    "2. **An HTTP client in the language's library**: `Http` exists only as a backend connection of an HTTP",
     "   repository; an adapter that speaks HTTP (CamusDB) needs one. A database with only a native driver needs a",
     "   dialect's type definitions (root rule 4's exception).",
-    "2. **A Nuclear library inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and",
+    "3. **Built Nuclear inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and",
     "   `synapsis-nest`; no runtime holds built Nuclear yet (lodash's delivery is the same open question).",
-    "3. **A kind package that brings a connection and its adapter** (`[adapter]` above) and the compile-time check of",
-    "   `refuses`: generic data of the loader, no database name in Rust (platforms rule 4).",
-    "4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it."
+    "4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it.",
+    "5. **The four databases of today moved out** of the dialects' `[project.plugins.*]` into plugin packages, the",
+    "   installer shipping them."
    ],
    "platforms": [
     "backend"
@@ -18782,7 +18963,12 @@
     "- It is a **sub-framework**: Synapsis keeps the unit of work and everything that makes an ORM; a new database",
     "  implements only a small contract.",
     "- What a database cannot do is a **compile-time error** of the project, never a hidden emulation.",
-    "- The first delivery covers **everything `store_api` uses**, in both dialects, inside the database check."
+    "- The first delivery covers **everything `store_api` uses**, in both dialects, inside the database check.",
+    "- **Every database** goes through the same contract, as a `plugin`: matched natively to a dialect's ORM when the",
+    "  ORM knows it, adapted by the Synapsis ORM when it does not; the four of today too.",
+    "- A transaction the database asks to retry is **retried by the library**, then the error is thrown.",
+    "",
+    "The decision is [ADR-backend-0004](../../03-adr/0004-every-database-is-a-plugin.md)."
    ],
    "platforms": [
     "backend"
@@ -19044,8 +19230,8 @@
    "summary": "T0 — Decide",
    "body": [
     "- [x] The inventory of what the repositories give (requirements §1).",
-    "- [x] CamusDB probed against the contract (design §4).",
-    "- [ ] The user's two decisions (design §5), then the ADR (`ADR-backend-0004`) and this spec `approved`."
+    "- [x] CamusDB probed against the contract (design §5).",
+    "- [x] The user's decisions: every database is a plugin, native or adapted; the library retries (ADR-backend-0004)."
    ],
    "platforms": [
     "backend"
@@ -19064,11 +19250,13 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t1-what-nuclear-lacks-design-6",
    "type": "spec",
    "title": "005 — Database adapters: tasks — T1 — What Nuclear lacks (design §6)",
-   "summary": "T1 — What Nuclear lacks (design §6)",
+   "summary": "project's entities and its diagnostic.",
    "body": [
+    "- [ ] The kind `plugin` in `platform.toml`, `@refuses` and `@retries`, the loader's check of `@refuses` against a",
+    "      project's entities and its diagnostic.",
+    "- [ ] A plugin package (`plugin.toml`, the `.nuc`, the dialect parts) found by `nuclear add` and the installer.",
     "- [ ] An HTTP client in the language's library, every language dialect, its conformance tests.",
     "- [ ] Built Nuclear inside a runtime package: how it is built, shipped by the installer and typed.",
-    "- [ ] A kind package with `[adapter]`: the connection word, `refuses`, the loader's check and its diagnostic.",
     "- [ ] The entity metadata the templates write for an adapted connection."
    ],
    "platforms": [
@@ -19085,13 +19273,15 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t2-the-synapsis-orm-in-nuclear",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t2-the-four-databases-of-today-as-native-plugins",
    "type": "spec",
-   "title": "005 — Database adapters: tasks — T2 — The Synapsis ORM in Nuclear",
-   "summary": "T2 — The Synapsis ORM in Nuclear",
+   "title": "005 — Database adapters: tasks — T2 — The four databases of today as native plugins",
+   "summary": "the database check unchanged and green.",
    "body": [
-    "- [ ] Mapper, unit of work, entity states, the query as a SQL tree, the loader, the guards of a write.",
-    "- [ ] `SqlDialect` with the standard SQL, and the tests of each requirement row on SQLite through a test adapter."
+    "- [ ] `sqlite`, `postgres`, `mysql`, `mariadb` moved out of the dialects into plugin packages; `refusal` of each;",
+    "      the database check unchanged and green.",
+    "- [ ] `@transactional` retries on a `retry` refusal, both runtimes; an event inside a transaction sent at its",
+    "      commit; the same test in both."
    ],
    "platforms": [
     "backend"
@@ -19107,11 +19297,15 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t3-migrations-on-an-adapted-connection",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t3-the-synapsis-orm-in-nuclear",
    "type": "spec",
-   "title": "005 — Database adapters: tasks — T3 — Migrations on an adapted connection",
-   "summary": "T3 — Migrations on an adapted connection",
-   "body": "- [ ] The diff, the history table, `make`/`up`/`down`/`status`, rendered by `schemaChange`.",
+   "title": "005 — Database adapters: tasks — T3 — The Synapsis ORM in Nuclear",
+   "summary": "T3 — The Synapsis ORM in Nuclear",
+   "body": [
+    "- [ ] Mapper, unit of work, entity states, the query as a SQL tree, the loader, the guards of a write, the retry.",
+    "- [ ] `SqlDialect` with the standard SQL; every row of requirements §1 tested through the SQLite plugin run adapted.",
+    "- [ ] Migrations: the diff, the history table, `make`/`up`/`down`/`status`, rendered by `schemaChange`."
+   ],
    "platforms": [
     "backend"
    ],
@@ -19126,15 +19320,16 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t4-camusdb",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t4-camusdb-adapted",
    "type": "spec",
-   "title": "005 — Database adapters: tasks — T4 — CamusDB",
-   "summary": "its entities' `onDelete = \"cascade\"` gives the new diagnostic.",
+   "title": "005 — Database adapters: tasks — T4 — CamusDB, adapted",
+   "summary": "to probe.",
    "body": [
-    "- [ ] The package `camusdb`: the adapter in Nuclear, `[adapter]`, its docs; the rows of design §4 still to probe.",
+    "- [ ] The package `camusdb`: the adapter in Nuclear, `@refuses`, `@retries`, its docs; the rows of design §5 still",
+    "      to probe.",
     "- [ ] `store_api` on CamusDB in `checks/database-check` with both dialects: the same answers as the four others;",
-    "      its entities' `onDelete = \"cascade\"` gives the new diagnostic.",
-    "- [ ] `app-check`'s statement count on CamusDB no higher than on the ORM databases."
+    "      its `onDelete = \"cascade\"` gives the new diagnostic.",
+    "- [ ] `app-check`'s statement count on CamusDB no higher than on the native databases."
    ],
    "platforms": [
     "backend"
@@ -19150,13 +19345,37 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t5-deploy",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t5-a-native-plugin-an-agent-writes",
    "type": "spec",
-   "title": "005 — Database adapters: tasks — T5 — Deploy",
-   "summary": "the MCP tool and the knowledge base, `installer/install.sh` (root rule 15).",
+   "title": "005 — Database adapters: tasks — T5 — A native plugin an agent writes",
+   "summary": "alone: the proof the knowledge base is enough.",
    "body": [
-    "- [ ] The reference (§2.8, Plugins), `diagnostics.md`, the brief, the guide for an agent that adapts a database,",
-    "      the MCP tool and the knowledge base, `installer/install.sh` (root rule 15)."
+    "- [ ] SQL Server (or Oracle) written as a native plugin by an agent from a fresh install, following the playbook",
+    "      alone: the proof the knowledge base is enough."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t6-deploy",
+   "type": "spec",
+   "title": "005 — Database adapters: tasks — T6 — Deploy",
+   "summary": "`can:` and `limit:` rows current; built, checked, ingested.",
+   "body": [
+    "- [ ] The reference (§2.8, Plugins), `diagnostics.md`, the brief, the guide.",
+    "- [ ] The knowledge base: `playbook:write-a-database-plugin` (the contract, native or adapted, the checks to pass),",
+    "      `can:` and `limit:` rows current; built, checked, ingested.",
+    "- [ ] The MCP tool that makes a plugin's skeleton; `uv tool install --reinstall tools/mcp`; `installer/install.sh`."
    ],
    "platforms": [
     "backend"
@@ -19185,7 +19404,7 @@
     "| Spec | What | Status |",
     "|---|---|---|",
     "| [004-backend-parity](004-backend-parity/plan.md) | What a real API needs that the platform lacked: relations, migrations, transactions, pagination, authentication and guards, scheduled work, uploads, deploy and operations, the command at parity with mobile | in-progress: F1–F4 done ([ADR-backend-0001](../03-adr/0001-backend-data.md)); the three decisions of 2026-11-23 delivered (§4b: the 409 of the database, a long text, `migrate make --rename`); F5–F9 left (F9 belongs to the command line tools); one decision open for the user (§5) |",
-    "| [005-database-adapters](005-database-adapters/requirements.md) | A database no ORM knows (CamusDB) used by the same repositories: the Synapsis ORM in Nuclear and a small contract a database implements | draft: inventory and contract written, CamusDB probed; two decisions open for the user ([design](005-database-adapters/design.md) §5) |"
+    "| [005-database-adapters](005-database-adapters/requirements.md) | Every database is a `plugin` on one adapter contract: native where a dialect's ORM knows it, the Synapsis ORM in Nuclear where not (CamusDB the test) | approved ([ADR-backend-0004](../03-adr/0004-every-database-is-a-plugin.md)): T0 done, T1 next |"
    ],
    "platforms": [
     "backend"

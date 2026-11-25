@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 owner: Julian Molina
 updated: 2026-11-25
 related: [design.md, tasks.md, ../../03-adr/0001-backend-data.md, ../../03-adr/0002-typeorm-is-the-rule-of-migrations.md, ../../07-reference/backend.md]
@@ -16,6 +16,11 @@ the user on 2026-11-25:
   implements only a small contract.
 - What a database cannot do is a **compile-time error** of the project, never a hidden emulation.
 - The first delivery covers **everything `store_api` uses**, in both dialects, inside the database check.
+- **Every database** goes through the same contract, as a `plugin`: matched natively to a dialect's ORM when the
+  ORM knows it, adapted by the Synapsis ORM when it does not; the four of today too.
+- A transaction the database asks to retry is **retried by the library**, then the error is thrown.
+
+The decision is [ADR-backend-0004](../../03-adr/0004-every-database-is-a-plugin.md).
 
 ## 1. What the repositories give today, and who does it
 
