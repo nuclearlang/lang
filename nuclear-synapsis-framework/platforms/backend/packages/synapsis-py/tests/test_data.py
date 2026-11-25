@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from synapsis import (
-    AppConfig, AppError, Conflict, Entity, Err, Mapped, Ok, Page, Repository, Result, SQLite, column, contains,
+    AppConfig, AppError, Conflict, Entity, Err, Mapped, Ok, Page, Repository, Result, Database, column, contains,
     controller, create_app, created, get, icontains, ilike, inject, like, many_to_many, many_to_one, one_to_many,
     primary, transactional, updated,
 )
@@ -174,7 +174,7 @@ class ProjectController:
 
 
 class Config(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
 
 
 async def test_relations_pages_and_transactions() -> None:

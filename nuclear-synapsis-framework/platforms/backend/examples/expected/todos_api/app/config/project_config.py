@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from synapsis import AppConfig, Connection, SQLite, env
+from app.plugins.sqlite import SQLite
+from synapsis import AppConfig, Connection, env
 
 
 class ProjectConfig(AppConfig):

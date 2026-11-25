@@ -7,7 +7,12 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, PrimaryKey, Sequelize, Table, UpdatedAt } from 'sequelize-typescript';
-import { Entity, SQLite, exactColumn, exactText, joinTable } from '../src/index.js';
+import { Database, Entity, exactColumn, exactText, joinTable } from '../src/index.js';
+
+/** What the plugin `sqlite` writes in a project (ADR-backend-0004). */
+class SQLite extends Database {
+  readonly dialect = 'sqlite';
+}
 import { BigDouble } from '../src/exact.js';
 import { createTables, down, make, status, textType, up } from '../src/migrate.js';
 

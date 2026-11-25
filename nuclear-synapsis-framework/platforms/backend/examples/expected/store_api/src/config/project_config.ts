@@ -1,4 +1,5 @@
-import { AppConfig, Connection, SQLite, env } from 'synapsis-nest';
+import { SQLite } from '../plugins/sqlite.js';
+import { AppConfig, Connection, env } from 'synapsis-nest';
 
 /**
  * The connections of the whole app: databases, chat models, Kafka, Redis (nuclear help backend, §2.8).

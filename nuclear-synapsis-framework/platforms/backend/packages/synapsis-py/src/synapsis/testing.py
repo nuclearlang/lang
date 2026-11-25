@@ -17,7 +17,7 @@ from .result import Err, Ok, Result
 
 from .inject import inject, reset
 from .app import start, stop
-from .config import AppConfig, ChatModel, Connection, Database, SQLite
+from .config import AppConfig, ChatModel, Connection, Database
 
 __all__ = ["FakeModel", "memory_database", "running", "client", "app_client", "AppClient", "AppSocket", "HttpAnswer", "SocketEvent"]
 
@@ -52,7 +52,7 @@ class FakeModel(ChatModel):
 
 def memory_database() -> SQLite:
     """A fresh SQLite database in memory, with the tables of every entity."""
-    return SQLite(":memory:", create_tables=True)
+    return Database("sqlite:///:memory:", create_tables=True)
 
 
 def _family(c: Connection) -> type:
@@ -67,7 +67,7 @@ def _swap(config: AppConfig, replace: tuple[Connection, ...]) -> AppConfig:
     for c in config.connections:
         same = next((r for r in replace if isinstance(r, _family(c)) and r.name == c.name), None)
         if same is None and isinstance(c, Database):
-            same = SQLite(":memory:", name=c.name, create_tables=True)
+            same = Database("sqlite:///:memory:", name=c.name, create_tables=True)
         out.append(same or c)
     out += [r for r in replace if r not in out]
     swapped = AppConfig()

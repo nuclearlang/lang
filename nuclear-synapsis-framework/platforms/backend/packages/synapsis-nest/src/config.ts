@@ -55,9 +55,9 @@ export abstract class Connection {
 }
 
 export interface DatabaseOptions {
-  /** `postgres://user:pass@host:5432/db`, `mysql://...`, `mariadb://...`; SQLite uses `file` instead. */
+  /** `postgres://user:pass@host:5432/db`, `mysql://...`, `mariadb://...`; a database kept in a file uses `file`. */
   url?: string;
-  /** SQLite file (`':memory:'` for tests). */
+  /** The file of a database kept in one (`':memory:'` for tests). */
   file?: string;
   /** Creates the entities' tables at start (development). */
   createTables?: boolean;
@@ -103,11 +103,6 @@ export abstract class Database extends Connection {
   }
 }
 
-/** SQLite (sqlite3): new SQLite({ file: 'app.sqlite', createTables: true }). */
-export class SQLite extends Database {
-  readonly dialect = 'sqlite' as const;
-}
-
 /** The project configuration (config/project_config.nuc): its connections. */
 export abstract class AppConfig {
   abstract readonly connections: Connection[];
@@ -130,6 +125,6 @@ export abstract class ComponentConfig {
 export function databaseOf(config: AppConfig, name = 'default'): SequelizeModuleOptions {
   const db = config.connections.find((c): c is Database => c instanceof Database && c.name === name)
     ?? config.connections.find((c): c is Database => c instanceof Database);
-  if (!db) throw new Error('the configuration has no database connection (Postgres, MySQL, MariaDB or SQLite)');
+  if (!db) throw new Error('the configuration has no database connection');
   return db.sequelize();
 }

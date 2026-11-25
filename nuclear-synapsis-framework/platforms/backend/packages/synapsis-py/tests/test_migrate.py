@@ -11,11 +11,11 @@ import sys
 from pathlib import Path
 
 APP = '''
-from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, many_to_one, primary
+from synapsis import AppConfig, Database, Entity, Mapped, column, create_app, many_to_one, primary
 
 
 class ProjectConfig(AppConfig):
-    connections = [SQLite(file="app.sqlite")]
+    connections = [Database("sqlite:///app.sqlite")]
 
 
 class Project(Entity):
@@ -223,8 +223,8 @@ def test_a_text_column_is_the_varchar_of_its_length_or_the_text_type_that_holds_
 
     # a changed length is a migration, in both directions
     essays = (
-        "from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, primary\n\n\n"
-        "class ProjectConfig(AppConfig):\n    connections = [SQLite(file=\"app.sqlite\")]\n\n\n"
+        "from synapsis import AppConfig, Database, Entity, Mapped, column, create_app, primary\n\n\n"
+        "class ProjectConfig(AppConfig):\n    connections = [Database(\"sqlite:///app.sqlite\")]\n\n\n"
         "class Essay(Entity):\n    __tablename__ = \"essays\"\n    id: Mapped[int] = primary(generated=True)\n"
         "    body: Mapped[str] = column(length={n})\n\n\napp = create_app(ProjectConfig(), entities=[Essay])\n"
     )
@@ -375,11 +375,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from synapsis import AppConfig, Entity, Mapped, SQLite, column, create_app, created, many_to_many, many_to_one, primary, updated
+from synapsis import AppConfig, Database, Entity, Mapped, column, create_app, created, many_to_many, many_to_one, primary, updated
 
 
 class ProjectConfig(AppConfig):
-    connections = [SQLite(file="app.sqlite", create_tables=True)]
+    connections = [Database("sqlite:///app.sqlite", create_tables=True)]
 
 
 class Label(Entity):
@@ -473,8 +473,8 @@ def test_an_exact_column_is_made_and_changed_by_its_precision_and_scale(tmp_path
     assert [str(ExactInteger().compile(dialect=d.dialect())) for d in (sqlite, postgresql, mysql)] == ["EXACT TEXT", "BIGINT", "BIGINT"]
     prices = (
         "from decimal import Decimal\n"
-        "from synapsis import AppConfig, BigDouble, BigInt, Entity, Mapped, SQLite, column, create_app, primary\n\n\n"
-        "class ProjectConfig(AppConfig):\n    connections = [SQLite(file=\"app.sqlite\")]\n\n\n"
+        "from synapsis import AppConfig, BigDouble, BigInt, Database, Entity, Mapped, column, create_app, primary\n\n\n"
+        "class ProjectConfig(AppConfig):\n    connections = [Database(\"sqlite:///app.sqlite\")]\n\n\n"
         "class Price(Entity):\n    __tablename__ = \"prices\"\n    id: Mapped[int] = primary(generated=True)\n"
         "    code: Mapped[BigInt] = column()\n"
         "    amount: Mapped[BigDouble] = column({amount}){more}\n\n\napp = create_app(ProjectConfig(), entities=[Price])\n"

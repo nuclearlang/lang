@@ -91,8 +91,16 @@ class Database(Connection):
     driver: str | None = None
     retries: int = 3
 
-    def __init__(self, url: str, name: str = "default", create_tables: bool = False, echo: bool = False) -> None:
+    def __init__(
+        self, url: str = "", name: str = "default", create_tables: bool = False, echo: bool = False, file: str | None = None
+    ) -> None:
+        # a database kept in a file (`file`, `":memory:"`) instead of a server: its driver's url of that file
+        if file is not None:
+            if not self.driver:
+                raise ValueError(f"{type(self).__name__}: a database given a file needs the driver its plugin names")
+            url = f"{self.driver}:///{file}"
         self.url = _with_driver(url, self.driver)
+        self.file = file
         self.name = name
         self.create_tables = create_tables
         self.echo = echo
@@ -124,14 +132,6 @@ class Database(Connection):
     async def close(self) -> None:
         if self.engine is not None:
             await self.engine.dispose()
-
-
-class SQLite(Database):
-    """SQLite (aiosqlite): SQLite(file = "app.sqlite"); ":memory:" for tests."""
-
-    def __init__(self, file: str = ":memory:", name: str = "default", create_tables: bool = False, echo: bool = False) -> None:
-        super().__init__(f"sqlite:///{file}", name, create_tables, echo)
-        self.file = file
 
 
 class Redis(Connection):

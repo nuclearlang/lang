@@ -1,4 +1,5 @@
-import { AppConfig, Connection, Guard, Http, NoOrigin, SQLite, Token, env } from 'synapsis-nest';
+import { SQLite } from '../plugins/sqlite.js';
+import { AppConfig, Connection, Guard, Http, NoOrigin, Token, env } from 'synapsis-nest';
 import { Ollama } from 'synapsis-nest/ai';
 import { WebSocketServer } from 'synapsis-nest/sockets';
 

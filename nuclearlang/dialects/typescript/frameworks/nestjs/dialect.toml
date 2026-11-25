@@ -281,11 +281,6 @@ express = "the controller kind already gives the routes, their parameters and th
 fastify = "the controller kind already gives the routes, their parameters and their answers (over NestJS): fastify is not needed for an API"
 koa = "the controller kind already gives the routes, their parameters and their answers (over NestJS): koa is not needed for an API"
 
-[project.plugins.sqlite]
-description = "SQLite databases (sqlite3): SQLite(file = \"app.sqlite\")"
-packages = { sqlite3 = "^6.0.0" }
-names = ["SQLite"]
-
 [project.plugins.redis]
 description = "The Redis cache (ioredis): Redis(url = ...), cacheGet, cacheSet"
 packages = { ioredis = "^5.11.0" }     # 5.x: what @langchain/community (the chroma plugin) accepts next to it

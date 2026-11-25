@@ -17,7 +17,6 @@ from .config import (
     Ollama,
     OpenAI,
     Redis,
-    SQLite,
     env,
 )
 from .exact import BigDouble, BigInt
@@ -51,7 +50,7 @@ from .web import controller, delete, get, patch, post, put, status, untraced
 __all__ = [
     "AppConfig", "AppError", "BigDouble", "BigInt", "ChatModel", "Chroma", "ComponentConfig", "Conflict", "Connection", "Database",
     "Embeddings", "Entity", "Err", "Forbidden", "Guard", "NoOrigin", "Token", "Http", "HttpRepository", "Invalid", "Kafka", "Mapped", "Model",
-    "NotFound", "Ok", "Ollama", "OpenAI", "Page", "Query", "Redis", "Repository", "Result", "SQLite", "Unauthorized", "between", "bind", "column", "connection", "connections", "contains",
+    "NotFound", "Ok", "Ollama", "OpenAI", "Page", "Query", "Redis", "Repository", "Result", "Unauthorized", "between", "bind", "column", "connection", "connections", "contains",
     "controller", "create_app", "created", "delete", "env", "get", "gt", "gte", "icontains", "ilike", "one_of", "status",
     "inject", "is_null", "like", "lt", "lte", "many_to_many", "many_to_one", "ne", "one_to_many", "one_to_one",
     "patch", "post", "primary", "provide", "put", "transactional", "untraced", "updated", ]

@@ -84,7 +84,7 @@ def _database(app: str) -> Any:
     config, components = state.synapsis_config, state.synapsis_components
     found = [c for c in [*config.connections, *(c for comp in components for c in comp.connections)] if isinstance(c, Database)]
     if not found:
-        raise LookupError("the configuration has no database (Postgres, MySQL, MariaDB or SQLite)")
+        raise LookupError("the configuration has no database")
     return next((c for c in found if c.name == "default"), found[0])
 
 

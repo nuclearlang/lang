@@ -1,0 +1,5 @@
+# SQLAlchemy knows SQLite: the async driver aiosqlite
+[plugin]
+packages = { aiosqlite = ">=0.20" }
+names = ["SQLite"]
+values = { driver = "sqlite+aiosqlite" }

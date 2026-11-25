@@ -11,7 +11,7 @@ import pytest
 from annotated_types import Ge, Le, MaxLen, MinLen
 from pydantic import AfterValidator, Field
 
-from synapsis import AppConfig, AppError, Model, NotFound, Ok, Err, Result, SQLite, controller, create_app, get, post
+from synapsis import AppConfig, AppError, Database, Err, Model, NotFound, Ok, Result, controller, create_app, get, post
 from synapsis.testing import client, memory_database
 from synapsis.validators import is_email, is_given, is_url
 
@@ -43,7 +43,7 @@ class SignupController:
 
 
 class Config(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
 
 
 GOOD = {"email": "a@b.co", "name": "Anna", "age": 30, "code": "ABC", "note": "x"}

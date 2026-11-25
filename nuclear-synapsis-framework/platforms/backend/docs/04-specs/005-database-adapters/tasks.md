@@ -29,13 +29,12 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 ## T2 — The four databases of today as native plugins
 
-- [x] `postgres`, `mysql` and `mariadb` moved out of the dialects and the runtimes into `plugins/` (2026-11-25).
-- [ ] `sqlite` moved the same way (the runtimes' tests use it: `memory_database`, `SYNAPSIS_DATABASE=memory`); a native plugin of a new database (SQL Server, Oracle) also
-      brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of
-      the migrations): they become what its plugin gives.
+- [x] `sqlite`, `postgres`, `mysql` and `mariadb` moved out of the dialects and the runtimes into `plugins/`
+      (2026-11-25); the runtimes' own tests use a `Database` of SQLite in memory.
+- [ ] A native plugin of a new database (SQL Server, Oracle) also brings the rules the runtimes keep today by the
+      ORM's dialect name (the text types, `ilike`, the catalog of the migrations): they become what its plugin gives.
 - [x] `@transactional` retries a serialization failure or a deadlock (`RETRIES` = 3), both runtimes; an event
-      inside a transaction sent at its commit; the same test in both (2026-11-25). The number comes from the plugin's
-      `@retries` once plugins exist.
+      inside a transaction sent at its commit; the same test in both (2026-11-25). A plugin's `@retries` sets it.
 
 ## T3 — The Synapsis ORM in Nuclear
 

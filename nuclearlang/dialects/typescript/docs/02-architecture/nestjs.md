@@ -90,7 +90,7 @@ Only the enabled ones go to `package.json`, and only then are their names import
 
 | Plugin | Packages | Gives |
 |---|---|---|
-| `sqlite` | `sqlite3 ^6.0.0` | `SQLite(file = ...)` |
+| `sqlite` | `sqlite3 ^6.0.0` | `SQLite(file = ...)`: a plugin package of the platform (`plugins/sqlite`), its class built from its Nuclear |
 | `postgres` | `pg ^8.13.0` | `Postgres(url = ...)`: a plugin package of the platform (`plugins/postgres`, ADR-backend-0004), its class built from its Nuclear |
 | `mysql` | `mysql2 ^3.11.0` | `MySQL(url = ...)`: a plugin package of the platform (`plugins/mysql`), its class built from its Nuclear |
 | `mariadb` | `mariadb ^3.4.0` | `MariaDB(url = ...)`: a plugin package of the platform (`plugins/mariadb`), its class built from its Nuclear |

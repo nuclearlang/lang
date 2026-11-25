@@ -647,22 +647,23 @@ The connections of the app (`appConfig`, `config/project_config.nuc`) and of a c
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a
 variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
-default is required: `nuclear run` does not start without it. A database that is a plugin (`Postgres`, `MySQL`, `MariaDB`;
+default is required: `nuclear run` does not start without it. A database is a plugin (`SQLite`, `Postgres`, `MySQL`, `MariaDB`;
 ADR-backend-0004) is a class the build writes from the plugin's Nuclear into `src/plugins/`, `class Postgres extends
 Database` with the Sequelize `dialect` its package names (`postgres`) and its `retries`, imported from there.
 
 ```nuclear
 appConfig ProjectConfig
   connections: Connection[] = [
-    SQLite(file = env("DATABASE", "tasks.sqlite")),
+    Redis(url = env("REDIS_URL", "redis://localhost:6379")),
   ]
 ```
 
 ```typescript
-import { AppConfig, Connection, SQLite, env } from 'synapsis-nest';
+import { AppConfig, Connection, env } from 'synapsis-nest';
+import { Redis } from 'synapsis-nest/events';
 
 export class ProjectConfig extends AppConfig {
-  readonly connections: Connection[] = [new SQLite({ file: env('DATABASE', 'tasks.sqlite') })];
+  readonly connections: Connection[] = [new Redis({ url: env('REDIS_URL', 'redis://localhost:6379') })];
 }
 ```
 
@@ -675,10 +676,10 @@ upgrades of the app's HTTP server at its path, checks the app's guards, and send
 app over the loopback.
 
 ```nuclear
-// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+// config.nuc: plugins(events = true, websocket = true)
 
 appConfig ProjectConfig
-  connections: Connection[] = [SQLite(file = "chat.sqlite"), WebSocketServer(path = "ws")]
+  connections: Connection[] = [WebSocketServer(path = "ws")]
   guards: Guard[] = [NoOrigin(), Token(value = env("CHAT_TOKEN"), header = "X-Chat-Token")]
 
 @controller("admin", guards = [Token(value = env("ADMIN_TOKEN"))])
@@ -690,13 +691,13 @@ controller AdminController()
 
 ```typescript
 import { Controller, Get } from '@nestjs/common';
-import { AppConfig, Connection, Guard, NoOrigin, SQLite, Token, env, guardedBy } from 'synapsis-nest';
+import { AppConfig, Connection, Guard, NoOrigin, Token, env, guardedBy } from 'synapsis-nest';
 import { WebSocketServer } from 'synapsis-nest/sockets';
 
-// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+// config.nuc: plugins(events = true, websocket = true)
 
 export class ProjectConfig extends AppConfig {
-  readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })];
+  readonly connections: Connection[] = [new WebSocketServer({ path: 'ws' })];
   readonly guards: Guard[] = [
     new NoOrigin(),
     new Token({ value: env('CHAT_TOKEN'), header: 'X-Chat-Token' }),

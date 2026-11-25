@@ -528,14 +528,13 @@ The connections of the app (`appConfig`, `config/project_config.nuc`) and of a c
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a
 variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
-default is required: `nuclear run` does not start without it. A database that is a plugin (`Postgres`, `MySQL`, `MariaDB`;
+default is required: `nuclear run` does not start without it. A database is a plugin (`SQLite`, `Postgres`, `MySQL`, `MariaDB`;
 ADR-backend-0004) is a class the build writes from the plugin's Nuclear into `app/plugins/`, `class Postgres(Database)`
 with the `driver` its package names (`postgresql+asyncpg`) and its `retries`, imported from there.
 
 ```nuclear
 appConfig ProjectConfig
   connections: Connection[] = [
-    SQLite(file = env("DATABASE", "rick.sqlite")),
     Redis(url = env("REDIS_URL", "redis://localhost:6379/0")),
     Kafka(servers = env("KAFKA", "localhost:9092"), group = "rick"),
     OpenAI(model = "gpt-4o-mini"),
@@ -545,12 +544,11 @@ appConfig ProjectConfig
 ```python
 from __future__ import annotations
 
-from synapsis import AppConfig, Connection, Kafka, OpenAI, Redis, SQLite, env
+from synapsis import AppConfig, Connection, Kafka, OpenAI, Redis, env
 
 
 class ProjectConfig(AppConfig):
     connections: list[Connection] = [
-        SQLite(file=env("DATABASE", "rick.sqlite")),
         Redis(url=env("REDIS_URL", "redis://localhost:6379/0")),
         Kafka(servers=env("KAFKA", "localhost:9092"), group="rick"),
         OpenAI(model="gpt-4o-mini"),
@@ -569,10 +567,10 @@ of the log, the cause of a 500, the body's limit and type, CORS); a parameter of
 dependency of the route (`synapsis.wire.parse_param`), the body by FastAPI through the runtime's JSON reader.
 
 ```nuclear
-// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+// config.nuc: plugins(events = true, websocket = true)
 
 appConfig ProjectConfig
-  connections: Connection[] = [SQLite(file = "chat.sqlite"), WebSocketServer(path = "ws")]
+  connections: Connection[] = [WebSocketServer(path = "ws")]
   guards: Guard[] = [NoOrigin(), Token(value = env("CHAT_TOKEN"), header = "X-Chat-Token")]
 
 @controller("admin", guards = [Token(value = env("ADMIN_TOKEN"))])
@@ -585,14 +583,14 @@ controller AdminController()
 ```python
 from __future__ import annotations
 
-from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get
+from synapsis import AppConfig, Connection, Guard, NoOrigin, Token, controller, env, get
 from synapsis.sockets import WebSocketServer
 
 
-# config.nuc: plugins(sqlite = true, events = true, websocket = true)
+# config.nuc: plugins(events = true, websocket = true)
 
 class ProjectConfig(AppConfig):
-    connections: list[Connection] = [SQLite(file="chat.sqlite"), WebSocketServer(path="ws")]
+    connections: list[Connection] = [WebSocketServer(path="ws")]
     guards: list[Guard] = [NoOrigin(), Token(value=env("CHAT_TOKEN"), header="X-Chat-Token")]
 
 

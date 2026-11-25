@@ -225,7 +225,7 @@
     "- A `@transactional` use case uses the default database only.",
     "- The join table of a `@manyToMany` is always named `<owner table>_<field>`.",
     "- A test's `appClient()` sends every body as JSON: a test cannot send one that is not JSON (the rule `json` is not testable in Nuclear yet).",
-    "- A database connection is one of `SQLite`, `Postgres`, `MySQL`, `MariaDB`: a database outside them (Oracle, SQL Server, CamusDB, Spanner) cannot be used yet. A database is a `plugin` package (ADR-backend-0004; `Postgres`, `MySQL` and `MariaDB` are, with `@refuses` and `@retries`), but a plugin of a new database still lacks the rules its ORM does not even out, and one no ORM knows needs the Synapsis ORM, not built yet (the backend's spec 005). It is reported, never patched into the installation.",
+    "- A database connection is one of `SQLite`, `Postgres`, `MySQL`, `MariaDB`: a database outside them (Oracle, SQL Server, CamusDB, Spanner) cannot be used yet. A database is a `plugin` package (ADR-backend-0004; the four are, with `@refuses` and `@retries`), but a plugin of a new database still lacks the rules its ORM does not even out, and one no ORM knows needs the Synapsis ORM, not built yet (the backend's spec 005). It is reported, never patched into the installation.",
     "",
     "A task that needs one of these is written with the kinds that exist (a use case with its own rules) or reported as not possible yet."
    ],

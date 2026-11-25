@@ -11,7 +11,7 @@ import pytest
 from annotated_types import MinLen
 from pydantic import ValidationError
 
-from synapsis import AppConfig, Model, Page, SQLite, controller, create_app, get, post
+from synapsis import AppConfig, Database, Model, Page, controller, create_app, get, post
 from synapsis.testing import client, memory_database
 
 
@@ -52,7 +52,7 @@ class TypedController:
 
 
 class Config(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
 
 
 def refused(field: str, type_: str) -> dict[str, object]:

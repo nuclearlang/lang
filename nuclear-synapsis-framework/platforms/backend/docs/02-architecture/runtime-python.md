@@ -16,7 +16,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `result` | `Result`, `Ok`, `Err` |
 | `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |
 | `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |
-| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Database` (a database's plugin subclasses it with its `driver` and `retries`, ADR-backend-0004), `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
+| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Database` (a database's plugin subclasses it with its `driver` and `retries`, ADR-backend-0004; `file` instead of `url` is its driver's url of that file), `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
 | `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
 | `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |
@@ -30,7 +30,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |
 | `sockets` (optional, plugin `websocket`) | `WebSocketServer`: a Starlette WebSocket route; each request frame goes through the app with httpx's ASGI transport; a sink of `events` sends the published to the subscribed (ADR-synapsis-0008) |
 | `telemetry` (optional) | `Telemetry`, `Otlp`, `Datadog`, `NewRelic`, `Grafana` (OTLP/HTTP), `Metric`, `traced` (the span the dialect writes on each use case's `exec`). Its own providers, not OpenTelemetry's global ones (a process may set those only once): without an open connection `traced` and `Metric` do nothing. A sampler drops the traces of the `@untraced` routes and keeps `sample` of the rest |
-| `testing` | `running`, `client`, `FakeModel`, `memory_database` |
+| `testing` | `running`, `client`, `FakeModel`, `memory_database` (a `Database` of SQLite in memory: the tests' database, whatever the app's) |
 | `validators` | `is_email`, `is_url` |
 | `exact` | the exact numbers (ADR-backend-0003): `BigInt`, `BigDouble` (an `int` and a `Decimal` annotated with their JSON: a text both ways), `parse_bigint` / `parse_bigdouble` (the language's texts, at most `MAX_DIGITS`), `bigdouble_text`, `fits_bigint` / `fits_bigdouble`, `column_text` (SQLite's text of a value), `JsonInt` |
 | `migrate` | the migrations (below) |

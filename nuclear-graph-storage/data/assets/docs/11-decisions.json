@@ -19393,15 +19393,14 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/04-specs/005-database-adapters/tasks.md#t2-the-four-databases-of-today-as-native-plugins",
    "type": "spec",
    "title": "005 — Database adapters: tasks — T2 — The four databases of today as native plugins",
-   "summary": "brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of the migrations): they become what its plugin gives.",
+   "summary": "(2026-11-25); the runtimes' own tests use a `Database` of SQLite in memory.",
    "body": [
-    "- [x] `postgres`, `mysql` and `mariadb` moved out of the dialects and the runtimes into `plugins/` (2026-11-25).",
-    "- [ ] `sqlite` moved the same way (the runtimes' tests use it: `memory_database`, `SYNAPSIS_DATABASE=memory`); a native plugin of a new database (SQL Server, Oracle) also",
-    "      brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of",
-    "      the migrations): they become what its plugin gives.",
+    "- [x] `sqlite`, `postgres`, `mysql` and `mariadb` moved out of the dialects and the runtimes into `plugins/`",
+    "      (2026-11-25); the runtimes' own tests use a `Database` of SQLite in memory.",
+    "- [ ] A native plugin of a new database (SQL Server, Oracle) also brings the rules the runtimes keep today by the",
+    "      ORM's dialect name (the text types, `ilike`, the catalog of the migrations): they become what its plugin gives.",
     "- [x] `@transactional` retries a serialization failure or a deadlock (`RETRIES` = 3), both runtimes; an event",
-    "      inside a transaction sent at its commit; the same test in both (2026-11-25). The number comes from the plugin's",
-    "      `@retries` once plugins exist."
+    "      inside a transaction sent at its commit; the same test in both (2026-11-25). A plugin's `@retries` sets it."
    ],
    "platforms": [
     "backend"

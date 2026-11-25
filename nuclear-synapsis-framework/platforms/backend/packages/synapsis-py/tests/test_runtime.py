@@ -6,7 +6,7 @@ from typing import TypedDict
 import pytest
 
 from synapsis import (
-    AppConfig, AppError, Entity, Mapped, Ok, Repository, Result, SQLite, column, controller, create_app,
+    AppConfig, AppError, Entity, Mapped, Ok, Repository, Result, Database, column, controller, create_app,
     get, gt, inject, one_of, post, primary,
 )
 from synapsis.ai import Agent, Graph, Messages, Tools, next, start, text_of
@@ -51,7 +51,7 @@ class HeroController:
 
 
 class Config(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
 
 
 async def test_crud_query_and_controller() -> None:
@@ -149,7 +149,7 @@ def test_a_model_has_nuclears_names_on_the_wire() -> None:
 
 
 class WebConfig(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
     origins = ["http://localhost:5173"]
 
 

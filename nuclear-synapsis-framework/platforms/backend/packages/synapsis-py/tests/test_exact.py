@@ -12,7 +12,7 @@ from annotated_types import Ge, Le
 from pydantic import ValidationError
 
 from synapsis import (
-    AppConfig, AppError, BigDouble, BigInt, Entity, Mapped, Model, Repository, Result, SQLite, between, column,
+    AppConfig, AppError, BigDouble, BigInt, Entity, Mapped, Model, Repository, Result, Database, between, column,
     controller, get, gt, gte, lt, lte, one_of, post, primary,
 )
 from synapsis import create_app
@@ -84,7 +84,7 @@ class AmountController:
 
 
 class Config(AppConfig):
-    connections = [SQLite("unused.db")]
+    connections = [Database("sqlite:///unused.db")]
 
 
 def refused(field: str, rule: str, message: str) -> dict[str, object]:
