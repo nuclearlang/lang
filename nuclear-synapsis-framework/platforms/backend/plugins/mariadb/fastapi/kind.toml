@@ -1,0 +1,5 @@
+# SQLAlchemy knows MariaDB: the async driver aiomysql
+[plugin]
+packages = { aiomysql = ">=0.2" }
+names = ["MariaDB"]
+values = { driver = "mariadb+aiomysql" }

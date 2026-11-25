@@ -51,7 +51,7 @@ written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "A
 "synapsis" = [
   "Result", "Ok", "Err", "AppError", "NotFound", "Invalid", "Conflict", "Forbidden", "Unauthorized",
   "inject", "provide", "bind", "env", "connection",
-  "AppConfig", "ComponentConfig", "Database", "MySQL", "MariaDB", "SQLite", "Redis", "Kafka", "OpenAI", "Ollama", "Embeddings", "Chroma",
+  "AppConfig", "ComponentConfig", "Database", "SQLite", "Redis", "Kafka", "OpenAI", "Ollama", "Embeddings", "Chroma",
   "Entity", "Mapped", "primary", "column", "created", "updated", "Http", "HttpRepository",
   "many_to_one", "one_to_many", "many_to_many", "one_to_one", "transactional", "Page",
   "Repository", "gt", "gte", "lt", "lte", "ne", "like", "ilike", "contains", "icontains", "one_of", "is_null", "between",
@@ -292,16 +292,6 @@ django = "the platform already gives the routes (controller), the database (enti
 description = "SQLite databases (aiosqlite): SQLite(file = \"app.sqlite\")"
 packages = { aiosqlite = ">=0.20" }
 names = ["SQLite"]
-
-[project.plugins.mysql]
-description = "MySQL databases (aiomysql): MySQL(url = \"mysql://...\")"
-packages = { aiomysql = ">=0.2" }
-names = ["MySQL"]
-
-[project.plugins.mariadb]
-description = "MariaDB databases (aiomysql): MariaDB(url = \"mariadb://...\")"
-packages = { aiomysql = ">=0.2" }
-names = ["MariaDB"]
 
 [project.plugins.redis]
 description = "The Redis cache (redis.asyncio): Redis(url = ...), cache_get, cache_set"

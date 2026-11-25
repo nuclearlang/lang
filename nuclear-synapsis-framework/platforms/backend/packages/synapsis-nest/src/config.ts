@@ -103,16 +103,6 @@ export abstract class Database extends Connection {
   }
 }
 
-/** MySQL (mysql2). */
-export class MySQL extends Database {
-  readonly dialect = 'mysql' as const;
-}
-
-/** MariaDB (mariadb). */
-export class MariaDB extends Database {
-  readonly dialect = 'mariadb' as const;
-}
-
 /** SQLite (sqlite3): new SQLite({ file: 'app.sqlite', createTables: true }). */
 export class SQLite extends Database {
   readonly dialect = 'sqlite' as const;

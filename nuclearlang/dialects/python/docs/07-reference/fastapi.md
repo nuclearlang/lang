@@ -528,14 +528,14 @@ The connections of the app (`appConfig`, `config/project_config.nuc`) and of a c
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which `synapsis.config` loads at start without replacing a
 variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
-default is required: `nuclear run` does not start without it. A database that is a plugin (`Postgres`,
+default is required: `nuclear run` does not start without it. A database that is a plugin (`Postgres`, `MySQL`, `MariaDB`;
 ADR-backend-0004) is a class the build writes from the plugin's Nuclear into `app/plugins/`, `class Postgres(Database)`
 with the `driver` its package names (`postgresql+asyncpg`) and its `retries`, imported from there.
 
 ```nuclear
 appConfig ProjectConfig
   connections: Connection[] = [
-    MySQL(url = env("DATABASE_URL", "mysql://localhost/rick")),
+    SQLite(file = env("DATABASE", "rick.sqlite")),
     Redis(url = env("REDIS_URL", "redis://localhost:6379/0")),
     Kafka(servers = env("KAFKA", "localhost:9092"), group = "rick"),
     OpenAI(model = "gpt-4o-mini"),
@@ -545,12 +545,12 @@ appConfig ProjectConfig
 ```python
 from __future__ import annotations
 
-from synapsis import AppConfig, Connection, Kafka, MySQL, OpenAI, Redis, env
+from synapsis import AppConfig, Connection, Kafka, OpenAI, Redis, SQLite, env
 
 
 class ProjectConfig(AppConfig):
     connections: list[Connection] = [
-        MySQL(url=env("DATABASE_URL", "mysql://localhost/rick")),
+        SQLite(file=env("DATABASE", "rick.sqlite")),
         Redis(url=env("REDIS_URL", "redis://localhost:6379/0")),
         Kafka(servers=env("KAFKA", "localhost:9092"), group="rick"),
         OpenAI(model="gpt-4o-mini"),

@@ -92,8 +92,8 @@ Only the enabled ones go to `package.json`, and only then are their names import
 |---|---|---|
 | `sqlite` | `sqlite3 ^6.0.0` | `SQLite(file = ...)` |
 | `postgres` | `pg ^8.13.0` | `Postgres(url = ...)`: a plugin package of the platform (`plugins/postgres`, ADR-backend-0004), its class built from its Nuclear |
-| `mysql` | `mysql2 ^3.11.0` | `MySQL(url = ...)` |
-| `mariadb` | `mariadb ^3.4.0` | `MariaDB(url = ...)` |
+| `mysql` | `mysql2 ^3.11.0` | `MySQL(url = ...)`: a plugin package of the platform (`plugins/mysql`), its class built from its Nuclear |
+| `mariadb` | `mariadb ^3.4.0` | `MariaDB(url = ...)`: a plugin package of the platform (`plugins/mariadb`), its class built from its Nuclear |
 | `redis` | `ioredis ^5.11.0` | `Redis(url = ...)`, `cacheGet`, `cacheSet` |
 | `kafka` | `kafkajs ^2.2.4` | `Kafka(servers = ..., group = ...)`: `publish` reaches the broker; missing topics are created |
 | `events` | none | `publish` and the `listener` kind with `@consumer` in the same process |

@@ -1,0 +1,6 @@
+# A database of the backend platform (ADR-backend-0004): its Nuclear (mariadb.nuc) is built with every project that
+# enables it (`plugins(mariadb = true)`, ADR-platform-0017); each dialect folder says how the dialect's ORM knows it.
+[package]
+version = "0.102.0"
+platform = "backend"
+description = "MariaDB databases: MariaDB(url = env(\"DATABASE_URL\", \"mariadb://user:pass@localhost/app\"))"

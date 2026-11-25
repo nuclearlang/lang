@@ -16,7 +16,7 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `result` | `Result`, `Ok`, `Err` |
 | `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |
 | `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |
-| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Database` (a database's plugin subclasses it with its `driver` and `retries`, ADR-backend-0004), `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
+| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Database` (a database's plugin subclasses it with its `driver` and `retries`, ADR-backend-0004), `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
 | `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
 | `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |

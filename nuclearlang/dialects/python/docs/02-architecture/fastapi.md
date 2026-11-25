@@ -82,7 +82,7 @@ imported (`synapsis.ai`, `synapsis.events`).
 |---|---|---|
 | `sqlite` | `aiosqlite>=0.20` | `SQLite(file = ...)` |
 | `postgres` | `asyncpg>=0.30` | `Postgres(url = ...)`: a plugin package of the platform (`plugins/postgres`, ADR-backend-0004), its class built from its Nuclear |
-| `mysql`, `mariadb` | `aiomysql>=0.2` | `MySQL(url = ...)`, `MariaDB(url = ...)` |
+| `mysql`, `mariadb` | `aiomysql>=0.2` | `MySQL(url = ...)`, `MariaDB(url = ...)`: plugin packages of the platform (`plugins/mysql`, `plugins/mariadb`), their classes built from their Nuclear |
 | `redis` | `redis>=5.2` | `Redis(url = ...)`, `cacheGet`, `cacheSet` |
 | `kafka` | `aiokafka>=0.12` | `Kafka(servers = ..., group = ...)`: `publish` reaches the broker |
 | `events` | none | `publish` and the `listener` kind with `@consumer` in the same process |

@@ -126,14 +126,6 @@ class Database(Connection):
             await self.engine.dispose()
 
 
-class MySQL(Database):
-    """MySQL (aiomysql): MySQL(url = "mysql://user:pass@localhost/app")."""
-
-
-class MariaDB(Database):
-    """MariaDB (aiomysql): MariaDB(url = "mariadb://user:pass@localhost/app")."""
-
-
 class SQLite(Database):
     """SQLite (aiosqlite): SQLite(file = "app.sqlite"); ":memory:" for tests."""
 

@@ -19395,8 +19395,8 @@
    "title": "005 — Database adapters: tasks — T2 — The four databases of today as native plugins",
    "summary": "brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of the migrations): they become what its plugin gives.",
    "body": [
-    "- [x] `postgres` moved out of the dialects and the runtimes into `plugins/postgres` (2026-11-25).",
-    "- [ ] `sqlite`, `mysql`, `mariadb` moved the same way; a native plugin of a new database (SQL Server, Oracle) also",
+    "- [x] `postgres`, `mysql` and `mariadb` moved out of the dialects and the runtimes into `plugins/` (2026-11-25).",
+    "- [ ] `sqlite` moved the same way (the runtimes' tests use it: `memory_database`, `SYNAPSIS_DATABASE=memory`); a native plugin of a new database (SQL Server, Oracle) also",
     "      brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of",
     "      the migrations): they become what its plugin gives.",
     "- [x] `@transactional` retries a serialization failure or a deadlock (`RETRIES` = 3), both runtimes; an event",

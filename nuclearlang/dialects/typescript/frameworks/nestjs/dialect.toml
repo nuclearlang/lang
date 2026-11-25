@@ -286,16 +286,6 @@ description = "SQLite databases (sqlite3): SQLite(file = \"app.sqlite\")"
 packages = { sqlite3 = "^6.0.0" }
 names = ["SQLite"]
 
-[project.plugins.mysql]
-description = "MySQL databases (mysql2): MySQL(url = \"mysql://...\")"
-packages = { mysql2 = "^3.11.0" }
-names = ["MySQL"]
-
-[project.plugins.mariadb]
-description = "MariaDB databases (mariadb): MariaDB(url = \"mariadb://...\")"
-packages = { mariadb = "^3.4.0" }
-names = ["MariaDB"]
-
 [project.plugins.redis]
 description = "The Redis cache (ioredis): Redis(url = ...), cacheGet, cacheSet"
 packages = { ioredis = "^5.11.0" }     # 5.x: what @langchain/community (the chroma plugin) accepts next to it

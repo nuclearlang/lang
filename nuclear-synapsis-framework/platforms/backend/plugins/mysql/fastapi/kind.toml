@@ -1,0 +1,5 @@
+# SQLAlchemy knows MySQL: the async driver aiomysql
+[plugin]
+packages = { aiomysql = ">=0.2" }
+names = ["MySQL"]
+values = { driver = "mysql+aiomysql" }

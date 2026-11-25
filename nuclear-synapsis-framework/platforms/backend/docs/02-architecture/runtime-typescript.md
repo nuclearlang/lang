@@ -16,7 +16,7 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 | `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |
 | | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |
 | | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |
-| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Database`, which a database's plugin subclasses with its Sequelize `dialect` and `retries`, ADR-backend-0004; `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |
+| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Database`, which a database's plugin subclasses with its Sequelize `dialect` and `retries`, ADR-backend-0004; `SQLite`) with `url` or `file` + `createTables` |
 | | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |
 | | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |
 | | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |
