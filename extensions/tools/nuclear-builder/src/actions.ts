@@ -12,6 +12,7 @@ export const PAGE_ACTIONS: Record<string, string> = {
   saveSpec: 'spec new',
   start: 'spec new',
   runSpec: 'run',
+  deleteSpec: 'spec delete',
   atlas: 'editor',
   polish: 'spec list',
   suggest: 'editor',

@@ -1653,7 +1653,7 @@
     "| Discard a draft | `spec discard <id>` | `spec_discard` | user |",
     "| Move a spec | `spec move <id> --component … [--layer …]` | `spec_move` | anyone |",
     "| Migrate the flat specs | `spec migrate` | `spec_migrate` | anyone |",
-    "| Delete a spec (to `.nuclear/builder/deleted/`) | `spec delete <id>` | `spec_delete` | user |"
+    "| Delete a spec (*Delete* in the spec's view and in an idle run's head; the editor asks first; to `.nuclear/builder/deleted/`) | `spec delete <id>` | `spec_delete` | user |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/actions.md"
@@ -5995,7 +5995,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md#2-write-the-spec-in-vs-code.3254b3",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md#2-write-the-spec-in-vs-code.a10f8b",
    "type": "guide",
    "title": "Write a spec and start the Builder — 2. Write the spec in VS Code",
    "summary": "changed; *Budget* opens the Spending section of *Settings and integrations* (the team's budget per run and the confirmations).",
@@ -6007,7 +6007,11 @@
     "Press **Save the spec** to keep it for later, or **Start the run**. The spec is placed by `nuclear-builder spec new`",
     "in `specs/<component>/[<layer>/]<id>/spec.md` and appears in the tree; the run starts as `nuclear-builder run",
     "<that file> --team <id> --events`, a process of the editor: closing the page leaves it working ([follow a",
-    "run](follow-a-run.md)). A spec saved earlier opens from the tree, with *Start the run*."
+    "run](follow-a-run.md)). A spec saved earlier opens from the tree, with *Start the run*.",
+    "",
+    "To delete a spec, open it and press **Delete** (also in the head of its run, when nothing runs): the editor asks first,",
+    "then its folder, with the documents the agents wrote and its checks, moves to `.nuclear/builder/deleted/`, where it can",
+    "be brought back; its run stays in the runs' list. In a terminal: `nuclear-builder spec delete <id>`."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md"

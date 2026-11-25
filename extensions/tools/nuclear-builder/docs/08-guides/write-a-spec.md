@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-25
 related: [follow-a-run.md, pipeline-commands.md, ../../../../../installer/docs/08-guides/ai-setup.md]
 ---
 # Write a spec and start the Builder
@@ -62,6 +62,10 @@ Press **Save the spec** to keep it for later, or **Start the run**. The spec is 
 in `specs/<component>/[<layer>/]<id>/spec.md` and appears in the tree; the run starts as `nuclear-builder run
 <that file> --team <id> --events`, a process of the editor: closing the page leaves it working ([follow a
 run](follow-a-run.md)). A spec saved earlier opens from the tree, with *Start the run*.
+
+To delete a spec, open it and press **Delete** (also in the head of its run, when nothing runs): the editor asks first,
+then its folder, with the documents the agents wrote and its checks, moves to `.nuclear/builder/deleted/`, where it can
+be brought back; its run stays in the runs' list. In a terminal: `nuclear-builder spec delete <id>`.
 
 ## 3. Without VS Code
 

@@ -49,6 +49,7 @@ type Message =
   | { type: 'start'; spec: Spec; team: string }
   | { type: 'saveSpec'; spec: Spec }
   | { type: 'runSpec'; id: string; path: string; team: string }
+  | { type: 'deleteSpec'; id: string; title: string; runs: number }
   | { type: 'specs' }
   | { type: 'picked'; spec: string | null; run: string | null; stage: string | null; step: string | null }
   | { type: 'atlas'; channel?: string }
@@ -733,6 +734,18 @@ export class BuilderPanel {
         this.post({ type: 'select', id: m.id });
         driveRun(this.root, m.id, ['run', m.path.endsWith('.md') ? m.path : m.path + '/spec.md', ...(m.team ? ['--team', m.team] : [])]);
         return;
+      case 'deleteSpec': {
+        // the agents' documents are in the spec's folder: asked first, and moved, never deleted (`spec delete`)
+        const del = l10n.t('Delete');
+        const detail = [l10n.t('Its folder, with the documents the agents wrote and its checks, moves to {0}: nothing is lost.', '.nuclear/builder/deleted/'), m.runs ? l10n.t("Its run stays in the runs' list.") : ''].filter(Boolean).join(' ');
+        if ((await vscode.window.showWarningMessage(l10n.t('Delete the spec "{0}"?', m.title), { modal: true, detail }, del)) !== del) return;
+        const done = await lineJson<{ deleted?: string; kept?: string; error?: string }>(this.root, ['spec', 'delete', m.id, '--yes', '--json']);
+        if (done.error) throw new Error(done.error);
+        this.post({ type: 'select', id: null });
+        await this.specs();
+        sidebarChanged.fire();
+        return void vscode.window.showInformationMessage(l10n.t('The spec "{0}" is in {1}.', m.title, done.kept ?? '.nuclear/builder/deleted/'));
+      }
       case 'atlas':
         // a member's direct message or a team's channel, in Nuclear Atlas (no channel: the project's team channel)
         return void vscode.commands.executeCommand('nuclear.atlas.open', this.root, m.channel || (this.root ? teamChannel(this.root) : undefined));
@@ -1336,7 +1349,7 @@ function drawSpec() {
   if (!x) { view.mode = 'home'; return drawHome(); }
   $('#main').innerHTML = '<div class="home"><div class="hero" style="text-align:left;max-width:640px"><div class="muted">' + esc(whereOf(x)) + '</div><h1>' + esc(x.title) + '</h1><div class="muted"><code>' + esc(x.path + '/spec.md') + '</code></div>'
     + '<div class="muted" style="margin-top:10px">' + esc(t('specNoRun')) + '</div>'
-    + '<div class="acts" style="justify-content:flex-start;margin-top:14px">' + teamSelect() + '<button class="primary" data-runspec="' + esc(x.id) + '" data-path="' + esc(x.path) + '">▶ ' + esc(t('startRun')) + '</button><button data-open="' + esc(x.path + '/spec.md') + '">' + esc(t('openSpec')) + '</button><button data-polish="' + esc(x.id) + '" title="' + esc(t('polishHint')) + '">✦ ' + esc(t('polish')) + '</button></div></div></div>';
+    + '<div class="acts" style="justify-content:flex-start;margin-top:14px">' + teamSelect() + '<button class="primary" data-runspec="' + esc(x.id) + '" data-path="' + esc(x.path) + '">▶ ' + esc(t('startRun')) + '</button><button data-open="' + esc(x.path + '/spec.md') + '">' + esc(t('openSpec')) + '</button><button data-polish="' + esc(x.id) + '" title="' + esc(t('polishHint')) + '">✦ ' + esc(t('polish')) + '</button><button data-delspec="' + esc(x.id) + '" data-title="' + esc(x.title) + '" data-runs="0" title="' + esc(t('deleteSpecHint')) + '">🗑 ' + esc(t('deleteSpec')) + '</button></div></div></div>';
 }
 
 // ---------- the form ----------
@@ -1665,7 +1678,8 @@ function head(r) {
     + (idle && r.status === 'waiting' && !r.waiting ? '<button id="resume" class="primary" title="' + esc(t('resumeHint')) + '">▶ ' + esc(t('resume')) + '</button>' : '')
     + (idle ? '<button id="scratch" title="' + esc(t('scratchHint')) + '">⟲ ' + esc(t('scratch')) + '</button>' : '')
     + '<button data-act="detail">' + esc(detailed ? t('prog.simple') : t('prog.detail')) + '</button>'
-    + '<button data-open="' + esc((r.specPath ?? 'specs/' + r.id) + '/spec.md') + '">' + esc(t('openSpec')) + '</button></div>'
+    + '<button data-open="' + esc((r.specPath ?? 'specs/' + r.id) + '/spec.md') + '">' + esc(t('openSpec')) + '</button>'
+    + (idle ? '<button data-delspec="' + esc(r.spec.id ?? r.id) + '" data-title="' + esc(r.spec.title) + '" data-runs="1" title="' + esc(t('deleteSpecHint')) + '">🗑 ' + esc(t('deleteSpec')) + '</button>' : '') + '</div>'
     + (r.waiting && !asks ? '<div class="acts" style="margin:6px 0 0"><button class="primary" data-act="showAsk">❗ ' + esc(t('waitsForYouSee')) + '</button></div>' : '')
     + (factory(r) ? '' : '<div class="muted">⚠ ' + esc(t('olderEngine')) + '</div>')
     + ((r.interrupted ?? []).slice(-1).map((i) => '<div class="muted">⚠ ' + esc(t('interrupted', i.stage + (i.step ? ' · ' + i.step : ''), new Date(i.at).toLocaleString(LANG), i.undone.join(', ') || t('nothing'))) + '</div>').join(''))
@@ -1782,7 +1796,7 @@ document.addEventListener('click', (e) => {
   if (ps && view.mode === 'run') { const [stage, step] = ps.dataset.pickstep.split('/'); Object.assign(view, { stage, step, trace: null, open: stage, inStep: null, level: null, auto: false }); drawRun(); return; }
   const le = e.target.closest('#log .le');
   if (le && !e.target.closest('a')) { const k = le.dataset.lk; if (logOpen.has(k)) logOpen.delete(k); else logOpen.add(k); $('#log')._html = ''; return drawLog(view.mode === 'run' ? view.run : null); }
-  const x = e.target.closest('[data-uc],[data-src],[data-stage],[data-over],[data-tab],[data-open],[data-ci],[data-jira],[data-delcrit],[data-delpc],[data-sug],[data-ctx],[data-answer],[data-check],[data-mark],[data-spec],[data-fold],[data-unfold],[data-try],[data-squad],[data-runspec],[data-polish],[data-dm],[data-teamchat],[data-act],button,a');
+  const x = e.target.closest('[data-uc],[data-src],[data-stage],[data-over],[data-tab],[data-open],[data-ci],[data-jira],[data-delcrit],[data-delpc],[data-sug],[data-ctx],[data-answer],[data-check],[data-mark],[data-spec],[data-fold],[data-unfold],[data-try],[data-squad],[data-runspec],[data-delspec],[data-polish],[data-dm],[data-teamchat],[data-act],button,a');
   if (!x) { $('#ciPop').classList.remove('open'); return; }
   const d = x.dataset;
   if (x.id !== 'ci') $('#ciPop').classList.remove('open');
@@ -1791,6 +1805,7 @@ document.addEventListener('click', (e) => {
   if (d.spec) return openSpec(d.spec);
   if (d.squad) return vscode.postMessage({ type: 'teams' });
   if (d.runspec) return vscode.postMessage({ type: 'runSpec', id: d.runspec, path: d.path, team: form.team || teams.chosen });
+  if (d.delspec) return vscode.postMessage({ type: 'deleteSpec', id: d.delspec, title: d.title || d.delspec, runs: Number(d.runs || 0) });
   if (d.act === 'new') return newSpec();
   if (d.act === 'askChat') return vscode.postMessage({ type: 'atlas' });
   if (d.dm) return vscode.postMessage({ type: 'atlas', channel: d.dm });

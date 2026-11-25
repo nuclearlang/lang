@@ -5525,25 +5525,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.15f1c0",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- HTTP Connections no longer repeats an endpoint: a mobile or web app's call to the window's own backend is that backend's route, shown once with the apps that call it (`api · app, web`); a call to another service (a weather API) stays under the app. The HTTP Connections request tests, never run before, now run with the extension's tests.",
-    "- **Nuclear Monitor watches and measures web and mobile apps**: *Measure the app* works for every app; *Run and watch* opens a web app on the web device and a mobile app on the device picked, measured. Their console is the page's (prints, errors with their stack and *Open in the code*, each request with its address and status, a request with no answer with its reason: what was \"No connection to the server\"), and their measurements arrive through the window's collector (127.0.0.1, a token, the app's origin only). The web device's log has no terminal colours any more; the devices write how a run ended.",
-    "- **Nuclear Builder runs a station's checks at the same time**: four at once by default (`parallelChecks` in `.nuclear/builder.json`, 1 to 16), each its own agent's session, step, trace and cost, in its own copy of the project with its fixes merged back; the page shows each with its spinner and *Now · N checks at the same time*, the log in the order they ended (English and Spanish). Six checks of a stubbed second each: 6.1 s before, 2.0 s now."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.23ce59",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5741,6 +5722,21 @@
     "- Nuclear Chat's members answer in your language and with GIFs: in the language you chose (`nuclear.language`), or in the one your message is written in, even with the local 3B model; a member whose personality sends GIFs may answer with one of the pack's (more likely when you sent one), never showing the words behind it. The language is the first section of *Settings and integrations*, and *Automatic* says what it resolves to there and in the onboarding.",
     "- 0.69.0: a member's panel is for working (its *Brain*: one list of agent · model, the unavailable ones disabled; tabs Summary, Person, Skills, Instructions, Behaviour, Tasks and, last, the fun Profile); the company screen loads in about 0.2 s (one `team screen` process, 128 px thumbnails, lazy imports); the workspace strip has one meaningful icon per tool with its label, *Your software company* among them, and the Builder a *Build a team* button; skills, checks, step titles, questions, agents' reasons and the set-up's texts in Spanish."
    ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5031ed",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- **Nuclear Builder runs a station's checks at the same time**: four at once by default (`parallelChecks` in `.nuclear/builder.json`, 1 to 16), each its own agent's session, step, trace and cost, in its own copy of the project with its fixes merged back; the page shows each with its spinner and *Now · N checks at the same time*, the log in the order they ended (English and Spanish). Six checks of a stubbed second each: 6.1 s before, 2.0 s now.",
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -6298,6 +6294,25 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f7e612",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Nuclear Builder: a spec is deleted from the page (*Delete* in the spec's view and in the head of its run when nothing runs), asked first; its folder moves to `.nuclear/builder/deleted/`, nothing is lost.",
+    "- HTTP Connections no longer repeats an endpoint: a mobile or web app's call to the window's own backend is that backend's route, shown once with the apps that call it (`api · app, web`); a call to another service (a weather API) stays under the app. The HTTP Connections request tests, never run before, now run with the extension's tests.",
+    "- **Nuclear Monitor watches and measures web and mobile apps**: *Measure the app* works for every app; *Run and watch* opens a web app on the web device and a mobile app on the device picked, measured. Their console is the page's (prints, errors with their stack and *Open in the code*, each request with its address and status, a request with no answer with its reason: what was \"No connection to the server\"), and their measurements arrive through the window's collector (127.0.0.1, a token, the app's origin only). The web device's log has no terminal colours any more; the devices write how a run ended."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"

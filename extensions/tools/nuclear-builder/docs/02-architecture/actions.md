@@ -40,7 +40,7 @@ never run there (a workspace is no project).
 | Discard a draft | `spec discard <id>` | `spec_discard` | user |
 | Move a spec | `spec move <id> --component … [--layer …]` | `spec_move` | anyone |
 | Migrate the flat specs | `spec migrate` | `spec_migrate` | anyone |
-| Delete a spec (to `.nuclear/builder/deleted/`) | `spec delete <id>` | `spec_delete` | user |
+| Delete a spec (*Delete* in the spec's view and in an idle run's head; the editor asks first; to `.nuclear/builder/deleted/`) | `spec delete <id>` | `spec_delete` | user |
 
 ## The reports
 
