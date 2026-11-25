@@ -24,6 +24,12 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 
 ## Pending
 
+- **Found by an agent making a backend for frontend over The One API (2026-11-25):** an API whose `GET <path>/{id}`
+  answers a page with one item (`{docs: [book], total: 1...}`) gets a repository `one(id) Result<Error, Book>` that
+  cannot read it: the get use case was written by hand (`page.docs[0]`, `NotFound` when empty). The detail answer is
+  never read; `--from-json` reads only the list's. A field the list answer has but another page omits (`offset` once
+  `page` is sent) is not optional either.
+
 - **Found making a backend with timestamps (2026-11-23):** `gen resource --fields` has no way to give an
   entity `@created()` / `@updated()` (`createdAt:DateTime?` becomes a plain column, and a field of the model too):
   they were written by hand in the entity.

@@ -28,7 +28,7 @@ know where the fields come from (the spec, the API's answer, the API's documenta
      a screen with its state manager and state model) and the tests of each action. A component that does not exist
      is created first; a file that exists is never overwritten (the facade gets the missing aliases added).
    - The fields come from `--fields "id:int name:string origin:Origin"`, from `--from-json <file or url>` (an
-     example answer of the API: a list under `results` is a paged answer, a nested object a model, `null` an
+     example answer of the API: a list of objects under `results` (or next to a page's fields) is a paged answer, a nested object a model, `null` an
      optional field) or from `--from-spec <spec.md>` (its example answer, else its `Key | Type | Description` table;
      a table with objects it does not detail reads the API's answer from the spec's `GET <url>` line, which also
      gives the API). A JSON key that is not the field's camelCase name gets `@key("air_date")`; the backend platform

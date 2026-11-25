@@ -4,6 +4,15 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- **An agent that builds a workspace from an API spends far less.** Found with an OpenCode agent that built a backend
+  for frontend, a website and an app over The One API, and spent 4 times the tokens of the same work without Nuclear:
+  the generator took the API's page `{docs: [...], total, page}` for the item, so the agent rewrote 145 files by
+  hand. `gen resource --from-json` (MCP `generate_resource`) now knows a page by its neighbours (`total`, `page`,
+  `next`...) whatever its list is called, and a key `_id` is the model's `id`. `graph_strategy` gives a request for a
+  backend, a website and an app the plan of a whole system (a workspace, one app per platform, the backend first, the
+  clients from its contract, never the API again), and "create a workspace" the plan of a new project, never a
+  migration. `nuclear_start` is less than half as long (the atlas one line per group) and `nuclear_brief` gives the
+  base language part once per session (`full = true` repeats it).
 - **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the
   same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's
   agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,

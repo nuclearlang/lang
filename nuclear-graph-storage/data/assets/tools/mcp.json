@@ -2055,11 +2055,12 @@
    "title": "`nuclear_brief` — a tool of the Nuclear MCP server",
    "summary": "The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc.",
    "body": [
-    "The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc.",
+    "The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc. The base language part, the same in every sheet, comes only in the first sheet of a session; full = true repeats it (after the client dropped it from its context).",
     "",
     "Parameters:",
     "",
-    "- `dialect`: string = `\"backend\"`"
+    "- `dialect`: string = `\"backend\"`",
+    "- `full`: boolean = `false`"
    ],
    "keys": [
     "nuclear_brief",
@@ -2091,6 +2092,12 @@
       "type": "string",
       "required": false,
       "default": "\"backend\""
+     },
+     {
+      "name": "full",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
      }
     ]
    }

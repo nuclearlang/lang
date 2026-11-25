@@ -161,7 +161,7 @@ Registered only when the local models are on again (ADR-platform-0013): today no
 | `nuclear_build(code, dialect)` | what a piece of Nuclear becomes in the dialect's language |
 | `nuclear_fmt(code)` | the piece in the canonical layout |
 | `nuclear_help(word, dialect)` | the documentation of a kind, a decorator, a topic or a command |
-| `nuclear_brief(dialect)` | the short sheet of Nuclear and a platform: read before writing `.nuc` |
+| `nuclear_brief(dialect, full?)` | the short sheet of Nuclear and a platform: read before writing `.nuc`. Its base language part comes only in the first sheet of a session; `full = true` repeats it |
 | `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |
 | `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |
 | `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |

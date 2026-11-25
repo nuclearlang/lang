@@ -87,15 +87,14 @@ pub fn from_json(json: &Json, name: &str) -> Result<Answer, String> {
     let (item, page) = match json {
         Json::Array(items) => (items.first().cloned().ok_or("the example is an empty list: give one with an item")?, None),
         Json::Object(map) => {
-            let list = ["results", "items", "data", "content"].into_iter().find(|k| map.get(*k).is_some_and(|v| v.as_array().is_some_and(|a| a.first().is_some_and(Json::is_object))));
-            match list {
+            match list_key(map) {
                 Some(key) => {
-                    let first = map[key].as_array().and_then(|a| a.first()).cloned().unwrap_or(Json::Null);
+                    let first = map[&key].as_array().and_then(|a| a.first()).cloned().unwrap_or(Json::Null);
                     let mut wrapper = Json::Object(map.clone());
                     if let Json::Object(w) = &mut wrapper {
-                        w.remove(key);
+                        w.remove(&key);
                     }
-                    (first, Some((wrapper, key.to_string())))
+                    (first, Some((wrapper, key)))
                 }
                 None => (json.clone(), None),
             }
@@ -116,6 +115,28 @@ pub fn from_json(json: &Json, name: &str) -> Result<Answer, String> {
     Ok((models, page))
 }
 
+/// The words of a page's other fields (lower case, without `_`): `total`, `page`, `next`, `info`...
+const PAGING: &[&str] = &[
+    "total", "count", "page", "pages", "limit", "offset", "next", "prev", "previous", "perpage", "pagesize", "size",
+    "totalpages", "totalcount", "totalitems", "totalresults", "cursor", "nextcursor", "hasmore", "info", "meta",
+    "pagination", "links",
+];
+
+/// The field that holds the items of a paged answer: `results`, `items`, `data` or `content` holding objects; else
+/// the one list of objects whose neighbours are a page's (`total`, `page`, `next`...) and that has no key of its own
+/// (`{docs: [...], total, page}` is a page; `{id, episodes: [...]}` is one item).
+fn list_key(map: &serde_json::Map<String, Json>) -> Option<String> {
+    let objects = |v: &Json| v.as_array().is_some_and(|a| a.first().is_some_and(Json::is_object));
+    if let Some(key) = ["results", "items", "data", "content"].into_iter().find(|k| map.get(*k).is_some_and(objects)) {
+        return Some(key.to_string());
+    }
+    let lists: Vec<&String> = map.iter().filter(|(_, v)| objects(v)).map(|(k, _)| k).collect();
+    let [key] = lists[..] else { return None };
+    let own_key = map.keys().any(|k| camel(k) == "id");
+    let paging = map.keys().any(|k| k != key && PAGING.contains(&k.replace('_', "").to_lowercase().as_str()));
+    (paging && !own_key).then(|| key.clone())
+}
+
 /// The JSON name of a field, when Nuclear's camelCase name is another (`air_date` → `airDate`).
 fn json_key(key: &str) -> Option<String> {
     (camel(key) != key).then(|| key.to_string())
@@ -126,7 +147,7 @@ fn object_model(value: &Json, name: &str, owner: &str, models: &mut Vec<Model>) 
     let mut fields = Vec::new();
     // the key first, then the others in alphabetical order (the JSON reader keeps the keys sorted)
     let mut entries: Vec<(&String, &Json)> = map.iter().collect();
-    entries.sort_by_key(|(k, _)| *k != "id");
+    entries.sort_by_key(|(k, _)| camel(k) != "id");
     for (key, v) in entries {
         let field = camel(key);
         let (ty, optional) = match v {
@@ -633,6 +654,24 @@ mod tests {
         assert_eq!((page.name.as_str(), key.as_str()), ("CharacterPage", "results"));
         assert!(page.fields.iter().any(|f| f.name == "info" && f.ty == "CharacterPageInfo"));
         assert!(page.fields.iter().any(|f| f.name == "results" && f.ty == "Character[]"));
+    }
+
+    /// A page under another key (The One API's `docs`) is still a page; an item with a list of objects is not.
+    #[test]
+    fn a_page_is_told_by_its_neighbours_not_by_the_name_of_its_list() {
+        let json: Json = serde_json::from_str(r#"{"docs":[{"_id":"5cf5805fb53e011a64671582","name":"The Fellowship Of The Ring"}],"total":3,"limit":1000,"offset":0,"page":1,"pages":1}"#).unwrap();
+        let (models, page) = from_json(&json, "Book").unwrap();
+        assert_eq!(models[0].name, "Book");
+        assert_eq!(models[0].fields[0].name, "id");
+        assert_eq!((models[0].fields[0].ty.as_str(), models[0].fields[0].key.as_deref()), ("string", Some("_id")));
+        let (page, key) = page.unwrap();
+        assert_eq!((page.name.as_str(), key.as_str()), ("BookPage", "docs"));
+        assert!(page.fields.iter().any(|f| f.name == "docs" && f.ty == "Book[]"));
+        assert!(page.fields.iter().any(|f| f.name == "pages" && f.ty == "int"));
+        let item: Json = serde_json::from_str(r#"{"id":1,"name":"Rick","count":2,"episodes":[{"id":1,"name":"Pilot"}]}"#).unwrap();
+        let (models, page) = from_json(&item, "Character").unwrap();
+        assert!(page.is_none());
+        assert!(models[0].fields.iter().any(|f| f.name == "episodes" && f.ty == "CharacterEpisodes[]"));
     }
 
     #[test]

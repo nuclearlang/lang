@@ -21163,7 +21163,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#tests-tests-test-server-nuc-nuclear-build-venv-bin-python-m-pytest-q",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#tests-tests-test-server-nuc-nuclear-build-venv-bin-python-m-pytest-q.9160a1",
    "type": "context",
    "title": "The MCP server: overview — Tests (`tests/test_server.nuc`; `nuclear build . && .venv/bin/python -m pytest -q`)",
    "summary": "mode the server offers `nuclear_start` first, `graph_strategy` and the generators, and none of `developer_*`; every tool is named in the guide of the server (`docs/08-guides/mcp.md`).",
@@ -21173,14 +21173,31 @@
     "  tool is named in the guide of the server (`docs/08-guides/mcp.md`).",
     "- `testTheLocalModelsSwitchMirrorsNuclearBuildersSetup`: `LOCAL_MODELS` equals `localModels` of",
     "  `extensions/tools/nuclear-builder/setup.json` (only in the working tree).",
-    "- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear and never names",
-    "  `developer_task` or `developer_review`.",
+    "- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear, never names",
+    "  `developer_task` or `developer_review`, and stays short (no command line cycle, the atlas one line per group).",
+    "- `testTheBaseLanguagePartOfTheBriefComesOncePerSession`: the second `nuclear_brief` leaves the base part out.",
     "- `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.",
     "- `tests/test_work.nuc`: a change asked by elicitation is done only on a yes (declined, cancelled, unticked: nothing",
     "  runs); through the MCP library's own client (elicitation accepted, declined, absent); a client that cannot ask gets",
     "  a preview and a token for that exact change, once (another change's token, a used one, an expired one, an unknown",
-    "  one: refused); `workspace_delete` removes the marker and the apps' folders only when asked; the apps', specs' and",
-    "  teams' tools call their commands with the right arguments, folder and stdin, and never hire a local member; the",
+    "  one: refused); `workspace_delete` removes the marker and the apps' folders only when asked; the apps', specs' and"
+   ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#tests-tests-test-server-nuc-nuclear-build-venv-bin-python-m-pytest-q.e9cde0",
+   "type": "context",
+   "title": "The MCP server: overview — Tests (`tests/test_server.nuc`; `nuclear build . && .venv/bin/python -m pytest -q`)",
+   "summary": "teams' tools call their commands with the right arguments, folder and stdin, and never hire a local member; the real `nuclear workspace` (skipped while the installed `nuclear` has none).",
+   "body": [
+    "teams' tools call their commands with the right arguments, folder and stdin, and never hire a local member; the",
     "  real `nuclear workspace` (skipped while the installed `nuclear` has none)."
    ],
    "sources": [
@@ -21384,7 +21401,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes-with-the-local-models-on.e9d580",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes-with-the-local-models-on.920013",
    "type": "context",
    "title": "The MCP server: overview — Two modes (with the local models on)",
    "summary": "The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).",
@@ -21393,13 +21410,29 @@
     "The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give",
     "`developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;",
     "`developer_review`); remote, `REMOTE_NOTE` + `graph_strategy` + `GENERATORS` + `REMOTE` (generate; the model writes what is left",
-    "after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that",
-    "cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear",
+    "after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start` without",
+    "its command line cycle and tools table (`startForMcp`), that cycle and the atlas's names one line per group",
+    "(`atlasLines`, from `nuclear help atlas --json`): every line read first is paid again on each later turn of the agent.",
+    "`nuclear_brief` gives the base language part once per session (`briefed`, `briefWithoutBase`; `full = true` repeats it); with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear",
     "help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does",
     "not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a",
-    "product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand",
-    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+    "product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand"
    ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes-with-the-local-models-on.fa9521",
+   "type": "context",
+   "title": "The MCP server: overview — Two modes (with the local models on)",
+   "summary": "(ADR-platform-0004).",
+   "body": "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
    ],
@@ -21852,13 +21885,40 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.23b501",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.0d83c2",
    "type": "guide",
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
    "body": [
+    "| `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |",
     "| `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |",
     "| `projects_list()` | every Nuclear project of this machine, whatever its workspace, and where it runs in development (`nuclear projects --json`): `{file, projects: [{name, root, platform, dialect, workspace, url, scheme, host, port}]}`. A project's port never moves by itself (the dialect's, or the project's `PORT`) and is the one `nuclear run` uses; only the user's projects are listed (no temporary folder, no project of Nuclear's own); a backend run in development lets these addresses and any port of `localhost`, `127.0.0.1`, `[::1]` call it from a browser (CORS). Read it to know which port a backend uses, or why a browser app says it has no connection to its server |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.301806",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — The compiler and the command line",
+   "summary": "The compiler and the command line",
+   "body": [
+    "| Tool | What it does |",
+    "|---|---|",
+    "| `nuclear_start(project?)` | **first**: what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic; with a project folder, its pieces and the sheet of its dialect |",
+    "| `nuclear_doc(topic)` | one topic of the atlas, whole: a guide chapter, `base`, `library`, a platform, a dialect, a tool, `context-docs`, `example/<name>`; a word that is not a topic answers the topics that explain it |",
+    "| `nuclear_check(code \\| path, dialect)` | `ok`, or one line per error with its fix, for a piece of Nuclear or a whole project |",
+    "| `nuclear_build(code, dialect)` | what a piece of Nuclear becomes in the dialect's language |",
+    "| `nuclear_fmt(code)` | the piece in the canonical layout |",
+    "| `nuclear_help(word, dialect)` | the documentation of a kind, a decorator, a topic or a command |",
+    "| `nuclear_brief(dialect, full?)` | the short sheet of Nuclear and a platform: read before writing `.nuc`. Its base language part comes only in the first sheet of a session; `full = true` repeats it |",
+    "| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
@@ -21875,33 +21935,6 @@
    "title": "The MCP server of NuclearLang — The compiler and the command line",
    "summary": "The compiler and the command line",
    "body": "| `project_migrate(project, action, message, to, confirm, fake, transaction, rename)` | the migrations of a backend project's database (`nuclear migrate`, the same in every backend dialect): `status` (every migration, applied or pending), `make` (`message`: one migration, the entities minus the last one; it warns of every drop; `rename`: the tables and columns that were renamed, each `<table>=<new table>` or `<table>.<column>=<new column>` in the database's names, written as a rename that keeps the rows), `up` (the pending ones; `to`: up to that migration), `down` (the last one applied; `to`: back to that migration); `fake` (`up`, `down`): only the history changes and nothing runs (a database that already has its tables is brought under the migrations); `transaction` (`up`, `down`): `all` (the default), `each` or `none`. `make`, `up` and `down` ask the user first (`confirm`: the preview's token, for a client that cannot ask): `up` and `down` change the database of the project's active environment, and `down` drops what the migration made, with its data. Answers `{ok, action, output}` |",
-   "sources": [
-    "tools/mcp/docs/08-guides/mcp.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-the-compiler-and-the-command-line.7342a6",
-   "type": "guide",
-   "title": "The MCP server of NuclearLang — The compiler and the command line",
-   "summary": "The compiler and the command line",
-   "body": [
-    "| Tool | What it does |",
-    "|---|---|",
-    "| `nuclear_start(project?)` | **first**: what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic; with a project folder, its pieces and the sheet of its dialect |",
-    "| `nuclear_doc(topic)` | one topic of the atlas, whole: a guide chapter, `base`, `library`, a platform, a dialect, a tool, `context-docs`, `example/<name>`; a word that is not a topic answers the topics that explain it |",
-    "| `nuclear_check(code \\| path, dialect)` | `ok`, or one line per error with its fix, for a piece of Nuclear or a whole project |",
-    "| `nuclear_build(code, dialect)` | what a piece of Nuclear becomes in the dialect's language |",
-    "| `nuclear_fmt(code)` | the piece in the canonical layout |",
-    "| `nuclear_help(word, dialect)` | the documentation of a kind, a decorator, a topic or a command |",
-    "| `nuclear_brief(dialect)` | the short sheet of Nuclear and a platform: read before writing `.nuc` |",
-    "| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |",
-    "| `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |"
-   ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
    ],

@@ -1,4 +1,5 @@
 use os
+use json
 use shutil
 use subprocess
 use asyncio
@@ -57,6 +58,38 @@ runLogTail(project: string, lines: int = 200) string
   shown = all.slice(Math.max(0, all.length - count), all.length)
   "${log} (last ${shown.length} of ${all.length} lines)\n\n${shown.join("\n")}"
 
+// The start topic as an MCP client reads it: without the command line's work cycle and tools table, which the MCP
+// cycle of nuclear_start replaces (every line an agent reads first is paid again on each of its later turns).
+startForMcp(start: string) string
+  parts = start.split("\n## The work cycle\n")
+  if parts.length < 2
+    return start.trim()
+  rest = parts[1].split("\n## Where everything is")
+  rest.length < 2 ? parts[0].trim() : "${parts[0].trim()}\n\n## Where everything is${rest[1]}".trim()
+
+// The atlas in one line per group, only the topics' names (`nuclear help atlas --json`); each is read with nuclear_doc.
+atlasLines(text: string) string
+  rows: <string, any>[] = json.loads(text)
+  groups: <string, string[]> = {}
+  for row in rows
+    group = "${row["group"]}"
+    if not (group in groups)
+      groups[group] = []
+    groups[group]!.add("${row["name"]}")
+  lines = ["## The atlas: every topic, by group", "", "Read one whole with nuclear_doc(<topic>); a word that is not a topic answers the topics that explain it.", ""]
+  for group, names in groups
+    lines.add("- ${group}: ${names.join(", ")}")
+  lines.join("\n")
+
+// The sheet of nuclear_brief after the first of a session: its base language part (the same in every sheet) is left
+// out, the platform's and the dialect's parts are whole.
+briefWithoutBase(sheet: string) string
+  marker = "\n# Platform " in sheet ? "\n# Platform " : "\n# Dialect "
+  parts = sheet.split(marker)
+  if parts.length < 2
+    return sheet
+  "(The base language part is in this session's first nuclear_brief; full = true repeats it.)\n\n${sheet.substring(parts[0].length + 1)}"
+
 taskSlug(text: string) string
   whole = stripChars(text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-"), "-")
   cut = whole.substring(0, Math.min(40, whole.length))
@@ -106,6 +139,9 @@ shape(value: any, depth: int = 0) string
 // reached with the token of the client `mcp` (`nuclear-graph connect mcp`), so the user decides whether MCP clients
 // may read it. Each method with a comment is a tool, and the comment is what the client reads of it.
 McpTools(graph: GraphClient, tools: Toolchain, web: Web)
+  // A sheet of nuclear_brief was given in this session (stdio: one server per client session).
+  briefed: boolean = false
+
   // Search the Nuclear Smart Graph, by meaning and by exact name (a diagnostic code, a command, a kind). shelf:
   // concepts (what it is, why, how it works), language (how it is written in Nuclear), platforms (kinds, decorators,
   // layout, plugins), tools (CLI commands, MCP tools, HTTP routes, generators, agents), errors (diagnostics, failures
@@ -177,10 +213,10 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     start = ~runTool(["nuclear", "help", "start"])
     if start.code != 0
       return start.out
-    atlas = ~runTool(["nuclear", "help", "atlas"])
+    atlas = ~runTool(["nuclear", "help", "atlas", "--json"])
     strategy = "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. "
     cycle = localDeveloper() ? "${WORKSPACE}${strategy}${GENERATORS}${LOCAL}" : "${REMOTE_NOTE}${WORKSPACE}${strategy}${GENERATORS}${REMOTE}"
-    parts = [start.out.trim(), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.out.trim()]
+    parts = [startForMcp(start.out), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.code == 0 ? atlasLines(atlas.out) : atlas.out.trim()]
     root = project.length > 0 ? projectOf(project) : null
     if root != null
       inspected: string = ~tools.project("${root}", ["gen", "inspect"])
@@ -189,6 +225,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       if found != null
         sheet = ~runTool(["nuclear", "spec", "--brief", "--dialect", found![1] ?? ""])
         parts.add(sheet.out.trim())
+        briefed = true
     parts.join("\n\n---\n\n")
 
   // One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base,
@@ -203,8 +240,14 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     ~tools.help(word, dialect)
 
   // The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc.
-  nuclearBrief(dialect: string = "backend") string
-    ~tools.brief(dialect)
+  // The base language part, the same in every sheet, comes only in the first sheet of a session; full = true repeats it
+  // (after the client dropped it from its context).
+  nuclearBrief(dialect: string = "backend", full: boolean = false) string
+    sheet: string = ~tools.brief(dialect)
+    if briefed and not full
+      return briefWithoutBase(sheet)
+    briefed = true
+    sheet
 
   // The piece of Nuclear in the canonical layout.
   nuclearFmt(code: string) string

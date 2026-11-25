@@ -24,7 +24,7 @@ and reports `(Wrote::Created | Kept, path)`; the command (`tools/cli/src/framewo
 1. **The fields** (`gen_command` of the command, `generate.rs`):
    - `--fields "id:int name:string origin:Origin?"` → `parse_fields`.
    - `--from-json <file|url>` → `from_json`: a nested object becomes a model `<Name><Key>` (`object_model`,
-     `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not
+     `nested`), a list under a key of a paged answer gives `<Name>Page` (`list_key`: `results`, `items`, `data`, `content`, else the one list of objects whose neighbours are a page's: `total`, `page`, `next`..., and no `id`), `null` an optional field, a key that is not
      the field's camelCase name gets `@key` (`json_key`). A url is fetched with `curl` (`fetch_text`) and also gives
      the API's base and path.
    - `--from-spec <spec.md>` → its example answer (`spec_json`), else its `Key | Type | Description` table
@@ -105,7 +105,7 @@ The templates are Nuclear, the same for every dialect of the platform: nothing h
 ## Tests
 
 - `generate.rs`: `a_spec_gives_its_example_answer_and_its_url`, `plurals_and_fields`,
-  `an_example_answer_gives_the_models_and_the_page`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,
+  `an_example_answer_gives_the_models_and_the_page`, `a_page_is_told_by_its_neighbours_not_by_the_name_of_its_list`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,
   `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.
 - `tools/cli/src/framework/mod.rs` (crate `nuclear-cli`): `a_generated_resource_compiles_with_every_dialect`,
   `make_writes_every_kind_where_the_platform_says`.

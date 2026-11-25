@@ -72,8 +72,10 @@ The instructions only say where to begin (spec 016: an agent with no context lea
 The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give
 `developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;
 `developer_review`); remote, `REMOTE_NOTE` + `graph_strategy` + `GENERATORS` + `REMOTE` (generate; the model writes what is left
-after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that
-cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
+after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start` without
+its command line cycle and tools table (`startForMcp`), that cycle and the atlas's names one line per group
+(`atlasLines`, from `nuclear help atlas --json`): every line read first is paid again on each later turn of the agent.
+`nuclear_brief` gives the base language part once per session (`briefed`, `briefWithoutBase`; `full = true` repeats it); with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
 help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does
 not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a
 product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand
@@ -154,8 +156,9 @@ Every machine runs the server and the Smart Graph (ADR-installer-0004), but no l
   tool is named in the guide of the server (`docs/08-guides/mcp.md`).
 - `testTheLocalModelsSwitchMirrorsNuclearBuildersSetup`: `LOCAL_MODELS` equals `localModels` of
   `extensions/tools/nuclear-builder/setup.json` (only in the working tree).
-- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear and never names
-  `developer_task` or `developer_review`.
+- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear, never names
+  `developer_task` or `developer_review`, and stays short (no command line cycle, the atlas one line per group).
+- `testTheBaseLanguagePartOfTheBriefComesOncePerSession`: the second `nuclear_brief` leaves the base part out.
 - `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.
 - `tests/test_work.nuc`: a change asked by elicitation is done only on a yes (declined, cancelled, unticked: nothing
   runs); through the MCP library's own client (elicitation accepted, declined, absent); a client that cannot ask gets

@@ -11,14 +11,15 @@
    "body": [
     "**The plan.**",
     "",
-    "1. Inspect: `nuclear gen inspect` (MCP `project_inspect`). No `config.nuc` yet: `strategy:project` first. Several platforms: one project per platform, the backend first.",
+    "1. Inspect: `workspace_show` of the user's folder and `nuclear gen inspect` (MCP `project_inspect`). No workspace yet: `workspace_create` in that folder, then one `app_add` per app (backend, web, mobile), each asked to the user first. One app per platform, the backend first.",
     "2. Limits: every `cannot` and `limit` row whose words the request writes (authentication, payments, push notifications...) is told to the user now, before any code.",
     "3. Decompose (`playbook:decompose-a-spec`): the big parts, one component per resource (a thing it stores or reads) or capability (a thing it does). Write the list: the component, what it holds, what it depends on.",
     "4. Order the parts: a component nobody depends on first; a relation between two entities after both exist.",
     "5. Each part is a run of its own, with its strategy: a stored resource `strategy:resource-db`, a resource of another API `strategy:resource-api`, a rule `strategy:usecase`, a view `strategy:interface`. At most 12 pieces for a model in one run.",
     "6. Between components only the facades: a use case of another component is called through that component's `appcomponent`.",
-    "7. The app of the backend comes after it: `strategy:client-of-backend`.",
-    "8. At the end, the whole project: `nuclear build`, `nuclear check .`, `nuclear test`.",
+    "7. A backend that reads another API (a backend for frontend): every resource is `strategy:resource-api`, one `generate_resource` call each, all of them before any code is written by hand.",
+    "8. The web and mobile apps of the backend come after it, from its contract: `strategy:client-of-backend`. A client never reads the external API again and never writes by hand a model the contract gives.",
+    "9. At the end, the whole project: `nuclear build`, `nuclear check .`, `nuclear test`.",
     "",
     "**A model writes:** only each part's own rules and view details; never a standard resource.",
     "",
@@ -35,7 +36,9 @@
     "quiero todo un sistema de inventario",
     "haz una aplicación completa de reservas",
     "a complete backend for a library",
-    "implementa todo el sistema"
+    "implementa todo el sistema",
+    "create a workspace with a backend, a website and a mobile app for this API",
+    "un backend, una web y una app móvil que usan una API pública"
    ],
    "links": [
     {
@@ -88,7 +91,12 @@
      "desde cero",
      "end to end",
      "completo",
-     "completa"
+     "completa",
+     "workspace",
+     "backend for frontend",
+     "bff",
+     "website and app",
+     "web and mobile"
     ]
    },
    "data": {
@@ -96,7 +104,10 @@
      "\\b(whole|entire|complete|full)\\s+(system|app|application|platform|backend|product)\\b",
      "\\b(todo|toda|completo|completa|entero|entera)\\b.{0,24}\\b(sistema|app|aplicaci[oó]n|plataforma|backend|producto)\\b",
      "\\b(sistema|aplicaci[oó]n|plataforma)\\s+(completo|completa|entero|entera)\\b",
-     "\\b(un|una|a|an)\\s+(sistema|system|aplicaci[oó]n|plataforma|platform)\\s+(de|para|for|of|to|that|que)\\b"
+     "\\b(un|una|a|an)\\s+(sistema|system|aplicaci[oó]n|plataforma|platform)\\s+(de|para|for|of|to|that|que)\\b",
+     "\\bbackend\\b\\s*(,|\\band\\b|\\by\\b|\\+|&)\\s*(an?\\s+|una?\\s+|the\\s+|la\\s+|el\\s+)?(website|web\\s*app|web|frontend|front-end|mobile\\s*app|mobile|app|app\\s*m[oó]vil)\\b",
+     "\\b(website|web\\s*app|web|frontend|front-end|mobile\\s*app|mobile|app|app\\s*m[oó]vil)\\s*(,|\\band\\b|\\by\\b|\\+|&)\\s*(an?\\s+|una?\\s+|the\\s+|la\\s+|el\\s+)?backend\\b",
+     "\\b(backend\\s+for\\s+frontend|bff)\\b"
     ],
     "generators": [
      "resource",
@@ -127,7 +138,7 @@
    "body": [
     "**The plan.**",
     "",
-    "1. `nuclear new <name> -p backend|mobile|web [-d <dialect>]` (a dialect alone gives its platform).",
+    "1. In the user's folder, a workspace first (`workspace_show`; none: `workspace_create`), then one `app_add` per app with its platform (`backend`, `mobile`, `web`) and dialect, each asked to the user first. Outside a workspace: `nuclear new <name> -p backend|mobile|web [-d <dialect>]` (a dialect alone gives its platform).",
     "2. `config.nuc`: the app's name and version, `plugins(...)` for what it uses (the cards `plugin:<platform>.<name>`).",
     "3. `config/project_config.nuc`: the connections (a database, an `Http(baseUrl)`, a model).",
     "4. `nuclear build`, `nuclear install`, `nuclear test`; `nuclear run` to see it.",
@@ -148,7 +159,9 @@
     "crea un proyecto nuevo",
     "start a mobile app project",
     "inicia un proyecto web",
-    "how do I scaffold a project"
+    "how do I scaffold a project",
+    "create a workspace here using nuclearlang",
+    "crea un workspace aquí"
    ],
    "links": [
     {
@@ -176,7 +189,10 @@
      "scaffold",
      "nuclear new",
      "empty project",
-     "proyecto vacío"
+     "proyecto vacío",
+     "workspace",
+     "new workspace",
+     "espacio de trabajo"
     ]
    },
    "data": {
@@ -184,7 +200,8 @@
      "\\b(new|create|start|scaffold|init(ialize)?)\\b.{0,30}\\bproject\\b",
      "\\b(nuevo|crea(r)?|inicia(r)?|empieza|empezar)\\b.{0,30}\\bproyecto\\b",
      "\\bproyecto\\s+(nuevo|vac[ií]o)\\b",
-     "\\bsynapsis new\\b"
+     "\\bsynapsis new\\b",
+     "\\b(new|create|start|set\\s*up|crea(r)?|nuevo|inicia(r)?)\\b.{0,30}\\bworkspace\\b"
     ],
     "mode": "commands",
     "stages": [],
@@ -304,13 +321,14 @@
    "body": [
     "**The plan.**",
     "",
-    "1. Inspect: `nuclear gen inspect`; the name must not be declared already.",
-    "2. The shape: `api_inspect <url>` shows the real answer (keys, types, nested objects, a page). `--from-json <url>` reads it by itself.",
+    "1. Inspect: `nuclear gen inspect`; the name must not be declared already. The app is the web or mobile app of a workspace whose backend reads this API: it reads that backend, `strategy:client-of-backend`, never the API again.",
+    "2. The shape: `api_inspect <url>` shows the real answer (keys, types, nested objects, a page). `--from-json <url>` reads it by itself. The url cannot be read (it needs a key, it answers 429): the answer saved to a file, `--from-json <file> --source rest:<base> --path <path>`, or `--from-spec`.",
     "3. Dry run first: `nuclear gen resource <component> <Name> --from-json <url> --actions list,get[,search] --dry-run`; on mobile and web add `--screen <screen>` for its list.",
-    "4. Run it without `--dry-run`. A snake_case key gets `@key`; a nested object becomes `<Name><Key>`; a paged answer `<Name>Page`.",
-    "5. Neither the request nor the API gives the fields: look up the API's documentation (`web_search`, `web_read`); still unclear: ask, never guess.",
-    "6. A rule on top of it (a filter, a transformation) is `strategy:usecase`.",
-    "7. `nuclear check .`, `nuclear test` (mobile and web: the generated test mocks the repository; backend: the tester writes one, the generator has none yet).",
+    "4. Run it without `--dry-run`. A snake_case key gets `@key`; a nested object becomes `<Name><Key>`; a paged answer (a list of objects next to `total`, `page`, `next`...: `results`, `docs`, `items`) `<Name>Page`. Several resources: one call each, before any code by hand.",
+    "5. The generated code is wrong for this API: a gap of the generator. Tell the user, correct only the file that is wrong, never rewrite the resources by hand.",
+    "6. Neither the request nor the API gives the fields: look up the API's documentation (`web_search`, `web_read`); still unclear: ask, never guess.",
+    "7. A rule on top of it (a filter, a transformation) is `strategy:usecase`.",
+    "8. `nuclear check .`, `nuclear test` (mobile and web: the generated test mocks the repository; backend: the tester writes one, the generator has none yet).",
     "",
     "**A model writes:** nothing; only a use case when the request states a rule of its own.",
     "",
@@ -2950,7 +2968,7 @@
    },
    "data": {
     "signals": [
-     "\\b(document|documents|documenting|documentation|documenta|documentar|documentaci[oó]n)\\b",
+     "(?<![/\\w.-])\\b(document|documents|documenting|documentation|documenta|documentar|documentaci[oó]n)\\b(?![/\\w.-]*\\.\\w)",
      "\\b(readme|doc comments?|docstrings?)\\b",
      "\\b(diagram|diagrama)\\b"
     ],

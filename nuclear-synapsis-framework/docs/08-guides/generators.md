@@ -32,7 +32,7 @@ The fields come from one of three places:
 
 | Option | The fields are read from |
 |---|---|
-| `--from-json <file\|url>` | an example answer of the API. A nested object becomes a model named `<Name><Key>`, a paged answer gives `<Name>Page`, a snake_case key gets `@key`. A url also gives the API to call |
+| `--from-json <file\|url>` | an example answer of the API. A nested object becomes a model named `<Name><Key>`, a paged answer (a list of objects under `results`, `items`, `data` or `content`, or the one list next to a page's fields such as `total`, `page`, `next`, as `{docs: [...], total, page}`) gives `<Name>Page`, a snake_case key gets `@key`. A url also gives the API to call |
 | `--from-spec <spec.md>` | the spec's example answer, or else its `Key \| Type \| Description` table; a `GET https://...` line gives the API |
 | `--fields "id:int name:string origin:Origin?"` | the command line. A type that is not a basic one must be declared in the project |
 

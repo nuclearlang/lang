@@ -6172,34 +6172,6 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0978de",
-   "type": "context",
-   "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`: mobile and web read APIs, a database resource is backend only); a name another file…",
-   "body": [
-    "of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a",
-    "   decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`:",
-    "   mobile and web read APIs, a database resource is backend only); a name another file declares is refused (N0303).",
-    "3. **The context** (`context(&Resource)`, `usecase_context(&UseCase)`): the values the templates read. `Name`/`name`,",
-    "   `Names`/`names` (`plural`, or `--plural`), `component`/`Component`, `fields`, `data` (the fields without the",
-    "   key), `models`, `rest`/`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items`, `idType`,",
-    "   `actions.<action>`, `each_action`, `screen`/`Screen`, and the samples the tests use (`sample_of`, `sample`). The",
-    "   whole list is in `nuclearlang/docs/07-reference/dialects.md`.",
-    "4. **The plan** (`plan(dialect, what, ctx)`): for each `[[generators.<what>]]` piece of the platform, skipped when",
-    "   its `when` value is not true, once per item of its `each` list: the declaration's name (`name` rendered), its",
-    "   path (the `[layout]` place of its `kind` with `{component}`, `{screen}`, `{file}` = the name in snake_case), and",
-    "   its text (`template` rendered, then put in the canonical layout by `nuclear_syntax::fmt::format`)."
-   ],
-   "sources": [
-    "tools/code_generator/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0bcf83",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
@@ -6223,25 +6195,23 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.8c008d",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.216cb9",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "5. The write (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its head line and its body, told by the head line), and says `added to`.",
+   "summary": "1. The fields (`gen_command` of the command, `generate.rs`): `nested`), a list under a key of a paged answer gives `<Name>Page` (`list_key`: `results`, `items`, `data`, `content`, else the one list of objects whose neighbours are a page's: `total`, `page`, `next`..., and no `id`), `null` an…",
    "body": [
-    "5. **The write** (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a",
-    "   facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its",
-    "   head line and its body, told by the head line), and says `added to`. `--dry-run` shows the plan and writes",
-    "   nothing. A component that does not exist is created first (`generators.component`).",
-    "6. **The `Http` connection** (`ensure_http`): a REST resource whose base url no connection of the app's",
-    "   `appConfig` file has gets one written with the platform's `[gen] http` form, or `http_named` (named after the",
-    "   component) when the app already has another; the repository then names it.",
-    "",
-    "`gen usecase` (`UseCase`, `Route`, `parse_route`, `result_parts`): the signature of `exec` is read from the project",
-    "with `nuclear_transpile::map::shape`, never typed again. `--calls <Repository>.<method>` writes the use case too",
-    "(a method that answers no `Result` goes inside an `Ok`); `--route \"<VERB> <prefix>[/<path>]\"` adds its route to the",
-    "controller of the prefix, made when missing (a `{name}` of the path must be a parameter of the use case; the route",
-    "calls it with `~` only when `exec` awaits). A use case that is neither declared nor given `--calls` is refused with",
-    "the place and the form to write it."
+    "1. **The fields** (`gen_command` of the command, `generate.rs`):",
+    "   - `--fields \"id:int name:string origin:Origin?\"` → `parse_fields`.",
+    "   - `--from-json <file|url>` → `from_json`: a nested object becomes a model `<Name><Key>` (`object_model`,",
+    "     `nested`), a list under a key of a paged answer gives `<Name>Page` (`list_key`: `results`, `items`, `data`, `content`, else the one list of objects whose neighbours are a page's: `total`, `page`, `next`..., and no `id`), `null` an optional field, a key that is not",
+    "     the field's camelCase name gets `@key` (`json_key`). A url is fetched with `curl` (`fetch_text`) and also gives",
+    "     the API's base and path.",
+    "   - `--from-spec <spec.md>` → its example answer (`spec_json`), else its `Key | Type | Description` table",
+    "     (`from_spec`); a table with objects it does not detail reads the API's answer from the spec's `GET <url>` line",
+    "     (`spec_url`).",
+    "2. **The checks, before anything is written**: every name given to `make` or `gen` (a component, a screen, a",
+    "   resource, a use case) is snake_case, starts with a letter, has no `_` at either end nor two together, and is no",
+    "   reserved word of Nuclear or of the project's target (`generated_name` in the CLI: `_global`, `users_`, `if`, and"
    ],
    "sources": [
     "tools/code_generator/docs/02-architecture/overview.md"
@@ -6253,11 +6223,43 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.91fe6e",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.285cd5",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "`gen inspect` prints what the project has as JSON: its platform and dialect, its components with their declarations (`kind`, `name`, `file`), what is outside a component, and the generators of its platform.",
+   "summary": "path (the `[layout]` place of its `kind` with `{component}`, `{screen}`, `{file}` = the name in snake_case), and its text (`template` rendered, then put in the canonical layout by `nuclear_syntax::fmt::format`).",
    "body": [
+    "path (the `[layout]` place of its `kind` with `{component}`, `{screen}`, `{file}` = the name in snake_case), and",
+    "   its text (`template` rendered, then put in the canonical layout by `nuclear_syntax::fmt::format`).",
+    "5. **The write** (`write`): a missing file is `created`; a file that exists is `kept`; a `merge = true` piece (a",
+    "   facade, a repository, a controller) gets the members it lacks, each one whole (`members`: its decorators, its",
+    "   head line and its body, told by the head line), and says `added to`. `--dry-run` shows the plan and writes",
+    "   nothing. A component that does not exist is created first (`generators.component`).",
+    "6. **The `Http` connection** (`ensure_http`): a REST resource whose base url no connection of the app's",
+    "   `appConfig` file has gets one written with the platform's `[gen] http` form, or `http_named` (named after the",
+    "   component) when the app already has another; the repository then names it."
+   ],
+   "sources": [
+    "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.57561b",
+   "type": "context",
+   "title": "The code generator: overview — `gen`: from a resource's data to files",
+   "summary": "`gen usecase` (`UseCase`, `Route`, `parse_route`, `result_parts`): the signature of `exec` is read from the project with `nuclear_transpile::map::shape`, never typed again.",
+   "body": [
+    "`gen usecase` (`UseCase`, `Route`, `parse_route`, `result_parts`): the signature of `exec` is read from the project",
+    "with `nuclear_transpile::map::shape`, never typed again. `--calls <Repository>.<method>` writes the use case too",
+    "(a method that answers no `Result` goes inside an `Ok`); `--route \"<VERB> <prefix>[/<path>]\"` adds its route to the",
+    "controller of the prefix, made when missing (a `{name}` of the path must be a parameter of the use case; the route",
+    "calls it with `~` only when `exec` awaits). A use case that is neither declared nor given `--calls` is refused with",
+    "the place and the form to write it.",
+    "",
     "`gen inspect` prints what the project has as JSON: its platform and dialect, its components with their declarations",
     "(`kind`, `name`, `file`), what is outside a component, and the generators of its platform."
    ],
@@ -6271,25 +6273,23 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.a8e8e1",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.e175d3",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "1. The fields (`gen_command` of the command, `generate.rs`): `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not the field's camelCase name gets `@key` (`json_key`).",
+   "summary": "`global` with `fastapi`, are refused with what to write instead, never made into a folder); every type a field names is basic (`BASIC`), a model of the same answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns of basic types (a relation is…",
    "body": [
-    "1. **The fields** (`gen_command` of the command, `generate.rs`):",
-    "   - `--fields \"id:int name:string origin:Origin?\"` → `parse_fields`.",
-    "   - `--from-json <file|url>` → `from_json`: a nested object becomes a model `<Name><Key>` (`object_model`,",
-    "     `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not",
-    "     the field's camelCase name gets `@key` (`json_key`). A url is fetched with `curl` (`fetch_text`) and also gives",
-    "     the API's base and path.",
-    "   - `--from-spec <spec.md>` → its example answer (`spec_json`), else its `Key | Type | Description` table",
-    "     (`from_spec`); a table with objects it does not detail reads the API's answer from the spec's `GET <url>` line",
-    "     (`spec_url`).",
-    "2. **The checks, before anything is written**: every name given to `make` or `gen` (a component, a screen, a",
-    "   resource, a use case) is snake_case, starts with a letter, has no `_` at either end nor two together, and is no",
-    "   reserved word of Nuclear or of the project's target (`generated_name` in the CLI: `_global`, `users_`, `if`, and",
-    "   `global` with `fastapi`, are refused with what to write instead, never made into a folder); every type a field names is basic (`BASIC`), a model of the same",
-    "   answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns"
+    "`global` with `fastapi`, are refused with what to write instead, never made into a folder); every type a field names is basic (`BASIC`), a model of the same",
+    "   answer or declared in the project (`nuclear_transpile::map::inventory`); a database resource takes only columns",
+    "   of basic types (a relation is written by hand) and has no generated `search` (which column is searched is a",
+    "   decision); the actions are of `ACTIONS`; the platform has pieces for the source (`when = \"rest\"` / `\"db\"`:",
+    "   mobile and web read APIs, a database resource is backend only); a name another file declares is refused (N0303).",
+    "3. **The context** (`context(&Resource)`, `usecase_context(&UseCase)`): the values the templates read. `Name`/`name`,",
+    "   `Names`/`names` (`plural`, or `--plural`), `component`/`Component`, `fields`, `data` (the fields without the",
+    "   key), `models`, `rest`/`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items`, `idType`,",
+    "   `actions.<action>`, `each_action`, `screen`/`Screen`, and the samples the tests use (`sample_of`, `sample`). The",
+    "   whole list is in `nuclearlang/docs/07-reference/dialects.md`.",
+    "4. **The plan** (`plan(dialect, what, ctx)`): for each `[[generators.<what>]]` piece of the platform, skipped when",
+    "   its `when` value is not true, once per item of its `each` list: the declaration's name (`name` rendered), its"
    ],
    "sources": [
     "tools/code_generator/docs/02-architecture/overview.md"
@@ -6352,10 +6352,10 @@
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#tests",
    "type": "context",
    "title": "The code generator: overview — Tests",
-   "summary": "`an_example_answer_gives_the_models_and_the_page`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`, `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.",
+   "summary": "`an_example_answer_gives_the_models_and_the_page`, `a_page_is_told_by_its_neighbours_not_by_the_name_of_its_list`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`, `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.",
    "body": [
     "- `generate.rs`: `a_spec_gives_its_example_answer_and_its_url`, `plurals_and_fields`,",
-    "  `an_example_answer_gives_the_models_and_the_page`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,",
+    "  `an_example_answer_gives_the_models_and_the_page`, `a_page_is_told_by_its_neighbours_not_by_the_name_of_its_list`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,",
     "  `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.",
     "- `tools/cli/src/framework/mod.rs` (crate `nuclear-cli`): `a_generated_resource_compiles_with_every_dialect`,",
     "  `make_writes_every_kind_where_the_platform_says`.",

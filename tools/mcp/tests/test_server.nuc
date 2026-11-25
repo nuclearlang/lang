@@ -50,6 +50,19 @@ testAnAgentWithNoContextLearnsNuclearFromNuclearStart() void
   expect(not ("developer_task" in start) and not ("developer_review" in start))
   doc: string = asyncio.run(tools.nuclearDoc("control"))
   expect("match" in doc)
+  // what it costs an agent: the command line's cycle and tools table are left out, the atlas is one line per group
+  expect(not ("## The tools" in start) and not ("\n## The work cycle\n" in start) and "- language: guide, syntax" in start)
+  expect(start.length < 11000)
+
+testTheBaseLanguagePartOfTheBriefComesOncePerSession() void
+  tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
+  first: string = asyncio.run(tools.nuclearBrief("backend"))
+  second: string = asyncio.run(tools.nuclearBrief("web"))
+  again: string = asyncio.run(tools.nuclearBrief("web", full = true))
+  expect("# NuclearLang brief" in first and "# Platform `backend`" in first)
+  expect(not ("# NuclearLang brief" in second) and "# Platform `web`" in second and "full = true" in second)
+  expect("# NuclearLang brief" in again)
+  expect(briefWithoutBase("only one part") == "only one part")
 
 testTheRunLogToolAnswersTheTailOfTheProjectsLogAndNothingOutsideIt(tmpPath: Path) void
   project = tmpPath.joinpath("shop")

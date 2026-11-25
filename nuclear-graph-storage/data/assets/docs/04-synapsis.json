@@ -1468,7 +1468,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#1-a-resource.389f59",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#1-a-resource.990bf2",
    "type": "guide",
    "title": "Generators: the standard code, written by a command — 1. A resource",
    "summary": "nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character nuclear gen resource orders Order --fields \"id:int total:double status:string\" --source db nuclear gen resource episodes Episode --from-spec specs/episodes/spec.md --screen episode_list The fields come…",
@@ -1483,7 +1483,7 @@
     "",
     "| Option | The fields are read from |",
     "|---|---|",
-    "| `--from-json <file\\|url>` | an example answer of the API. A nested object becomes a model named `<Name><Key>`, a paged answer gives `<Name>Page`, a snake_case key gets `@key`. A url also gives the API to call |",
+    "| `--from-json <file\\|url>` | an example answer of the API. A nested object becomes a model named `<Name><Key>`, a paged answer (a list of objects under `results`, `items`, `data` or `content`, or the one list next to a page's fields such as `total`, `page`, `next`, as `{docs: [...], total, page}`) gives `<Name>Page`, a snake_case key gets `@key`. A url also gives the API to call |",
     "| `--from-spec <spec.md>` | the spec's example answer, or else its `Key \\| Type \\| Description` table; a `GET https://...` line gives the API |",
     "| `--fields \"id:int name:string origin:Origin?\"` | the command line. A type that is not a basic one must be declared in the project |",
     "",
