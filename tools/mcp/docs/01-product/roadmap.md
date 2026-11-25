@@ -19,6 +19,10 @@ The pending work of the server. A done item is deleted.
 
 ## Pending
 
+- **Found measuring an OpenCode agent (2026-11-25):** `app_add` confirmed for three apps in parallel lost one (web
+  answered "exists already" and was added again: 5 calls, 4 turns); and a product session reaches 92 tools with
+  23.6 k chars of descriptions, which a client's tool search dumps (~5 k chars each time).
+
 - **`workspace_delete` removes the marker itself**: `nuclear workspace` has no `delete`; when the CLI has one, the
   tool calls it. `testTheWorkspaceToolsAgainstTheInstalledCommand` skips until the installed `nuclear` has
   `nuclear workspace`.

@@ -12,6 +12,10 @@ MCP server, in the project [`tools/mcp`](../../../tools/mcp/AGENTS.md).
 
 ## Pending
 
+- **Found measuring an OpenCode agent (2026-11-25):** `graph_search` with `k: 8` answers 9-13 k chars and
+  `graph_answer` 16.7 k for one question: every hit is its whole card. An agent pays them again on every later turn
+  (~1.8 M tokens in one run); a hit should be its id, title and summary, the card read with `graph_card` when chosen.
+
 - **Found at the 0.90.0 release (2026-11-21), not caused by it:** `nuclear-graph knowledge examples` reports 4 errors
   in one block, `concept:workspace` #1: a `workspace.nuc` manifest (`workspace(...)`, `app(...)`) compiled as a
   backend file is N0106; the block should be checked as a manifest, or not be a `nuclear` block. And
