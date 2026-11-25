@@ -46,6 +46,8 @@ for r in "$FRAMEWORK"/platforms/*/; do
     done
   fi
   if [ -d "$r/kinds" ]; then mkdir -p "$DEST/kinds"; cp -R "$r/kinds/." "$DEST/kinds/"; fi
+  # its plugins (the databases, ADR-backend-0004): kind packages with Nuclear source, next to the contract that finds them
+  if [ -d "$r/plugins" ]; then cp -R "$r/plugins" "$DEST/platforms/$name/"; fi
   # the runtimes: every package, as it is (a built JavaScript package needs its dist/)
   for p in "$r"/packages/*; do
     [ -d "$p" ] || continue

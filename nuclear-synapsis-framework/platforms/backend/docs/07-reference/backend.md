@@ -68,6 +68,26 @@ the line to add: `tools`, `agent`, `state`, `graph` need `ai`; `listener`, `publ
 for a broker); `WebSocketServer` needs `websocket` (which needs `events`); `cacheGet`, `cacheSet` need `redis`; `Datadog`, `NewRelic`, `Grafana`, `Otlp`, `Metric` need `telemetry`; a
 database connection needs its plugin.
 
+#### A database is a plugin (ADR-backend-0004)
+
+A database is a plugin package of the platform (`postgres` is one): a `plugin` declaration in Nuclear, built with
+every project that enables it, whose name is the connection word of §2.8. Its parameters are the connection's;
+what its database cannot do is `@refuses`, and a project that asks it does not build (N0313, never emulated);
+`@retries(n)` is how many times a `@transactional` use case runs again when its database refuses the transaction
+for another one (3 without it, §2.4). How each dialect's ORM reaches the database is the package's, never the
+Nuclear's.
+
+```nuclear
+@refuses(onDelete = ["cascade", "set null"])
+@retries(5)
+plugin CamusDB(url: string, name: string = "default", createTables: boolean = false)
+```
+
+A package is `kind.toml` (`[package]` with `platform = "backend"`), its `.nuc` and a folder per dialect it
+implements, whose `kind.toml` has `[plugin]`: the runtime `packages`, the `names` that need the plugin (N0304) and
+the `values` its dialect's template reads (what the dialect's ORM names the database). It is installed for every
+project with `nuclear add <folder>`, or kept in `kinds/<name>/` of one project.
+
 ## 2. Kinds
 
 ### 2.1 Entity

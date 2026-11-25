@@ -2053,13 +2053,14 @@
    "id": "mcp:nuclear_brief",
    "type": "mcp",
    "title": "`nuclear_brief` — a tool of the Nuclear MCP server",
-   "summary": "The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc.",
+   "summary": "The short sheet of Nuclear and a platform (platform: backend, mobile, web), or a dialect (dialect: fastapi, nestjs, react, flutter): read it before writing .nuc by hand.",
    "body": [
-    "The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc. The base language part, the same in every sheet, comes only in the first sheet of a session; full = true repeats it (after the client dropped it from its context).",
+    "The short sheet of Nuclear and a platform (platform: backend, mobile, web), or a dialect (dialect: fastapi, nestjs, react, flutter): read it before writing .nuc by hand. The base language part, the same in every sheet, comes only in the first sheet of a session; full = true repeats it (after the client dropped it from its context).",
     "",
     "Parameters:",
     "",
-    "- `dialect`: string = `\"backend\"`",
+    "- `platform`: string = `\"\"`",
+    "- `dialect`: string = `\"\"`",
     "- `full`: boolean = `false`"
    ],
    "keys": [
@@ -2088,10 +2089,16 @@
     "runs": "nuclear spec --brief",
     "params": [
      {
+      "name": "platform",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
       "name": "dialect",
       "type": "string",
       "required": false,
-      "default": "\"backend\""
+      "default": "\"\""
      },
      {
       "name": "full",
@@ -2279,13 +2286,14 @@
    "id": "mcp:nuclear_doc",
    "type": "mcp",
    "title": "`nuclear_doc` — a tool of the Nuclear MCP server",
-   "summary": "One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>.",
+   "summary": "One topic of the atlas (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>.",
    "body": [
-    "One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>. A word that is not a topic answers the topics that explain it.",
+    "One topic of the atlas (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>. A short topic comes whole; a long one answers its opening and the index of its sections (an example: its files), and section (words of a heading) answers that section only. A word that is not a topic answers the topics that explain it.",
     "",
     "Parameters:",
     "",
-    "- `topic`: string"
+    "- `topic`: string",
+    "- `section`: string = `\"\"`"
    ],
    "keys": [
     "nuclear_doc",
@@ -2317,6 +2325,12 @@
       "type": "string",
       "required": true,
       "default": ""
+     },
+     {
+      "name": "section",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
      }
     ]
    }

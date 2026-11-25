@@ -272,6 +272,11 @@ pub mod codes {
         title: "a required variable without a value in the environment",
         explanation: "`env(\"NAME\")` without a default is a required variable of the project (spec 021): `nuclear check --env <environment>` and `nuclear build --env <environment>` report each one the environment does not give a value (its .env files, the keyring's secrets, the process), and `nuclear run` does not start without them. Give it one: `nuclear env set NAME <value> --env <environment>` (`--secret` for a secret), or a default: `env(\"NAME\", \"default\")`.",
     };
+    pub const REFUSED_BY_PLUGIN: Code = Code {
+        id: "N0313",
+        title: "a value the project's database cannot do",
+        explanation: "A plugin of the project (a database, ADR-backend-0004) declares with @refuses what its database cannot do: `@refuses(onDelete = [\"cascade\", \"set null\"])`. A decorator of the project that gives one of those values (`@manyToOne(onDelete = \"cascade\")`) is refused at compile time instead of failing in the database, and the platform never emulates it. Give another value the plugin accepts (`onDelete = \"restrict\"`), or do it in a use case (remove the children before the parent).",
+    };
     pub const KIND_PACKAGE: Code = Code {
         id: "N0306",
         title: "kind package without an implementation for the dialect",
@@ -432,6 +437,7 @@ pub mod codes {
         ENV_NAME,
         ENV_SECRET_CLIENT,
         ENV_MISSING,
+        REFUSED_BY_PLUGIN,
         TAB_INDENT,
         BAD_DEDENT,
         ODD_INDENT,

@@ -146,26 +146,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.0ac617",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.81e09f",
    "type": "readme",
    "title": "The backend platform — Folders",
-   "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
+   "summary": "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`, `nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes (`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`).",
    "body": [
-    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What",
-    "  `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is",
-    "  `tools/code_generator/platforms/backend/generators.toml`.",
-    "- `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).",
-    "- `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
-    "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
-    "- `examples/examples-backend/store_api/`: the example of the database check (customers, orders, tags, coupons: relations,",
-    "  pages, searches, transactions, what the database refuses), made with `nuclear new` and `nuclear gen`.",
-    "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
-    "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
-    "- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
-    "  website runs those commands again and fails if they do not give it).",
-    "- `examples/expected/{rick_api,store_api,tasks_api,todos_api}/`: the golden output of the projects.",
-    "- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the",
-    "  guards and the WebSocket of `tasks_api`; `smoke.mjs`)."
+    "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
+    "`nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes",
+    "(`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`)."
    ],
    "platforms": [
     "backend"
@@ -180,11 +168,48 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.327d7d",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.ebcb8e",
    "type": "readme",
    "title": "The backend platform — Folders",
-   "summary": "seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`, a rename with `make --rename`, a long text), `tables.py` (the tables `createTables` makes against the first migration's) and `scenario.py` (the one HTTP scenario whose answers are compared).",
+   "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
    "body": [
+    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What",
+    "  `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is",
+    "  `tools/code_generator/platforms/backend/generators.toml`.",
+    "- `plugins/<database>/`: the databases as plugin packages (ADR-backend-0004): `kind.toml`, the `plugin` in Nuclear,",
+    "  a folder per dialect with `[plugin]` (`packages`, `names`, `values`). The loader finds them next to",
+    "  `platform.toml`; the installer copies them there. Only `postgres` is one yet (spec 005).",
+    "- `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).",
+    "- `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
+    "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
+    "- `examples/examples-backend/store_api/`: the example of the database check (customers, orders, tags, coupons: relations,",
+    "  pages, searches, transactions, what the database refuses), made with `nuclear new` and `nuclear gen`.",
+    "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
+    "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
+    "- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
+    "  website runs those commands again and fails if they do not give it)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.fe2e5b",
+   "type": "readme",
+   "title": "The backend platform — Folders",
+   "summary": "guards and the WebSocket of `tasks_api`; `smoke.mjs`).",
+   "body": [
+    "- `examples/expected/{rick_api,store_api,tasks_api,todos_api}/`: the golden output of the projects.",
+    "- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the",
+    "  guards and the WebSocket of `tasks_api`; `smoke.mjs`).",
     "- `checks/database-check/`: `check.sh` (every dialect × every database, in Docker), `db.py` (the real schema, the",
     "  seed, SQL), `migrations.py` (every kind of schema change with `nuclear migrate`, a rename with `make --rename`, a long text), `tables.py` (the tables",
     "  `createTables` makes against the first migration's) and `scenario.py` (the one HTTP",
@@ -193,11 +218,7 @@
     "  against an allow-list), `security.py` (the same hostile requests to both dialects), `audit.py` (the advisories of",
     "  the dependencies), `performance.py` and `load.mjs` (the same load, the SQL statements of a request), `probes/`",
     "  (the Nuclear of the probe routes), `known.txt` and `known.py` (the findings not fixed yet).",
-    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
-    "",
-    "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
-    "`nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes",
-    "(`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`)."
+    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user."
    ],
    "platforms": [
     "backend"
@@ -332,6 +353,40 @@
    "title": "Changelog",
    "summary": "All notable changes to synapsis-backend are written here; versions follow Semantic Versioning.",
    "body": "All notable changes to synapsis-backend are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.0e816a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`nestjs`: the kind `plugin`, written in Nuclear in a plugin package and built with every project that enables it; `@refuses` (what its database cannot do: a project that asks it is N0313) and `@retries` (the runs of a refused transaction).",
+   "body": [
+    "- **A database is a plugin** (ADR-backend-0004, reference \"A database is a plugin\"), the same in `fastapi` and",
+    "  `nestjs`: the kind `plugin`, written in Nuclear in a plugin package and built with every project that enables it;",
+    "  `@refuses` (what its database cannot do: a project that asks it is N0313) and `@retries` (the runs of a refused",
+    "  transaction). PostgreSQL is the first: `plugins(postgres = true)` and `Postgres(url = ...)` are unchanged, the",
+    "  class now comes from the plugin's Nuclear (`plugins/postgres` of the build) instead of the runtime.",
+    "",
+    "- **A transaction the database refuses for another runs again** (ADR-backend-0004, reference §2.4), the same in",
+    "  `fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again",
+    "  from its start, up to three times, then throws. **The events published inside `@transactional` are sent after the",
+    "  commit**: a rolled back transaction publishes nothing, and one run again publishes once (before, they were sent at",
+    "  once, even for a transaction rolled back).",
+    "",
+    "- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in",
+    "  `fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers",
+    "  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`."
+   ],
    "platforms": [
     "backend"
    ],
@@ -859,34 +914,6 @@
     "  longer hides that function in the body; outside it keeps its own name (`@_public_names`: a route's `?max=`, an MCP",
     "  tool's `type`, a keyword call), and synapsis-py reads a renamed reserved word (`from_`) by its own name too. `rick_api`'s `alive(max)` is written `alive(max_)`.",
     "- The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.e3f781",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "`fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again from its start, up to three times, then throws.",
-   "body": [
-    "- **A transaction the database refuses for another runs again** (ADR-backend-0004, reference §2.4), the same in",
-    "  `fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again",
-    "  from its start, up to three times, then throws. **The events published inside `@transactional` are sent after the",
-    "  commit**: a rolled back transaction publishes nothing, and one run again publishes once (before, they were sent at",
-    "  once, even for a transaction rolled back).",
-    "",
-    "- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in",
-    "  `fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers",
-    "  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`."
    ],
    "platforms": [
     "backend"
@@ -1977,6 +2004,33 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.098e9a",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Modules",
+   "summary": "Modules",
+   "body": [
+    "| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |",
+    "| `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |",
+    "| `wire` | how a request is read, the same as the other runtime: `read_json` (UTF-8, no `NaN`, 512 levels, no U+0000), `is_json`, `parse_param` (the parameters of the path and the query), `LIMITS` (`maxBodySize`, `maxPageSize`) |",
+    "| `server` | `python -m synapsis.server [--reload] [--port]`: uvicorn on `HOST` (default `127.0.0.1`) and `PORT`, no `Server` header, no access log of its own |",
+    "| `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |",
+    "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
+    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |",
+    "| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.128ab6",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Modules",
@@ -1995,6 +2049,34 @@
     "  reference §2.7).",
     "- A parameter the dialect wrote with a trailing `_` (its name is a Python word or builtin: `type_`, `from_`) keeps",
     "  its own name for the client: `router_of` writes the route's `{type}` as `{type_}` (the same URL) and `_endpoint`"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.178c1e",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Modules",
+   "summary": "Modules",
+   "body": [
+    "| Module | Holds |",
+    "|---|---|",
+    "| `result` | `Result`, `Ok`, `Err` |",
+    "| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |",
+    "| `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |",
+    "| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Database` (a database's plugin subclasses it with its `driver` and `retries`, ADR-backend-0004), `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |",
+    "| `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |",
+    "| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |",
+    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |"
    ],
    "platforms": [
     "backend"
@@ -2047,61 +2129,6 @@
     "| `migrate` | the migrations (below) |",
     "",
     "Behaviour worth knowing:"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.9c38d9",
-   "type": "context",
-   "title": "The Python runtime: `synapsis-py` — Modules",
-   "summary": "Modules",
-   "body": [
-    "| `edge` | `Edge`, the ASGI middleware of every request: its log line, the cause of a 500 (`said` keeps the request's values out), the body's limit (413) and type (415), an encoded `/` (404), CORS |",
-    "| `wire` | how a request is read, the same as the other runtime: `read_json` (UTF-8, no `NaN`, 512 levels, no U+0000), `is_json`, `parse_param` (the parameters of the path and the query), `LIMITS` (`maxBodySize`, `maxPageSize`) |",
-    "| `server` | `python -m synapsis.server [--reload] [--port]`: uvicorn on `HOST` (default `127.0.0.1`) and `PORT`, no `Server` header, no access log of its own |",
-    "| `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |",
-    "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
-    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |",
-    "| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.ddeb3f",
-   "type": "context",
-   "title": "The Python runtime: `synapsis-py` — Modules",
-   "summary": "Modules",
-   "body": [
-    "| Module | Holds |",
-    "|---|---|",
-    "| `result` | `Result`, `Ok`, `Err` |",
-    "| `errors` | `AppError` and the errors with an HTTP status: `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict`; `IntegrityViolation`: what the runtime refuses as a database would (below) |",
-    "| `inject` | injection by type: `inject`, `provide`, `bind`, `reset` |",
-    "| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |",
-    "| `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |",
-    "| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `one_of`, `is_null`, `between`), `Page`, `transactional` |",
-    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |",
-    "| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`); 405 with `Allow` and `OPTIONS` (`_not_allowed`) |"
    ],
    "platforms": [
     "backend"
@@ -2301,7 +2328,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.8b81f1",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.121948",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
    "summary": "Entry points and modules",
@@ -2311,11 +2338,10 @@
     "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
     "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
     "| | `model` | `IsDateTime` (a `DateTime` field of a model), `checkModel` and `InvalidModel` (a model built in code) |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Database`, which a database's plugin subclasses with its Sequelize `dialect` and `retries`, ADR-backend-0004; `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
     "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `contains`, `icontains`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
     "| | `web` | `ResultInterceptor`, `ErrorFilter` (every error's body; what the database refuses: below; 405 with `Allow`, `OPTIONS`; the cause of a 500 in the log), the parameters' pipes (`IntPipe`, `DoublePipe`, `BoolPipe`, `TextPipe`, `RequiredPipe`), `configureApp`; serves the contract (`serveContract`) |",
-    "| | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |",
-    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |"
+    "| | `edge` | the middleware of every request (`edge`): its log line, the body's limit (413) and type (415) read into a `RawBody`, an encoded `/` (404) and unreserved letter, CORS; `readJson` (UTF-8, 512 levels, no U+0000), `limits` (`maxBodySize`, `maxPageSize`), `logCause` |"
    ],
    "platforms": [
     "backend"
@@ -2362,11 +2388,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.9409e4",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.be99ff",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
    "summary": "Behaviour worth knowing:",
    "body": [
+    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |",
     "| | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |",
     "| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`), `sinks` |",
     "| `synapsis-nest/sockets` | `websocket` | `WebSocketServer`: `ws` on the app's HTTP server (`Connection.instrument`, called by `configureApp`); each request frame goes through the app over the loopback (ADR-synapsis-0008) |",

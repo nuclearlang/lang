@@ -48,6 +48,9 @@ installer/install.sh                         # the user runs the installed copy:
 - `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What
   `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is
   `tools/code_generator/platforms/backend/generators.toml`.
+- `plugins/<database>/`: the databases as plugin packages (ADR-backend-0004): `kind.toml`, the `plugin` in Nuclear,
+  a folder per dialect with `[plugin]` (`packages`, `names`, `values`). The loader finds them next to
+  `platform.toml`; the installer copies them there. Only `postgres` is one yet (spec 005).
 - `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).
 - `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).
 - `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.

@@ -1,0 +1,4 @@
+// A PostgreSQL database: `Postgres(url = env("DATABASE_URL", "postgres://user:pass@localhost/app"))`. `name` tells
+// it from the other databases of the app (`"default"`); `createTables` makes the entities' tables at start
+// (development: a project's schema comes from its migrations).
+plugin Postgres(url: string, name: string = "default", createTables: boolean = false)

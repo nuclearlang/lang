@@ -16,10 +16,12 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 ## T1 — What Nuclear lacks (design §6)
 
-- [ ] The kind `plugin` in `platform.toml`, `@refuses` and `@retries`, the loader's check of `@refuses` against a
-      project's entities and its diagnostic.
-- [ ] A plugin package (`plugin.toml`, the `.nuc` source, the dialect parts) found by `nuclear add` and the
-      installer, its source built with each project (ADR-platform-0017).
+- [x] The kind `plugin` in `platform.toml`, `@refuses` and `@retries`, the check of `@refuses` against a project's
+      decorators (N0313; `[decorators.refusals]`, no name in Rust) (2026-11-25). A plugin's refusals hold for the
+      whole project, also for an entity on another connection.
+- [x] A plugin package (`kind.toml`, the `.nuc` source, the dialect parts with `[plugin] values`) found next to
+      the platform's contract, in a project's `kinds/` or the installation's, its source built with each project
+      that enables it, its templates reading `package.<key>` (ADR-platform-0017) (2026-11-25).
 - [ ] An HTTP client in the language's library, every language dialect, its conformance tests.
 - [ ] Built Nuclear inside a runtime package (ADR-platform-0017): the runtime's build transpiles it, the installer
       ships it, its type definitions are regenerated.
@@ -27,8 +29,10 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 ## T2 — The four databases of today as native plugins
 
-- [ ] `sqlite`, `postgres`, `mysql`, `mariadb` moved out of the dialects into plugin packages; `refusal` of each;
-      the database check unchanged and green.
+- [x] `postgres` moved out of the dialects and the runtimes into `plugins/postgres` (2026-11-25).
+- [ ] `sqlite`, `mysql`, `mariadb` moved the same way; a native plugin of a new database (SQL Server, Oracle) also
+      brings the rules the runtimes keep today by the ORM's dialect name (the text types, `ilike`, the catalog of
+      the migrations): they become what its plugin gives.
 - [x] `@transactional` retries a serialization failure or a deadlock (`RETRIES` = 3), both runtimes; an event
       inside a transaction sent at its commit; the same test in both (2026-11-25). The number comes from the plugin's
       `@retries` once plugins exist.

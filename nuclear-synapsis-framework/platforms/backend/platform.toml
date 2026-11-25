@@ -10,6 +10,8 @@ description = "HTTP APIs, data, events and AI agents"
 kinds = [
   "appConfig", "config", "entity", "repository", "model", "usecase", "appcomponent", "service", "aggregate",
   "controller", "listener", "tools", "agent", "state", "graph", "tests",
+  # a database (ADR-backend-0004): written in a plugin package, built with every project that enables it
+  "plugin",
 ]
 # the decorators a project may write (a dialect consumes them in its templates or writes them as the target's)
 decorators = [
@@ -22,6 +24,8 @@ decorators = [
   "key",
   # no span for this use case, route or controller when telemetry is on (spec 012)
   "untraced",
+  # on a plugin (ADR-backend-0004): what its database cannot do, and how many times a transaction runs again
+  "refuses", "retries",
 ]
 plugins = ["sqlite", "postgres", "mysql", "mariadb", "redis", "kafka", "events", "websocket", "ai", "openai", "ollama", "chroma", "telemetry"]
 
@@ -34,6 +38,13 @@ manyToMany = ["inverse"]
 oneToOne = ["inverse", "onDelete"]
 joinTable = []
 joinColumn = []
+refuses = ["onDelete"]
+
+# N0313 (ADR-backend-0004): a decorator that refuses values → the kinds it is written on. `@refuses(onDelete =
+# ["cascade"])` on a plugin refuses those values of the argument `onDelete` in every decorator of a project that
+# enables the plugin.
+[decorators.refusals]
+refuses = ["plugin"]
 
 # N0308: a relation field is optional (there only when loaded), its type is an entity, `inverse` names a field of it;
 # a @manyToOne (or the @joinColumn side of a @oneToOne) keeps its column in the field `<name>Id`; one side of a
@@ -72,3 +83,5 @@ agent = "components/{component}/ai/{file}.nuc"
 graph = "components/{component}/ai/{file}.nuc"
 state = "components/{component}/ai/states/{file}.nuc"
 tests = "test/{file}.nuc"
+# a database (ADR-backend-0004): at the root of its plugin package, never in a project
+plugin = "{file}.nuc"

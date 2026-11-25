@@ -4,6 +4,12 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **A database is a plugin** (ADR-backend-0004, reference "A database is a plugin"), the same in `fastapi` and
+  `nestjs`: the kind `plugin`, written in Nuclear in a plugin package and built with every project that enables it;
+  `@refuses` (what its database cannot do: a project that asks it is N0313) and `@retries` (the runs of a refused
+  transaction). PostgreSQL is the first: `plugins(postgres = true)` and `Postgres(url = ...)` are unchanged, the
+  class now comes from the plugin's Nuclear (`plugins/postgres` of the build) instead of the runtime.
+
 - **A transaction the database refuses for another runs again** (ADR-backend-0004, reference §2.4), the same in
   `fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again
   from its start, up to three times, then throws. **The events published inside `@transactional` are sent after the

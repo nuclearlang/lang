@@ -12,7 +12,7 @@ use crate::emit::{DeclKind, DeclSummary, Emitter, ExtDecl, MONITOR_PATH, Project
 use nuclear_diag::{Diagnostic, Span, codes};
 use nuclear_dialect::{Dialect, Loader, model::KindSource};
 use nuclear_dialect::template::{Ctx, Value};
-use nuclear_syntax::ast::{File, Item};
+use nuclear_syntax::ast::{Body, Decl, Decorator, ExprKind, File, Item, Member, StrPiece};
 use nuclear_syntax::token::{StrPart, Token, TokenKind};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -331,6 +331,8 @@ pub fn reserved_package(dialect: &Dialect, name: &str) -> bool {
 
 /// The section of `config.nuc` that enables plugins: `plugins(genkit = true, kafka = true)`.
 pub const PLUGINS_SECTION: &str = "plugins";
+/// Where the Nuclear source of the enabled plugins goes in a build (ADR-platform-0017): `plugins/<file>`.
+pub const PLUGINS_DIR: &str = "plugins";
 /// The manifest of a Synapsis project and its sections: `synapsis(platform = ..., dialect = ...)` and
 /// `app(name = ..., description = ..., version = ...)` (ADR-synapsis-0002).
 pub const CONFIG_FILE: &str = "config.nuc";
@@ -624,7 +626,9 @@ pub fn sources(root: &Path, skip: &Path) -> Vec<PathBuf> {
         for e in entries.flatten() {
             let p = e.path();
             let hidden = p.file_name().is_some_and(|n| n.to_string_lossy().starts_with('.'));
-            if hidden || p == skip || (p.is_dir() && p.join(".git").exists()) {
+            // a kind package of the project (`kinds/<name>/kind.toml`): its Nuclear is built only when it is enabled
+            let package = p.is_dir() && p.join(nuclear_dialect::model::KIND_FILE).is_file();
+            if hidden || package || p == skip || (p.is_dir() && p.join(".git").exists()) {
                 continue;
             }
             if p.is_dir() {
@@ -737,6 +741,30 @@ fn build_with(
         });
     }
 
+    // the Nuclear source of the enabled plugins (ADR-platform-0017): built with the project, as its own files under
+    // `plugins/`, never one of its sources (no layout, no map of the project)
+    let enabled = if dialect.project.plugins.is_empty() { Vec::new() } else { enabled_plugins(root, dialect) };
+    let mut package_values = HashMap::new();
+    for plugin in dialect.project.plugins.iter().filter(|p| enabled.contains(&p.name)) {
+        for file in &plugin.sources {
+            let source = std::fs::read_to_string(file).unwrap_or_default();
+            let stem = file.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+            let path = format!("{PLUGINS_DIR}/{stem}");
+            let mut p = nuclear_syntax::parse(&source);
+            names.extend(crate::naming::apply(&mut p.file, dialect));
+            let ok = !p.diagnostics.iter().any(Diagnostic::is_error);
+            package_values.insert(path.clone(), plugin.values.clone());
+            parsed.push(Parsed {
+                default_kind: None,
+                rel: file.clone(),
+                path,
+                source,
+                file: ok.then_some(p.file),
+                diagnostics: p.diagnostics,
+            });
+        }
+    }
+
     // the helpers the project uses (`helpers.rs`): one more file, written by the build, that the others import
     // from by name
     let own: HashSet<String> =
@@ -783,8 +811,10 @@ fn build_with(
         monitor: manifest.monitor,
         lazy_imports: manifest.lazy_imports,
         source_names: names.clone(),
+        package_values: package_values.clone(),
         ..Default::default()
     };
+    let from_package = |path: &str| package_values.contains_key(path);
     let mut kinds: HashMap<String, Option<String>> = HashMap::new();
     // declarations made public by a decorator (`public = ["@screen"]`)
     let mut public_decls: HashSet<String> = HashSet::new();
@@ -849,15 +879,17 @@ fn build_with(
     // the variables the code reads with env(): the only values a client's values module carries (spec 021)
     let mut env_read: HashSet<String> = HashSet::new();
     let mut helpers_code = None;
+    let mut refused = refused_values(dialect, &parsed);
     for p in parsed {
         let helpers = p.path == crate::helpers::PATH && !used.is_empty();
         let mut diagnostics = p.diagnostics;
+        diagnostics.extend(refused.remove(&p.path).unwrap_or_default());
         let mut code = String::new();
         let mut lines = Vec::new();
         if let Some(mut file) = p.file {
             let mut idents = Vec::new();
             identifiers(&nuclear_syntax::lex(&p.source).tokens, &mut idents);
-            if !helpers {
+            if !helpers && !from_package(&p.path) {
                 diagnostics.extend(architecture(dialect, &ctx, &kinds, &public_decls, &file, &p.path, &idents));
             }
             if dialect.platform.is_some() {
@@ -881,7 +913,7 @@ fn build_with(
             // by the names the source wrote (a dialect may have renamed them: `uniq_by`)
             let undefined = e.undefined.iter().map(|n| names.get(n).cloned().unwrap_or_else(|| n.clone())).collect();
             missing.extend(crate::helpers::used(&p.source, &undefined, &own, dialect));
-            if !helpers {
+            if !helpers && !from_package(&p.path) {
                 summaries.extend(e.summaries.into_iter().map(|s| (p.path.clone(), s)));
             }
         }
@@ -1288,6 +1320,75 @@ fn dependency_path(p: &Path) -> String {
         None => s.strip_prefix(r"\\?\").unwrap_or(&s).to_string(),
     };
     s.replace('\\', "/")
+}
+
+/// N0313 (ADR-backend-0004): what a plugin of the project refuses (`@refuses(onDelete = ["cascade"])` on a declaration
+/// of a kind `[decorators.refusals]` names), found in a decorator of any file of the project, by file path.
+fn refused_values(dialect: &Dialect, parsed: &[Parsed]) -> HashMap<String, Vec<Diagnostic>> {
+    let mut out: HashMap<String, Vec<Diagnostic>> = HashMap::new();
+    if dialect.decorator_refusals.is_empty() {
+        return out;
+    }
+    let text = |e: &nuclear_syntax::ast::Expr| match &e.kind {
+        ExprKind::Str(p) => match p.as_slice() {
+            [StrPiece::Text(t)] => Some(t.clone()),
+            _ => None,
+        },
+        _ => None,
+    };
+    // argument → (refused value, the declaration that refuses it)
+    let mut refused: HashMap<String, Vec<(String, String)>> = HashMap::new();
+    let decls = || parsed.iter().filter_map(|p| p.file.as_ref().map(|f| (p, f))).flat_map(|(p, f)| {
+        f.items.iter().filter_map(move |i| if let Item::Decl(d) = i { Some((p, d)) } else { None })
+    });
+    for (_, d) in decls() {
+        for dec in &d.decorators {
+            let Some(kinds) = dialect.decorator_refusals.get(&dec.name) else { continue };
+            if !d.words.iter().any(|w| kinds.contains(&w.name)) {
+                continue;
+            }
+            for a in dec.args.iter().flatten() {
+                let (Some(n), ExprKind::List(items)) = (&a.name, &a.value.kind) else { continue };
+                for v in items.iter().filter_map(text) {
+                    refused.entry(n.name.clone()).or_default().push((v, d.name.name.clone()));
+                }
+            }
+        }
+    }
+    if refused.is_empty() {
+        return out;
+    }
+    fn decorators(d: &Decl) -> Vec<&Decorator> {
+        let mut all: Vec<&Decorator> = d.decorators.iter().collect();
+        all.extend(d.params.iter().flat_map(|p| &p.list).flat_map(|p| &p.decorators));
+        if let Body::Members(members) = &d.body {
+            for m in members {
+                match m {
+                    Member::Field(f) => all.extend(&f.decorators),
+                    Member::Method(x) => all.extend(decorators(x)),
+                    _ => {}
+                }
+            }
+        }
+        all
+    }
+    for (p, d) in decls() {
+        for dec in decorators(d) {
+            if dialect.decorator_refusals.contains_key(&dec.name) {
+                continue;
+            }
+            for a in dec.args.iter().flatten() {
+                let (Some(n), Some(v)) = (&a.name, text(&a.value)) else { continue };
+                let Some((_, by)) = refused.get(&n.name).and_then(|l| l.iter().find(|(x, _)| *x == v)) else { continue };
+                let msg = format!(
+                    "@{}({} = \"{v}\"): the database of the plugin {by} cannot do it (its @refuses); give another value or do it in a use case",
+                    dec.name, n.name
+                );
+                out.entry(p.path.clone()).or_default().push(Diagnostic::error(codes::REFUSED_BY_PLUGIN, a.span, msg));
+            }
+        }
+    }
+    out
 }
 
 #[cfg(test)]

@@ -72,21 +72,27 @@ class Connection:
 _DRIVERS = {"postgres": "postgresql+asyncpg", "postgresql": "postgresql+asyncpg", "mysql": "mysql+aiomysql", "mariadb": "mariadb+aiomysql", "sqlite": "sqlite+aiosqlite"}
 
 
-def _with_driver(url: str) -> str:
+def _with_driver(url: str, driver: str | None = None) -> str:
     """`postgres://user:pass@host/db` (the platform's URL, the same in every dialect) with the async driver SQLAlchemy
-    needs; a URL that already names one (`postgresql+asyncpg://`) is kept."""
+    needs: the one the database's plugin names (ADR-backend-0004), or the one of its scheme; a URL that already names
+    one (`postgresql+asyncpg://`) is kept."""
     scheme, sep, rest = url.partition("://")
     if not sep or "+" in scheme:
         return url
-    return f"{_DRIVERS.get(scheme, scheme)}://{rest}"
+    return f"{driver or _DRIVERS.get(scheme, scheme)}://{rest}"
 
 
 class Database(Connection):
     """A SQL database through SQLAlchemy 2 async. `url`: `postgres://`, `mysql://`, `mariadb://` (the driver is
-    chosen here). `create_tables` creates the entities' tables at start (development)."""
+    chosen here). `create_tables` creates the entities' tables at start (development). A database's plugin
+    (ADR-backend-0004) is a subclass that names its `driver` and may set `retries`: how many times a transaction it
+    refuses for another one runs again."""
+
+    driver: str | None = None
+    retries: int = 3
 
     def __init__(self, url: str, name: str = "default", create_tables: bool = False, echo: bool = False) -> None:
-        self.url = _with_driver(url)
+        self.url = _with_driver(url, self.driver)
         self.name = name
         self.create_tables = create_tables
         self.echo = echo
@@ -118,10 +124,6 @@ class Database(Connection):
     async def close(self) -> None:
         if self.engine is not None:
             await self.engine.dispose()
-
-
-class Postgres(Database):
-    """PostgreSQL (asyncpg): Postgres(url = env("DATABASE_URL", "postgres://localhost/app"))."""
 
 
 class MySQL(Database):

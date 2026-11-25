@@ -188,6 +188,20 @@ tests Tasks
 Full rules: `nuclear help backend`.
 '''
 
+plugin = '''
+A **database**, written in a plugin package (ADR-backend-0004) and built with every project that enables it
+(`plugins(postgres = true)`): the connection word of the app's configuration. Its parameters are the connection's;
+`@refuses` says what the database cannot do (a project that asks it does not build, N0313) and `@retries` how many
+times a transaction it refuses for another one runs again (3 by default). How the dialect's ORM knows the database
+is the package's, never the Nuclear's.
+
+```nuclear
+@refuses(onDelete = ["cascade", "set null"])
+@retries(5)
+plugin CamusDB(url: string, name: string = "default", createTables: boolean = false)
+```
+'''
+
 service = '''
 Helpers of the use cases: mappings, transformations, calculations without state. Its dependencies are the parameters of its header. Only use cases and aggregates call it.
 '''
@@ -354,6 +368,28 @@ On an entity field `x?: T`: one row of T and one of this. The side with `@joinCo
 
 joinColumn = '''
 On the side of a `@oneToOne` that keeps the column (`xId`, a field of its own).
+'''
+
+refuses = '''
+On a `plugin` (ADR-backend-0004): the values its database cannot do, by the argument that gives them in a decorator
+of the project. `@refuses(onDelete = ["cascade"])` refuses `@manyToOne(onDelete = "cascade")` in every project that
+enables the plugin (N0313): give another value, or do it in a use case.
+
+```nuclear
+@refuses(onDelete = ["cascade", "set null"])
+plugin CamusDB(url: string)
+```
+'''
+
+retries = '''
+On a `plugin` (ADR-backend-0004): how many times a `@transactional` use case runs again when its database refuses
+the transaction only because another ran at the same time (a serialization failure, a deadlock); then the error is
+thrown. 3 without it.
+
+```nuclear
+@retries(5)
+plugin CamusDB(url: string)
+```
 '''
 
 transactional = '''

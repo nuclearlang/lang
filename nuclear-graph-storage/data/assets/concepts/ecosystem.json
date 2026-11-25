@@ -187,7 +187,7 @@
     "```",
     "",
     "- The kind decides where the file goes (`nuclear help layout --platform <p>`), which members it must or may have (a `usecase` has one `exec` that returns a `Result`), who may call it (the architecture rules) and what is generated for it.",
-    "- **Native kinds** belong to a platform: the backend has 16 (entity, repository, model, usecase, appcomponent, service, aggregate, controller, listener, tools, agent, state, graph, tests, appConfig, config); mobile and web have their own, with views and state managers.",
+    "- **Native kinds** belong to a platform: the backend has 17 (entity, repository, model, usecase, appcomponent, service, aggregate, controller, listener, tools, agent, state, graph, tests, appConfig, config, and plugin: a database, written in a plugin package and never in a project); mobile and web have their own, with views and state managers.",
     "- **Extension kinds** are packages (`kinds/<name>/`) written with TOML and templates on top of a dialect, never touching the compiler.",
     "- Look one up instead of guessing: `nuclear help <kind> --platform <p>`; all of them: `nuclear help words --platform <p>`.",
     "- `nuclear make <kind> <component> <Name>` writes the smallest file of a kind at its place."

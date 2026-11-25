@@ -337,6 +337,9 @@ pub(crate) struct ProjectCtx {
     /// `[project] sources` and `[project.outputs]`: where each file goes (for relative imports).
     pub sources: String,
     pub outputs: Vec<(String, String)>,
+    /// The files of the enabled plugins' Nuclear source (ADR-platform-0017), by path → the `[plugin] values` of their
+    /// package, which the kind templates of their declarations read as `package.<key>`.
+    pub package_values: HashMap<String, BTreeMap<String, String>>,
 }
 
 impl ProjectCtx {
@@ -3555,6 +3558,7 @@ impl<'a> Emitter<'a> {
                     .set("kind", kind.as_ref().map(|(n, _)| n.clone()).unwrap_or_default())
                     .set("component", component)
                     .value("plugins", self.plugin_flags())
+                    .value("package", self.package_values())
                     .set("name", &out_name)
                     .set("source_name", &d.name.name)
                     .set("class_name", &out_name)
@@ -7494,6 +7498,12 @@ impl<'a> Emitter<'a> {
     fn plugin_flags(&self) -> Value {
         let on = self.project.and_then(|p| p.plugins.as_ref()).unwrap_or(&self.plugins);
         Value::Map(on.iter().map(|n| (n.clone(), Value::Bool(true))).collect())
+    }
+
+    /// `package.<key>` of a kind's template: the `[plugin] values` of the package whose source this file is.
+    fn package_values(&self) -> Value {
+        let values = self.project.and_then(|p| p.package_values.get(&self.file_path));
+        Value::Map(values.into_iter().flatten().map(|(k, v)| (k.clone(), Value::str(v))).collect())
     }
 
     /// `site` of a method's template: where it is written, the parts of `[call_site]`'s breadcrumb as constants

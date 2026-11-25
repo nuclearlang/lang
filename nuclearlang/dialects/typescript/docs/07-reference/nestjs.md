@@ -647,20 +647,22 @@ The connections of the app (`appConfig`, `config/project_config.nuc`) and of a c
 `.env.<environment>`, their `.local` versions) and its secrets (the system's keyring); `nuclear build --env
 <environment>` writes the non-secret ones into the build's `.env`, which the runtime's `config.ts` loads at start without replacing a
 variable the process already has (production gives its secrets in the real environment). `env("VAR")` without a
-default is required: `nuclear run` does not start without it.
+default is required: `nuclear run` does not start without it. A database that is a plugin (`Postgres`,
+ADR-backend-0004) is a class the build writes from the plugin's Nuclear into `src/plugins/`, `class Postgres extends
+Database` with the Sequelize `dialect` its package names (`postgres`) and its `retries`, imported from there.
 
 ```nuclear
 appConfig ProjectConfig
   connections: Connection[] = [
-    Postgres(url = env("DATABASE_URL", "postgres://localhost/tasks")),
+    MySQL(url = env("DATABASE_URL", "mysql://localhost/tasks")),
   ]
 ```
 
 ```typescript
-import { AppConfig, Connection, Postgres, env } from 'synapsis-nest';
+import { AppConfig, Connection, MySQL, env } from 'synapsis-nest';
 
 export class ProjectConfig extends AppConfig {
-  readonly connections: Connection[] = [new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/tasks') })];
+  readonly connections: Connection[] = [new MySQL({ url: env('DATABASE_URL', 'mysql://localhost/tasks') })];
 }
 ```
 

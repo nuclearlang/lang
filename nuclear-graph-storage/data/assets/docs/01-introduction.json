@@ -435,11 +435,63 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.314b63",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`PARAMETER num_ctx 32768`).",
+   "body": [
+    "`PARAMETER num_ctx 32768`). Fix: a run whose agent marked several checks at once tore `checks.json` and the engine",
+    "  fell.",
+    "- **A project's documents point to the oracle** (spec 025): `nuclear new` writes in `docs/README.md` and `AGENTS.md`",
+    "  that Nuclear is asked of the MCP server and never copied into the project, whose documents hold its own architecture",
+    "  (its components' layers, where each piece goes), business and decisions; `nuclear agent init` adds the section to a",
+    "  project made before.",
+    "- **An empty text under `@required` answers the rule `required`** in every backend dialect, never `minLength`",
+    "  (ADR-synapsis-0014); `@minLength(1)` still answers `minLength`."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.34eaa9",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- **What the backend's app check found, fixed the same in `fastapi` and `nestjs`**: a WebSocket frame `null` or a frame too large **ended a `nestjs` app**, and a frame's path `7/x` **sent the upgrade's token to another port** of the machine (a frame is now a JSON object or the socket closes 1003, a path stays in the app); one limit of **1 MB for a body and a frame** (`maxBodySize`, 413); **only JSON is a body** (a form answers 415: `nestjs` made rows from forms any web page can send); an `int` is 64 bits, a `double` finite, a parameter exactly its type and given once, a missing one `required`, and `nestjs` keeps a parameter's default; **a page holds at most 100 rows** (`maxPageSize`); **no `/docs` or `/redoc`**; one log line per request and the cause of every 500, never a value the client sent; **the app listens on 127.0.0.1** (`HOST`); no `Server` or `X-Powered-By`; 405 with `Allow`, `HEAD`, `OPTIONS`, paths matched as written; one CORS preflight answer; a guard's header trimmed and refused when repeated; `fastapi` reads a row in one SQL statement and starts with `python -m synapsis.server`. **Breaking** for clients that send forms or bodies over 1 MB, ask for pages over 100 rows or open `/docs`, and for deployments that relied on every network (set `HOST=0.0.0.0`).",
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.38ba00",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "sections with their sizes (an example: its files) and `section` one section whole; `nuclear_start`'s first rule and `graph_strategy`'s plan say to run the generators first and read only the section a hand-written piece needs.",
+   "body": [
+    "sections with their sizes (an example: its files) and `section` one section whole; `nuclear_start`'s first rule",
+    "  and `graph_strategy`'s plan say to run the generators first and read only the section a hand-written piece needs.",
+    "  `nuclear_brief` takes `platform` (the server's own texts named it, and the backend sheet came instead).",
+    "- **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the",
+    "  same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's",
+    "  agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,",
+    "  and never read nor change `build/`, `node_modules/` or `dist/`; a step's prompt sends the agent to the oracle first",
+    "  and names where each document it already holds is; Anthropic's requests cache their prefix (a cache read priced as",
+    "  it is). Measured on one spec with Haiku: -40 % to -43 % tokens in, -49 % time, -60 % files read by hand. The ledger",
+    "  and `nuclear-builder metrics --view context` say each step's turns, tool calls and reads by hand. A local model whose",
+    "  window is too small (Ollama gives 4 096 tokens under 24 GiB of VRAM) is refused before any call with its fix, and",
+    "  Ollama's *the prompt is longer than the context length* is said with the same fix (a `-32k` variant made with"
+   ],
    "sources": [
     "CHANGELOG.md"
    ],
@@ -671,36 +723,6 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.77981f",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "and never read nor change `build/`, `node_modules/` or `dist/`; a step's prompt sends the agent to the oracle first and names where each document it already holds is; Anthropic's requests cache their prefix (a cache read priced as it is).",
-   "body": [
-    "and never read nor change `build/`, `node_modules/` or `dist/`; a step's prompt sends the agent to the oracle first",
-    "  and names where each document it already holds is; Anthropic's requests cache their prefix (a cache read priced as",
-    "  it is). Measured on one spec with Haiku: -40 % to -43 % tokens in, -49 % time, -60 % files read by hand. The ledger",
-    "  and `nuclear-builder metrics --view context` say each step's turns, tool calls and reads by hand. A local model whose",
-    "  window is too small (Ollama gives 4 096 tokens under 24 GiB of VRAM) is refused before any call with its fix, and",
-    "  Ollama's *the prompt is longer than the context length* is said with the same fix (a `-32k` variant made with",
-    "  `PARAMETER num_ctx 32768`). Fix: a run whose agent marked several checks at once tore `checks.json` and the engine",
-    "  fell.",
-    "- **A project's documents point to the oracle** (spec 025): `nuclear new` writes in `docs/README.md` and `AGENTS.md`",
-    "  that Nuclear is asked of the MCP server and never copied into the project, whose documents hold its own architecture",
-    "  (its components' layers, where each piece goes), business and decisions; `nuclear agent init` adds the section to a",
-    "  project made before.",
-    "- **An empty text under `@required` answers the rule `required`** in every backend dialect, never `minLength`",
-    "  (ADR-synapsis-0014); `@minLength(1)` still answers `minLength`."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:CHANGELOG.md#unreleased.789192",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -764,34 +786,6 @@
     "  `--profile lite|medium|hard` is refused as on standby; on a machine that had a local profile its first step takes",
     "  away what NuclearLang put there (the Developer's service and launcher, the models it pulled, Ollama when it",
     "  installed it), writes `ai.env` as `remote` and says the GB freed. `setup --plan --json` and `team screen` carry"
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.8c9aca",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "for frontend, a website and an app over The One API, and spent 4 times the tokens of the same work without Nuclear: the generator took the API's page `{docs: [...], total, page}` for the item, so the agent rewrote 145 files by hand.",
-   "body": [
-    "- **An agent that builds a workspace from an API spends far less.** Found with an OpenCode agent that built a backend",
-    "  for frontend, a website and an app over The One API, and spent 4 times the tokens of the same work without Nuclear:",
-    "  the generator took the API's page `{docs: [...], total, page}` for the item, so the agent rewrote 145 files by",
-    "  hand. `gen resource --from-json` (MCP `generate_resource`) now knows a page by its neighbours (`total`, `page`,",
-    "  `next`...) whatever its list is called, and a key `_id` is the model's `id`. `graph_strategy` gives a request for a",
-    "  backend, a website and an app the plan of a whole system (a workspace, one app per platform, the backend first, the",
-    "  clients from its contract, never the API again), and \"create a workspace\" the plan of a new project, never a",
-    "  migration. `nuclear_start` is less than half as long (the atlas one line per group) and `nuclear_brief` gives the",
-    "  base language part once per session (`full = true` repeats it).",
-    "- **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the",
-    "  same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's",
-    "  agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,"
    ],
    "sources": [
     "CHANGELOG.md"
@@ -897,6 +891,34 @@
    "body": [
     "- **A failed step of Nuclear Builder is retried alone, and no run loses the agents' work again**: *Retry from the failed step* is the main action of a failed run (every step before it kept, the Developer's code among them), *Retry this step* is in a failed step's detail, and *Start over…* is apart and asks first. Fix: an undo (a failed step, a repair, a retry from a station, a restart) deleted the files the agents wrote with no copy; now each is set aside first in `.nuclear/builder/runs/<run>.set-aside/`, listed under the run. Whatever takes the agents' work back asks first, naming the files and where they are kept: the page's modal (Cancel by default), the terminal (`retry`, `restart` and `spec delete` refuse without `--yes` elsewhere), the tool `run_retry` (`confirm`). Fix: a Builder window that reloads no longer fails the step a run was in (`Broken pipe`).",
     "- `nuclear make` and `nuclear gen` (and the MCP server's generators) refuse a name that is not snake_case or is a reserved word of Nuclear or of the project's target (`_global`, `users_`, `if`, `global` with `fastapi`): such a name was written as a folder (`components/_global`)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.a6268b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "for frontend, a website and an app over The One API, and spent 4 times the tokens of the same work without Nuclear: the generator took the API's page `{docs: [...], total, page}` for the item, so the agent rewrote 145 files by hand.",
+   "body": [
+    "- **An agent that builds a workspace from an API spends far less.** Found with an OpenCode agent that built a backend",
+    "  for frontend, a website and an app over The One API, and spent 4 times the tokens of the same work without Nuclear:",
+    "  the generator took the API's page `{docs: [...], total, page}` for the item, so the agent rewrote 145 files by",
+    "  hand. `gen resource --from-json` (MCP `generate_resource`) now knows a page by its neighbours (`total`, `page`,",
+    "  `next`...) whatever its list is called, and a key `_id` is the model's `id`. `graph_strategy` gives a request for a",
+    "  backend, a website and an app the plan of a whole system (a workspace, one app per platform, the backend first, the",
+    "  clients from its contract, never the API again), and \"create a workspace\" the plan of a new project, never a",
+    "  migration. `nuclear_start` is less than half as long (the atlas one line per group) and `nuclear_brief` gives the",
+    "  base language part once per session (`full = true` repeats it).",
+    "- **An agent generates first and reads only the part it needs.** Measured with OpenCode on the same task with and",
+    "  without Nuclear: the agent read the whole `fastapi` reference (34.7 k chars) before generating a backend it then",
+    "  wrote none of, and that one answer was paid again on 50 turns. `nuclear_doc` now answers a long topic as its"
    ],
    "sources": [
     "CHANGELOG.md"

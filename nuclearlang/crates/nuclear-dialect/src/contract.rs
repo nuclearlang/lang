@@ -471,6 +471,8 @@ pub const KIND_VARS: &[&str] = &[
     "project",
     "kind",
     "component", "doc", "field_decor",
+    // the `[plugin] values` of the package whose source the declaration is (ADR-platform-0017)
+    "package",
 ];
 
 pub struct OptionSpec {

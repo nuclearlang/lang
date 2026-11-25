@@ -51,7 +51,7 @@ written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "A
 "synapsis" = [
   "Result", "Ok", "Err", "AppError", "NotFound", "Invalid", "Conflict", "Forbidden", "Unauthorized",
   "inject", "provide", "bind", "env", "connection",
-  "AppConfig", "ComponentConfig", "Postgres", "MySQL", "MariaDB", "SQLite", "Redis", "Kafka", "OpenAI", "Ollama", "Embeddings", "Chroma",
+  "AppConfig", "ComponentConfig", "Database", "MySQL", "MariaDB", "SQLite", "Redis", "Kafka", "OpenAI", "Ollama", "Embeddings", "Chroma",
   "Entity", "Mapped", "primary", "column", "created", "updated", "Http", "HttpRepository",
   "many_to_one", "one_to_many", "many_to_many", "one_to_one", "transactional", "Page",
   "Repository", "gt", "gte", "lt", "lte", "ne", "like", "ilike", "contains", "icontains", "one_of", "is_null", "between",
@@ -73,7 +73,7 @@ written = ["Result", "Ok", "Err", "AppError", "Model", "BigInt", "BigDouble", "A
 # read by the templates (decor), not written as Python decorators
 consumed = ["entity", "primary", "column", "created", "updated", "repository",
   "manyToOne", "oneToMany", "manyToMany", "oneToOne", "joinTable", "joinColumn", "state", "test",
-  "required", "email", "url", "minLength", "maxLength", "min", "max", "pattern", "key"]
+  "required", "email", "url", "minLength", "maxLength", "min", "max", "pattern", "key", "refuses", "retries"]
 
 
 # --- configuration: the connections of the app and of each component ---
@@ -85,6 +85,12 @@ template = { file = "templates/appconfig.tpl" }
 [kinds.appConfig.syntax]
 field = "{{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}"
 constructor = ""
+
+[kinds.plugin]
+description = "plugin Name(url, ...) → a database connection (Database), with the driver its package names (ADR-backend-0004)"
+imports = ["Database"]
+named_params = true
+template = { file = "templates/plugin.tpl" }
 
 [kinds.config]
 description = "config Name + connections → the connections of one component (ComponentConfig)"
@@ -286,11 +292,6 @@ django = "the platform already gives the routes (controller), the database (enti
 description = "SQLite databases (aiosqlite): SQLite(file = \"app.sqlite\")"
 packages = { aiosqlite = ">=0.20" }
 names = ["SQLite"]
-
-[project.plugins.postgres]
-description = "PostgreSQL databases (asyncpg): Postgres(url = env(\"DATABASE_URL\", \"postgres://...\"))"
-packages = { asyncpg = ">=0.30" }
-names = ["Postgres"]
 
 [project.plugins.mysql]
 description = "MySQL databases (aiomysql): MySQL(url = \"mysql://...\")"

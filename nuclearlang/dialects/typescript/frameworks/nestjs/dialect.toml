@@ -19,7 +19,7 @@ defs = [
   "nestjs_common@12.3.2",
   "nestjs_core@12.3.2",
   "nestjs_sequelize@12.0.0",
-  "synapsis-nest@0.1.0",
+  "synapsis-nest@0.102.0",
   "class_validator@0.15.1",
   "class_transformer@0.5.1",
   "sequelize_typescript@2.1.6",
@@ -60,6 +60,8 @@ consumed = [
   "manyToOne", "oneToMany", "manyToMany", "oneToOne", "joinTable", "joinColumn", "controller",
   "get", "post", "put", "patch", "delete", "status",
   "required", "email", "url", "minLength", "maxLength", "min", "max", "pattern", "test", "state", "key",
+  # ADR-backend-0004: read by the template of a plugin
+  "refuses", "retries",
   # spec 012: no span for it; nothing to write until this dialect brings the telemetry plugin
   "untraced",
 ]
@@ -71,6 +73,12 @@ inherits = ["AppConfig"]
 template = { file = "templates/appconfig.tpl" }
 [kinds.appConfig.syntax]
 field = "readonly {{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}};"
+
+[kinds.plugin]
+description = "plugin Name(url, ...) → a database connection (Database), with the dialect its package names (ADR-backend-0004)"
+imports = ["Database"]
+named_params = true
+template = { file = "templates/plugin.tpl" }
 
 [kinds.config]
 description = "config Name + connections → the connections of one component (ComponentConfig)"
@@ -277,11 +285,6 @@ koa = "the controller kind already gives the routes, their parameters and their 
 description = "SQLite databases (sqlite3): SQLite(file = \"app.sqlite\")"
 packages = { sqlite3 = "^6.0.0" }
 names = ["SQLite"]
-
-[project.plugins.postgres]
-description = "PostgreSQL databases (pg): Postgres(url = env(\"DATABASE_URL\", \"...\"))"
-packages = { pg = "^8.13.0" }
-names = ["Postgres"]
 
 [project.plugins.mysql]
 description = "MySQL databases (mysql2): MySQL(url = \"mysql://...\")"

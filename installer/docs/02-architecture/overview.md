@@ -24,7 +24,7 @@ folder above the binary's `bin/`).
 |---|---|---|
 | `bin/` | `nuclear`, `nuclear-lsp` | the binaries given |
 | `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |
-| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `examples/` (only their `.nuc` and `nuclear.toml`, without `build/` nor `expected/`: `nuclear help example/<name>`) | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |
+| `platforms/<platform>/` | `platform.toml`, `plugins/` (its plugin packages, the backend's databases: the loader finds them next to the contract, ADR-backend-0004), `docs/07-reference/`, `docs/08-guides/`, `examples/` (only their `.nuc` and `nuclear.toml`, without `build/` nor `expected/`: `nuclear help example/<name>`) | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |
 | `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |
 | `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |
 | `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |

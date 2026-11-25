@@ -59,7 +59,7 @@ automatic imports, the inherited members and the checks of constructor arguments
 | Dialect | `defs` |
 |---|---|
 | `typescript`, `nodejs` | none |
-| `nestjs` | `typescript@5.9.3` (the standard library: implicit, never imported), `nestjs_common@12.3.2`, `nestjs_core@12.3.2`, `nestjs_sequelize@12.0.0`, `class_validator@0.15.1`, `class_transformer@0.5.1`, `sequelize_typescript@2.1.6`, `synapsis-nest@0.1.0`, `sequelize@6.37.8`, `nestjs_testing@12.3.2`, `rxjs@7.8.2` |
+| `nestjs` | `typescript@5.9.3` (the standard library: implicit, never imported), `nestjs_common@12.3.2`, `nestjs_core@12.3.2`, `nestjs_sequelize@12.0.0`, `class_validator@0.15.1`, `class_transformer@0.5.1`, `sequelize_typescript@2.1.6`, `synapsis-nest@0.102.0`, `sequelize@6.37.8`, `nestjs_testing@12.3.2`, `rxjs@7.8.2` |
 | `react` | `typescript@5.9.3`, `synapsis-web@0.1.0`, `react@19.3.1`, `react_router@7.18.5`, `vitest@4.1.12`, `testing_library_react@16.3.3` |
 
 The order of a `defs` list decides which package gives a name two of them export: in `nestjs`, class-validator's

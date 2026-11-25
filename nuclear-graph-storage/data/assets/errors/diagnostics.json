@@ -3751,6 +3751,43 @@
     "fix": "`nuclear env set TASKS_TOKEN --secret --env production`, or a default",
     "example": "`env(\"TASKS_TOKEN\")` with no `TASKS_TOKEN` in `.env.production`"
    }
+  },
+  {
+   "id": "error:N0313",
+   "type": "diagnostic",
+   "title": "N0313 — a value the project's database cannot do",
+   "summary": "A decorator of the project gives a value the database of one of its plugins cannot do: the plugin declares it with `@refuses` (ADR-backend-0004), and the platform never emulates it",
+   "body": [
+    "`N0313` · projects and architecture · error",
+    "",
+    "**What it is.** A decorator of the project gives a value the database of one of its plugins cannot do: the plugin declares it with `@refuses` (ADR-backend-0004), and the platform never emulates it",
+    "",
+    "**Why.** A plugin of the project (a database, ADR-backend-0004) declares with @refuses what its database cannot do: `@refuses(onDelete = [\"cascade\", \"set null\"])`. A decorator of the project that gives one of those values (`@manyToOne(onDelete = \"cascade\")`) is refused at compile time instead of failing in the database, and the platform never emulates it. Give another value the plugin accepts (`onDelete = \"restrict\"`), or do it in a use case (remove the children before the parent).",
+    "",
+    "**Example.** `@manyToOne(onDelete = \"cascade\")` in a project with a database whose plugin has `@refuses(onDelete = [\"cascade\", \"set null\"])`",
+    "",
+    "**Fix.** another value (`onDelete = \"restrict\"`), or do it in a use case (remove the children before the parent)"
+   ],
+   "keys": [
+    "n0313",
+    "a value the project's database cannot do"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0313",
+    "family": "project",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "projects and architecture",
+    "title": "a value the project's database cannot do",
+    "what": "A decorator of the project gives a value the database of one of its plugins cannot do: the plugin declares it with `@refuses` (ADR-backend-0004), and the platform never emulates it",
+    "fix": "another value (`onDelete = \"restrict\"`), or do it in a use case (remove the children before the parent)",
+    "example": "`@manyToOne(onDelete = \"cascade\")` in a project with a database whose plugin has `@refuses(onDelete = [\"cascade\", \"set null\"])`"
+   }
   }
  ]
 }

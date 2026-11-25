@@ -121,6 +121,8 @@ pub struct KindPackage {
     /// The dialects with an implementation folder.
     pub dialects: Vec<String>,
     pub root: PathBuf,
+    /// Its `*.nuc` files (ADR-platform-0017), sorted: built with every project that enables the package.
+    pub sources: Vec<PathBuf>,
 }
 
 /// Where a kind comes from (ADR-synapsis-0004): the editor shows it and lists only the project's platform kinds.
@@ -178,6 +180,11 @@ pub struct PluginDef {
     pub names: Vec<String>,
     /// Plugins it needs (enabled by it).
     pub requires: Vec<String>,
+    /// The Nuclear source of a package (its `*.nuc`, ADR-platform-0017): built with every project that enables it.
+    pub sources: Vec<PathBuf>,
+    /// `[plugin] values` of the package's dialect part: what its declarations' templates read as `package.<key>`
+    /// (a database plugin's driver: what the dialect's ORM names it, never written in Nuclear).
+    pub values: BTreeMap<String, String>,
 }
 
 impl ProjectDef {
@@ -553,6 +560,10 @@ pub struct Dialect {
     /// `[decorators.fields]`: decorator of a field → the rules the field must meet (N0308; the relation decorators
     /// of the backend platform, ADR-backend-0001). A platform's `platform.toml` may declare them for all its dialects.
     pub decorator_fields: BTreeMap<String, FieldRule>,
+    /// `[decorators.refusals]` of the platform: a decorator that refuses values (`refuses`) → the kinds it is written
+    /// on (`plugin`). Each list argument of it refuses those values of the argument of the same name in every
+    /// decorator of a project that enables the declaration's plugin (N0313, ADR-backend-0004).
+    pub decorator_refusals: BTreeMap<String, Vec<String>>,
     /// The decorators of the dialect's platform (`decorators` of `platform.toml`): any other one in lower case is N0309.
     /// Empty for a dialect without a platform.
     pub platform_decorators: BTreeSet<String>,
@@ -811,6 +822,13 @@ pub fn kind_package_at(root: &Path) -> Option<KindPackage> {
         .collect();
     dialects.sort();
     let name = root.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
+    let mut sources: Vec<PathBuf> = std::fs::read_dir(root)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.is_file() && p.extension().is_some_and(|x| x == "nuc"))
+        .collect();
+    sources.sort();
     Some(KindPackage {
         name,
         version: get("version"),
@@ -818,6 +836,7 @@ pub fn kind_package_at(root: &Path) -> Option<KindPackage> {
         description: get("description"),
         dialects,
         root: root.to_path_buf(),
+        sources,
     })
 }
 
@@ -1013,8 +1032,25 @@ impl Loader {
 
     /// The kind packages found in `self.packages` (ADR-synapsis-0004): each folder with a `kind.toml`.
     pub fn kind_packages(&self) -> Vec<KindPackage> {
+        self.packages_in(self.packages.iter())
+    }
+
+    /// The packages of a platform's own `plugins/` folder (next to its `platform.toml`: the databases,
+    /// ADR-backend-0004), then those of `self.packages`; a name already found is not read again.
+    fn platform_packages(&self, platform: &str) -> Vec<KindPackage> {
+        let own: Vec<PathBuf> = self.platform_file(platform).and_then(|f| f.parent().map(|d| d.join("plugins"))).into_iter().collect();
+        let mut out: Vec<KindPackage> = Vec::new();
+        for pkg in self.packages_in(own.iter().chain(&self.packages)) {
+            if !out.iter().any(|p| p.name == pkg.name) {
+                out.push(pkg);
+            }
+        }
+        out
+    }
+
+    fn packages_in<'a>(&self, dirs: impl Iterator<Item = &'a PathBuf>) -> Vec<KindPackage> {
         let mut out = Vec::new();
-        for dir in &self.packages {
+        for dir in dirs {
             let Ok(entries) = std::fs::read_dir(dir) else { continue };
             let mut roots: Vec<PathBuf> = entries.flatten().map(|e| e.path()).filter(|p| p.join(KIND_FILE).is_file()).collect();
             roots.sort();
@@ -1027,11 +1063,16 @@ impl Loader {
     /// parent) is loaded as a layer named after the package; a package without one is a gap (N0306 if enabled).
     fn apply_packages(&self, d: &mut Dialect, report: &mut Report) {
         let Some(platform) = d.platform.clone() else { return };
-        for pkg in self.kind_packages() {
+        for pkg in self.platform_packages(&platform) {
             if pkg.platform != platform {
                 continue;
             }
-            let mut plugin = PluginDef { name: pkg.name.clone(), description: pkg.description.clone(), ..Default::default() };
+            let mut plugin = PluginDef {
+                name: pkg.name.clone(),
+                description: pkg.description.clone(),
+                sources: pkg.sources.clone(),
+                ..Default::default()
+            };
             if let Some(dialect_name) = d.chain.iter().find(|n| pkg.dialects.contains(n)).cloned() {
                 let dir = pkg.root.join(&dialect_name);
                 let before: BTreeSet<String> = d.kinds.keys().cloned().collect();
@@ -1066,6 +1107,7 @@ impl Loader {
                         plugin.dev_packages = pairs("dev_packages");
                         plugin.defs = Layer::string_list(p.get("defs"));
                         plugin.names = Layer::string_list(p.get("names"));
+                        plugin.values = pairs("values").into_iter().collect();
                     }
                     let mut filtered = toml::Table::new();
                     for (k, v) in table {
@@ -1084,9 +1126,13 @@ impl Loader {
                 }
                 plugin.kinds = d.kinds.keys().filter(|k| !before.contains(*k)).cloned().collect();
                 d.extra_docs.push(pkg.root.clone());
+                // a plugin of the platform a package brings for this dialect (a database, ADR-backend-0004)
+                d.missing_plugins.remove(&pkg.name);
             } else {
                 d.package_gaps.insert(pkg.name.clone(), pkg.dialects.clone());
             }
+            // a package takes the place of a dialect's plugin of the same name
+            d.project.plugins.retain(|p| p.name != plugin.name);
             d.project.plugins.push(plugin);
             d.packages.push(pkg);
         }
@@ -1491,6 +1537,10 @@ fn check_platform(d: &mut Dialect, platform: &str, file: Option<&Path>, report: 
         }
         for (dec, rule) in decorators.get("fields").and_then(|v| v.as_table()).into_iter().flatten() {
             d.decorator_fields.entry(dec.clone()).or_insert_with(|| field_rule(rule));
+        }
+        for (dec, kinds) in decorators.get("refusals").and_then(|v| v.as_table()).into_iter().flatten() {
+            let kinds = kinds.as_array().into_iter().flatten().filter_map(|v| v.as_str().map(str::to_string)).collect();
+            d.decorator_refusals.insert(dec.clone(), kinds);
         }
     }
     let list = |key: &str| -> BTreeSet<String> {
@@ -2336,6 +2386,7 @@ impl Layer<'_> {
                             kinds: Self::string_list(pt.get("kinds")),
                             names: Self::string_list(pt.get("names")),
                             requires: Self::string_list(pt.get("requires")),
+                            ..Default::default()
                         };
                         self.d.project.plugins.retain(|p| &p.name != name);
                         self.d.project.plugins.push(plugin);

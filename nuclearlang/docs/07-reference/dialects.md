@@ -393,7 +393,7 @@ class {{name}} extends StatelessWidget {
 
 | Key | Use |
 |---|---|
-| `template` | Required, inline or `{ file = "templates/x.tpl" }`. Variables: `name`, `source_name`, `class_name`, `members` (fields and methods), `body` (constructor, fields and methods), `methods_code`, `fields` (list: `name`, `type`, `type_nullable`, `default`, `optional`, `tinfo`, `decor`, `decorators`: the decorators the dialect does not consume, already written), `fields_required` (true when a field has neither `?` nor a default), `methods` (list: `name`, `is.<name>`, `params_list`, `ret_info`, `decor`), `params`, `params_list` (list: `name`, `local` (the variable the body reads: `name` renamed where it would hide a function of the target, `list` → `list_`; a constructor's is `name`), `type`, `tinfo`, `decor`, `default`, `optional`, `named`, `required`), `params_required` (true when a constructor parameter has neither `?` nor a default), `ctor`, `extends`, `implements`, `clauses`, `clause.<word>`, `decorators`, `decor`, `deco_args`, `export`, `modifiers`, `generics` (text: `<T>`), `generic_list` (list: `name`), `file`, `project`, `component`, `kind` ([projects.md](projects.md) §5). A template that does not use `generics`/`generic_list` (or `implements`/`clauses`) rejects declarations with generics (or with `> Interface`): `N0218` |
+| `template` | Required, inline or `{ file = "templates/x.tpl" }`. Variables: `name`, `source_name`, `class_name`, `members` (fields and methods), `body` (constructor, fields and methods), `methods_code`, `fields` (list: `name`, `type`, `type_nullable`, `default`, `optional`, `tinfo`, `decor`, `decorators`: the decorators the dialect does not consume, already written), `fields_required` (true when a field has neither `?` nor a default), `methods` (list: `name`, `is.<name>`, `params_list`, `ret_info`, `decor`), `params`, `params_list` (list: `name`, `local` (the variable the body reads: `name` renamed where it would hide a function of the target, `list` → `list_`; a constructor's is `name`), `type`, `tinfo`, `decor`, `default`, `optional`, `named`, `required`), `params_required` (true when a constructor parameter has neither `?` nor a default), `ctor`, `extends`, `implements`, `clauses`, `clause.<word>`, `decorators`, `decor`, `deco_args`, `export`, `modifiers`, `generics` (text: `<T>`), `generic_list` (list: `name`), `file`, `project`, `component`, `kind` ([projects.md](projects.md) §5), `package` (in a declaration of a package's Nuclear source, §7: the `[plugin] values` of the package's folder for the dialect, `{{package.driver}}`). A template that does not use `generics`/`generic_list` (or `implements`/`clauses`) rejects declarations with generics (or with `> Interface`): `N0218` |
 | `rename` | Output name: `"{{name}}Controller"` |
 | `imports` | Symbols of `[auto_imports]` the kind may need: imported if the generated code writes them |
 | `inherits` | Classes of the type definitions (§5.6) the generated class extends (`["State"]`): their members are used as members and a method with one of those names gets `override = true` |
@@ -576,6 +576,7 @@ platform, with TOML and templates only. A package is a folder:
 kinds/jobs/
 ├── kind.toml                 [package] name, version, platform, description
 ├── docs.toml                 editor documentation of its words (§5.7)
+├── jobs.nuc                  its Nuclear source, if it has one (ADR-platform-0017)
 ├── fastapi/kind.toml         how the fastapi dialect writes its kinds: [plugin] (runtime packages, defs, names)
 │   └── templates/job.tpl     and the same sections as a dialect: [kinds.*], [decorators], [functions],
 └── nestjs/kind.toml          [auto_imports], [library.*]... never [dialect], [project] or [syntax]
@@ -605,6 +606,13 @@ template = { file = "templates/job.tpl" }
   one for every project). A package of the project's platform is a **plugin** of the dialect: `config.nuc` enables
   it with `plugins(jobs = true)`, its kinds and names need it (N0304), its runtime packages reach the generated
   manifest, and the project keeps `synapsis(platform = "backend", dialect = "fastapi")`.
+- **Its Nuclear source** (`*.nuc` at the package's root, ADR-platform-0017) is built with every project that
+  enables the package, as files of the project under `plugins/` of the build (no layout, no map of the project, its
+  diagnostics on the package's file). `[plugin] values` (`values = { driver = "postgresql+asyncpg" }`) of the
+  dialect's folder is what the templates of its declarations read as `package.<key>`: what only the target names
+  stays out of the Nuclear. A folder of the project with a `kind.toml` is a package, never one of its sources.
+- A platform's own packages are in `plugins/` next to its `platform.toml` (the backend's databases,
+  ADR-backend-0004); a package there takes the place of a dialect's `[project.plugins.<name>]` of the same name.
 - The implementation is the folder named after the dialect, or after a dialect it extends. A package without one
   for the project's dialect is N0306 when enabled: enabling a package implemented for some dialects ties the project
   to them, exactly as a dialect's type definitions do. The Nuclear of the kind is the same in every dialect that

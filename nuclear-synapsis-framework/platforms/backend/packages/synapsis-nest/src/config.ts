@@ -3,6 +3,7 @@
 // Values usually come from the environment: env('X', 'default').
 import { readFileSync } from 'node:fs';
 import type { SequelizeModuleOptions } from '@nestjs/sequelize';
+import type { Dialect } from 'sequelize';
 import type { Sequelize } from 'sequelize-typescript';
 import type { Guard } from './guards.js';
 
@@ -75,9 +76,11 @@ const CREATE_TABLES = {
   },
 };
 
-/** A SQL database through Sequelize. */
+/** A SQL database through Sequelize. A database's plugin (ADR-backend-0004) is a subclass that names Sequelize's
+ * `dialect` and may set `retries`: how many times a transaction it refuses for another one runs again. */
 export abstract class Database extends Connection {
-  abstract readonly dialect: 'postgres' | 'mysql' | 'sqlite' | 'mariadb';
+  abstract readonly dialect: Dialect;
+  readonly retries: number = 3;
 
   constructor(readonly options: DatabaseOptions = {}) {
     super();
@@ -98,11 +101,6 @@ export abstract class Database extends Connection {
       logging: this.options.logging ?? false,
     };
   }
-}
-
-/** PostgreSQL (pg): new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/app') }). */
-export class Postgres extends Database {
-  readonly dialect = 'postgres' as const;
 }
 
 /** MySQL (mysql2). */

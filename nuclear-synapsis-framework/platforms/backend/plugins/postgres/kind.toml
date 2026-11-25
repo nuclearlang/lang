@@ -1,0 +1,6 @@
+# A database of the backend platform (ADR-backend-0004): its Nuclear (postgres.nuc) is built with every project that
+# enables it (`plugins(postgres = true)`, ADR-platform-0017); each dialect folder says how the dialect's ORM knows it.
+[package]
+version = "0.102.0"
+platform = "backend"
+description = "PostgreSQL databases: Postgres(url = env(\"DATABASE_URL\", \"postgres://user:pass@localhost/app\"))"

@@ -26,6 +26,11 @@ files or the `config.nuc` checks. Rules: `docs/07-reference/projects.md`. Code:
   free words of the generated code (`code_words`, `free_code_words` in `emit.rs`): a local, a parameter, a field of
   a module (`self.note = note`), a member, a word of a comment, a string or a docstring, and the members a
   library helper calls never import another file.
+- The Nuclear source of every enabled plugin package (`PluginDef::sources`, ADR-platform-0017) is parsed with the
+  project's files as `plugins/<file>` (`PLUGINS_DIR`), with `ProjectCtx::package_values` for its templates'
+  `package.<key>`; it skips the architecture rules and the map. A folder with a `kind.toml` is never one of the
+  project's sources (`sources`). Before pass 2, `refused_values` gives N0313 for each decorator argument a plugin's
+  `@refuses` lists (`Dialect::decorator_refusals`, from `[decorators.refusals]` of the platform).
 - Result runtime in `nuclear/result`; `[project.files]` templates (`project_context`: `decls`, `kinds.<k>`,
   `decorated.<d>`, `files`, `has.<kind>`, `has.@<decorator>`, `components`, `uses`); a project file whose template
   renders empty is not written; it imports the files whose names its code writes.

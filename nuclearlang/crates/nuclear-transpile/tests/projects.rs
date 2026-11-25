@@ -899,6 +899,50 @@ fn kind_package_builds_with_its_dialects_only() {
     }
 }
 
+/// ADR-backend-0004, ADR-platform-0017: a database is a plugin package with Nuclear source; a project that enables it
+/// builds the source with its own files (its template reads the package's `values`), and what the plugin refuses
+/// (`@refuses`) is N0313 in the project's decorators, only while the plugin is enabled.
+#[test]
+fn a_database_plugin_is_built_with_the_project_and_refuses_what_its_database_cannot_do() {
+    let root = std::env::temp_dir().join(format!("nuclear-database-plugin-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let task = "@entity(\"tasks\")\nentity Task()\n  @primary(generated = true)\n  id: int\n  @manyToOne(inverse = \"tasks\", onDelete = \"cascade\")\n  list?: TaskList\n  listId: int\n";
+    let files = [
+        ("config.nuc", "synapsis(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\nplugins(camusdb = true)\n"),
+        ("config/project_config.nuc", "appConfig ProjectConfig\n  connections: Connection[] = [CamusDB(url = \"http://localhost:5095/app\")]\n"),
+        ("components/todo/data/entities/task_list.nuc", "@entity(\"lists\")\nentity TaskList()\n  @primary(generated = true)\n  id: int\n  @oneToMany(inverse = \"list\")\n  tasks?: Task[]\n"),
+        ("components/todo/data/entities/task.nuc", task),
+        ("kinds/camusdb/kind.toml", "[package]\nversion = \"0.1.0\"\nplatform = \"backend\"\n"),
+        ("kinds/camusdb/camusdb.nuc", "// CamusDB\n@refuses(onDelete = [\"cascade\", \"set null\"])\n@retries(5)\nplugin CamusDB(url: string, name: string = \"default\", createTables: boolean = false)\n"),
+        ("kinds/camusdb/fastapi/kind.toml", "[plugin]\nnames = [\"CamusDB\"]\nvalues = { driver = \"camus\" }\n"),
+    ];
+    for (rel, text) in files {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+    let mut l = loader(None);
+    l.packages.push(root.join("kinds"));
+    let d = l.load("fastapi").0.unwrap();
+    let errors = |out: &project::ProjectOutput| -> Vec<String> {
+        out.files.iter().flat_map(|f| f.diagnostics.iter().filter(|x| x.is_error()).map(|x| format!("{}: {}", x.code.id, x.message))).collect()
+    };
+    let out = project::build(&root, &Manifest::read(&root).unwrap(), &d);
+    let refused = errors(&out);
+    assert_eq!(refused.len(), 1, "{refused:?}");
+    assert!(refused[0].starts_with("N0313:") && refused[0].contains("CamusDB"), "{refused:?}");
+    let plugin = out.files.iter().find(|f| f.source_path.ends_with("camusdb.nuc")).expect("the plugin's source is built");
+    assert!(plugin.code.contains("class CamusDB(Database):") && plugin.code.contains("driver = \"camus\"") && plugin.code.contains("retries = 5"), "{}", plugin.code);
+    let config = out.files.iter().find(|f| f.source_path.ends_with("project_config.nuc")).unwrap();
+    assert!(config.code.contains("CamusDB(url="), "{}", config.code);
+
+    // a value the database can do builds
+    std::fs::write(root.join("components/todo/data/entities/task.nuc"), task.replace("\"cascade\"", "\"restrict\"")).unwrap();
+    let out = project::build(&root, &Manifest::read(&root).unwrap(), &d);
+    assert!(errors(&out).is_empty(), "{:?}", errors(&out));
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 /// A backend project adds a package with `dependencies(...)` and keeps its type definitions in `<project>/defs`:
 /// the code sees its names (no N0106), imports them, and the generated manifest lists the package.
 #[test]

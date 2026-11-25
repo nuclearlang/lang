@@ -728,6 +728,45 @@
    }
   },
   {
+   "id": "decorator:backend.refuses",
+   "type": "decorator",
+   "title": "`@refuses` — a decorator of the backend platform",
+   "summary": "On a `plugin` (ADR-backend-0004): the values its database cannot do, by the argument that gives them in a decorator of the project.",
+   "body": [
+    "On a `plugin` (ADR-backend-0004): the values its database cannot do, by the argument that gives them in a decorator",
+    "of the project. `@refuses(onDelete = [\"cascade\"])` refuses `@manyToOne(onDelete = \"cascade\")` in every project that",
+    "enables the plugin (N0313): give another value, or do it in a use case.",
+    "",
+    "```nuclear",
+    "@refuses(onDelete = [\"cascade\", \"set null\"])",
+    "plugin CamusDB(url: string)",
+    "```",
+    "",
+    "Its arguments: `onDelete` (`!` = required)."
+   ],
+   "keys": [
+    "@refuses",
+    "refuses"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/docs.toml"
+   ],
+   "meta": {
+    "name": "refuses"
+   },
+   "data": {
+    "platform": "backend",
+    "decorator": "refuses",
+    "args": [
+     "onDelete"
+    ]
+   }
+  },
+  {
    "id": "decorator:backend.repository",
    "type": "decorator",
    "title": "`@repository` — a decorator of the backend platform",
@@ -776,6 +815,41 @@
    "data": {
     "platform": "backend",
     "decorator": "required",
+    "args": []
+   }
+  },
+  {
+   "id": "decorator:backend.retries",
+   "type": "decorator",
+   "title": "`@retries` — a decorator of the backend platform",
+   "summary": "On a `plugin` (ADR-backend-0004): how many times a `@transactional` use case runs again when its database refuses the transaction only because another ran at the same time (a serialization failure, a deadlock); then the error is thrown.",
+   "body": [
+    "On a `plugin` (ADR-backend-0004): how many times a `@transactional` use case runs again when its database refuses",
+    "the transaction only because another ran at the same time (a serialization failure, a deadlock); then the error is",
+    "thrown. 3 without it.",
+    "",
+    "```nuclear",
+    "@retries(5)",
+    "plugin CamusDB(url: string)",
+    "```"
+   ],
+   "keys": [
+    "@retries",
+    "retries"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/docs.toml"
+   ],
+   "meta": {
+    "name": "retries"
+   },
+   "data": {
+    "platform": "backend",
+    "decorator": "retries",
     "args": []
    }
   },
@@ -1651,6 +1725,64 @@
    }
   },
   {
+   "id": "kind:backend.plugin",
+   "type": "kind",
+   "title": "`plugin` — a kind of the backend platform",
+   "summary": "A database, written in a plugin package (ADR-backend-0004) and built with every project that enables it (`plugins(postgres = true)`): the connection word of the app's configuration.",
+   "body": [
+    "A **database**, written in a plugin package (ADR-backend-0004) and built with every project that enables it",
+    "(`plugins(postgres = true)`): the connection word of the app's configuration. Its parameters are the connection's;",
+    "`@refuses` says what the database cannot do (a project that asks it does not build, N0313) and `@retries` how many",
+    "times a transaction it refuses for another one runs again (3 by default). How the dialect's ORM knows the database",
+    "is the package's, never the Nuclear's.",
+    "",
+    "```nuclear",
+    "@refuses(onDelete = [\"cascade\", \"set null\"])",
+    "@retries(5)",
+    "plugin CamusDB(url: string, name: string = \"default\", createTables: boolean = false)",
+    "```",
+    "",
+    "Its file: `{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
+   ],
+   "keys": [
+    "plugin"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "links": [
+    {
+     "rel": "uses",
+     "to": "decorator:backend.refuses"
+    },
+    {
+     "rel": "uses",
+     "to": "decorator:backend.retries"
+    },
+    {
+     "rel": "placed-by",
+     "to": "layout:backend"
+    }
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/docs.toml"
+   ],
+   "meta": {
+    "kind": "plugin",
+    "name": "plugin"
+   },
+   "data": {
+    "platform": "backend",
+    "file": "{file}.nuc",
+    "aliases": [],
+    "decorators": [
+     "refuses",
+     "retries"
+    ]
+   }
+  },
+  {
    "id": "kind:backend.repository",
    "type": "kind",
    "title": "`repository` — a kind of the backend platform",
@@ -2051,6 +2183,7 @@
     "- `graph` → `components/{component}/ai/{file}.nuc`",
     "- `listener` → `components/{component}/events/{file}.nuc`",
     "- `model` → `components/{component}/domain/models/{file}.nuc`",
+    "- `plugin` → `{file}.nuc`",
     "- `repository` → `components/{component}/data/repositories/{file}.nuc`",
     "- `service` → `components/{component}/domain/services/{file}.nuc`",
     "- `state` → `components/{component}/ai/states/{file}.nuc`",
@@ -2115,6 +2248,10 @@
       "file": "components/{component}/domain/models/{file}.nuc"
      },
      {
+      "kind": "plugin",
+      "file": "{file}.nuc"
+     },
+     {
       "kind": "repository",
       "file": "components/{component}/data/repositories/{file}.nuc"
      },
@@ -2149,7 +2286,7 @@
    "id": "platform:backend",
    "type": "platform",
    "title": "The backend platform of Synapsis",
-   "summary": "The backend platform: HTTP APIs, data, events and AI agents. 16 kinds, 35 decorators, 13 plugins; built by the dialects fastapi, nestjs (default: fastapi).",
+   "summary": "The backend platform: HTTP APIs, data, events and AI agents. 17 kinds, 37 decorators, 13 plugins; built by the dialects fastapi, nestjs (default: fastapi).",
    "body": [
     "A project of the platform is written once in Nuclear and builds with any of its dialects (`fastapi`, `nestjs`; `fastapi` when none is named). Create one: `nuclear new <name> -p backend`.",
     "",
@@ -2171,6 +2308,7 @@
     "- `state`: The state of a graph.",
     "- `graph`: A graph of steps: its methods are the nodes.",
     "- `tests`: A group of tests (in `test/`).",
+    "- `plugin`: A database, written in a plugin package (ADR-backend-0004) and built with every project that enables it (`plugins(postgres = true)`): the connection word of…",
     "",
     "Its plugins: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `websocket`, `ai`, `openai`, `ollama`, `chroma`, `telemetry`."
    ],
@@ -2248,6 +2386,10 @@
     },
     {
      "rel": "has",
+     "to": "kind:backend.plugin"
+    },
+    {
+     "rel": "has",
      "to": "layout:backend"
     }
    ],
@@ -2280,7 +2422,8 @@
      "agent",
      "state",
      "graph",
-     "tests"
+     "tests",
+     "plugin"
     ],
     "decorators": [
      "entity",
@@ -2317,7 +2460,9 @@
      "max",
      "pattern",
      "key",
-     "untraced"
+     "untraced",
+     "refuses",
+     "retries"
     ],
     "plugins": [
      "sqlite",
@@ -2659,9 +2804,9 @@
    "id": "plugin:backend.postgres",
    "type": "plugin",
    "title": "`postgres` — a plugin of the backend platform",
-   "summary": "PostgreSQL databases (asyncpg): Postgres(url = env(\"DATABASE_URL\", \"postgres://...\"))",
+   "summary": "An optional part of the backend platform.",
    "body": [
-    "PostgreSQL databases (asyncpg): Postgres(url = env(\"DATABASE_URL\", \"postgres://...\"))",
+    "An optional part of the backend platform.",
     "",
     "Enable it in `config.nuc`: `plugins(postgres = true)`. A kind or a name of a plugin that is not enabled is `N0304`, which says the line to add."
    ],

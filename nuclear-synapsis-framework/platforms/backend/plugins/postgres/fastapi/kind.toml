@@ -1,0 +1,5 @@
+# SQLAlchemy knows PostgreSQL: the async driver asyncpg
+[plugin]
+packages = { asyncpg = ">=0.30" }
+names = ["Postgres"]
+values = { driver = "postgresql+asyncpg" }

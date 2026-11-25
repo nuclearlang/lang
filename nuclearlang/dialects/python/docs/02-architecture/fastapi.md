@@ -81,7 +81,7 @@ imported (`synapsis.ai`, `synapsis.events`).
 | Plugin | Packages | Gives |
 |---|---|---|
 | `sqlite` | `aiosqlite>=0.20` | `SQLite(file = ...)` |
-| `postgres` | `asyncpg>=0.30` | `Postgres(url = ...)` |
+| `postgres` | `asyncpg>=0.30` | `Postgres(url = ...)`: a plugin package of the platform (`plugins/postgres`, ADR-backend-0004), its class built from its Nuclear |
 | `mysql`, `mariadb` | `aiomysql>=0.2` | `MySQL(url = ...)`, `MariaDB(url = ...)` |
 | `redis` | `redis>=5.2` | `Redis(url = ...)`, `cacheGet`, `cacheSet` |
 | `kafka` | `aiokafka>=0.12` | `Kafka(servers = ..., group = ...)`: `publish` reaches the broker |

@@ -12,6 +12,8 @@ import {
   literal, where as whereOf,
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
+import { connections } from './app.js';
+import { Database } from './config.js';
 import { limits } from './edge.js';
 import { BIGINT_MAX, BIGINT_MIN, BigDouble, columnText, fitsBigDouble, isBigDouble } from './exact.js';
 import { Conflict, NotFound } from './errors.js';
@@ -68,7 +70,8 @@ function inTransaction(): { transaction?: Transaction } {
   return r ? { transaction: r.transaction } : {};
 }
 
-/** A transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes. */
+/** A transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes;
+ * a database's plugin may set its own (`Database.retries`). */
 export const RETRIES = 3;
 // SQLSTATE of a serialization failure and of a deadlock (PostgreSQL's code, MySQL's and MariaDB's sqlState)
 const RETRY_STATES = new Set(['40001', '40P01']);
@@ -102,6 +105,7 @@ export function transactional(_target: object, _key: string | symbol, descriptor
   const fn = descriptor.value as (...args: unknown[]) => Promise<unknown>;
   descriptor.value = async function (this: unknown, ...args: unknown[]) {
     if (running.getStore() || !database) return fn.apply(this, args);
+    const limit = connections().find((c): c is Database => c instanceof Database && c.name === 'default')?.retries ?? RETRIES;
     for (let attempt = 0; ; attempt++) {
       const t = await database.transaction();
       const waiting: (() => Promise<void>)[] = [];
@@ -114,7 +118,7 @@ export function transactional(_target: object, _key: string | symbol, descriptor
         else await t.commit();
       } catch (e) {
         await t.rollback();
-        if (attempt < RETRIES && mustRetry(e)) continue;
+        if (attempt < limit && mustRetry(e)) continue;
         throw e;
       }
       if (!failed) for (const send of waiting) await send();

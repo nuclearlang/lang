@@ -52,7 +52,8 @@ class Page[T]:
 _tx: ContextVar[AsyncSession | None] = ContextVar("synapsis_transaction", default=None)
 _after: ContextVar[list[Callable[[], Awaitable[None]]] | None] = ContextVar("synapsis_after_commit", default=None)
 
-# a transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes
+# a transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes;
+# a database's plugin may set its own (`Database.retries`)
 RETRIES = 3
 # SQLSTATE of a serialization failure and of a deadlock (PostgreSQL's code, MySQL's and MariaDB's state)
 _RETRY_STATES = {"40001", "40P01"}
@@ -105,10 +106,11 @@ def transactional[**P, R](fn: Callable[P, Awaitable[R]]) -> Callable[P, Awaitabl
         from .app import connection
         from .config import Database
 
+        db = connection(Database)
         attempt = 0
         while True:
             waiting: list[Callable[[], Awaitable[None]]] = []
-            async with cast(AsyncSession, connection(Database).sessions()) as s:
+            async with cast(AsyncSession, db.sessions()) as s:
                 token, kept = _tx.set(s), _after.set(waiting)
                 try:
                     async with s.begin():
@@ -118,7 +120,7 @@ def transactional[**P, R](fn: Callable[P, Awaitable[R]]) -> Callable[P, Awaitabl
                 except _Rollback as r:
                     return cast(R, r.result)
                 except Exception as e:
-                    if attempt >= RETRIES or not must_retry(e):
+                    if attempt >= db.retries or not must_retry(e):
                         raise
                     attempt += 1
                     continue
