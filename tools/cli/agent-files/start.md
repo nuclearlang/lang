@@ -16,10 +16,11 @@ never search the disk for Nuclear's source code or its documents, and never gues
 
 ## Rules never broken
 
-1. **Read before writing.** The syntax sheet of your dialect first (`nuclear spec --brief --dialect <dialect>`,
-   MCP `nuclear_brief`), then the topic of what you write. Look up a word instead of guessing:
-   `nuclear help <word> --dialect <dialect>`; a class or member of the target's libraries:
-   `nuclear defs show <Name> --dialect <dialect>`.
+1. **Generate first, then read only what is left.** The generators (rule 2) write the standard code with nothing to
+   read. Before writing `.nuc` by hand: the short sheet of the platform (`nuclear spec --brief --platform <platform>`,
+   MCP `nuclear_brief(platform)`), then only the part of a topic you need (MCP `nuclear_doc(topic, section)`: a long
+   topic answers its sections first). Look up a word instead of guessing: `nuclear help <word> --dialect <dialect>`;
+   a class or member of the target's libraries: `nuclear defs show <Name> --dialect <dialect>`.
 2. **A product is made with the tools.** `nuclear new` creates the project, `nuclear gen` writes finished code of a
    resource, `nuclear make` the skeleton of each piece where the platform puts it, `nuclear add` a library. Write by
    hand only what they leave, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, never

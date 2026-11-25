@@ -90,6 +90,55 @@ briefWithoutBase(sheet: string) string
     return sheet
   "(The base language part is in this session's first nuclear_brief; full = true repeats it.)\n\n${sheet.substring(parts[0].length + 1)}"
 
+// The size under which a topic is answered whole; a longer one answers its index first.
+DOC_WHOLE = 8000
+
+// The headings of a document (`#` to `###`, outside code blocks): their line, level and text.
+headings(lines: string[]) <string, any>[]
+  out: <string, any>[] = []
+  fenced = false
+  for at in 0..lines.length
+    line = lines[at]
+    if line.startsWith("```")
+      fenced = not fenced
+    else if not fenced
+      m = Regex(r"^(#{1,3}) (.+)$").find(line)
+      if m != null
+        out.add({ "at": at, "level": "${m![1] ?? ""}".length, "text": "${m![2] ?? ""}".trim() })
+  out
+
+// Where the section of a heading ends: the next heading of its level or higher, else the end.
+sectionEnd(heads: <string, any>[], index: int, total: int) int
+  level: int = heads[index]["level"]
+  for later in heads.slice(index + 1, heads.length)
+    other: int = later["level"]
+    if other <= level
+      return later["at"]
+  total
+
+// A topic as an agent reads it: whole when short; else its opening and the index of its sections with their sizes.
+// section: the first section whose heading holds those words, whole.
+docPart(topic: string, text: string, section: string = "") string
+  lines = text.split("\n")
+  heads = headings(lines)
+  index: string[] = []
+  for i in 0..heads.length
+    head = heads[i]
+    level: int = head["level"]
+    size = lines.slice(head["at"], sectionEnd(heads, i, lines.length)).join("\n").length
+    index.add("${"  ".repeat(Math.max(0, level - 2))}- ${head["text"]} (${Math.max(1, (size / 1000).round())}k)")
+  wanted = section.trim().lower()
+  if wanted.length > 0
+    for i in 0..heads.length
+      if wanted in "${heads[i]["text"]}".lower()
+        return lines.slice(heads[i]["at"], sectionEnd(heads, i, lines.length)).join("\n").trim()
+    return "${topic} has no section with \"${section}\". Its sections:\n\n${index.join("\n")}"
+  if text.length <= DOC_WHOLE or heads.length < 3
+    return text
+  first: int = heads[1]["at"]
+  opening = lines.slice(0, first).join("\n").trim()
+  "${opening}\n\n## The sections of ${topic} (${(text.length / 1000).round()}k chars whole)\n\nRead only the one you need: nuclear_doc(topic = \"${topic}\", section = \"<words of its heading>\").\n\n${index.slice(1, index.length).join("\n")}"
+
 taskSlug(text: string) string
   whole = stripChars(text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-"), "-")
   cut = whole.substring(0, Math.min(40, whole.length))
@@ -175,7 +224,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return "the graph has no strategy: `nuclear-graph ingest` the knowledge base"
     why = found["why"] ?? ""
     second = found["second"] ?? ""
-    learn = "Before writing: nuclear_start if not called yet, nuclear_brief(<platform>), and nuclear_doc for each topic the plan names (the atlas of nuclear_start lists them)."
+    learn = "Run the plan's generators first: they write the standard code with nothing to read. Before writing .nuc by hand: nuclear_start if not called yet, nuclear_brief(platform), and only the section of a topic you need (nuclear_doc(topic, section); a long topic answers its sections first), never a whole dialect reference."
     "${found["id"]} (${why.length > 0 ? why : "by meaning"}; the next closest: ${second.length > 0 ? second : "none"})\n\n${found["plan"]}\n\n${learn}"
 
   // One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase,
@@ -228,22 +277,25 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
         briefed = true
     parts.join("\n\n---\n\n")
 
-  // One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base,
+  // One topic of the atlas (nuclear_start lists them): a guide chapter (syntax, functions, control...), base,
   // library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp,
-  // vscode, builder...), context-docs, example/<name>. A word that is not a topic answers the topics that explain it.
-  nuclearDoc(topic: string) string
+  // vscode, builder...), context-docs, example/<name>. A short topic comes whole; a long one answers its opening and
+  // the index of its sections (an example: its files), and section (words of a heading) answers that section only.
+  // A word that is not a topic answers the topics that explain it.
+  nuclearDoc(topic: string, section: string = "") string
     ran = ~runTool(["nuclear", "help", topic])
-    ran.out
+    ran.code == 0 ? docPart(topic, ran.out, section) : ran.out
 
   // Documentation of a kind, decorator, header word (with dialect), a topic or a command.
   nuclearHelp(word: string, dialect: string = "") string
     ~tools.help(word, dialect)
 
-  // The short sheet of Nuclear and a platform (backend, mobile, web), or a dialect: read it before writing .nuc.
-  // The base language part, the same in every sheet, comes only in the first sheet of a session; full = true repeats it
-  // (after the client dropped it from its context).
-  nuclearBrief(dialect: string = "backend", full: boolean = false) string
-    sheet: string = ~tools.brief(dialect)
+  // The short sheet of Nuclear and a platform (platform: backend, mobile, web), or a dialect (dialect: fastapi,
+  // nestjs, react, flutter): read it before writing .nuc by hand. The base language part, the same in every sheet,
+  // comes only in the first sheet of a session; full = true repeats it (after the client dropped it from its context).
+  nuclearBrief(platform: string = "", dialect: string = "", full: boolean = false) string
+    asked = dialect.length > 0 ? dialect : platform
+    sheet: string = ~tools.brief(asked.length > 0 ? asked : "backend")
     if briefed and not full
       return briefWithoutBase(sheet)
     briefed = true

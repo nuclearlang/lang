@@ -63,6 +63,20 @@ testTheBaseLanguagePartOfTheBriefComesOncePerSession() void
   expect(not ("# NuclearLang brief" in second) and "# Platform `web`" in second and "full = true" in second)
   expect("# NuclearLang brief" in again)
   expect(briefWithoutBase("only one part") == "only one part")
+  // the texts of the server write nuclear_brief(platform): a platform comes as a platform
+  web: string = asyncio.run(McpTools(GraphClient("mcp"), Toolchain(), Web()).nuclearBrief(platform = "web"))
+  expect("# Platform `web`" in web and not ("# Platform `backend`" in web))
+
+testALongTopicAnswersItsSectionsAndOneSectionWhole() void
+  text = "# Big\n\nWhat it is.\n\n## 1. One\n\n${"a".repeat(5000)}\n\n```nuclear\n# not a heading\n```\n\n### 1.1 Inner\n\nInner text.\n\n## 2. Two\n\n${"b".repeat(5000)}\n"
+  index = docPart("big", text)
+  expect("What it is." in index and "- 1. One (5k)" in index and "  - 1.1 Inner" in index and "- 2. Two" in index)
+  expect(not ("aaaa" in index) and not ("not a heading" in index))
+  one = docPart("big", text, "1. one")
+  expect(one.startsWith("## 1. One") and "Inner text." in one and not ("bbbb" in one))
+  expect(docPart("big", text, "1.1") == "### 1.1 Inner\n\nInner text.")
+  expect("no section" in docPart("big", text, "nothing"))
+  expect(docPart("small", "# Small\n\nshort") == "# Small\n\nshort")
 
 testTheRunLogToolAnswersTheTailOfTheProjectsLogAndNothingOutsideIt(tmpPath: Path) void
   project = tmpPath.joinpath("shop")

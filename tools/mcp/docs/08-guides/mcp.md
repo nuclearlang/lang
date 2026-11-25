@@ -156,12 +156,12 @@ Registered only when the local models are on again (ADR-platform-0013): today no
 | Tool | What it does |
 |---|---|
 | `nuclear_start(project?)` | **first**: what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic; with a project folder, its pieces and the sheet of its dialect |
-| `nuclear_doc(topic)` | one topic of the atlas, whole: a guide chapter, `base`, `library`, a platform, a dialect, a tool, `context-docs`, `example/<name>`; a word that is not a topic answers the topics that explain it |
+| `nuclear_doc(topic, section?)` | one topic of the atlas (a long one answers its sections with their sizes first; `section`, words of a heading, answers that section whole): a guide chapter, `base`, `library`, a platform, a dialect, a tool, `context-docs`, `example/<name>`; a word that is not a topic answers the topics that explain it |
 | `nuclear_check(code \| path, dialect)` | `ok`, or one line per error with its fix, for a piece of Nuclear or a whole project |
 | `nuclear_build(code, dialect)` | what a piece of Nuclear becomes in the dialect's language |
 | `nuclear_fmt(code)` | the piece in the canonical layout |
 | `nuclear_help(word, dialect)` | the documentation of a kind, a decorator, a topic or a command |
-| `nuclear_brief(dialect, full?)` | the short sheet of Nuclear and a platform: read before writing `.nuc`. Its base language part comes only in the first sheet of a session; `full = true` repeats it |
+| `nuclear_brief(platform?, dialect?, full?)` | the short sheet of Nuclear and a platform (or a dialect): read before writing `.nuc` by hand. Its base language part comes only in the first sheet of a session; `full = true` repeats it |
 | `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |
 | `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |
 | `project_test(project)` | the tests of a project, written in Nuclear (`nuclear test`: built, then run by its dialect's runner). The same answer in every dialect: `{ok, passed, failed, failures: [{file, line, name}], hint, output}`: where each failure is in the `.nuc`, and what it means (`nuclear explain`). Run it after every change |

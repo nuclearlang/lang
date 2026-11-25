@@ -13,6 +13,12 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
   clients from its contract, never the API again), and "create a workspace" the plan of a new project, never a
   migration. `nuclear_start` is less than half as long (the atlas one line per group) and `nuclear_brief` gives the
   base language part once per session (`full = true` repeats it).
+- **An agent generates first and reads only the part it needs.** Measured with OpenCode on the same task with and
+  without Nuclear: the agent read the whole `fastapi` reference (34.7 k chars) before generating a backend it then
+  wrote none of, and that one answer was paid again on 50 turns. `nuclear_doc` now answers a long topic as its
+  sections with their sizes (an example: its files) and `section` one section whole; `nuclear_start`'s first rule
+  and `graph_strategy`'s plan say to run the generators first and read only the section a hand-written piece needs.
+  `nuclear_brief` takes `platform` (the server's own texts named it, and the backend sheet came instead).
 - **The MCP server is the agents' oracle** (spec 025): Nuclear Builder's agents cost less and take less time for the
   same work. Each tool reaches an agent of the factory once (`nuclear-mcp --skip`: 45 tools instead of 92); OpenCode's
   agents never get the user's own `~/.claude` instructions and skills, nor OpenCode's tools the factory does not use,

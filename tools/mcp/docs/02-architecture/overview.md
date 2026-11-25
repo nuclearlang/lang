@@ -75,7 +75,10 @@ The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `G
 after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start` without
 its command line cycle and tools table (`startForMcp`), that cycle and the atlas's names one line per group
 (`atlasLines`, from `nuclear help atlas --json`): every line read first is paid again on each later turn of the agent.
-`nuclear_brief` gives the base language part once per session (`briefed`, `briefWithoutBase`; `full = true` repeats it); with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
+`nuclear_brief` takes a platform or a dialect and gives the base language part once per session (`briefed`,
+`briefWithoutBase`; `full = true` repeats it); `nuclear_doc` answers a topic longer than `DOC_WHOLE` (8 000 chars)
+as its opening and the index of its sections with their sizes, and `section` one section whole (`docPart`,
+`headings`, `sectionEnd`; an example's sections are its files); with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
 help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does
 not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a
 product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand
@@ -158,7 +161,9 @@ Every machine runs the server and the Smart Graph (ADR-installer-0004), but no l
   `extensions/tools/nuclear-builder/setup.json` (only in the working tree).
 - `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear, never names
   `developer_task` or `developer_review`, and stays short (no command line cycle, the atlas one line per group).
-- `testTheBaseLanguagePartOfTheBriefComesOncePerSession`: the second `nuclear_brief` leaves the base part out.
+- `testTheBaseLanguagePartOfTheBriefComesOncePerSession`: the second `nuclear_brief` leaves the base part out, and
+  a platform comes as a platform.
+- `testALongTopicAnswersItsSectionsAndOneSectionWhole`: `docPart`'s index and sections (a heading in code is none).
 - `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.
 - `tests/test_work.nuc`: a change asked by elicitation is done only on a yes (declined, cancelled, unticked: nothing
   runs); through the MCP library's own client (elicitation accepted, declined, absent); a client that cannot ask gets
