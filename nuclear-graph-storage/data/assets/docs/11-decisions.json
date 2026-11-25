@@ -2032,6 +2032,117 @@
    }
   },
   {
+   "id": "doc:docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md#consequences",
+   "type": "adr",
+   "title": "ADR-platform-0017: A Nuclear library reaches a project as source; a runtime's own Nuclear is built into the runtime — Consequences",
+   "summary": "runtimes.",
+   "body": [
+    "- Positive: a plugin an agent writes is built and checked exactly like the project; one source serves every dialect.",
+    "- Positive: the runtimes stay complete packages of their target; a project's build time does not grow with them.",
+    "- Negative: the installer and the runtime checks run the transpiler; a change of the transpiler rebuilds the",
+    "  runtimes.",
+    "- Negative: a package of source needs a way into `nuclear add`, the loader and the language server (spec 005 T1)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0017: A Nuclear library reaches a project as source; a runtime's own Nuclear is built into the runtime — Context and problem",
+   "summary": "The parts of the platform written in Nuclear outside a project need a way into it: a database plugin with its adapter (ADR-backend-0004), a library of helpers (ADR-lang-0013 already builds lodash's helpers with each project), and the Synapsis ORM, which is part of the backend runtimes.",
+   "body": [
+    "The parts of the platform written in Nuclear outside a project need a way into it: a database plugin with its",
+    "adapter (ADR-backend-0004), a library of helpers (ADR-lang-0013 already builds lodash's helpers with each project),",
+    "and the Synapsis ORM, which is part of the backend runtimes. The user decided on 2026-11-25 between three ways:",
+    "everything as source, everything prebuilt into the targets' packages, or source for libraries and prebuilt for what",
+    "belongs to a runtime."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md#decision",
+   "type": "adr",
+   "title": "ADR-platform-0017: A Nuclear library reaches a project as source; a runtime's own Nuclear is built into the runtime — Decision",
+   "summary": "project from the installation); each build transpiles it with the project, to the project's dialect, into `build/`, as the helpers of lodash are today.",
+   "body": [
+    "**A library or a plugin is a package of `.nuc` source.** `nuclear add` installs it (for the project, or for every",
+    "project from the installation); each build transpiles it with the project, to the project's dialect, into `build/`,",
+    "as the helpers of lodash are today. The same rules hold for it as for the project's own code: the diagnostics, the",
+    "golden rule, no warning of the target.",
+    "",
+    "**The Nuclear of a runtime is built into the runtime.** What a runtime package needs from Nuclear (the Synapsis ORM in",
+    "`synapsis-py` and `synapsis-nest`) is transpiled when the runtime is built, by the installer and the checks, and",
+    "ships as the target's code inside the package. A project never compiles the runtime."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md#options-considered",
+   "type": "adr",
+   "title": "ADR-platform-0017: A Nuclear library reaches a project as source; a runtime's own Nuclear is built into the runtime — Options considered",
+   "summary": "1. Source for libraries and plugins, built into the runtime for a runtime's own — chosen.",
+   "body": [
+    "1. **Source for libraries and plugins, built into the runtime for a runtime's own** — chosen.",
+    "2. **Everything as source**: one rule, but every build compiles the whole ORM and a runtime is no longer whole by",
+    "   itself.",
+    "3. **Everything prebuilt** into pip and npm packages: fast builds, but a plugin an agent writes in a project would",
+    "   need its own build and install."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md#references",
+   "type": "adr",
+   "title": "ADR-platform-0017: A Nuclear library reaches a project as source; a runtime's own Nuclear is built into the runtime — References",
+   "summary": "(every database is a plugin), ADR-lang-0013 (the helpers are the language's), ADR-platform-0016 (the installation is sealed: an installed package is read-only).",
+   "body": [
+    "- [ADR-backend-0004](../../nuclear-synapsis-framework/platforms/backend/docs/03-adr/0004-every-database-is-a-plugin.md)",
+    "  (every database is a plugin), [ADR-lang-0013](../../nuclearlang/docs/03-adr/0013-helpers-are-part-of-the-language.md)",
+    "  (the helpers are the language's), ADR-platform-0016 (the installation is sealed: an installed package is read-only)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0017-nuclear-libraries-reach-a-project-as-source.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.214d6b",
    "type": "adr",
    "title": "Decisions of the platform",
@@ -2055,14 +2166,16 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.c15944",
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.76cd61",
    "type": "adr",
    "title": "Decisions of the platform",
-   "summary": "Only the decisions about the whole platform.",
+   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
    "body": [
-    "Only the decisions about the whole platform. Each project keeps its own in its `docs/03-adr/`, numbered from 0001",
-    "and cited with its key (`../README.md` has the table of keys). The format is `0000-template.md`. An accepted ADR",
-    "is not edited: a new one replaces it."
+    "| [ADR-platform-0015](0015-migrating-a-project-into-nuclear.md) | A project of another technology is migrated into Nuclear by an agent that reads it and rewrites it with the tools; the transpiler still reads only `.nuc` (amends 0004) | accepted |",
+    "| [ADR-platform-0016](0016-the-installation-is-sealed.md) | No agent changes Nuclear; the installation is sealed and a changed one builds nothing (N0225, N0226) | accepted |",
+    "| [ADR-platform-0017](0017-nuclear-libraries-reach-a-project-as-source.md) | A Nuclear library or plugin reaches a project as source, built with it; a runtime's own Nuclear is built into the runtime | accepted |",
+    "",
+    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
    ],
    "agents": false,
    "sources": [
@@ -2075,15 +2188,14 @@
    }
   },
   {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.f461a2",
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.c15944",
    "type": "adr",
    "title": "Decisions of the platform",
-   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "summary": "Only the decisions about the whole platform.",
    "body": [
-    "| [ADR-platform-0015](0015-migrating-a-project-into-nuclear.md) | A project of another technology is migrated into Nuclear by an agent that reads it and rewrites it with the tools; the transpiler still reads only `.nuc` (amends 0004) | accepted |",
-    "| [ADR-platform-0016](0016-the-installation-is-sealed.md) | No agent changes Nuclear; the installation is sealed and a changed one builds nothing (N0225, N0226) | accepted |",
-    "",
-    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
+    "Only the decisions about the whole platform. Each project keeps its own in its `docs/03-adr/`, numbered from 0001",
+    "and cited with its key (`../README.md` has the table of keys). The format is `0000-template.md`. An accepted ADR",
+    "is not edited: a new one replaces it."
    ],
    "agents": false,
    "sources": [
@@ -18930,7 +19042,8 @@
     "   repository; an adapter that speaks HTTP (CamusDB) needs one. A database with only a native driver needs a",
     "   dialect's type definitions (root rule 4's exception).",
     "3. **Built Nuclear inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and",
-    "   `synapsis-nest`; no runtime holds built Nuclear yet (lodash's delivery is the same open question).",
+    "   `synapsis-nest` when the runtime is built; a plugin is a package of `.nuc` source built with each project",
+    "   (ADR-platform-0017). Neither path exists yet.",
     "4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it.",
     "5. **The four databases of today moved out** of the dialects' `[project.plugins.*]` into plugin packages, the",
     "   installer shipping them."
@@ -19254,9 +19367,11 @@
    "body": [
     "- [ ] The kind `plugin` in `platform.toml`, `@refuses` and `@retries`, the loader's check of `@refuses` against a",
     "      project's entities and its diagnostic.",
-    "- [ ] A plugin package (`plugin.toml`, the `.nuc`, the dialect parts) found by `nuclear add` and the installer.",
+    "- [ ] A plugin package (`plugin.toml`, the `.nuc` source, the dialect parts) found by `nuclear add` and the",
+    "      installer, its source built with each project (ADR-platform-0017).",
     "- [ ] An HTTP client in the language's library, every language dialect, its conformance tests.",
-    "- [ ] Built Nuclear inside a runtime package: how it is built, shipped by the installer and typed.",
+    "- [ ] Built Nuclear inside a runtime package (ADR-platform-0017): the runtime's build transpiles it, the installer",
+    "      ships it, its type definitions are regenerated.",
     "- [ ] The entity metadata the templates write for an adapted connection."
    ],
    "platforms": [

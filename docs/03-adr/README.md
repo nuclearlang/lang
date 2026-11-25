@@ -22,5 +22,6 @@ is not edited: a new one replaces it.
 | [ADR-platform-0014](0014-stability-and-parity.md) | The same Nuclear means the same in every dialect: the language's rules stay, every change runs every test set, a converter and one reference tool settle what dialects answer differently, the MCP server and the knowledge base serve every new thing | accepted |
 | [ADR-platform-0015](0015-migrating-a-project-into-nuclear.md) | A project of another technology is migrated into Nuclear by an agent that reads it and rewrites it with the tools; the transpiler still reads only `.nuc` (amends 0004) | accepted |
 | [ADR-platform-0016](0016-the-installation-is-sealed.md) | No agent changes Nuclear; the installation is sealed and a changed one builds nothing (N0225, N0226) | accepted |
+| [ADR-platform-0017](0017-nuclear-libraries-reach-a-project-as-source.md) | A Nuclear library or plugin reaches a project as source, built with it; a runtime's own Nuclear is built into the runtime | accepted |
 
 [old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.

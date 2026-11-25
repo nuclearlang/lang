@@ -145,7 +145,8 @@ A native plugin implements only `refusal` (the ORM's error → `Refusal`), for t
    repository; an adapter that speaks HTTP (CamusDB) needs one. A database with only a native driver needs a
    dialect's type definitions (root rule 4's exception).
 3. **Built Nuclear inside a runtime package**: the Synapsis ORM is Nuclear built into `synapsis-py` and
-   `synapsis-nest`; no runtime holds built Nuclear yet (lodash's delivery is the same open question).
+   `synapsis-nest` when the runtime is built; a plugin is a package of `.nuc` source built with each project
+   (ADR-platform-0017). Neither path exists yet.
 4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it.
 5. **The four databases of today moved out** of the dialects' `[project.plugins.*]` into plugin packages, the
    installer shipping them.

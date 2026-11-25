@@ -18,9 +18,11 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 - [ ] The kind `plugin` in `platform.toml`, `@refuses` and `@retries`, the loader's check of `@refuses` against a
       project's entities and its diagnostic.
-- [ ] A plugin package (`plugin.toml`, the `.nuc`, the dialect parts) found by `nuclear add` and the installer.
+- [ ] A plugin package (`plugin.toml`, the `.nuc` source, the dialect parts) found by `nuclear add` and the
+      installer, its source built with each project (ADR-platform-0017).
 - [ ] An HTTP client in the language's library, every language dialect, its conformance tests.
-- [ ] Built Nuclear inside a runtime package: how it is built, shipped by the installer and typed.
+- [ ] Built Nuclear inside a runtime package (ADR-platform-0017): the runtime's build transpiles it, the installer
+      ships it, its type definitions are regenerated.
 - [ ] The entity metadata the templates write for an adapted connection.
 
 ## T2 — The four databases of today as native plugins
