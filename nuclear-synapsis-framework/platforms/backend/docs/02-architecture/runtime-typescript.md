@@ -101,6 +101,10 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
   parameters'; the app's `json replacer` writes a `bigint`, `Entity.toJSON` keeps the columns in their order.
 - **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It
   opens on the database of the last repository made ([roadmap](../01-product/roadmap.md)).
+  `transactional` runs the use case again, `RETRIES` (3) times, when `mustRetry` reads a serialization failure or a
+  deadlock from Sequelize's `DatabaseError` (SQLSTATE `40001`, `40P01`; MySQL's and MariaDB's `errno` 1213); `publish`
+  inside one hands its sending to `afterCommit`, kept with the transaction until it commits. Test: `runs again a
+  transaction the database refuses for another one` (the same as `test_data.py`).
 
 ## Migrations
 

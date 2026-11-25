@@ -8,7 +8,7 @@
 // `@transactional` method every call joins one transaction of the default database.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import {
-  BuildOptions, FindOptions, IncludeOptions, Model as SequelizeModel, ModelStatic, Op, Order, Transaction, WhereOptions, col, fn,
+  BuildOptions, DatabaseError, FindOptions, IncludeOptions, Model as SequelizeModel, ModelStatic, Op, Order, Transaction, WhereOptions, col, fn,
   literal, where as whereOf,
 } from 'sequelize';
 import { BelongsToManyOptions, Model, ModelCtor, Sequelize } from 'sequelize-typescript';
@@ -56,33 +56,69 @@ export class Page<T> {
   ) {}
 }
 
-// the transaction of the running @transactional call, and the database the repositories use
-const running = new AsyncLocalStorage<Transaction>();
+// the transaction of the running @transactional call and what waits for its commit (the events it publishes), and
+// the database the repositories use
+type Running = { transaction: Transaction; waiting: (() => Promise<void>)[] };
+const running = new AsyncLocalStorage<Running>();
 let database: Sequelize | undefined;
 
 /** The options of a call inside the running transaction (none outside one). */
 function inTransaction(): { transaction?: Transaction } {
-  const t = running.getStore();
-  return t ? { transaction: t } : {};
+  const r = running.getStore();
+  return r ? { transaction: r.transaction } : {};
+}
+
+/** A transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes. */
+export const RETRIES = 3;
+// SQLSTATE of a serialization failure and of a deadlock (PostgreSQL's code, MySQL's and MariaDB's sqlState)
+const RETRY_STATES = new Set(['40001', '40P01']);
+// MySQL's and MariaDB's number of a deadlock, when the driver gives no state
+const RETRY_NUMBERS = new Set([1213]);
+
+/** The database refused the transaction only because of another one running at the same time: running it again may
+ * succeed. Any other error is not retried. */
+export function mustRetry(e: unknown): boolean {
+  if (!(e instanceof DatabaseError)) return false;
+  const { code, sqlState, errno } = (e.original ?? {}) as { code?: string; sqlState?: string; errno?: number };
+  return RETRY_STATES.has(String(sqlState ?? code)) || (errno !== undefined && RETRY_NUMBERS.has(errno));
+}
+
+/** Inside `@transactional`, keeps `send` for the commit (dropped by a rollback, never run twice by a retry) and
+ * answers true; outside one answers false and the caller sends at once. */
+export function afterCommit(send: () => Promise<void>): boolean {
+  const r = running.getStore();
+  if (!r) return false;
+  r.waiting.push(send);
+  return true;
 }
 
 /**
  * `@transactional` on a use case's `exec`: its repository calls share one transaction of the default database; an
- * `Err` or an error rolls it back, an `Ok` commits it. A call inside another transactional call joins it.
+ * `Err` or an error rolls it back, an `Ok` commits it. A call inside another transactional call joins it. A
+ * transaction the database asks to run again (`mustRetry`) runs again from its start, `RETRIES` times; the events
+ * published inside are sent once, after the commit.
  */
 export function transactional(_target: object, _key: string | symbol, descriptor: PropertyDescriptor): void {
   const fn = descriptor.value as (...args: unknown[]) => Promise<unknown>;
   descriptor.value = async function (this: unknown, ...args: unknown[]) {
     if (running.getStore() || !database) return fn.apply(this, args);
-    const t = await database.transaction();
-    try {
-      const result = await running.run(t, () => fn.apply(this, args));
-      if (result instanceof Result && result.isErr) await t.rollback();
-      else await t.commit();
+    for (let attempt = 0; ; attempt++) {
+      const t = await database.transaction();
+      const waiting: (() => Promise<void>)[] = [];
+      let result: unknown;
+      let failed = false;
+      try {
+        result = await running.run({ transaction: t, waiting }, () => fn.apply(this, args));
+        failed = result instanceof Result && result.isErr;
+        if (failed) await t.rollback();
+        else await t.commit();
+      } catch (e) {
+        await t.rollback();
+        if (attempt < RETRIES && mustRetry(e)) continue;
+        throw e;
+      }
+      if (!failed) for (const send of waiting) await send();
       return result;
-    } catch (e) {
-      await t.rollback();
-      throw e;
     }
   };
 }

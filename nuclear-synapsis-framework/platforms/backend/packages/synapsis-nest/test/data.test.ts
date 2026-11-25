@@ -9,6 +9,9 @@ import {
 import {
   AppError, Conflict, Entity, Err, ErrorFilter, Ok, Repository, Result, contains, icontains, ilike, joinTable, like, transactional,
 } from '../src/index.js';
+import { RETRIES } from '../src/repository.js';
+import { Listener, consumer, publish } from '../src/events.js';
+import { DatabaseError } from 'sequelize';
 
 @Table({ tableName: 'projects', underscored: true, timestamps: false })
 class Project extends Entity {
@@ -124,6 +127,36 @@ class MoveTasks {
   }
 }
 
+/** What a driver raises when another transaction wins: a serialization failure, SQLSTATE 40001. */
+function busy(): DatabaseError {
+  return new DatabaseError(Object.assign(new Error('could not serialize access'), { code: '40001', sql: 'COMMIT', parameters: {} }));
+}
+
+class Saved extends Listener {
+  readonly names: string[] = [];
+
+  @consumer('retry.saved')
+  async saved(value: { name: string }): Promise<void> {
+    this.names.push(value.name);
+  }
+}
+
+/** A use case the database refuses `refusals` times for another transaction, then lets commit. */
+class SaveRefused {
+  runs = 0;
+  constructor(readonly projects: Repository<Project>, readonly refusals: number, readonly fail = false) {}
+
+  @transactional
+  async exec(name: string): Promise<Result<AppError, number>> {
+    this.runs += 1;
+    await this.projects.save(new Project({ name }));
+    await publish('retry.saved', { name });
+    if (this.runs <= this.refusals) throw busy();
+    if (this.fail) return Err(new Conflict('rolled back'));
+    return Ok(this.runs);
+  }
+}
+
 describe('data (ADR-backend-0001)', () => {
   let db: Sequelize;
   before(async () => {
@@ -167,6 +200,30 @@ describe('data (ADR-backend-0001)', () => {
 
     await projects.remove(work.id); // ON DELETE CASCADE
     assert.equal(await tasks.count(), 0);
+  });
+
+  // ADR-backend-0004: run again from its start RETRIES times, then the error; its events are sent once, at commit
+  it('runs again a transaction the database refuses for another one', async () => {
+    const projects = new Repository(Project);
+    const before = await projects.count();
+    const seen = new Saved();
+    const retried = new SaveRefused(projects, 2);
+    assert.equal((await retried.exec('kept')).value, 3);
+    assert.equal(retried.runs, 3);
+    assert.equal(await projects.count(), before + 1);
+    assert.deepEqual(seen.names, ['kept']);
+
+    const refused = new SaveRefused(projects, RETRIES + 1);
+    await assert.rejects(refused.exec('lost'), DatabaseError);
+    assert.equal(refused.runs, RETRIES + 1);
+    assert.equal(await projects.count(), before + 1);
+
+    assert.ok((await new SaveRefused(projects, 0, true).exec('failed')).isErr);
+    assert.equal(await projects.count(), before + 1);
+    assert.deepEqual(seen.names, ['kept']); // nothing of a rolled back transaction was published
+
+    await publish('retry.saved', { name: 'outside' }); // outside a transaction: at once
+    assert.deepEqual(seen.names, ['kept', 'outside']);
   });
 
   // the same cases as test_data.py: what Spring's DataIntegrityViolationException covers answers 409 `conflict`

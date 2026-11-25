@@ -377,6 +377,33 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3130f3",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)` (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`, compared and sorted by value); migrations make and change them; a value…",
+   "body": [
+    "- **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`",
+    "  on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`",
+    "  (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,",
+    "  compared and sorted by value); migrations make and change them; a value the column cannot hold (beyond 64 bits,",
+    "  more decimals or digits than it has) is 409 `conflict`, never rounded. In JSON, in a body and in a parameter they",
+    "  are the language's texts (`\"0.3\"`; a JSON number is 400 `type`), answered as `toString()`; the OpenAPI document",
+    "  gives a `string` with a `pattern`; `@min` / `@max` compare them exactly. `nuclear gen resource --fields",
+    "  \"price:bigdouble\"` takes them. N0308: a key is an `int` or a `string`, `precision` and `scale` are a `bigdouble`'s."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3af5a5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -659,37 +686,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.893998",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "`fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`.",
-   "body": [
-    "- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in",
-    "  `fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers",
-    "  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`.",
-    "",
-    "- **Exact numbers in the backend** (ADR-backend-0003, reference §2.1, §2.2, §2.3), the same in `fastapi` and `nestjs`",
-    "  on SQLite, PostgreSQL, MySQL and MariaDB: an entity's `bigint` is a `BIGINT` column, a `bigdouble` a `NUMERIC(p, s)`",
-    "  (`@column(precision = p, scale = s)`, 30 and 10 by default; SQLite keeps the value's text, `EXACT TEXT(p,s)`,",
-    "  compared and sorted by value); migrations make and change them; a value the column cannot hold (beyond 64 bits,",
-    "  more decimals or digits than it has) is 409 `conflict`, never rounded. In JSON, in a body and in a parameter they",
-    "  are the language's texts (`\"0.3\"`; a JSON number is 400 `type`), answered as `toString()`; the OpenAPI document",
-    "  gives a `string` with a `pattern`; `@min` / `@max` compare them exactly. `nuclear gen resource --fields",
-    "  \"price:bigdouble\"` takes them. N0308: a key is an `int` or a `string`, `precision` and `scale` are a `bigdouble`'s."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.9ac8fd",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -863,6 +859,34 @@
     "  longer hides that function in the body; outside it keeps its own name (`@_public_names`: a route's `?max=`, an MCP",
     "  tool's `type`, a keyword call), and synapsis-py reads a renamed reserved word (`from_`) by its own name too. `rick_api`'s `alive(max)` is written `alive(max_)`.",
     "- The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.e3f781",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again from its start, up to three times, then throws.",
+   "body": [
+    "- **A transaction the database refuses for another runs again** (ADR-backend-0004, reference §2.4), the same in",
+    "  `fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again",
+    "  from its start, up to three times, then throws. **The events published inside `@transactional` are sent after the",
+    "  commit**: a rolled back transaction publishes nothing, and one run again publishes once (before, they were sent at",
+    "  once, even for a transaction rolled back).",
+    "",
+    "- **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in",
+    "  `fastapi` and `nestjs`: `\"\"` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers",
+    "  `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`."
    ],
    "platforms": [
     "backend"
@@ -1680,17 +1704,39 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.9c25f8",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.26d329",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Data",
    "summary": "both sides elsewhere).",
    "body": [
     "both sides elsewhere). The other runtime writes the same SQL.",
     "- **An optional field left empty** is `None` and pydantic writes it `null`: it is never left out of an answer.",
-    "- **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins.",
+    "- **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins. `transactional` runs the use",
+    "  case again, `RETRIES` (3) times, when `must_retry` reads a serialization failure or a deadlock from the driver's",
+    "  error (SQLSTATE `40001`, `40P01`; MySQL's and MariaDB's number 1213); `publish` inside one hands its sending to",
+    "  `after_commit`, a second `ContextVar` the commit empties. Test:",
+    "  `test_a_transaction_the_database_refuses_for_another_runs_again` (the same as `data.test.ts`).",
     "- **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),",
-    "  so a non-null column can be added to a table that has rows.",
-    "",
+    "  so a non-null column can be added to a table that has rows."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data.6db20e",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Data",
+   "summary": "(`EXACT TEXT`, `EXACT TEXT(p,s)`: the value's text with `s` decimals).",
+   "body": [
     "- **Exact numbers** (`orm.ExactInteger`, `orm.ExactDecimal`): `BIGINT` and `NUMERIC(p, s)`, on SQLite `_LiteExact`",
     "  (`EXACT TEXT`, `EXACT TEXT(p,s)`: the value's text with `s` decimals). Their comparator writes `gt`, `gte`, `lt`,",
     "  `lte`, `between` and `orderBy` as `_ExactCompare` / `_ExactOrder`, compiled for each database: a plain comparison,",
@@ -2117,22 +2163,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.0c9b2f",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.61bc59",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Data",
-   "summary": "the type (`templates/bigdouble.tpl`; `exact.test.ts` holds them the same), not exported: the runtime reads one and takes one of any file by its members (`isBigDouble`).",
+   "summary": "deadlock from Sequelize's `DatabaseError` (SQLSTATE `40001`, `40P01`; MySQL's and MariaDB's `errno` 1213); `publish` inside one hands its sending to `afterCommit`, kept with the transaction until it commits.",
    "body": [
-    "- **Exact numbers** (`exact.ts`, ADR-backend-0003): `BigDouble` is the class the dialect writes in each file that uses",
-    "  the type (`templates/bigdouble.tpl`; `exact.test.ts` holds them the same), not exported: the runtime reads one and",
-    "  takes one of any file by its members (`isBigDouble`). `exactColumn` gives an entity's field its getter (the",
-    "  database's text or number read back as a `bigint` / `BigDouble`) and setter (`columnText`: the text with the",
-    "  column's decimals); the repository finds an exact column by its type (`BIGINT`, `DECIMAL`), writes a value as a",
-    "  number literal (MySQL compares a quoted text with a DECIMAL as a double) and on SQLite compares and sorts the text",
-    "  by value (`liteCompare`, `liteOrder`: the same SQL as the other runtime); `fits` refuses what the column cannot",
-    "  hold. `IsBigInt` / `IsBigDouble` / `MinExact` / `MaxExact` are the model's; `BigIntPipe` / `BigDoublePipe` the",
-    "  parameters'; the app's `json replacer` writes a `bigint`, `Entity.toJSON` keeps the columns in their order.",
-    "- **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It",
-    "  opens on the database of the last repository made ([roadmap](../01-product/roadmap.md))."
+    "deadlock from Sequelize's `DatabaseError` (SQLSTATE `40001`, `40P01`; MySQL's and MariaDB's `errno` 1213); `publish`",
+    "  inside one hands its sending to `afterCommit`, kept with the transaction until it commits. Test: `runs again a",
+    "  transaction the database refuses for another one` (the same as `test_data.py`)."
    ],
    "platforms": [
     "backend"
@@ -2165,6 +2203,37 @@
     "  writes in the other runtime.",
     "- **Answers**: `ResultInterceptor` gives every answer to `answerOf` (`model.ts`), which writes `null` for each",
     "  optional field of a model left `undefined` (the fields class-validator's `IsOptional` marks, read once per class),"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data.bdad9a",
+   "type": "context",
+   "title": "The TypeScript runtime: `synapsis-nest` — Data",
+   "summary": "the type (`templates/bigdouble.tpl`; `exact.test.ts` holds them the same), not exported: the runtime reads one and takes one of any file by its members (`isBigDouble`).",
+   "body": [
+    "- **Exact numbers** (`exact.ts`, ADR-backend-0003): `BigDouble` is the class the dialect writes in each file that uses",
+    "  the type (`templates/bigdouble.tpl`; `exact.test.ts` holds them the same), not exported: the runtime reads one and",
+    "  takes one of any file by its members (`isBigDouble`). `exactColumn` gives an entity's field its getter (the",
+    "  database's text or number read back as a `bigint` / `BigDouble`) and setter (`columnText`: the text with the",
+    "  column's decimals); the repository finds an exact column by its type (`BIGINT`, `DECIMAL`), writes a value as a",
+    "  number literal (MySQL compares a quoted text with a DECIMAL as a double) and on SQLite compares and sorts the text",
+    "  by value (`liteCompare`, `liteOrder`: the same SQL as the other runtime); `fits` refuses what the column cannot",
+    "  hold. `IsBigInt` / `IsBigDouble` / `MinExact` / `MaxExact` are the model's; `BigIntPipe` / `BigDoublePipe` the",
+    "  parameters'; the app's `json replacer` writes a `bigint`, `Entity.toJSON` keeps the columns in their order.",
+    "- **Transactions**: an `AsyncLocalStorage` whose transaction every repository call passes as `{ transaction }`. It",
+    "  opens on the database of the last repository made ([roadmap](../01-product/roadmap.md)).",
+    "  `transactional` runs the use case again, `RETRIES` (3) times, when `mustRetry` reads a serialization failure or a"
    ],
    "platforms": [
     "backend"

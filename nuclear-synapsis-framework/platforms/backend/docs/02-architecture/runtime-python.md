@@ -91,7 +91,11 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
   || '%' ESCAPE '/'`, the text's `%`, `_` and `/` escaped with `/` (`icontains`: `ILIKE` on PostgreSQL, `lower()` on
   both sides elsewhere). The other runtime writes the same SQL.
 - **An optional field left empty** is `None` and pydantic writes it `null`: it is never left out of an answer.
-- **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins.
+- **Transactions**: a session kept in a `ContextVar`, which `Repository.use()` joins. `transactional` runs the use
+  case again, `RETRIES` (3) times, when `must_retry` reads a serialization failure or a deadlock from the driver's
+  error (SQLSTATE `40001`, `40P01`; MySQL's and MariaDB's number 1213); `publish` inside one hands its sending to
+  `after_commit`, a second `ContextVar` the commit empties. Test:
+  `test_a_transaction_the_database_refuses_for_another_runs_again` (the same as `data.test.ts`).
 - **Defaults**: a field's default is also the column's SQL default (`column(default=...)` sets `server_default`),
   so a non-null column can be added to a table that has rows.
 

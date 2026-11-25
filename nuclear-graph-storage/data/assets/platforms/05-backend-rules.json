@@ -830,7 +830,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-4-use-case.6cfed8",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-4-use-case.6ea87b",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.4 Use case",
    "summary": "{ \"status\": 409, \"message\": \"conflict\" } It is the answer for a repeated value in a unique column, a foreign key that points at no row, a row removed while others point to it (a relation without `onDelete`), a null in a required column, and a text longer than its column (§2.1).",
@@ -855,10 +855,7 @@
     "    task = ~tasks.save(Task(title = input.title, priority = input.priority))",
     "    ~publish(\"tasks.created\", { \"id\": task.id, \"title\": task.title })",
     "    Ok(task)",
-    "```",
-    "",
-    "`@transactional` on `exec` (ADR-backend-0001): every repository call inside shares one transaction of the default database;",
-    "an `Err` or an error rolls it back, an `Ok` commits it. A transactional call inside another joins it."
+    "```"
    ],
    "platforms": [
     "backend"
@@ -868,11 +865,18 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-4-use-case.ee8a68",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-4-use-case.dd081f",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.4 Use case",
-   "summary": "usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository) @transactional exec(id: int, into: int) Result<Error, Moved> ~projects.find(into) moved = ~tasks.move(id, into) ~projects.remove(id) Ok(Moved(count = moved))",
+   "summary": "`@transactional` on `exec` (ADR-backend-0001): every repository call inside shares one transaction of the default database; an `Err` or an error rolls it back, an `Ok` commits it.",
    "body": [
+    "`@transactional` on `exec` (ADR-backend-0001): every repository call inside shares one transaction of the default database;",
+    "an `Err` or an error rolls it back, an `Ok` commits it. A transactional call inside another joins it. A",
+    "transaction the database refuses only because another ran at the same time (a serialization failure, a deadlock)",
+    "runs again from its start, up to three times, and then its error is thrown as any error nothing handles",
+    "(ADR-backend-0004). The events it publishes are sent after the commit: never for a transaction rolled back, once for",
+    "one run again.",
+    "",
     "```nuclear",
     "usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository)",
     "  @transactional",
@@ -1417,38 +1421,15 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.b9da08",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
-   "summary": "The upgrade passes the app's guards: a refusal answers the upgrade with the guard's status (401, 403) and the error's body; an upgrade on another path answers 404. A frame is a JSON object (`method` and `path` texts, `headers` an object of texts): any other frame (not JSON, binary, `null`, a…",
-   "body": [
-    "The upgrade passes the app's guards: a refusal answers the upgrade with the guard's status (401, 403) and the error's",
-    "body; an upgrade on another path answers 404. A frame is a JSON object (`method` and `path` texts, `headers` an",
-    "object of texts): any other frame (not JSON, binary, `null`, a number, a list, deeper than 512 levels) closes the",
-    "socket with 1003, and one larger than `maxBodySize` with 1009. A request's `path` starts with one `/` and stays in the",
-    "app (another answers 404, and nothing leaves the app); a `method` other than `GET`, `HEAD`, `POST`, `PUT`, `PATCH`,",
-    "`DELETE` answers 405. A frame's own `headers` replace the upgrade's of the same name; `Host`, `Content-Length`,",
-    "`Transfer-Encoding` and the other headers of a connection are never taken from a frame. A `web` client gets this",
-    "with a `WebSocket(url)` connection and its repositories as they are (web.md §3.2). With Kafka, a socket receives what",
-    "its own process publishes. The contract says which transports serve each controller (`transports`), the path",
-    "(`webSocket`) and the events published (`events`: topic, component, payload; projects.md §1.2)."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.eca022",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.10729e",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
    "summary": "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka` connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic.",
    "body": [
     "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka`",
     "connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic. A `listener` receives them: each `@consumer(\"topic\")` method gets the",
-    "messages of the topic, parsed as the type of its parameter (a model or a map). The Redis cache: `~cacheGet(key)`,",
+    "messages of the topic, parsed as the type of its parameter (a model or a map). Inside `@transactional` an event is",
+    "sent when the transaction commits (§2.4). The Redis cache: `~cacheGet(key)`,",
     "`~cacheSet(key, value, seconds = 60)`.",
     "",
     "```nuclear",
@@ -1471,6 +1452,30 @@
     "| app → client | `{\"id\": 1, \"status\": 200, \"body\": ...}`: its answer, the same as over HTTP |",
     "| client → app | `{\"subscribe\": \"tasks.created\"}`, `{\"unsubscribe\": \"tasks.created\"}` |",
     "| app → client | `{\"event\": \"tasks.created\", \"data\": ...}`: an event published by the app |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.b9da08",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
+   "summary": "The upgrade passes the app's guards: a refusal answers the upgrade with the guard's status (401, 403) and the error's body; an upgrade on another path answers 404. A frame is a JSON object (`method` and `path` texts, `headers` an object of texts): any other frame (not JSON, binary, `null`, a…",
+   "body": [
+    "The upgrade passes the app's guards: a refusal answers the upgrade with the guard's status (401, 403) and the error's",
+    "body; an upgrade on another path answers 404. A frame is a JSON object (`method` and `path` texts, `headers` an",
+    "object of texts): any other frame (not JSON, binary, `null`, a number, a list, deeper than 512 levels) closes the",
+    "socket with 1003, and one larger than `maxBodySize` with 1009. A request's `path` starts with one `/` and stays in the",
+    "app (another answers 404, and nothing leaves the app); a `method` other than `GET`, `HEAD`, `POST`, `PUT`, `PATCH`,",
+    "`DELETE` answers 405. A frame's own `headers` replace the upgrade's of the same name; `Host`, `Content-Length`,",
+    "`Transfer-Encoding` and the other headers of a connection are never taken from a frame. A `web` client gets this",
+    "with a `WebSocket(url)` connection and its repositories as they are (web.md §3.2). With Kafka, a socket receives what",
+    "its own process publishes. The contract says which transports serve each controller (`transports`), the path",
+    "(`webSocket`) and the events published (`events`: topic, component, payload; projects.md §1.2)."
    ],
    "platforms": [
     "backend"

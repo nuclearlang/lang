@@ -48,8 +48,39 @@ class Page[T]:
     pages: int = 0
 
 
-# the session of the running @transactional call
+# the session of the running @transactional call, and what waits for its commit (the events it publishes)
 _tx: ContextVar[AsyncSession | None] = ContextVar("synapsis_transaction", default=None)
+_after: ContextVar[list[Callable[[], Awaitable[None]]] | None] = ContextVar("synapsis_after_commit", default=None)
+
+# a transaction the database asks to run again is run again this many times (ADR-backend-0004), then its error goes
+RETRIES = 3
+# SQLSTATE of a serialization failure and of a deadlock (PostgreSQL's code, MySQL's and MariaDB's state)
+_RETRY_STATES = {"40001", "40P01"}
+# MySQL's and MariaDB's number of a deadlock, when the driver gives no state
+_RETRY_NUMBERS = {1213}
+
+
+def must_retry(error: BaseException) -> bool:
+    """The database refused the transaction only because of another one running at the same time: running it again
+    may succeed. Any other error is not retried."""
+    orig = getattr(error, "orig", None)
+    if orig is None:
+        return False
+    state = getattr(orig, "sqlstate", None) or getattr(orig, "pgcode", None)
+    if state in _RETRY_STATES:
+        return True
+    args: tuple[Any, ...] = getattr(orig, "args", ())
+    return bool(args) and args[0] in _RETRY_NUMBERS
+
+
+def after_commit(send: Callable[[], Awaitable[None]]) -> bool:
+    """Inside `@transactional`, keeps `send` for the commit (dropped by a rollback, never run twice by a retry) and
+    answers True; outside one answers False and the caller sends at once."""
+    waiting = _after.get()
+    if waiting is None:
+        return False
+    waiting.append(send)
+    return True
 
 
 class InvalidField(AttributeError):
@@ -63,7 +94,9 @@ class _Rollback(Exception):
 
 def transactional[**P, R](fn: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
     """`@transactional` on a use case's `exec`: its repository calls share one transaction of the default database;
-    an `Err` or an error rolls it back, an `Ok` commits it. A call inside another transactional call joins it."""
+    an `Err` or an error rolls it back, an `Ok` commits it. A call inside another transactional call joins it. A
+    transaction the database asks to run again (`must_retry`) runs again from its start, `RETRIES` times; the events
+    published inside are sent once, after the commit."""
 
     @functools.wraps(fn)
     async def run(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -72,18 +105,29 @@ def transactional[**P, R](fn: Callable[P, Awaitable[R]]) -> Callable[P, Awaitabl
         from .app import connection
         from .config import Database
 
-        async with cast(AsyncSession, connection(Database).sessions()) as s:
-            token = _tx.set(s)
-            try:
-                async with s.begin():
-                    result = await fn(*args, **kwargs)
-                    if isinstance(result, Result) and cast(Result[Any, Any], result).is_err:
-                        raise _Rollback(result)
-                return result
-            except _Rollback as r:
-                return cast(R, r.result)
-            finally:
-                _tx.reset(token)
+        attempt = 0
+        while True:
+            waiting: list[Callable[[], Awaitable[None]]] = []
+            async with cast(AsyncSession, connection(Database).sessions()) as s:
+                token, kept = _tx.set(s), _after.set(waiting)
+                try:
+                    async with s.begin():
+                        result = await fn(*args, **kwargs)
+                        if isinstance(result, Result) and cast(Result[Any, Any], result).is_err:
+                            raise _Rollback(result)
+                except _Rollback as r:
+                    return cast(R, r.result)
+                except Exception as e:
+                    if attempt >= RETRIES or not must_retry(e):
+                        raise
+                    attempt += 1
+                    continue
+                finally:
+                    _tx.reset(token)
+                    _after.reset(kept)
+            for send in waiting:
+                await send()
+            return result
 
     return run
 

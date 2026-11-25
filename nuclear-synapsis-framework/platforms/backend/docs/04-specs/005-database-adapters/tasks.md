@@ -27,8 +27,9 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 - [ ] `sqlite`, `postgres`, `mysql`, `mariadb` moved out of the dialects into plugin packages; `refusal` of each;
       the database check unchanged and green.
-- [ ] `@transactional` retries on a `retry` refusal, both runtimes; an event inside a transaction sent at its
-      commit; the same test in both.
+- [x] `@transactional` retries a serialization failure or a deadlock (`RETRIES` = 3), both runtimes; an event
+      inside a transaction sent at its commit; the same test in both (2026-11-25). The number comes from the plugin's
+      `@retries` once plugins exist.
 
 ## T3 — The Synapsis ORM in Nuclear
 

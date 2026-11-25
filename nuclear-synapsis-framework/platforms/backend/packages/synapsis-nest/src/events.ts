@@ -7,6 +7,7 @@ import type { Kafka as KafkaClient, Producer } from 'kafkajs';
 import type { Redis as RedisClient } from 'ioredis';
 import { connection, connections } from './app.js';
 import { Connection } from './config.js';
+import { afterCommit } from './repository.js';
 
 /** Redis (ioredis): new Redis({ url: env('REDIS_URL', 'redis://localhost:6379') }). */
 export class Redis extends Connection {
@@ -105,14 +106,20 @@ async function startConsumers(kafka: Kafka): Promise<void> {
 /** Who else receives every event this process publishes (the app's WebSocket, synapsis-nest/sockets). */
 export const sinks: ((topic: string, value: unknown) => Promise<void>)[] = [];
 
-/** Sends `value` (a model, an object, a text) to the topic. */
+/** Sends `value` (a model, an object, a text) to the topic. Inside `@transactional` it is sent after the commit, and
+ * not at all when the transaction is rolled back. */
 export async function publish(topic: string, value: unknown, name = 'default'): Promise<void> {
-  const kafka = connections().find((c): c is Kafka => c instanceof Kafka && c.name === name);
   const plain: unknown = JSON.parse(JSON.stringify(value ?? null));
+  const text = JSON.stringify(value);
+  if (!afterCommit(() => send(topic, plain, text, name))) await send(topic, plain, text, name);
+}
+
+async function send(topic: string, plain: unknown, text: string, name: string): Promise<void> {
+  const kafka = connections().find((c): c is Kafka => c instanceof Kafka && c.name === name);
   // shortcut: with Kafka, a socket receives only what this process publishes; consume for sockets with several instances
   for (const sink of sinks) await sink(topic, plain);
   if (!kafka?.producer) return deliver(topic, plain);
-  await kafka.producer.send({ topic, messages: [{ value: JSON.stringify(value) }] });
+  await kafka.producer.send({ topic, messages: [{ value: text }] });
 }
 
 /** The JSON value cached under `key`, or null. */

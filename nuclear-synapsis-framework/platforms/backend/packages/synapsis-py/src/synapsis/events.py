@@ -8,7 +8,7 @@ import inspect
 import json
 import typing
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel
 
@@ -26,7 +26,7 @@ class Listener:
     """A `listener` kind: each method with @consumer("topic") receives the messages of that topic. An instance
     receives the events of this process from the moment it exists."""
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> Listener:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         self = super().__new__(cls)
         _listeners.append(self)
         return self
@@ -56,9 +56,17 @@ def _encode(value: Any) -> bytes:
 
 
 async def publish(topic: str, value: Any, connection_name: str = "default") -> None:
-    """Sends `value` (a model, a dict, a text) to the topic: the Kafka connection, or the listeners of this process."""
-    kafka = next((c for c in connections() if isinstance(c, Kafka) and c.name == connection_name), None)
+    """Sends `value` (a model, a dict, a text) to the topic: the Kafka connection, or the listeners of this process.
+    Inside `@transactional` it is sent after the commit, and not at all when the transaction is rolled back."""
+    from .repository import after_commit
+
     raw = _encode(value)
+    if not after_commit(lambda: _send(topic, raw, connection_name)):
+        await _send(topic, raw, connection_name)
+
+
+async def _send(topic: str, raw: bytes, connection_name: str) -> None:
+    kafka = next((c for c in connections() if isinstance(c, Kafka) and c.name == connection_name), None)
     # shortcut: with Kafka, a socket receives only what this process publishes; consume for sockets with several instances
     for sink in sinks:
         await sink(topic, raw)

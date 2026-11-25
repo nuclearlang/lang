@@ -354,7 +354,11 @@ usecase CreateTask(tasks: TaskRepository)
 ```
 
 `@transactional` on `exec` (ADR-backend-0001): every repository call inside shares one transaction of the default database;
-an `Err` or an error rolls it back, an `Ok` commits it. A transactional call inside another joins it.
+an `Err` or an error rolls it back, an `Ok` commits it. A transactional call inside another joins it. A
+transaction the database refuses only because another ran at the same time (a serialization failure, a deadlock)
+runs again from its start, up to three times, and then its error is thrown as any error nothing handles
+(ADR-backend-0004). The events it publishes are sent after the commit: never for a transaction rolled back, once for
+one run again.
 
 ```nuclear
 usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository)
@@ -655,7 +659,8 @@ Applying and reverting:
 
 `~publish("topic", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka`
 connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic. A `listener` receives them: each `@consumer("topic")` method gets the
-messages of the topic, parsed as the type of its parameter (a model or a map). The Redis cache: `~cacheGet(key)`,
+messages of the topic, parsed as the type of its parameter (a model or a map). Inside `@transactional` an event is
+sent when the transaction commits (§2.4). The Redis cache: `~cacheGet(key)`,
 `~cacheSet(key, value, seconds = 60)`.
 
 ```nuclear

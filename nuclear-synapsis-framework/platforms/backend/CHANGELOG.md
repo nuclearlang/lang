@@ -4,6 +4,12 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- **A transaction the database refuses for another runs again** (ADR-backend-0004, reference §2.4), the same in
+  `fastapi` and `nestjs`: a `@transactional` use case that meets a serialization failure or a deadlock runs again
+  from its start, up to three times, then throws. **The events published inside `@transactional` are sent after the
+  commit**: a rolled back transaction publishes nothing, and one run again publishes once (before, they were sent at
+  once, even for a transaction rolled back).
+
 - **An empty text under `@required` answers the rule `required`** (ADR-synapsis-0014, reference §2.3), the same in
   `fastapi` and `nestjs`: `""` was `minLength` 1, a missing value or `null` `required`. `@minLength(1)` still answers
   `minLength`. In `fastapi` an empty list under `@required` is now given, as in `nestjs`.

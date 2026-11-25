@@ -11,6 +11,9 @@ from synapsis import (
     controller, create_app, created, get, icontains, ilike, inject, like, many_to_many, many_to_one, one_to_many,
     primary, transactional, updated,
 )
+from sqlalchemy.exc import OperationalError
+from synapsis.events import Listener, consumer, publish
+from synapsis.repository import RETRIES
 from synapsis.testing import client, memory_database
 
 
@@ -209,6 +212,65 @@ async def test_relations_pages_and_transactions() -> None:
 
         await projects.remove(work.id)  # ON DELETE CASCADE
         assert await tasks.count() == 0
+
+
+class _Busy(Exception):
+    """What a driver raises when another transaction wins: a serialization failure, SQLSTATE 40001."""
+
+    sqlstate = "40001"
+
+
+class Saved(Listener):
+    def __init__(self) -> None:
+        self.names: list[str] = []
+
+    @consumer("retry.saved")
+    async def saved(self, value: dict[str, str]) -> None:
+        self.names.append(value["name"])
+
+
+class SaveRefused:
+    """A use case the database refuses `refusals` times for another transaction, then lets commit."""
+
+    def __init__(self, projects: ProjectRepository, refusals: int, fail: bool = False) -> None:
+        self.projects, self.refusals, self.fail, self.runs = projects, refusals, fail, 0
+
+    @transactional
+    async def exec(self, name: str) -> Result[AppError, int]:
+        self.runs += 1
+        await self.projects.save(Project(name=name))
+        await publish("retry.saved", {"name": name})
+        if self.runs <= self.refusals:
+            raise OperationalError("COMMIT", None, _Busy())
+        if self.fail:
+            return Err(Conflict("rolled back"))
+        return Ok(self.runs)
+
+
+async def test_a_transaction_the_database_refuses_for_another_runs_again() -> None:
+    # ADR-backend-0004: run again from its start RETRIES times, then the error; its events are sent once, at commit
+    app = create_app(Config(), controllers=[ProjectController])
+    async with client(app, Config(), memory_database()):
+        projects, seen = inject(ProjectRepository), Saved()
+        retried = SaveRefused(projects, refusals=2)
+        assert (await retried.exec("kept")).value == 3
+        assert retried.runs == 3 and await projects.count() == 1
+        assert seen.names == ["kept"]
+
+        refused = SaveRefused(projects, refusals=RETRIES + 1)
+        try:
+            await refused.exec("lost")
+            raise AssertionError("the last refusal is thrown")
+        except OperationalError:
+            pass
+        assert refused.runs == RETRIES + 1 and await projects.count() == 1
+
+        failed = await SaveRefused(projects, refusals=0, fail=True).exec("failed")
+        assert failed.is_err and await projects.count() == 1
+        assert seen.names == ["kept"]  # nothing of a rolled back transaction was published
+
+        await publish("retry.saved", {"name": "outside"})  # outside a transaction: at once
+        assert seen.names == ["kept", "outside"]
 
 
 async def test_the_same_rows_in_every_dialect() -> None:
