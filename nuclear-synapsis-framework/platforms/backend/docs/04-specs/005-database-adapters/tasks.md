@@ -40,7 +40,12 @@ Each phase ends with every test set green (root rule 16) and its documents in th
 
 - [ ] Mapper, unit of work, entity states, the query as a SQL tree, the loader, the guards of a write, the retry.
 - [ ] `SqlDialect` with the standard SQL; every row of requirements §1 tested through the SQLite plugin run adapted.
-- [ ] Migrations: the diff, the history table, `make`/`up`/`down`/`status`, rendered by `schemaChange`.
+- [ ] Migrations for every database (ADR-backend-0005): the kind `migration` and its changes, `migrate make` writing
+      it from the kept schema, `up`/`down`/`status`/`--to`/`--fake`/`--transaction` through `schemaChange`,
+      `rebuild` and `transactionalDdl`; the four databases of today on it, `checks/database-check/migrations.py`
+      green; Alembic and the `nestjs` migrator removed.
+- [ ] `nuclear upgrade` converts the migrations of before (Alembic, `nestjs`'s), their history kept, with fixtures
+      of both.
 
 ## T4 — CamusDB, adapted
 

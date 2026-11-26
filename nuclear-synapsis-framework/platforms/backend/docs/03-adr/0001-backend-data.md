@@ -147,6 +147,8 @@ runtime's `PageOf<T>` (Flutter has its own `Page`; a project's own `Page` keeps 
 
 ## References
 
+- The migrations part (the dialect's tool) is superseded by ADR-backend-0005: a migration is Nuclear, its DDL
+  written by the database's adapter.
 - Replaces: ADR-0100
 - The rules for a user: [the reference](../07-reference/backend.md) §2.1, §2.2, §2.4, §2.8.
 - How the runtimes build it: [Python](../02-architecture/runtime-python.md#data),

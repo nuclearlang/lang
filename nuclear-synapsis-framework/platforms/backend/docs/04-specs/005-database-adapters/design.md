@@ -62,7 +62,7 @@ dialect and driver, so no target library is in Nuclear (platforms rule 1).
 | Query | `where` / `orderBy` / `limit` / `offset` / `paginate` / `update` / `delete` as a SQL tree, never a text | 1.4 |
 | Loader | `relations("a.b")`: one `SELECT … WHERE key IN (…)` per relation | 1.4 |
 | Guards of a write | the length of a text, an exact number: refused with 409 before it is sent | 1.2, 1.5 |
-| Migrations | the same diff as today, the history table, `up`/`down`/`status`, rendered through the adapter | 1.6 |
+| Migrations | for every database, native or adapted (ADR-backend-0005): the `migration` files, their diff, the history table, `up`/`down`/`status`, the DDL written by the adapter (§4.1) | 1.6 |
 
 The native way gets the retry from the same rule: the runtime's `@transactional` retries when the plugin's
 `refusal` says `retry`, on both ways. An event published inside a transaction is sent at its commit, so a retried
@@ -117,7 +117,47 @@ and overrides only what its database writes otherwise:
 | `transactionalDdl()` | `true` | `--transaction all`: answered `each`, and said, when `false` |
 | `returning()` | `true` | without it the row is read back by its key |
 
-A native plugin implements only `refusal` (the ORM's error → `Refusal`), for the 409 and the retry.
+A native plugin implements `refusal` (the ORM's error → `Refusal`, for the 409 and the retry) and the methods of
+§4.1: the ORM runs its queries, but its migrations are the platform's (ADR-backend-0005).
+
+### 4.1 The migrations (ADR-backend-0005)
+
+A migration is a `.nuc` of the kind `migration` (`up()`, `down()`: a list of changes), the same file in every dialect
+and for every database. `nuclear migrate make` writes it from the difference between the entities and the schema the
+last migration leaves; the Synapsis ORM applies it, asking the adapter for the DDL of each change:
+
+```nuclear
+// the changes of a schema, the platform's
+SchemaChange
+  createTable
+  dropTable
+  renameTable
+  addColumn
+  dropColumn
+  renameColumn
+  alterColumn
+  addUnique
+  dropUnique
+  addForeignKey
+  dropForeignKey
+  sql
+
+// what SqlDialect answers for one change: its statements, or the table rebuilt
+SchemaSql
+  statements: string[]
+  rebuild: boolean
+```
+
+| Method of `SqlDialect` | Standard | Asked when |
+|---|---|---|
+| `schemaChange(change, table)` | standard DDL (`ALTER TABLE … ADD COLUMN`, `ADD CONSTRAINT … UNIQUE`) | each change of a migration and of `createTables` |
+| `rebuild(table, into)` | `CREATE` the new table, copy the rows, `DROP`, `RENAME`, keeping the key and its sequence | a change the database cannot alter (`rebuild = true`): SQLite, CamusDB |
+| `transactionalDdl()` | `true` | `--transaction all`: answered `each`, and said, when `false` (MySQL, MariaDB, CamusDB) |
+| `historyTable()` | the table `migrations` (TypeORM's: id, timestamp, name) through `quote` | `up`, `down`, `status`, `--fake` |
+
+The schema a migration leaves is kept with it, so `make`, a rebuild and `down` never read the database's catalog.
+The migrations written before by Alembic and by `nestjs`'s migrator are converted to this form when a project is
+upgraded (`nuclear upgrade`), their history kept: fixtures of both are tested.
 
 ## 5. CamusDB on the contract (probed on 2026-11-25, `camusdb/camusdb:latest`)
 
@@ -154,5 +194,7 @@ A native plugin implements only `refusal` (the ORM's error → `Refusal`), for t
    `synapsis-nest` when the runtime is built; a plugin is a package of `.nuc` source built with each project
    (ADR-platform-0017). Neither path exists yet.
 4. **The metadata of an entity on an adapted connection**: the templates of both dialects write it.
+6. **The kind `migration`** in the backend contract and its changes (ADR-backend-0005), with `nuclear migrate make`
+   writing it and `nuclear upgrade` converting the migrations of before.
 5. **The four databases of today moved out** of the dialects' `[project.plugins.*]` into plugin packages, the
    installer shipping them.

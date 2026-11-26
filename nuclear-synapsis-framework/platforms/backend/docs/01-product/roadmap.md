@@ -13,8 +13,9 @@ commands of `nuclear` is in [the command line tools](../../../../../tools/cli/AG
 ## Half done
 
 - **Every database is a plugin** ([spec 005](../04-specs/005-database-adapters/tasks.md), ADR-backend-0004, 2026-11-25):
-  decided and designed, CamusDB probed; nothing built. Next: T1, what Nuclear lacks (the kind `plugin`, an HTTP
-  client in the language's library, built Nuclear inside a runtime).
+  the kind `plugin`, `@refuses` (N0313), `@retries` and the four databases of today as plugins are built; the
+  migrations become Nuclear, written by the adapter (ADR-backend-0005), not built yet. Next: the rules a native
+  plugin brings, the kind `migration`, an HTTP client in the language's library, the Synapsis ORM (T3).
 
 - **Backend parity** (step 4 of the competitiveness plan;
   [spec 004](../04-specs/004-backend-parity/plan.md)). In place, in both dialects
