@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-20
+updated: 2026-11-26
 related: [tools/mcp/docs/08-guides/mcp.md]
 ---
 # Roadmap of the MCP server
@@ -19,6 +19,10 @@ The pending work of the server. A done item is deleted.
 
 ## Pending
 
+- **Found by the walkthrough of a backend, web and mobile over the Rick and Morty API (2026-11-26,
+  [walkthrough-rick-and-morty.md](../08-guides/walkthrough-rick-and-morty.md)):** no tool runs `nuclear contracts
+  update` (`PROJECT_COMMANDS` lacks `contracts`), so a client of a backend needs a terminal; `project_test` of a
+  project not installed answers a runtime hint instead of "run `nuclear_project` with install".
 - **Found measuring an OpenCode agent (2026-11-25):** `app_add` confirmed for three apps in parallel lost one (web
   answered "exists already" and was added again: 5 calls, 4 turns); and a product session reaches 92 tools with
   23.6 k chars of descriptions, which a client's tool search dumps (~5 k chars each time).

@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-26
 related: [nuclear-synapsis-framework/docs/08-guides/generators.md]
 ---
 # Roadmap of the code generator
@@ -24,6 +24,9 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 
 ## Pending
 
+- **`nuclear make screen` on web (2026-11-26):** any `--route` is refused with the usage line, and without it
+  only the view is written (route `/<screen>`), not the state model and the state manager mobile gets and
+  `strategy:interface` describes.
 - **Found by an agent making a backend for frontend over The One API (2026-11-25):** an API whose `GET <path>/{id}`
   answers a page with one item (`{docs: [book], total: 1...}`) gets a repository `one(id) Result<Error, Book>` that
   cannot read it: the get use case was written by hand (`page.docs[0]`, `NotFound` when empty). The detail answer is

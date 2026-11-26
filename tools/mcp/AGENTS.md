@@ -82,6 +82,7 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change the server: how a tool is declared, the two modes, the instructions, what each group of tools needs, its settings |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why there is an MCP server and what it exposes |
 | [docs/08-guides/mcp.md](docs/08-guides/mcp.md) | You need what a user reads: the set-up of each client, how a model works with the server, every tool and its parameters, what to do when a tool fails |
+| [docs/08-guides/walkthrough-rick-and-morty.md](docs/08-guides/walkthrough-rick-and-morty.md) | You need every call an agent makes and every answer of the server for one real request (backend, web and mobile over a public API), and how to talk to the server by hand |
 
 Elsewhere:
 
