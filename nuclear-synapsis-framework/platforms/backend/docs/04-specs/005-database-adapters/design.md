@@ -134,7 +134,13 @@ A native plugin implements only `refusal` (the ORM's error → `Refusal`), for t
 | `refusal` | `CADB0300` unique, `CADB0304`/`0305` foreign key, `CADB0301` required, `CADB0302` too long, `CADB0502`/`0504` retry | `CADB0300` yes |
 | `@refuses` | `ON DELETE CASCADE` refused (`CADB0533`); only `NO ACTION` and `RESTRICT` | yes |
 | `ALTER TABLE ADD COLUMN … DEFAULT (0)` | works | yes |
-| `numeric(p, s)`, `datetime` precision, `LIKE … ESCAPE`, DDL in a transaction | to probe | no |
+| Migrations | no tool of its own: Nuclear's (`nuclear migrate`) over its DDL | — |
+| `CREATE` / `ALTER TABLE ADD` / `DROP COLUMN`, `RENAME COLUMN` / `TO`, `DROP NOT NULL`, a named foreign key | work | yes |
+| A named unique | no `ADD CONSTRAINT … UNIQUE`: `CREATE UNIQUE INDEX <name>`; `DROP INDEX <name> ON <table>` | yes |
+| A changed type, length or default | no `ALTER COLUMN … TYPE` nor `SET DEFAULT`: `schemaChange` rebuilds the table (the runtimes' SQLite way) | yes |
+| A column named `timestamp` (the history table) | a reserved word: `quote()` | yes |
+| DDL in a transaction | not undone by a rollback: `transactionalDdl()` is `false` (MySQL's case) | yes |
+| `numeric(p, s)`, `datetime` precision, `LIKE … ESCAPE` | to probe | no |
 
 ## 6. What Nuclear lacks for this (checked in the references)
 
